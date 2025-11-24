@@ -2,18 +2,15 @@ services:
   logger.channel.image_effects:
     parent: logger.channel_base
     arguments: ['image_effects']
-  plugin.manager.image_effects.color_selector:
-    class: Drupal\image_effects\Plugin\ImageEffectsPluginManager
+  Drupal\image_effects\Plugin\ColorSelectorPluginManager:
     parent: default_plugin_manager
-    arguments: ['color_selector', '@config.factory']
-  plugin.manager.image_effects.image_selector:
-    class: Drupal\image_effects\Plugin\ImageEffectsPluginManager
+    arguments: ['@config.factory']
+  Drupal\image_effects\Plugin\ImageSelectorPluginManager:
     parent: default_plugin_manager
-    arguments: ['image_selector', '@config.factory']
-  plugin.manager.image_effects.font_selector:
-    class: Drupal\image_effects\Plugin\ImageEffectsPluginManager
+    arguments: ['@config.factory']
+  Drupal\image_effects\Plugin\FontSelectorPluginManager:
     parent: default_plugin_manager
-    arguments: ['font_selector', '@config.factory']
+    arguments: ['@config.factory']
   image_effects.converter:
     class: Drupal\image_effects\ImageEffectsConverter
   image_effects.uninstall_validator:
@@ -22,3 +19,13 @@ services:
       - { name: module_install.uninstall_validator }
     arguments: ['@config.factory', '@string_translation']
     lazy: true
+
+  plugin.manager.image_effects.color_selector:
+    alias: Drupal\image_effects\Plugin\ColorSelectorPluginManager
+    deprecated: 'The "%alias_id%" service alias is deprecated. Use "Drupal\image_effects\Plugin\ColorSelectorPluginManager" service id instead.'
+  plugin.manager.image_effects.image_selector:
+    alias: Drupal\image_effects\Plugin\ImageSelectorPluginManager
+    deprecated: 'The "%alias_id%" service alias is deprecated. Use "Drupal\image_effects\Plugin\ImageSelectorPluginManager" service id instead.'
+  plugin.manager.image_effects.font_selector:
+    alias: Drupal\image_effects\Plugin\FontSelectorPluginManager
+    deprecated: 'The "%alias_id%" service alias is deprecated. Use "Drupal\image_effects\Plugin\FontSelectorPluginManager" service id instead.'

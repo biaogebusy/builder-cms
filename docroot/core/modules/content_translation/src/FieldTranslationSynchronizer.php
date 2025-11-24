@@ -190,6 +190,7 @@ class FieldTranslationSynchronizer implements FieldTranslationSynchronizerInterf
    */
   protected function getOriginalEntity(ContentEntityInterface $entity) {
     if (!isset($entity->original)) {
+      /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
       $storage = $this->entityTypeManager->getStorage($entity->getEntityTypeId());
       $original = $entity->isDefaultRevision() ? $storage->loadUnchanged($entity->id()) : $storage->loadRevision($entity->getLoadedRevisionId());
     }
@@ -327,7 +328,7 @@ class FieldTranslationSynchronizer implements FieldTranslationSynchronizerInterf
    * @param array $properties
    *   An array of column names to be synchronized.
    *
-   * @returns string
+   * @return string
    *   A hash code that can be used to identify the item.
    */
   protected function itemHash(array $items, $delta, array $properties) {

@@ -13,9 +13,9 @@
   {% for child in children %}
     {% set item = attribute(element, child) %}
     {% if child in selected %}
-      {% set new_nesting_level = attribute(depth, child) %}
+      {% set new_nesting_level = attribute(depth, child) ?? 0 %}
     {% endif %}
-    {% set new_nesting_level = attribute(depth, child) %}
+    {% set new_nesting_level = attribute(depth, child) ?? 0%}
     {% include '@better_exposed_filters/bef-nested-elements.html.twig' %}
     {% set current_nesting_level = new_nesting_level %}
   {% endfor %}

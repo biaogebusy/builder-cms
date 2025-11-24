@@ -11,21 +11,12 @@ use Drupal\commerce_order\Entity\OrderInterface;
 class CheckoutOrderManager implements CheckoutOrderManagerInterface {
 
   /**
-   * The chain checkout flow resolver.
-   *
-   * @var \Drupal\commerce_checkout\Resolver\ChainCheckoutFlowResolverInterface
-   */
-  protected $chainCheckoutFlowResolver;
-
-  /**
    * Constructs a new CheckoutOrderManager object.
    *
-   * @param \Drupal\commerce_checkout\Resolver\ChainCheckoutFlowResolverInterface $chain_checkout_flow_resolver
+   * @param \Drupal\commerce_checkout\Resolver\ChainCheckoutFlowResolverInterface $chainCheckoutFlowResolver
    *   The chain checkout flow resolver.
    */
-  public function __construct(ChainCheckoutFlowResolverInterface $chain_checkout_flow_resolver) {
-    $this->chainCheckoutFlowResolver = $chain_checkout_flow_resolver;
-  }
+  public function __construct(protected ChainCheckoutFlowResolverInterface $chainCheckoutFlowResolver) {}
 
   /**
    * {@inheritdoc}
@@ -36,6 +27,9 @@ class CheckoutOrderManager implements CheckoutOrderManagerInterface {
       $order->set('checkout_flow', $checkout_flow);
       $order->save();
     }
+
+    // Set the order on the checkout flow's checkout flow plugin.
+    $order->get('checkout_flow')->entity->getPlugin()->setOrder($order);
 
     return $order->get('checkout_flow')->entity;
   }

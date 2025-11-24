@@ -2,16 +2,18 @@
 
 namespace Drupal\commerce_store\Entity;
 
+use Drupal\Core\Entity\EntityPublishedTrait;
 use CommerceGuys\Addressing\AddressFormat\AddressField;
 use CommerceGuys\Addressing\AddressFormat\FieldOverride;
-use Drupal\address\AddressInterface;
-use Drupal\commerce\EntityOwnerTrait;
-use Drupal\commerce_price\Entity\CurrencyInterface;
+use Drupal\Core\Datetime\TimeZoneFormHelper;
 use Drupal\Core\Entity\ContentEntityBase;
+use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
-use Drupal\Core\Entity\EntityChangedTrait;
+use Drupal\address\AddressInterface;
+use Drupal\commerce\EntityOwnerTrait;
+use Drupal\commerce_price\Entity\CurrencyInterface;
 
 /**
  * Defines the store entity class.
@@ -41,6 +43,8 @@ use Drupal\Core\Entity\EntityChangedTrait;
  *       "default" = "Drupal\commerce_store\Form\StoreForm",
  *       "add" = "Drupal\commerce_store\Form\StoreForm",
  *       "edit" = "Drupal\commerce_store\Form\StoreForm",
+ *       "enable" = "Drupal\commerce_store\Form\StoreStatusForm",
+ *       "disable" = "Drupal\commerce_store\Form\StoreStatusForm",
  *       "duplicate" = "Drupal\commerce_store\Form\StoreForm",
  *       "delete" = "Drupal\Core\Entity\ContentEntityDeleteForm"
  *     },
@@ -48,7 +52,7 @@ use Drupal\Core\Entity\EntityChangedTrait;
  *       "default" = "Drupal\entity\Menu\DefaultEntityLocalTaskProvider",
  *     },
  *     "route_provider" = {
- *       "default" = "Drupal\entity\Routing\AdminHtmlRouteProvider",
+ *       "default" = "Drupal\commerce_store\StoreRouteProvider",
  *       "delete-multiple" = "Drupal\entity\Routing\DeleteMultipleRouteProvider",
  *     },
  *     "translation" = "Drupal\content_translation\ContentTranslationHandler"
@@ -66,6 +70,7 @@ use Drupal\Core\Entity\EntityChangedTrait;
  *     "langcode" = "langcode",
  *     "owner" = "uid",
  *     "uid" = "uid",
+ *     "published" = "status"
  *   },
  *   links = {
  *     "canonical" = "/store/{commerce_store}",
@@ -73,6 +78,8 @@ use Drupal\Core\Entity\EntityChangedTrait;
  *     "add-form" = "/store/add/{commerce_store_type}",
  *     "edit-form" = "/store/{commerce_store}/edit",
  *     "duplicate-form" = "/store/{commerce_store}/duplicate",
+ *     "enable-form" = "/store/{commerce_store}/enable",
+ *     "disable-form" = "/store/{commerce_store}/disable",
  *     "delete-form" = "/store/{commerce_store}/delete",
  *     "delete-multiple-form" = "/admin/commerce/config/stores/delete",
  *     "collection" = "/admin/commerce/config/stores",
@@ -85,6 +92,7 @@ class Store extends ContentEntityBase implements StoreInterface {
 
   use EntityOwnerTrait;
   use EntityChangedTrait;
+  use EntityPublishedTrait;
 
   /**
    * {@inheritdoc}
@@ -249,7 +257,7 @@ class Store extends ContentEntityBase implements StoreInterface {
    * {@inheritdoc}
    */
   public function getCreatedTime() {
-    return $this->get('created')->value;
+    return (int) $this->get('created')->value;
   }
 
   /**
@@ -291,6 +299,7 @@ class Store extends ContentEntityBase implements StoreInterface {
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
     $fields = parent::baseFieldDefinitions($entity_type);
     $fields += static::ownerBaseFieldDefinitions($entity_type);
+    $fields += static::publishedBaseFieldDefinitions($entity_type);
 
     $fields['type'] = BaseFieldDefinition::create('entity_reference')
       ->setLabel(t('Type'))
@@ -371,6 +380,7 @@ class Store extends ContentEntityBase implements StoreInterface {
         AddressField::ADDITIONAL_NAME => ['override' => FieldOverride::HIDDEN],
         AddressField::FAMILY_NAME => ['override' => FieldOverride::HIDDEN],
         AddressField::ORGANIZATION => ['override' => FieldOverride::HIDDEN],
+        AddressField::ADDRESS_LINE3 => ['override' => FieldOverride::HIDDEN],
       ])
       ->setDisplayOptions('form', [
         'type' => 'address_default',
@@ -428,6 +438,16 @@ class Store extends ContentEntityBase implements StoreInterface {
       ->setDescription(t('The time when the store was last edited.'))
       ->setTranslatable(TRUE);
 
+    $fields['status']
+      ->setLabel(t('Enabled'))
+      ->setDisplayOptions('form', [
+        'type' => 'boolean_checkbox',
+        'settings' => [
+          'display_label' => TRUE,
+        ],
+      ])
+      ->setDisplayConfigurable('form', TRUE);
+
     return $fields;
   }
 
@@ -455,7 +475,7 @@ class Store extends ContentEntityBase implements StoreInterface {
    *   The allowed values.
    */
   public static function getTimezones() {
-    return system_time_zones(NULL, TRUE);
+    return TimeZoneFormHelper::getOptionsListByRegion();
   }
 
   /**

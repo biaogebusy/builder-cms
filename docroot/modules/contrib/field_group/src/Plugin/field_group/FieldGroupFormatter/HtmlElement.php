@@ -2,10 +2,12 @@
 
 namespace Drupal\field_group\Plugin\field_group\FieldGroupFormatter;
 
-use Drupal\field_group\Element\HtmlElement as HtmlElementRenderElement;
 use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility\Xss;
 use Drupal\Core\Form\FormState;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\Template\Attribute;
+use Drupal\field_group\Element\HtmlElement as HtmlElementRenderElement;
 use Drupal\field_group\FieldGroupFormatterBase;
 
 /**
@@ -72,7 +74,7 @@ class HtmlElement extends FieldGroupFormatterBase {
     $element['#attributes'] = $element_attributes;
     if ($this->getSetting('show_label')) {
       $element['#title_element'] = $this->getSetting('label_element');
-      $element['#title'] = $this->getLabel();
+      $element['#title'] = $this->getSetting('label_as_html') ? Markup::create(Xss::filterAdmin($this->getLabel())) : Markup::create(Html::escape($this->getLabel()));
       // Prevent \Drupal\content_translation\ContentTranslationHandler::addTranslatabilityClue()
       // from adding an incorrect suffix to the field group title.
       $element['#multilingual'] = TRUE;
@@ -177,7 +179,6 @@ class HtmlElement extends FieldGroupFormatterBase {
       '#options' => [
         'none' => $this->t('None'),
         'collapsible' => $this->t('Collapsible'),
-        'blind' => $this->t('Blind'),
       ],
       '#default_value' => $this->getSetting('effect'),
       '#weight' => 6,

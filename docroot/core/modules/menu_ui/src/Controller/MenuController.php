@@ -6,7 +6,6 @@ use Drupal\Component\Utility\Xss;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Menu\MenuParentFormSelectorInterface;
 use Drupal\system\MenuInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -33,13 +32,6 @@ class MenuController extends ControllerBase {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static($container->get('menu.parent_form_selector'));
-  }
-
-  /**
    * Gets all the available menus and menu items as a JavaScript array.
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
@@ -50,7 +42,7 @@ class MenuController extends ControllerBase {
    */
   public function getParentOptions(Request $request) {
     $available_menus = [];
-    if ($menus = $request->request->get('menus')) {
+    if ($menus = $request->request->all('menus')) {
       foreach ($menus as $menu) {
         $available_menus[$menu] = $menu;
       }

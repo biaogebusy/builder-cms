@@ -92,12 +92,13 @@ trait ViewsReferenceTrait {
     $view_name = $field_value['target_id'] ?? NULL;
     $options = [];
     if ($view_name) {
-      // Extract the view id from the text.
-      preg_match('#\((.*?)\)#', $view_name, $match);
-      if (!empty($match)) {
-        $view_name = $match[1];
-      }
-      $options = $this->getViewDisplays($view_name);
+
+      // An entity reference might be 'Test (view) (test_view),
+      // where just 'test_view' should be retrieved.
+      $name_parts = explode('(', $view_name);
+      $last_part = array_pop($name_parts);
+      $last_part = rtrim($last_part, ')');
+      $options = $this->getViewDisplays($last_part);
     }
 
     $element['display_id'] = [
@@ -191,6 +192,25 @@ trait ViewsReferenceTrait {
     ] + $element;
 
     return $element;
+  }
+
+  /**
+   * Validate that a display ID is selected for the given View.
+   *
+   * @param array $field_values
+   *   The views reference field values.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   * @param string $key
+   *   The field name.
+   */
+  public static function validateDisplayId(array $field_values, FormStateInterface $form_state, string $key): void {
+    // The select widget nests the target ID which is only later
+    // fixed in the massaging of form values.
+    if (!empty($field_values[0]['target_id']) && empty($field_values[0]['display_id'])) {
+      $message = t('Views Reference Display ID is required.');
+      $form_state->setErrorByName($key . '][0][display_id', $message);
+    }
   }
 
   /**

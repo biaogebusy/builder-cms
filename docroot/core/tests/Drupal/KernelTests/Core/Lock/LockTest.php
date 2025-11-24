@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Lock;
 
+use Drupal\Core\Database\Database;
 use Drupal\Core\Lock\DatabaseLockBackend;
 use Drupal\KernelTests\KernelTestBase;
 
@@ -30,7 +33,7 @@ class LockTest extends KernelTestBase {
   /**
    * Tests backend release functionality.
    */
-  public function testBackendLockRelease() {
+  public function testBackendLockRelease(): void {
     $success = $this->lock->acquire('lock_a');
     $this->assertTrue($success, 'Could acquire first lock.');
 
@@ -70,7 +73,7 @@ class LockTest extends KernelTestBase {
   /**
    * Tests backend release functionality.
    */
-  public function testBackendLockReleaseAll() {
+  public function testBackendLockReleaseAll(): void {
     $success = $this->lock->acquire('lock_a');
     $this->assertTrue($success, 'Could acquire first lock.');
 
@@ -84,6 +87,17 @@ class LockTest extends KernelTestBase {
 
     $is_free = $this->lock->lockMayBeAvailable('lock_b');
     $this->assertTrue($is_free, 'Second lock has been released.');
+
+    // Test that the semaphore table having been removed does not cause
+    // exceptions.
+    $success = $this->lock->acquire('lock_a');
+    $this->assertTrue($success, 'Could re-acquire first lock.');
+
+    Database::getConnection()->schema()->dropTable('semaphore');
+    $this->lock->releaseAll();
+
+    $is_free = $this->lock->lockMayBeAvailable('lock_a');
+    $this->assertTrue($is_free, 'Re-acquired lock has been released.');
   }
 
 }

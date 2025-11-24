@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Functional;
 
 use Drupal\node\Entity\Node;
@@ -35,9 +37,7 @@ class TermTranslationFieldViewTest extends TaxonomyTestBase {
   protected $translatedTagName = 'TranslatedTagName';
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['language', 'content_translation', 'taxonomy'];
 
@@ -62,7 +62,7 @@ class TermTranslationFieldViewTest extends TaxonomyTestBase {
   /**
    * Tests if the translated taxonomy term is displayed.
    */
-  public function testTranslatedTaxonomyTermReferenceDisplay() {
+  public function testTranslatedTaxonomyTermReferenceDisplay(): void {
     $path = 'node/' . $this->node->id();
     $translation_path = $this->translateToLangcode . '/' . $path;
 

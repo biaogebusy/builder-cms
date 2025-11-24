@@ -4,7 +4,7 @@ dependencies:
   module:
     - node
 id: test_exposed_form_sort_items_per_page
-label: ''
+label: test_exposed_form_sort_items_per_page
 module: views
 description: ''
 tag: ''
@@ -50,6 +50,7 @@ display:
           order: asc
           expose:
             label: 'id'
+            field_identifier: id
           exposed: true
           plugin_id: standard
     display_plugin: default

@@ -7,14 +7,18 @@
 
 /**
  * Notes on how to use this file.
- * - When adding tests for changes to meta tags provided by a submodule, that
- *   submodule must be listed in the modules list below.
- * - It is easiest to not add meta tag default configuration changes here that
- *   depend upon submodules, it works better to make those changes in the
- *   appropriate update script.
- * - There is currently only one Metatag field defined, on the Article content
- *   type.
- * - Each meta tag value to be tested is added to the fields lower down.
+ *
+ * When adding tests for changes to meta tags provided by a submodule, that
+ * submodule must be listed in the modules list below.
+ *
+ * It is easiest to not add meta tag default configuration changes here that
+ * depend upon submodules, it works better to make those changes in the
+ * appropriate update script.
+ *
+ * There is currently only one Metatag field defined, on the Article content
+ * type.
+ *
+ * Each meta tag value to be tested is added to the fields lower down.
  *
  * @todo Finish documenting this file.
  * @todo Expand to handle multiple languages.
@@ -24,14 +28,20 @@
  * @todo Work out a better way of handling field specification changes.
  */
 
-use Drupal\Core\Database\Database;
 use Drupal\Component\Serialization\Yaml;
 use Drupal\Component\Uuid\Php as Uuid;
+use Drupal\Core\Database\Database;
 
 $config_fields = ['collection', 'name', 'data'];
 $keyvalue_fields = ['collection', 'name', 'value'];
 
 $connection = Database::getConnection();
+
+// Classes that are allowed in serialized arrays.
+$allowed_classes = [
+  'Drupal\Core\Field\BaseFieldDefinition',
+  'Drupal\field\Entity\FieldStorageConfig',
+];
 
 // Enable Metatag (and Token).
 $extensions = $connection->select('config')
@@ -40,7 +50,7 @@ $extensions = $connection->select('config')
   ->condition('name', 'core.extension')
   ->execute()
   ->fetchField();
-$extensions = unserialize($extensions, ['allowed_classes' => []]);
+$extensions = unserialize($extensions, ['allowed_classes' => FALSE]);
 $extensions['module']['metatag'] = 0;
 /**
  * Additional submodules must be added here if their meta tags are being tested.
@@ -76,7 +86,7 @@ $data = $connection->select('key_value')
   ->condition('name', 'existing_updates')
   ->execute()
   ->fetchField();
-$data = unserialize($data, ['allowed_classes' => []]);
+$data = unserialize($data, ['allowed_classes' => FALSE]);
 $data[] = 'metatag_post_update_convert_author_config';
 $data[] = 'metatag_post_update_convert_author_data';
 $data[] = 'metatag_post_update_convert_mask_icon_to_array_values';
@@ -376,7 +386,7 @@ $key_value = $connection->select('key_value')
   ->condition('name', 'node')
   ->execute()
   ->fetchField();
-$key_value = unserialize($key_value, ['allowed_classes' => []]);
+$key_value = unserialize($key_value, ['allowed_classes' => FALSE]);
 $key_value['field_meta_tags'] = [
   'type' => 'metatag',
   'bundles' => [
@@ -395,19 +405,20 @@ $connection->update('key_value')
 // messing with a serialized object.
 $key_value = $connection->select('key_value')
   ->fields('key_value', ['value'])
-    ->condition('collection', 'entity.definitions.installed')
-    ->condition('name', 'node.field_storage_definitions')
+  ->condition('collection', 'entity.definitions.installed')
+  ->condition('name', 'node.field_storage_definitions')
   ->execute()
   ->fetchField();
-$key_value = unserialize($key_value, ['allowed_classes' => [
-  'Drupal\Core\Field\BaseFieldDefinition',
-  'Drupal\field\Entity\FieldStorageConfig',
-]]);
-$key_value['field_meta_tags'] = unserialize('O:38:"Drupal\field\Entity\FieldStorageConfig":35:{s:5:"' . "\0" . '*' . "\0" . 'id";s:20:"node.field_meta_tags";s:13:"' . "\0" . '*' . "\0" . 'field_name";s:15:"field_meta_tags";s:14:"' . "\0" . '*' . "\0" . 'entity_type";s:4:"node";s:7:"' . "\0" . '*' . "\0" . 'type";s:7:"metatag";s:9:"' . "\0" . '*' . "\0" . 'module";s:7:"metatag";s:11:"' . "\0" . '*' . "\0" . 'settings";a:0:{}s:14:"' . "\0" . '*' . "\0" . 'cardinality";i:1;s:15:"' . "\0" . '*' . "\0" . 'translatable";b:1;s:9:"' . "\0" . '*' . "\0" . 'locked";b:0;s:25:"' . "\0" . '*' . "\0" . 'persist_with_no_fields";b:0;s:14:"custom_storage";b:0;s:10:"' . "\0" . '*' . "\0" . 'indexes";a:0:{}s:10:"' . "\0" . '*' . "\0" . 'deleted";b:0;s:13:"' . "\0" . '*' . "\0" . 'originalId";s:20:"node.field_meta_tags";s:9:"' . "\0" . '*' . "\0" . 'status";b:1;s:7:"' . "\0" . '*' . "\0" . 'uuid";s:36:"6aaab457-3728-4319-afa3-938e753ed342";s:11:"' . "\0" . '*' . "\0" . 'langcode";s:2:"en";s:23:"' . "\0" . '*' . "\0" . 'third_party_settings";a:0:{}s:8:"' . "\0" . '*' . "\0" . '_core";a:0:{}s:14:"' . "\0" . '*' . "\0" . 'trustedData";b:0;s:15:"' . "\0" . '*' . "\0" . 'entityTypeId";s:20:"field_storage_config";s:15:"' . "\0" . '*' . "\0" . 'enforceIsNew";N;s:12:"' . "\0" . '*' . "\0" . 'typedData";N;s:16:"' . "\0" . '*' . "\0" . 'cacheContexts";a:0:{}s:12:"' . "\0" . '*' . "\0" . 'cacheTags";a:0:{}s:14:"' . "\0" . '*' . "\0" . 'cacheMaxAge";i:-1;s:14:"' . "\0" . '*' . "\0" . '_serviceIds";a:0:{}s:18:"' . "\0" . '*' . "\0" . '_entityStorages";a:0:{}s:15:"' . "\0" . '*' . "\0" . 'dependencies";a:1:{s:6:"module";a:2:{i:0;s:7:"metatag";i:1;s:4:"node";}}s:12:"' . "\0" . '*' . "\0" . 'isSyncing";b:0;s:18:"cardinality_number";i:1;s:6:"submit";O:48:"Drupal\Core\StringTranslation\TranslatableMarkup":3:{s:9:"' . "\0" . '*' . "\0" . 'string";s:19:"Save field settings";s:12:"' . "\0" . '*' . "\0" . 'arguments";a:0:{}s:10:"' . "\0" . '*' . "\0" . 'options";a:0:{}}s:13:"form_build_id";s:48:"form-LK9HeARuUzcwIVvCAA4jG2MscwGjLAUJ9GLYxuzSo7o";s:10:"form_token";s:43:"eengi9MkLSqT-YFMEKD18fJ6cOvVyS_XRq1He7qhq4s";s:7:"form_id";s:30:"field_storage_config_edit_form";}}');
+$key_value = unserialize($key_value, [
+  'allowed_classes' => $allowed_classes,
+]);
+$key_value['field_meta_tags'] = @unserialize('O:38:"Drupal\field\Entity\FieldStorageConfig":35:{s:5:"' . "\0" . '*' . "\0" . 'id";s:20:"node.field_meta_tags";s:13:"' . "\0" . '*' . "\0" . 'field_name";s:15:"field_meta_tags";s:14:"' . "\0" . '*' . "\0" . 'entity_type";s:4:"node";s:7:"' . "\0" . '*' . "\0" . 'type";s:7:"metatag";s:9:"' . "\0" . '*' . "\0" . 'module";s:7:"metatag";s:11:"' . "\0" . '*' . "\0" . 'settings";a:0:{}s:14:"' . "\0" . '*' . "\0" . 'cardinality";i:1;s:15:"' . "\0" . '*' . "\0" . 'translatable";b:1;s:9:"' . "\0" . '*' . "\0" . 'locked";b:0;s:25:"' . "\0" . '*' . "\0" . 'persist_with_no_fields";b:0;s:14:"custom_storage";b:0;s:10:"' . "\0" . '*' . "\0" . 'indexes";a:0:{}s:10:"' . "\0" . '*' . "\0" . 'deleted";b:0;s:13:"' . "\0" . '*' . "\0" . 'originalId";s:20:"node.field_meta_tags";s:9:"' . "\0" . '*' . "\0" . 'status";b:1;s:7:"' . "\0" . '*' . "\0" . 'uuid";s:36:"6aaab457-3728-4319-afa3-938e753ed342";s:11:"' . "\0" . '*' . "\0" . 'langcode";s:2:"en";s:23:"' . "\0" . '*' . "\0" . 'third_party_settings";a:0:{}s:8:"' . "\0" . '*' . "\0" . '_core";a:0:{}s:14:"' . "\0" . '*' . "\0" . 'trustedData";b:0;s:15:"' . "\0" . '*' . "\0" . 'entityTypeId";s:20:"field_storage_config";s:15:"' . "\0" . '*' . "\0" . 'enforceIsNew";N;s:12:"' . "\0" . '*' . "\0" . 'typedData";N;s:16:"' . "\0" . '*' . "\0" . 'cacheContexts";a:0:{}s:12:"' . "\0" . '*' . "\0" . 'cacheTags";a:0:{}s:14:"' . "\0" . '*' . "\0" . 'cacheMaxAge";i:-1;s:14:"' . "\0" . '*' . "\0" . '_serviceIds";a:0:{}s:18:"' . "\0" . '*' . "\0" . '_entityStorages";a:0:{}s:15:"' . "\0" . '*' . "\0" . 'dependencies";a:1:{s:6:"module";a:2:{i:0;s:7:"metatag";i:1;s:4:"node";}}s:12:"' . "\0" . '*' . "\0" . 'isSyncing";b:0;s:18:"cardinality_number";i:1;s:6:"submit";O:48:"Drupal\Core\StringTranslation\TranslatableMarkup":3:{s:9:"' . "\0" . '*' . "\0" . 'string";s:19:"Save field settings";s:12:"' . "\0" . '*' . "\0" . 'arguments";a:0:{}s:10:"' . "\0" . '*' . "\0" . 'options";a:0:{}}s:13:"form_build_id";s:48:"form-LK9HeARuUzcwIVvCAA4jG2MscwGjLAUJ9GLYxuzSo7o";s:10:"form_token";s:43:"eengi9MkLSqT-YFMEKD18fJ6cOvVyS_XRq1He7qhq4s";s:7:"form_id";s:30:"field_storage_config_edit_form";}}', [
+  'allowed_classes' => $allowed_classes,
+]);
 $connection->update('key_value')
   ->fields(['value' => serialize($key_value)])
-    ->condition('collection', 'entity.definitions.installed')
-    ->condition('name', 'node.field_storage_definitions')
+  ->condition('collection', 'entity.definitions.installed')
+  ->condition('name', 'node.field_storage_definitions')
   ->execute();
 
 $connection->schema()->createTable('node__field_meta_tags', [
@@ -535,262 +546,262 @@ $connection->schema()->createTable('node_revision__field_meta_tags', [
 // Create a node with values.
 // @todo Create a few more.
 $connection->insert('comment_entity_statistics')
-->fields([
-  'entity_id',
-  'entity_type',
-  'field_name',
-  'cid',
-  'last_comment_timestamp',
-  'last_comment_name',
-  'last_comment_uid',
-  'comment_count',
-])
-->values([
-  'entity_id' => '1',
-  'entity_type' => 'node',
-  'field_name' => 'comment',
-  'cid' => '0',
-  'last_comment_timestamp' => '1669762329',
-  'last_comment_name' => NULL,
-  'last_comment_uid' => '1',
-  'comment_count' => '0',
-])
-->execute();
+  ->fields([
+    'entity_id',
+    'entity_type',
+    'field_name',
+    'cid',
+    'last_comment_timestamp',
+    'last_comment_name',
+    'last_comment_uid',
+    'comment_count',
+  ])
+  ->values([
+    'entity_id' => '1',
+    'entity_type' => 'node',
+    'field_name' => 'comment',
+    'cid' => '0',
+    'last_comment_timestamp' => '1669762329',
+    'last_comment_name' => NULL,
+    'last_comment_uid' => '1',
+    'comment_count' => '0',
+  ])
+  ->execute();
 $connection->insert('node')
-->fields([
-  'nid',
-  'vid',
-  'type',
-  'uuid',
-  'langcode',
-])
-->values([
-  'nid' => '1',
-  'vid' => '1',
-  'type' => 'article',
-  'uuid' => 'fc2c9449-df04-4d41-beea-5a5b39bf6b89',
-  'langcode' => 'en',
-])
-->execute();
+  ->fields([
+    'nid',
+    'vid',
+    'type',
+    'uuid',
+    'langcode',
+  ])
+  ->values([
+    'nid' => '1',
+    'vid' => '1',
+    'type' => 'article',
+    'uuid' => 'fc2c9449-df04-4d41-beea-5a5b39bf6b89',
+    'langcode' => 'en',
+  ])
+  ->execute();
 $connection->insert('node__comment')
-->fields([
-  'bundle',
-  'deleted',
-  'entity_id',
-  'revision_id',
-  'langcode',
-  'delta',
-  'comment_status',
-])
-->values([
-  'bundle' => 'article',
-  'deleted' => '0',
-  'entity_id' => '1',
-  'revision_id' => '1',
-  'langcode' => 'en',
-  'delta' => '0',
-  'comment_status' => '2',
-])
-->execute();
+  ->fields([
+    'bundle',
+    'deleted',
+    'entity_id',
+    'revision_id',
+    'langcode',
+    'delta',
+    'comment_status',
+  ])
+  ->values([
+    'bundle' => 'article',
+    'deleted' => '0',
+    'entity_id' => '1',
+    'revision_id' => '1',
+    'langcode' => 'en',
+    'delta' => '0',
+    'comment_status' => '2',
+  ])
+  ->execute();
 $connection->insert('node__field_meta_tags')
-->fields([
-  'bundle',
-  'deleted',
-  'entity_id',
-  'revision_id',
-  'langcode',
-  'delta',
-  'field_meta_tags_value',
-])
-->values([
-  'bundle' => 'article',
-  'deleted' => '0',
-  'entity_id' => '1',
-  'revision_id' => '1',
-  'langcode' => 'en',
-  'delta' => '0',
+  ->fields([
+    'bundle',
+    'deleted',
+    'entity_id',
+    'revision_id',
+    'langcode',
+    'delta',
+    'field_meta_tags_value',
+  ])
+  ->values([
+    'bundle' => 'article',
+    'deleted' => '0',
+    'entity_id' => '1',
+    'revision_id' => '1',
+    'langcode' => 'en',
+    'delta' => '0',
   /**
    * Expand this list as new meta tags need to be tested.
    */
-  'field_meta_tags_value' => serialize([
-    'description' => 'This is a Metatag v1 meta tag.',
-    'title' => 'Testing | [site:name]',
-    'robots' => 'index, nofollow, noarchive',
+    'field_meta_tags_value' => serialize([
+      'description' => 'This is a Metatag v1 meta tag.',
+      'title' => 'Testing | [site:name]',
+      'robots' => 'index, nofollow, noarchive',
 
     // For #3065441.
-    'google_plus_author' => 'GooglePlus Author tag test value for #3065441.',
-    'google_plus_description' => 'GooglePlus Description tag test value for #3065441.',
-    'google_plus_name' => 'GooglePlus Name tag test value for #3065441.',
-    'google_plus_publisher' => 'GooglePlus Publisher tag test value for #3065441.',
+      'google_plus_author' => 'GooglePlus Author tag test value for #3065441.',
+      'google_plus_description' => 'GooglePlus Description tag test value for #3065441.',
+      'google_plus_name' => 'GooglePlus Name tag test value for #3065441.',
+      'google_plus_publisher' => 'GooglePlus Publisher tag test value for #3065441.',
 
     // For #2973351.
-    'news_keywords' => 'News Keywords tag test value for #2973351.',
-    'standout' => 'Standout tag test value for #2973351.',
+      'news_keywords' => 'News Keywords tag test value for #2973351.',
+      'standout' => 'Standout tag test value for #2973351.',
 
     // For #3132065.
-    'twitter_cards_data1' => 'Data1 tag test for #3132065.',
-    'twitter_cards_data2' => 'Data2 tag test for #3132065.',
-    'twitter_cards_dnt' => 'Do Not Track tag test for #3132065.',
-    'twitter_cards_gallery_image0' => 'Gallery Image0 tag test for #3132065.',
-    'twitter_cards_gallery_image1' => 'Gallery Image1 tag test for #3132065.',
-    'twitter_cards_gallery_image2' => 'Gallery Image2 tag test for #3132065.',
-    'twitter_cards_gallery_image3' => 'Gallery Image3 tag test for #3132065.',
-    'twitter_cards_image_height' => 'Image Height tag test for #3132065.',
-    'twitter_cards_image_width' => 'Image Width tag test for #3132065.',
-    'twitter_cards_label1' => 'Label1 tag test for #3132065.',
-    'twitter_cards_label2' => 'Label2 tag test for #3132065.',
-    'twitter_cards_page_url' => 'Page URL tag test for #3132065.',
+      'twitter_cards_data1' => 'Data1 tag test for #3132065.',
+      'twitter_cards_data2' => 'Data2 tag test for #3132065.',
+      'twitter_cards_dnt' => 'Do Not Track tag test for #3132065.',
+      'twitter_cards_gallery_image0' => 'Gallery Image0 tag test for #3132065.',
+      'twitter_cards_gallery_image1' => 'Gallery Image1 tag test for #3132065.',
+      'twitter_cards_gallery_image2' => 'Gallery Image2 tag test for #3132065.',
+      'twitter_cards_gallery_image3' => 'Gallery Image3 tag test for #3132065.',
+      'twitter_cards_image_height' => 'Image Height tag test for #3132065.',
+      'twitter_cards_image_width' => 'Image Width tag test for #3132065.',
+      'twitter_cards_label1' => 'Label1 tag test for #3132065.',
+      'twitter_cards_label2' => 'Label2 tag test for #3132065.',
+      'twitter_cards_page_url' => 'Page URL tag test for #3132065.',
 
     // For #3217263.
-    'content_language' => 'Content Language tag test for #3217263.',
+      'content_language' => 'Content Language tag test for #3217263.',
 
     // For #3132062.
-    'twitter_cards_type' => 'gallery',
+      'twitter_cards_type' => 'gallery',
 
     // For #3361816.
-    'google_rating' => 'Google Rating tag test for #3361816',
-  ]),
-])
-->execute();
+      'google_rating' => 'Google Rating tag test for #3361816',
+    ]),
+  ])
+  ->execute();
 $connection->insert('node_field_data')
-->fields([
-  'nid',
-  'vid',
-  'type',
-  'title',
-  'created',
-  'changed',
-  'promote',
-  'sticky',
-  'revision_translation_affected',
-  'default_langcode',
-  'langcode',
-  'status',
-  'uid',
-])
-->values([
-  'nid' => '1',
-  'vid' => '1',
-  'type' => 'article',
-  'title' => 'Testing',
-  'created' => '1669762311',
-  'changed' => '1669762329',
-  'promote' => '1',
-  'sticky' => '0',
-  'revision_translation_affected' => '1',
-  'default_langcode' => '1',
-  'langcode' => 'en',
-  'status' => '1',
-  'uid' => '1',
-])
-->execute();
+  ->fields([
+    'nid',
+    'vid',
+    'type',
+    'title',
+    'created',
+    'changed',
+    'promote',
+    'sticky',
+    'revision_translation_affected',
+    'default_langcode',
+    'langcode',
+    'status',
+    'uid',
+  ])
+  ->values([
+    'nid' => '1',
+    'vid' => '1',
+    'type' => 'article',
+    'title' => 'Testing',
+    'created' => '1669762311',
+    'changed' => '1669762329',
+    'promote' => '1',
+    'sticky' => '0',
+    'revision_translation_affected' => '1',
+    'default_langcode' => '1',
+    'langcode' => 'en',
+    'status' => '1',
+    'uid' => '1',
+  ])
+  ->execute();
 $connection->insert('node_field_revision')
-->fields([
-  'nid',
-  'vid',
-  'title',
-  'created',
-  'changed',
-  'promote',
-  'sticky',
-  'revision_translation_affected',
-  'default_langcode',
-  'langcode',
-  'status',
-  'uid',
-])
-->values([
-  'nid' => '1',
-  'vid' => '1',
-  'title' => 'Testing',
-  'created' => '1669762311',
-  'changed' => '1669762329',
-  'promote' => '1',
-  'sticky' => '0',
-  'revision_translation_affected' => '1',
-  'default_langcode' => '1',
-  'langcode' => 'en',
-  'status' => '1',
-  'uid' => '1',
-])
-->execute();
+  ->fields([
+    'nid',
+    'vid',
+    'title',
+    'created',
+    'changed',
+    'promote',
+    'sticky',
+    'revision_translation_affected',
+    'default_langcode',
+    'langcode',
+    'status',
+    'uid',
+  ])
+  ->values([
+    'nid' => '1',
+    'vid' => '1',
+    'title' => 'Testing',
+    'created' => '1669762311',
+    'changed' => '1669762329',
+    'promote' => '1',
+    'sticky' => '0',
+    'revision_translation_affected' => '1',
+    'default_langcode' => '1',
+    'langcode' => 'en',
+    'status' => '1',
+    'uid' => '1',
+  ])
+  ->execute();
 $connection->insert('node_revision__comment')
-->fields([
-  'bundle',
-  'deleted',
-  'entity_id',
-  'revision_id',
-  'langcode',
-  'delta',
-  'comment_status',
-])
-->values([
-  'bundle' => 'article',
-  'deleted' => '0',
-  'entity_id' => '1',
-  'revision_id' => '1',
-  'langcode' => 'en',
-  'delta' => '0',
-  'comment_status' => '2',
-])
-->execute();
+  ->fields([
+    'bundle',
+    'deleted',
+    'entity_id',
+    'revision_id',
+    'langcode',
+    'delta',
+    'comment_status',
+  ])
+  ->values([
+    'bundle' => 'article',
+    'deleted' => '0',
+    'entity_id' => '1',
+    'revision_id' => '1',
+    'langcode' => 'en',
+    'delta' => '0',
+    'comment_status' => '2',
+  ])
+  ->execute();
 $connection->insert('node_revision__field_meta_tags')
-->fields([
-  'bundle',
-  'deleted',
-  'entity_id',
-  'revision_id',
-  'langcode',
-  'delta',
-  'field_meta_tags_value',
-])
-->values([
-  'bundle' => 'article',
-  'deleted' => '0',
-  'entity_id' => '1',
-  'revision_id' => '1',
-  'langcode' => 'en',
-  'delta' => '0',
+  ->fields([
+    'bundle',
+    'deleted',
+    'entity_id',
+    'revision_id',
+    'langcode',
+    'delta',
+    'field_meta_tags_value',
+  ])
+  ->values([
+    'bundle' => 'article',
+    'deleted' => '0',
+    'entity_id' => '1',
+    'revision_id' => '1',
+    'langcode' => 'en',
+    'delta' => '0',
   /**
    * Expand this list as new meta tags need to be tested.
    */
-  'field_meta_tags_value' => serialize([
-    'description' => 'This is a Metatag v1 meta tag.',
-    'title' => 'Testing | [site:name]',
-    'robots' => 'index, nofollow, noarchive',
+    'field_meta_tags_value' => serialize([
+      'description' => 'This is a Metatag v1 meta tag.',
+      'title' => 'Testing | [site:name]',
+      'robots' => 'index, nofollow, noarchive',
 
     // For #3065441.
-    'google_plus_author' => 'GooglePlus Author tag test value for #3065441.',
-    'google_plus_description' => 'GooglePlus Description tag test value for #3065441.',
-    'google_plus_name' => 'GooglePlus Name tag test value for #3065441.',
-    'google_plus_publisher' => 'GooglePlus Publisher tag test value for #3065441.',
+      'google_plus_author' => 'GooglePlus Author tag test value for #3065441.',
+      'google_plus_description' => 'GooglePlus Description tag test value for #3065441.',
+      'google_plus_name' => 'GooglePlus Name tag test value for #3065441.',
+      'google_plus_publisher' => 'GooglePlus Publisher tag test value for #3065441.',
 
     // For #2973351.
-    'news_keywords' => 'News Keywords tag test value for #2973351.',
-    'standout' => 'Standout tag test value for #2973351.',
+      'news_keywords' => 'News Keywords tag test value for #2973351.',
+      'standout' => 'Standout tag test value for #2973351.',
 
     // For #3132065.
-    'twitter_cards_data1' => 'Data1 tag test for #3132065.',
-    'twitter_cards_data2' => 'Data2 tag test for #3132065.',
-    'twitter_cards_dnt' => 'Do Not Track tag test for #3132065.',
-    'twitter_cards_gallery_image0' => 'Gallery Image0 tag test for #3132065.',
-    'twitter_cards_gallery_image1' => 'Gallery Image1 tag test for #3132065.',
-    'twitter_cards_gallery_image2' => 'Gallery Image2 tag test for #3132065.',
-    'twitter_cards_gallery_image3' => 'Gallery Image3 tag test for #3132065.',
-    'twitter_cards_image_height' => 'Image Height tag test for #3132065.',
-    'twitter_cards_image_width' => 'Image Width tag test for #3132065.',
-    'twitter_cards_label1' => 'Label1 tag test for #3132065.',
-    'twitter_cards_label2' => 'Label2 tag test for #3132065.',
-    'twitter_cards_page_url' => 'Page URL tag test for #3132065.',
+      'twitter_cards_data1' => 'Data1 tag test for #3132065.',
+      'twitter_cards_data2' => 'Data2 tag test for #3132065.',
+      'twitter_cards_dnt' => 'Do Not Track tag test for #3132065.',
+      'twitter_cards_gallery_image0' => 'Gallery Image0 tag test for #3132065.',
+      'twitter_cards_gallery_image1' => 'Gallery Image1 tag test for #3132065.',
+      'twitter_cards_gallery_image2' => 'Gallery Image2 tag test for #3132065.',
+      'twitter_cards_gallery_image3' => 'Gallery Image3 tag test for #3132065.',
+      'twitter_cards_image_height' => 'Image Height tag test for #3132065.',
+      'twitter_cards_image_width' => 'Image Width tag test for #3132065.',
+      'twitter_cards_label1' => 'Label1 tag test for #3132065.',
+      'twitter_cards_label2' => 'Label2 tag test for #3132065.',
+      'twitter_cards_page_url' => 'Page URL tag test for #3132065.',
 
     // For #3217263.
-    'content_language' => 'Content Language tag test for #3217263.',
+      'content_language' => 'Content Language tag test for #3217263.',
 
     // For #3132062.
-    'twitter_cards_type' => 'gallery',
+      'twitter_cards_type' => 'gallery',
 
     // For #3361816.
-    'google_rating' => 'Google Rating tag test for #3361816',
-  ]),
-])
-->execute();
+      'google_rating' => 'Google Rating tag test for #3361816',
+    ]),
+  ])
+  ->execute();

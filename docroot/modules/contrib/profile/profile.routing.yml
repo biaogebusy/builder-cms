@@ -32,7 +32,7 @@ profile.user_page.add_form:
   path: '/user/{user}/{profile_type}/add'
   defaults:
     _controller: '\Drupal\profile\Controller\UserController::addForm'
-    _title: 'Add profile'
+    _title_callback: '\Drupal\profile\Controller\UserController::addFormTitle'
   requirements:
     _profile_type_multiple: 'TRUE'
     _custom_access: '\Drupal\profile\Controller\UserController::checkCreateAccess'

@@ -4,8 +4,8 @@ namespace Drupal\field_permissions;
 
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\field\FieldStorageConfigInterface;
 
 /**
  * Implement FieldPermission Interface.
@@ -24,7 +24,7 @@ interface FieldPermissionsServiceInterface {
    *   An array keyed by the permission machine name, with label and description
    *   keys. Note that this machine name doesn't include the field name.
    *
-   * @todo This is really only releavant to the custom field permission type
+   * @todo This is really only relevant to the custom field permission type
    *   plugin. However, since it is used in the report page, it would be
    *   difficult to abstract down to the plugin level the way the report
    *   currently works.
@@ -53,10 +53,10 @@ interface FieldPermissionsServiceInterface {
   /**
    * Get the permission type for a given field.
    *
-   * @param \Drupal\field\FieldStorageConfigInterface $field
+   * @param \Drupal\Core\Field\FieldStorageDefinitionInterface $field
    *   The field to return permissions for.
    */
-  public function fieldGetPermissionType(FieldStorageConfigInterface $field);
+  public function fieldGetPermissionType(FieldStorageDefinitionInterface $field);
 
   /**
    * Field is attached to comment entity.
@@ -70,7 +70,7 @@ interface FieldPermissionsServiceInterface {
   public static function isCommentField(FieldDefinitionInterface $field_definition);
 
   /**
-   * Get access for field by operations and account permisisons.
+   * Get access for field by operations and account permissions.
    *
    * @param string $operation
    *   String operation on field.

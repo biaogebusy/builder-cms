@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Enhancer;
 
 use Drupal\Core\Routing\Enhancer\ParamConversionEnhancer;
 use Drupal\Tests\UnitTestCase;
 use Drupal\Core\Routing\RouteObjectInterface;
-use Symfony\Component\HttpFoundation\ParameterBag;
+use Symfony\Component\HttpFoundation\InputBag;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Route;
 
@@ -38,7 +40,7 @@ class ParamConversionEnhancerTest extends UnitTestCase {
   /**
    * @covers ::enhance
    */
-  public function testEnhance() {
+  public function testEnhance(): void {
     $route = new Route('/test/{id}/{literal}/{null}');
 
     $raw_variables = [
@@ -52,7 +54,7 @@ class ParamConversionEnhancerTest extends UnitTestCase {
 
     $expected = $defaults;
     $expected['id'] = 'something_better!';
-    $expected['_raw_variables'] = new ParameterBag($raw_variables);
+    $expected['_raw_variables'] = new InputBag($raw_variables);
 
     $this->paramConverterManager->expects($this->once())
       ->method('convert')
@@ -73,7 +75,7 @@ class ParamConversionEnhancerTest extends UnitTestCase {
   /**
    * @covers ::copyRawVariables
    */
-  public function testCopyRawVariables() {
+  public function testCopyRawVariables(): void {
     $route = new Route('/test/{id}');
     $route->setDefault('node_type', 'page');
     $defaults = [
@@ -91,8 +93,8 @@ class ParamConversionEnhancerTest extends UnitTestCase {
 
         return $defaults;
       });
-    $expected = new ParameterBag([
-      'id' => 1,
+    $expected = new InputBag([
+      'id' => '1',
       'node_type' => 'page',
     ]);
     $result = $this->paramConversionEnhancer->enhance($defaults, new Request());

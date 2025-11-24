@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Functional\Views;
 
 /**
@@ -10,9 +12,7 @@ namespace Drupal\Tests\comment\Functional\Views;
 class NodeCommentsTest extends CommentTestBase {
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['history'];
 
@@ -31,7 +31,7 @@ class NodeCommentsTest extends CommentTestBase {
   /**
    * Tests the new comments field plugin.
    */
-  public function testNewComments() {
+  public function testNewComments(): void {
     $this->drupalGet('test-new-comments');
     $this->assertSession()->statusCodeEquals(200);
     $new_comments = $this->cssSelect(".views-field-new-comments a:contains('1')");
@@ -41,7 +41,7 @@ class NodeCommentsTest extends CommentTestBase {
   /**
    * Test the comment count field.
    */
-  public function testCommentCount() {
+  public function testCommentCount(): void {
     $this->drupalGet('test-comment-count');
     $this->assertSession()->statusCodeEquals(200);
     $this->assertCount(2, $this->cssSelect('.views-row'));

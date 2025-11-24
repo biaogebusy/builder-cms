@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\file\Kernel;
 
 use Drupal\Core\Database\Database;
@@ -20,7 +22,7 @@ class UsageTest extends FileManagedUnitTestBase {
   /**
    * Tests \Drupal\file\FileUsage\DatabaseFileUsageBackend::listUsage().
    */
-  public function testGetUsage() {
+  public function testGetUsage(): void {
     $file = $this->createFile();
     $connection = Database::getConnection();
     $connection->insert('file_usage')
@@ -54,7 +56,7 @@ class UsageTest extends FileManagedUnitTestBase {
   /**
    * Tests \Drupal\file\FileUsage\DatabaseFileUsageBackend::add().
    */
-  public function testAddUsage() {
+  public function testAddUsage(): void {
     $file = $this->createFile();
     $file_usage = $this->container->get('file.usage');
     $file_usage->add($file, 'testing', 'foo', 1);
@@ -80,7 +82,7 @@ class UsageTest extends FileManagedUnitTestBase {
   /**
    * Tests file usage deletion when files are made temporary.
    */
-  public function testRemoveUsageTemporary() {
+  public function testRemoveUsageTemporary(): void {
     $this->config('file.settings')
       ->set('make_unused_managed_files_temporary', TRUE)
       ->save();
@@ -91,7 +93,7 @@ class UsageTest extends FileManagedUnitTestBase {
   /**
    * Tests file usage deletion when files are made temporary.
    */
-  public function testRemoveUsageNonTemporary() {
+  public function testRemoveUsageNonTemporary(): void {
     $this->config('file.settings')
       ->set('make_unused_managed_files_temporary', FALSE)
       ->save();
@@ -163,7 +165,7 @@ class UsageTest extends FileManagedUnitTestBase {
     $connection->update('file_managed')
       ->fields([
         'status' => 0,
-        'changed' => REQUEST_TIME - $this->config('system.file')->get('temporary_maximum_age') - 1,
+        'changed' => \Drupal::time()->getRequestTime() - $this->config('system.file')->get('temporary_maximum_age') - 1,
       ])
       ->condition('fid', $temp_old->id())
       ->execute();
@@ -180,7 +182,7 @@ class UsageTest extends FileManagedUnitTestBase {
     // Permanent file that is old.
     $perm_old = $fileRepository->writeData('', $destination);
     $connection->update('file_managed')
-      ->fields(['changed' => REQUEST_TIME - $this->config('system.file')->get('temporary_maximum_age') - 1])
+      ->fields(['changed' => \Drupal::time()->getRequestTime() - $this->config('system.file')->get('temporary_maximum_age') - 1])
       ->condition('fid', $temp_old->id())
       ->execute();
     $this->assertFileExists($perm_old->getFileUri());
@@ -194,7 +196,7 @@ class UsageTest extends FileManagedUnitTestBase {
   /**
    * Ensure that temporary files are removed by default.
    */
-  public function testTempFileCleanupDefault() {
+  public function testTempFileCleanupDefault(): void {
     [$temp_old, $temp_new, $perm_old, $perm_new] = $this->createTempFiles();
 
     // Run cron and then ensure that only the old, temp file was deleted.
@@ -208,7 +210,7 @@ class UsageTest extends FileManagedUnitTestBase {
   /**
    * Ensure that temporary files are kept as configured.
    */
-  public function testTempFileNoCleanup() {
+  public function testTempFileNoCleanup(): void {
     [$temp_old, $temp_new, $perm_old, $perm_new] = $this->createTempFiles();
 
     // Set the max age to 0, meaning no temporary files will be deleted.
@@ -227,7 +229,7 @@ class UsageTest extends FileManagedUnitTestBase {
   /**
    * Ensure that temporary files are kept as configured.
    */
-  public function testTempFileCustomCleanup() {
+  public function testTempFileCustomCleanup(): void {
     [$temp_old, $temp_new, $perm_old, $perm_new] = $this->createTempFiles();
 
     // Set the max age to older than default.
@@ -246,7 +248,7 @@ class UsageTest extends FileManagedUnitTestBase {
   /**
    * Tests file usage with translated entities.
    */
-  public function testFileUsageWithEntityTranslation() {
+  public function testFileUsageWithEntityTranslation(): void {
     /** @var \Drupal\file\FileUsage\FileUsageInterface $file_usage */
     $file_usage = $this->container->get('file.usage');
 
@@ -254,11 +256,19 @@ class UsageTest extends FileManagedUnitTestBase {
     $this->installEntitySchema('node');
     $this->installSchema('node', ['node_access']);
 
-    // Activate English and Romanian languages.
-    ConfigurableLanguage::create(['id' => 'en'])->save();
-    ConfigurableLanguage::create(['id' => 'ro'])->save();
+    ConfigurableLanguage::create([
+      'id' => 'en',
+      'label' => 'English',
+    ])->save();
+    ConfigurableLanguage::create([
+      'id' => 'ro',
+      'label' => 'Romanian',
+    ])->save();
 
-    NodeType::create(['type' => 'page'])->save();
+    NodeType::create([
+      'type' => 'page',
+      'name' => 'Page',
+    ])->save();
     ContentLanguageSettings::loadByEntityTypeBundle('node', 'page')
       ->setLanguageAlterable(FALSE)
       ->setDefaultLangcode('en')

@@ -1,17 +1,17 @@
 <?php
 
-namespace Drupal\Tests\vem_embed_media\Functional;
+namespace Drupal\Tests\vem_migrate_oembed\Functional;
 
-use Drupal\media\Entity\MediaType;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\media\Traits\MediaTypeCreationTrait;
+use Drupal\media\Entity\MediaType;
 
 /**
  * Tests the VEM to OEmbed migration.
  *
- * @group vem_embed_media
+ * @group vem_migrate_oembed
  */
-class oEmbedUpdateTest extends BrowserTestBase {
+class OEmbedUpdateTest extends BrowserTestBase {
 
   use MediaTypeCreationTrait;
 
@@ -27,6 +27,8 @@ class oEmbedUpdateTest extends BrowserTestBase {
 
   /**
    * Tests the VEM to OEmbed migration.
+   *
+   * phpcs:disable Drupal.NamingConventions.ValidFunctionName.ScopeNotCamelCaps
    */
   public function testOEmbedUpdate() {
 

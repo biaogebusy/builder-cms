@@ -92,7 +92,7 @@ class BlockFieldTest extends EntityShareClientFunctionalTestBase {
         'en' => [
           'es_test_block' => $this->getCompleteNodeInfos([
             'field_es_test_block' => [
-              'value_callback' => function () {
+              'value_callback' => static function () {
                 return [
                   [
                     'plugin_id' => 'system_powered_by_block',
@@ -156,7 +156,7 @@ class BlockFieldTest extends EntityShareClientFunctionalTestBase {
     parent::populateRequestService();
 
     // Request the /jsonapi/block_content/es_test/block_content_test URL.
-    $route_name = sprintf('jsonapi.%s--%s.individual', 'block_content', 'es_test');
+    $route_name = \sprintf('jsonapi.%s--%s.individual', 'block_content', 'es_test');
     $url = Url::fromRoute($route_name, [
       'entity' => 'block_content_test',
     ])

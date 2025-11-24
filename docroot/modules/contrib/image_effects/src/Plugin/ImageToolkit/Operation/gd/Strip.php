@@ -1,20 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageToolkit\Operation\gd;
 
+use Drupal\Core\ImageToolkit\Attribute\ImageToolkitOperation;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\system\Plugin\ImageToolkit\Operation\gd\GDImageToolkitOperationBase;
 
 /**
  * Defines GD Strip operation.
- *
- * @ImageToolkitOperation(
- *   id = "image_effects_gd_strip",
- *   toolkit = "gd",
- *   operation = "strip",
- *   label = @Translation("Strip"),
- *   description = @Translation("Strips metadata from an image.")
- * )
  */
+#[ImageToolkitOperation(
+  id: 'image_effects_gd_strip',
+  toolkit: 'gd',
+  operation: 'strip',
+  label: new TranslatableMarkup('Strip'),
+  description: new TranslatableMarkup('Strips metadata from an image.'),
+)]
 class Strip extends GDImageToolkitOperationBase {
 
   /**

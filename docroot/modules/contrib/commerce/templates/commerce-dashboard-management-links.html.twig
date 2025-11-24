@@ -1,0 +1,12 @@
+<div class="commerce-dashboard--management-links">
+  <button class="management-links-toggle" type="button" aria-controls="management-links" aria-label="Toggle management menu">
+    <span class="management-links-toggle__icon"></span>
+  </button>
+  <div class="management-links" aria-labelledby="management-links">
+    {% for key, link in links %}
+    <div class="management-link management-link--{{ key }}">
+      <a class="card" href="{{ link.url }}" title="{{ link.description }}"><span class="management-link__icon"></span>{{ link.title }}</a>
+    </div>
+    {% endfor %}
+  </div>
+</div>

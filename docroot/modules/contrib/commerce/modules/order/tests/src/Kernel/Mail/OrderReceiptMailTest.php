@@ -2,14 +2,14 @@
 
 namespace Drupal\Tests\commerce_order\Kernel\Mail;
 
+use Drupal\Core\Test\AssertMailTrait;
+use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 use Drupal\commerce_order\Entity\Order;
 use Drupal\commerce_price\Price;
 use Drupal\commerce_product\Entity\Product;
 use Drupal\commerce_product\Entity\ProductVariation;
 use Drupal\commerce_product\Entity\ProductVariationType;
-use Drupal\Core\Test\AssertMailTrait;
 use Drupal\profile\Entity\Profile;
-use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 
 /**
  * Tests the sending of order receipt emails.
@@ -41,7 +41,7 @@ class OrderReceiptMailTest extends OrderKernelTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    $user = $this->createUser([
+    $user = $this->createUser([], NULL, FALSE, [
       'mail' => 'customer@example.com',
       'preferred_langcode' => 'en',
     ]);

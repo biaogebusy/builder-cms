@@ -128,33 +128,23 @@ class ThemeInitialization implements ThemeInitializationInterface {
    */
   public function loadActiveTheme(ActiveTheme $active_theme) {
     // Initialize the theme.
-    if ($theme_engine = $active_theme->getEngine()) {
+    if ($active_theme->getEngine()) {
       // Include the engine.
       include_once $this->root . '/' . $active_theme->getOwner();
-
-      if (function_exists($theme_engine . '_init')) {
-        @trigger_error('THEME_ENGINE_init() is deprecated in drupal:9.3.0 and removed in drupal:10.0.0. There is no replacement. See https://www.drupal.org/node/3246978', E_USER_DEPRECATED);
-        foreach ($active_theme->getBaseThemeExtensions() as $base) {
-          call_user_func($theme_engine . '_init', $base);
-        }
-        call_user_func($theme_engine . '_init', $active_theme->getExtension());
+      foreach (array_reverse($active_theme->getBaseThemeExtensions()) as $base) {
+        $base->load();
       }
-      else {
-        foreach ($active_theme->getBaseThemeExtensions() as $base) {
-          $base->load();
-        }
-        $active_theme->getExtension()->load();
-      }
+      $active_theme->getExtension()->load();
     }
     else {
-      // include non-engine theme files
-      foreach ($active_theme->getBaseThemeExtensions() as $base) {
+      // Include non-engine theme files
+      foreach (array_reverse($active_theme->getBaseThemeExtensions()) as $base) {
         // Include the theme file or the engine.
         if ($base->owner) {
           include_once $this->root . '/' . $base->owner;
         }
       }
-      // and our theme gets one too.
+      // And our theme gets one too.
       if ($active_theme->getOwner()) {
         include_once $this->root . '/' . $active_theme->getOwner();
       }
@@ -182,16 +172,13 @@ class ThemeInitialization implements ThemeInitializationInterface {
       $values['logo'] = $theme->getPath() . '/logo.svg';
     }
 
-    // @todo Remove in Drupal 10.0.x.
-    $values['stylesheets_remove'] = $this->prepareStylesheetsRemove($theme, $base_themes);
-
     // Prepare libraries overrides from this theme and ancestor themes. This
     // allows child themes to easily remove CSS files from base themes and
     // modules.
     $values['libraries_override'] = [];
 
     // Get libraries overrides declared by base themes.
-    foreach ($base_themes as $base) {
+    foreach (array_reverse($base_themes) as $base) {
       if (!empty($base->info['libraries-override'])) {
         foreach ($base->info['libraries-override'] as $library => $override) {
           $values['libraries_override'][$base->getPath()][$library] = $override;
@@ -307,52 +294,6 @@ class ThemeInitialization implements ThemeInitializationInterface {
     if (isset($extensions[$token])) {
       return str_replace($token_candidate, $extensions[$token]->getPath(), $css_file);
     }
-  }
-
-  /**
-   * Prepares stylesheets-remove specified in the *.info.yml file.
-   *
-   * This method is used as a BC layer to access the contents of the deprecated
-   * stylesheets-remove key in theme info.yml files. It will be removed once it
-   * is no longer needed in Drupal 10.
-   *
-   * @param \Drupal\Core\Extension\Extension $theme
-   *   The theme extension object.
-   * @param \Drupal\Core\Extension\Extension[] $base_themes
-   *   An array of base themes.
-   *
-   * @return string[]
-   *   The list of stylesheets-remove specified in the *.info.yml file.
-   *
-   * @todo Remove in Drupal 10.0.x.
-   *
-   * @internal
-   */
-  protected function prepareStylesheetsRemove(Extension $theme, $base_themes) {
-    // Prepare stylesheets from this theme as well as all ancestor themes.
-    // We work it this way so that we can have child themes remove CSS files
-    // easily from parent.
-    $stylesheets_remove = [];
-    // Grab stylesheets from base theme.
-    foreach ($base_themes as $base) {
-      if (!empty($base->info['stylesheets-remove'])) {
-        @trigger_error('The theme info key stylesheets-remove implemented by theme ' . $base->getName() . ' is deprecated in drupal:8.0.0 and is removed from drupal:10.0.0. See https://www.drupal.org/node/2497313', E_USER_DEPRECATED);
-        foreach ($base->info['stylesheets-remove'] as $css_file) {
-          $css_file = $this->resolveStyleSheetPlaceholders($css_file);
-          $stylesheets_remove[$css_file] = $css_file;
-        }
-      }
-    }
-
-    // Add stylesheets used by this theme.
-    if (!empty($theme->info['stylesheets-remove'])) {
-      @trigger_error('The theme info key stylesheets-remove implemented by theme ' . $theme->getName() . ' is deprecated in drupal:8.0.0 and is removed from drupal:10.0.0. See https://www.drupal.org/node/2497313', E_USER_DEPRECATED);
-      foreach ($theme->info['stylesheets-remove'] as $css_file) {
-        $css_file = $this->resolveStyleSheetPlaceholders($css_file);
-        $stylesheets_remove[$css_file] = $css_file;
-      }
-    }
-    return $stylesheets_remove;
   }
 
 }

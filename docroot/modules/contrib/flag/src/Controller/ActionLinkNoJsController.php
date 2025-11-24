@@ -66,17 +66,20 @@ class ActionLinkNoJsController implements ContainerInjectionInterface {
    *   The flag entity.
    * @param int $entity_id
    *   The flaggable entity ID.
+   * @param string $view_mode
+   *   The flaggable entity view mode. Note, that this parameter isn't actually
+   *   used, but needed to match the route definition.
    *
    * @return \Symfony\Component\HttpFoundation\RedirectResponse|null
    *   The response object, only if successful.
    *
    * @see \Drupal\flag\Plugin\Reload
    */
-  public function flag(FlagInterface $flag, $entity_id) {
-    /* @var \Drupal\Core\Entity\EntityInterface $entity */
+  public function flag(FlagInterface $flag, $entity_id, ?string $view_mode = NULL) {
+    /** @var \Drupal\Core\Entity\EntityInterface $entity */
     $entity = $this->flagService->getFlaggableById($flag, $entity_id);
 
-    if (empty($entity)) {
+    if ($entity === NULL) {
       throw new NotFoundHttpException();
     }
 
@@ -98,17 +101,20 @@ class ActionLinkNoJsController implements ContainerInjectionInterface {
    *   The flag entity.
    * @param int $entity_id
    *   The flaggable entity ID.
+   * @param string $view_mode
+   *   The flaggable entity view mode. Note, that this parameter isn't actually
+   *   used, but needed to match the route definition.
    *
    * @return \Symfony\Component\HttpFoundation\RedirectResponse|null
    *   The response object, only if successful.
    *
    * @see \Drupal\flag\Plugin\Reload
    */
-  public function unflag(FlagInterface $flag, $entity_id) {
-    /* @var \Drupal\Core\Entity\EntityInterface $entity */
+  public function unflag(FlagInterface $flag, $entity_id, ?string $view_mode = NULL) {
+    /** @var \Drupal\Core\Entity\EntityInterface $entity */
     $entity = $this->flagService->getFlaggableById($flag, $entity_id);
 
-    if (empty($entity)) {
+    if ($entity === NULL) {
       throw new NotFoundHttpException();
     }
 

@@ -1,12 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\diff\Plugin\views\field;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\RevisionableInterface;
+use Drupal\Core\Entity\RevisionableStorageInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\TypedData\TranslatableInterface;
 use Drupal\views\Plugin\views\field\FieldPluginBase;
 use Drupal\views\Plugin\views\field\UncacheableFieldHandlerTrait;
@@ -21,33 +25,17 @@ class DiffPluginBase extends FieldPluginBase {
   use UncacheableFieldHandlerTrait;
 
   /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
    * Constructs a DiffPluginBase object.
-   *
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The plugin ID for the plugin instance.
-   * @param mixed $plugin_definition
-   *   The plugin implementation definition.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
    */
   public function __construct(
     array $configuration,
     $plugin_id,
     $plugin_definition,
-    EntityTypeManagerInterface $entity_type_manager,
+    protected EntityTypeManagerInterface $entityTypeManager,
+    TranslationInterface $translation,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
-
-    $this->entityTypeManager = $entity_type_manager;
+    $this->setStringTranslation($translation);
   }
 
   /**
@@ -59,6 +47,7 @@ class DiffPluginBase extends FieldPluginBase {
       $plugin_id,
       $plugin_definition,
       $container->get('entity_type.manager'),
+      $container->get('string_translation'),
     );
   }
 
@@ -111,7 +100,7 @@ class DiffPluginBase extends FieldPluginBase {
    *
    * @see self::loadEntityFromDiffFormKey()
    */
-  protected function calculateEntityDiffFormKey(EntityInterface $entity) {
+  protected function calculateEntityDiffFormKey(EntityInterface $entity): string {
     $key_parts = [$entity->language()->getId(), $entity->id()];
 
     if ($entity instanceof RevisionableInterface) {
@@ -122,7 +111,7 @@ class DiffPluginBase extends FieldPluginBase {
     // numeric). JSON then Base64 encoding ensures the diff_form_key is
     // safe to use in HTML, and that the key parts can be retrieved.
     $key = Json::encode($key_parts);
-    return base64_encode($key);
+    return \base64_encode($key);
   }
 
   /**
@@ -139,22 +128,25 @@ class DiffPluginBase extends FieldPluginBase {
    * @throws \UnexpectedValueException
    *   If no entity can be found for the given diff form key.
    */
-  protected function loadEntityFromDiffFormKey($diff_form_key) {
-    $key = base64_decode($diff_form_key);
+  protected function loadEntityFromDiffFormKey($diff_form_key): EntityInterface {
+    $key = \base64_decode($diff_form_key);
     $key_parts = Json::decode($key);
     $revision_id = NULL;
 
     // If there are 3 items, vid will be last.
-    if (count($key_parts) === 3) {
-      $revision_id = array_pop($key_parts);
+    if (\count($key_parts) === 3) {
+      $revision_id = \array_pop($key_parts);
     }
 
     // The first two items will always be langcode and ID.
-    $id = array_pop($key_parts);
-    $langcode = array_pop($key_parts);
+    $id = \array_pop($key_parts);
+    $langcode = \array_pop($key_parts);
 
     // Load the entity or a specific revision depending on the given key.
     $storage = $this->entityTypeManager->getStorage($this->getEntityType());
+    if (!$storage instanceof RevisionableStorageInterface) {
+      throw new \UnexpectedValueException('Entity not revisionable');
+    }
     $entity = $revision_id ? $storage->loadRevision($revision_id) : $storage->load($id);
 
     if (empty($entity)) {

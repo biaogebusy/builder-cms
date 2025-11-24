@@ -1,9 +1,6 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\field\Unit\FieldConfigEntityUnitTest.
- */
+declare(strict_types=1);
 
 namespace Drupal\Tests\field\Unit;
 
@@ -74,6 +71,8 @@ class FieldConfigEntityUnitTest extends UnitTestCase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    parent::setUp();
+
     $this->entityTypeId = $this->randomMachineName();
     $this->entityType = $this->createMock('\Drupal\Core\Config\Entity\ConfigEntityTypeInterface');
 
@@ -114,7 +113,7 @@ class FieldConfigEntityUnitTest extends UnitTestCase {
   /**
    * @covers ::calculateDependencies
    */
-  public function testCalculateDependencies() {
+  public function testCalculateDependencies(): void {
     // Mock the interfaces necessary to create a dependency on a bundle entity.
     $target_entity_type = $this->createMock('\Drupal\Core\Entity\EntityTypeInterface');
     $target_entity_type->expects($this->any())
@@ -152,7 +151,7 @@ class FieldConfigEntityUnitTest extends UnitTestCase {
   /**
    * Tests that invalid bundles are handled.
    */
-  public function testCalculateDependenciesIncorrectBundle() {
+  public function testCalculateDependenciesIncorrectBundle(): void {
     $storage = $this->createMock('\Drupal\Core\Config\Entity\ConfigEntityStorageInterface');
     $storage->expects($this->any())
       ->method('load')
@@ -195,7 +194,7 @@ class FieldConfigEntityUnitTest extends UnitTestCase {
   /**
    * @covers ::onDependencyRemoval
    */
-  public function testOnDependencyRemoval() {
+  public function testOnDependencyRemoval(): void {
     $this->fieldTypePluginManager->expects($this->any())
       ->method('getDefinition')
       ->with('test_field')
@@ -224,7 +223,7 @@ class FieldConfigEntityUnitTest extends UnitTestCase {
   /**
    * @covers ::toArray
    */
-  public function testToArray() {
+  public function testToArray(): void {
     $field = new FieldConfig([
       'field_name' => $this->fieldStorage->getName(),
       'entity_type' => 'test_entity_type',
@@ -269,7 +268,7 @@ class FieldConfigEntityUnitTest extends UnitTestCase {
   /**
    * @covers ::getType
    */
-  public function testGetType() {
+  public function testGetType(): void {
     // Ensure that FieldConfig::getType() is not delegated to
     // FieldStorage.
     $this->entityFieldManager->expects($this->never())

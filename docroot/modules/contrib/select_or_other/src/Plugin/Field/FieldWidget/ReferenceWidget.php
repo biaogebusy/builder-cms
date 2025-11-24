@@ -69,7 +69,7 @@ class ReferenceWidget extends WidgetBase implements ContainerFactoryPluginInterf
   /**
    * Constructs a ReferenceWidget object.
    */
-  public function __construct($plugin_id, $plugin_definition, FieldDefinitionInterface $field_definition, array $settings, array $third_party_settings, EntityTypeManagerInterface $entity_type = NULL, EntityTypeBundleInfoInterface $bundle_info_service = NULL, AccountInterface $current_user = NULL) {
+  public function __construct($plugin_id, $plugin_definition, FieldDefinitionInterface $field_definition, array $settings, array $third_party_settings, ?EntityTypeManagerInterface $entity_type = NULL, ?EntityTypeBundleInfoInterface $bundle_info_service = NULL, ?AccountInterface $current_user = NULL) {
     parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $third_party_settings);
     $this->entityTypeManager = $entity_type;
     $this->bundleInfoService = $bundle_info_service;
@@ -127,7 +127,7 @@ class ReferenceWidget extends WidgetBase implements ContainerFactoryPluginInterf
   /**
    * {@inheritdoc}
    */
-  protected function getOptions(FieldableEntityInterface $entity = NULL) {
+  protected function getOptions(?FieldableEntityInterface $entity = NULL) {
     $options = [];
 
     // Prepare properties to use for loading.

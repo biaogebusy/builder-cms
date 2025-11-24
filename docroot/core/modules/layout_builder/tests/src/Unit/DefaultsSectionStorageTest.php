@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\layout_builder\Unit;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
@@ -71,7 +73,7 @@ class DefaultsSectionStorageTest extends UnitTestCase {
    * @covers ::getThirdPartySetting
    * @covers ::setThirdPartySetting
    */
-  public function testThirdPartySettings() {
+  public function testThirdPartySettings(): void {
     $this->entityTypeManager->getDefinition('entity_view_display')->willReturn(new EntityType(['id' => 'entity_view_display']));
 
     $container = new ContainerBuilder();
@@ -96,8 +98,8 @@ class DefaultsSectionStorageTest extends UnitTestCase {
     $this->assertSame('value 1', $this->plugin->getThirdPartySetting('the_module', 'the_key'));
 
     // When the section list is updated, also update the result returned.
-    $section_list->setThirdPartySetting('the_module', 'the_key', 'value 2')->shouldBeCalled()->will(function ($args) {
-      $this->getThirdPartySetting('the_module', 'the_key', NULL)->willReturn($args[2]);
+    $section_list->setThirdPartySetting('the_module', 'the_key', 'value 2')->shouldBeCalled()->will(function (array $args) use ($section_list) {
+      $section_list->getThirdPartySetting('the_module', 'the_key', NULL)->willReturn($args[2]);
     });
 
     // Update the plugin value.
@@ -120,7 +122,7 @@ class DefaultsSectionStorageTest extends UnitTestCase {
    * @param array $defaults
    *   The defaults to pass to ::extractEntityFromRoute().
    */
-  public function testExtractEntityFromRoute($success, $expected_entity_id, $value, array $defaults) {
+  public function testExtractEntityFromRoute($success, $expected_entity_id, $value, array $defaults): void {
     if ($expected_entity_id) {
       $entity_storage = $this->prophesize(EntityStorageInterface::class);
       $entity_storage->load($expected_entity_id)->willReturn('the_return_value');
@@ -134,7 +136,6 @@ class DefaultsSectionStorageTest extends UnitTestCase {
     }
 
     $method = new \ReflectionMethod($this->plugin, 'extractEntityFromRoute');
-    $method->setAccessible(TRUE);
     $result = $method->invoke($this->plugin, $value, $defaults);
     if ($success) {
       $this->assertEquals('the_return_value', $result);
@@ -147,7 +148,7 @@ class DefaultsSectionStorageTest extends UnitTestCase {
   /**
    * Provides data for ::testExtractEntityFromRoute().
    */
-  public function providerTestExtractEntityFromRoute() {
+  public static function providerTestExtractEntityFromRoute() {
     // Data provider values are:
     // - whether a successful result is expected
     // - the expected entity ID
@@ -193,7 +194,7 @@ class DefaultsSectionStorageTest extends UnitTestCase {
   /**
    * @covers ::extractEntityFromRoute
    */
-  public function testExtractEntityFromRouteCreate() {
+  public function testExtractEntityFromRouteCreate(): void {
     $expected = 'the_return_value';
     $value = 'foo.bar.baz';
     $expected_create_values = [
@@ -210,7 +211,6 @@ class DefaultsSectionStorageTest extends UnitTestCase {
     $this->entityTypeManager->getStorage('entity_view_display')->willReturn($entity_storage->reveal());
 
     $method = new \ReflectionMethod($this->plugin, 'extractEntityFromRoute');
-    $method->setAccessible(TRUE);
     $result = $method->invoke($this->plugin, $value, []);
     $this->assertSame($expected, $result);
   }
@@ -220,7 +220,7 @@ class DefaultsSectionStorageTest extends UnitTestCase {
    * @covers ::getEntityTypes
    * @covers \Drupal\layout_builder\Routing\LayoutBuilderRoutesTrait::buildLayoutRoutes
    */
-  public function testBuildRoutes() {
+  public function testBuildRoutes(): void {
     $module_handler = $this->prophesize(ModuleHandlerInterface::class);
     $module_handler->moduleExists('field_ui')->willReturn(TRUE);
     $container = new ContainerBuilder();
@@ -415,7 +415,7 @@ class DefaultsSectionStorageTest extends UnitTestCase {
   /**
    * @covers ::buildRoutes
    */
-  public function testBuildRoutesNoFieldUi() {
+  public function testBuildRoutesNoFieldUi(): void {
     $module_handler = $this->prophesize(ModuleHandlerInterface::class);
     $module_handler->moduleExists('field_ui')->willReturn(FALSE);
     $container = new ContainerBuilder();

@@ -5,6 +5,7 @@ namespace Drupal\search_api_db\DatabaseCompatibility;
 use Drupal\Component\Transliteration\TransliterationInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Query\SelectInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Represents any database for which no specifics are known.
@@ -33,7 +34,11 @@ class GenericDatabase implements DatabaseCompatibilityHandlerInterface {
    * @param \Drupal\Component\Transliteration\TransliterationInterface $transliterator
    *   The transliteration service to use.
    */
-  public function __construct(Connection $database, TransliterationInterface $transliterator) {
+  public function __construct(
+    Connection $database,
+    #[Autowire(service: 'transliteration')]
+    TransliterationInterface $transliterator,
+  ) {
     $this->database = $database;
     $this->transliterator = $transliterator;
   }

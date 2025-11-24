@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Path;
 
 use Drupal\Core\ParamConverter\ParamNotConvertedException;
 use Drupal\Core\Path\PathValidator;
 use Drupal\Tests\UnitTestCase;
 use Drupal\Core\Routing\RouteObjectInterface;
-use Symfony\Component\HttpFoundation\ParameterBag;
+use Symfony\Component\HttpFoundation\InputBag;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\Routing\Exception\MethodNotAllowedException;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
@@ -69,7 +71,7 @@ class PathValidatorTest extends UnitTestCase {
    *
    * @covers ::isValid
    */
-  public function testIsValidWithFrontpage() {
+  public function testIsValidWithFrontpage(): void {
     $this->accessAwareRouter->expects($this->never())
       ->method('match');
 
@@ -77,11 +79,11 @@ class PathValidatorTest extends UnitTestCase {
   }
 
   /**
-   * Tests the isValid() method for <none> (used for jumplinks).
+   * Tests the isValid() method for <none> (used for jump links).
    *
    * @covers ::isValid
    */
-  public function testIsValidWithNone() {
+  public function testIsValidWithNone(): void {
     $this->accessAwareRouter->expects($this->never())
       ->method('match');
 
@@ -93,7 +95,7 @@ class PathValidatorTest extends UnitTestCase {
    *
    * @covers ::isValid
    */
-  public function testIsValidWithExternalUrl() {
+  public function testIsValidWithExternalUrl(): void {
     $this->accessAwareRouter->expects($this->never())
       ->method('match');
 
@@ -105,7 +107,7 @@ class PathValidatorTest extends UnitTestCase {
    *
    * @covers ::isValid
    */
-  public function testIsValidWithInvalidExternalUrl() {
+  public function testIsValidWithInvalidExternalUrl(): void {
     $this->accessAwareRouter->expects($this->never())
       ->method('match');
 
@@ -118,7 +120,7 @@ class PathValidatorTest extends UnitTestCase {
    * @covers ::isValid
    * @covers ::getPathAttributes
    */
-  public function testIsValidWithLinkToAnyPageAccount() {
+  public function testIsValidWithLinkToAnyPageAccount(): void {
     $this->account->expects($this->once())
       ->method('hasPermission')
       ->with('link to any page')
@@ -128,7 +130,7 @@ class PathValidatorTest extends UnitTestCase {
     $this->accessUnawareRouter->expects($this->once())
       ->method('match')
       ->with('/test-path')
-      ->willReturn([RouteObjectInterface::ROUTE_NAME => 'test_route', '_raw_variables' => new ParameterBag(['key' => 'value'])]);
+      ->willReturn([RouteObjectInterface::ROUTE_NAME => 'test_route', '_raw_variables' => new InputBag(['key' => 'value'])]);
     $this->pathProcessor->expects($this->once())
       ->method('processInbound')
       ->willReturnArgument(0);
@@ -141,7 +143,7 @@ class PathValidatorTest extends UnitTestCase {
    *
    * @covers ::isValid
    */
-  public function testIsValidWithoutLinkToAnyPageAccount() {
+  public function testIsValidWithoutLinkToAnyPageAccount(): void {
     $this->account->expects($this->once())
       ->method('hasPermission')
       ->with('link to any page')
@@ -151,7 +153,7 @@ class PathValidatorTest extends UnitTestCase {
     $this->accessAwareRouter->expects($this->once())
       ->method('match')
       ->with('/test-path')
-      ->willReturn([RouteObjectInterface::ROUTE_NAME => 'test_route', '_raw_variables' => new ParameterBag(['key' => 'value'])]);
+      ->willReturn([RouteObjectInterface::ROUTE_NAME => 'test_route', '_raw_variables' => new InputBag(['key' => 'value'])]);
     $this->pathProcessor->expects($this->once())
       ->method('processInbound')
       ->willReturnArgument(0);
@@ -164,7 +166,7 @@ class PathValidatorTest extends UnitTestCase {
    *
    * @covers ::isValid
    */
-  public function testIsValidWithPathAlias() {
+  public function testIsValidWithPathAlias(): void {
     $this->account->expects($this->once())
       ->method('hasPermission')
       ->with('link to any page')
@@ -174,7 +176,7 @@ class PathValidatorTest extends UnitTestCase {
     $this->accessAwareRouter->expects($this->once())
       ->method('match')
       ->with('/test-path')
-      ->willReturn([RouteObjectInterface::ROUTE_NAME => 'test_route', '_raw_variables' => new ParameterBag(['key' => 'value'])]);
+      ->willReturn([RouteObjectInterface::ROUTE_NAME => 'test_route', '_raw_variables' => new InputBag(['key' => 'value'])]);
     $this->pathProcessor->expects($this->once())
       ->method('processInbound')
       ->with('/path-alias', $this->anything())
@@ -189,7 +191,7 @@ class PathValidatorTest extends UnitTestCase {
    * @covers ::isValid
    * @covers ::getPathAttributes
    */
-  public function testIsValidWithAccessDenied() {
+  public function testIsValidWithAccessDenied(): void {
     $this->account->expects($this->once())
       ->method('hasPermission')
       ->with('link to any page')
@@ -211,7 +213,7 @@ class PathValidatorTest extends UnitTestCase {
    * @covers ::isValid
    * @covers ::getPathAttributes
    */
-  public function testIsValidWithResourceNotFound() {
+  public function testIsValidWithResourceNotFound(): void {
     $this->account->expects($this->once())
       ->method('hasPermission')
       ->with('link to any page')
@@ -233,7 +235,7 @@ class PathValidatorTest extends UnitTestCase {
    * @covers ::isValid
    * @covers ::getPathAttributes
    */
-  public function testIsValidWithParamNotConverted() {
+  public function testIsValidWithParamNotConverted(): void {
     $this->account->expects($this->once())
       ->method('hasPermission')
       ->with('link to any page')
@@ -255,7 +257,7 @@ class PathValidatorTest extends UnitTestCase {
    * @covers ::isValid
    * @covers ::getPathAttributes
    */
-  public function testIsValidWithMethodNotAllowed() {
+  public function testIsValidWithMethodNotAllowed(): void {
     $this->account->expects($this->once())
       ->method('hasPermission')
       ->with('link to any page')
@@ -278,7 +280,7 @@ class PathValidatorTest extends UnitTestCase {
    *
    * @covers ::isValid
    */
-  public function testIsValidWithFailingParameterConverting() {
+  public function testIsValidWithFailingParameterConverting(): void {
     $this->account->expects($this->once())
       ->method('hasPermission')
       ->with('link to any page')
@@ -301,7 +303,7 @@ class PathValidatorTest extends UnitTestCase {
    *
    * @covers ::isValid
    */
-  public function testIsValidWithNotExistingPath() {
+  public function testIsValidWithNotExistingPath(): void {
     $this->account->expects($this->once())
       ->method('hasPermission')
       ->with('link to any page')
@@ -325,7 +327,7 @@ class PathValidatorTest extends UnitTestCase {
    * @covers ::getUrlIfValid
    * @covers ::getPathAttributes
    */
-  public function testGetUrlIfValidWithAccess() {
+  public function testGetUrlIfValidWithAccess(): void {
     $this->account->expects($this->exactly(2))
       ->method('hasPermission')
       ->with('link to any page')
@@ -334,7 +336,7 @@ class PathValidatorTest extends UnitTestCase {
     $this->accessAwareRouter->expects($this->exactly(2))
       ->method('match')
       ->with('/test-path')
-      ->willReturn([RouteObjectInterface::ROUTE_NAME => 'test_route', '_raw_variables' => new ParameterBag(['key' => 'value'])]);
+      ->willReturn([RouteObjectInterface::ROUTE_NAME => 'test_route', '_raw_variables' => new InputBag(['key' => 'value'])]);
     $this->pathProcessor->expects($this->exactly(2))
       ->method('processInbound')
       ->willReturnArgument(0);
@@ -358,7 +360,7 @@ class PathValidatorTest extends UnitTestCase {
    *
    * @covers ::getUrlIfValid
    */
-  public function testGetUrlIfValidWithQuery() {
+  public function testGetUrlIfValidWithQuery(): void {
     $this->account->expects($this->once())
       ->method('hasPermission')
       ->with('link to any page')
@@ -367,7 +369,7 @@ class PathValidatorTest extends UnitTestCase {
     $this->accessAwareRouter->expects($this->once())
       ->method('match')
       ->with('/test-path?k=bar')
-      ->willReturn([RouteObjectInterface::ROUTE_NAME => 'test_route', '_raw_variables' => new ParameterBag()]);
+      ->willReturn([RouteObjectInterface::ROUTE_NAME => 'test_route', '_raw_variables' => new InputBag()]);
     $this->pathProcessor->expects($this->once())
       ->method('processInbound')
       ->willReturnArgument(0);
@@ -384,7 +386,7 @@ class PathValidatorTest extends UnitTestCase {
    *
    * @covers ::getUrlIfValid
    */
-  public function testGetUrlIfValidWithoutAccess() {
+  public function testGetUrlIfValidWithoutAccess(): void {
     $this->account->expects($this->once())
       ->method('hasPermission')
       ->with('link to any page')
@@ -408,7 +410,7 @@ class PathValidatorTest extends UnitTestCase {
    *
    * @covers ::getUrlIfValid
    */
-  public function testGetUrlIfValidWithFrontPageAndQueryAndFragments() {
+  public function testGetUrlIfValidWithFrontPageAndQueryAndFragments(): void {
     $url = $this->pathValidator->getUrlIfValid('<front>?hei=sen#berg');
     $this->assertEquals('<front>', $url->getRouteName());
     $this->assertEquals(['hei' => 'sen'], $url->getOptions()['query']);
@@ -421,7 +423,7 @@ class PathValidatorTest extends UnitTestCase {
    * @covers ::getUrlIfValidWithoutAccessCheck
    * @covers ::getPathAttributes
    */
-  public function testGetUrlIfValidWithoutAccessCheck() {
+  public function testGetUrlIfValidWithoutAccessCheck(): void {
     $this->account->expects($this->never())
       ->method('hasPermission')
       ->with('link to any page');
@@ -430,7 +432,7 @@ class PathValidatorTest extends UnitTestCase {
     $this->accessUnawareRouter->expects($this->once())
       ->method('match')
       ->with('/test-path')
-      ->willReturn([RouteObjectInterface::ROUTE_NAME => 'test_route', '_raw_variables' => new ParameterBag(['key' => 'value'])]);
+      ->willReturn([RouteObjectInterface::ROUTE_NAME => 'test_route', '_raw_variables' => new InputBag(['key' => 'value'])]);
     $this->pathProcessor->expects($this->once())
       ->method('processInbound')
       ->willReturnArgument(0);
@@ -440,6 +442,22 @@ class PathValidatorTest extends UnitTestCase {
 
     $this->assertEquals('test_route', $url->getRouteName());
     $this->assertEquals(['key' => 'value'], $url->getRouteParameters());
+  }
+
+  /**
+   * Tests the getUrlIfValidWithoutAccessCheck() method with an invalid path.
+   *
+   * @covers ::getUrlIfValidWithoutAccessCheck
+   * @covers ::getUrl
+   */
+  public function testGetUrlIfValidWithoutAccessCheckWithInvalidPath(): void {
+    // URLs must not start nor end with ASCII control characters or spaces.
+    $this->assertFalse($this->pathValidator->getUrlIfValidWithoutAccessCheck('foo '));
+    // Also check URL-encoded variant.
+    $this->pathProcessor->expects($this->once())
+      ->method('processInbound')
+      ->willReturnArgument(0);
+    $this->assertFalse($this->pathValidator->getUrlIfValidWithoutAccessCheck('foo%20'));
   }
 
 }

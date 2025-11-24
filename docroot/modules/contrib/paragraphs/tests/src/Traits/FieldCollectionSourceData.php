@@ -13,7 +13,7 @@ trait FieldCollectionSourceData {
    * @return array
    *   The source data
    */
-  protected function getSourceData() {
+  protected static function getSourceData() {
     $data = [];
 
     $data[]['source_data'] = [

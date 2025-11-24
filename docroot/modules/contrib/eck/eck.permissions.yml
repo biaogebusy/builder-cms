@@ -18,6 +18,8 @@ administer eck entities:
   title: 'Administer ECK entities'
   description: 'Create, edit, delete and perform other tasks across all ECK entities.'
   restrict access: true
+view unpublished eck entities:
+  title: 'View unpublished ECK entities'
 
 permission_callbacks:
   - '\Drupal\eck\PermissionsGenerator::entityPermissions'

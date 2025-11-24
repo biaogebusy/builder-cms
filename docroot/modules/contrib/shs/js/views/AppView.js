@@ -150,7 +150,7 @@
      *
      * @param {string} name
      *   Name of the configuration to get. To get the value of a nested
-     *   configuration the names are concatted by a dot (i.e.
+     *   configuration the names are concatenated by a dot (i.e.
      *   "display.animationSpeed").
      *
      * @returns {mixed}

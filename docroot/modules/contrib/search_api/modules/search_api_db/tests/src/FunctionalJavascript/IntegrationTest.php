@@ -3,12 +3,14 @@
 namespace Drupal\Tests\search_api_db\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that using the DB backend via the UI works as expected.
  *
  * @group search_api
  */
+#[RunTestsInSeparateProcesses]
 class IntegrationTest extends WebDriverTestBase {
 
   /**

@@ -4,10 +4,14 @@ namespace Drupal\user\Plugin\views\access;
 
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableDependencyInterface;
+use Drupal\Core\DependencyInjection\DeprecatedServicePropertyTrait;
+use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\user\PermissionHandlerInterface;
+use Drupal\views\Attribute\ViewsAccess;
 use Drupal\views\Plugin\views\access\AccessPluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Routing\Route;
@@ -16,14 +20,19 @@ use Symfony\Component\Routing\Route;
  * Access plugin that provides permission-based access control.
  *
  * @ingroup views_access_plugins
- *
- * @ViewsAccess(
- *   id = "perm",
- *   title = @Translation("Permission"),
- *   help = @Translation("Access will be granted to users with the specified permission string.")
- * )
  */
+#[ViewsAccess(
+  id: 'perm',
+  title: new TranslatableMarkup('Permission'),
+  help: new TranslatableMarkup('Access will be granted to users with the specified permission string.'),
+)]
 class Permission extends AccessPluginBase implements CacheableDependencyInterface {
+  use DeprecatedServicePropertyTrait;
+
+  /**
+   * The service properties that should raise a deprecation error.
+   */
+  private array $deprecatedProperties = ['moduleHandler' => 'module_handler'];
 
   /**
    * {@inheritdoc}
@@ -38,11 +47,9 @@ class Permission extends AccessPluginBase implements CacheableDependencyInterfac
   protected $permissionHandler;
 
   /**
-   * The module handler.
-   *
-   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   * Module extension list.
    */
-  protected $moduleHandler;
+  protected ModuleExtensionList $moduleExtensionList;
 
   /**
    * Constructs a Permission object.
@@ -50,18 +57,22 @@ class Permission extends AccessPluginBase implements CacheableDependencyInterfac
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\user\PermissionHandlerInterface $permission_handler
    *   The permission handler.
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
-   *   The module handler.
+   * @param \Drupal\Core\Extension\ModuleExtensionList|\Drupal\Core\Extension\ModuleHandlerInterface $module_extension_list
+   *   The module extension list.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, PermissionHandlerInterface $permission_handler, ModuleHandlerInterface $module_handler) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, PermissionHandlerInterface $permission_handler, ModuleExtensionList|ModuleHandlerInterface $module_extension_list) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->permissionHandler = $permission_handler;
-    $this->moduleHandler = $module_handler;
+    if ($module_extension_list instanceof ModuleHandlerInterface) {
+      @trigger_error('Calling ' . __METHOD__ . '() with the $module_extension_list argument as ModuleHandlerInterface is deprecated in drupal:10.3.0 and will be required in drupal:12.0.0. See https://www.drupal.org/node/3310017', E_USER_DEPRECATED);
+      $module_extension_list = \Drupal::service('extension.list.module');
+    }
+    $this->moduleExtensionList = $module_extension_list;
   }
 
   /**
@@ -73,7 +84,7 @@ class Permission extends AccessPluginBase implements CacheableDependencyInterfac
       $plugin_id,
       $plugin_definition,
       $container->get('user.permissions'),
-      $container->get('module_handler')
+      $container->get('extension.list.module'),
     );
   }
 
@@ -114,7 +125,7 @@ class Permission extends AccessPluginBase implements CacheableDependencyInterfac
     $permissions = $this->permissionHandler->getPermissions();
     foreach ($permissions as $perm => $perm_item) {
       $provider = $perm_item['provider'];
-      $display_name = $this->moduleHandler->getName($provider);
+      $display_name = $this->moduleExtensionList->getName($provider);
       $perms[$display_name][$perm] = strip_tags($perm_item['title']);
     }
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Utility;
 
 use Drupal\Core\GeneratedUrl;
@@ -57,7 +59,7 @@ class UnroutedUrlAssemblerTest extends UnitTestCase {
   /**
    * @covers ::assemble
    */
-  public function testAssembleWithNeitherExternalNorDomainLocalUri() {
+  public function testAssembleWithNeitherExternalNorDomainLocalUri(): void {
     $this->expectException(\InvalidArgumentException::class);
     $this->unroutedUrlAssembler->assemble('wrong-url');
   }
@@ -65,7 +67,7 @@ class UnroutedUrlAssemblerTest extends UnitTestCase {
   /**
    * @covers ::assemble
    */
-  public function testAssembleWithLeadingSlash() {
+  public function testAssembleWithLeadingSlash(): void {
     $this->expectException(\InvalidArgumentException::class);
     $this->unroutedUrlAssembler->assemble('/drupal.org');
   }
@@ -76,7 +78,7 @@ class UnroutedUrlAssemblerTest extends UnitTestCase {
    *
    * @dataProvider providerTestAssembleWithExternalUrl
    */
-  public function testAssembleWithExternalUrl($uri, array $options, $expected) {
+  public function testAssembleWithExternalUrl($uri, array $options, $expected): void {
     $this->setupRequestStack(FALSE);
     $this->assertEquals($expected, $this->unroutedUrlAssembler->assemble($uri, $options));
     $generated_url = $this->unroutedUrlAssembler->assemble($uri, $options, TRUE);
@@ -87,7 +89,7 @@ class UnroutedUrlAssemblerTest extends UnitTestCase {
   /**
    * Provides test data for testAssembleWithExternalUrl.
    */
-  public function providerTestAssembleWithExternalUrl() {
+  public static function providerTestAssembleWithExternalUrl() {
     return [
       ['http://example.com/test', [], 'http://example.com/test'],
       ['http://example.com/test', ['fragment' => 'example'], 'http://example.com/test#example'],
@@ -107,11 +109,11 @@ class UnroutedUrlAssemblerTest extends UnitTestCase {
 
   /**
    * @covers ::assemble
-   * @covers::buildLocalUrl
+   * @covers ::buildLocalUrl
    *
    * @dataProvider providerTestAssembleWithLocalUri
    */
-  public function testAssembleWithLocalUri($uri, array $options, $subdir, $expected) {
+  public function testAssembleWithLocalUri($uri, array $options, $subdir, $expected): void {
     $this->setupRequestStack($subdir);
 
     $this->assertEquals($expected, $this->unroutedUrlAssembler->assemble($uri, $options));
@@ -120,7 +122,7 @@ class UnroutedUrlAssemblerTest extends UnitTestCase {
   /**
    * @return array
    */
-  public function providerTestAssembleWithLocalUri() {
+  public static function providerTestAssembleWithLocalUri() {
     return [
       ['base:example', [], FALSE, '/example'],
       ['base:example', ['query' => ['foo' => 'bar']], FALSE, '/example?foo=bar'],
@@ -137,7 +139,7 @@ class UnroutedUrlAssemblerTest extends UnitTestCase {
   /**
    * @covers ::assemble
    */
-  public function testAssembleWithNotEnabledProcessing() {
+  public function testAssembleWithNotEnabledProcessing(): void {
     $this->setupRequestStack(FALSE);
     $this->pathProcessor->expects($this->never())
       ->method('processOutbound');
@@ -148,15 +150,15 @@ class UnroutedUrlAssemblerTest extends UnitTestCase {
   /**
    * @covers ::assemble
    */
-  public function testAssembleWithEnabledProcessing() {
+  public function testAssembleWithEnabledProcessing(): void {
     $this->setupRequestStack(FALSE);
     $this->pathProcessor->expects($this->exactly(2))
       ->method('processOutbound')
-      ->willReturnCallback(function ($path, &$options = [], Request $request = NULL, BubbleableMetadata $bubbleable_metadata = NULL) {
+      ->willReturnCallback(function ($path, &$options = [], ?Request $request = NULL, ?BubbleableMetadata $bubbleable_metadata = NULL) {
         if ($bubbleable_metadata) {
           $bubbleable_metadata->setCacheContexts(['some-cache-context']);
         }
-        return 'test-other-uri';
+        return '/test-other-uri';
       });
 
     $result = $this->unroutedUrlAssembler->assemble('base:test-uri', ['path_processing' => TRUE]);
@@ -170,10 +172,33 @@ class UnroutedUrlAssemblerTest extends UnitTestCase {
   }
 
   /**
+   * @covers ::assemble
+   */
+  public function testAssembleWithStartingSlashEnabledProcessing(): void {
+    $this->setupRequestStack(FALSE);
+    $this->pathProcessor->expects($this->exactly(2))
+      ->method('processOutbound')
+      ->with('/test-uri', $this->anything(), $this->anything(), $this->anything())
+      ->willReturnCallback(function ($path, &$options = [], ?Request $request = NULL, ?BubbleableMetadata $bubbleable_metadata = NULL) {
+        $bubbleable_metadata?->setCacheContexts(['some-cache-context']);
+        return '/test-other-uri';
+      });
+
+    $result = $this->unroutedUrlAssembler->assemble('base:/test-uri', ['path_processing' => TRUE]);
+    $this->assertEquals('/test-other-uri', $result);
+
+    $result = $this->unroutedUrlAssembler->assemble('base:/test-uri', ['path_processing' => TRUE], TRUE);
+    $expected_generated_url = new GeneratedUrl();
+    $expected_generated_url->setGeneratedUrl('/test-other-uri')
+      ->setCacheContexts(['some-cache-context']);
+    $this->assertEquals($expected_generated_url, $result);
+  }
+
+  /**
    * Setups the request stack for a given subdir.
    *
-   * @param string $subdir
-   *   The wanted subdir.
+   * @param bool $subdir
+   *   TRUE to use a subdir.
    */
   protected function setupRequestStack($subdir) {
     $server = [];
@@ -184,7 +209,7 @@ class UnroutedUrlAssemblerTest extends UnitTestCase {
       $server = [
         'SCRIPT_NAME' => '/subdir/index.php',
         'SCRIPT_FILENAME' => $this->root . '/index.php',
-        'SERVER_NAME' => 'http://www.example.com',
+        'SERVER_NAME' => 'www.example.com',
       ];
       $request = Request::create('/subdir/');
     }

@@ -26,14 +26,14 @@ class UserFloodSubscriber implements EventSubscriberInterface {
    * @param \Psr\Log\LoggerInterface $logger
    *   A logger instance.
    */
-  public function __construct(LoggerInterface $logger = NULL) {
+  public function __construct(?LoggerInterface $logger = NULL) {
     $this->logger = $logger;
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     $events[UserEvents::FLOOD_BLOCKED_USER][] = ['blockedUser'];
     $events[UserEvents::FLOOD_BLOCKED_IP][] = ['blockedIp'];
     return $events;

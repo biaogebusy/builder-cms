@@ -2,10 +2,6 @@
 
 namespace Drupal\commerce_payment\Form;
 
-use Drupal\commerce\InlineFormManager;
-use Drupal\commerce_payment\PaymentOption;
-use Drupal\commerce_payment\PaymentOptionsBuilderInterface;
-use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\SupportsStoredPaymentMethodsInterface;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
@@ -13,6 +9,10 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\commerce\InlineFormManager;
+use Drupal\commerce_payment\PaymentOption;
+use Drupal\commerce_payment\PaymentOptionsBuilderInterface;
+use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\SupportsStoredPaymentMethodsInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
@@ -145,8 +145,8 @@ class PaymentAddForm extends FormBase implements ContainerInjectionInterface {
     // Core bug #1988968 doesn't allow the payment method add form JS to depend
     // on an external library, so the libraries need to be preloaded here.
     foreach ($payment_gateways as $payment_gateway) {
-      if ($js_library = $payment_gateway->getPlugin()->getJsLibrary()) {
-        $form['#attached']['library'][] = $js_library;
+      foreach ($payment_gateway->getPlugin()->getLibraries() as $library) {
+        $form['#attached']['library'][] = $library;
       }
     }
 

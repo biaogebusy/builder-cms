@@ -11,6 +11,8 @@ use Drupal\layout_builder\SectionComponent;
 use Drupal\Tests\BrowserTestBase;
 
 /**
+ * Tests integration with Layout Builder.
+ *
  * @group core_context
  */
 class LayoutBuilderIntegrationTest extends BrowserTestBase {
@@ -226,7 +228,7 @@ class LayoutBuilderIntegrationTest extends BrowserTestBase {
    *
    * @dataProvider provider
    */
-  public function test(array $block_configuration, $layout_overridable = FALSE, $third_party_contexts = [], array $entity_values = []) {
+  public function test(array $block_configuration, bool $layout_overridable = FALSE, array $third_party_contexts = [], array $entity_values = []) {
     $page = $this->getSession()->getPage();
 
     $component = SectionComponent::fromArray([

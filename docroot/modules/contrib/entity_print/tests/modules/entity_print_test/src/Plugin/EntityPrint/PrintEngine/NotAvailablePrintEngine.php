@@ -18,7 +18,9 @@ class NotAvailablePrintEngine extends PrintEngineBase {
   /**
    * {@inheritdoc}
    */
-  public function send($filename, $force_download = TRUE) {}
+  public function send($filename, $force_download = TRUE) {
+    return $this;
+  }
 
   /**
    * {@inheritdoc}
@@ -33,7 +35,9 @@ class NotAvailablePrintEngine extends PrintEngineBase {
   /**
    * {@inheritdoc}
    */
-  public function addPage($content) {}
+  public function addPage($content) {
+    return $this;
+  }
 
   /**
    * {@inheritdoc}
@@ -45,6 +49,8 @@ class NotAvailablePrintEngine extends PrintEngineBase {
   /**
    * {@inheritdoc}
    */
-  public function getPrintObject() {}
+  public function getPrintObject() {
+    return new \stdClass();
+  }
 
 }

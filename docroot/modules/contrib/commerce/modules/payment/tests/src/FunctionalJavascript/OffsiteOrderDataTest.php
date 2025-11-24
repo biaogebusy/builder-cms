@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\commerce_payment\FunctionalJavascript;
 
+use Drupal\Tests\commerce\FunctionalJavascript\CommerceWebDriverTestBase;
 use Drupal\commerce_order\Entity\Order;
 use Drupal\commerce_payment\Entity\PaymentGateway;
-use Drupal\Tests\commerce\FunctionalJavascript\CommerceWebDriverTestBase;
 
 /**
  * Tests saving order data before and after saving the payment.
@@ -118,7 +118,7 @@ class OffsiteOrderDataTest extends CommerceWebDriverTestBase {
    * @return array
    *   A list of testSave function arguments.
    */
-  public function saveDataProvider() {
+  public static function saveDataProvider() {
     return [
       ['before'],
       ['after'],

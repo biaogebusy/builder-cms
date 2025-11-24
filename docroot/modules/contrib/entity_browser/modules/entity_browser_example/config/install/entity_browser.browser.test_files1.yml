@@ -12,7 +12,7 @@ display: modal
 display_configuration:
   width: '650'
   height: '500'
-  link_text: 'Select entities'
+  link_text: 'Select entities (Modal)'
 selection_display: no_display
 selection_display_configuration: {  }
 widget_selector: single

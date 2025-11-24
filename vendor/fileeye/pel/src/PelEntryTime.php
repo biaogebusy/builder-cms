@@ -153,7 +153,6 @@ class PelEntryTime extends PelEntryAscii
                 } else {
                     return $seconds + $this->seconds;
                 }
-                break;
             case self::EXIF_STRING:
                 list ($year, $month, $day) = $this->convertJdToGregorian($this->day_count);
                 $hours = (int) ($this->seconds / 3600);
@@ -189,7 +188,7 @@ class PelEntryTime extends PelEntryAscii
     {
         if ($type === self::UNIX_TIMESTAMP) {
             if (is_int($timestamp) || is_float($timestamp)) {
-                $this->day_count = $this->convertUnixToJd($timestamp);
+                $this->day_count = (int) $this->convertUnixToJd($timestamp);
                 $this->seconds = $timestamp % 86400;
             } else {
                 throw new PelInvalidArgumentException('Expected integer value for $type, got %s', gettype($timestamp));
@@ -248,7 +247,7 @@ class PelEntryTime extends PelEntryAscii
         }
 
         $m1412 = ($month <= 2) ? - 1 : 0;
-        return floor((1461 * ($year + 4800 + $m1412)) / 4) + floor((367 * ($month - 2 - 12 * $m1412)) / 12) - floor((3 * floor(($year + 4900 + $m1412) / 100)) / 4) + $day - 32075;
+        return (int) (floor((1461 * ($year + 4800 + $m1412)) / 4) + floor((367 * ($month - 2 - 12 * $m1412)) / 12) - floor((3 * floor(($year + 4900 + $m1412) / 100)) / 4) + $day - 32075);
     }
 
     /**

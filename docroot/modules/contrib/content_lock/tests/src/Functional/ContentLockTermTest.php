@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_lock\Functional;
 
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
@@ -56,45 +58,41 @@ class ContentLockTermTest extends BrowserTestBase {
       'taxonomy_term[bundles][' . $term1->bundle() . ']' => 1,
     ];
     $this->drupalGet('admin/config/content/content_lock');
-    $this->submitForm($edit, t('Save configuration'));
+    $this->submitForm($edit, 'Save configuration');
 
     // We lock term1.
     $this->drupalLogin($user1);
     // Edit a term without saving.
     $this->drupalGet("taxonomy/term/{$term1->id()}/edit");
     $assert_session = $this->assertSession();
-    $assert_session->pageTextContains(t('This content is now locked against simultaneous editing.'));
+    $assert_session->pageTextContains('This content is now locked against simultaneous editing.');
 
     // Other user can not edit term1.
     $this->drupalLogin($user2);
     $this->drupalGet("taxonomy/term/{$term1->id()}/edit");
-    $assert_session->pageTextContains(t('This content is being edited by the user @name and is therefore locked to prevent other users changes.', [
-      '@name' => $user1->getDisplayName(),
-    ]));
-    $assert_session->linkExists(t('Break lock'));
+    $assert_session->pageTextContains("This content is being edited by the user {$user1->getDisplayName()} and is therefore locked to prevent other users changes.");
+    $assert_session->linkExists('Break lock');
     $submit = $assert_session->buttonExists('edit-submit');
     $this->assertTrue($submit->hasAttribute('disabled'));
 
     // We save term1 and unlock it.
     $this->drupalLogin($user1);
     $this->drupalGet("taxonomy/term/{$term1->id()}/edit");
-    $assert_session->pageTextContains(t('This content is now locked by you against simultaneous editing.'));
+    $assert_session->pageTextContains('This content is now locked by you against simultaneous editing.');
     $this->drupalGet('/taxonomy/term/' . $term1->id() . '/edit');
-    $this->submitForm([], t('Save'));
+    $this->submitForm([], 'Save');
 
     // We lock term1 with user2.
     $this->drupalLogin($user2);
     // Edit a node without saving.
     $this->drupalGet("taxonomy/term/{$term1->id()}/edit");
-    $assert_session->pageTextContains(t('This content is now locked against simultaneous editing.'));
+    $assert_session->pageTextContains('This content is now locked against simultaneous editing.');
 
     // Other user can not edit term1.
     $this->drupalLogin($user1);
     $this->drupalGet("taxonomy/term/{$term1->id()}/edit");
-    $assert_session->pageTextContains(t('This content is being edited by the user @name and is therefore locked to prevent other users changes.', [
-      '@name' => $user2->getDisplayName(),
-    ]));
-    $assert_session->linkNotExists(t('Break lock'));
+    $assert_session->pageTextContains("This content is being edited by the user {$user2->getDisplayName()} and is therefore locked to prevent other users changes.");
+    $assert_session->linkNotExists('Break lock');
     $submit = $assert_session->buttonExists('edit-submit');
     $this->assertTrue($submit->hasAttribute('disabled'));
 
@@ -102,9 +100,9 @@ class ContentLockTermTest extends BrowserTestBase {
     $this->drupalLogin($user2);
     // Edit a node without saving.
     $this->drupalGet("taxonomy/term/{$term1->id()}/edit");
-    $assert_session->pageTextContains(t('This content is now locked by you against simultaneous editing.'));
+    $assert_session->pageTextContains('This content is now locked by you against simultaneous editing.');
     $this->drupalGet('/taxonomy/term/' . $term1->id() . '/edit');
-    $this->submitForm([], t('Save'));
+    $this->submitForm([], 'Save');
   }
 
 }

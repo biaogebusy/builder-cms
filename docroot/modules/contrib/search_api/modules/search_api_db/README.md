@@ -30,7 +30,8 @@ double quotes.
 [facets]: https://www.drupal.org/project/facets
 
 If you feel some backend option is missing, or have other ideas for improving
-this implementation, please file a feature request in the project's [issue queue], using the "Database search" component.
+this implementation, file a feature request in the project's [issue queue],
+using the “Database search” component.
 
 [issue queue]: https://www.drupal.org/project/issues/search_api
 

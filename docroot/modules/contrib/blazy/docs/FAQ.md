@@ -8,7 +8,7 @@ some code cleanup, and optimization where needed. Patches are very much welcome.
 
 
 ### PROGRAMATICALLY
-[blazy.api.php](https://git.drupalcode.org/project/blazy/blob/8.x-2.x/blazy.api.php)
+[blazy.api.php](https://git.drupalcode.org/project/blazy/blob/3.0.x/blazy.api.php)
 
 
 ### BLAZY VS. B-LAZY

@@ -1,10 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\layout_builder\FunctionalJavascript;
 
 use Drupal\block_content\Entity\BlockContentType;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\Tests\contextual\FunctionalJavascript\ContextualLinkClickTrait;
+
+// cspell:ignore fieldbody
 
 /**
  * Tests the Layout Builder UI.
@@ -64,7 +68,7 @@ class LayoutBuilderUiTest extends WebDriverTestBase {
   /**
    * Tests that after removing sections reloading the page does not re-add them.
    */
-  public function testReloadWithNoSections() {
+  public function testReloadWithNoSections(): void {
     $assert_session = $this->assertSession();
     $page = $this->getSession()->getPage();
 
@@ -88,14 +92,21 @@ class LayoutBuilderUiTest extends WebDriverTestBase {
   /**
    * Tests the message indicating unsaved changes.
    */
-  public function testUnsavedChangesMessage() {
+  public function testUnsavedChangesMessage(): void {
     $assert_session = $this->assertSession();
     $page = $this->getSession()->getPage();
 
-    // Make and then discard changes.
     $this->assertModifiedLayout(static::FIELD_UI_PREFIX . '/display/default/layout');
+    // Discard then cancel.
+    $page->pressButton('Discard changes');
+    $page->clickLink('Cancel');
+    $assert_session->addressEquals(static::FIELD_UI_PREFIX . '/display/default/layout');
+    $assert_session->pageTextContainsOnce('You have unsaved changes.');
+
+    // Discard then confirm.
     $page->pressButton('Discard changes');
     $page->pressButton('Confirm');
+    $assert_session->addressEquals(static::FIELD_UI_PREFIX . '/display/default');
     $assert_session->pageTextNotContains('You have unsaved changes.');
 
     // Make and then save changes.
@@ -134,7 +145,7 @@ class LayoutBuilderUiTest extends WebDriverTestBase {
   /**
    * Tests that elements that open the dialog are properly highlighted.
    */
-  public function testAddHighlights() {
+  public function testAddHighlights(): void {
     $assert_session = $this->assertSession();
     $page = $this->getSession()->getPage();
 
@@ -170,14 +181,14 @@ class LayoutBuilderUiTest extends WebDriverTestBase {
     $this->assertNotEmpty($assert_session->waitForElementVisible('css', '[data-layout-delta="1"]'));
     $assert_session->elementsCount('css', '.layout-builder__add-block', 3);
 
-    // Add a custom block.
+    // Add a content block.
     $page->clickLink('Add block');
-    $this->assertNotEmpty($assert_session->waitForElementVisible('css', 'a:contains("Create custom block")'));
+    $this->assertNotEmpty($assert_session->waitForElementVisible('css', 'a:contains("Create content block")'));
     $assert_session->assertWaitOnAjaxRequest();
 
     // Highlight is present with ChooseBlockController::build().
     $this->assertHighlightedElement('[data-layout-builder-highlight-id="block-0-first"]');
-    $page->clickLink('Create custom block');
+    $page->clickLink('Create content block');
     $this->assertNotEmpty($assert_session->waitForElementVisible('css', '#drupal-off-canvas input[value="Add block"]'));
     $assert_session->assertWaitOnAjaxRequest();
 
@@ -246,7 +257,7 @@ class LayoutBuilderUiTest extends WebDriverTestBase {
   /**
    * Tests removing newly added extra field.
    */
-  public function testNewExtraField() {
+  public function testNewExtraField(): void {
     $assert_session = $this->assertSession();
     $page = $this->getSession()->getPage();
 

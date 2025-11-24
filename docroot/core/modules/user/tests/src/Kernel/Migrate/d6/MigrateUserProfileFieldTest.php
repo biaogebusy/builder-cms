@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Kernel\Migrate\d6;
 
 use Drupal\field\Entity\FieldStorageConfig;
@@ -23,7 +25,7 @@ class MigrateUserProfileFieldTest extends MigrateDrupal6TestBase {
   /**
    * Tests migration of user profile fields.
    */
-  public function testUserProfileFields() {
+  public function testUserProfileFields(): void {
     // Migrated a text field.
     $field_storage = FieldStorageConfig::load('user.profile_color');
     $this->assertSame('text', $field_storage->getType(), 'Field type is text.');

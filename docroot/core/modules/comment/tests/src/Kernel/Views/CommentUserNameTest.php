@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Kernel\Views;
 
 use Drupal\comment\Entity\Comment;
+use Drupal\comment\Entity\CommentType;
 use Drupal\Core\Session\AnonymousUserSession;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
@@ -54,7 +57,12 @@ class CommentUserNameTest extends ViewsKernelTestBase {
 
     $admin_role = Role::create([
       'id' => 'admin',
-      'permissions' => ['administer comments', 'access user profiles'],
+      'permissions' => [
+        'view test entity',
+        'administer comments',
+        'access user profiles',
+        'access comments',
+      ],
       'label' => 'Admin',
     ]);
     $admin_role->save();
@@ -73,6 +81,13 @@ class CommentUserNameTest extends ViewsKernelTestBase {
     $host = EntityTest::create(['name' => $this->randomString()]);
     $host->save();
 
+    $commentType = CommentType::create([
+      'id' => 'entity_test_comment',
+      'label' => t('Entity Test Comment'),
+      'target_entity_type_id' => 'entity_test',
+    ]);
+    $commentType->save();
+
     // Create some comments.
     $comment = Comment::create([
       'subject' => 'My comment title',
@@ -81,7 +96,7 @@ class CommentUserNameTest extends ViewsKernelTestBase {
       'entity_type' => 'entity_test',
       'field_name' => 'comment',
       'entity_id' => $host->id(),
-      'comment_type' => 'entity_test',
+      'comment_type' => 'entity_test_comment',
       'status' => 1,
     ]);
     $comment->save();
@@ -95,7 +110,7 @@ class CommentUserNameTest extends ViewsKernelTestBase {
       'entity_type' => 'entity_test',
       'field_name' => 'comment',
       'entity_id' => $host->id(),
-      'comment_type' => 'entity_test',
+      'comment_type' => 'entity_test_comment',
       'created' => 123456,
       'status' => 1,
     ]);
@@ -105,10 +120,11 @@ class CommentUserNameTest extends ViewsKernelTestBase {
   /**
    * Tests the username formatter.
    */
-  public function testUsername() {
+  public function testUsername(): void {
     $view_id = $this->randomMachineName();
     $view = View::create([
       'id' => $view_id,
+      'label' => $view_id,
       'base_table' => 'comment_field_data',
       'display' => [
         'default' => [
@@ -174,8 +190,11 @@ class CommentUserNameTest extends ViewsKernelTestBase {
     $this->assertNoLink($this->adminUser->label());
     // Note: External users aren't pointing to drupal user profiles.
     $this->assertLink('barry (not verified)');
-    $this->assertLink('My comment title');
-    $this->assertLink('Anonymous comment title');
+    // Anonymous user does not have access to this link but can still see title.
+    $this->assertText('My comment title');
+    $this->assertNoLink('My comment title');
+    $this->assertText('Anonymous comment title');
+    $this->assertNoLink('Anonymous comment title');
   }
 
 }

@@ -12,7 +12,7 @@ use Drupal\Core\Utility\LinkGeneratorInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Class UserDefaultPageConfigEntityForm.
+ * Class for creating default config entity form for user.
  *
  * @package Drupal\user_default_page\Form
  */
@@ -100,7 +100,7 @@ class UserDefaultPageConfigEntityForm extends EntityForm {
     ];
 
     $roles = ['' => '-Select-'];
-    foreach (user_roles(TRUE) as $role) {
+    foreach ($this->entityTypeManager->getStorage('user_role')->loadMultiple() as $role) {
       $roles[$role->id()] = $role->label();
     }
     $form['roles_fieldset']['user_roles'] = [
@@ -288,6 +288,6 @@ class UserDefaultPageConfigEntityForm extends EntityForm {
         );
     }
     $form_state->setRedirectUrl($user_default_page_config_entity->toUrl('collection'));
+    return $status;
   }
-
 }

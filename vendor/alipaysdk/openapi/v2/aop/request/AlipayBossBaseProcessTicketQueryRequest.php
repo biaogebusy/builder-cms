@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.boss.base.process.ticket.query request
  *
  * @author auto create
- * @since 1.0, 2024-01-09 16:47:22
+ * @since 1.0, 2025-08-13 15:17:39
  */
 class AlipayBossBaseProcessTicketQueryRequest
 {

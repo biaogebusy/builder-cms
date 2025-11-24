@@ -139,7 +139,7 @@ class ContentEntity extends SourcePluginBase implements ContainerFactoryPluginIn
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration = NULL) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, ?MigrationInterface $migration = NULL) {
     return new static(
       $configuration,
       $plugin_id,
@@ -248,8 +248,8 @@ class ContentEntity extends SourcePluginBase implements ContainerFactoryPluginIn
     if (!$this->configuration['include_translations']) {
       return parent::count($refresh);
     }
-    // @TODO: Determine a better way to retrieve a valid count for translations.
-    // https://www.drupal.org/project/drupal/issues/2937166
+    // @todo Determine a better way to retrieve a valid count for translations.
+    //   https://www.drupal.org/project/drupal/issues/2937166
     return MigrateSourceInterface::NOT_COUNTABLE;
   }
 

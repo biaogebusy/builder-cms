@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Config;
 
 use Drupal\KernelTests\KernelTestBase;
@@ -21,9 +23,7 @@ class ConfigEntityUnitTest extends KernelTestBase {
   protected $strictConfigSchema = FALSE;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['config_test'];
 
@@ -45,7 +45,7 @@ class ConfigEntityUnitTest extends KernelTestBase {
   /**
    * Tests storage methods.
    */
-  public function testStorageMethods() {
+  public function testStorageMethods(): void {
     $entity_type = \Drupal::entityTypeManager()->getDefinition('config_test');
 
     // Test the static extractID() method.

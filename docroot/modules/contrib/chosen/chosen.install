@@ -26,14 +26,14 @@ function chosen_requirements($phase) {
           'title' => t('Chosen JavaScript file'),
           'value' => t('Not Installed'),
           'severity' => REQUIREMENT_ERROR,
-          'description' => t('You need to <a href="@url">download</a> the @chosen and extract the entire contents of the archive into the %path directory in your Drupal installation directory.', ['@chosen' => $link, '%path' => 'libraries/chosen', '@url' => 'https://github.com/harvesthq/chosen/releases/latest']),
+          'description' => t('You need to <a href="@url">download</a> the @chosen and extract the entire contents of the archive into the %path directory in your Drupal installation directory.', ['@chosen' => $link, '%path' => 'libraries/chosen', '@url' => 'https://github.com/noli42/chosen/releases/download/3.0.0/chosen-assets-v3.0.0.zip']),
         ];
       }
       else {
         $requirements['chosen_js'] = [
           'title' => t('Chosen JavaScript file'),
           'severity' => REQUIREMENT_OK,
-          'value' => t('Installed'),
+          'value' => t('Installed <br/>The chosen.js is under %path.', ['%path' => $chosen_path]),
         ];
       }
       break;

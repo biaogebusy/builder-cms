@@ -5,14 +5,14 @@
     "keywords": ["postal", "address", "internationalization", "localization"],
     "license": "MIT",
     "require": {
-        "php": ">=7.3",
-        "doctrine/collections": "^1.2 || ^2.0"
+        "php": ">=8.0",
+        "doctrine/collections": "^1.6 || ^2.0"
     },
     "require-dev": {
-        "symfony/validator": "^4.4 || ^5.4 || ^6.0",
-        "phpunit/phpunit": "^9.5",
-        "mikey179/vfsstream": "^1.6.10",
-        "squizlabs/php_codesniffer": "^3.6",
+        "symfony/validator": "^5.4 || ^6.3 || ^7.0",
+        "phpunit/phpunit": "^9.6",
+        "mikey179/vfsstream": "^1.6.11",
+        "squizlabs/php_codesniffer": "^3.7",
         "ext-json": "*"
     },
     "suggest": {
@@ -36,7 +36,7 @@
     ],
     "extra": {
         "branch-alias": {
-            "dev-master": "1.x-dev"
+            "dev-master": "2.x-dev"
         }
     }
 }

@@ -1,0 +1,20 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"GD",
+		"Chaozhou Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Chao'an Xian": {
+			"local_name": "潮安县"
+		},
+		"Raoping Xian": {
+			"local_name": "饶平县"
+		},
+		"Xiangqiao Qu": {
+			"local_name": "湘桥区"
+		}
+	}
+}

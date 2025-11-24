@@ -17,7 +17,7 @@ class AdminSettingsForm extends ConfigFormBase {
    *
    * @var string
    */
-  const SETTINGS = 'entity_share_diff.settings';
+  public const SETTINGS = 'entity_share_diff.settings';
 
   /**
    * {@inheritdoc}
@@ -50,8 +50,8 @@ class AdminSettingsForm extends ConfigFormBase {
     $form['context']['lines_leading'] = [
       '#type' => 'number',
       '#min' => 1,
-      '#max' => 1000,
-      '#size' => 5,
+      '#max' => (int) 1000,
+      '#size' => (int) 5,
       '#title' => $this->t('Leading lines'),
       '#description' => $this->t('The number of lines of leading context before each difference.'),
       '#default_value' => $config->get('context.lines_leading'),
@@ -59,8 +59,8 @@ class AdminSettingsForm extends ConfigFormBase {
     $form['context']['lines_trailing'] = [
       '#type' => 'number',
       '#min' => 1,
-      '#max' => 1000,
-      '#size' => 5,
+      '#max' => (int) 1000,
+      '#size' => (int) 5,
       '#title' => $this->t('Trailing lines'),
       '#description' => $this->t('The number of lines of trailing context after each difference.'),
       '#default_value' => $config->get('context.lines_trailing'),
@@ -73,7 +73,6 @@ class AdminSettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-
     $this->configFactory->getEditable(static::SETTINGS)
       ->set('context', $form_state->getValue('context'))
       ->save();

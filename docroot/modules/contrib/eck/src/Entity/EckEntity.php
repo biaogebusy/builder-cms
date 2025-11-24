@@ -3,6 +3,8 @@
 namespace Drupal\eck\Entity;
 
 use Drupal\Core\Entity\ContentEntityBase;
+use Drupal\Core\Entity\EntityPublishedInterface;
+use Drupal\Core\Entity\EntityPublishedTrait;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
@@ -14,7 +16,16 @@ use Drupal\user\UserInterface;
  *
  * @ingroup eck
  */
-class EckEntity extends ContentEntityBase implements EckEntityInterface {
+class EckEntity extends ContentEntityBase implements EckEntityInterface, EntityPublishedInterface {
+
+  use EntityPublishedTrait;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(array $values, $entity_type, $bundle = FALSE, $translations = []) {
+    parent::__construct($values, $entity_type, $bundle, $translations);
+  }
 
   /**
    * {@inheritdoc}
@@ -56,6 +67,14 @@ class EckEntity extends ContentEntityBase implements EckEntityInterface {
   /**
    * {@inheritdoc}
    */
+  public function isPublished() {
+    $key = $this->getEntityType()->getKey('published');
+    return (bool) $this->hasField($key) ? $this->get($key)->value : TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function setOwnerId($uid) {
     if ($this->hasField('uid')) {
       $this->set('uid', $uid);
@@ -84,6 +103,46 @@ class EckEntity extends ContentEntityBase implements EckEntityInterface {
       }
     }
     return '';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getChangedTime() {
+    if ($this->hasField('changed')) {
+      return $this->get('changed')->value;
+    }
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setChangedTime($timestamp) {
+    if ($this->hasField('changed')) {
+      $this->set('changed', $timestamp);
+    }
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCreatedTime() {
+    if ($this->hasField('created')) {
+      return $this->get('created')->value;
+    }
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setCreatedTime($timestamp) {
+    if ($this->hasField('created')) {
+      $this->set('created', $timestamp);
+    }
+    return $this;
   }
 
   /**
@@ -174,6 +233,22 @@ class EckEntity extends ContentEntityBase implements EckEntityInterface {
         ->setDescription(t('The time that the entity was last edited.'))
         ->setTranslatable(TRUE)
         ->setDisplayConfigurable('view', TRUE);
+    }
+
+    // Status field for the entity.
+    if ($config->get('status')) {
+      $fields += static::publishedBaseFieldDefinitions($entityType);
+      $fields['status']
+        ->setLabel(t('Published'))
+        ->setInitialValue(TRUE)
+        ->setDisplayConfigurable('form', TRUE)
+        ->setDisplayOptions('form', [
+          'type' => 'boolean_checkbox',
+          'settings' => [
+            'display_label' => TRUE,
+          ],
+          'weight' => 100,
+        ]);
     }
 
     return $fields;

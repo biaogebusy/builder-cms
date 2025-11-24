@@ -12,11 +12,12 @@
   "require-dev": {
     "drupal/diff": "1.x-dev",
     "drupal/replicate": "1.x-dev",
-    "drupal/inline_entity_form": "1.x-dev",
+    "drupal/inline_entity_form": "3.x-dev",
     "drupal/field_group": "3.x-dev",
     "drupal/block_field": "1.x-dev",
     "drupal/entity_browser": "2.x-dev",
     "drupal/entity_usage": "2.x-dev",
-    "drupal/search_api": "^1"
+    "drupal/search_api": "^1",
+    "drupal/feeds": "^3"
   }
 }

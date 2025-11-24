@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_lock\Functional;
 
 /**
@@ -30,6 +32,7 @@ class ContentLockTranslationTest extends ContentLockTestBase {
     $this->markTestSkipped(
       'prefetch_catch is not D10 compatible.'
     );
+    parent::setUp();
   }
 
   /**
@@ -46,7 +49,7 @@ class ContentLockTranslationTest extends ContentLockTestBase {
       'entity_test_mul_changed[settings][translation_lock]' => 1,
     ];
     $this->drupalGet('admin/config/content/content_lock');
-    $this->submitForm($edit, t('Save configuration'));
+    $this->submitForm($edit, 'Save configuration');
 
     /** @var \Drupal\content_lock\ContentLock\ContentLock $lockService */
     $lockService = \Drupal::service('content_lock');
@@ -57,7 +60,7 @@ class ContentLockTranslationTest extends ContentLockTestBase {
     $this->drupalLogin($this->user1);
     // Edit a entity without saving.
     $this->drupalGet($this->entity->toUrl('edit-form'));
-    $assert_session->pageTextContains(t('This content translation is now locked against simultaneous editing. This content translation will remain locked if you navigate away from this page without saving or unlocking it.'));
+    $assert_session->pageTextContains('This content translation is now locked against simultaneous editing. This content translation will remain locked if you navigate away from this page without saving or unlocking it.');
     // English form locked, german not.
     $this->assertNotFalse($lockService->fetchLock($this->entity->id(), $this->entity->language()->getId(), NULL, 'entity_test_mul_changed'));
     $this->assertFalse($lockService->fetchLock($translation->id(), $translation->language()->getId(), NULL, 'entity_test_mul_changed'));
@@ -65,30 +68,30 @@ class ContentLockTranslationTest extends ContentLockTestBase {
     $this->drupalLogin($this->user2);
     // Enter english form.
     $this->drupalGet($this->entity->toUrl('edit-form'));
-    $assert_session->pageTextContains(t('This content translation is being edited by the user'));
+    $assert_session->pageTextContains('This content translation is being edited by the user');
     $this->getSession()->getPage()->clickLink('Break lock');
     $this->getSession()->getPage()->pressButton('Confirm break lock');
     $this->assertSame($this->entity->toUrl('edit-form', ['absolute' => TRUE])->toString(), $this->getUrl());
-    $assert_session->pageTextContains(t('This content translation is now locked against simultaneous editing. This content translation will remain locked if you navigate away from this page without saving or unlocking it.'));
+    $assert_session->pageTextContains('This content translation is now locked against simultaneous editing. This content translation will remain locked if you navigate away from this page without saving or unlocking it.');
 
     // Enter translation form.
     $this->drupalGet($translation->toUrl('edit-form'));
-    $assert_session->pageTextContains(t('This content translation is now locked against simultaneous editing. This content translation will remain locked if you navigate away from this page without saving or unlocking it.'));
+    $assert_session->pageTextContains('This content translation is now locked against simultaneous editing. This content translation will remain locked if you navigate away from this page without saving or unlocking it.');
     $this->assertNotFalse($lockService->fetchLock($translation->id(), $translation->language()->getId(), NULL, 'entity_test_mul_changed'));
     $this->drupalGet($translation->toUrl('edit-form'));
-    $this->submitForm([], t('Save'));
+    $this->submitForm([], 'Save');
 
     $this->drupalLogin($this->user1);
     $this->drupalGet($translation->toUrl('edit-form'));
-    $assert_session->pageTextContains(t('This content translation is now locked against simultaneous editing. This content translation will remain locked if you navigate away from this page without saving or unlocking it.'));
+    $assert_session->pageTextContains('This content translation is now locked against simultaneous editing. This content translation will remain locked if you navigate away from this page without saving or unlocking it.');
 
     $this->drupalLogin($this->user2);
     $this->drupalGet($translation->toUrl('edit-form'));
-    $assert_session->pageTextContains(t('This content translation is being edited by the user'));
+    $assert_session->pageTextContains('This content translation is being edited by the user');
     $this->getSession()->getPage()->clickLink('Break lock');
     $this->getSession()->getPage()->pressButton('Confirm break lock');
     $this->assertSame($translation->toUrl('edit-form', ['absolute' => TRUE])->toString(), $this->getUrl());
-    $assert_session->pageTextContains(t('This content translation is now locked against simultaneous editing. This content translation will remain locked if you navigate away from this page without saving or unlocking it.'));
+    $assert_session->pageTextContains('This content translation is now locked against simultaneous editing. This content translation will remain locked if you navigate away from this page without saving or unlocking it.');
   }
 
 }

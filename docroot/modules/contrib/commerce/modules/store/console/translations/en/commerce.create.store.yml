@@ -6,4 +6,4 @@ options:
   currency: 'The store currency (optional)'
 arguments: {}
 messages:
-    success: 'I am a new generated command.'
+  success: 'I am a new generated command.'

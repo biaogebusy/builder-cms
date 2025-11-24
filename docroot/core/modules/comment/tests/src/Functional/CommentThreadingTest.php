@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Functional;
 
 use Drupal\comment\CommentManagerInterface;
@@ -17,23 +19,45 @@ class CommentThreadingTest extends CommentTestBase {
   protected $defaultTheme = 'stark';
 
   /**
+   * Check the reply link on unpublished comments.
+   */
+  public function testCommentReplyLinkUnpublished(): void {
+    // Set comments to have a subject with preview disabled.
+    $this->setCommentPreview(DRUPAL_DISABLED);
+    $this->setCommentForm(FALSE);
+    $this->setCommentSettings('default_mode', CommentManagerInterface::         COMMENT_MODE_THREADED, 'Comment paging changed.');
+
+    // Create a node.
+    $this->drupalLogin($this->adminUser);
+    $this->node = $this->drupalCreateNode(['type' => 'article', 'promote' => 1, 'uid' => $this->webUser->id()]);
+
+    // Post comment #1.
+    $comment_text = $this->randomMachineName();
+    $comment1 = $this->postComment($this->node, $comment_text, '', TRUE);
+    $this->drupalGet($this->node->toUrl());
+    $this->assertSession()->pageTextContains('Reply');
+    $comment1->setUnpublished();
+    $comment1->save();
+
+    $this->drupalGet($this->node->toUrl());
+    $this->assertSession()->pageTextNotContains('Reply');
+  }
+
+  /**
    * Tests the comment threading.
    */
-  public function testCommentThreading() {
+  public function testCommentThreading(): void {
     // Set comments to have a subject with preview disabled.
-    $this->drupalLogin($this->adminUser);
     $this->setCommentPreview(DRUPAL_DISABLED);
     $this->setCommentForm(TRUE);
     $this->setCommentSubject(TRUE);
     $this->setCommentSettings('default_mode', CommentManagerInterface::COMMENT_MODE_THREADED, 'Comment paging changed.');
-    $this->drupalLogout();
 
     // Create a node.
     $this->drupalLogin($this->webUser);
     $this->node = $this->drupalCreateNode(['type' => 'article', 'promote' => 1, 'uid' => $this->webUser->id()]);
 
     // Post comment #1.
-    $this->drupalLogin($this->webUser);
     $subject_text = $this->randomMachineName();
     $comment_text = $this->randomMachineName();
 
@@ -127,14 +151,14 @@ class CommentThreadingTest extends CommentTestBase {
   /**
    * Asserts that the link to the specified parent comment is present.
    *
-   * @param int $cid
+   * @param string $cid
    *   The comment ID to check.
-   * @param int $pid
+   * @param string $pid
    *   The expected parent comment ID.
    *
    * @internal
    */
-  protected function assertParentLink(int $cid, int $pid): void {
+  protected function assertParentLink(string $cid, string $pid): void {
     // This pattern matches a markup structure like:
     // @code
     // <article id="comment-2">
@@ -158,12 +182,12 @@ class CommentThreadingTest extends CommentTestBase {
   /**
    * Asserts that the specified comment does not have a link to a parent.
    *
-   * @param int $cid
+   * @param string $cid
    *   The comment ID to check.
    *
    * @internal
    */
-  protected function assertNoParentLink(int $cid): void {
+  protected function assertNoParentLink(string $cid): void {
     $pattern = "//article[@id='comment-$cid']";
     // A parent link is always accompanied by the text "In reply to".
     $this->assertSession()->elementTextNotContains('xpath', $pattern, 'In reply to');

@@ -1,0 +1,32 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"LN",
+		"Liaoyang Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Baita Qu": {
+			"local_name": "白塔区"
+		},
+		"Dengta Shi": {
+			"local_name": "灯塔市"
+		},
+		"Gongzhangling Qu": {
+			"local_name": "弓长岭区"
+		},
+		"Hongwei Qu": {
+			"local_name": "宏伟区"
+		},
+		"Liaoyang Xian": {
+			"local_name": "辽阳县"
+		},
+		"Taizihe Qu": {
+			"local_name": "太子河区"
+		},
+		"Wensheng Qu": {
+			"local_name": "文圣区"
+		}
+	}
+}

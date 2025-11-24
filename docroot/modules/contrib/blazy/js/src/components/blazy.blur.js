@@ -80,15 +80,12 @@
     var existing = null;
     var valid = false;
     var stored = $.storage(K_BLUR);
-    // @todo remove at 3.x:
-    var dt = 'data-thumb';
     var dbt = 'data-b-thumb';
-    var dtValue = $.attr(cn, dbt + ' ' + dt);
+    var dtValue = $.attr(cn, dbt);
     var found;
 
     if (dtValue) {
-      // @todo remove the last at 3.x:
-      if ($.is(url, dbt) || $.is(url, dt)) {
+      if ($.is(url, dbt)) {
         url = dtValue;
       }
     }

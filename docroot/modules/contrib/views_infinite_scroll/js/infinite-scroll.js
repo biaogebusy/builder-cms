@@ -44,11 +44,11 @@
     var view = Drupal.views.instances[currentViewId];
     // Remove once so that the exposed form and pager are processed on
     // behavior attach.
-    view.$view.removeOnce('ajax-pager');
-    view.$exposed_form.removeOnce('exposed-form');
+    once.remove('ajax-pager', view.$view);
+    once.remove('exposed-form', view.$exposed_form);
     // Make sure infinite scroll can be reinitialized.
     var $existingPager = view.$view.find(pagerSelector);
-    $existingPager.removeOnce('infinite-scroll');
+    once.remove('infinite-scroll', $existingPager);
 
     var $newRows = $newView.find(contentWrapperSelector).children();
     var $newPager = $newView.find(pagerSelector);
@@ -79,8 +79,8 @@
    */
   Drupal.behaviors.views_infinite_scroll_automatic = {
     attach : function (context, settings) {
-      $(context).find(automaticPagerSelector).once('infinite-scroll').each(function () {
-        var $pager = $(this);
+      once('infinite-scroll', automaticPagerSelector, context).forEach(function (elem) {
+        var $pager = $(elem);
         $pager.addClass('visually-hidden');
         var isLoadNeeded = function () {
           return window.innerHeight + window.pageYOffset > $pager.offset().top - scrollThreshold;
@@ -102,7 +102,7 @@
       // other than a scroll. AJAX filters are a good example of the event needing
       // to be destroyed earlier than above.
       if (trigger === 'unload') {
-        if ($(context).find(automaticPagerSelector).removeOnce('infinite-scroll').length) {
+        if (once.remove('infinite-scroll', automaticPagerSelector, context).length) {
           $window.off(scrollEvent);
         }
       }

@@ -9,13 +9,9 @@ use Drupal\Core\Ajax\HtmlCommand;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\RendererInterface;
 use Drupal\editor\Ajax\EditorDialogSave;
-use Drupal\editor\Entity\Editor;
 use Drupal\filter\Entity\FilterFormat;
-use Drupal\image\Entity\ImageStyle;
 use Drupal\video_embed_field\Plugin\Field\FieldFormatter\Video;
-use Drupal\video_embed_field\ProviderManager;
 use Drupal\video_embed_field\ProviderPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -32,6 +28,20 @@ class VideoEmbedDialog extends FormBase {
   protected $providerManager;
 
   /**
+   * The image style entity storage.
+   *
+   * @var \Drupal\Core\Entity\EntityStorageInterface
+   */
+  protected $imageStyleStorage;
+
+  /**
+   * The editor entity storage.
+   *
+   * @var \Drupal\Core\Entity\EntityStorageInterface
+   */
+  protected $editorStorage;
+
+  /**
    * The renderer.
    *
    * @var \Drupal\Core\Render\RendererInterface
@@ -39,29 +49,22 @@ class VideoEmbedDialog extends FormBase {
   protected $renderer;
 
   /**
-   * VideoEmbedDialog constructor.
-   *
-   * @param \Drupal\video_embed_field\ProviderManager $provider_manager
-   *   The video provider plugin manager.
-   * @param \Drupal\Core\Render\RendererInterface $renderer
-   *   The renderer.
-   */
-  public function __construct(ProviderManager $provider_manager, RendererInterface $renderer) {
-    $this->providerManager = $provider_manager;
-    $this->render = $renderer;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static($container->get('video_embed_field.provider_manager'), $container->get('renderer'));
+    $instance = parent::create($container);
+    $instance->providerManager = $container->get('video_embed_field.provider_manager');
+    $entity_type_manager = $container->get('entity_type.manager');
+    $instance->imageStyleStorage = $entity_type_manager->getStorage('image_style');
+    $instance->editorStorage = $entity_type_manager->getStorage('editor');
+    $instance->renderer = $container->get('renderer');
+    return $instance;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, FilterFormat $filter_format = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?FilterFormat $filter_format = NULL) {
     // Add AJAX support.
     $form['#prefix'] = '<div id="video-embed-dialog-form">';
     $form['#suffix'] = '</div>';
@@ -78,19 +81,28 @@ class VideoEmbedDialog extends FormBase {
     // If no settings are found, use the defaults configured in the filter
     // formats interface.
     $settings = $this->getUserInput($form_state, 'settings');
-    if (empty($settings) && $editor = Editor::load($filter_format->id())) {
+    if (empty($settings) && $editor = $this->editorStorage->load($filter_format->id())) {
       $editor_settings = $editor->getSettings();
       $plugin_settings = NestedArray::getValue($editor_settings, [
         'plugins',
-        'video_embed',
+        'video_embed_wysiwyg_video_embed',
         'defaults',
         'children',
       ]);
+      if (empty($plugin_settings)) {
+        $plugin_settings = NestedArray::getValue($editor_settings, [
+          'plugins',
+          'video_embed',
+          'defaults',
+          'children',
+        ]);
+      }
       $settings = $plugin_settings ? $plugin_settings : [];
     }
 
     // Create a settings form from the existing video formatter.
-    $form['settings'] = Video::mockInstance($settings)->settingsForm([], new FormState());;
+    $form['settings'] = Video::mockInstance($settings)->settingsForm([], new FormState());
+
     $form['settings']['#type'] = 'fieldset';
     $form['settings']['#title'] = $this->t('Settings');
 
@@ -122,7 +134,7 @@ class VideoEmbedDialog extends FormBase {
    *   The default value.
    */
   protected function getUserInput(FormStateInterface $form_state, $key) {
-    return isset($form_state->getUserInput()['editor_object'][$key]) ? $form_state->getUserInput()['editor_object'][$key] : '';
+    return $form_state->getUserInput()['editor_object'][$key] ?? '';
   }
 
   /**
@@ -145,7 +157,7 @@ class VideoEmbedDialog extends FormBase {
     }
 
     $provider->downloadThumbnail();
-    $thumbnail_preview = ImageStyle::load('video_embed_wysiwyg_preview')->buildUrl($provider->getLocalThumbnailUri());
+    $thumbnail_preview = $this->imageStyleStorage->load('video_embed_wysiwyg_preview')->buildUrl($provider->getLocalThumbnailUri());
     $thumbnail_preview_parts = parse_url($thumbnail_preview);
     return [
       'preview_thumbnail' => $thumbnail_preview_parts['path'] . (!empty($thumbnail_preview_parts['query']) ? '?' : '') . $thumbnail_preview_parts['query'],

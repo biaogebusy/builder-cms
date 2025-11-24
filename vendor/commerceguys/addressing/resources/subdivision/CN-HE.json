@@ -1,0 +1,54 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"HE"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Baoding Shi": {
+			"local_name": "保定市",
+			"has_children": true
+		},
+		"Cangzhou Shi": {
+			"local_name": "沧州市",
+			"has_children": true
+		},
+		"Chengde Shi": {
+			"local_name": "承德市",
+			"has_children": true
+		},
+		"Handan Shi": {
+			"local_name": "邯郸市",
+			"has_children": true
+		},
+		"Hengshui Shi": {
+			"local_name": "衡水市",
+			"has_children": true
+		},
+		"Langfang Shi": {
+			"local_name": "廊坊市",
+			"has_children": true
+		},
+		"Qinhuangdao Shi": {
+			"local_name": "秦皇岛市",
+			"has_children": true
+		},
+		"Shijiazhuang Shi": {
+			"local_name": "石家庄市",
+			"has_children": true
+		},
+		"Tangshan Shi": {
+			"local_name": "唐山市",
+			"has_children": true
+		},
+		"Xingtai Shi": {
+			"local_name": "邢台市",
+			"has_children": true
+		},
+		"Zhangjiakou Shi": {
+			"local_name": "张家口市",
+			"has_children": true
+		}
+	}
+}

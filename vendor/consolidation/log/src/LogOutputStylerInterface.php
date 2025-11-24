@@ -65,11 +65,6 @@ interface LogOutputStylerInterface
     public function log($output, $level, $message, $context);
 
     /**
-     * Print a success message.
-     */
-    public function success($output, $level, $message, $context);
-
-    /**
      * Print an error message. Used when log level is:
      *  - LogLevel::EMERGENCY
      *  - LogLevel::ALERT

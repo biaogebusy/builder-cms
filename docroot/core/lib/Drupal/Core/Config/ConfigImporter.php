@@ -201,7 +201,7 @@ class ConfigImporter {
    * @param \Drupal\Core\Extension\ThemeExtensionList $extension_list_theme
    *   The theme extension list.
    */
-  public function __construct(StorageComparerInterface $storage_comparer, EventDispatcherInterface $event_dispatcher, ConfigManagerInterface $config_manager, LockBackendInterface $lock, TypedConfigManagerInterface $typed_config, ModuleHandlerInterface $module_handler, ModuleInstallerInterface $module_installer, ThemeHandlerInterface $theme_handler, TranslationInterface $string_translation, ModuleExtensionList $extension_list_module, ThemeExtensionList $extension_list_theme = NULL) {
+  public function __construct(StorageComparerInterface $storage_comparer, EventDispatcherInterface $event_dispatcher, ConfigManagerInterface $config_manager, LockBackendInterface $lock, TypedConfigManagerInterface $typed_config, ModuleHandlerInterface $module_handler, ModuleInstallerInterface $module_installer, ThemeHandlerInterface $theme_handler, TranslationInterface $string_translation, ModuleExtensionList $extension_list_module, ?ThemeExtensionList $extension_list_theme = NULL) {
     $this->moduleExtensionList = $extension_list_module;
     $this->storageComparer = $storage_comparer;
     $this->eventDispatcher = $event_dispatcher;
@@ -213,6 +213,7 @@ class ConfigImporter {
     $this->themeHandler = $theme_handler;
     $this->stringTranslation = $string_translation;
     if ($extension_list_theme === NULL) {
+      @trigger_error('Calling ' . __METHOD__ . ' without the $extension_list_theme argument is deprecated in drupal:10.1.0 and will be required in drupal:11.0.0. See https://www.drupal.org/node/3284397', E_USER_DEPRECATED);
       $extension_list_theme = \Drupal::service('extension.list.theme');
     }
     $this->themeExtensionList = $extension_list_theme;
@@ -418,7 +419,7 @@ class ConfigImporter {
     //   'text' => -1,
     // );
     // @endcode
-    // will result in the following sort order:
+    // Will result in the following sort order:
     // 1. -2   options
     // 2. -1   text
     // 3.  0 0 ban
@@ -429,18 +430,43 @@ class ConfigImporter {
 
     // Determine which modules to install.
     $install = array_keys(array_diff_key($new_extensions['module'], $current_extensions['module']));
+    // Always install required modules first. Respect the dependencies between
+    // the modules.
+    $install_required = [];
+    $install_non_required = [];
+    foreach ($install as $module) {
+      if (!isset($module_data[$module])) {
+        // The module doesn't exist. This is handled in
+        // \Drupal\Core\EventSubscriber\ConfigImportSubscriber::validateModules().
+        continue;
+      }
+      if (!empty($module_data[$module]->info['required'])) {
+        $install_required[$module] = $module_data[$module]->sort;
+      }
+      else {
+        $install_non_required[$module] = $module_data[$module]->sort;
+      }
+    }
     // Ensure that installed modules are sorted in exactly the reverse order
     // (with dependencies installed first, and modules of the same weight sorted
     // in alphabetical order).
-    $module_list = array_reverse($module_list);
-    $this->extensionChangelist['module']['install'] = array_intersect(array_keys($module_list), $install);
+    arsort($install_required);
+    arsort($install_non_required);
 
-    // If we're installing the install profile ensure it comes last. This will
-    // occur when installing a site from configuration.
-    $install_profile_key = array_search($new_extensions['profile'], $this->extensionChangelist['module']['install'], TRUE);
-    if ($install_profile_key !== FALSE) {
-      unset($this->extensionChangelist['module']['install'][$install_profile_key]);
-      $this->extensionChangelist['module']['install'][] = $new_extensions['profile'];
+    $this->extensionChangelist['module']['install'] = array_keys($install_required + $install_non_required);
+
+    // If we're installing the install profile ensure it comes last in the
+    // list of modules to be installed. This will occur when installing a site
+    // from configuration.
+    if (isset($new_extensions['profile'])) {
+      $install_profile_key = array_search($new_extensions['profile'], $this->extensionChangelist['module']['install'], TRUE);
+      // If the profile is not in the list of modules to be installed this will
+      // generate a validation error. See
+      // \Drupal\Core\EventSubscriber\ConfigImportSubscriber::validateModules().
+      if ($install_profile_key !== FALSE) {
+        unset($this->extensionChangelist['module']['install'][$install_profile_key]);
+        $this->extensionChangelist['module']['install'][] = $new_extensions['profile'];
+      }
     }
 
     // Get a list of themes with dependency weights as values.
@@ -536,13 +562,16 @@ class ConfigImporter {
    *   Exception thrown if the $sync_step can not be called.
    */
   public function doSyncStep($sync_step, &$context) {
+    if ($this->validated) {
+      $this->storageComparer->writeMode();
+    }
     if (is_string($sync_step) && method_exists($this, $sync_step)) {
       \Drupal::service('config.installer')->setSyncing(TRUE);
       $this->$sync_step($context);
     }
     elseif (is_callable($sync_step)) {
       \Drupal::service('config.installer')->setSyncing(TRUE);
-      call_user_func_array($sync_step, [&$context, $this]);
+      $sync_step($context, $this);
     }
     else {
       throw new \InvalidArgumentException('Invalid configuration synchronization step');
@@ -850,8 +879,8 @@ class ConfigImporter {
       ->setSourceStorage($this->storageComparer->getSourceStorage());
     if ($type == 'module') {
       $this->moduleInstaller->$op([$name], FALSE);
-      // Installing a module can cause a kernel boot therefore reinject all the
-      // services.
+      // Installing a module can cause a kernel boot therefore inject all the
+      // services again.
       $this->reInjectMe();
       // During a module install or uninstall the container is rebuilt and the
       // module handler is called. This causes the container's instance of the
@@ -971,6 +1000,9 @@ class ConfigImporter {
     }
     else {
       $config = new Config($name, $this->storageComparer->getTargetStorage($collection), $this->eventDispatcher, $this->typedConfigManager);
+    }
+    if ($old_data = $this->storageComparer->getTargetStorage($collection)->read($name)) {
+      $config->initWithData($old_data);
     }
     if ($op == 'delete') {
       $config->delete();
@@ -1109,6 +1141,8 @@ class ConfigImporter {
     // the new container.
     $this->__sleep();
     $this->__wakeup();
+    $this->storageComparer->__sleep();
+    $this->storageComparer->__wakeup();
   }
 
 }

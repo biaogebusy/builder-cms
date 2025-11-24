@@ -19,8 +19,8 @@ categories:
 elements: |
   description:
     '#markup': |
-      <p>This webform includes a #test elememt which will trigger all methods associated with a WebformElement plugin.</p>
-      
+      <p>This webform includes a #test element which will trigger all methods associated with a WebformElement plugin.</p>
+
   test:
     '#type': webform_test_element
     '#title': 'This is a test element'

@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\commerce_payment\Kernel;
 
+use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 use Drupal\commerce_order\Entity\Order;
 use Drupal\commerce_order\Entity\OrderItem;
 use Drupal\commerce_payment\Entity\Payment;
@@ -9,7 +10,6 @@ use Drupal\commerce_payment\Entity\PaymentGateway;
 use Drupal\commerce_payment\Entity\PaymentMethod;
 use Drupal\commerce_price\Price;
 use Drupal\profile\Entity\Profile;
-use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 
 /**
  * Tests the payment order updater.
@@ -109,7 +109,7 @@ class PaymentOrderUpdaterTest extends OrderKernelTestBase {
       'card_number' => '1111',
       'billing_profile' => $profile,
       'reusable' => TRUE,
-      'expires' => strtotime('2028/03/24'),
+      'expires' => strtotime('+1 year'),
     ]);
     $payment_method->setBillingProfile($profile);
     $payment_method->save();

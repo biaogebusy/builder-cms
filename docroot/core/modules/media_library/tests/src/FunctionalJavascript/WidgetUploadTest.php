@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media_library\FunctionalJavascript;
 
 use Drupal\media\Entity\Media;
 use Drupal\Tests\TestFileCreationTrait;
 
 /**
- * Tests that uploads in the Media library's widget works as expected.
+ * Tests that uploads in the 'media_library_widget' works as expected.
  *
  * @group media_library
  *
@@ -23,9 +25,9 @@ class WidgetUploadTest extends MediaLibraryTestBase {
   protected $defaultTheme = 'stark';
 
   /**
-   * Tests that uploads in the Media library's widget works as expected.
+   * Tests that uploads in the 'media_library_widget' works as expected.
    */
-  public function testWidgetUpload() {
+  public function testWidgetUpload(): void {
     $assert_session = $this->assertSession();
     $page = $this->getSession()->getPage();
     $driver = $this->getSession()->getDriver();
@@ -119,7 +121,7 @@ class WidgetUploadTest extends MediaLibraryTestBase {
     $this->waitForText('Alternative text field is required');
     $page->fillField('Alternative text', $this->randomString());
     $this->pressSaveButton();
-    $this->assertJsCondition('jQuery("input[name=\'media_library_select_form[0]\']").is(":focus")');
+    $this->assertJsCondition('jQuery("input[name=\'media_library_select_form[1]\']").is(":focus")');
     // The file should be permanent now.
     $files = $file_storage->loadMultiple();
     $file = array_pop($files);
@@ -127,15 +129,16 @@ class WidgetUploadTest extends MediaLibraryTestBase {
     // Load the created media item.
     $media_items = Media::loadMultiple();
     $added_media = array_pop($media_items);
+    $added_media_id = $added_media->id();
     // Ensure the media item was saved to the library and automatically
     // selected. The added media items should be in the first position of the
     // add form.
     $assert_session->pageTextContains('Add or select media');
     $assert_session->pageTextContains($png_image->filename);
-    $assert_session->fieldValueEquals('media_library_select_form[0]', $added_media->id());
-    $assert_session->checkboxChecked('media_library_select_form[0]');
+    $assert_session->fieldValueEquals("media_library_select_form[$added_media_id]", $added_media_id);
+    $assert_session->checkboxChecked("media_library_select_form[$added_media_id]");
     $assert_session->pageTextContains('1 of 2 items selected');
-    $assert_session->hiddenFieldValueEquals('current_selection', $added_media->id());
+    $assert_session->hiddenFieldValueEquals('current_selection', $added_media_id);
     // Ensure the created item is added in the widget.
     $this->pressInsertSelected('Added one media item.');
     $this->waitForText($png_image->filename);
@@ -177,19 +180,20 @@ class WidgetUploadTest extends MediaLibraryTestBase {
     $media_items = Media::loadMultiple();
     $added_media = array_pop($media_items);
     $added_media_name = $added_media->label();
+    $added_media_id = $added_media->id();
     // Ensure the media item was saved to the library and automatically
     // selected. The added media items should be in the first position of the
     // add form.
     $assert_session->pageTextContains('Add or select media');
     $assert_session->pageTextContains('Unlimited Cardinality Image');
-    $assert_session->fieldValueEquals('media_library_select_form[0]', $added_media->id());
-    $assert_session->checkboxChecked('media_library_select_form[0]');
+    $assert_session->fieldValueEquals("media_library_select_form[$added_media_id]", $added_media_id);
+    $assert_session->checkboxChecked("media_library_select_form[$added_media_id]");
     // Assert the item that was selected before uploading the file is still
     // selected.
     $assert_session->pageTextContains('2 items selected');
     $assert_session->checkboxChecked("Select $added_media_name");
     $assert_session->checkboxChecked("Select $existing_media_name");
-    $assert_session->hiddenFieldValueEquals('current_selection', implode(',', [$selected_item_id, $added_media->id()]));
+    $assert_session->hiddenFieldValueEquals('current_selection', implode(',', [$selected_item_id, $added_media_id]));
     $selected_checkboxes = [];
     foreach ($this->getCheckboxes() as $checkbox) {
       if ($checkbox->isChecked()) {
@@ -204,13 +208,17 @@ class WidgetUploadTest extends MediaLibraryTestBase {
     // Assert we can now only upload one more media item.
     $this->openMediaLibraryForField('field_twin_media');
     $this->switchToMediaType('Four');
+    // We set the multiple to FALSE if only one file can be uploaded
     $this->assertFalse($assert_session->fieldExists('Add file')->hasAttribute('multiple'));
     $assert_session->pageTextContains('One file only.');
+    $choose_files = $assert_session->elementExists('css', '.form-managed-file');
+    $choose_files->hasButton('Choose file');
+    $this->assertFalse($choose_files->hasButton('Choose files'));
 
     // Assert media type four should only allow jpg files by trying a png file
     // first.
     $png_uri_4 = $file_system->copy($png_image->uri, 'public://');
-    $this->addMediaFileToField('Add file', $file_system->realpath($png_uri_4), FALSE);
+    $this->addMediaFileToField('Add file', $file_system->realpath($png_uri_4));
     $this->waitForText('Only files with the following extensions are allowed');
     // Assert that jpg files are accepted by type four.
     $jpg_uri_2 = $file_system->copy($jpg_image->uri, 'public://');
@@ -256,10 +264,11 @@ class WidgetUploadTest extends MediaLibraryTestBase {
     $media_items = Media::loadMultiple();
     $added_media = array_pop($media_items);
     $added_media_name = $added_media->label();
+    $added_media_id = $added_media->id();
     $assert_session->pageTextContains('1 item selected');
     $assert_session->checkboxChecked("Select $added_media_name");
     $assert_session->checkboxNotChecked("Select $existing_media_name");
-    $assert_session->hiddenFieldValueEquals('current_selection', $added_media->id());
+    $assert_session->hiddenFieldValueEquals('current_selection', $added_media_id);
     $this->pressInsertSelected('Added one media item.');
     $this->waitForText($file_system->basename($png_uri_5));
 
@@ -362,7 +371,7 @@ class WidgetUploadTest extends MediaLibraryTestBase {
    * @todo Merge this with testWidgetUpload() in
    *   https://www.drupal.org/project/drupal/issues/3087227
    */
-  public function testWidgetUploadAdvancedUi() {
+  public function testWidgetUploadAdvancedUi(): void {
     $this->config('media_library.settings')->set('advanced_ui', TRUE)->save();
 
     $assert_session = $this->assertSession();
@@ -458,7 +467,7 @@ class WidgetUploadTest extends MediaLibraryTestBase {
     $this->waitForText('Alternative text field is required');
     $page->fillField('Alternative text', $this->randomString());
     $this->saveAnd('select');
-    $this->assertJsCondition('jQuery("input[name=\'media_library_select_form[0]\']").is(":focus")');
+    $this->assertJsCondition('jQuery("input[name=\'media_library_select_form[1]\']").is(":focus")');
     // The file should be permanent now.
     $files = $file_storage->loadMultiple();
     $file = array_pop($files);
@@ -466,15 +475,16 @@ class WidgetUploadTest extends MediaLibraryTestBase {
     // Load the created media item.
     $media_items = Media::loadMultiple();
     $added_media = array_pop($media_items);
+    $added_media_id = $added_media->id();
     // Ensure the media item was saved to the library and automatically
     // selected. The added media items should be in the first position of the
     // add form.
     $assert_session->pageTextContains('Add or select media');
     $assert_session->pageTextContains($png_image->filename);
-    $assert_session->fieldValueEquals('media_library_select_form[0]', $added_media->id());
-    $assert_session->checkboxChecked('media_library_select_form[0]');
+    $assert_session->fieldValueEquals("media_library_select_form[$added_media_id]", $added_media_id);
+    $assert_session->checkboxChecked("media_library_select_form[$added_media_id]");
     $assert_session->pageTextContains('1 of 2 items selected');
-    $assert_session->hiddenFieldValueEquals('current_selection', $added_media->id());
+    $assert_session->hiddenFieldValueEquals('current_selection', $added_media_id);
     // Ensure the created item is added in the widget.
     $this->pressInsertSelected('Added one media item.');
     $this->waitForText($png_image->filename);
@@ -520,19 +530,20 @@ class WidgetUploadTest extends MediaLibraryTestBase {
     $media_items = Media::loadMultiple();
     $added_media = array_pop($media_items);
     $added_media_name = $added_media->label();
+    $added_media_id = $added_media->id();
     // Ensure the media item was saved to the library and automatically
     // selected. The added media items should be in the first position of the
     // add form.
     $assert_session->pageTextContains('Add or select media');
     $assert_session->pageTextContains('Unlimited Cardinality Image');
-    $assert_session->fieldValueEquals('media_library_select_form[0]', $added_media->id());
-    $assert_session->checkboxChecked('media_library_select_form[0]');
+    $assert_session->fieldValueEquals("media_library_select_form[$added_media_id]", $added_media_id);
+    $assert_session->checkboxChecked("media_library_select_form[$added_media_id]");
     // Assert the item that was selected before uploading the file is still
     // selected.
     $assert_session->pageTextContains('2 items selected');
     $assert_session->checkboxChecked("Select $added_media_name");
     $assert_session->checkboxChecked("Select $existing_media_name");
-    $assert_session->hiddenFieldValueEquals('current_selection', implode(',', [$selected_item_id, $added_media->id()]));
+    $assert_session->hiddenFieldValueEquals('current_selection', implode(',', [$selected_item_id, $added_media_id]));
     $selected_checkboxes = [];
     foreach ($this->getCheckboxes() as $checkbox) {
       if ($checkbox->isChecked()) {
@@ -547,13 +558,18 @@ class WidgetUploadTest extends MediaLibraryTestBase {
     // Assert we can now only upload one more media item.
     $this->openMediaLibraryForField('field_twin_media');
     $this->switchToMediaType('Four');
+
+    // We set the multiple to FALSE if only one file can be uploaded
     $this->assertFalse($assert_session->fieldExists('Add file')->hasAttribute('multiple'));
     $assert_session->pageTextContains('One file only.');
+    $choose_files = $assert_session->elementExists('css', '.form-managed-file');
+    $choose_files->hasButton('Choose file');
+    $this->assertFalse($choose_files->hasButton('Choose files'));
 
     // Assert media type four should only allow jpg files by trying a png file
     // first.
     $png_uri_4 = $file_system->copy($png_image->uri, 'public://');
-    $this->addMediaFileToField('Add file', $file_system->realpath($png_uri_4), FALSE);
+    $this->addMediaFileToField('Add file', $file_system->realpath($png_uri_4));
     $this->waitForText('Only files with the following extensions are allowed');
     // Assert that jpg files are accepted by type four.
     $jpg_uri_2 = $file_system->copy($jpg_image->uri, 'public://');
@@ -618,7 +634,9 @@ class WidgetUploadTest extends MediaLibraryTestBase {
     $selection_area = $this->getSelectionArea();
     $assert_session->checkboxChecked("Select $existing_media_name", $selection_area);
     $selection_area->uncheckField("Select $existing_media_name");
-    $assert_session->hiddenFieldValueEquals('current_selection', '');
+    $page->waitFor(10, function () use ($page) {
+      return $page->find('hidden_field_selector', ['hidden_field', 'current_selection'])->getValue() === '';
+    });
     // Close the details element so that clicking the Save and select works.
     // @todo Fix dialog or test so this is not necessary to prevent random
     //   fails. https://www.drupal.org/project/drupal/issues/3055648
@@ -628,10 +646,11 @@ class WidgetUploadTest extends MediaLibraryTestBase {
     $media_items = Media::loadMultiple();
     $added_media = array_pop($media_items);
     $added_media_name = $added_media->label();
+    $added_media_id = $added_media->id();
     $assert_session->pageTextContains('1 item selected');
     $assert_session->checkboxChecked("Select $added_media_name");
     $assert_session->checkboxNotChecked("Select $existing_media_name");
-    $assert_session->hiddenFieldValueEquals('current_selection', $added_media->id());
+    $assert_session->hiddenFieldValueEquals('current_selection', $added_media_id);
     $this->pressInsertSelected('Added one media item.');
     $this->waitForText($file_system->basename($png_uri_5));
 

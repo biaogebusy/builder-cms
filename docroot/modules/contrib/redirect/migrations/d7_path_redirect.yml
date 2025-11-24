@@ -21,6 +21,7 @@ process:
     plugin: default_value
     source: language
     default_value: und
+  enabled: status
   status_code: status_code
 destination:
   plugin: entity:redirect

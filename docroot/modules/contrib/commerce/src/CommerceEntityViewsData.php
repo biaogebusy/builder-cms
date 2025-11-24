@@ -201,7 +201,8 @@ class CommerceEntityViewsData extends EntityViewsData {
    */
   protected function mapFieldDefinition($table, $field_name, FieldDefinitionInterface $field_definition, TableMappingInterface $table_mapping, &$table_data) {
     $field_column_mapping = $table_mapping->getColumnNames($field_name);
-    $field_storage = $this->getFieldStorageDefinitions()[$field_name];
+    $field_storage_definitions = $this->entityFieldManager->getFieldStorageDefinitions($this->entityType->id());
+    $field_storage = $field_storage_definitions[$field_name];
     $field_schema = $field_storage->getSchema();
 
     $field_definition_type = $field_definition->getType();

@@ -44,7 +44,7 @@ abstract class WebformDeleteFormBase extends ConfirmFormBase implements WebformD
       $form['details'] = $details;
     }
     if (!$details && $confirm_input) {
-      $form['hr'] = ['#markup' => '<p><hr/></p>'];
+      $form['hr'] = ['#markup' => '<hr class="webform-hr"/>'];
     }
     if ($confirm_input) {
       $form['confirm'] = $confirm_input;

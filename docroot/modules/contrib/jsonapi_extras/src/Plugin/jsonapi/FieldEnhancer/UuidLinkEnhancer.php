@@ -4,19 +4,20 @@ namespace Drupal\jsonapi_extras\Plugin\jsonapi\FieldEnhancer;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\jsonapi_extras\Attribute\ResourceFieldEnhancer;
 use Drupal\jsonapi_extras\Plugin\ResourceFieldEnhancerBase;
 use Shaper\Util\Context;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Use UUID for internal link field value.
- *
- * @ResourceFieldEnhancer(
- *   id = "uuid_link",
- *   label = @Translation("UUID for link (link field only)"),
- *   description = @Translation("Use UUID for internal link field.")
- * )
  */
+#[ResourceFieldEnhancer(
+  id: 'uuid_link',
+  label: new TranslatableMarkup('UUID for link (link field only)'),
+  description: new TranslatableMarkup('Use UUID for internal link field.'),
+)]
 class UuidLinkEnhancer extends ResourceFieldEnhancerBase implements ContainerFactoryPluginInterface {
 
   /**

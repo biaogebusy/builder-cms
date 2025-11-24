@@ -237,7 +237,7 @@ class AutosaveEntityFormHandler implements AutosaveEntityFormHandlerInterface, E
       $changed_form_value = isset($input['changed']) ? $input['changed'] : NULL;
       $entity->setChangedTime($changed_form_value ?: $changed_time);
 
-      if (!$this->conflictEnabled && ($unchanged = $this->entityStorage->loadUnchanged($entity->id())) && ($unchanged->getChangedTimeAcrossTranslations() > $entity->getChangedTimeAcrossTranslations())) {
+      if (!$this->conflictEnabled && ($unchanged = $this->entityStorage->loadUnchanged($this->getEntityId($entity))) && ($unchanged->getChangedTimeAcrossTranslations() > $entity->getChangedTimeAcrossTranslations())) {
         $form_state->setTemporaryValue('autosave_form_last_autosave_timestamp', 'entity_saved_meanwhile');
         return FALSE;
       }
@@ -253,7 +253,7 @@ class AutosaveEntityFormHandler implements AutosaveEntityFormHandlerInterface, E
    */
   public function getLastAutosavedFormState(FormStateInterface $form_state, $autosave_form_session_id, $uid) {
     list($form_id, $entity) = $this->getFormIDandEntity($form_state);
-    return $this->autosaveEntityFormStorage->getFormState($form_id, $entity->getEntityTypeId(), $entity->id(), $entity->language()->getId(), $uid, $autosave_form_session_id);
+    return $this->autosaveEntityFormStorage->getFormState($form_id, $entity->getEntityTypeId(), $this->getEntityId($entity), $entity->language()->getId(), $uid, $autosave_form_session_id);
   }
 
   /**
@@ -261,7 +261,7 @@ class AutosaveEntityFormHandler implements AutosaveEntityFormHandlerInterface, E
    */
   public function storeState(FormStateInterface $form_state, $autosave_form_session_id, $autosave_timestamp, $uid) {
     list($form_id, $entity) = $this->getFormIDandEntity($form_state);
-    $this->autosaveEntityFormStorage->storeEntityAndFormState($form_id, $autosave_form_session_id, $entity->getEntityTypeId(), $entity->id(), $entity->language()->getId(), $uid, $autosave_timestamp, $entity, $form_state);
+    $this->autosaveEntityFormStorage->storeEntityAndFormState($form_id, $autosave_form_session_id, $entity->getEntityTypeId(), $this->getEntityId($entity), $entity->language()->getId(), $uid, $autosave_timestamp, $entity, $form_state);
   }
 
   /**
@@ -269,7 +269,7 @@ class AutosaveEntityFormHandler implements AutosaveEntityFormHandlerInterface, E
    */
   public function getLastAutosavedTimestamp(FormStateInterface $form_state, $uid) {
     list($form_id, $entity) = $this->getFormIDandEntity($form_state);
-    return $entity->isNew() ? NULL : $this->autosaveEntityFormStorage->getLastAutosavedStateTimestamp($form_id, $entity->getEntityTypeId(), $entity->id(), $entity->language()->getId(), $uid);
+    return $this->autosaveEntityFormStorage->getLastAutosavedStateTimestamp($form_id, $entity->getEntityTypeId(), $this->getEntityId($entity), $entity->language()->getId(), $uid);
   }
 
   /**
@@ -277,7 +277,7 @@ class AutosaveEntityFormHandler implements AutosaveEntityFormHandlerInterface, E
    */
   public function purgeCurrentAutosavedState(FormStateInterface $form_state, $uid) {
     list($form_id, $entity) = $this->getFormIDandEntity($form_state);
-    $this->autosaveEntityFormStorage->purgeAutosavedEntityState($entity->getEntityTypeId(), $entity->id(), $this->getAutosaveFormSessionID($form_state), $form_id, $entity->language()->getId(), $uid);
+    $this->autosaveEntityFormStorage->purgeAutosavedEntityState($entity->getEntityTypeId(), $this->getEntityId($entity), $this->getAutosaveFormSessionID($form_state), $form_id, $entity->language()->getId(), $uid);
   }
 
   /**
@@ -285,28 +285,34 @@ class AutosaveEntityFormHandler implements AutosaveEntityFormHandlerInterface, E
    */
   public function purgeAllAutosavedStates(FormStateInterface $form_state, $uid) {
     list($form_id, $entity) = $this->getFormIDandEntity($form_state);
-    $this->autosaveEntityFormStorage->purgeAutosavedEntityState($entity->getEntityTypeId(), $entity->id(), NULL, $form_id, $entity->language()->getId(), $uid);
+    $this->autosaveEntityFormStorage->purgeAutosavedEntityState($entity->getEntityTypeId(), $this->getEntityId($entity), NULL, $form_id, $entity->language()->getId(), $uid);
   }
 
   /**
    * {@inheritdoc}
    */
   public function isAutosaveEnabled(FormStateInterface $form_state) {
-    list($form_id, $entity) = $this->getFormIDandEntity($form_state);
-    $allowed = !$entity->isNew() && !$this->currentUser->isAnonymous();
-    return $allowed;
+    $form_object = $form_state->getFormObject();
+    assert($form_object instanceof EntityFormInterface);
+
+    // Don't enable autosave on delete forms.
+    if ($form_object->getOperation() == 'delete') {
+      return FALSE;
+    }
+
+    // Don't enable autosave on Layout Builder forms.
+    if (($baseFormId = $form_object->getBaseFormId()) && str_ends_with($baseFormId, '_layout_builder_form')) {
+      return FALSE;
+    }
+
+    return !$this->currentUser->isAnonymous();
   }
 
   /**
    * {@inheritdoc}
    */
   public static function getAutosaveSessionID(EntityInterface $entity) {
-    if (isset($entity->{static::AUTOSAVE_SESSION_ID})) {
-      return $entity->{static::AUTOSAVE_SESSION_ID};
-    }
-    else {
-      return NULL;
-    }
+    return $entity->{static::AUTOSAVE_SESSION_ID} ?? NULL;
   }
 
   /**
@@ -324,6 +330,22 @@ class AutosaveEntityFormHandler implements AutosaveEntityFormHandlerInterface, E
     $form_id = $form_object->getFormId();
     $entity = $form_object->getEntity();
     return [$form_id, $entity];
+  }
+
+  /**
+   * Returns the entity ID to use for the autosave storage.
+   *
+   * We cannot use the entity ID in all cases. For example new entities do not
+   * yet have an entity ID, but we still need to return something.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   Entity to get the id for.
+   *
+   * @return int|string
+   *   Entity ID or 0 for new entities.
+   */
+  public static function getEntityId(EntityInterface $entity) {
+    return $entity->isNew() ? 0 : $entity->id();
   }
 
 }

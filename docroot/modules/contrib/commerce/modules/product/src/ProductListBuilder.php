@@ -2,10 +2,11 @@
 
 namespace Drupal\commerce_product;
 
-use Drupal\commerce_product\Entity\ProductType;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityListBuilder;
+use Drupal\Core\Link;
 use Drupal\Core\Url;
+use Drupal\commerce_product\Entity\ProductType;
 
 /**
  * Defines the list builder for products.
@@ -29,10 +30,7 @@ class ProductListBuilder extends EntityListBuilder {
     /** @var \Drupal\commerce_product\Entity\ProductInterface $entity */
     $product_type = ProductType::load($entity->bundle());
 
-    $row['title']['data'] = [
-      '#type' => 'link',
-      '#title' => $entity->label(),
-    ] + $entity->toUrl()->toRenderArray();
+    $row['title']['data'] = Link::fromTextAndUrl($entity->label(), $entity->toUrl());
     $row['type'] = $product_type->label();
     $row['status'] = $entity->isPublished() ? $this->t('Published') : $this->t('Unpublished');
 

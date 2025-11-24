@@ -6,6 +6,9 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\ctools\Form\ContextDelete;
 
+/**
+ * Delete form for adding static contexts.
+ */
 class AddVariantStaticContextDeleteForm extends ContextDelete {
 
   /**
@@ -20,7 +23,7 @@ class AddVariantStaticContextDeleteForm extends ContextDelete {
    */
   public function getQuestion() {
     $cached_values = $this->getTempstore();
-    /** @var $page \Drupal\page_manager\PageInterface */
+    /** @var \Drupal\page_manager\PageInterface $page */
     $page_variant = $this->getPageVariant($cached_values);
     return $this->t('Are you sure you want to delete the static context %label?', ['%label' => $page_variant->getStaticContext($this->context_id)['label']]);
   }

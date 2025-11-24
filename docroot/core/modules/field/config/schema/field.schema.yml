@@ -3,10 +3,16 @@
 field.settings:
   type: config_object
   label: 'Field settings'
+  constraints:
+    FullyValidatable: ~
   mapping:
     purge_batch_size:
       type: integer
       label: 'Maximum number of field data records to purge'
+      constraints:
+        NotNull: []
+        Range:
+          min: 1
 
 field.storage.*.*:
   type: config_entity
@@ -24,6 +30,10 @@ field.storage.*.*:
     type:
       type: string
       label: 'Type'
+      constraints:
+        PluginExists:
+          manager: plugin.manager.field.field_type
+          interface: '\Drupal\Core\Field\FieldItemInterface'
     settings:
       type: field.storage_settings.[%parent.type]
     module:

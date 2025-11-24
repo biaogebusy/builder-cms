@@ -41,7 +41,7 @@ class EntityBrowserTest extends EntityBrowserWebDriverTestBase {
     // Test the Edit functionality.
     $this->assertSession()->pageTextContains('llama.jpg');
     $this->assertSession()->buttonExists('Edit');
-    // @TODO Test the edit button.
+    // @todo Test the edit button.
     // Test the Delete functionality.
     $this->assertSession()->buttonExists('Remove');
     $this->getSession()->getPage()->pressButton('Remove');
@@ -412,7 +412,6 @@ class EntityBrowserTest extends EntityBrowserWebDriverTestBase {
 
     // Open the entity browser widget form.
     $this->getSession()->getPage()->clickLink('Select entities');
-    $this->waitForAjaxToFinish();
     $this->getSession()->switchToIFrame('entity_browser_iframe_widget_context_default_value');
 
     // Check that only nodes of an allowed type are listed.

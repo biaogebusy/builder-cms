@@ -14,10 +14,12 @@ jkopel
 Keereman
 Keran
 Kopel
+leongersen
 mikeker
 mkeereman
 Mustgrave
 Neslee
+nouislider
 Olot
 Olèrdola
 Podanenko
@@ -30,3 +32,4 @@ Uviéu
 Valdiciego
 Valdés
 Validatable
+Veri

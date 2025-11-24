@@ -25,27 +25,37 @@ final class CastToBool implements TypeCasting
 {
     private readonly bool $isNullable;
     private readonly Type $type;
+    private readonly TypeCastingInfo $info;
     private ?bool $default = null;
 
     public function __construct(ReflectionProperty|ReflectionParameter $reflectionProperty)
     {
         [$this->type, $this->isNullable] = $this->init($reflectionProperty);
+        $this->info = TypeCastingInfo::fromAccessor($reflectionProperty);
     }
 
-    public function setOptions(bool $default = null): void
-    {
+    public function setOptions(
+        ?bool $default = null,
+        bool $emptyStringAsNull = false,
+    ): void {
         $this->default = $default;
+    }
+
+    public function info(): TypeCastingInfo
+    {
+        return $this->info;
     }
 
     /**
      * @throws TypeCastingFailed
      */
-    public function toVariable(?string $value): ?bool
+    public function toVariable(mixed $value): ?bool
     {
         $returnValue = match (true) {
+            is_bool($value) => $value,
             null !== $value => filter_var($value, Type::Bool->filterFlag()),
             $this->isNullable => $this->default,
-            default => throw TypeCastingFailed::dueToNotNullableType('boolean'),
+            default => throw TypeCastingFailed::dueToNotNullableType('boolean', info: $this->info),
         };
 
         return match (true) {
@@ -54,7 +64,7 @@ final class CastToBool implements TypeCasting
                 null === $value => 'null',
                 '' === $value => 'empty string',
                 default => $value,
-            }, $this->type->value),
+            }, $this->type->value, info: $this->info),
             default => $returnValue,
         };
     }

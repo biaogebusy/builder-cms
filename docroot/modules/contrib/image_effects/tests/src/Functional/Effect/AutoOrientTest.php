@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image_effects\Functional\Effect;
 
 use Drupal\Tests\image_effects\Functional\ImageEffectsTestBase;
@@ -31,7 +33,7 @@ class AutoOrientTest extends ImageEffectsTestBase {
    *
    * @dataProvider providerToolkits
    */
-  public function testAutoOrientEffect($toolkit_id, $toolkit_config, array $toolkit_settings) {
+  public function testAutoOrientEffect(string $toolkit_id, string $toolkit_config, array $toolkit_settings): void {
     $this->changeToolkit($toolkit_id, $toolkit_config, $toolkit_settings);
 
     // Add Auto Orient effect to the test image style.
@@ -123,7 +125,7 @@ class AutoOrientTest extends ImageEffectsTestBase {
    *
    * @dataProvider providerToolkits
    */
-  public function testAutoOrientAllTags($toolkit_id, $toolkit_config, array $toolkit_settings) {
+  public function testAutoOrientAllTags(string $toolkit_id, string $toolkit_config, array $toolkit_settings): void {
     $this->changeToolkit($toolkit_id, $toolkit_config, $toolkit_settings);
 
     // Add Auto Orient effect to the test image style.

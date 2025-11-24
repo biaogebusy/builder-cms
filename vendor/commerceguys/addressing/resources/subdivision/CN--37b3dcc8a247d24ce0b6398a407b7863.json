@@ -1,0 +1,30 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"JL",
+		"Baishan Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Badaojiang Qu": {
+			"local_name": "八道江区"
+		},
+		"Fusong Xian": {
+			"local_name": "抚松县"
+		},
+		"Jiangyuan Qu": {
+			"local_name": "江源区"
+		},
+		"Jingyu Xian": {
+			"local_name": "靖宇县"
+		},
+		"Linjiang Shi": {
+			"local_name": "临江市"
+		},
+		"Changbai Xian": {
+			"local_code": "长白朝鲜族自治县",
+			"local_name": "长白县"
+		}
+	}
+}

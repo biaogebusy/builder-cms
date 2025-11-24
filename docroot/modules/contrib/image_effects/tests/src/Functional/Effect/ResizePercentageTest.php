@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image_effects\Functional\Effect;
 
 use Drupal\Tests\image_effects\Functional\ImageEffectsTestBase;
@@ -23,7 +25,7 @@ class ResizePercentageTest extends ImageEffectsTestBase {
    *
    * @dataProvider providerToolkits
    */
-  public function testResizePercentage($toolkit_id, $toolkit_config, array $toolkit_settings) {
+  public function testResizePercentage(string $toolkit_id, string $toolkit_config, array $toolkit_settings): void {
     $this->changeToolkit($toolkit_id, $toolkit_config, $toolkit_settings);
 
     $original_uri = $this->getTestImageCopyUri('core/tests/fixtures/files/image-test.png');
@@ -165,7 +167,7 @@ class ResizePercentageTest extends ImageEffectsTestBase {
       $this->assertEquals($test['expected_height'], $image->getHeight());
 
       // Remove effect.
-      $uuid = $this->removeEffectFromTestStyle($uuid);
+      $this->removeEffectFromTestStyle($uuid);
     }
   }
 

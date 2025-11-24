@@ -5,9 +5,11 @@ namespace WeChatPay;
 use function strlen;
 use function sprintf;
 use function in_array;
+use function array_key_exists;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Psr7\Query;
 use GuzzleHttp\Psr7\Utils;
 use GuzzleHttp\Promise\Create;
 use GuzzleHttp\Promise\PromiseInterface;
@@ -54,8 +56,6 @@ trait ClientXmlTrait
         '/payitil/report',
         '/risk/getpublickey',
         '/risk/getviolation',
-        '/sandboxnew/pay/downloadbill',
-        '/sandboxnew/pay/getsignkey',
         '/secapi/mch/submchmanage',
         '/xdc/apiv2getsignkey/sign/getsignkey',
     ];
@@ -74,11 +74,22 @@ trait ClientXmlTrait
      * @return callable(callable(RequestInterface, array))
      * @throws \WeChatPay\Exception\InvalidArgumentException
      */
-    public static function transformRequest(?string $mchid = null, string $secret = '', ?array $merchant = null): callable
+    public static function transformRequest(
+        ?string $mchid = null,
+        #[\SensitiveParameter]
+        string $secret = '',
+        ?array $merchant = null
+    ): callable
     {
         return static function (callable $handler) use ($mchid, $secret, $merchant): callable {
             return static function (RequestInterface $request, array $options = []) use ($handler, $mchid, $secret, $merchant): PromiseInterface {
-                $data = $options['xml'] ?? [];
+                $methodIsGet = $request->getMethod() === 'GET';
+
+                if ($methodIsGet) {
+                    $queryParams = Query::parse($request->getUri()->getQuery());
+                }
+
+                $data = $options['xml'] ?? ($queryParams ?? []);
 
                 if ($mchid && $mchid !== ($inputMchId = $data['mch_id'] ?? $data['mchid'] ?? $data['combine_mch_id'] ?? null)) {
                     throw new Exception\InvalidArgumentException(sprintf(Exception\EV2_REQ_XML_NOTMATCHED_MCHID, $inputMchId ?? '', $mchid));
@@ -90,7 +101,7 @@ trait ClientXmlTrait
 
                 $data['sign'] = Crypto\Hash::sign($type, Formatter::queryStringLike(Formatter::ksort($data)), $secret);
 
-                $modify = ['body' => Transformer::toXml($data)];
+                $modify = $methodIsGet ? ['query' => Query::build($data)] : ['body' => Transformer::toXml($data)];
 
                 // for security request, it was required the merchant's private_key and certificate
                 if (isset($options['security']) && true === $options['security']) {
@@ -112,7 +123,10 @@ trait ClientXmlTrait
      *
      * @return callable(callable(RequestInterface, array))
      */
-    public static function transformResponse(string $secret = ''): callable
+    public static function transformResponse(
+        #[\SensitiveParameter]
+        string $secret = ''
+    ): callable
     {
         return static function (callable $handler) use ($secret): callable {
             return static function (RequestInterface $request, array $options = []) use ($secret, $handler): PromiseInterface {
@@ -122,6 +136,14 @@ trait ClientXmlTrait
 
                 return $handler($request, $options)->then(static function(ResponseInterface $response) use ($secret) {
                     $result = Transformer::toArray(static::body($response));
+
+                    if (!(array_key_exists('return_code', $result) && Crypto\Hash::equals('SUCCESS', $result['return_code']))) {
+                        return Create::rejectionFor($response);
+                    }
+
+                    if (array_key_exists('result_code', $result) && !Crypto\Hash::equals('SUCCESS', $result['result_code'])) {
+                        return Create::rejectionFor($response);
+                    }
 
                     /** @var ?string $sign */
                     $sign = $result['sign'] ?? null;

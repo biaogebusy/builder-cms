@@ -16,7 +16,7 @@ function flag_post_update_flag_relationship_dependencies(&$sandbox) {
   // Load all views.
   $views = \Drupal::entityTypeManager()->getStorage('view')->loadMultiple();
 
-  /* @var \Drupal\views\Entity\View[] $views */
+  /** @var \Drupal\views\Entity\View[] $views */
   foreach ($views as $view) {
     // Views that use the flag_relationship plugin will depend on the Flag
     // module already.
@@ -37,14 +37,13 @@ function flag_post_update_flag_relationship_dependencies(&$sandbox) {
  * Update the flag and unflag actions for existing flags.
  */
 function flag_post_update_flag_actions() {
-  /** @var \Drupal\system\Entity\Action[] $actions */
   $flags = \Drupal::entityTypeManager()->getStorage('flag')->loadMultiple();
   $action_names = [];
   foreach ($flags as $flag) {
     $action_names[] = 'flag_action.' . $flag->id() . '.flag';
     $action_names[] = 'flag_action.' . $flag->id() . '.unflag';
   }
-  $actions = Drupal\system\Entity\Action::loadMultiple($action_names);
+  $actions = Action::loadMultiple($action_names);
   foreach ($actions as $old_id => $action) {
     if (preg_match('/\.(un)?flag$/', $old_id)) {
       // Update the plugin ID and the action ID.

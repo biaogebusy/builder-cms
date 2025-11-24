@@ -18,3 +18,8 @@ responsive-video:
   css:
     component:
       css/video_embed_field.responsive-video.css: {}
+
+field-type-icon:
+  css:
+    theme:
+      css/video_embed_field.field-type-icon.css: {}

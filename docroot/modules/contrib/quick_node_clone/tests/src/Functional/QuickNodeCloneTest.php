@@ -59,8 +59,8 @@ class QuickNodeCloneTest extends BrowserTestBase {
     $this->submitForm($edit, 'Save configuration');
 
     // Create a basic page.
-    $title_value = $this->randomGenerator->word(10);
-    $body_value = $this->randomGenerator->sentences(10);
+    $title_value = 'The Original Page';
+    $body_value = '<p>This is the original page.</p>';
     $edit = [
       'title[0][value]' => $title_value,
       'body[0][value]' => $body_value,

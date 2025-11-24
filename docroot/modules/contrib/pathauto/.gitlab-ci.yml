@@ -48,7 +48,20 @@ include:
 ################
 # variables:
 #   SKIP_ESLINT: '1'
+variables:
+  OPT_IN_TEST_PREVIOUS_MINOR: '1'
+  _PHPUNIT_CONCURRENT: 1
 
+composer (next major):
+  variables:
+    _LENIENT_ALLOW_LIST: "ctools"
+    PHP_VERSION: $CORE_PHP_MAX
+    DRUPAL_CORE: $CORE_MAJOR_DEVELOPMENT
+    IGNORE_PROJECT_DRUPAL_CORE_VERSION: 1
+
+phpunit (next major):
+  variables:
+    SYMFONY_DEPRECATIONS_HELPER: "disabled"
 
 ###################################################################################
 #

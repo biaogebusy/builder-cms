@@ -1,10 +1,11 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace DrupalCodeGenerator\Test;
 
 use DrupalCodeGenerator\Application;
-use DrupalCodeGenerator\Helper\Renderer;
-use DrupalCodeGenerator\Tests\QuestionHelper;
+use DrupalCodeGenerator\Helper\Renderer\TwigRenderer;
 use DrupalCodeGenerator\Twig\TwigEnvironment;
 use DrupalCodeGenerator\Utils;
 use PHPUnit\Framework\TestCase;
@@ -18,30 +19,41 @@ use Twig\Loader\FilesystemLoader;
  */
 abstract class GeneratorTest extends TestCase {
 
+  /**
+   * Display returned by the last execution of the command.
+   */
   protected string $display;
+
+  /**
+   * A directory to look up for fixtures.
+   */
   protected string $fixtureDir;
+
+  /**
+   * Working directory.
+   */
   private string $directory;
 
   /**
    * {@inheritdoc}
    */
-  public function setUp(): void {
+  protected function setUp(): void {
     $this->directory = \sys_get_temp_dir() . '/dcg_sandbox';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function tearDown(): void {
+  protected function tearDown(): void {
     (new Filesystem())->remove($this->directory);
   }
 
   /**
    * Executes the command.
    *
-   * @param \Symfony\Component\Console\Command\Command $command
+   * @psalm-param \Symfony\Component\Console\Command\Command $command
    *   A command to execute.
-   * @param array $user_input
+   * @psalm-param list<string> $user_input
    *   An array of strings representing each input passed to the command input
    *   stream.
    */
@@ -50,7 +62,7 @@ abstract class GeneratorTest extends TestCase {
 
     $command_tester = new CommandTester($command);
     $result = $command_tester
-      ->setInputs(\array_values($user_input))
+      ->setInputs($user_input)
       ->execute(['--destination' => $this->directory, '--working-dir' => $this->directory]);
 
     $this->display = $command_tester->getDisplay();
@@ -83,6 +95,11 @@ abstract class GeneratorTest extends TestCase {
 
   /**
    * Creates DCG application.
+   *
+   * @psalm-suppress UndefinedClass
+   * @psalm-suppress TooFewArguments
+   * @psalm-suppress InvalidArgument
+   * @todo Fix this.
    */
   protected function createApplication(): Application {
     $application = Application::create();
@@ -94,7 +111,7 @@ abstract class GeneratorTest extends TestCase {
 
     // Replace default renderer to enable 'strict_variables' in tests.
     $twig_environment = new TwigEnvironment(new FilesystemLoader([Application::TEMPLATE_PATH]), ['strict_variables' => TRUE]);
-    $helper_set->set(new Renderer($twig_environment));
+    $helper_set->set(new TwigRenderer($twig_environment));
     return $application;
   }
 

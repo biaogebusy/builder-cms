@@ -14,10 +14,10 @@ use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\inline_entity_form\ElementSubmit;
-use Drupal\inline_entity_form\WidgetSubmit;
 use Drupal\inline_entity_form\Form\EntityInlineForm;
-use Drupal\inline_entity_form\Plugin\Field\FieldWidget\InlineEntityFormComplex;
 use Drupal\inline_entity_form\MigrationHelper;
+use Drupal\inline_entity_form\Plugin\Field\FieldWidget\InlineEntityFormComplex;
+use Drupal\inline_entity_form\WidgetSubmit;
 use Drupal\migrate\Plugin\MigrateSourceInterface;
 use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\Row;
@@ -132,8 +132,9 @@ function inline_entity_form_reference_form(array $reference_form, FormStateInter
   $reference_form['#element_validate'][] = 'inline_entity_form_reference_form_validate';
   $reference_form['#ief_element_submit'][] = 'inline_entity_form_reference_form_submit';
 
-  // Allow other modules to alter the form.
+  // Allow other modules and themes to alter the form.
   \Drupal::moduleHandler()->alter('inline_entity_form_reference_form', $reference_form, $form_state);
+  \Drupal::theme()->alter('inline_entity_form_reference_form', $reference_form, $form_state);
 
   return $reference_form;
 }

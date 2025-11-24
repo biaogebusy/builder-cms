@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\flag\Kernel;
 
-use Drupal\node\Entity\Node;
 use Drupal\flag\Entity\Flag;
+use Drupal\node\Entity\Node;
 
 /**
  * Tests related to access to flags.
@@ -23,7 +25,7 @@ class AccessTest extends FlagKernelTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    $this->installSchema('user', 'users_data', 'flag');
+    $this->installSchema('user', ['users_data']);
 
     // The first user is uid 1, create that to avoid that our test users
     // implicitly have all permissions even those that don't exist.
@@ -134,7 +136,7 @@ class AccessTest extends FlagKernelTestBase {
     $article_by_editor->setOwner($user_editor);
     $article_by_editor->save();
 
-    // Author can self review his or her own work.
+    // Author can self review own work.
     $this->assertTrue($flag->actionAccess('flag', $user_author, $article_by_author)->isAllowed());
     $this->assertTrue($flag->actionAccess('unflag', $user_author, $article_by_author)->isAllowed());
 
@@ -178,7 +180,7 @@ class AccessTest extends FlagKernelTestBase {
 
     $flag_id = $flag->id();
 
-    // Create a user who may flag her own user account.
+    // Create a user who may flag own user account.
     $user_alice = $this->createUser([
       "flag $flag_id own user account",
       "unflag $flag_id own user account",

@@ -108,7 +108,7 @@ elements: |
             tags: tags
           auto_create: 1
           auto_create_bundle: tags
-  summary_and_relationshsips_details:
+  summary_and_relationships_details:
     '#title': 'Issue Summary'
     '#type': details
     '#open': true

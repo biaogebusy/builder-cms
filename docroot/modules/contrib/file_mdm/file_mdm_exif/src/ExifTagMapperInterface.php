@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\file_mdm_exif;
 
 /**
@@ -26,7 +28,7 @@ interface ExifTagMapperInterface {
    * @throws \Drupal\file_mdm\FileMetadataException
    *   When wrong argument is passed, or if the IFD/TAG could not be found.
    */
-  public function resolveKeyToIfdAndTag($key);
+  public function resolveKeyToIfdAndTag(string|array $key): array;
 
   /**
    * Returns a list of default metadata 'keys' supported.
@@ -49,6 +51,6 @@ interface ExifTagMapperInterface {
    *     0 => the string identifier of the IFD.
    *     1 => the string identifier of the TAG.
    */
-  public function getSupportedKeys(array $options = NULL);
+  public function getSupportedKeys(array $options = NULL): array;
 
 }

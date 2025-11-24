@@ -60,7 +60,7 @@ class OrderAssignmentTest extends OrderKernelTestBase {
     $this->installEntitySchema('commerce_payment');
     $this->installEntitySchema('commerce_payment_method');
     $this->installConfig(['commerce_payment']);
-    $this->user = $this->createUser(['mail' => $this->randomString() . '@example.com']);
+    $this->user = $this->createUser();
 
     // Turn off title generation to allow explicit values to be used.
     $variation_type = ProductVariationType::load('default');
@@ -154,7 +154,7 @@ class OrderAssignmentTest extends OrderKernelTestBase {
    * @covers ::assign
    */
   public function testAssign() {
-    $second_user = $this->createUser(['mail' => $this->randomString() . '@example.com']);
+    $second_user = $this->createUser();
     $this->orderAssignment->assignMultiple([$this->order], $second_user);
 
     $this->order = $this->reloadEntity($this->order);
@@ -175,7 +175,7 @@ class OrderAssignmentTest extends OrderKernelTestBase {
     // Confirm that the new ID was also copied to the billing profile.
     $this->assertNotEmpty($billing_profile->getData('address_book_profile_id'));
 
-    $third_user = $this->createUser(['mail' => $this->randomString() . '@example.com']);
+    $third_user = $this->createUser();
     $this->orderAssignment->assignMultiple([$this->order], $third_user);
 
     $this->order = $this->reloadEntity($this->order);

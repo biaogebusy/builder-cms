@@ -34,6 +34,6 @@ interface ManualPaymentGatewayInterface extends PaymentGatewayInterface, HasPaym
    * @param \Drupal\commerce_price\Price $amount
    *   The received amount. If NULL, defaults to the entire payment amount.
    */
-  public function receivePayment(PaymentInterface $payment, Price $amount = NULL);
+  public function receivePayment(PaymentInterface $payment, ?Price $amount = NULL);
 
 }

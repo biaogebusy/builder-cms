@@ -5,7 +5,9 @@ namespace Drupal\search_api\Plugin\search_api\processor;
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Drupal\search_api\Attribute\SearchApiProcessor;
 use Drupal\search_api\Item\FieldInterface;
 use Drupal\search_api\Plugin\search_api\data_type\value\TextValueInterface;
 use Drupal\search_api\Processor\FieldsProcessorPluginBase;
@@ -17,18 +19,17 @@ use Symfony\Component\Yaml\Parser;
 
 /**
  * Strips HTML tags from fulltext fields and decodes HTML entities.
- *
- * @SearchApiProcessor(
- *   id = "html_filter",
- *   label = @Translation("HTML filter"),
- *   description = @Translation("Strips HTML tags from fulltext fields and decodes HTML entities. Use this processor when indexing HTML data – for example, node bodies for certain text formats. The processor also allows to boost (or ignore) the contents of specific elements."),
- *   stages = {
- *     "pre_index_save" = 0,
- *     "preprocess_index" = -15,
- *     "preprocess_query" = -15,
- *   }
- * )
  */
+#[SearchApiProcessor(
+  id: 'html_filter',
+  label: new TranslatableMarkup('HTML filter'),
+  description: new TranslatableMarkup('Strips HTML tags from fulltext fields and decodes HTML entities. Use this processor when indexing HTML data – for example, node bodies for certain text formats. The processor also allows to boost (or ignore) the contents of specific elements.'),
+  stages: [
+    'pre_index_save' => 0,
+    'preprocess_index' => -15,
+    'preprocess_query' => -15,
+  ],
+)]
 class HtmlFilter extends FieldsProcessorPluginBase {
 
   /**
@@ -140,7 +141,7 @@ class HtmlFilter extends FieldsProcessorPluginBase {
         $tags = [];
       }
     }
-    catch (ParseException $exception) {
+    catch (ParseException) {
       $errors[] = $this->t('Tags is not a valid YAML map. See @link for information on how to write correctly formed YAML.', ['@link' => 'http://yaml.org']);
       $tags = [];
     }
@@ -193,8 +194,11 @@ class HtmlFilter extends FieldsProcessorPluginBase {
    * {@inheritdoc}
    */
   protected function processFieldValue(&$value, $type) {
+    if (!is_string($value)) {
+      return;
+    }
     // Remove invisible content.
-    $text = preg_replace('@<(applet|audio|canvas|command|embed|iframe|map|menu|noembed|noframes|noscript|script|style|svg|video)[^>]*>.*</\1>@siU', ' ', $value);
+    $text = $this->removeInvisibleHtmlElements($value);
     $is_text_type = $this->getDataTypeHelper()->isTextType($type);
     if ($is_text_type) {
       // Let removed tags still delimit words.
@@ -212,6 +216,41 @@ class HtmlFilter extends FieldsProcessorPluginBase {
   }
 
   /**
+   * Removes all invisible HTML elements (like "script") from the given HTML.
+   *
+   * @param string $html
+   *   The HTML to sanitize.
+   *
+   * @return string
+   *   The same HTML string with all invisible elements completely removed.
+   */
+  protected function removeInvisibleHtmlElements(string $html): string {
+    $regex = '/<(applet|audio|canvas|command|embed|iframe|map|menu|noembed|noframes|noscript|script|style|svg|video)/iU';
+    $result = '';
+    while (preg_match($regex, $html, $matches, PREG_OFFSET_CAPTURE)) {
+      /** @var int $match_pos */
+      $match_pos = $matches[0][1];
+      $result .= substr($html, 0, $match_pos);
+      $closing_angle_bracket_pos = strpos($html, '>', $match_pos + strlen($matches[0][0]));
+      if ($closing_angle_bracket_pos === FALSE) {
+        return $result;
+      }
+      if ($html[$closing_angle_bracket_pos - 1] === '/') {
+        $html = substr($html, $closing_angle_bracket_pos + 1);
+      }
+      else {
+        $end_tag = "</{$matches[1][0]}>";
+        $end_tag_pos = strpos($html, $end_tag, $closing_angle_bracket_pos + 1);
+        if ($end_tag_pos === FALSE) {
+          return $result;
+        }
+        $html = substr($html, $end_tag_pos + strlen($end_tag));
+      }
+    }
+    return $result . $html;
+  }
+
+  /**
    * Copies configured attributes out of HTML tags so they are indexed.
    *
    * @param string $text
@@ -223,82 +262,67 @@ class HtmlFilter extends FieldsProcessorPluginBase {
    */
   protected function handleAttributes(string $text): string {
     // Determine which attributes should be indexed and bail early if it's none.
-    $handled_attributes = [];
+    $handled_attributes = $xpath_expr = [];
     foreach (['alt', 'title'] as $attr) {
       if ($this->configuration[$attr]) {
         $handled_attributes[] = $attr;
+        $xpath_expr[] = "//*[@$attr]";
       }
     }
     if (!$handled_attributes) {
       return $text;
     }
 
-    $processed_text = '';
-    $pos = 0;
-    $text_len = mb_strlen($text);
-    // Go through the whole text, looking for HTML tags.
-    while ($pos < $text_len) {
-      // Find start of HTML tag.
-      // Since there is always a space in front of a "<" character, we do not
-      // need to write "$start_pos === FALSE" explicitly to check for a match.
-      $start_pos = mb_strpos($text, '<', $pos);
-      // Add everything from the last position to this start tag (or the end of
-      // the string, if we found none) to the processed text.
-      $processed_text .= mb_substr($text, $pos, $start_pos ? $start_pos - $pos : NULL);
-      if (!$start_pos) {
-        break;
-      }
-
-      // Find end of HTML tag.
-      // As above for $start_pos, $end_pos cannot be 0 since it must be greater
-      // than $start_pos. So, no need to check for FALSE strictly.
-      $end_pos = mb_strpos($text, '>', $start_pos + 1);
-      // Extract the contents of the tag, and add it to the processed text.
-      $tag_contents = mb_substr($text, $start_pos, $end_pos ? $end_pos + 1 - $start_pos : NULL);
-      $processed_text .= $tag_contents;
-      if (!$end_pos) {
-        break;
-      }
-      // Next, we want to begin searching right after the end of this HTML tag.
-      $pos = $end_pos + 1;
-
-      // Split the tag contents, without the angle brackets, into the element
-      // name and the rest.
-      $tag_contents = trim($tag_contents, '<> ');
-      [$element_name, $tag_contents] = explode(' ', $tag_contents, 2) + [1 => NULL];
-      // If there is just the element name, no need to look for attributes.
-      if (!$tag_contents) {
-        continue;
-      }
-
-      // This will match all the attributes we're looking for.
-      $attr_regex = '(?:' . implode('|', $handled_attributes) . ')';
-      $pattern = "/(?:^|\s)$attr_regex\s*+=\s*+(['\"])/Su";
-      $flags = PREG_OFFSET_CAPTURE | PREG_SET_ORDER;
-      if (preg_match_all($pattern, $tag_contents, $matches, $flags)) {
-        foreach ($matches as $match) {
-          // Now just extract the attribute value as everything between the
-          // matched quote character and the next such character.
-          // Unfortunately, preg_match_all() reports positions in bytes, not
-          // characters, so we need to use a bit of magic to reconcile this with
-          // our usual handling of Unicode.
-          $quote_char = $match[1][0];
-          /** @var int $quote_pos */
-          $quote_pos = $match[1][1];
-          $tag_contents_from_quote = substr($tag_contents, $quote_pos + 1);
-          $length = mb_strpos($tag_contents_from_quote, $quote_char);
-          $attr_value = mb_substr($tag_contents_from_quote, 0, $length);
-          // Take care of self-closing tags, so users are still able to set a
-          // boost for, for instance, the "alt" attribute from an "img" tag.
-          if ($tag_contents[-1] === '/') {
-            $attr_value = " <$element_name> $attr_value </$element_name>";
-          }
-          $processed_text .= ' ' . $attr_value;
+    $dom = Html::load($text);
+    $xpath = new \DOMXPath($dom);
+    /** @var \DOMElement $node */
+    foreach ($xpath->query(implode('|', $xpath_expr)) as $node) {
+      foreach ($handled_attributes as $attr_name) {
+        $attr = $node->attributes?->getNamedItem($attr_name);
+        if ($attr !== NULL) {
+          $node->prepend(" {$attr->textContent} ");
         }
       }
     }
 
-    return $processed_text;
+    return static::serializeHtml($dom);
+  }
+
+  /**
+   * Converts the body of a \DOMDocument back to an HTML snippet.
+   *
+   * The function serializes the body part of a \DOMDocument back to an (X)HTML
+   * snippet. The resulting (X)HTML snippet will be properly formatted to be
+   * compatible with HTML user agents.
+   *
+   * Copied from the Drupal 10.1 version of
+   * \Drupal\Component\Utility\Html::serialize().
+   *
+   * @param \DOMDocument $document
+   *   A \DOMDocument object to serialize, only the tags below the first <body>
+   *   node will be converted.
+   *
+   * @return string
+   *   A valid (X)HTML snippet, as a string.
+   *
+   * @see \Drupal\Component\Utility\Html::serialize()
+   */
+  protected static function serializeHtml(\DOMDocument $document): string {
+    $body_node = $document->getElementsByTagName('body')->item(0);
+    $html = '';
+
+    if ($body_node !== NULL) {
+      foreach ($body_node->getElementsByTagName('script') as $node) {
+        Html::escapeCdataElement($node);
+      }
+      foreach ($body_node->getElementsByTagName('style') as $node) {
+        Html::escapeCdataElement($node, '/*', '*/');
+      }
+      foreach ($body_node->childNodes as $node) {
+        $html .= $document->saveXML($node);
+      }
+    }
+    return $html;
   }
 
   /**

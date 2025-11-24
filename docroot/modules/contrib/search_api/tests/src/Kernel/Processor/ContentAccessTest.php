@@ -15,6 +15,7 @@ use Drupal\node\NodeInterface;
 use Drupal\Tests\search_api\Kernel\ResultsTrait;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the "Content access" processor.
@@ -23,6 +24,7 @@ use Drupal\user\Entity\User;
  *
  * @see \Drupal\search_api\Plugin\search_api\processor\ContentAccess
  */
+#[RunTestsInSeparateProcesses]
 class ContentAccessTest extends ProcessorTestBase {
 
   use CommentTestTrait;

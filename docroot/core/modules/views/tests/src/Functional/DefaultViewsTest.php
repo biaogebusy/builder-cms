@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Functional;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\comment\CommentInterface;
 use Drupal\comment\Tests\CommentTestTrait;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
@@ -13,7 +14,7 @@ use Drupal\views\Views;
 use Drupal\comment\Entity\Comment;
 use Drupal\taxonomy\Entity\Vocabulary;
 use Drupal\taxonomy\Entity\Term;
-use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 
 /**
  * Tests the default views provided by views.
@@ -23,12 +24,10 @@ use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
 class DefaultViewsTest extends ViewTestBase {
 
   use CommentTestTrait;
-  use EntityReferenceTestTrait;
+  use EntityReferenceFieldCreationTrait;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'views',
@@ -70,7 +69,7 @@ class DefaultViewsTest extends ViewTestBase {
     $vocabulary = Vocabulary::create([
       'name' => $this->randomMachineName(),
       'description' => $this->randomMachineName(),
-      'vid' => mb_strtolower($this->randomMachineName()),
+      'vid' => $this->randomMachineName(),
       'langcode' => LanguageInterface::LANGCODE_NOT_SPECIFIED,
       'help' => '',
       'nodes' => ['page' => 'page'],
@@ -79,7 +78,7 @@ class DefaultViewsTest extends ViewTestBase {
     $vocabulary->save();
 
     // Create a field.
-    $field_name = mb_strtolower($this->randomMachineName());
+    $field_name = $this->randomMachineName();
 
     $handler_settings = [
       'target_bundles' => [
@@ -90,7 +89,7 @@ class DefaultViewsTest extends ViewTestBase {
     $this->createEntityReferenceField('node', 'page', $field_name, NULL, 'taxonomy_term', 'default', $handler_settings, FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
 
     // Create a time in the past for the archive.
-    $time = REQUEST_TIME - 3600;
+    $time = \Drupal::time()->getRequestTime() - 3600;
 
     $this->addDefaultCommentField('node', 'page');
 
@@ -137,7 +136,7 @@ class DefaultViewsTest extends ViewTestBase {
   /**
    * Tests that all Default views work as expected.
    */
-  public function testDefaultViews() {
+  public function testDefaultViews(): void {
     // Get all default views.
     $controller = $this->container->get('entity_type.manager')->getStorage('view');
     $views = $controller->loadMultiple();
@@ -155,8 +154,7 @@ class DefaultViewsTest extends ViewTestBase {
 
         $view->execute();
 
-        $tokens = ['@name' => $name, '@display_id' => $display_id];
-        $this->assertTrue($view->executed, new FormattableMarkup('@name:@display_id has been executed.', $tokens));
+        $this->assertTrue($view->executed, "$name:$display_id has been executed.");
 
         $this->assertNotEmpty($view->result);
         $view->destroy();
@@ -185,7 +183,7 @@ class DefaultViewsTest extends ViewTestBase {
   /**
    * Tests the archive view.
    */
-  public function testArchiveView() {
+  public function testArchiveView(): void {
     // Create additional nodes compared to the one in the setup method.
     // Create two nodes in the same month, and one in each following month.
     $node = [
@@ -211,7 +209,7 @@ class DefaultViewsTest extends ViewTestBase {
     $columns = ['nid', 'created_year_month', 'num_records'];
     $column_map = array_combine($columns, $columns);
     // Create time of additional nodes created in the setup method.
-    $created_year_month = date('Ym', REQUEST_TIME - 3600);
+    $created_year_month = date('Ym', \Drupal::time()->getRequestTime() - 3600);
     $expected_result = [
       [
         'nid' => 1,

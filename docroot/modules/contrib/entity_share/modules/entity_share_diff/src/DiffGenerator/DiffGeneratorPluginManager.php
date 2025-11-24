@@ -39,11 +39,11 @@ class DiffGeneratorPluginManager extends DefaultPluginManager {
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
     parent::__construct(
-    'Plugin/DiffGenerator',
-    $namespaces,
-    $module_handler,
-    'Drupal\entity_share_diff\DiffGenerator\DiffGeneratorInterface',
-    'Drupal\entity_share_diff\Annotation\DiffGenerator'
+      'Plugin/DiffGenerator',
+      $namespaces,
+      $module_handler,
+      'Drupal\entity_share_diff\DiffGenerator\DiffGeneratorInterface',
+      'Drupal\entity_share_diff\Annotation\DiffGenerator'
     );
     $this->setCacheBackend($cache_backend, 'field_diff_generator_plugins');
   }
@@ -56,11 +56,11 @@ class DiffGeneratorPluginManager extends DefaultPluginManager {
    * @param string $field_type
    *   The field type.
    *
-   * @return \Drupal\entity_share_diff\DiffGenerator\DiffGeneratorInterface|null
-   *   The plugin instance, NULL if none.
-   *
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Component\Plugin\Exception\PluginException
+   *
+   * @return \Drupal\entity_share_diff\DiffGenerator\DiffGeneratorInterface|null
+   *   The plugin instance, NULL if none.
    */
   public function createInstanceForFieldDefinition(string $field_type) {
     if (!isset($this->pluginDefinitions)) {
@@ -86,16 +86,16 @@ class DiffGeneratorPluginManager extends DefaultPluginManager {
     $plugin_options = [];
     if (isset($plugins[$field_type])) {
       // Sort the plugins based on their weight.
-      uasort($plugins[$field_type], 'Drupal\Component\Utility\SortArray::sortByWeightElement');
+      \uasort($plugins[$field_type], 'Drupal\Component\Utility\SortArray::sortByWeightElement');
 
-      foreach (array_keys($plugins[$field_type]) as $id) {
+      foreach (\array_keys($plugins[$field_type]) as $id) {
         $definition = $this->getDefinition($id, FALSE);
         // Check if the plugin is applicable.
-        if (isset($definition['class']) && in_array($field_type, $definition['field_types'])) {
+        if (isset($definition['class']) && \in_array($field_type, $definition['field_types'], TRUE)) {
           $plugin_options[$id] = $this->getDefinitions()[$id]['label'];
         }
       }
-      $settings = key($plugin_options);
+      $settings = \key($plugin_options);
       return $this->createInstance($settings, []);
     }
     return NULL;

@@ -1,0 +1,38 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"XJ",
+		"Aksu Diqu"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Aksu Shi": {
+			"local_name": "阿克苏市"
+		},
+		"Awat Xian": {
+			"local_name": "阿瓦提县"
+		},
+		"Baicheng Xian": {
+			"local_name": "拜城县"
+		},
+		"Kalpin Xian": {
+			"local_name": "柯坪县"
+		},
+		"Kuqa Xian": {
+			"local_name": "库车县"
+		},
+		"Xayar Xian": {
+			"local_name": "沙雅县"
+		},
+		"Wensu Xian": {
+			"local_name": "温宿县"
+		},
+		"Wushi Xian": {
+			"local_name": "乌什县"
+		},
+		"Xinhe Xian": {
+			"local_name": "新和县"
+		}
+	}
+}

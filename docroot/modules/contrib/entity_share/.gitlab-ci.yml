@@ -1,0 +1,12 @@
+# https://git.drupalcode.org/project/gitlab_templates/
+
+variables:
+  COMPOSER_EXTRA: "--ignore-platform-req=ext-sodium"
+
+include:
+  - project: $_GITLAB_TEMPLATES_REPO
+    ref: $_GITLAB_TEMPLATES_REF
+    file:
+      - '/includes/include.drupalci.main.yml'
+      - '/includes/include.drupalci.variables.yml'
+      - '/includes/include.drupalci.workflows.yml'

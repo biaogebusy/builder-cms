@@ -21,7 +21,7 @@ use Drupal\webform\Plugin\WebformElementManagerInterface;
 use Drupal\webform\WebformInterface;
 
 /**
- * Provides a webform schema maaager.
+ * Provides a webform schema manager.
  */
 class WebformSchemaManager implements WebformSchemaManagerInterface {
 

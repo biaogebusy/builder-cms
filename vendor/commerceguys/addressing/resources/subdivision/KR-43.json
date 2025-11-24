@@ -1,0 +1,44 @@
+{
+	"country_code": "KR",
+	"parents": [
+		"KR",
+		"43"
+	],
+	"locale": "ko",
+	"subdivisions": {
+		"Goesan-gun": {
+			"local_name": "괴산군"
+		},
+		"Danyang-gun": {
+			"local_name": "단양군"
+		},
+		"Boeun-gun": {
+			"local_name": "보은군"
+		},
+		"Yeongdong-gun": {
+			"local_name": "영동군"
+		},
+		"Okcheon-gun": {
+			"local_name": "옥천군"
+		},
+		"Eumseong-gun": {
+			"local_name": "음성군"
+		},
+		"Jecheon-si": {
+			"local_name": "제천시"
+		},
+		"Jeungpyeong-gun": {
+			"local_name": "증평군"
+		},
+		"Jincheon-gun": {
+			"local_name": "진천군"
+		},
+		"Cheongju-si": {
+			"local_name": "청주시",
+			"has_children": true
+		},
+		"Chungju-si": {
+			"local_name": "충주시"
+		}
+	}
+}

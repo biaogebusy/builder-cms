@@ -15,6 +15,8 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Installer\InstallerKernel;
+use Drupal\Core\Field\Plugin\Field\FieldType\EntityReferenceItemInterface;
+use Drupal\Core\Logger\LoggerChannelTrait;
 use Drupal\Core\TypedData\DataReferenceTargetDefinition;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
@@ -40,6 +42,8 @@ use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
  * @see \Drupal\jsonapi\ResourceType\ResourceType
  */
 class ResourceTypeRepository implements ResourceTypeRepositoryInterface {
+
+  use LoggerChannelTrait;
 
   /**
    * The entity type manager.
@@ -289,7 +293,7 @@ class ResourceTypeRepository implements ResourceTypeRepositoryInterface {
       /** @var \Drupal\jsonapi\ResourceType\ResourceTypeField $field */
       foreach (array_diff_key($fields, array_flip([$reserved_field_name])) as $field) {
         if ($aliased_reserved_field->getPublicName() === $field->getPublicName()) {
-          throw new \LogicException("The generated alias '{$aliased_reserved_field->getPublicName()}' for field name '{$aliased_reserved_field->getInternalName()}' conflicts with an existing field. Please report this in the JSON:API issue queue!");
+          throw new \LogicException("The generated alias '{$aliased_reserved_field->getPublicName()}' for field name '{$aliased_reserved_field->getInternalName()}' conflicts with an existing field. Report this in the JSON:API issue queue!");
         }
       }
     }
@@ -298,7 +302,7 @@ class ResourceTypeRepository implements ResourceTypeRepositoryInterface {
     // access the display name of a user. This is useful when displaying the
     // name of a node's author.
     // @see \Drupal\jsonapi\JsonApiResource\ResourceObject::extractContentEntityFields()
-    // @todo: eliminate this special casing in https://www.drupal.org/project/drupal/issues/3079254.
+    // @todo Eliminate this special casing in https://www.drupal.org/project/drupal/issues/3079254.
     if ($entity_type->id() === 'user') {
       $fields['display_name'] = new ResourceTypeAttribute('display_name');
     }
@@ -439,29 +443,44 @@ class ResourceTypeRepository implements ResourceTypeRepositoryInterface {
   protected function getRelatableResourceTypesFromFieldDefinition(FieldDefinitionInterface $field_definition, array $resource_types) {
     $item_definition = $field_definition->getItemDefinition();
     $entity_type_id = $item_definition->getSetting('target_type');
-    $handler_settings = $item_definition->getSetting('handler_settings');
-    $target_bundles = empty($handler_settings['target_bundles']) ? $this->getAllBundlesForEntityType($entity_type_id) : $handler_settings['target_bundles'];
     $relatable_resource_types = [];
+    $item_class = $item_definition->getClass();
+    if (is_subclass_of($item_class, EntityReferenceItemInterface::class)) {
+      $target_type_bundles = $item_class::getReferenceableBundles($field_definition);
+    }
+    else {
+      @trigger_error(
+        sprintf('Entity reference field items not implementing %s is deprecated in drupal:10.2.0 and will be required in drupal:11.0.0. See https://www.drupal.org/node/3279140', EntityReferenceItemInterface::class),
+        E_USER_DEPRECATED
+      );
+      $handler_settings = $item_definition->getSetting('handler_settings');
 
-    foreach ($target_bundles as $target_bundle) {
-      if ($resource_type = static::lookupResourceType($resource_types, $entity_type_id, $target_bundle)) {
-        $relatable_resource_types[] = $resource_type;
-      }
-      // Do not warn during the site installation since system integrity
-      // is not guaranteed in this period and the warnings may pop up falsy,
-      // adding confusion to the process.
-      elseif (!InstallerKernel::installationAttempted()) {
-        trigger_error(
-          sprintf(
-            'The "%s" at "%s:%s" references the "%s:%s" entity type that does not exist. Please take action.',
-            $field_definition->getName(),
-            $field_definition->getTargetEntityTypeId(),
-            $field_definition->getTargetBundle(),
-            $entity_type_id,
-            $target_bundle
-          ),
-          E_USER_WARNING
-        );
+      $has_target_bundles = isset($handler_settings['target_bundles']) && !empty($handler_settings['target_bundles']);
+      $target_bundles = $has_target_bundles ? $handler_settings['target_bundles'] : $this->getAllBundlesForEntityType($entity_type_id);
+      $target_type_bundles = [$entity_type_id => $target_bundles];
+    }
+
+    foreach ($target_type_bundles as $entity_type_id => $target_bundles) {
+      foreach ($target_bundles as $target_bundle) {
+        if ($resource_type = static::lookupResourceType($resource_types, $entity_type_id, $target_bundle)) {
+          $relatable_resource_types[] = $resource_type;
+          continue;
+        }
+        // Do not warn during site installation since system integrity
+        // is not guaranteed during this period and may cause confusing and
+        // unnecessary warnings.
+        if (!InstallerKernel::installationAttempted()) {
+          $this->getLogger('jsonapi')->warning(
+            'The "@name" at "@target_entity_type_id:@target_bundle" references the "@entity_type_id:@bundle" entity type that does not exist.',
+            [
+              '@name' => $field_definition->getName(),
+              '@target_entity_type_id' => $field_definition->getTargetEntityTypeId(),
+              '@target_bundle' => $field_definition->getTargetBundle(),
+              '@entity_type_id' => $entity_type_id,
+              '@bundle' => $target_bundle,
+            ],
+          );
+        }
       }
     }
 

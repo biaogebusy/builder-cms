@@ -5,7 +5,6 @@ namespace Drupal\tour\Plugin\tour\tip;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Utility\Token;
 use Drupal\tour\TipPluginBase;
-use Drupal\tour\TourTipPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -16,7 +15,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   title = @Translation("Text")
  * )
  */
-class TipPluginText extends TipPluginBase implements ContainerFactoryPluginInterface, TourTipPluginInterface {
+class TipPluginText extends TipPluginBase implements ContainerFactoryPluginInterface {
 
   /**
    * The body text which is used for render of this Text Tip.
@@ -68,16 +67,6 @@ class TipPluginText extends TipPluginBase implements ContainerFactoryPluginInter
         'class' => ['tour-tip-body'],
       ],
     ];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getOutput() {
-    // Call parent to trigger error when calling this function.
-    parent::getOutput();
-    $output = '<p class="tour-tip-body">' . $this->token->replace($this->get('body')) . '</p>';
-    return ['#markup' => $output];
   }
 
 }

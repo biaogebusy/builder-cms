@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\commerce_payment\Unit;
 
-use Drupal\commerce_payment\CreditCardType;
 use Drupal\Tests\UnitTestCase;
+use Drupal\commerce_payment\CreditCardType;
 
 /**
  * @coversDefaultClass \Drupal\commerce_payment\CreditCardType
@@ -102,7 +102,7 @@ class CreditCardTypeTest extends UnitTestCase {
    * @return array
    *   A list of testInvalidDefinition function arguments.
    */
-  public function definitionProvider() {
+  public static function definitionProvider() {
     return [
       [[], 'Missing required property id.'],
       [['id' => 'llama'], 'Missing required property label.'],

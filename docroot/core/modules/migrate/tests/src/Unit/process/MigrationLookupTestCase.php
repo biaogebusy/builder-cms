@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Unit\process;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
@@ -28,7 +30,7 @@ abstract class MigrationLookupTestCase extends MigrateProcessTestCase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
     $this->migrateStub = $this->prophesize(MigrateStub::class);
     $this->migrateLookup = $this->prophesize(MigrateLookupInterface::class);

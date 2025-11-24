@@ -2,8 +2,8 @@
 
 namespace Drupal\sqlite\Driver\Database\sqlite;
 
-use Drupal\Core\Database\StatementPrefetch;
 use Drupal\Core\Database\StatementInterface;
+use Drupal\Core\Database\StatementPrefetchIterator;
 
 /**
  * SQLite implementation of \Drupal\Core\Database\Statement.
@@ -14,7 +14,7 @@ use Drupal\Core\Database\StatementInterface;
  * user-space mock of PDOStatement that buffers all the data and doesn't
  * have those limitations.
  */
-class Statement extends StatementPrefetch implements StatementInterface {
+class Statement extends StatementPrefetchIterator implements StatementInterface {
 
   /**
    * {@inheritdoc}
@@ -26,7 +26,7 @@ class Statement extends StatementPrefetch implements StatementInterface {
    *
    * See http://bugs.php.net/bug.php?id=45259 for more details.
    */
-  protected function getStatement($query, &$args = []) {
+  protected function getStatement(string $query, ?array &$args = []): object {
     if (is_array($args) && !empty($args)) {
       // Check if $args is a simple numeric array.
       if (range(0, count($args) - 1) === array_keys($args)) {
@@ -73,13 +73,13 @@ class Statement extends StatementPrefetch implements StatementInterface {
             // When replacing the placeholders, make sure we search for the
             // exact placeholder. For example, if searching for
             // ':db_placeholder_1', do not replace ':db_placeholder_11'.
-            $query = preg_replace('/' . preg_quote($placeholder) . '\b/', $value, $query);
+            $query = preg_replace('/' . preg_quote($placeholder, NULL) . '\b/', $value, $query);
           }
         }
       }
     }
 
-    return $this->pdoConnection->prepare($query);
+    return $this->clientConnection->prepare($query);
   }
 
   /**

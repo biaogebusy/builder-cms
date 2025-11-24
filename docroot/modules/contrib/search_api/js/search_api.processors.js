@@ -8,7 +8,8 @@
     attach(context) {
       const selector = '.search-api-status-wrapper input.form-checkbox';
       $(selector, context).each(function foreach() {
-        const $checkbox = $(this);
+        const checkbox = this;
+        const $checkbox = $(checkbox);
         const processorId = $checkbox.data('id');
 
         const $rows = $(
@@ -23,7 +24,7 @@
         // Bind a click handler to this checkbox to conditionally show and hide
         // the processor's table row and vertical tab pane.
         $checkbox.on('click.searchApiUpdate', () => {
-          if ($checkbox.is(':checked')) {
+          if (checkbox.matches(':checked')) {
             $rows.show();
             if (tab) {
               tab.tabShow().updateSummary();
@@ -39,7 +40,7 @@
         // Attach summary for configurable items (only for screen-readers).
         if (tab) {
           tab.details.drupalSetSummary(() => {
-            return $checkbox.is(':checked')
+            return checkbox.matches(':checked')
               ? Drupal.t('Enabled')
               : Drupal.t('Disabled');
           });

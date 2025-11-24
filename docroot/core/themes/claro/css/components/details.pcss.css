@@ -5,8 +5,6 @@
  * @see collapse.js
  */
 
-@import "../base/variables.pcss.css";
-
 /**
  * Available modifiers are:
  *  - .claro-details--accordion
@@ -38,8 +36,7 @@
 
 .claro-details {
   display: block;
-  margin-top: var(--space-m);
-  margin-bottom: var(--space-m);
+  margin-block: var(--space-m);
   color: var(--color-text);
   border: var(--details-border-size) solid var(--details-border-color);
   border-radius: var(--details-border-size-radius);
@@ -60,8 +57,7 @@
 
 .claro-details--accordion-item,
 .claro-details--vertical-tabs-item {
-  margin-top: 0;
-  margin-bottom: 0;
+  margin-block: 0;
   border-radius: 0;
   box-shadow: none;
 }
@@ -83,35 +79,25 @@
 .claro-details__summary {
   position: relative;
   box-sizing: border-box;
-  padding: var(--space-m) var(--space-m) var(--space-m) var(--details-desktop-wrapper-padding-start); /* LTR */
+  padding-block: var(--space-m);
+  padding-inline: var(--details-desktop-wrapper-padding-start) var(--space-m);
   list-style: none;
   cursor: pointer;
   transition: background-color var(--details-bg-color-transition-duration) ease-in-out;
-  word-wrap: break-word;
-  hyphens: auto;
   color: var(--color-gray-800);
   border-radius: var(--size-summary-border-radius);
   background-color: transparent;
   line-height: var(--space-m);
-}
-[dir="rtl"] .claro-details__summary {
-  padding-right: var(--details-desktop-wrapper-padding-start);
-  padding-left: var(--space-m);
 }
 
 /* Modifiers */
 .claro-details__summary--accordion,
 .claro-details__summary--accordion-item,
 .claro-details__summary--vertical-tabs-item {
-  padding: var(--summary-accordion-padding-vertical) var(--space-l) var(--summary-accordion-padding-vertical) var(--details-desktop-wrapper-padding-start); /* LTR */
+  padding-block: var(--summary-accordion-padding-vertical);
+  padding-inline: var(--details-desktop-wrapper-padding-start) var(--space-l);
   background: var(--color-white);
   line-height: var(--summary-accordion-line-height);
-}
-[dir="rtl"] .claro-details__summary--accordion,
-[dir="rtl"] .claro-details__summary--accordion-item,
-[dir="rtl"] .claro-details__summary--vertical-tabs-item {
-  padding-right: var(--details-desktop-wrapper-padding-start);
-  padding-left: var(--space-l);
 }
 
 /**
@@ -143,23 +129,22 @@
 
 .claro-details__summary::before {
   position: absolute;
-  top: 50%;
-  left: var(--space-s); /* LTR */
+  inset-block-start: 50%;
+  inset-inline-start: var(--space-s);
   display: inline-block;
   width: var(--space-m);
   height: var(--space-m);
-  margin-top: calc(var(--space-m) / -2);
+  margin-block-start: calc(var(--space-m) / -2);
   content: "";
   transition: transform var(--details-transform-transition-duration) ease-in 0s;
-  transform: rotate(90deg); /* LTR */
+  transform: rotate(90deg);
   text-align: center;
   background-image: url(../../images/icons/545560/chevron-right.svg);
   background-size: contain;
-}
-[dir="rtl"] .claro-details__summary::before {
-  right: var(--space-s);
-  left: auto;
-  transform: rotate(-270deg);
+
+  @nest [dir="rtl"] & {
+    transform: rotate(-270deg);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -168,19 +153,21 @@
   }
 }
 
-@media (-ms-high-contrast: active), (forced-colors: active) {
+@media (forced-colors: active) {
   .claro-details__summary::before {
     width: 0.5625rem;
     height: 0.5625rem;
-    transition: transform var(--details-transform-transition-duration) ease-in 0s, margin var(--details-transform-transition-duration) ease-in 0s;
+    transition:
+      transform var(--details-transform-transition-duration) ease-in 0s,
+      margin var(--details-transform-transition-duration) ease-in 0s;
     transform: rotate(135deg); /* LTR */
-    border-top: 0.125rem solid;
-    border-right: 0.125rem solid;
+    border-block-start: 0.125rem solid;
+    border-inline-end: 0.125rem solid;
     background: none;
-  }
 
-  [dir="rtl"] .claro-details__summary::before {
-    transform: rotate(-225deg);
+    @nest [dir="rtl"] & {
+      transform: rotate(-225deg);
+    }
   }
 }
 
@@ -214,10 +201,7 @@
  */
 .claro-details__summary::after {
   position: absolute;
-  top: -1px;
-  right: -1px;
-  bottom: -1px;
-  left: -1px;
+  inset: -1px;
   content: "";
   transition: opacity var(--details-box-shadow-transition-duration) ease-in-out;
   pointer-events: none;
@@ -284,16 +268,17 @@
   transform: rotate(-90deg); /* for LTR and RTL */
 }
 
-@media (-ms-high-contrast: active), (forced-colors: active) {
+@media (forced-colors: active) {
   .claro-details__summary:hover::before,
-  .claro-details__summary:hover:focus::before {
+  .claro-details__summary:hover:focus::before,
+  .claro-details[open] > .claro-details__summary:focus::before {
     background: none;
   }
 
   .claro-details[open] > .claro-details__summary::before,
   [dir="rtl"] .claro-details[open] > .claro-details__summary::before {
-    margin-top: calc(0.125rem / -2);
-    margin-right: 0.125rem;
+    margin-block-start: -0.125rem;
+    margin-inline-end: 0.125rem;
     transform: rotate(-45deg); /* for LTR and RTL */
     background: none;
   }
@@ -302,7 +287,7 @@
 .claro-details[open] > .claro-details__summary--accordion,
 .claro-details[open] > .claro-details__summary--accordion-item,
 .claro-details[open] > .claro-details__summary--vertical-tabs-item {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--details-box-shadow);
 }
 
 .claro-details__summary:hover {
@@ -316,31 +301,22 @@
 
 /**
  * Active has to be here for Firefox.
- * Merges standard collapse-processed selectors.
  */
-[open] > .claro-details__summary--accordion:not(:focus):not(:active)::after,
-[open] > .claro-details__summary--accordion-item:not(:focus):not(:active)::after,
-.collapse-processed[open] > .claro-details__summary--accordion .details-title:not(:focus)::after,
-.collapse-processed[open] > .claro-details__summary--accordion-item .details-title:not(:focus)::after,
-[open] > .claro-details__summary--vertical-tabs-item:not(:focus):not(:active)::after,
-.collapse-processed[open] > .claro-details__summary--vertical-tabs-item .details-title:not(:focus)::after {
+[open] > .claro-details__summary--accordion:not(:focus, :active)::after,
+[open] > .claro-details__summary--accordion-item:not(:focus, :active)::after,
+[open] > .claro-details__summary--vertical-tabs-item:not(:focus, :active)::after {
   opacity: 1;
   border: var(--details-summary-focus-border-size) solid var(--color-absolutezero);
   border-width: 0 0 0 var(--details-summary-focus-border-size); /* LTR */
   box-shadow: none;
-}
-[dir="rtl"] [open] > .claro-details__summary--accordion:not(:focus)::after,
-[dir="rtl"] [open] > .claro-details__summary--accordion-item:not(:focus)::after,
-[dir="rtl"] .collapse-processed[open] > .claro-details__summary--accordion .details-title:not(:focus)::after,
-[dir="rtl"] .collapse-processed[open] > .claro-details__summary--accordion-item .details-title:not(:focus)::after,
-[dir="rtl"] [open] > .claro-details__summary--vertical-tabs-item:not(:focus)::after,
-[dir="rtl"] .collapse-processed[open] > .claro-details__summary--vertical-tabs-item .details-title:not(:focus)::after {
-  border-width: 0 var(--details-summary-focus-border-size) 0 0;
+
+  @nest [dir="rtl"] & {
+    border-width: 0 var(--details-summary-focus-border-size) 0 0;
+  }
 }
 
 .claro-details__summary:focus::after,
-.claro-details__summary:active::after,
-.collapse-processed > .claro-details__summary .details-title:focus::after {
+.claro-details__summary:active::after {
   opacity: 1;
 }
 
@@ -401,7 +377,8 @@
   background-color: var(--color-gray-050-o-40);
 }
 
-@media screen and (min-width: 48em) {
+/* @see Drupal.behaviors.verticalTabs */
+@media screen and (min-width: 641px) {
   .claro-details__wrapper {
     margin: var(--space-l) var(--details-desktop-wrapper-padding-start);
   }
@@ -411,9 +388,7 @@
   .claro-details__wrapper--vertical-tabs-item {
     margin: 0;
   }
-}
 
-@media screen and (min-width: 85em) {
   .js .claro-details__wrapper--vertical-tabs-item {
     margin: 0;
     border-top: 0;
@@ -435,102 +410,13 @@
 
 /* Description. */
 .claro-details__description {
-  margin-bottom: var(--space-m);
+  margin-block-end: var(--space-m);
   color: var(--input-fg-color--description);
   font-size: var(--font-size-xs); /* ~13px */
   line-height: calc(17rem / 16); /* 17px */
 }
 .claro-details__description.is-disabled {
   color: var(--input--disabled-fg-color);
-}
-
-/**
- * Collapse processed for non-supporting browsers like IE or Edge.
- */
-.collapse-processed > .claro-details__summary {
-  padding: 0;
-}
-
-.collapse-processed > .claro-details__summary::after {
-  content: none;
-}
-
-.collapse-processed > .claro-details__summary .details-title {
-  position: relative;
-  display: block;
-  padding: var(--space-m) var(--space-m) var(--space-m) var(--details-desktop-wrapper-padding-start); /* LTR */
-  text-decoration: none;
-  color: inherit;
-  border-radius: var(--size-summary-border-radius);
-}
-[dir="rtl"] .collapse-processed > .claro-details__summary .details-title {
-  padding-right: var(--details-desktop-wrapper-padding-start);
-  padding-left: var(--space-m);
-}
-
-.collapse-processed > .claro-details__summary--accordion .details-title,
-.collapse-processed > .claro-details__summary--accordion-item .details-title,
-.collapse-processed > .claro-details__summary--vertical-tabs-item .details-title {
-  padding: var(--summary-accordion-padding-vertical) var(--space-l) var(--summary-accordion-padding-vertical) var(--details-desktop-wrapper-padding-start); /* LTR */
-}
-[dir="rtl"] .collapse-processed > .claro-details__summary--accordion .details-title,
-[dir="rtl"] .collapse-processed > .claro-details__summary--accordion-item .details-title,
-[dir="rtl"] .collapse-processed > .claro-details__summary--vertical-tabs-item .details-title {
-  padding-right: var(--details-desktop-wrapper-padding-start);
-  padding-left: var(--space-l);
-}
-
-/* Focus and hover states. */
-.collapse-processed > .claro-details__summary .details-title:focus,
-.collapse-processed > .claro-details__summary .details-title:hover {
-  z-index: 1;
-  text-decoration: none;
-  outline: none;
-  box-shadow: none;
-}
-
-.collapse-processed > .claro-details__summary .details-title::after {
-  position: absolute;
-  top: -1px;
-  right: -1px;
-  bottom: -1px;
-  left: -1px;
-  content: "";
-  transition: opacity var(--details-box-shadow-transition-duration) ease-in-out;
-  pointer-events: none;
-  opacity: 0;
-  border: var(--details-summary-focus-border-size) solid var(--color-focus);
-  border-radius: var(--details-border-size-radius);
-}
-
-.collapse-processed > .claro-details__summary .details-title:focus::after {
-  opacity: 1;
-}
-
-/* Accordion item modifiers for the focus box. */
-
-.collapse-processed > .claro-details__summary--accordion-item .details-title::after,
-.vertical-tabs__item > .claro-details__summary--vertical-tabs-item .details-title::after {
-  border-radius: 0;
-}
-
-.collapse-processed:first-child > .claro-details__summary--accordion-item .details-title::after,
-.vertical-tabs__item--first > .claro-details__summary--vertical-tabs-item .details-title::after {
-  border-top-left-radius: var(--details-border-size-radius);
-  border-top-right-radius: var(--details-border-size-radius);
-}
-
-.collapse-processed:last-child > .claro-details__summary--accordion-item .details-title::after,
-.vertical-tabs__item--last > .claro-details__summary--vertical-tabs-item .details-title::after {
-  border-bottom-right-radius: var(--details-border-size-radius);
-  border-bottom-left-radius: var(--details-border-size-radius);
-}
-
-.collapse-processed[open] > .claro-details__summary--accordion .details-title::after,
-.collapse-processed[open] > .claro-details__summary--accordion-item .details-title::after,
-.vertical-tabs__item[open] > .claro-details__summary--vertical-tabs-item .details-title::after {
-  border-bottom-right-radius: 0;
-  border-bottom-left-radius: 0;
 }
 
 .claro-details__summary-summary {
@@ -540,30 +426,11 @@
   font-weight: normal;
 }
 
-@media (-ms-high-contrast: active), (forced-colors: active) {
-  .collapse-processed[open] > .claro-details__summary--accordion .details-title:not(:focus)::after,
-  .collapse-processed[open] > .claro-details__summary--accordion-item .details-title:not(:focus)::after,
-  .collapse-processed[open] > .claro-details__summary--vertical-tabs-item .details-title:not(:focus)::after {
-    top: -1px;
-    right: -1px;
-    bottom: -1px;
-    left: -1px;
-  }
-  .collapse-processed > .claro-details__summary .details-title::after {
-    top: -5px;
-    right: -5px;
-    bottom: -5px;
-    left: -5px;
-    border: 2px dotted;
-  }
-}
-
 .required-mark::after {
   display: inline-block;
   width: 0.4375rem;
   height: 0.4375rem;
-  margin-right: 0.3em;
-  margin-left: 0.3em;
+  margin-inline: 0.3em;
   content: "";
   vertical-align: super;
   background-image: url(../../images/core/ee0000/required.svg);

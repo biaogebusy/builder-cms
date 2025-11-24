@@ -11,28 +11,21 @@ use Drupal\commerce\Country;
 class DefaultCountryResolver implements CountryResolverInterface {
 
   /**
-   * The configuration factory.
-   *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface
-   */
-  protected $configFactory;
-
-  /**
    * Constructs a new DefaultCountryResolver object.
    *
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
    *   The config factory.
    */
-  public function __construct(ConfigFactoryInterface $config_factory) {
-    $this->configFactory = $config_factory;
-  }
+  public function __construct(protected ConfigFactoryInterface $configFactory) {}
 
   /**
    * {@inheritdoc}
    */
   public function resolve() {
     $country_code = $this->configFactory->get('system.date')->get('country.default');
-    return new Country($country_code);
+    if ($country_code && is_string($country_code)) {
+      return new Country($country_code);
+    }
   }
 
 }

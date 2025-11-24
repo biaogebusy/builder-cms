@@ -38,7 +38,7 @@ class View extends SelectionDisplayBase {
   public function getForm(array &$original_form, FormStateInterface $form_state) {
     $form = [];
 
-    // TODO - do we need better error handling for view and view_display
+    // @todo do we need better error handling for view and view_display
     // (in case either of those is nonexistent
     // or display not of correct type)?
     $storage = &$form_state->getStorage();
@@ -49,7 +49,7 @@ class View extends SelectionDisplayBase {
         ->getExecutable();
     }
 
-    // TODO - if there are entities that are selected multiple times this
+    // @todo if there are entities that are selected multiple times this
     // displays them only once. Reason for that is how SQL and Views work and
     // we probably can't do much about it.
     $selected_entities = $form_state->get(['entity_browser', 'selected_entities']);
@@ -113,7 +113,7 @@ class View extends SelectionDisplayBase {
     $values = $form_state->getValues();
 
     if (!empty($values['view'])) {
-      list($view_id, $display_id) = explode('.', $values['view']);
+      [$view_id, $display_id] = explode('.', $values['view']);
       $this->configuration['view'] = $view_id;
       $this->configuration['view_display'] = $display_id;
     }

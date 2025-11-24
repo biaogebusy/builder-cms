@@ -1,0 +1,29 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"SX",
+		"Jincheng Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Cheng Qu": {
+			"local_name": "城区"
+		},
+		"Gaoping Shi": {
+			"local_name": "高平市"
+		},
+		"Lingchuan Xian": {
+			"local_name": "陵川县"
+		},
+		"Qinshui Xian": {
+			"local_name": "沁水县"
+		},
+		"Yangcheng Xian": {
+			"local_name": "阳城县"
+		},
+		"Zezhou Xian": {
+			"local_name": "泽州县"
+		}
+	}
+}

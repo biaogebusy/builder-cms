@@ -13,8 +13,8 @@ content:
   last_message:
     weight: 1
     region: content
-    settings: {  }
-    third_party_settings: {  }
+    settings: {}
+    third_party_settings: {}
   members:
     label: hidden
     type: private_message_thread_member_formatter
@@ -23,7 +23,7 @@ content:
     settings:
       display_type: label
       entity_display_mode: private_message_author
-    third_party_settings: {  }
+    third_party_settings: {}
 hidden:
   delete_link: true
   no_active_users: true

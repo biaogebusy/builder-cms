@@ -5,10 +5,10 @@ namespace Drupal\address\Plugin\Field\FieldWidget;
 use CommerceGuys\Addressing\Country\CountryRepositoryInterface;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\Element;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -97,6 +97,54 @@ class AddressDefaultWidget extends WidgetBase implements ContainerFactoryPluginI
   /**
    * {@inheritdoc}
    */
+  public static function defaultSettings() {
+    return [
+      'wrapper_type' => 'fieldset',
+    ] + parent::defaultSettings();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function settingsForm(array $form, FormStateInterface $form_state) {
+    return [
+      'wrapper_type' => [
+        '#type' => 'radios',
+        '#title' => $this->t('Wrapper type'),
+        '#options' => $this->wrapperTypeOptions(),
+        '#default_value' => $this->getSetting('wrapper_type'),
+      ],
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function settingsSummary() {
+    $summary = parent::settingsSummary();
+    $summary[] = $this->t('Wrapper type: @wrapper_type', [
+      '@wrapper_type' => $this->wrapperTypeOptions()[$this->getSetting('wrapper_type')],
+    ]);
+    return $summary;
+  }
+
+  /**
+   * Gets the options for the "Wrapper type" setting.
+   *
+   * @return string[]
+   *   The available options.
+   */
+  protected function wrapperTypeOptions(): array {
+    return [
+      'container' => $this->t('Container (invisible)'),
+      'details' => $this->t('Details (collapsible)'),
+      'fieldset' => $this->t('Fieldset (non-collapsible)'),
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
     $item = $items[$delta];
     $value = $item->toArray();
@@ -113,7 +161,7 @@ class AddressDefaultWidget extends WidgetBase implements ContainerFactoryPluginI
     }
 
     $element += [
-      '#type' => 'details',
+      '#type' => $this->getSetting('wrapper_type'),
       '#open' => TRUE,
     ];
     $element['address'] = [
@@ -125,7 +173,10 @@ class AddressDefaultWidget extends WidgetBase implements ContainerFactoryPluginI
     ];
     // Make sure no properties are required on the default value widget.
     if ($this->isDefaultValueWidget($form_state)) {
-      $element['address']['#after_build'][] = [get_class($this), 'makeFieldsOptional'];
+      $element['address']['#after_build'][] = [
+        get_class($this),
+        'makeFieldsOptional',
+      ];
     }
 
     return $element;
@@ -135,7 +186,8 @@ class AddressDefaultWidget extends WidgetBase implements ContainerFactoryPluginI
    * {@inheritdoc}
    */
   public function errorElement(array $element, ConstraintViolationInterface $violation, array $form, FormStateInterface $form_state) {
-    $error_element = NestedArray::getValue($element['address'], $violation->arrayPropertyPath);
+    $property_path_array = explode('.', $violation->getPropertyPath());
+    $error_element = NestedArray::getValue($element['address'], [$property_path_array[1]]);
     return is_array($error_element) ? $error_element : FALSE;
   }
 

@@ -15,6 +15,7 @@ use Drupal\Core\Render\Element;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\file\FileInterface;
 use Drupal\webform\Entity\Webform;
@@ -264,7 +265,7 @@ function webform_menu_local_tasks_alter(&$data, $route_name, RefinableCacheableD
   if (strpos($route_name, 'entity.webform_submission.devel_') === 0 || $route_name === 'entity.webform_submission.token_devel') {
     foreach ($data['tabs'] as $tab_level) {
       foreach ($tab_level as $tab) {
-        /** @var Drupal\Core\Url $url */
+        /** @var \Drupal\Core\Url $url */
         $url = $tab['#link']['url'];
         $tab_route_name = $url->getRouteName();
         $tab_route_parameters = $url->getRouteParameters();
@@ -951,6 +952,16 @@ function webform_webform_access_rules() {
       ],
     ],
   ];
+}
+
+/**
+ * Implements hook_field_info_alter().
+ */
+function webform_field_info_alter(&$info) {
+  // @todo Remove once Drupal 10.2.x is only supported.
+  if (floatval(\Drupal::VERSION) < 10.2) {
+    $info['webform']['category'] = new TranslatableMarkup("Reference");
+  }
 }
 
 /* ************************************************************************** */

@@ -2,12 +2,12 @@
 
 namespace Drupal\Tests\commerce_product\Kernel;
 
+use Drupal\Core\Entity\Entity\EntityViewMode;
+use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
 use Drupal\commerce_product\Entity\Product;
 use Drupal\commerce_product\Entity\ProductAttribute;
 use Drupal\commerce_product\Entity\ProductAttributeValue;
 use Drupal\commerce_product\Entity\ProductVariation;
-use Drupal\Core\Entity\Entity\EntityViewMode;
-use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
 
 /**
  * Tests the "commerce_product_attributes_overview" formatter.

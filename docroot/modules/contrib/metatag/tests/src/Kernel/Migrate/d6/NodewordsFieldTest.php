@@ -30,7 +30,7 @@ class NodewordsFieldTest extends MigrateSqlSourceTestBase {
   /**
    * {@inheritdoc}
    */
-  public function providerSource() {
+  public static function providerSource() {
     return [
       [
         // Example source data for the test. This test is focused on making sure

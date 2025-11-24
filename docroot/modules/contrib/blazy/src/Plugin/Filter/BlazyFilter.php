@@ -2,9 +2,9 @@
 
 namespace Drupal\blazy\Plugin\Filter;
 
-use Drupal\blazy\Media\BlazyFile;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\blazy\Media\BlazyFile;
 use Drupal\filter\FilterProcessResult;
 
 /**

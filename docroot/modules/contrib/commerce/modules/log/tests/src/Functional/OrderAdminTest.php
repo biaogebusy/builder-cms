@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\commerce_log\Functional;
 
-use Drupal\commerce_order\Entity\Order;
 use Drupal\Component\Utility\Html;
 use Drupal\Tests\commerce_order\Functional\OrderBrowserTestBase;
+use Drupal\commerce_order\Entity\Order;
 
 /**
  * Tests the order admin.
@@ -81,7 +81,7 @@ class OrderAdminTest extends OrderBrowserTestBase {
       'customer_type' => 'existing',
       'uid' => $user,
     ];
-    $this->submitForm($edit, $this->t('Create'));
+    $this->submitForm($edit, (string) $this->t('Create'));
     $order = Order::load(1);
     $this->drupalGet($order->toUrl('canonical'));
     $this->assertSession()->pageTextContains('Order created through the order add form.');

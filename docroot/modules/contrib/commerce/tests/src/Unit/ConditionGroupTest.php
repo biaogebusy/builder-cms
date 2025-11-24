@@ -2,11 +2,11 @@
 
 namespace Drupal\Tests\commerce\Unit;
 
+use Drupal\Tests\UnitTestCase;
 use Drupal\commerce\ConditionGroup;
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_order\Plugin\Commerce\Condition\OrderTotalPrice;
 use Drupal\commerce_price\Price;
-use Drupal\Tests\UnitTestCase;
 
 /**
  * @coversDefaultClass \Drupal\commerce\ConditionGroup

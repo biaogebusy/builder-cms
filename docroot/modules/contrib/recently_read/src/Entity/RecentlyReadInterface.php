@@ -19,7 +19,7 @@ interface RecentlyReadInterface extends ContentEntityInterface, EntityChangedInt
    * @return string
    *   Name of the Recently read.
    */
-  public function getName();
+  public function getName(): string;
 
   /**
    * Sets the Recently read name.
@@ -30,7 +30,7 @@ interface RecentlyReadInterface extends ContentEntityInterface, EntityChangedInt
    * @return \Drupal\recently_read\Entity\RecentlyReadInterface
    *   The called Recently read entity.
    */
-  public function setName($name);
+  public function setName(string $name): RecentlyReadInterface;
 
   /**
    * Gets the Recently read creation timestamp.
@@ -38,7 +38,7 @@ interface RecentlyReadInterface extends ContentEntityInterface, EntityChangedInt
    * @return int
    *   Creation timestamp of the Recently read.
    */
-  public function getCreatedTime();
+  public function getCreatedTime(): int;
 
   /**
    * Sets the Recently read creation timestamp.
@@ -49,7 +49,7 @@ interface RecentlyReadInterface extends ContentEntityInterface, EntityChangedInt
    * @return \Drupal\recently_read\Entity\RecentlyReadInterface
    *   The called Recently read entity.
    */
-  public function setCreatedTime($timestamp);
+  public function setCreatedTime(int $timestamp): RecentlyReadInterface;
 
   /**
    * Get entity id.

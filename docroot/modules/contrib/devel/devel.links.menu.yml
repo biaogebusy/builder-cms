@@ -35,12 +35,12 @@ devel.theme_registry:
 devel.entity_info_page:
   title: 'Entity Info'
   route_name: devel.entity_info_page
-#  parent: 'system.admin_config_development'
+  #  parent: 'system.admin_config_development'
   menu_name: devel
 devel.field_info_page:
   title: 'Field Info'
   route_name: devel.field_info_page
-#  parent: 'system.admin_config_development'
+  #  parent: 'system.admin_config_development'
   menu_name: devel
 devel.phpinfo:
   title: 'PHPinfo()'
@@ -64,6 +64,11 @@ devel.run_cron:
   route_name: devel.run_cron
   menu_name: devel
   class: \Drupal\devel\Plugin\Menu\DestinationMenuLink
+devel.switch_user:
+  title: 'Switch user'
+  route_name: devel.switch_user
+  menu_name: devel
+
 
 # Container info
 devel.container_info.service:

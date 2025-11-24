@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageToolkit\Operation;
 
 /**
@@ -14,9 +16,11 @@ trait GaussianBlurTrait {
     return [
       'radius' => [
         'description' => 'The blur radius, in pixels.',
+        'type' => 'int',
       ],
       'sigma' => [
         'description' => 'The blur sigma value.',
+        'type' => 'float',
         'required' => FALSE,
         'default' => NULL,
       ],
@@ -27,14 +31,17 @@ trait GaussianBlurTrait {
    * {@inheritdoc}
    */
   protected function validateArguments(array $arguments) {
+    $arguments = ArgumentsTypeValidator::validate($this->arguments(), $arguments);
+
     // Assure blur radius is valid.
-    if (!is_int($arguments['radius']) || $arguments['radius'] < 1) {
+    if ($arguments['radius'] < 1) {
       throw new \InvalidArgumentException("Invalid radius ('{$arguments['radius']}') specified for the image 'gaussian_blur' operation");
     }
     // Assure sigma value is valid.
-    if ($arguments['sigma'] !== NULL && (!is_float($arguments['sigma']) || $arguments['sigma'] <= 0)) {
+    if ($arguments['sigma'] !== NULL && $arguments['sigma'] <= 0) {
       throw new \InvalidArgumentException("Invalid sigma value ('{$arguments['sigma']}') specified for the image 'gaussian_blur' operation");
     }
+
     return $arguments;
   }
 

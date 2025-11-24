@@ -1,0 +1,20 @@
+name: ddev-drupal-contrib
+repository: ddev/ddev-drupal-contrib
+version: 1.0.1
+dependencies:
+    - ddev/ddev-selenium-standalone-chrome
+install_date: "2025-07-07T14:50:14-04:00"
+project_files:
+    - commands/web/eslint
+    - commands/web/expand-composer-json
+    - commands/web/nightwatch
+    - commands/web/phpcbf
+    - commands/web/phpcs
+    - commands/web/phpstan
+    - commands/web/phpunit
+    - commands/web/poser
+    - commands/web/stylelint
+    - commands/web/symlink-project
+    - config.contrib.yaml
+global_files: []
+removal_actions: []

@@ -2,12 +2,12 @@
 
 namespace Drupal\Tests\commerce_tax\Kernel;
 
-use Drupal\commerce_tax\Plugin\Commerce\TaxNumberType\VerificationResult;
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
+use Drupal\commerce_tax\Plugin\Commerce\TaxNumberType\VerificationResult;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
 
 /**
  * Tests the 'commerce_tax_number' field type.
@@ -231,7 +231,7 @@ class TaxNumberItemTest extends CommerceKernelTestBase {
     $violations = $tax_number_item->validate();
     $this->assertCount(1, $violations);
     $this->assertEquals('type', $violations[0]->getPropertyPath());
-    $this->assertEquals('This value should not be null.', $violations[0]->getMessage());
+    $this->assertEquals('This value should not be null.', (string) $violations[0]->getMessage());
 
     // Unrecognized type.
     $tax_number_item->setValue([
@@ -241,7 +241,7 @@ class TaxNumberItemTest extends CommerceKernelTestBase {
     $violations = $tax_number_item->validate();
     $this->assertCount(1, $violations);
     $this->assertEquals('type', $violations[0]->getPropertyPath());
-    $this->assertEquals('Invalid type specified.', $violations[0]->getMessage());
+    $this->assertEquals('Invalid type specified.', (string) $violations[0]->getMessage());
 
     // Unrecognized verification_state.
     $tax_number_item->setValue([
@@ -252,7 +252,7 @@ class TaxNumberItemTest extends CommerceKernelTestBase {
     $violations = $tax_number_item->validate();
     $this->assertCount(1, $violations);
     $this->assertEquals('verification_state', $violations[0]->getPropertyPath());
-    $this->assertEquals('Invalid verification_state specified.', $violations[0]->getMessage());
+    $this->assertEquals('Invalid verification state specified.', (string) $violations[0]->getMessage());
 
     // Value too long.
     $entity->set('test_tax_number', [
@@ -267,7 +267,7 @@ class TaxNumberItemTest extends CommerceKernelTestBase {
     $violations = $tax_number_item->validate();
     $this->assertCount(1, $violations);
     $this->assertEquals('value', $violations[0]->getPropertyPath());
-    $this->assertEquals($expected_message->__toString(), $violations[0]->getMessage());
+    $this->assertEquals($expected_message->__toString(), (string) $violations[0]->getMessage());
 
     // Invalid format.
     $tax_number_item->setValue([
@@ -280,7 +280,7 @@ class TaxNumberItemTest extends CommerceKernelTestBase {
     $violations = $tax_number_item->validate();
     $this->assertCount(1, $violations);
     $this->assertEquals('value', $violations[0]->getPropertyPath());
-    $this->assertEquals($expected_message->__toString(), $violations[0]->getMessage());
+    $this->assertEquals($expected_message->__toString(), (string) $violations[0]->getMessage());
 
     // Invalid format (verification failed).
     $tax_number_item->setValue([
@@ -293,7 +293,7 @@ class TaxNumberItemTest extends CommerceKernelTestBase {
     $violations = $tax_number_item->validate();
     $this->assertCount(1, $violations);
     $this->assertEquals('value', $violations[0]->getPropertyPath());
-    $this->assertEquals($expected_message->__toString(), $violations[0]->getMessage());
+    $this->assertEquals($expected_message->__toString(), (string) $violations[0]->getMessage());
 
     // Valid format (verification succeeded).
     $tax_number_item->setValue([
@@ -328,7 +328,7 @@ class TaxNumberItemTest extends CommerceKernelTestBase {
     $violations = $tax_number_item->validate();
     $this->assertCount(1, $violations);
     $this->assertEquals('value', $violations[0]->getPropertyPath());
-    $this->assertEquals($expected_message->__toString(), $violations[0]->getMessage());
+    $this->assertEquals($expected_message->__toString(), (string) $violations[0]->getMessage());
   }
 
   /**

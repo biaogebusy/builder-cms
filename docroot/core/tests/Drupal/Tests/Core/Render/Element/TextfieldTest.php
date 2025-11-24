@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Render\Element;
 
 use Drupal\Core\Form\FormStateInterface;
@@ -17,7 +19,7 @@ class TextfieldTest extends UnitTestCase {
    *
    * @dataProvider providerTestValueCallback
    */
-  public function testValueCallback($expected, $input) {
+  public function testValueCallback($expected, $input): void {
     $element = [];
     $form_state = $this->prophesize(FormStateInterface::class)->reveal();
     $this->assertSame($expected, Textfield::valueCallback($element, $input, $form_state));
@@ -26,14 +28,14 @@ class TextfieldTest extends UnitTestCase {
   /**
    * Data provider for testValueCallback().
    */
-  public function providerTestValueCallback() {
+  public static function providerTestValueCallback() {
     $data = [];
     $data[] = [NULL, FALSE];
     $data[] = [NULL, NULL];
     $data[] = ['', ['test']];
     $data[] = ['test', 'test'];
     $data[] = ['123', 123];
-    $data[] = ['testwithnewline', "test\nwith\rnewline"];
+    $data[] = ['testWithNewline', "test\nWith\rNewline"];
 
     return $data;
   }

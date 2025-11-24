@@ -24,13 +24,6 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 class UnprocessableHttpEntityExceptionNormalizer extends HttpExceptionNormalizer {
 
   /**
-   * The interface or class that this Normalizer supports.
-   *
-   * @var string
-   */
-  protected $supportedInterfaceOrClass = UnprocessableHttpEntityException::class;
-
-  /**
    * {@inheritdoc}
    */
   protected function buildErrorObjects(HttpException $exception) {
@@ -76,6 +69,15 @@ class UnprocessableHttpEntityExceptionNormalizer extends HttpExceptionNormalizer
     }
 
     return $errors;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSupportedTypes(?string $format): array {
+    return [
+      UnprocessableHttpEntityException::class => TRUE,
+    ];
   }
 
 }

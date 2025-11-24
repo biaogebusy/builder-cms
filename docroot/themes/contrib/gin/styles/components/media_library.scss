@@ -1,6 +1,7 @@
 .media-library {
-  &-edit__link,
+  &-item &-edit__link,
   &-item &-item__edit,
+  &-item &-item__edit.button,
   &-item &-item__remove,
   &-item &-item__remove.button {
     border-color: var(--gin-border-color) !important;
@@ -26,7 +27,7 @@
     &:active {
       width: 32px;
       height: 32px;
-      margin: var(--gin-spacing-s);
+      margin: var(--gin-spacing-xs);
       background-color: white;
       border-radius: 50%;
       box-shadow: 0 2px 4px rgba(0, 0, 0, .15);
@@ -34,10 +35,10 @@
     }
   }
 
-  &-edit__link,
+  &-item &-edit__link,
   &-item &-item__edit {
-    top: .625rem;
-    right: 3.125rem;
+    inset-block-start: .625rem;
+    inset-inline-end: 3.125rem;
     background-image: icon('media-edit');
     background-size: .75rem .75rem;
   }
@@ -54,6 +55,7 @@
 .media-library-item {
   background: none;
 
+  svg,
   img {
     @include color-pattern;
   }
@@ -121,16 +123,17 @@
 
   & &__preview {
     position: relative;
-    padding-bottom: 100%;
+    padding-block-end: 100%;
     border: 1px solid var(--gin-border-color);
     border-radius: var(--gin-border-xl);
     overflow: hidden;
 
     .field {
+      svg,
       img {
         position: absolute;
-        top: 0;
-        left: 0;
+        inset-block-start: 0;
+        inset-inline-start: 0;
         width: 100%;
         height: 100%;
         object-fit: cover;
@@ -197,6 +200,7 @@
 fieldset.media-library-widget {
   .media-library-widget__toggle-weight {
     font-size: var(--gin-font-size-xxs);
+    line-height: 1;
     padding: var(--gin-spacing-xs);
   }
 
@@ -212,11 +216,12 @@ fieldset.media-library-widget {
 
 .media-library-widget-empty-text {
   color: var(--gin-color-text-light);
-  margin: 0 0 calc(var(--gin-spacing-xs) * -1) 0;
+  margin-block: 0 calc(var(--gin-spacing-xs) * -1);
+  margin-inline: 0;
 }
 
 .media-library-open-button {
-  margin-top: 0;
+  margin-block-start: 0;
 }
 
 .media-library-add-form {
@@ -231,8 +236,8 @@ fieldset.media-library-widget {
     box-shadow: none;
 
     .form-item--upload {
-      margin-top: 0;
-      margin-right: 0;
+      margin-block-start: 0;
+      margin-inline-end: 0;
     }
 
     .dropzone-enable {
@@ -263,23 +268,19 @@ fieldset.media-library-widget {
       color: var(--gin-color-primary);
       text-shadow: none;
       background-color: var(--gin-bg-layer);
-      border-right: 0 none;
-      border-bottom: 1px solid var(--gin-border-color);
+      border-inline-end: 0 none;
+      border-block-end: 1px solid var(--gin-border-color);
       box-shadow: none;
     }
 
     &.active::before {
-      border-left-color: var(--gin-color-primary);
+      border-inline-start-color: var(--gin-color-primary);
     }
 
     &:focus::after {
       border: var(--gin-border-xs) solid var(--gin-color-focus);
     }
   }
-}
-
-+ .media-library-content {
-  border-left: 1px solid var(--gin-border-color);
 }
 
 .media-library-view {
@@ -298,9 +299,8 @@ fieldset.media-library-widget {
 }
 
 .media-library-wrapper {
-  margin-top: 0;
-  margin-left: calc(var(--gin-spacing-m) * -1);
-  margin-right: calc(var(--gin-spacing-m) * -1);
+  margin-block-start: 0;
+  margin-inline: calc(var(--gin-spacing-m) * -1);
 
   .views-display-link {
     position: relative;
@@ -315,8 +315,8 @@ fieldset.media-library-widget {
       width: 16px;
       height: 16px;
       position: absolute;
-      left: 0;
-      top: 1px;
+      inset-inline-start: 0;
+      inset-block-start: 1px;
       background-color: var(--gin-color-text);
     }
 
@@ -343,25 +343,20 @@ fieldset.media-library-widget {
 }
 
 .media-library-content {
-  border-left: 0 none;
+  border-inline-start: 0 none;
   border-color: var(--gin-border-color);
 }
 
 .media-library-select-all {
   color: var(--gin-color-title);
-  padding: 0 var(--gin-spacing-m) var(--gin-spacing-m);
-  margin-left: 0;
-  margin-top: 0;
+  padding-block: 0 var(--gin-spacing-m);
+  padding-inline: var(--gin-spacing-m);
+  margin-inline-start: 0;
+  margin-block-start: 0;
   background: var(--gin-bg-layer);
-  border-bottom: 1px solid var(--gin-border-color-table-header);
+  border-block-end: 1px solid var(--gin-border-color-table-header);
   border-radius: 0;
   box-sizing: border-box;
-
-  // @include mq(medium) {
-  //   z-index: 98;
-  //   position: sticky;
-  //   top: calc(var(--gin-toolbar-y-offset) + var(--gin-sticky-offset));
-  // }
 }
 
 .views-field-thumbnail__target-id {
@@ -394,25 +389,35 @@ fieldset.media-library-widget {
     flex-direction: row;
     justify-content: flex-end;
     white-space: nowrap;
-    margin-top: 0;
+    margin-block-start: 0;
 
     .button:not(:last-child) {
-      margin-right: var(--gin-spacing-xs);
+      margin-inline-end: var(--gin-spacing-xs);
     }
   }
 
   .media-library-selected-count {
     flex-grow: 1;
-    margin-bottom: var(--gin-spacing-s);
+    margin-block-end: var(--gin-spacing-s);
   }
 
   @include mq(xsmall) {
     flex-direction: row;
 
     .media-library-selected-count {
-      margin-bottom: 0;
-      margin-left: 0;
+      margin-block-end: 0;
+      margin-inline-start: 0;
     }
+  }
+}
+
+.js-media-library-widget {
+  .fieldset__label {
+    margin-block-end: 0;
+  }
+
+  .media-library-selection {
+    margin-block-start: 0;
   }
 }
 
@@ -430,13 +435,14 @@ fieldset.media-library-widget {
 .field--name-field-media {
   &.field--widget-entity-reference-autocomplete {
     fieldset.form-item {
-      padding: var(--gin-spacing-xl) calc(var(--gin-spacing-l) - var(--gin-spacing-xxs)) var(--gin-spacing-m) calc(var(--gin-spacing-l) - var(--gin-spacing-xxs));
+      padding-block: var(--gin-spacing-xl) var(--gin-spacing-m);
+      padding-inline: calc(var(--gin-spacing-l) - var(--gin-spacing-xxs));
       border: 1px solid var(--gin-border-color);
 
       > legend {
         font-weight: var(--gin-font-weight-heavy);
         position: relative;
-        top: calc(var(--gin-spacing-l) - var(--gin-spacing-xxs));
+        inset-block-start: calc(var(--gin-spacing-l) - var(--gin-spacing-xxs));
         transform: translateY(50%);
 
         &::before {
@@ -445,15 +451,15 @@ fieldset.media-library-widget {
           width: 100%;
           height: 1px;
           position: absolute;
-          top: calc((var(--gin-spacing-l) - var(--gin-spacing-xxs)) * -1);
-          left: 0;
+          inset-block-start: calc((var(--gin-spacing-l) - var(--gin-spacing-xxs)) * -1);
+          inset-inline-start: 0;
           background: var(--gin-border-color);
         }
       }
 
       > .form-item {
         h4 {
-          margin-bottom: 0;
+          margin-block-end: 0;
         }
       }
     }
@@ -462,4 +468,26 @@ fieldset.media-library-widget {
 
 .media-library-selected-count {
   color: var(--gin-color-text-light);
+}
+
+.media-library-new-widget {
+  .fieldset__label {
+    margin-block-end: 0;
+  }
+
+  .label {
+    font-size: var(--gin-font-size-l);
+    font-weight: var(--gin-font-weight-bold);
+    color: var(--gin-color-title);
+    margin-block-start: 0;
+  }
+
+  .description {
+    font-size: var(--gin-font-size-s);
+    color: var(--gin-color-text-light);
+  }
+
+  .form-type--entity-autocomplete {
+    margin-block: var(--gin-spacing-s);
+  }
 }

@@ -62,6 +62,9 @@ charts_display:
     data_markers:
       type: boolean
       label: 'Enable data markers'
+    connect_nulls:
+      type: boolean
+      label: 'Connect nulls'
     legend:
       type: boolean
       label: 'Legend'
@@ -208,9 +211,14 @@ charts_config:
       label: 'Y axis Display'
     library_config:
       type: charts.settings.library_plugin.[%parent.library]
+    library_type_options:
+      type: charts.library_plugin.[%parent.library].options.[%parent.type]
 
 charts.settings.library_plugin.*:
   type: charts_settings_library_plugin
+
+charts.library_plugin.*.options.*:
+  type: mapping
 
 charts_settings_library_plugin:
   type: mapping

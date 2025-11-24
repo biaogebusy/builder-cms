@@ -2,8 +2,8 @@
 
 namespace Drupal\config_filter\Config;
 
-use Drupal\config_filter\Exception\InvalidStorageFilterException;
 use Drupal\Core\Config\StorageInterface;
+use Drupal\config_filter\Exception\InvalidStorageFilterException;
 
 /**
  * Class FilteredStorage.

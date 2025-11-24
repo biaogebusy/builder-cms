@@ -1,0 +1,25 @@
+# List of words excluded from cspell validation for the project Colorbox.
+# Mostly contains custom names: variables, css/js properties, etc...
+
+# Custom variable names, ids, keys or identifiers.
+cbox
+colorbox
+colorboxdompurify
+colorboxplugin
+dompurify
+iframed
+lightbox
+mobiledetect
+mobiledevicewidth
+mycolorbox
+mystyle
+stockholmsyndrome
+
+# Config variables defined in module's schema file:
+# Watchout: changing these would have a big impact and could break sites.
+initialheight
+initialwidth
+maxheight
+maxwidth
+overlayclose
+returnfocus

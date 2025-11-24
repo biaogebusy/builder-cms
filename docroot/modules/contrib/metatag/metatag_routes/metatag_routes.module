@@ -30,7 +30,9 @@ function metatag_routes_metatags_alter(array &$metatags, array $context) {
   // Ignore some system routes that are not appropriate for meta tags.
   if (metatag_is_current_route_supported()) {
     // Look to see if a configuration was assigned for this route.
-    $current_route = \Drupal::routeMatch()->getRouteName();
+    /** @var \Drupal\metatag_routes\Helper\MetatagRoutesHelperInterface $metatag_routes_helper */
+    $metatag_routes_helper = \Drupal::service('metatag_routes.helper');
+    $current_route = $metatag_routes_helper->getCurrentMetatagRouteId();
     if (!empty($current_route)) {
       $defaults = \Drupal::entityTypeManager()
         ->getStorage('metatag_defaults')

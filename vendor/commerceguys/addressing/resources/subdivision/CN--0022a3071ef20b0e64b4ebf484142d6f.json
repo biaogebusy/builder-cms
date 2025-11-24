@@ -1,0 +1,131 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"TW",
+		"Kaohsiung City"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Alian District": {
+			"local_name": "阿蓮區"
+		},
+		"Daliao District": {
+			"local_name": "大寮區"
+		},
+		"Dashe District": {
+			"local_name": "大社區"
+		},
+		"Dashu District": {
+			"local_name": "大樹區"
+		},
+		"Dongsha Island": {
+			"local_name": "東沙島"
+		},
+		"Fengshan District": {
+			"local_name": "鳳山區"
+		},
+		"Gangshan District": {
+			"local_name": "岡山區"
+		},
+		"Gushan District": {
+			"local_name": "鼓山區"
+		},
+		"Hunei District": {
+			"local_name": "湖內區"
+		},
+		"Jiading District": {
+			"local_name": "茄萣區"
+		},
+		"Jiaxian District": {
+			"local_name": "甲仙區"
+		},
+		"Linyuan District": {
+			"local_name": "林園區"
+		},
+		"Lingya District": {
+			"local_name": "苓雅區"
+		},
+		"Liugui District": {
+			"local_name": "六龜區"
+		},
+		"Luzhu District": {
+			"local_name": "路竹區"
+		},
+		"Maolin District": {
+			"local_name": "茂林區"
+		},
+		"Meinong District": {
+			"local_name": "美濃區"
+		},
+		"Mituo District": {
+			"local_name": "彌陀區"
+		},
+		"Namaxia District": {
+			"local_name": "那瑪夏區"
+		},
+		"Nansha Island": {
+			"local_name": "南沙島"
+		},
+		"Nanzi District": {
+			"local_name": "楠梓區"
+		},
+		"Neimen District": {
+			"local_name": "內門區"
+		},
+		"Niaosong District": {
+			"local_name": "鳥松區"
+		},
+		"Qijin District": {
+			"local_name": "旗津區"
+		},
+		"Qishan District": {
+			"local_name": "旗山區"
+		},
+		"Qianjin District": {
+			"local_name": "前金區"
+		},
+		"Qianzhen District": {
+			"local_name": "前鎮區"
+		},
+		"Qiaotou District": {
+			"local_name": "橋頭區"
+		},
+		"Renwu District": {
+			"local_name": "仁武區"
+		},
+		"Sanmin District": {
+			"local_name": "三民區"
+		},
+		"Shanlin District": {
+			"local_name": "杉林區"
+		},
+		"Taoyuan District": {
+			"local_name": "桃源區"
+		},
+		"Tianliao District": {
+			"local_name": "田寮區"
+		},
+		"Xiaogang District": {
+			"local_name": "小港區"
+		},
+		"Xinxing District": {
+			"local_name": "新興區"
+		},
+		"Yancheng District": {
+			"local_name": "鹽埕區"
+		},
+		"Yanchao District": {
+			"local_name": "燕巢區"
+		},
+		"Yong'an District": {
+			"local_name": "永安區"
+		},
+		"Ziguan District": {
+			"local_name": "梓官區"
+		},
+		"Zuoying District": {
+			"local_name": "左營區"
+		}
+	}
+}

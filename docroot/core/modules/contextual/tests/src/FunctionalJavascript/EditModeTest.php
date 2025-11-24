@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\contextual\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
@@ -8,6 +10,7 @@ use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
  * Tests edit mode.
  *
  * @group contextual
+ * @group #slow
  */
 class EditModeTest extends WebDriverTestBase {
 
@@ -35,15 +38,29 @@ class EditModeTest extends WebDriverTestBase {
   protected $defaultTheme = 'stark';
 
   /**
+   * The administration theme name.
+   *
+   * @var string
+   */
+  protected $adminTheme = 'claro';
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
     parent::setUp();
 
+    \Drupal::service('theme_installer')->install([$this->adminTheme]);
+    \Drupal::configFactory()
+      ->getEditable('system.theme')
+      ->set('admin', $this->adminTheme)
+      ->save();
+
     $this->drupalLogin($this->createUser([
       'administer blocks',
       'access contextual links',
       'access toolbar',
+      'view the administration theme',
     ]));
     $this->placeBlock('system_powered_by_block', ['id' => 'powered']);
   }
@@ -51,7 +68,7 @@ class EditModeTest extends WebDriverTestBase {
   /**
    * Tests enabling and disabling edit mode.
    */
-  public function testEditModeEnableDisable() {
+  public function testEditModeEnableDisable(): void {
     $web_assert = $this->assertSession();
     $page = $this->getSession()->getPage();
     // Get the page twice to ensure edit mode remains enabled after a new page
@@ -62,7 +79,9 @@ class EditModeTest extends WebDriverTestBase {
 
       // After the page loaded we need to additionally wait until the settings
       // tray Ajax activity is done.
-      $web_assert->assertWaitOnAjaxRequest();
+      if ($page_get_count === 0) {
+        $web_assert->assertWaitOnAjaxRequest();
+      }
 
       if ($page_get_count == 0) {
         $unrestricted_tab_count = $this->getTabbableElementsCount();
@@ -86,6 +105,13 @@ class EditModeTest extends WebDriverTestBase {
       // correct after toggling the edit mode at least once.
       $this->assertAnnounceEditMode();
       $this->assertSame($expected_restricted_tab_count, $this->getTabbableElementsCount());
+
+      // Test while Edit Mode is enabled it doesn't interfere with pages with
+      // no contextual links.
+      $this->drupalGet('admin/structure/block');
+      $web_assert->elementContains('css', 'h1.page-title', 'Block layout');
+      $this->assertEquals(0, count($page->findAll('css', '[data-contextual-id]')));
+      $this->assertGreaterThan(0, $this->getTabbableElementsCount());
     }
 
   }
@@ -120,7 +146,7 @@ class EditModeTest extends WebDriverTestBase {
     $web_assert = $this->assertSession();
     $page = $this->getSession()->getPage();
     // Wait till all the contextual links are hidden.
-    $page->waitFor(1, function () use ($page, $web_assert) {
+    $page->waitFor(1, function () use ($page) {
       return empty($page->find('css', '.contextual .trigger.visually-hidden'));
     });
     $web_assert->elementContains('css', static::ANNOUNCE_SELECTOR, 'Tabbing is no longer constrained by the Contextual module.');

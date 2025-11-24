@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Functional\Views;
 
 use Drupal\language\Entity\ConfigurableLanguage;
@@ -94,13 +96,13 @@ class BulkFormTest extends NodeTestBase {
     ]));
     $this->drupalGet('test-node-bulk-form');
     $elements = $this->assertSession()->selectExists('edit-action')->findAll('css', 'option');
-    $this->assertCount(8, $elements, 'All node operations are found.');
+    $this->assertCount(9, $elements, 'All node operations are found.');
   }
 
   /**
    * Tests the node bulk form.
    */
-  public function testBulkForm() {
+  public function testBulkForm(): void {
     // Unpublish a node using the bulk form.
     $node = reset($this->nodes);
     $this->assertTrue($node->isPublished(), 'Node is initially published');
@@ -221,7 +223,7 @@ class BulkFormTest extends NodeTestBase {
   /**
    * Tests multiple deletion.
    */
-  public function testBulkDeletion() {
+  public function testBulkDeletion(): void {
     // Select a bunch of translated and untranslated nodes and check that
     // nodes and individual translations are properly deleted.
     $edit = [

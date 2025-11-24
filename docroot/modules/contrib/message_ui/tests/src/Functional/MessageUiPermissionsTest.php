@@ -101,7 +101,7 @@ class MessageUiPermissionsTest extends AbstractTestMessageUi {
     $this->assertSession()->statusCodeEquals(403);
 
     user_role_grant_permissions($this->rid, ['overview messages']);
-    $this->drupalGet('/admin/content/messages');
+    $this->drupalGet('/admin/content/message');
     $this->assertSession()->statusCodeEquals(200);
 
     // Create a new user with the bypass access permission and verify the

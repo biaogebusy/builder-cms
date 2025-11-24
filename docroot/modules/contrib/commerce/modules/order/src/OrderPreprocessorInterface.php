@@ -10,6 +10,8 @@ use Drupal\commerce_order\Entity\OrderInterface;
  * Order preprocessors are responsible for resetting an order to an unprocessed
  * state prior to processing, e.g. to revert changes to order items made by
  * processors as in the case of a Buy X, Get Y promotion.
+ *
+ * Interface for services tagged as 'commerce_order.order_preprocessor'.
  */
 interface OrderPreprocessorInterface {
 

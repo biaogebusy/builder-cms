@@ -34,36 +34,43 @@ class JsonApiNormalizerDecoratorBase implements NormalizerInterface, Denormalize
   /**
    * {@inheritdoc}
    */
-  public function normalize($object, $format = NULL, array $context = []) {
+  public function normalize($object, $format = NULL, array $context = []): array|bool|string|int|float|null|\ArrayObject {
     return $this->inner->normalize($object, $format, $context);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function denormalize($data, $class, $format = NULL, array $context = []) {
+  public function denormalize($data, $class, $format = NULL, array $context = []): mixed {
     return $this->inner->denormalize($data, $class, $format, $context);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function setSerializer(SerializerInterface $serializer) {
+  public function setSerializer(SerializerInterface $serializer): void {
     $this->inner->setSerializer($serializer);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function supportsNormalization($data, $format = NULL) {
+  public function supportsNormalization($data, $format = NULL, $context = []): bool {
     return $this->inner instanceof NormalizerInterface && $this->inner->supportsNormalization($data, $format);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function supportsDenormalization($data, $type, $format = NULL) {
+  public function supportsDenormalization($data, $type, $format = NULL, array $context = []): bool {
     return $this->inner instanceof DenormalizerInterface && $this->inner->supportsDenormalization($data, $type, $format);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSupportedTypes(?string $format): array {
+    return ['object' => TRUE];
   }
 
 }

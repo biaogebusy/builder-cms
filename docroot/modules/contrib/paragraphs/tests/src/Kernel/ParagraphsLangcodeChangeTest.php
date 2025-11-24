@@ -203,7 +203,7 @@ class ParagraphsLangcodeChangeTest extends EntityKernelTestBase {
 
     $this->formDisplay = EntityFormDisplay::load('node.' . $this->nodeType . '.default');
 
-    $this->createUser(['uid' => 1, 'name' => 'user1'])->save();
+    $this->createUser([], 'user1', TRUE)->save();
 
     $this->paragraph = $this->entityTypeManager->getStorage('paragraph')->create([
       'type' => $this->paragraphType,

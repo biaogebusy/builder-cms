@@ -1,9 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\redirect\Unit;
 
+use Drupal\Core\Path\CurrentPathStack;
+use Drupal\path_alias\AliasManager;
 use Drupal\Tests\UnitTestCase;
 use Drupal\redirect\EventSubscriber\RouteNormalizerRequestSubscriber;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -28,7 +33,7 @@ class RouteNormalizerRequestSubscriberTest extends UnitTestCase {
     $kill_switch->expects($this->any())
       ->method('trigger')
       ->withAnyParameters()
-      ->will($this->returnValue(NULL));
+      ->willReturn(NULL);
     $container = new ContainerBuilder();
     $container->set('page_cache_kill_switch', $kill_switch);
     \Drupal::setContainer($container);
@@ -41,7 +46,7 @@ class RouteNormalizerRequestSubscriberTest extends UnitTestCase {
     $request_uri = 'https://example.com/route-to-normalize';
     $request_query = [];
 
-    $event = $this->getGetResponseEventStub($request_uri, http_build_query($request_query));
+    $event = $this->getGetRequestEventStub($request_uri, http_build_query($request_query));
     // We set 'route_normalizer_enabled' config to FALSE and expect to leave onKernelRequestRedirect at the beginning,
     // i.e. $this->redirectChecker->canRedirect($request) should never be called.
     $subscriber = $this->getSubscriber($request_uri, FALSE, FALSE);
@@ -55,7 +60,7 @@ class RouteNormalizerRequestSubscriberTest extends UnitTestCase {
     $request_uri = 'https://example.com/route-to-normalize';
     $request_query = [];
 
-    $event = $this->getGetResponseEventStub($request_uri, http_build_query($request_query), HttpKernelInterface::SUB_REQUEST);
+    $event = $this->getGetRequestEventStub($request_uri, http_build_query($request_query), HttpKernelInterface::SUB_REQUEST);
     // We are using SUB_REQUEST as the request type and expect to leave onKernelRequestRedirect at the beginning,
     // i.e. $this->redirectChecker->canRedirect($request) should never be called.
     $subscriber = $this->getSubscriber($request_uri, TRUE, FALSE);
@@ -69,7 +74,7 @@ class RouteNormalizerRequestSubscriberTest extends UnitTestCase {
     $request_uri = 'https://example.com/route-to-normalize';
     $request_query = [];
 
-    $event = $this->getGetResponseEventStub($request_uri, http_build_query($request_query), HttpKernelInterface::MASTER_REQUEST, TRUE);
+    $event = $this->getGetRequestEventStub($request_uri, http_build_query($request_query), HttpKernelInterface::MAIN_REQUEST, TRUE);
     // We set '_disable_route_normalizer' as a request attribute and expect to leave onKernelRequestRedirect at the beginning,
     // i.e. $this->redirectChecker->canRedirect($request) should never be called.
     $subscriber = $this->getSubscriber($request_uri, TRUE, FALSE);
@@ -81,12 +86,13 @@ class RouteNormalizerRequestSubscriberTest extends UnitTestCase {
    * @dataProvider getTestUrls
    */
   public function testOnKernelRequestRedirect($request_uri, $request_query, $expected, $expect_normalization) {
-    $event = $this->getGetResponseEventStub($request_uri, http_build_query($request_query));
+    $event = $this->getGetRequestEventStub($request_uri, http_build_query($request_query));
     $subscriber = $this->getSubscriber($request_uri);
     $subscriber->onKernelRequestRedirect($event);
 
     if ($expect_normalization) {
       $response = $event->getResponse();
+      $this->assertInstanceOf(RedirectResponse::class, $response);
       $this->assertEquals($expected, $response->getTargetUrl());
     }
   }
@@ -94,7 +100,7 @@ class RouteNormalizerRequestSubscriberTest extends UnitTestCase {
   /**
    * Data provider for testOnKernelRequestRedirect().
    */
-  public function getTestUrls() {
+  public static function getTestUrls() {
     return [
       ['https://example.com/route-to-normalize', [], 'https://example.com/route-to-normalize', FALSE],
       ['https://example.com/route-to-normalize', ['key' => 'value'], 'https://example.com/route-to-normalize?key=value', FALSE],
@@ -109,13 +115,25 @@ class RouteNormalizerRequestSubscriberTest extends UnitTestCase {
    * @param string $request_uri
    *   The return value for the generateFromRoute method.
    * @param bool $enabled
-   *   Flag indicating if the normalizer shoud be enabled.
+   *   Flag indicating if the normalizer should be enabled.
    * @param bool $call_expected
    *   If true, canRedirect() and other methods should be called once.
    *
    * @return \Drupal\redirect\EventSubscriber\RouteNormalizerRequestSubscriber
+   *   The RouteNormalizerRequestSubscriber object.
    */
   protected function getSubscriber($request_uri, $enabled = TRUE, $call_expected = TRUE) {
+
+    $alias_manager = $this->createMock(AliasManager::class);
+    $alias_manager->expects($this->any())
+      ->method('setCacheKey')
+      ->with('/current-path');
+
+    $current_path = $this->createMock(CurrentPathStack::class);
+    $current_path->expects($this->any())
+      ->method('getPath')
+      ->willReturn('/current-path');
+
     return new RouteNormalizerRequestSubscriber(
       $this->getUrlGeneratorStub($request_uri, $call_expected),
       $this->getPathMatcherStub($call_expected),
@@ -125,7 +143,9 @@ class RouteNormalizerRequestSubscriberTest extends UnitTestCase {
           'default_status_code' => 301,
         ],
       ]),
-      $this->getRedirectCheckerStub($call_expected)
+      $this->getRedirectCheckerStub($call_expected),
+      $alias_manager,
+      $current_path
     );
   }
 
@@ -138,6 +158,7 @@ class RouteNormalizerRequestSubscriberTest extends UnitTestCase {
    *   If true, we expect generateFromRoute() to be called once.
    *
    * @return \Drupal\Core\Routing\UrlGeneratorInterface|\PHPUnit\Framework\MockObject\MockObject
+   *   The UrlGenerator mock object.
    */
   protected function getUrlGeneratorStub($request_uri, $call_expected = TRUE) {
     $url_generator = $this->createMock('\Drupal\Core\Routing\UrlGeneratorInterface');
@@ -160,6 +181,7 @@ class RouteNormalizerRequestSubscriberTest extends UnitTestCase {
    *   If true, we expect isFrontPage() to be called once.
    *
    * @return \Drupal\Core\Path\PathMatcherInterface|\PHPUnit\Framework\MockObject\MockObject
+   *   The PathMatcher mock object.
    */
   protected function getPathMatcherStub($call_expected = TRUE) {
     $path_matcher = $this->createMock('\Drupal\Core\Path\PathMatcherInterface');
@@ -180,6 +202,7 @@ class RouteNormalizerRequestSubscriberTest extends UnitTestCase {
    *   If true, we expect canRedirect() to be called once.
    *
    * @return \Drupal\redirect\RedirectChecker|\PHPUnit\Framework\MockObject\MockObject
+   *   The RedirectChecker mock object.
    */
   protected function getRedirectCheckerStub($call_expected = TRUE) {
     $redirect_checker = $this->createMock('\Drupal\redirect\RedirectChecker');
@@ -194,11 +217,11 @@ class RouteNormalizerRequestSubscriberTest extends UnitTestCase {
   }
 
   /**
-   * Returns a GET response event object.
+   * Returns a GET request event object.
    *
    * @param string $path_info
    *   The path of the request.
-   * @param array $query_string
+   * @param string $query_string
    *   The query string of the request.
    * @param int $request_type
    *   The request type of the request.
@@ -206,8 +229,9 @@ class RouteNormalizerRequestSubscriberTest extends UnitTestCase {
    *   If true, the request attribute '_disable_route_normalizer' will be set.
    *
    * @return \Symfony\Component\HttpKernel\Event\RequestEvent
+   *   The GET request event object.
    */
-  protected function getGetResponseEventStub($path_info, $query_string, $request_type = HttpKernelInterface::MASTER_REQUEST, $set_request_attribute = FALSE) {
+  protected function getGetRequestEventStub($path_info, $query_string, $request_type = HttpKernelInterface::MAIN_REQUEST, $set_request_attribute = FALSE) {
     $request = Request::create($path_info . '?' . $query_string, 'GET', [], [], [], ['SCRIPT_NAME' => 'index.php', 'SCRIPT_FILENAME' => 'index.php']);
 
     if ($set_request_attribute === TRUE) {

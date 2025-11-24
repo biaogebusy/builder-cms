@@ -12,7 +12,7 @@ use Drupal\Core\Config\StorageInterface;
 /**
  * Replace the "advancedqueue_jobs" view with the updated version.
  */
-function advancedqueue_post_update_1() {
+function advancedqueue_post_update_1(): void {
   /** @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface $view_storage */
   $view_storage = \Drupal::entityTypeManager()->getStorage('view');
   /** @var \Drupal\Core\Config\Entity\ConfigEntityInterface $view */

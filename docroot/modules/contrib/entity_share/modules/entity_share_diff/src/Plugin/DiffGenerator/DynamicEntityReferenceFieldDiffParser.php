@@ -42,7 +42,7 @@ class DynamicEntityReferenceFieldDiffParser extends EntityReferenceFieldDiffPars
     // Case of remote entity.
     elseif (!empty($remote_field_data['data'])) {
       foreach ($remote_field_data['data'] as $field_key => $remote_item_data) {
-        list($entity_type_id,) = explode('--', $remote_item_data['type']);
+        [$entity_type_id] = \explode('--', $remote_item_data['type']);
         $result[$field_key] = $entity_type_id . ': ' . $remote_item_data['id'];
       }
     }

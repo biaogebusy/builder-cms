@@ -58,7 +58,14 @@ class FieldType extends DataType {
   public $category = '';
 
   /**
-   * The plugin_id of the default widget for this field type.
+   * The weight of the field type.
+   *
+   * @var int
+   */
+  public $weight = 0;
+
+  /**
+   * The plugin ID of the default widget for this field type.
    *
    * This widget must be available whenever the field type is available (i.e.
    * provided by the field type module, or by a module the field type module
@@ -66,10 +73,11 @@ class FieldType extends DataType {
    *
    * @var string
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   public $default_widget;
 
   /**
-   * The plugin_id of the default formatter for this field type.
+   * The plugin ID of the default formatter for this field type.
    *
    * This formatter must be available whenever the field type is available (i.e.
    * provided by the field type module, or by a module the field type module
@@ -77,6 +85,7 @@ class FieldType extends DataType {
    *
    * @var string
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   public $default_formatter;
 
   /**
@@ -84,11 +93,13 @@ class FieldType extends DataType {
    *
    * @var bool
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   public $no_ui = FALSE;
 
   /**
    * {@inheritdoc}
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   public $list_class;
 
   /**

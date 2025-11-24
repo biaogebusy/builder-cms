@@ -2,8 +2,8 @@
 
 namespace Drupal\commerce_price\Comparator;
 
+use Drupal\commerce\ComparisonFailureBridge;
 use SebastianBergmann\Comparator\Comparator;
-use SebastianBergmann\Comparator\ComparisonFailure;
 
 /**
  * Provides a PHPUnit comparator for numbers cast to strings.
@@ -18,16 +18,16 @@ class NumberComparator extends Comparator {
   /**
    * {@inheritdoc}
    */
-  public function accepts($expected, $actual) {
+  public function accepts($expected, $actual): bool {
     return is_string($expected) && is_numeric($expected) && is_string($actual) && is_numeric($actual);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function assertEquals($expected, $actual, $delta = 0.0, $canonicalize = FALSE, $ignoreCase = FALSE) {
+  public function assertEquals($expected, $actual, $delta = 0.0, $canonicalize = FALSE, $ignoreCase = FALSE): void {
     if ($expected != $actual) {
-      throw new ComparisonFailure(
+      throw ComparisonFailureBridge::create(
         $expected,
         $actual,
         '',

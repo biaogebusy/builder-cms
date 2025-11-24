@@ -24,37 +24,15 @@ class ContentEntityTaskManager implements EventSubscriberInterface {
    */
   const DELETE_ITEMS_TASK_TYPE = 'search_api.entity_datasource.trackItemsDeleted';
 
-  /**
-   * The Search API task manager.
-   *
-   * @var \Drupal\search_api\Task\TaskManagerInterface
-   */
-  protected $taskManager;
-
-  /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
-   * Constructs a ContentEntityTaskManager object.
-   *
-   * @param \Drupal\search_api\Task\TaskManagerInterface $task_manager
-   *   The Search API task manager.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
-   */
-  public function __construct(TaskManagerInterface $task_manager, EntityTypeManagerInterface $entity_type_manager) {
-    $this->taskManager = $task_manager;
-    $this->entityTypeManager = $entity_type_manager;
-  }
+  public function __construct(
+    protected TaskManagerInterface $taskManager,
+    protected EntityTypeManagerInterface $entityTypeManager,
+  ) {}
 
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     $events['search_api.task.' . self::INSERT_ITEMS_TASK_TYPE][] = ['processEvent'];
     $events['search_api.task.' . self::DELETE_ITEMS_TASK_TYPE][] = ['processEvent'];
 
@@ -91,7 +69,7 @@ class ContentEntityTaskManager implements EventSubscriberInterface {
     $reschedule = FALSE;
     if ($index->isValidDatasource($datasource_id)) {
       /** @var \Drupal\search_api\Plugin\search_api\datasource\ContentEntity $datasource */
-      $datasource = $index->getDatasource($datasource_id);
+      $datasource = $index->getDatasourceIfAvailable($datasource_id);
       $raw_ids = $datasource->getPartialItemIds($data['page'], $data['bundles'], $data['languages']);
       if ($raw_ids !== NULL) {
         $reschedule = TRUE;

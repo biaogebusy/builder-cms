@@ -2,6 +2,7 @@
 
 namespace Drupal\search_api\Plugin\views\argument;
 
+use Drupal\views\Attribute\ViewsArgument;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\LoggerTrait;
@@ -11,9 +12,8 @@ use Drupal\search_api\SearchApiException;
  * Defines a contextual filter for displaying a "More Like This" list.
  *
  * @ingroup views_argument_handlers
- *
- * @ViewsArgument("search_api_more_like_this")
  */
+#[ViewsArgument('search_api_more_like_this')]
 class SearchApiMoreLikeThis extends SearchApiStandard {
 
   use LoggerTrait;

@@ -7,6 +7,7 @@ use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Config\ConfigManagerInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
@@ -54,13 +55,19 @@ class EntityPermissionsForm extends UserPermissionsForm {
    *   The role storage.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
-   * @param Drupal\Core\Config\ConfigManagerInterface $config_manager
+   * @param \Drupal\Core\Config\ConfigManagerInterface $config_manager
    *   The configuration entity manager.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager service.
+   * @param \Drupal\Core\Extension\ModuleExtensionList|null $module_extension_list
+   *   The module extension list.
    */
-  public function __construct(PermissionHandlerInterface $permission_handler, RoleStorageInterface $role_storage, ModuleHandlerInterface $module_handler, ConfigManagerInterface $config_manager, EntityTypeManagerInterface $entity_type_manager) {
-    parent::__construct($permission_handler, $role_storage, $module_handler);
+  public function __construct(PermissionHandlerInterface $permission_handler, RoleStorageInterface $role_storage, ModuleHandlerInterface $module_handler, ConfigManagerInterface $config_manager, EntityTypeManagerInterface $entity_type_manager, ?ModuleExtensionList $module_extension_list = NULL) {
+    if ($module_extension_list === NULL) {
+      @trigger_error('Calling ' . __METHOD__ . '() without the $module_extension_list argument is deprecated in drupal:10.3.0 and will be required in drupal:12.0.0. See https://www.drupal.org/node/3310017', E_USER_DEPRECATED);
+      $module_extension_list = \Drupal::service('extension.list.module');
+    }
+    parent::__construct($permission_handler, $role_storage, $module_handler, $module_extension_list);
     $this->configManager = $config_manager;
     $this->entityTypeManager = $entity_type_manager;
   }
@@ -74,7 +81,8 @@ class EntityPermissionsForm extends UserPermissionsForm {
       $container->get('entity_type.manager')->getStorage('user_role'),
       $container->get('module_handler'),
       $container->get('config.manager'),
-      $container->get('entity_type.manager')
+      $container->get('entity_type.manager'),
+      $container->get('extension.list.module'),
     );
   }
 
@@ -85,11 +93,10 @@ class EntityPermissionsForm extends UserPermissionsForm {
     // Get the names of all config entities that depend on $this->bundle.
     $config_name = $this->bundle->getConfigDependencyName();
     $config_entities = $this->configManager
-      ->getConfigEntitiesToChangeOnDependencyRemoval('config', [$config_name]);
+      ->findConfigEntityDependencies('config', [$config_name]);
     $config_names = array_map(
-      function ($dependent_config) {
-        return $dependent_config->getConfigDependencyName();
-      }, $config_entities['delete'] ?? []
+      fn($dependent_config) => $dependent_config->getConfigDependencyName(),
+      $config_entities,
     );
     $config_names[] = $config_name;
 
@@ -116,10 +123,10 @@ class EntityPermissionsForm extends UserPermissionsForm {
    *   The current state of the form.
    * @param string $bundle_entity_type
    *   (optional) The entity type ID.
-   * @param string|Drupal\Core\Entity\EntityInterface $bundle
+   * @param string|\Drupal\Core\Entity\EntityInterface $bundle
    *   (optional) Either the bundle name or the bundle object.
    */
-  public function buildForm(array $form, FormStateInterface $form_state, string $bundle_entity_type = NULL, $bundle = NULL): array {
+  public function buildForm(array $form, FormStateInterface $form_state, ?string $bundle_entity_type = NULL, $bundle = NULL): array {
     // Set $this->bundle for use by ::permissionsByProvider().
     if ($bundle instanceof EntityInterface) {
       $this->bundle = $bundle;
@@ -153,6 +160,10 @@ class EntityPermissionsForm extends UserPermissionsForm {
    *   The access result.
    */
   public function access(Route $route, RouteMatchInterface $route_match, $bundle = NULL): AccessResultInterface {
+    $permission = $route->getRequirement('_permission');
+    if ($permission && !$this->currentUser()->hasPermission($permission)) {
+      return AccessResult::neutral()->cachePerPermissions();
+    }
     // Set $this->bundle for use by ::permissionsByProvider().
     if ($bundle instanceof EntityInterface) {
       $this->bundle = $bundle;

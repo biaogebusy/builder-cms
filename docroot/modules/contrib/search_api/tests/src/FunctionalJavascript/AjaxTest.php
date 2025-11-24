@@ -6,12 +6,14 @@ use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\node\Entity\NodeType;
 use Drupal\search_api\Utility\Utility;
 use Drupal\search_api_test\PluginTestTrait;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests AJAX functionality in the Search API module.
  *
  * @group search_api
  */
+#[RunTestsInSeparateProcesses]
 class AjaxTest extends WebDriverTestBase {
 
   use PluginTestTrait;

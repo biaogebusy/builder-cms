@@ -173,6 +173,7 @@ class FieldConfigurationForm extends EntityForm {
         '#type' => 'link',
         '#title' => $this->t('Cancel'),
         '#url' => $this->entity->toUrl('fields'),
+        '#attributes' => ['class' => ['button', 'dialog-cancel']],
       ];
     }
 

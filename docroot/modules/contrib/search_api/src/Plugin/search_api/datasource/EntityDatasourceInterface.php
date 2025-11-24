@@ -48,6 +48,6 @@ interface EntityDatasourceInterface extends DatasourceInterface {
    *   In case both bundles and languages are specified, they are combined with
    *   OR.
    */
-  public function getPartialItemIds($page = NULL, array $bundles = NULL, array $languages = NULL);
+  public function getPartialItemIds($page = NULL, ?array $bundles = NULL, ?array $languages = NULL);
 
 }

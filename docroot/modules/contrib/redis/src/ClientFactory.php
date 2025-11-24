@@ -3,6 +3,10 @@
 namespace Drupal\redis;
 
 use Drupal\Core\Site\Settings;
+use Drupal\redis\Client\PhpRedisFactory;
+use Drupal\redis\Client\PredisFactory;
+use Drupal\redis\Client\RedisClientFactoryInterface;
+use Drupal\redis\Client\RelayFactory;
 
 /**
  * Common code and client singleton, for all Redis clients.
@@ -29,128 +33,51 @@ class ClientFactory {
   const REDIS_DEFAULT_PASSWORD = NULL;
 
   /**
-   * Cache implementation namespace.
-   */
-  const REDIS_IMPL_CACHE = '\\Drupal\\redis\\Cache\\';
-
-  /**
-   * Lock implementation namespace.
-   */
-  const REDIS_IMPL_LOCK = '\\Drupal\\redis\\Lock\\';
-
-  /**
-   * Lock implementation namespace.
-   */
-  const REDIS_IMPL_FLOOD = '\\Drupal\\redis\\Flood\\';
-
-  /**
-   * Persistent Lock implementation namespace.
-   */
-  const REDIS_IMPL_PERSISTENT_LOCK = '\\Drupal\\redis\\PersistentLock\\';
-
-  /**
-   * Client implementation namespace.
-   */
-  const REDIS_IMPL_CLIENT = '\\Drupal\\redis\\Client\\';
-
-  /**
-   * Queue implementation namespace.
-   */
-  const REDIS_IMPL_QUEUE = '\\Drupal\\redis\\Queue\\';
-
-  /**
-   * Reliable queue implementation namespace.
-   */
-  const REDIS_IMPL_RELIABLE_QUEUE = '\\Drupal\\redis\\Queue\\Reliable';
-
-  /**
-   * @var \Drupal\redis\ClientInterface
-   */
-  protected static $_clientInterface;
-
-  /**
-   * @var mixed
-   */
-  protected static $_client;
-
-  public static function hasClient() {
-    return isset(self::$_client);
-  }
-
-  /**
-   * Set client proxy.
-   */
-  public static function setClient(ClientInterface $interface) {
-    if (isset(self::$_client)) {
-      throw new \Exception("Once Redis client is connected, you cannot change client proxy instance.");
-    }
-
-    self::$_clientInterface = $interface;
-  }
-
-  /**
-   * Lazy instantiates client proxy depending on the actual configuration.
+   * The client adapter.
    *
-   * If you are using a lock or cache backend using one of the Redis client
-   * implementations, this will be overridden at early bootstrap phase and
-   * configuration will be ignored.
-   *
-   * @return ClientInterface
+   * @var \Drupal\redis\ClientInterface|null
    */
-  public static function getClientInterface()
-  {
-    if (!isset(self::$_clientInterface))
-    {
-      $settings = Settings::get('redis.connection', []);
-      if (!empty($settings['interface']))
-      {
-        $className = self::getClass(self::REDIS_IMPL_CLIENT, $settings['interface']);
-        self::$_clientInterface = new $className();
-      }
-      elseif (class_exists('Predis\Client'))
-      {
-        // Transparent and arbitrary preference for Predis library.
-        $className = self::getClass(self::REDIS_IMPL_CLIENT, 'Predis');
-        self::$_clientInterface = new $className();
-      }
-      elseif (class_exists('Redis'))
-      {
-        // Fallback on PhpRedis if available.
-        $className = self::getClass(self::REDIS_IMPL_CLIENT, 'PhpRedis');
-        self::$_clientInterface = new $className();
-      }
-      elseif (class_exists('Relay\Relay'))
-      {
-        // Fallback on PhpRedis if available.
-        $className = self::getClass(self::REDIS_IMPL_CLIENT, 'Relay');
-        self::$_clientInterface = new $className();
-      }
-      else
-      {
-        if (!isset(self::$_clientInterface))
-        {
-          throw new \Exception("No client interface set.");
-        }
-      }
-    }
+  protected ?ClientInterface $client = NULL;
 
-    return self::$_clientInterface;
+  /**
+   * @var \Drupal\redis\Client\RedisClientFactoryInterface[]
+   */
+  protected array $factories = [];
+
+  /**
+   * Whether the factory has an active client.
+   *
+   * @return bool
+   *   True if there is an instantiated client, false if not.
+   */
+  public function hasClient(): bool {
+    return $this->client instanceof ClientInterface;
   }
 
   /**
    * Get underlying library name.
    *
-   * @return string
+   * @return string|null
    */
-  public static function getClientName() {
-    return self::getClientInterface()->getName();
+  public function getClientName(): ?string {
+    return $this->client?->getName();
+  }
+
+  /**
+   * Add a client factory.
+   *
+   * @param \Drupal\redis\Client\RedisClientFactoryInterface $client_factory
+   *   The client factory.
+   */
+  public function addFactory(RedisClientFactoryInterface $client_factory): void {
+    $this->factories[$client_factory->getName()] = $client_factory;
   }
 
   /**
    * Get client singleton.
    */
-  public static function getClient() {
-    if (!isset(self::$_client)) {
+  public function getClient(): ClientInterface {
+    if (!isset($this->client)) {
       $settings = Settings::get('redis.connection', []);
       $settings += [
         'host' => self::REDIS_DEFAULT_HOST,
@@ -167,60 +94,37 @@ class ClientFactory {
             $settings['replication.host'][$key]['port'] = self::REDIS_DEFAULT_PORT;
           }
         }
+      }
 
-        self::$_client = self::getClientInterface()->getClient(
-          $settings['host'],
-          $settings['port'],
-          $settings['base'],
-          $settings['password'],
-          $settings['replication.host'],
-          $settings['persistent']);
+      // For early bootstrap container, the client factories aren't initialized
+      // yet.
+      if (empty($this->factories)) {
+        foreach ([PhpRedisFactory::class, PredisFactory::class, RelayFactory::class] as $client_factory_class) {
+          $client_factory = new $client_factory_class();
+          $this->factories[$client_factory->getName()] = $client_factory;
+        }
+      }
+
+      // If a specific client interface was requested, only use that.
+      if (isset($settings['interface'])) {
+        if (!isset($this->factories[$settings['interface']])) {
+          throw new \InvalidArgumentException('Invalid interface ' . $settings['interface']);
+        }
+        $this->client = $this->factories[$settings['interface']]->getClient($settings);
       }
       else {
-        self::$_client = self::getClientInterface()->getClient(
-          $settings['host'],
-          $settings['port'],
-          $settings['base'],
-          $settings['password'],
-          [], // There are no replication hosts.
-          $settings['persistent']);
+        // Fall back to returning the first-available client based on priority.
+        foreach ($this->factories as $client_factory) {
+          if ($client_factory->isAvailable()) {
+            $this->client = $client_factory->getClient($settings);
+            break;
+          }
+        }
       }
     }
 
-    return self::$_client;
+    return $this->client;
   }
 
-  /**
-   * Get specific class implementing the current client usage for the specific
-   * asked core subsystem.
-   *
-   * @param string $system
-   *   One of the ClientFactory::IMPL_* constant.
-   * @param string $clientName
-   *   Client name, if fixed.
-   *
-   * @return string
-   *   Class name, if found.
-   *
-   * @throws \Exception
-   *   If not found.
-   */
-  public static function getClass($system, $clientName = NULL) {
-    $className = $system . ($clientName ?: self::getClientName());
-
-    if (!class_exists($className)) {
-      throw new \Exception($className . " does not exists");
-    }
-
-    return $className;
-  }
-
-  /**
-   * For unit testing only reset internals.
-   */
-  static public function reset() {
-    self::$_clientInterface = null;
-    self::$_client = null;
-  }
 }
 

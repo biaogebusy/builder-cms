@@ -2,17 +2,18 @@
 
 namespace Drupal\commerce_payment\Plugin\Commerce\PaymentMethodType;
 
-use Drupal\entity\BundleFieldDefinition;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce_payment\Attribute\CommercePaymentMethodType;
 use Drupal\commerce_payment\Entity\PaymentMethodInterface;
+use Drupal\entity\BundleFieldDefinition;
 
 /**
  * Provides the PayPal payment method type.
- *
- * @CommercePaymentMethodType(
- *   id = "paypal",
- *   label = @Translation("PayPal"),
- * )
  */
+#[CommercePaymentMethodType(
+  id: "paypal",
+  label: new TranslatableMarkup('PayPal'),
+)]
 class PayPal extends PaymentMethodTypeBase {
 
   /**

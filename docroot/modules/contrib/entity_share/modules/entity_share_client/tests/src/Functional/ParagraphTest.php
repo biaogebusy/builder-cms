@@ -91,7 +91,7 @@ class ParagraphTest extends EntityShareClientFunctionalTestBase {
             // We are testing the JSON:API field enhancer "Serialized Data" by
             // exposing this paragraph property.
             'behavior_settings' => [
-              'value' => serialize(static::$behaviorSettings),
+              'value' => \serialize(static::$behaviorSettings),
               'checker_callback' => 'getExpectedBehaviorSettingsValue',
             ],
           ]),
@@ -156,7 +156,7 @@ class ParagraphTest extends EntityShareClientFunctionalTestBase {
    *   The expected value after import.
    */
   protected function getExpectedBehaviorSettingsValue(ContentEntityInterface $entity, string $field_name) {
-    return serialize(static::$behaviorSettings);
+    return \serialize(static::$behaviorSettings);
   }
 
 }

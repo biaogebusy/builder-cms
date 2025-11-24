@@ -1,33 +1,29 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drush\Commands\core;
 
 use Consolidation\OutputFormatters\StructuredData\PropertyList;
+use Drush\Attributes as CLI;
 use Drush\Commands\DrushCommands;
 use Drush\Drush;
 use Consolidation\OutputFormatters\StructuredData\RowsOfFields;
-use Consolidation\SiteAlias\SiteAliasManagerAwareInterface;
-use Consolidation\SiteAlias\SiteAliasManagerAwareTrait;
+use Consolidation\OutputFormatters\Options\FormatterOptions;
 
-class CoreCommands extends DrushCommands implements SiteAliasManagerAwareInterface
+final class CoreCommands extends DrushCommands
 {
-    use SiteAliasManagerAwareTrait;
+    const VERSION = 'version';
+    const GLOBAL_OPTIONS = 'core:global-options';
 
     /**
      * All global options.
-     *
-     * @command core:global-options
-     * @hidden
-     * @topic
-     * @table-style default
-     * @field-labels
-     *   name: Name
-     *   description: Description
-     * @default-fields name,description
-     * @aliases core-global-options
-     *
-     * @filter-default-field name
      */
+    #[CLI\Command(name: self::GLOBAL_OPTIONS, aliases: ['core-global-options'])]
+    #[CLI\Help(hidden: true)]
+    #[CLI\Topics(isTopic: true)]
+    #[CLI\FieldLabels(labels: ['name' => 'Name', 'description' => 'Description'])]
+    #[CLI\FilterDefaultField(field: 'name')]
     public function globalOptions($options = ['format' => 'table']): RowsOfFields
     {
         $application = Drush::getApplication();
@@ -67,17 +63,22 @@ class CoreCommands extends DrushCommands implements SiteAliasManagerAwareInterfa
 
     /**
      * Show Drush version.
-     *
-     * @command version
-     * @table-style compact
-     * @list-delimiter :
-     * @field-labels
-     *   drush-version: Drush version
-     *
-     *
      */
+    #[CLI\Command(name: self::VERSION)]
+    #[CLI\Format(listDelimiter: ':', tableStyle: 'compact')]
+    #[CLI\FieldLabels(labels: ['drush-version' => 'Drush version'])]
     public function version($options = ['format' => 'table']): PropertyList
     {
-        return new PropertyList(['drush-version' => Drush::getVersion()]);
+        $versionPropertyList = new PropertyList(['drush-version' => Drush::getVersion()]);
+        $versionPropertyList->addRendererFunction(
+            function ($key, $cellData, FormatterOptions $options) {
+                if ($key == 'drush-version') {
+                    return Drush::sanitizeVersionString($cellData);
+                }
+                return $cellData;
+            }
+        );
+
+        return $versionPropertyList;
     }
 }

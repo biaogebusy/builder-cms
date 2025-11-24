@@ -2,6 +2,7 @@
 
 namespace Drupal\rest_views\Plugin\views\field;
 
+use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\rest_views\SerializedData;
 use Drupal\views\Plugin\views\field\EntityField;
@@ -42,6 +43,7 @@ class EntityFieldExport extends EntityField {
   /**
    * {@inheritdoc}
    */
+  // phpcs:ignore
   public function render_item($count, $item) {
     $rendered = $item['rendered'];
     if (isset($rendered['#type']) && $rendered['#type'] === 'data') {
@@ -53,7 +55,7 @@ class EntityFieldExport extends EntityField {
   /**
    * {@inheritdoc}
    */
-  public function renderText($alter) {
+  public function renderText($alter): MarkupInterface|string|SerializedData|null {
     if (isset($this->last_render) && $this->last_render instanceof SerializedData) {
       return $this->last_render;
     }
@@ -63,10 +65,11 @@ class EntityFieldExport extends EntityField {
   /**
    * {@inheritdoc}
    */
-  public function multiple_options_form(&$form, FormStateInterface $form_state): void {
+  // phpcs:ignore
+  public function multiple_options_form(&$form, FormStateInterface $formState): void {
     // Initialize removed settings to avoid notices. Unset them afterward.
     $this->options['multi_type'] = $this->options['separator'] = NULL;
-    parent::multiple_options_form($form, $form_state);
+    parent::multiple_options_form($form, $formState);
 
     // The export field does not concatenate items.
     unset($form['multi_type'], $form['separator'], $this->options['multi_type'], $this->options['separator']);

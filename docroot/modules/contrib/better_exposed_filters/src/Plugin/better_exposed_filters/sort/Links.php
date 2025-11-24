@@ -17,7 +17,7 @@ class Links extends SortWidgetBase {
   /**
    * {@inheritdoc}
    */
-  public function exposedFormAlter(array &$form, FormStateInterface $form_state) {
+  public function exposedFormAlter(array &$form, FormStateInterface $form_state): void {
     $view = $form_state->get('view');
     parent::exposedFormAlter($form, $form_state);
 

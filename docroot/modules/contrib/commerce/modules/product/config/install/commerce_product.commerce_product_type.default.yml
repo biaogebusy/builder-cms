@@ -4,7 +4,6 @@ dependencies: {  }
 id: default
 label: Default
 description: ''
-variationType: default
 variationTypes:
   - default
 multipleVariations: true

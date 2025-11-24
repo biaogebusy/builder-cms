@@ -14,8 +14,17 @@
  * @see tabledrag.js
  */
 
+:root {
+  --table-row--dragging-bg-color: #fe7;
+  --table-row--last-dragged-bg-color: #ffb;
+}
+
 body.drag {
   cursor: move;
+}
+
+body.drag-y {
+  cursor: row-resize;
 }
 
 /* The block region's title row in table. */
@@ -27,7 +36,7 @@ body.drag {
 /* Empty region message row in table. */
 
 .region-message {
-  color: #828388;
+  color: var(--color-gray-600);
 }
 
 /* If the region is populated, we shouldn't display the empty message. */
@@ -53,17 +62,17 @@ body.drag {
 
 .draggable .tabledrag-changed {
   position: relative;
-  left: -0.5rem; /* LTR */
+  left: calc(var(--space-xs) * -1); /* LTR */
 }
 
 [dir="rtl"] .draggable .tabledrag-changed {
-  right: -0.5rem; /* LTR */
+  right: calc(var(--space-xs) * -1); /* LTR */
   left: auto;
 }
 
 .tabledrag-cell--only-drag .tabledrag-changed {
-  width: 1.5rem;
-  min-width: 1.5rem;
+  width: var(--space-l);
+  min-width: var(--space-l);
 }
 
 /**
@@ -72,11 +81,11 @@ body.drag {
 
 .draggable.drag,
 .draggable.drag:focus {
-  background-color: #fe7;
+  background-color: var(--table-row--dragging-bg-color);
 }
 
 .draggable.drag-previous {
-  background-color: #ffb;
+  background-color: var(--table-row--last-dragged-bg-color);
 }
 
 /**
@@ -91,7 +100,7 @@ body.drag {
 [dir="rtl"] .draggable-table td:first-child ~ td,
 [dir="rtl"] .draggable-table th:first-child ~ th {
   padding-right: 0;
-  padding-left: 1rem;
+  padding-left: var(--space-m);
 }
 
 /* Auto width for weight selects and number inputs. */
@@ -117,36 +126,37 @@ body.drag {
 
 .tabledrag-handle::after {
   display: inline-block;
-  width: 1.0625rem;
-  height: 1.0625rem;
-  margin-left: -1rem; /* LTR */
-  padding: 0.5rem 1rem;
+  width: var(--tabledrag-handle-icon-size);
+  height: var(--tabledrag-handle-icon-size);
+  margin-left: calc(var(--space-m) * -1); /* LTR */
+  padding: var(--space-xs) var(--space-m);
   content: "";
   transition: transform 0.1s ease-in-out 0s;
   background: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='17' height='17' viewBox='0 0 16 16'%3e%3cpath fill='%23000f33' d='M14.103 5.476a.5.5 0 00-.701-.053.526.526 0 00-.082.713l1.1 1.346H8.512V1.62l1.32 1.113a.501.501 0 00.732-.054.528.528 0 00-.085-.744L8.328.119a.5.5 0 00-.647 0L5.529 1.935a.527.527 0 00-.085.744.504.504 0 00.732.054l1.32-1.113v5.862H1.588L2.68 6.136a.526.526 0 00-.1-.68.5.5 0 00-.675.02L.117 7.67a.525.525 0 000 .66l1.788 2.194a.5.5 0 00.702.053.526.526 0 00.081-.713l-1.1-1.346h5.908v5.862l-1.32-1.113a.501.501 0 00-.698.082.526.526 0 00.051.716l2.152 1.817v-.001a.5.5 0 00.647 0l2.151-1.816a.526.526 0 00.052-.716.501.501 0 00-.699-.082l-1.32 1.113V8.518h5.908l-1.091 1.346a.527.527 0 00.022.776.504.504 0 00.752-.116l1.78-2.194a.527.527 0 000-.66z'/%3e%3c/svg%3e") no-repeat center;
 }
 
 [dir="rtl"] .tabledrag-handle::after {
-  margin-right: -1rem;
+  margin-right: calc(var(--space-m) * -1);
   margin-left: 0;
 }
 
-@media screen and (-ms-high-contrast: active) {
-  .tabledrag-handle::after {
-    content: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='17' height='17' viewBox='0 0 16 16'%3e%3cpath fill='currentColor' d='M14.103 5.476a.5.5 0 00-.701-.053.526.526 0 00-.082.713l1.1 1.346H8.512V1.62l1.32 1.113a.501.501 0 00.732-.054.528.528 0 00-.085-.744L8.328.119a.5.5 0 00-.647 0L5.529 1.935a.527.527 0 00-.085.744.504.504 0 00.732.054l1.32-1.113v5.862H1.588L2.68 6.136a.526.526 0 00-.1-.68.5.5 0 00-.675.02L.117 7.67a.525.525 0 000 .66l1.788 2.194a.5.5 0 00.702.053.526.526 0 00.081-.713l-1.1-1.346h5.908v5.862l-1.32-1.113a.501.501 0 00-.698.082.526.526 0 00.051.716l2.152 1.817v-.001a.5.5 0 00.647 0l2.151-1.816a.526.526 0 00.052-.716.501.501 0 00-.699-.082l-1.32 1.113V8.518h5.908l-1.091 1.346a.527.527 0 00.022.776.504.504 0 00.752-.116l1.78-2.194a.527.527 0 000-.66z'/%3e%3c/svg%3e");
-    background: none;
-  }
+/* Change icon and cursor if only vertical drag is allowed. */
+
+.tabledrag-handle.tabledrag-handle-y {
+  cursor: row-resize;
+}
+
+.tabledrag-handle.tabledrag-handle-y::after {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpath d='M2 8h12'/%3e%3cpath d='M8 2l2 2 -4 0 2 -2'/%3e%3cpath d='M8 14l2 -2 -4 0 2 2'/%3e%3c/svg%3e");
+  background-size: 1rem 1rem;
 }
 
 @media (forced-colors: active) {
   .tabledrag-handle::after {
     content: "";
     background: linktext;
-    -webkit-mask-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='17' height='17' viewBox='0 0 16 16'%3e%3cpath fill='%23000f33' d='M14.103 5.476a.5.5 0 00-.701-.053.526.526 0 00-.082.713l1.1 1.346H8.512V1.62l1.32 1.113a.501.501 0 00.732-.054.528.528 0 00-.085-.744L8.328.119a.5.5 0 00-.647 0L5.529 1.935a.527.527 0 00-.085.744.504.504 0 00.732.054l1.32-1.113v5.862H1.588L2.68 6.136a.526.526 0 00-.1-.68.5.5 0 00-.675.02L.117 7.67a.525.525 0 000 .66l1.788 2.194a.5.5 0 00.702.053.526.526 0 00.081-.713l-1.1-1.346h5.908v5.862l-1.32-1.113a.501.501 0 00-.698.082.526.526 0 00.051.716l2.152 1.817v-.001a.5.5 0 00.647 0l2.151-1.816a.526.526 0 00.052-.716.501.501 0 00-.699-.082l-1.32 1.113V8.518h5.908l-1.091 1.346a.527.527 0 00.022.776.504.504 0 00.752-.116l1.78-2.194a.527.527 0 000-.66z'/%3e%3c/svg%3e");
     mask-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='17' height='17' viewBox='0 0 16 16'%3e%3cpath fill='%23000f33' d='M14.103 5.476a.5.5 0 00-.701-.053.526.526 0 00-.082.713l1.1 1.346H8.512V1.62l1.32 1.113a.501.501 0 00.732-.054.528.528 0 00-.085-.744L8.328.119a.5.5 0 00-.647 0L5.529 1.935a.527.527 0 00-.085.744.504.504 0 00.732.054l1.32-1.113v5.862H1.588L2.68 6.136a.526.526 0 00-.1-.68.5.5 0 00-.675.02L.117 7.67a.525.525 0 000 .66l1.788 2.194a.5.5 0 00.702.053.526.526 0 00.081-.713l-1.1-1.346h5.908v5.862l-1.32-1.113a.501.501 0 00-.698.082.526.526 0 00.051.716l2.152 1.817v-.001a.5.5 0 00.647 0l2.151-1.816a.526.526 0 00.052-.716.501.501 0 00-.699-.082l-1.32 1.113V8.518h5.908l-1.091 1.346a.527.527 0 00.022.776.504.504 0 00.752-.116l1.78-2.194a.527.527 0 000-.66z'/%3e%3c/svg%3e");
-    -webkit-mask-repeat: no-repeat;
     mask-repeat: no-repeat;
-    -webkit-mask-position: center;
     mask-position: center;
   }
 }
@@ -169,13 +179,13 @@ body.drag {
 
 .tabledrag-handle:focus::before {
   display: block;
-  width: 2rem; /* Same as height. */
-  height: 2rem; /* Hande svg height + its vertical padding */
-  margin: 0 -0.5rem -2rem; /* Bottom: handle height as negative value. */
+  width: calc(var(--space-m) + (var(--space-xs) * 2)); /* Same as height. */
+  height: calc(var(--space-m) + (var(--space-xs) * 2)); /* Hande svg height + its vertical padding */
+  margin: 0 calc(var(--space-xs) * -1) calc((var(--space-m) + (var(--space-xs) * 2)) * -1); /* Bottom: handle height as negative value. */
   content: "";
-  border-radius: 2px;
-  outline: 2px dotted transparent;
-  box-shadow: 0 0 0 3px #26a769;
+  border-radius: var(--base-border-radius);
+  outline: var(--outline-size) dotted transparent;
+  box-shadow: 0 0 0 var(--focus-border-size) var(--color-focus);
 }
 
 /* Disabled tabledrag handle. */
@@ -198,13 +208,13 @@ body.drag {
  */
 
 .touchevents .tabledrag-handle::after {
-  padding-top: 0.75rem;
-  padding-bottom: 0.75rem;
+  padding-top: var(--space-s);
+  padding-bottom: var(--space-s);
 }
 
 .touchevents .draggable .menu-item__link {
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
+  padding-top: var(--space-xs);
+  padding-bottom: var(--space-xs);
 }
 
 /**
@@ -247,7 +257,7 @@ body.drag {
 }
 
 [dir="rtl"] .tabledrag-cell--only-drag {
-  padding-right: 1rem;
+  padding-right: var(--space-m);
   padding-left: 0;
 }
 
@@ -262,12 +272,12 @@ body.drag {
 }
 
 .tabledrag-cell-content__item {
-  padding-right: 0.5rem; /* LTR */
+  padding-right: var(--space-xs); /* LTR */
 }
 
 [dir="rtl"] .tabledrag-cell-content__item {
   padding-right: 0;
-  padding-left: 0.5rem;
+  padding-left: var(--space-xs);
 }
 
 .tabledrag-cell-content__item:empty {
@@ -282,7 +292,7 @@ body.drag {
 }
 
 .tabledrag-cell-content .tree {
-  min-height: 100%; /* Using simply 'height: 100%' would make IE11 rendering ugly. */
+  min-height: 100%;
 }
 
 /**
@@ -293,7 +303,7 @@ body.drag {
 
 /* stylelint-disable-next-line unit-allowed-list */
 
-@media not all and (-webkit-min-device-pixel-ratio: 0), not all and (min-resolution: 0.001dpcm) {
+@media not all and (min-resolution: 0.001dpcm) {
   @supports (-webkit-appearance: none) {
     .tabledrag-cell-content .tree {
       overflow: visible;
@@ -311,20 +321,17 @@ body.drag {
  */
 
 .indentation {
-  background: none !important;
-}
-
-.indentation {
   position: relative;
-  left: -0.25rem; /* LTR */
+  left: calc(var(--space-xs) * -0.5); /* LTR */
   float: left; /* LTR */
-  width: 1.5625rem; /* 25px */
-  height: 1.5625rem; /* 25px */
+  width: calc(25rem / 16); /* 25px */
+  height: calc(25rem / 16); /* 25px */
+  background: none !important;
   line-height: 0;
 }
 
 [dir="rtl"] .indentation {
-  right: -0.25rem;
+  right: calc(var(--space-xs) * -0.5);
   left: auto;
   float: right;
 }
@@ -338,8 +345,8 @@ body.drag {
  */
 
 .tree {
-  width: 1.5625rem; /* 25px */
-  height: 1.5625rem; /* 25px */
+  width: calc(25rem / 16); /* 25px */
+  height: calc(25rem / 16); /* 25px */
 }
 
 .tree__item {

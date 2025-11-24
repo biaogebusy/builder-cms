@@ -286,11 +286,17 @@ class EntityBrowserTest extends KernelTestBase {
         ->translate('Access pages that %browser uses to operate.', ['%browser' => $entity->label()])
         ->render(),
       'provider' => 'entity_browser',
+      'dependencies' => [
+        'config' => [
+          'entity_browser.browser.test',
+        ],
+      ],
     ];
 
     $this->assertSame($permissions[$expected_permission_name]['title']->render(), $expected_permission['title'], 'Dynamically generated permission title found.');
     $this->assertSame($permissions[$expected_permission_name]['description']->render(), $expected_permission['description'], 'Dynamically generated permission description found.');
     $this->assertSame($permissions[$expected_permission_name]['provider'], $expected_permission['provider'], 'Dynamically generated permission provider found.');
+    $this->assertSame($permissions[$expected_permission_name]['dependencies'], $expected_permission['dependencies'], 'Dynamically generated permission dependencies found.');
   }
 
   /**

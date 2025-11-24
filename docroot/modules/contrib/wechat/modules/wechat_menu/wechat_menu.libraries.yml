@@ -1,5 +1,0 @@
-menu_item_collection:
-  version: VERSION
-  css:
-    theme:
-      css/wechat_menu.css: {}

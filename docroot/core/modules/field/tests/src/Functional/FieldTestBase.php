@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Functional;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Tests\BrowserTestBase;
@@ -60,7 +61,7 @@ abstract class FieldTestBase extends BrowserTestBase {
     $values = $field->getValue();
     $this->assertSameSize($expected_values, $values, 'Expected number of values were saved.');
     foreach ($expected_values as $key => $value) {
-      $this->assertEquals($value, $values[$key][$column], new FormattableMarkup('Value @value was saved correctly.', ['@value' => $value]));
+      $this->assertEquals($value, $values[$key][$column], "Value $value was saved correctly.");
     }
   }
 

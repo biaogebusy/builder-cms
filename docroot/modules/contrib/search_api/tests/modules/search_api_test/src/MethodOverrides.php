@@ -11,6 +11,20 @@ use Drupal\search_api\IndexInterface;
 class MethodOverrides {
 
   /**
+   * Saved arguments of saveMethodArguments().
+   *
+   * @see static::genericMethod()
+   */
+  public static array $methodArgs = [];
+
+  /**
+   * The return value of saveMethodArguments().
+   *
+   * @see static::genericMethod()
+   */
+  public static mixed $returnValue = NULL;
+
+  /**
    * Provides a generic method override for the test backend.
    *
    * @param \Drupal\search_api\Backend\BackendInterface $backend
@@ -19,10 +33,12 @@ class MethodOverrides {
    * @return true
    *   Always returns TRUE, to cater to those methods that expect a return
    *   value.
+   *
+   * @throws \ErrorException
    */
   public static function overrideTestBackendMethod(BackendInterface $backend) {
     if ($backend->getConfiguration() !== ['test' => 'foobar']) {
-      trigger_error('Critical server method called with incorrect backend configuration.', E_USER_ERROR);
+      throw new \ErrorException('Critical server method called with incorrect backend configuration.');
     }
     return TRUE;
   }
@@ -39,12 +55,38 @@ class MethodOverrides {
    *
    * @return string[]
    *   The array keys of $items.
+   *
+   * @throws \ErrorException
    */
   public static function overrideTestBackendIndexItems(BackendInterface $backend, IndexInterface $index, array $items) {
     if ($backend->getConfiguration() !== ['test' => 'foobar']) {
-      trigger_error('Server method indexItems() called with incorrect backend configuration.', E_USER_ERROR);
+      throw new \ErrorException('Server method indexItems() called with incorrect backend configuration.');
     }
     return array_keys($items);
+  }
+
+  /**
+   * Saves the arguments passed to this method.
+   *
+   * @return mixed
+   *   Returns static::$returnValue.
+   *
+   * @see static::$methodArgs
+   * @see static::$returnValue
+   */
+  public static function genericMethod(): mixed {
+    static::$methodArgs = func_get_args();
+    return static::$returnValue;
+  }
+
+  /**
+   * Throws a type error when called.
+   *
+   * @throws \TypeError
+   *   Always.
+   */
+  public static function throwTypeError(): never {
+    throw new \TypeError('Foobar');
   }
 
 }

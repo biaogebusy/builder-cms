@@ -1,7 +1,31 @@
 plugin.plugin_configuration.search_api_backend.elasticsearch:
-  type: mapping
-  label: 'Search API Elasticsearch settings'
+  type: config_object
+  label: 'Elasticsearch settings'
   mapping:
+    connector:
+      type: string
+      label: 'The connector plugin ID'
+    connector_config:
+      type: plugin.plugin_configuration.elasticsearch_connector.[%parent.connector]
+    advanced:
+      type: mapping
+      mapping:
+        fuzziness:
+          type: string
+          label: The fuzziness
+        prefix:
+          type: string
+          label: The index prefix
+        suffix:
+          type: string
+          label: The index suffix
+        synonyms:
+          type: sequence
+          label: Synonyms
+          sequence:
+            type: string
+            label: Synonyms
+    # The cluster_settings key is deprecated in 8.0.x and will be removed in 9.0.x.
     cluster_settings:
       type: mapping
       label: 'Elasticsearch settings'
@@ -9,42 +33,63 @@ plugin.plugin_configuration.search_api_backend.elasticsearch:
         cluster:
           type: string
           label: 'The cluster that handles the connection'
+    # The server_description key is deprecated in 8.0.x and will be removed in
+    # 9.0.x.
+    server_description:
+      type: string
+      label: 'Server description'
+    # The fuzziness key is deprecated in 8.0.x and will be removed in 9.0.x.
     fuzziness:
       type: string
       label: 'Fuzziness'
+    # The scheme key is deprecated in 8.0.x and will be removed in 9.0.x.
     scheme:
       type: string
       label: 'The HTTP protocol to use for sending queries'
+    # The host key is deprecated in 8.0.x and will be removed in 9.0.x.
     host:
       type: string
       label: 'The host name or IP of the Elasticsearch server'
+    # The port key is deprecated in 8.0.x and will be removed in 9.0.x.
     port:
       type: string
       label: 'The port of the Elasticsearch server'
+    # The path key is deprecated in 8.0.x and will be removed in 9.0.x.
     path:
       type: string
       label: 'The path that identifies the Elasticsearch instance to use on the server'
+    # The http_user key is deprecated in 8.0.x and will be removed in 9.0.x.
     http_user:
       type: string
       label: 'Username for basic HTTP authentication'
+    # The http_pass key is deprecated in 8.0.x and will be removed in 9.0.x.
     http_pass:
       type: string
       label: 'Password for basic HTTP authentication'
+    # The excerpt key is deprecated in 8.0.x and will be removed in 9.0.x.
     excerpt:
       type: boolean
       label: 'Return an excerpt for all results'
+    # The retrieve_data key is deprecated in 8.0.x and will be removed in 9.0.x.
     retrieve_data:
       type: boolean
       label: 'Retrieve result data from Elasticsearch'
+    # The highlight_data key is deprecated in 8.0.x and will be removed in
+    # 9.0.x.
     highlight_data:
       type: boolean
       label: 'Highlight retrieved data'
+    # The http_method key is deprecated in 8.0.x and will be removed in 9.0.x.
     http_method:
       type: string
       label: 'The HTTP method to use for sending queries'
+    # The autocorrect_spell key is deprecated in 8.0.x and will be removed in
+    # 9.0.x.
     autocorrect_spell:
       type: boolean
       label: 'Use spellcheck for autocomplete suggestions'
+    # The autocorrect_suggest_words key is deprecated in 8.0.x and will be
+    # removed in 9.0.x.
     autocorrect_suggest_words:
       type: boolean
       label: 'Suggest additional words'

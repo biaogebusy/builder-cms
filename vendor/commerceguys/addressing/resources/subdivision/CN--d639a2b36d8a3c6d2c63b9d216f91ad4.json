@@ -1,0 +1,62 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"SX",
+		"Linfen Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Anze Xian": {
+			"local_name": "安泽县"
+		},
+		"Daning Xian": {
+			"local_name": "大宁县"
+		},
+		"Fenxi Xian": {
+			"local_name": "汾西县"
+		},
+		"Fushan Xian": {
+			"local_name": "浮山县"
+		},
+		"Gu Xian": {
+			"local_name": "古县"
+		},
+		"Hongtong Xian": {
+			"local_name": "洪洞县"
+		},
+		"Houma Shi": {
+			"local_name": "侯马市"
+		},
+		"Huozhou Shi": {
+			"local_name": "霍州市"
+		},
+		"Ji Xian": {
+			"local_name": "吉县"
+		},
+		"Pu Xian": {
+			"local_name": "蒲县"
+		},
+		"Quwo Xian": {
+			"local_name": "曲沃县"
+		},
+		"Xi Xian": {
+			"local_name": "隰县"
+		},
+		"Xiangning Xian": {
+			"local_name": "乡宁县"
+		},
+		"Xiangfen Xian": {
+			"local_name": "襄汾县"
+		},
+		"Yaodu Qu": {
+			"local_name": "尧都区"
+		},
+		"Yicheng Xian": {
+			"local_name": "翼城县"
+		},
+		"Yonghe Xian": {
+			"local_name": "永和县"
+		}
+	}
+}

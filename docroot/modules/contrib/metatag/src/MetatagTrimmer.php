@@ -20,7 +20,7 @@ class MetatagTrimmer {
    * @return string
    *   The trimmed string.
    */
-  public function trimAfterValue($string, $maxlength) {
+  public function trimAfterValue($string, $maxlength): string {
     // If the string is shorter than the max length then skip the rest of the
     // logic.
     if ($maxlength > mb_strlen($string)) {
@@ -47,7 +47,7 @@ class MetatagTrimmer {
    * @return string
    *   The trimmed string.
    */
-  public function trimBeforeValue($string, $maxlength) {
+  public function trimBeforeValue($string, $maxlength): string {
     // If the string is shorter than the max length then skip the rest of the
     // logic.
     if ($maxlength > mb_strlen($string)) {
@@ -68,6 +68,28 @@ class MetatagTrimmer {
   }
 
   /**
+   * Trims characters at the end of a string.
+   *
+   * @param string $string
+   *   The string to apply the trimming to.
+   * @param string $trimEndChars
+   *   The characters to trim at the end of the string.
+   *
+   * @return string
+   *   The string with the requested end characters removed.
+   */
+  public function trimEndChars(string $string, string $trimEndChars = ''): string {
+    if (empty($trimEndChars)) {
+      return rtrim($string);
+    }
+    else {
+      // Note the use of str_replace() so "\" won't be recognized as a parameter
+      // for an escape sequence.
+      return rtrim($string, " \n\r\t\v\x00" . str_replace("\\", "\\\\", $trimEndChars));
+    }
+  }
+
+  /**
    * Trims a value based on the given length and the given method.
    *
    * @param string $value
@@ -77,25 +99,48 @@ class MetatagTrimmer {
    * @param string $method
    *   The trim method to use for the trimming.
    *   Allowed values: 'afterValue', 'onValue' and 'beforeValue'.
+   * @param string $trimEndChars
+   *   The characters to trim at the end of the string.
+   * @param string $suffix
+   *   Characters to optionally add to the end of the trimmed string.
+   *
+   * @return string
+   *   The updated string.
    */
-  public function trimByMethod($value, $maxlength, $method) {
+  public function trimByMethod($value, $maxlength, $method, $trimEndChars = '', $suffix = ''): string {
     if (empty($value) || empty($maxlength)) {
       return $value;
     }
 
+    // If the string is shorter than the max length then skip the rest of the
+    // logic.
+    if ($maxlength > mb_strlen($value)) {
+      return $value;
+    }
+
+    if ($trimEndChars === NULL) {
+      $trimEndChars = '';
+    }
+
     switch ($method) {
       case 'afterValue':
-        return $this->trimAfterValue($value, $maxlength);
+        $value = $this->trimAfterValue($value, $maxlength);
+        break;
 
       case 'onValue':
-        return trim(mb_substr($value, 0, $maxlength));
+        $value = trim(mb_substr($value, 0, $maxlength));
+        break;
 
       case 'beforeValue':
-        return $this->trimBeforeValue($value, $maxlength);
+        $value = $this->trimBeforeValue($value, $maxlength);
+        break;
 
       default:
         throw new Exception('Unknown trimming method: ' . $method);
     }
+
+    // Do additional cleanup trimming, append the suffix.
+    return $this->trimEndChars($value, $trimEndChars) . $suffix;
   }
 
 }

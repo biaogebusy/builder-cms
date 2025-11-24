@@ -34,7 +34,7 @@ class BlockForm extends EntityForm {
   /**
    * The block storage.
    *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
+   * @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface
    */
   protected $storage;
 
@@ -74,6 +74,13 @@ class BlockForm extends EntityForm {
   protected $pluginFormFactory;
 
   /**
+   * The block repository service.
+   *
+   * @var \Drupal\block\BlockRepositoryInterface
+   */
+  protected $blockRepository;
+
+  /**
    * Constructs a BlockForm object.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -88,14 +95,21 @@ class BlockForm extends EntityForm {
    *   The theme handler.
    * @param \Drupal\Core\Plugin\PluginFormFactoryInterface $plugin_form_manager
    *   The plugin form manager.
+   * @param \Drupal\block\BlockRepositoryInterface|null $block_repository
+   *   The block repository service.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, ExecutableManagerInterface $manager, ContextRepositoryInterface $context_repository, LanguageManagerInterface $language, ThemeHandlerInterface $theme_handler, PluginFormFactoryInterface $plugin_form_manager) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, ExecutableManagerInterface $manager, ContextRepositoryInterface $context_repository, LanguageManagerInterface $language, ThemeHandlerInterface $theme_handler, PluginFormFactoryInterface $plugin_form_manager, ?BlockRepositoryInterface $block_repository = NULL) {
+    if ($block_repository === NULL) {
+      @trigger_error('Calling ' . __METHOD__ . ' without the $block_repository argument is deprecated in drupal:10.2.0 and will be required in drupal:11.0.0. See https://www.drupal.org/node/3333575', E_USER_DEPRECATED);
+      $block_repository = \Drupal::service('block.repository');
+    }
     $this->storage = $entity_type_manager->getStorage('block');
     $this->manager = $manager;
     $this->contextRepository = $context_repository;
     $this->language = $language;
     $this->themeHandler = $theme_handler;
     $this->pluginFormFactory = $plugin_form_manager;
+    $this->blockRepository = $block_repository;
   }
 
   /**
@@ -108,7 +122,8 @@ class BlockForm extends EntityForm {
       $container->get('context.repository'),
       $container->get('language_manager'),
       $container->get('theme_handler'),
-      $container->get('plugin_form.factory')
+      $container->get('plugin_form.factory'),
+      $container->get('block.repository')
     );
   }
 
@@ -237,15 +252,6 @@ class BlockForm extends EntityForm {
         continue;
       }
 
-      // Don't display the deprecated node type condition unless it has existing
-      // settings.
-      // @todo Make this more generic in
-      //   https://www.drupal.org/project/drupal/issues/2922451. Also remove
-      //   the node_type specific logic below.
-      if ($condition_id == 'node_type' && !isset($visibility[$condition_id])) {
-        continue;
-      }
-
       /** @var \Drupal\Core\Condition\ConditionInterface $condition */
       $condition = $this->manager->createInstance($condition_id, $visibility[$condition_id] ?? []);
       $form_state->set(['conditions', $condition_id], $condition);
@@ -256,23 +262,23 @@ class BlockForm extends EntityForm {
       $form[$condition_id] = $condition_form;
     }
 
-    if (isset($form['node_type'])) {
-      $form['node_type']['#title'] = $this->t('Content types (deprecated)');
-      $form['node_type']['bundles']['#title'] = $this->t('Content types');
-      $form['node_type']['negate']['#type'] = 'value';
-      $form['node_type']['negate']['#title_display'] = 'invisible';
-      $form['node_type']['negate']['#value'] = $form['node_type']['negate']['#default_value'];
+    // Disable negation for specific conditions.
+    $disable_negation = [
+      'entity_bundle:node',
+      'language',
+      'response_status',
+      'user_role',
+    ];
+    foreach ($disable_negation as $condition) {
+      if (isset($form[$condition])) {
+        $form[$condition]['negate']['#type'] = 'value';
+        $form[$condition]['negate']['#value'] = $form[$condition]['negate']['#default_value'];
+      }
     }
-    if (isset($form['entity_bundle:node'])) {
-      $form['entity_bundle:node']['negate']['#type'] = 'value';
-      $form['entity_bundle:node']['negate']['#title_display'] = 'invisible';
-      $form['entity_bundle:node']['negate']['#value'] = $form['entity_bundle:node']['negate']['#default_value'];
-    }
+
     if (isset($form['user_role'])) {
       $form['user_role']['#title'] = $this->t('Roles');
       unset($form['user_role']['roles']['#description']);
-      $form['user_role']['negate']['#type'] = 'value';
-      $form['user_role']['negate']['#value'] = $form['user_role']['negate']['#default_value'];
     }
     if (isset($form['request_path'])) {
       $form['request_path']['#title'] = $this->t('Pages');
@@ -283,10 +289,6 @@ class BlockForm extends EntityForm {
         $this->t('Show for the listed pages'),
         $this->t('Hide for the listed pages'),
       ];
-    }
-    if (isset($form['language'])) {
-      $form['language']['negate']['#type'] = 'value';
-      $form['language']['negate']['#value'] = $form['language']['negate']['#default_value'];
     }
     return $form;
   }
@@ -325,13 +327,6 @@ class BlockForm extends EntityForm {
   protected function validateVisibility(array $form, FormStateInterface $form_state) {
     // Validate visibility condition settings.
     foreach ($form_state->getValue('visibility') as $condition_id => $values) {
-      // All condition plugins use 'negate' as a Boolean in their schema.
-      // However, certain form elements may return it as 0/1. Cast here to
-      // ensure the data is in the expected type.
-      if (array_key_exists('negate', $values)) {
-        $form_state->setValue(['visibility', $condition_id, 'negate'], (bool) $values['negate']);
-      }
-
       // Allow the condition to validate the form.
       $condition = $form_state->get(['conditions', $condition_id]);
       $condition->validateConfigurationForm($form['visibility'][$condition_id], SubformState::createForSubform($form['visibility'][$condition_id], $form, $form_state));
@@ -358,9 +353,13 @@ class BlockForm extends EntityForm {
     }
 
     $this->submitVisibility($form, $form_state);
+  }
 
-    // Save the settings of the plugin.
-    $entity->save();
+  /**
+   * {@inheritdoc}
+   */
+  public function save(array $form, FormStateInterface $form_state) {
+    $value = parent::save($form, $form_state);
 
     $this->messenger()->addStatus($this->t('The block configuration has been saved.'));
     $form_state->setRedirect(
@@ -370,6 +369,8 @@ class BlockForm extends EntityForm {
       ],
       ['query' => ['block-placement' => Html::getClass($this->entity->id())]]
     );
+
+    return $value;
   }
 
   /**
@@ -393,7 +394,7 @@ class BlockForm extends EntityForm {
   }
 
   /**
-   * Generates a unique machine name for a block.
+   * Generates a unique machine name for a block based on a suggested string.
    *
    * @param \Drupal\block\BlockInterface $block
    *   The block entity.
@@ -403,25 +404,7 @@ class BlockForm extends EntityForm {
    */
   public function getUniqueMachineName(BlockInterface $block) {
     $suggestion = $block->getPlugin()->getMachineNameSuggestion();
-
-    // Get all the blocks which starts with the suggested machine name.
-    $query = $this->storage->getQuery();
-    $query->condition('id', $suggestion, 'CONTAINS');
-    $block_ids = $query->execute();
-
-    $block_ids = array_map(function ($block_id) {
-      $parts = explode('.', $block_id);
-      return end($parts);
-    }, $block_ids);
-
-    // Iterate through potential IDs until we get a new one. E.g.
-    // 'plugin', 'plugin_2', 'plugin_3', etc.
-    $count = 1;
-    $machine_default = $suggestion;
-    while (in_array($machine_default, $block_ids)) {
-      $machine_default = $suggestion . '_' . ++$count;
-    }
-    return $machine_default;
+    return $this->blockRepository->getUniqueMachineName($suggestion, $block->getTheme());
   }
 
   /**

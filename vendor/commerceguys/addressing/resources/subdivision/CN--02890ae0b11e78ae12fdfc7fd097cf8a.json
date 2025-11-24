@@ -1,0 +1,65 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"HL",
+		"Harbin Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Acheng Qu": {
+			"local_name": "阿城区"
+		},
+		"Bayan Xian": {
+			"local_name": "巴彦县"
+		},
+		"Bin Xian": {
+			"local_name": "宾县"
+		},
+		"Daoli Qu": {
+			"local_name": "道里区"
+		},
+		"Daowai Qu": {
+			"local_name": "道外区"
+		},
+		"Fangzheng Xian": {
+			"local_name": "方正县"
+		},
+		"Hulan Qu": {
+			"local_name": "呼兰区"
+		},
+		"Mulan Xian": {
+			"local_name": "木兰县"
+		},
+		"Nangang Qu": {
+			"local_name": "南岗区"
+		},
+		"Pingfang Qu": {
+			"local_name": "平房区"
+		},
+		"Shangzhi Shi": {
+			"local_name": "尚志市"
+		},
+		"Shuangcheng Shi": {
+			"local_name": "双城市"
+		},
+		"Sonbgei Qu": {
+			"local_name": "松北区"
+		},
+		"Tonghe Xian": {
+			"local_name": "通河县"
+		},
+		"Wuchang Shi": {
+			"local_name": "五常市"
+		},
+		"Xiangfang Qu": {
+			"local_name": "香坊区"
+		},
+		"Yanshou Xian": {
+			"local_name": "延寿县"
+		},
+		"Yilan Xian": {
+			"local_name": "依兰县"
+		}
+	}
+}

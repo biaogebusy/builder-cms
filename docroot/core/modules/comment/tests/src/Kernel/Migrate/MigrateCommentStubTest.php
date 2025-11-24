@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Kernel\Migrate;
 
 use Drupal\comment\Entity\CommentType;
@@ -28,7 +30,6 @@ class MigrateCommentStubTest extends MigrateDrupalTestBase {
     parent::setUp();
     $this->installEntitySchema('comment');
     $this->installEntitySchema('node');
-    $this->installSchema('system', ['sequences']);
 
     // Make sure uid 0 is created (default uid for comments is 0).
     $storage = \Drupal::entityTypeManager()->getStorage('user');
@@ -55,7 +56,7 @@ class MigrateCommentStubTest extends MigrateDrupalTestBase {
   /**
    * Tests creation of comment stubs.
    */
-  public function testStub() {
+  public function testStub(): void {
     $this->performStubTest('comment');
   }
 

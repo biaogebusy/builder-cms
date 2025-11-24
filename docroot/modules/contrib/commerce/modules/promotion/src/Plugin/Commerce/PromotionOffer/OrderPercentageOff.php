@@ -2,21 +2,22 @@
 
 namespace Drupal\commerce_promotion\Plugin\Commerce\PromotionOffer;
 
-use Drupal\commerce_order\Adjustment;
-use Drupal\commerce_promotion\Entity\PromotionInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce_order\Adjustment;
+use Drupal\commerce_promotion\Attribute\CommercePromotionOffer;
+use Drupal\commerce_promotion\Entity\PromotionInterface;
 
 /**
  * Provides the percentage off offer for orders.
  *
  * The discount is split between order items, to simplify VAT taxes and refunds.
- *
- * @CommercePromotionOffer(
- *   id = "order_percentage_off",
- *   label = @Translation("Percentage off the order subtotal"),
- *   entity_type = "commerce_order",
- * )
  */
+#[CommercePromotionOffer(
+  id: "order_percentage_off",
+  label: new TranslatableMarkup("Percentage off the order subtotal"),
+  entity_type: "commerce_order"
+)]
 class OrderPercentageOff extends OrderPromotionOfferBase {
 
   use PercentageOffTrait;

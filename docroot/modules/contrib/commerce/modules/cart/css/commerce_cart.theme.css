@@ -7,8 +7,8 @@
 
 .cart-block--contents {
   width: 225px;
-  background: white;
   color: black;
+  background: white;
 }
 .cart-block--contents__inner {
   padding: 10px;

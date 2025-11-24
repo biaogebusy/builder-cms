@@ -2,6 +2,7 @@
 
 namespace Drupal\search_api\Plugin\views\field;
 
+use Drupal\views\Attribute\ViewsField;
 use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfo;
@@ -15,9 +16,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Handles the display of entity reference fields in Search API Views.
  *
  * @ingroup views_field_handlers
- *
- * @ViewsField("search_api_entity")
  */
+#[ViewsField('search_api_entity')]
 class SearchApiEntity extends SearchApiStandard {
 
   use FieldAPIHandlerTrait;
@@ -203,7 +203,7 @@ class SearchApiEntity extends SearchApiStandard {
   /**
    * {@inheritdoc}
    */
-  public function query() {
+  public function query($use_groupby = FALSE) {
     $this->addRetrievedProperty($this->getCombinedPropertyPath());
   }
 

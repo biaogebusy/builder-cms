@@ -44,8 +44,8 @@ entity.node.webform_submission_export_import.results_import:
   defaults:
     _form: '\Drupal\webform_submission_export_import\Form\WebformSubmissionExportImportUploadForm'
     _title_callback: '\Drupal\Core\Entity\Controller\EntityController::title'
-    operation: webform_submission_view
-    entity_access: 'webform.submission_view_any'
+    operation: webform_submission_update
+    entity_access: 'webform.submission_update_any'
   options:
     parameters:
       node:

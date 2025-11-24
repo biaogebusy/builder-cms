@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageToolkit\Operation;
 
 use Drupal\Component\Utility\Color;
@@ -16,6 +18,7 @@ trait SetGifTransparentColorTrait {
     return [
       'transparent_color' => [
         'description' => 'The RGB hex color for GIF transparency',
+        'type' => 'string',
         'required' => FALSE,
         'default' => '#ffffff',
       ],
@@ -26,6 +29,8 @@ trait SetGifTransparentColorTrait {
    * {@inheritdoc}
    */
   protected function validateArguments(array $arguments) {
+    $arguments = ArgumentsTypeValidator::validate($this->arguments(), $arguments);
+
     // Assure transparent color is a valid hex string.
     if ($arguments['transparent_color'] && !Color::validateHex($arguments['transparent_color'])) {
       $transparent_color = $arguments['transparent_color'];

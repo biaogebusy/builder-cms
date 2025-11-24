@@ -18,6 +18,8 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *     plural = "@count currencies",
  *   ),
  *   handlers = {
+ *     "access" = "Drupal\entity\EntityAccessControlHandler",
+ *     "permission_provider" = "Drupal\entity\EntityPermissionProvider",
  *     "form" = {
  *       "add" = "Drupal\commerce_price\Form\CurrencyForm",
  *       "edit" = "Drupal\commerce_price\Form\CurrencyForm",

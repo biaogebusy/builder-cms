@@ -1,6 +1,6 @@
 name: Private Message
 description: A private message system for users to send messages to each other
-core_version_requirement: ^9.3 || ^10
+core_version_requirement: ^10.3 || ^11
 type: module
 package: Private Message
 
@@ -9,7 +9,7 @@ dependencies:
 
 configure: private_message.admin_config.config
 
-# Information added by Drupal.org packaging script on 2023-10-09
-version: '3.0.0'
+# Information added by Drupal.org packaging script on 2025-02-06
+version: '4.0.0-alpha4'
 project: 'private_message'
-datestamp: 1696872294
+datestamp: 1738835307

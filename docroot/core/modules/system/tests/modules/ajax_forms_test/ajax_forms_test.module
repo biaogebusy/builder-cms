@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Simpletest mock module for Ajax forms testing.
+ * Mock module for Ajax forms testing.
  */
 
 use Drupal\Core\Ajax\AddCssCommand;
@@ -129,7 +129,7 @@ function ajax_forms_test_advanced_commands_css_callback($form, FormStateInterfac
 function ajax_forms_test_advanced_commands_data_callback($form, FormStateInterface $form_state) {
   $selector = '#data_div';
   $response = new AjaxResponse();
-  $response->addCommand(new DataCommand($selector, 'testkey', 'testvalue'));
+  $response->addCommand(new DataCommand($selector, 'test_key', 'test_value'));
   return $response;
 }
 
@@ -202,25 +202,45 @@ function ajax_forms_test_advanced_commands_settings_callback($form, FormStateInt
  */
 function ajax_forms_test_advanced_commands_add_css_callback($form, FormStateInterface $form_state) {
   $response = new AjaxResponse();
-  $response->addCommand(new AddCssCommand('my/file.css'));
+  $response->addCommand(new AddCssCommand([
+    [
+      'href' => 'my/file.css',
+      'media' => 'all',
+    ],
+    [
+      'href' => 'https://example.com/css?family=Open+Sans',
+      'media' => 'all',
+    ],
+  ]));
   return $response;
 }
 
 /**
- * Ajax form callback: Selects the 'drivertext' element of the validation form.
+ * Ajax callback for 'add_css' that uses legacy string parameter.
+ *
+ * @todo Remove in Drupal 11.0.0 https://www.drupal.org/i/3339374
+ */
+function ajax_forms_test_advanced_commands_add_css_legacy_callback($form, FormStateInterface $form_state) {
+  $response = new AjaxResponse();
+  $response->addCommand(new AddCssCommand("<link rel='stylesheet' href='my/file.css' media='all' />"));
+  return $response;
+}
+
+/**
+ * Ajax form callback: Selects the 'driver_text' element of the validation form.
  */
 function ajax_forms_test_validation_form_callback($form, FormStateInterface $form_state) {
   \Drupal::messenger()->addStatus("ajax_forms_test_validation_form_callback invoked");
-  \Drupal::messenger()->addStatus(t("Callback: drivertext=%drivertext, spare_required_field=%spare_required_field", ['%drivertext' => $form_state->getValue('drivertext'), '%spare_required_field' => $form_state->getValue('spare_required_field')]));
+  \Drupal::messenger()->addStatus(t("Callback: driver_text=%driver_text, spare_required_field=%spare_required_field", ['%driver_text' => $form_state->getValue('driver_text'), '%spare_required_field' => $form_state->getValue('spare_required_field')]));
   return ['#markup' => '<div id="message_area">ajax_forms_test_validation_form_callback at ' . date('c') . '</div>'];
 }
 
 /**
- * Ajax form callback: Selects the 'drivernumber' element of the validation form.
+ * Ajax form callback: Selects the 'driver_number' element of the validation form.
  */
 function ajax_forms_test_validation_number_form_callback($form, FormStateInterface $form_state) {
   \Drupal::messenger()->addStatus("ajax_forms_test_validation_number_form_callback invoked");
-  \Drupal::messenger()->addStatus(t("Callback: drivernumber=%drivernumber, spare_required_field=%spare_required_field", ['%drivernumber' => $form_state->getValue('drivernumber'), '%spare_required_field' => $form_state->getValue('spare_required_field')]));
+  \Drupal::messenger()->addStatus(t("Callback: driver_number=%driver_number, spare_required_field=%spare_required_field", ['%driver_number' => $form_state->getValue('driver_number'), '%spare_required_field' => $form_state->getValue('spare_required_field')]));
   return ['#markup' => '<div id="message_area_number">ajax_forms_test_validation_number_form_callback at ' . date('c') . '</div>'];
 }
 

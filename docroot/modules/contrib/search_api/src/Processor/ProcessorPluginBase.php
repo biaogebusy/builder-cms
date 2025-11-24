@@ -16,37 +16,29 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Defines a base class from which other processors may extend.
  *
- * Plugins extending this class need to define a plugin definition array through
- * annotation. These definition arrays may be altered through
- * hook_search_api_processor_info_alter(). The definition includes the following
- * keys:
- * - id: The unique, system-wide identifier of the processor.
- * - label: The human-readable name of the processor, translated.
- * - description: A human-readable description for the processor, translated.
- * - stages: The default weights for all stages for which the processor should
- *   run. Available stages are defined by the STAGE_* constants in
- *   ProcessorInterface. This is, by default, used for supportsStage(), so if
- *   you don't provide a value here, your processor might not work as expected
- *   even though it implements the corresponding method.
+ *  Plugins extending this class need to provide the plugin definition using the
+ *  \Drupal\search_api\Attribute\SearchApiProcessor attribute. These definitions
+ *  may be altered using the "search_api.gathering_processors" event.
  *
  * A complete plugin definition should be written as in this example:
  *
  * @code
- * @SearchApiProcessor(
- *   id = "my_processor",
- *   label = @Translation("My Processor"),
- *   description = @Translation("Does … something."),
- *   stages = {
- *     "preprocess_index" = 0,
- *     "preprocess_query" = 0,
- *     "postprocess_query" = 0,
- *   }
- * )
+ * #[SearchApiProcessor(
+ *   id: 'my_processor',
+ *   label: new TranslatableMarkup('My Processor'),
+ *   description: new TranslatableMarkup('Does … something.'),
+ *   stages: [
+ *     'preprocess_index' => 0,
+ *     'preprocess_query' => 0,
+ *     'postprocess_query' => 0,
+ *   ],
+ * )]
  * @endcode
  *
- * @see \Drupal\search_api\Annotation\SearchApiProcessor
+ * @see \Drupal\search_api\Attribute\SearchApiProcessor
  * @see \Drupal\search_api\Processor\ProcessorPluginManager
  * @see \Drupal\search_api\Processor\ProcessorInterface
+ * @see \Drupal\search_api\Event\SearchApiEvents::GATHERING_PROCESSORS
  * @see plugin_api
  */
 abstract class ProcessorPluginBase extends IndexPluginBase implements ProcessorInterface {
@@ -145,7 +137,7 @@ abstract class ProcessorPluginBase extends IndexPluginBase implements ProcessorI
   /**
    * {@inheritdoc}
    */
-  public function getPropertyDefinitions(DatasourceInterface $datasource = NULL) {
+  public function getPropertyDefinitions(?DatasourceInterface $datasource = NULL) {
     return [];
   }
 
@@ -182,7 +174,7 @@ abstract class ProcessorPluginBase extends IndexPluginBase implements ProcessorI
   /**
    * {@inheritdoc}
    */
-  public function requiresReindexing(array $old_settings = NULL, array $new_settings = NULL) {
+  public function requiresReindexing(?array $old_settings = NULL, ?array $new_settings = NULL) {
     // Only require re-indexing for processors that actually run during the
     // indexing process.
     return $this->supportsStage(ProcessorInterface::STAGE_PREPROCESS_INDEX);

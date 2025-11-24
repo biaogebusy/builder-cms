@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\BuildTests\TestSiteApplication;
 
 use Drupal\BuildTests\Framework\BuildTestBase;
@@ -12,7 +14,7 @@ use Symfony\Component\Process\PhpExecutableFinder;
  */
 class InstallTest extends BuildTestBase {
 
-  public function testInstall() {
+  public function testInstall(): void {
     $this->copyCodebase();
     $fs = new Filesystem();
     $fs->chmod($this->getWorkspaceDirectory() . '/sites/default', 0700, 0000);

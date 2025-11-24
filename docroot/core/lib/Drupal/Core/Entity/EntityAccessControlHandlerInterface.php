@@ -29,14 +29,14 @@ interface EntityAccessControlHandlerInterface {
    * @param bool $return_as_object
    *   (optional) Defaults to FALSE.
    *
-   * @return bool|\Drupal\Core\Access\AccessResultInterface
+   * @return ($return_as_object is true ? \Drupal\Core\Access\AccessResultInterface : bool)
    *   The access result. Returns a boolean if $return_as_object is FALSE (this
    *   is the default) and otherwise an AccessResultInterface object.
    *   When a boolean is returned, the result of AccessInterface::isAllowed() is
    *   returned, i.e. TRUE means access is explicitly allowed, FALSE means
    *   access is either explicitly forbidden or "no opinion".
    */
-  public function access(EntityInterface $entity, $operation, AccountInterface $account = NULL, $return_as_object = FALSE);
+  public function access(EntityInterface $entity, $operation, ?AccountInterface $account = NULL, $return_as_object = FALSE);
 
   /**
    * Checks access to create an entity.
@@ -53,14 +53,14 @@ interface EntityAccessControlHandlerInterface {
    * @param bool $return_as_object
    *   (optional) Defaults to FALSE.
    *
-   * @return bool|\Drupal\Core\Access\AccessResultInterface
+   * @return ($return_as_object is true ? \Drupal\Core\Access\AccessResultInterface : bool)
    *   The access result. Returns a boolean if $return_as_object is FALSE (this
    *   is the default) and otherwise an AccessResultInterface object.
    *   When a boolean is returned, the result of AccessInterface::isAllowed() is
    *   returned, i.e. TRUE means access is explicitly allowed, FALSE means
    *   access is either explicitly forbidden or "no opinion".
    */
-  public function createAccess($entity_bundle = NULL, AccountInterface $account = NULL, array $context = [], $return_as_object = FALSE);
+  public function createAccess($entity_bundle = NULL, ?AccountInterface $account = NULL, array $context = [], $return_as_object = FALSE);
 
   /**
    * Clears all cached access checks.
@@ -86,8 +86,9 @@ interface EntityAccessControlHandlerInterface {
    * \Drupal\Core\Entity\EntityAccessControlHandlerInterface::access().
    *
    * @param string $operation
-   *   The operation access should be checked for.
-   *   Usually one of "view" or "edit".
+   *   The operation access should be checked for. Usually one of "view" or
+   *   "edit". Unlike entity access, for field access there is no distinction
+   *   between creating and updating.
    * @param \Drupal\Core\Field\FieldDefinitionInterface $field_definition
    *   The field definition.
    * @param \Drupal\Core\Session\AccountInterface $account
@@ -100,7 +101,7 @@ interface EntityAccessControlHandlerInterface {
    * @param bool $return_as_object
    *   (optional) Defaults to FALSE.
    *
-   * @return bool|\Drupal\Core\Access\AccessResultInterface
+   * @return ($return_as_object is true ? \Drupal\Core\Access\AccessResultInterface : bool)
    *   The access result. Returns a boolean if $return_as_object is FALSE (this
    *   is the default) and otherwise an AccessResultInterface object.
    *   When a boolean is returned, the result of AccessInterface::isAllowed() is
@@ -109,6 +110,6 @@ interface EntityAccessControlHandlerInterface {
    *
    * @see \Drupal\Core\Entity\EntityAccessControlHandlerInterface::access()
    */
-  public function fieldAccess($operation, FieldDefinitionInterface $field_definition, AccountInterface $account = NULL, FieldItemListInterface $items = NULL, $return_as_object = FALSE);
+  public function fieldAccess($operation, FieldDefinitionInterface $field_definition, ?AccountInterface $account = NULL, ?FieldItemListInterface $items = NULL, $return_as_object = FALSE);
 
 }

@@ -62,7 +62,7 @@ abstract class WidgetValidationBase extends PluginBase implements WidgetValidati
    * {@inheritdoc}
    */
   public function label() {
-    $this->label;
+    return $this->label;
   }
 
   /**

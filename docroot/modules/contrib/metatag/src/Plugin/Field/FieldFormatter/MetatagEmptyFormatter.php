@@ -2,21 +2,21 @@
 
 namespace Drupal\metatag\Plugin\Field\FieldFormatter;
 
-use Drupal\Core\Field\FormatterBase;
+use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Field\FormatterBase;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Plugin implementation of the 'metatag_empty_formatter' formatter.
- *
- * @FieldFormatter(
- *   id = "metatag_empty_formatter",
- *   module = "metatag",
- *   label = @Translation("Empty formatter"),
- *   field_types = {
- *     "metatag"
- *   }
- * )
  */
+#[FieldFormatter(
+  id: 'metatag_empty_formatter',
+  label: new TranslatableMarkup('Empty formatter'),
+  field_types: [
+    'metatag'
+  ]
+)]
 class MetatagEmptyFormatter extends FormatterBase {
 
   /**

@@ -83,3 +83,30 @@ function eck_update_8004() {
     $entityDefinitionUpdateManager->installEntityType($entityTypeDefinition);
   }
 }
+
+/**
+ * Add 'status' key for entity type config.
+ */
+function eck_update_8005() {
+  $config_factory = \Drupal::configFactory();
+  foreach ($config_factory->listAll('eck.eck_entity_type.') as $name) {
+    $config = $config_factory->getEditable($name);
+    // By default 'status' field will be disabled for existing entities types.
+    $config->set('status', FALSE);
+    $config->save();
+  }
+}
+
+/**
+ * Set the 'published' entity key.
+ */
+function eck_update_8006() {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  foreach (\Drupal::entityTypeManager()->getStorage('eck_entity_type')->loadMultiple() as $entity_type) {
+    $entity_type = $definition_update_manager->getEntityType($entity_type->id());
+    $keys = $entity_type->getKeys();
+    $keys['published'] = 'status';
+    $entity_type->set('entity_keys', $keys);
+    $definition_update_manager->updateEntityType($entity_type);
+  }
+}

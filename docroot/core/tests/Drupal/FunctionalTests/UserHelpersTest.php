@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalTests;
 
 use Drupal\Tests\BrowserTestBase;
@@ -19,7 +21,7 @@ class UserHelpersTest extends BrowserTestBase {
   /**
    * Tests BrowserTestBase::drupalUserIsLoggedIn().
    */
-  public function testDrupalUserIsLoggedIn() {
+  public function testDrupalUserIsLoggedIn(): void {
     $first_user = $this->drupalCreateUser();
     $second_user = $this->drupalCreateUser();
 

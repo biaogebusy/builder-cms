@@ -16,7 +16,7 @@ interface ProviderManagerInterface {
   public function getProvidersOptionList();
 
   /**
-   * Load the provider plugin definitions from a FAPI options list value.
+   * Load the provider plugin definitions from a form API options list value.
    *
    * @param array $options
    *   An array of options from a form API submission.

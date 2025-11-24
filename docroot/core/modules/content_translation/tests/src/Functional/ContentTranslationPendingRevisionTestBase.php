@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_translation\Functional;
 
 use Drupal\Core\Entity\ContentEntityInterface;
@@ -48,7 +50,7 @@ abstract class ContentTranslationPendingRevisionTestBase extends ContentTranslat
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     $this->entityTypeId = 'node';
     $this->bundle = 'article';
 
@@ -77,6 +79,11 @@ abstract class ContentTranslationPendingRevisionTestBase extends ContentTranslat
    * Enables content moderation for the test entity type and bundle.
    */
   protected function enableContentModeration() {
+    $perms = array_merge(parent::getAdministratorPermissions(), [
+      'administer workflows',
+      'view latest version',
+    ]);
+    $this->rootUser = $this->drupalCreateUser($perms);
     $this->drupalLogin($this->rootUser);
     $workflow_id = 'editorial';
     $this->drupalGet('/admin/config/workflow/workflows');

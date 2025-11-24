@@ -97,14 +97,14 @@ abstract class ParagraphsConversionBase extends PluginBase implements Paragraphs
   /**
    * {@inheritdoc}
    */
-  public function convert(array $settings, ParagraphInterface $original_paragraph, array $converted_paragraph = NULL) {
+  public function convert(array $settings, ParagraphInterface $original_paragraph, ?array $converted_paragraph = NULL) {
     return NULL;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function supports(ParagraphInterface $paragraph, array $parent_allowed_types = NULL) {
+  public function supports(ParagraphInterface $paragraph, ?array $parent_allowed_types = NULL) {
     return $paragraph->getType() == $this->getPluginDefinition()['source_type'];
   }
 

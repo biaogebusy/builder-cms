@@ -50,7 +50,7 @@
           // with file upload.
           if ($form.data('webform-auto-file-uploads') > 0 &&
             (isFormActions || (isMultipleUpload && !isManagedUploadButton)) &&
-            blockSubmit($form)) {
+            Drupal.webformManagedFileBlockSubmit($form)) {
             this.ajaxing = false;
             return false;
           }

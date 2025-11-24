@@ -1,0 +1,92 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"GD"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Chaozhou Shi": {
+			"local_name": "潮州市",
+			"has_children": true
+		},
+		"Dongguan Shi": {
+			"local_name": "东莞市"
+		},
+		"Foshan Shi": {
+			"local_name": "佛山市",
+			"has_children": true
+		},
+		"Guangzhou Shi": {
+			"local_name": "广州市",
+			"has_children": true
+		},
+		"Heyuan Shi": {
+			"local_name": "河源市",
+			"has_children": true
+		},
+		"Huizhou Shi": {
+			"local_name": "惠州市",
+			"has_children": true
+		},
+		"Jiangmen Shi": {
+			"local_name": "江门市",
+			"has_children": true
+		},
+		"Jieyang Shi": {
+			"local_name": "揭阳市",
+			"has_children": true
+		},
+		"Maoming Shi": {
+			"local_name": "茂名市",
+			"has_children": true
+		},
+		"Meizhou Shi": {
+			"local_name": "梅州市",
+			"has_children": true
+		},
+		"Qingyuan Shi": {
+			"local_name": "清远市",
+			"has_children": true
+		},
+		"Shantou Shi": {
+			"local_name": "汕头市",
+			"has_children": true
+		},
+		"Shanwei Shi": {
+			"local_name": "汕尾市",
+			"has_children": true
+		},
+		"Shaoguan Shi": {
+			"local_name": "韶关市",
+			"has_children": true
+		},
+		"Shenzhen Shi": {
+			"local_name": "深圳市",
+			"has_children": true
+		},
+		"Yangjiang Shi": {
+			"local_name": "阳江市",
+			"has_children": true
+		},
+		"Yunfu Shi": {
+			"local_name": "云浮市",
+			"has_children": true
+		},
+		"Zhanjiang Shi": {
+			"local_name": "湛江市",
+			"has_children": true
+		},
+		"Zhaoqing Shi": {
+			"local_name": "肇庆市",
+			"has_children": true
+		},
+		"Zhongshan Shi": {
+			"local_name": "中山市"
+		},
+		"Zhuhai Shi": {
+			"local_name": "珠海市",
+			"has_children": true
+		}
+	}
+}

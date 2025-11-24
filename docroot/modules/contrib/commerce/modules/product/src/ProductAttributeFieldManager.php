@@ -2,47 +2,19 @@
 
 namespace Drupal\commerce_product;
 
-use Drupal\commerce_product\Entity\ProductAttributeInterface;
-use Drupal\Core\Entity\EntityFieldManagerInterface;
+use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Entity\Display\EntityFormDisplayInterface;
+use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Cache\CacheBackendInterface;
-use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\commerce_product\Entity\ProductAttributeInterface;
 use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
 
 /**
  * Default implementation of the ProductAttributeFieldManagerInterface.
  */
 class ProductAttributeFieldManager implements ProductAttributeFieldManagerInterface {
-
-  /**
-   * The entity field manager.
-   *
-   * @var \Drupal\Core\Entity\EntityFieldManagerInterface
-   */
-  protected $entityFieldManager;
-
-  /**
-   * The entity type bundle info.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeBundleInfoInterface
-   */
-  protected $entityTypeBundleInfo;
-
-  /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  public $entityTypeManager;
-
-  /**
-   * The cache backend.
-   *
-   * @var \Drupal\Core\Cache\CacheBackendInterface
-   */
-  protected $cache;
 
   /**
    * Local cache for attribute field definitions.
@@ -61,20 +33,21 @@ class ProductAttributeFieldManager implements ProductAttributeFieldManagerInterf
   /**
    * Constructs a new ProductAttributeFieldManager object.
    *
-   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
+   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entityFieldManager
    *   The entity field manager.
-   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
+   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entityTypeBundleInfo
    *   The entity type bundle info.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    * @param \Drupal\Core\Cache\CacheBackendInterface $cache
    *   The cache backend.
    */
-  public function __construct(EntityFieldManagerInterface $entity_field_manager, EntityTypeBundleInfoInterface $entity_type_bundle_info, EntityTypeManagerInterface $entity_type_manager, CacheBackendInterface $cache) {
-    $this->entityFieldManager = $entity_field_manager;
-    $this->entityTypeBundleInfo = $entity_type_bundle_info;
-    $this->entityTypeManager = $entity_type_manager;
-    $this->cache = $cache;
+  public function __construct(
+    protected EntityFieldManagerInterface $entityFieldManager,
+    protected EntityTypeBundleInfoInterface $entityTypeBundleInfo,
+    protected EntityTypeManagerInterface $entityTypeManager,
+    protected CacheBackendInterface $cache,
+  ) {
   }
 
   /**
@@ -191,7 +164,9 @@ class ProductAttributeFieldManager implements ProductAttributeFieldManagerInterf
         'settings' => [
           'handler' => 'default',
           'handler_settings' => [
-            'target_bundles' => [$attribute->id()],
+            'target_bundles' => [
+              $attribute->id() => $attribute->id(),
+            ],
           ],
         ],
         'translatable' => FALSE,

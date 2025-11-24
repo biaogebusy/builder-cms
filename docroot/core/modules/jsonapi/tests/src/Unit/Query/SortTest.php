@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\jsonapi\Unit\Query;
 
 use Drupal\Core\Cache\Context\CacheContextsManager;
@@ -35,7 +37,7 @@ class SortTest extends UnitTestCase {
    * @covers ::createFromQueryParameter
    * @dataProvider parameterProvider
    */
-  public function testCreateFromQueryParameter($input, $expected) {
+  public function testCreateFromQueryParameter($input, $expected): void {
     $sort = Sort::createFromQueryParameter($input);
     foreach ($sort->fields() as $index => $sort_field) {
       $this->assertEquals($expected[$index]['path'], $sort_field['path']);
@@ -47,7 +49,7 @@ class SortTest extends UnitTestCase {
   /**
    * Provides a suite of shortcut sort parameters and their expected expansions.
    */
-  public function parameterProvider() {
+  public static function parameterProvider() {
     return [
       ['lorem', [['path' => 'lorem', 'direction' => 'ASC', 'langcode' => NULL]]],
       [
@@ -83,7 +85,7 @@ class SortTest extends UnitTestCase {
    * @covers ::createFromQueryParameter
    * @dataProvider badParameterProvider
    */
-  public function testCreateFromQueryParameterFail($input) {
+  public function testCreateFromQueryParameterFail($input): void {
     $this->expectException(BadRequestHttpException::class);
     Sort::createFromQueryParameter($input);
   }
@@ -91,7 +93,7 @@ class SortTest extends UnitTestCase {
   /**
    * Data provider for testCreateFromQueryParameterFail.
    */
-  public function badParameterProvider() {
+  public static function badParameterProvider() {
     return [
       [[['lorem']]],
       [''],

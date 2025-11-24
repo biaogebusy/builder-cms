@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Kernel\Mail;
 
 use Drupal\Component\Utility\Random;
@@ -12,6 +14,8 @@ use Drupal\Core\Url;
 use Drupal\file\Entity\File;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\system_mail_failure_test\Plugin\Mail\TestPhpMailFailure;
+
+// cspell:ignore drépal
 
 /**
  * Performs tests on the pluggable mailing framework.
@@ -40,6 +44,7 @@ class MailTest extends KernelTestBase {
     parent::setUp();
     $this->installEntitySchema('user');
     $this->installEntitySchema('file');
+    $this->installConfig(['system']);
 
     // Set required site configuration.
     $this->config('system.site')
@@ -51,7 +56,7 @@ class MailTest extends KernelTestBase {
   /**
    * Assert that the pluggable mail system is functional.
    */
-  public function testPluggableFramework() {
+  public function testPluggableFramework(): void {
     // Switch mail backends.
     $this->configureDefaultMailInterface('test_php_mail_failure');
 
@@ -64,10 +69,10 @@ class MailTest extends KernelTestBase {
     $this->assertInstanceOf(TestPhpMailFailure::class, $mail_backend);
 
     // Add a module-specific mail backend.
-    $this->config('system.mail')->set('interface.mymodule_testkey', 'test_mail_collector')->save();
+    $this->config('system.mail')->set('interface.my_module_test_key', 'test_mail_collector')->save();
 
     // Get the added MailInterface class instance.
-    $mail_backend = \Drupal::service('plugin.manager.mail')->getInstance(['module' => 'mymodule', 'key' => 'testkey']);
+    $mail_backend = \Drupal::service('plugin.manager.mail')->getInstance(['module' => 'my_module', 'key' => 'test_key']);
 
     // Assert whether the added mail backend is an instance of the expected
     // class.
@@ -78,7 +83,7 @@ class MailTest extends KernelTestBase {
   /**
    * Assert that the pluggable mail system is functional.
    */
-  public function testErrorMessageDisplay() {
+  public function testErrorMessageDisplay(): void {
     // Switch mail backends.
     $this->configureDefaultMailInterface('test_php_mail_failure');
 
@@ -98,7 +103,7 @@ class MailTest extends KernelTestBase {
    *
    * @see mail_cancel_test_mail_alter()
    */
-  public function testCancelMessage() {
+  public function testCancelMessage(): void {
     $language_interface = \Drupal::languageManager()->getCurrentLanguage();
 
     // Reset the state variable that holds sent messages.
@@ -118,7 +123,7 @@ class MailTest extends KernelTestBase {
   /**
    * Checks the From: and Reply-to: headers.
    */
-  public function testFromAndReplyToHeader() {
+  public function testFromAndReplyToHeader(): void {
     $language = \Drupal::languageManager()->getCurrentLanguage();
 
     // Reset the state variable that holds sent messages.
@@ -195,7 +200,7 @@ class MailTest extends KernelTestBase {
   /**
    * Checks that relative paths in mails are converted into absolute URLs.
    */
-  public function testConvertRelativeUrlsIntoAbsolute() {
+  public function testConvertRelativeUrlsIntoAbsolute(): void {
     $language_interface = \Drupal::languageManager()->getCurrentLanguage();
 
     $this->configureDefaultMailInterface('test_html_mail_collector');
@@ -209,7 +214,7 @@ class MailTest extends KernelTestBase {
     // One random tag name.
     $tag_name = strtolower($random->name(8, TRUE));
 
-    // Test root relative urls.
+    // Test root relative URLs.
     foreach (['href', 'src'] as $attribute) {
       // Reset the state variable that holds sent messages.
       \Drupal::state()->set('system.test_mail_collector', []);
@@ -231,7 +236,7 @@ class MailTest extends KernelTestBase {
       $this->assertSame($expected_html, $sent_message['body'], "Asserting that {$attribute} is properly converted for mails.");
     }
 
-    // Test protocol relative urls.
+    // Test protocol relative URLs.
     foreach (['href', 'src'] as $attribute) {
       // Reset the state variable that holds sent messages.
       \Drupal::state()->set('system.test_mail_collector', []);
@@ -253,7 +258,7 @@ class MailTest extends KernelTestBase {
       $this->assertSame($expected_html, $sent_message['body'], "Asserting that {$attribute} is properly converted for mails.");
     }
 
-    // Test absolute urls.
+    // Test absolute URLs.
     foreach (['href', 'src'] as $attribute) {
       // Reset the state variable that holds sent messages.
       \Drupal::state()->set('system.test_mail_collector', []);
@@ -282,7 +287,7 @@ class MailTest extends KernelTestBase {
    * By default Drupal uses relative paths for images and links. When sending
    * emails, absolute paths should be used instead.
    */
-  public function testRenderedElementsUseAbsolutePaths() {
+  public function testRenderedElementsUseAbsolutePaths(): void {
     $language_interface = \Drupal::languageManager()->getCurrentLanguage();
 
     $this->configureDefaultMailInterface('test_html_mail_collector');
@@ -324,7 +329,7 @@ class MailTest extends KernelTestBase {
         '#theme' => 'image',
         '#uri' => $input_path,
       ];
-      $expected_html = "<img src=\"$expected_path\" alt=\"\" />";
+      $expected_html = "<img src=\"$expected_path\" alt>\n";
 
       // Send a test message that mail_cancel_test_mail_alter should cancel.
       \Drupal::service('plugin.manager.mail')->mail('mail_html_test', 'render_from_message_param', 'relative_url@example.com', $language_interface->getId(), ['message' => $render]);

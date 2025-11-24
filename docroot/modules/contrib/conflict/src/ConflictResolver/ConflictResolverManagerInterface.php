@@ -14,11 +14,11 @@ interface ConflictResolverManagerInterface {
    * Resolves the conflicts between two entities based on their common parent.
    *
    * @param \Drupal\Core\Entity\EntityInterface $local
-   *   The local part of the comparision - for example the entity built of the
+   *   The local part of the comparison - for example the entity built of the
    *   user input on an entity form submission. This is basically the active
    *   entity object.
    * @param \Drupal\Core\Entity\EntityInterface $remote
-   *   The remote part of the comparision - for example the current version of
+   *   The remote part of the comparison - for example the current version of
    *   the entity from the storage or from a remote branch.
    * @param \Drupal\Core\Entity\EntityInterface $base
    *   The initial entity version in concurrent editing or the lowest common
@@ -39,17 +39,17 @@ interface ConflictResolverManagerInterface {
    *   An associative array keyed by the conflicting properties, having as
    *   values the corresponding conflict type.
    */
-  public function resolveConflicts(EntityInterface $local, EntityInterface $remote, EntityInterface $base, EntityInterface $result = NULL, ParameterBag $context = NULL, array $conflicts = NULL) : array;
+  public function resolveConflicts(EntityInterface $local, EntityInterface $remote, EntityInterface $base, ?EntityInterface $result = NULL, ?ParameterBag $context = NULL, ?array $conflicts = NULL) : array;
 
   /**
    * Returns the conflicts between two entities based on their common parent.
    *    *
    * @param \Drupal\Core\Entity\EntityInterface $local
-   *   The local part of the comparision - for example the entity built of the
+   *   The local part of the comparison - for example the entity built of the
    *   user input on an entity form submission. This is basically the active
    *   entity object.
    * @param \Drupal\Core\Entity\EntityInterface $remote
-   *   The remote part of the comparision - for example the current version of
+   *   The remote part of the comparison - for example the current version of
    *   the entity from the storage.
    * @param \Drupal\Core\Entity\EntityInterface $base
    *   The initial entity version in concurrent editing or the lowest common
@@ -61,6 +61,6 @@ interface ConflictResolverManagerInterface {
    *   An associative array keyed by the conflicting properties, having as
    *   values the corresponding conflict type.
    */
-  public function getConflicts(EntityInterface $local, EntityInterface $remote, EntityInterface $base, ParameterBag $context = NULL) : array;
+  public function getConflicts(EntityInterface $local, EntityInterface $remote, EntityInterface $base, ?ParameterBag $context = NULL) : array;
 
 }

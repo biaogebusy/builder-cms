@@ -50,7 +50,7 @@ trait PluginTestTrait {
    * @param callable|null $override
    *   The new code of the method, or NULL to use the default.
    */
-  protected function setMethodOverride($plugin_type, $method, callable $override = NULL) {
+  protected function setMethodOverride($plugin_type, $method, ?callable $override = NULL) {
     $key = "search_api_test.$plugin_type.method.$method";
     \Drupal::state()->set($key, $override);
   }

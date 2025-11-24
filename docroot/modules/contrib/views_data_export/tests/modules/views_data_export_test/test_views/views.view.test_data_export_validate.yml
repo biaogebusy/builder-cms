@@ -1,0 +1,59 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - rest
+    - user
+id: test_data_export_validate
+label: 'test_data_export_validate'
+module: views_data_export
+description: ''
+tag: ''
+base_table: entity_test
+base_field: id
+core: 8.x
+display:
+  default:
+    display_plugin: default
+    id: default
+    display_title: Master
+    position: null
+    display_options:
+      access:
+        type: perm
+        options:
+          perm: 'access content'
+      cache:
+        type: tag
+      query:
+        type: views_query
+      exposed_form:
+        type: basic
+      style:
+        type: default
+      row:
+        type: entity:entity_test
+      sorts:
+        id:
+          id: standard
+          table: entity_test
+          field: id
+          order: DESC
+          plugin_id: date
+          entity_type: entity_test
+          entity_field: id
+      title: 'Test serialize'
+      arguments: {  }
+  block_1:
+    display_plugin: block
+    id: block_1
+    display_title: block_1
+    position: null
+    display_options:
+      defaults:
+        style: false
+        row: false
+      style:
+        type: default
+      row:
+        type: entity:entity_test

@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\menu_per_role;
 
@@ -73,14 +73,7 @@ class MenuPerRoleLinkTreeManipulator extends DefaultMenuLinkTreeManipulators {
     }
 
     if ($instance instanceof MenuLinkContent) {
-      // Sadly ::getEntity() is protected at the moment.
-      $function = function () {
-        // @phpstan-ignore-next-line
-        return $this->getEntity();
-      };
-      $function = \Closure::bind($function, $instance, \get_class($instance));
-      /** @var \Drupal\menu_link_content\Entity\MenuLinkContent $entity */
-      $entity = $function();
+      $entity = $instance->getEntity();
       if (isset($entity->menu_per_role__show_role)) {
         /** @var array $show_role */
         $show_role = $entity->menu_per_role__show_role->getValue();

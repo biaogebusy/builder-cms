@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\autologout\FunctionalJavascript;
 
+use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Url;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 
@@ -18,6 +19,7 @@ class CyclicAjaxTest extends WebDriverTestBase {
    * @var array
    */
   protected static $modules = [
+    'system',
     'user',
     'autologout',
   ];
@@ -30,9 +32,9 @@ class CyclicAjaxTest extends WebDriverTestBase {
   /**
    * The config factory service.
    *
-   * @var \Drupal\Core\Config\ConfigFactory|object|null
+   * @var \Drupal\Core\Config\ConfigFactory
    */
-  protected $configFactory;
+  protected ConfigFactory $configFactory;
 
   /**
    * User to logout.
@@ -76,9 +78,9 @@ class CyclicAjaxTest extends WebDriverTestBase {
     $this->drupalLogin($this->privilegedUser);
     // Run JS.
     self::assertTrue($this->drupalUserIsLoggedIn($this->privilegedUser));
-    $this->getSession()->executeScript("
+    $this->getSession()->getDriver()->executeScript("
       function sendRequest() {
-        $.ajax({
+        jQuery.ajax({
             url: \"$this->baseUrl\",
             type: 'GET',
             success:
@@ -86,18 +88,26 @@ class CyclicAjaxTest extends WebDriverTestBase {
                     console.log('Request was sent!');
                 },
             complete: function () {
-                setTimeout(sendRequest, 5000); // The interval set to 5 seconds
+                window.cyclicTimeout = setTimeout(sendRequest, 5000); // The interval set to 5 seconds
             }
         });
-      sendRequest();
-      }"
+       }
+      sendRequest();"
     );
 
-    sleep(13);
+    $this->getSession()->wait(13000);
     self::assertTrue($this->drupalUserIsLoggedIn($this->privilegedUser));
-    sleep(5);
+
+    $this->getSession()->wait(5000);
     // Logged out.
     self::assertFalse($this->drupalUserIsLoggedIn($this->privilegedUser));
+
+    $this->getSession()->executeScript("
+      function clearRequests() {
+        clearTimeout(window.cyclicTimeout);
+      }
+      clearRequests();"
+    );
 
   }
 

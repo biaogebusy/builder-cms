@@ -23,13 +23,12 @@
 }
 
 .lpb-component-list {
-  padding-top: var(--gin-spacing-l);
-  padding-bottom: var(--gin-spacing-l);
+  padding-block: var(--gin-spacing-l);
 }
 
 .layout-paragraphs-delete-component-form {
-  padding-top: var(--gin-spacing-l);
-  padding-bottom: var(--gin-spacing-s);
+  padding-block-start: var(--gin-spacing-l);
+  padding-block-end: var(--gin-spacing-s);
 }
 
 .layout-select__item input.form-boolean:checked + label.option {

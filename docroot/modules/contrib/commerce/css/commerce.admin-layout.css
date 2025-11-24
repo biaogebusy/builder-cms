@@ -1,0 +1,49 @@
+/**
+ * Commerce Layouts.
+ */
+
+:root {
+  --commerce-layout-sidebar-width: 22.5rem;
+  --commerce-layout-content-width: 100%;
+}
+
+.layout-region {
+  box-sizing: border-box;
+}
+
+.layout-region--commerce-footer .layout-region__content {
+  margin-top: 1.5rem;
+}
+
+/**
+ * Wide screens form and admin pages layout.
+ */
+@media (min-width: 61rem) {
+  .layout-commerce-admin,
+  .layout-commerce-form {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: 2rem;
+  }
+
+  .layout-commerce-admin {
+    grid-template-columns: minmax(0, 3fr) minmax(auto, 1fr);
+  }
+
+  .layout-commerce-form {
+    grid-template-columns: minmax(0, 3fr) minmax(var(--commerce-layout-sidebar-width), 1fr);
+  }
+
+  .layout-region--commerce-main,
+  .layout-region--commerce-footer {
+    grid-column: 1;
+    margin-inline: auto;
+    width: var(--commerce-layout-content-width);
+  }
+
+  /* Push sidebar down to horizontal align with form section. */
+  .layout-region--commerce-secondary {
+    grid-row: span 2;
+    margin-block-start: 2rem;
+  }
+}

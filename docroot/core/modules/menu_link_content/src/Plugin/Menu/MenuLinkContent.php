@@ -8,6 +8,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Menu\MenuLinkBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\menu_link_content\MenuLinkContentInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -49,6 +50,13 @@ class MenuLinkContent extends MenuLinkBase implements ContainerFactoryPluginInte
   protected $entity;
 
   /**
+   * An array of entity operations links.
+   *
+   * @var array
+   */
+  protected $listBuilderOperations;
+
+  /**
    * The entity type manager.
    *
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
@@ -75,7 +83,7 @@ class MenuLinkContent extends MenuLinkBase implements ContainerFactoryPluginInte
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -123,7 +131,7 @@ class MenuLinkContent extends MenuLinkBase implements ContainerFactoryPluginInte
    * @throws \Drupal\Component\Plugin\Exception\PluginException
    *   If the entity ID and UUID are both invalid or missing.
    */
-  protected function getEntity() {
+  public function getEntity(): MenuLinkContentInterface {
     if (empty($this->entity)) {
       $entity = NULL;
       $storage = $this->entityTypeManager->getStorage('menu_link_content');
@@ -185,21 +193,48 @@ class MenuLinkContent extends MenuLinkBase implements ContainerFactoryPluginInte
    * {@inheritdoc}
    */
   public function getDeleteRoute() {
-    return $this->getEntity()->toUrl('delete-form');
+    $operations = $this->getListBuilderOperations();
+    return isset($operations['delete']) ? $operations['delete']['url'] : NULL;
   }
 
   /**
    * {@inheritdoc}
    */
   public function getEditRoute() {
-    return $this->getEntity()->toUrl();
+    $operations = $this->getListBuilderOperations();
+    return isset($operations['edit']) ? $operations['edit']['url'] : NULL;
   }
 
   /**
    * {@inheritdoc}
    */
   public function getTranslateRoute() {
-    return $this->getEntity()->toUrl('drupal:content-translation-overview');
+    $operations = $this->getListBuilderOperations();
+    return isset($operations['translate']) ? $operations['translate']['url'] : NULL;
+  }
+
+  /**
+   * Load entity operations from the list builder.
+   *
+   * @return array
+   *   An array of operations.
+   */
+  protected function getListBuilderOperations() {
+
+    if (is_null($this->listBuilderOperations)) {
+      $this->listBuilderOperations = $this->entityTypeManager
+        ->getListBuilder($this->getEntity()->getEntityTypeId())
+        ->getOperations($this->getEntity());
+    }
+
+    return $this->listBuilderOperations;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getOperations(): array {
+    return $this->getListBuilderOperations();
   }
 
   /**

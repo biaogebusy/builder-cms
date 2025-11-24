@@ -60,19 +60,19 @@ class DateFormatter implements DateFormatterInterface {
    * Contains the different date interval units.
    *
    * This array is keyed by strings representing the unit (e.g.
-   * '1 year|@count years') and with the amount of values of the unit in
+   * '@count year|@count years') and with the amount of values of the unit in
    * seconds.
    *
    * @var array
    */
   protected $units = [
-    '1 year|@count years' => 31536000,
-    '1 month|@count months' => 2592000,
-    '1 week|@count weeks' => 604800,
-    '1 day|@count days' => 86400,
-    '1 hour|@count hours' => 3600,
-    '1 min|@count min' => 60,
-    '1 sec|@count sec' => 1,
+    '@count year|@count years' => 31536000,
+    '@count month|@count months' => 2592000,
+    '@count week|@count weeks' => 604800,
+    '@count day|@count days' => 86400,
+    '@count hour|@count hours' => 3600,
+    '@count min|@count min' => 60,
+    '@count sec|@count sec' => 1,
   ];
 
   /**
@@ -117,7 +117,6 @@ class DateFormatter implements DateFormatterInterface {
     // Create a DrupalDateTime object from the timestamp and timezone.
     $create_settings = [
       'langcode' => $langcode,
-      'country' => $this->country(),
     ];
     $date = DrupalDateTime::createFromTimestamp($timestamp, $this->timezones[$timezone], $create_settings);
 
@@ -128,7 +127,7 @@ class DateFormatter implements DateFormatterInterface {
       }
     }
 
-    // Fall back to the 'medium' date format type if the format string is
+    // Fall back to the 'fallback' date format type if the format string is
     // empty, either from not finding a requested date format or being given an
     // empty custom format string.
     if (empty($format)) {
@@ -156,7 +155,8 @@ class DateFormatter implements DateFormatterInterface {
       }
       elseif ($output) {
         // Break if there was previous output but not any output at this level,
-        // to avoid skipping levels and getting output like "1 year 1 second".
+        // to avoid skipping levels and getting output like "@count year @count
+        // second".
         break;
       }
 
@@ -173,6 +173,7 @@ class DateFormatter implements DateFormatterInterface {
   public function getSampleDateFormats($langcode = NULL, $timestamp = NULL, $timezone = NULL) {
     $timestamp = $timestamp ?: time();
     // All date format characters for the PHP date() function.
+    // cspell:disable-next-line
     $date_chars = str_split('dDjlNSwzWFmMntLoYyaABgGhHisueIOPTZcrU');
     $date_elements = array_combine($date_chars, $date_chars);
     return array_map(function ($character) use ($timestamp, $timezone, $langcode) {
@@ -237,12 +238,12 @@ class DateFormatter implements DateFormatterInterface {
         // strings for all different possibilities.
         switch ($value) {
           case 'y':
-            $interval_output = $this->formatPlural($interval->y, '1 year', '@count years', [], ['langcode' => $options['langcode']]);
+            $interval_output = $this->formatPlural($interval->y, '@count year', '@count years', [], ['langcode' => $options['langcode']]);
             $max_age = min($max_age, 365 * 86400);
             break;
 
           case 'm':
-            $interval_output = $this->formatPlural($interval->m, '1 month', '@count months', [], ['langcode' => $options['langcode']]);
+            $interval_output = $this->formatPlural($interval->m, '@count month', '@count months', [], ['langcode' => $options['langcode']]);
             $max_age = min($max_age, 30 * 86400);
             break;
 
@@ -253,35 +254,35 @@ class DateFormatter implements DateFormatterInterface {
             $days = $interval->d;
             $weeks = floor($days / 7);
             if ($weeks) {
-              $interval_output .= $this->formatPlural($weeks, '1 week', '@count weeks', [], ['langcode' => $options['langcode']]);
+              $interval_output .= $this->formatPlural($weeks, '@count week', '@count weeks', [], ['langcode' => $options['langcode']]);
               $days -= $weeks * 7;
               $granularity--;
               $max_age = min($max_age, 7 * 86400);
             }
 
             if ((!$output || $weeks > 0) && $granularity > 0 && $days > 0) {
-              $interval_output .= ($interval_output ? ' ' : '') . $this->formatPlural($days, '1 day', '@count days', [], ['langcode' => $options['langcode']]);
+              $interval_output .= ($interval_output ? ' ' : '') . $this->formatPlural($days, '@count day', '@count days', [], ['langcode' => $options['langcode']]);
               $max_age = min($max_age, 86400);
             }
             else {
               // If we did not output days, set the granularity to 0 so that we
-              // will not output hours and get things like "1 week 1 hour".
+              // will not output hours and get things like "@count week @count hour".
               $granularity = 0;
             }
             break;
 
           case 'h':
-            $interval_output = $this->formatPlural($interval->h, '1 hour', '@count hours', [], ['langcode' => $options['langcode']]);
+            $interval_output = $this->formatPlural($interval->h, '@count hour', '@count hours', [], ['langcode' => $options['langcode']]);
             $max_age = min($max_age, 3600);
             break;
 
           case 'i':
-            $interval_output = $this->formatPlural($interval->i, '1 minute', '@count minutes', [], ['langcode' => $options['langcode']]);
+            $interval_output = $this->formatPlural($interval->i, '@count minute', '@count minutes', [], ['langcode' => $options['langcode']]);
             $max_age = min($max_age, 60);
             break;
 
           case 's':
-            $interval_output = $this->formatPlural($interval->s, '1 second', '@count seconds', [], ['langcode' => $options['langcode']]);
+            $interval_output = $this->formatPlural($interval->s, '@count second', '@count seconds', [], ['langcode' => $options['langcode']]);
             $max_age = min($max_age, 1);
             break;
 
@@ -291,7 +292,7 @@ class DateFormatter implements DateFormatterInterface {
       }
       elseif ($output) {
         // Break if there was previous output but not any output at this level,
-        // to avoid skipping levels and getting output like "1 year 1 second".
+        // to avoid skipping levels and getting output like "@count year @count second".
         break;
       }
 
@@ -345,8 +346,13 @@ class DateFormatter implements DateFormatterInterface {
    *
    * @return string
    *   The config setting for country.default.
+   *
+   * @deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. There will be a contrib replacement. See https://www.drupal.org/node/3439484
+   *
+   * @see https://www.drupal.org/node/3439484
    */
   protected function country() {
+    @trigger_error('Calling ' . __METHOD__ . '() is deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. There is no replacement. See https://www.drupal.org/node/3439484', E_USER_DEPRECATED);
     if ($this->country === NULL) {
       $this->country = \Drupal::config('system.date')->get('country.default');
     }

@@ -2,22 +2,23 @@
 
 namespace Drupal\commerce_order\Plugin\Commerce\Condition;
 
-use Drupal\commerce_order\Entity\OrderItemInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce\Attribute\CommerceCondition;
+use Drupal\commerce_order\Entity\OrderItemInterface;
 
 /**
  * Provides the variation condition for order items.
- *
- * @CommerceCondition(
- *   id = "order_item_purchased_entity",
- *   label = @Translation("Purchased entity"),
- *   display_label = @Translation("Specific purchased item"),
- *   category = @Translation("Purchased items"),
- *   entity_type = "commerce_order_item",
- *   weight = -1,
- *   deriver = "Drupal\commerce_order\Plugin\Commerce\Condition\PurchasedEntityConditionDeriver"
- * )
  */
+#[CommerceCondition(
+  id: "order_item_purchased_entity",
+  label: new TranslatableMarkup('Purchased entity'),
+  entity_type: "commerce_order_item",
+  display_label: new TranslatableMarkup("Specific purchased item"),
+  category: new TranslatableMarkup("Purchased items"),
+  weight: -1,
+  deriver: PurchasedEntityConditionDeriver::class,
+)]
 class OrderItemPurchasedEntity extends PurchasedEntityConditionBase {
 
   /**

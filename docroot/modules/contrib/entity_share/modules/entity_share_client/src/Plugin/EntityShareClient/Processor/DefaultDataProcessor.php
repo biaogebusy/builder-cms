@@ -130,7 +130,7 @@ class DefaultDataProcessor extends ImportProcessorPluginBase implements PluginFo
    */
   public function isEntityImportable(RuntimeImportContext $runtime_import_context, array $entity_json_data) {
     $field_mappings = $runtime_import_context->getFieldMappings();
-    $parsed_type = explode('--', $entity_json_data['type']);
+    $parsed_type = \explode('--', $entity_json_data['type']);
     $entity_type_id = $parsed_type[0];
     $entity_bundle = $parsed_type[1];
     // @todo Refactor in attributes to avoid getting entity keys each time.
@@ -148,11 +148,11 @@ class DefaultDataProcessor extends ImportProcessorPluginBase implements PluginFo
     }
 
     // Check if we try to import an entity with langcode in a disabled language.
-    if (is_null($this->languageManager->getLanguage($data_langcode))) {
+    if ($this->languageManager->getLanguage($data_langcode) === NULL) {
       // Use the entity type if there is no label.
       $entity_label = $entity_type_id;
       // Prepare entity label.
-      if (isset($entity_keys['label']) && isset($field_mappings[$entity_type_id][$entity_bundle][$entity_keys['label']])) {
+      if (isset($entity_keys['label'], $field_mappings[$entity_type_id][$entity_bundle][$entity_keys['label']])) {
         $label_public_name = $field_mappings[$entity_type_id][$entity_bundle][$entity_keys['label']];
         if (!empty($entity_json_data['attributes'][$label_public_name])) {
           $entity_label = $entity_json_data['attributes'][$label_public_name];
@@ -176,7 +176,7 @@ class DefaultDataProcessor extends ImportProcessorPluginBase implements PluginFo
    */
   public function prepareImportableEntityData(RuntimeImportContext $runtime_import_context, array &$entity_json_data) {
     $field_mappings = $runtime_import_context->getFieldMappings();
-    $parsed_type = explode('--', $entity_json_data['type']);
+    $parsed_type = \explode('--', $entity_json_data['type']);
     $entity_type_id = $parsed_type[0];
     $entity_bundle = $parsed_type[1];
     // @todo Refactor in attributes to avoid getting entity keys each time.

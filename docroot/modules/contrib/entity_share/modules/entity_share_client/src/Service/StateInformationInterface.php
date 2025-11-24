@@ -15,32 +15,32 @@ interface StateInformationInterface {
   /**
    * The info id in the case of an undefined state.
    */
-  const INFO_ID_UNDEFINED = 'undefined';
+  public const INFO_ID_UNDEFINED = 'undefined';
 
   /**
    * The info id in the case of an unknown entity type.
    */
-  const INFO_ID_UNKNOWN = 'unknown';
+  public const INFO_ID_UNKNOWN = 'unknown';
 
   /**
    * The info id in the case of a new entity.
    */
-  const INFO_ID_NEW = 'new';
+  public const INFO_ID_NEW = 'new';
 
   /**
    * The info id in the case of a new entity translation.
    */
-  const INFO_ID_NEW_TRANSLATION = 'new_translation';
+  public const INFO_ID_NEW_TRANSLATION = 'new_translation';
 
   /**
    * The info id in the case of a changed entity or translation.
    */
-  const INFO_ID_CHANGED = 'changed';
+  public const INFO_ID_CHANGED = 'changed';
 
   /**
    * The info id in the case of a synchronized entity or translation.
    */
-  const INFO_ID_SYNCHRONIZED = 'synchronized';
+  public const INFO_ID_SYNCHRONIZED = 'synchronized';
 
   /**
    * Check if an entity already exists or not and get status info.
@@ -62,7 +62,7 @@ interface StateInformationInterface {
   public function getStatusInfo(array $data);
 
   /**
-   * {@inheritdoc}
+   * From a status identifier, get label and CSS class.
    *
    * @param string $status_info_id
    *   An identifier of the status info (the value of 'INFO_ID_...' constant).
@@ -103,7 +103,7 @@ interface StateInformationInterface {
    * @return \Drupal\entity_share_client\Entity\EntityImportStatusInterface|bool
    *   The "Entity import status" entity or FALSE if none found.
    */
-  public function getImportStatusByParameters(string $uuid, string $entity_type_id, string $langcode = NULL);
+  public function getImportStatusByParameters(string $uuid, string $entity_type_id, ?string $langcode = NULL);
 
   /**
    * Gets the dedicated "Entity import status" entity for imported entity.
@@ -124,6 +124,6 @@ interface StateInformationInterface {
    * @param string|null $langcode
    *   Optional language code, used when deleting only specific translations.
    */
-  public function deleteImportStatusOfEntity(EntityInterface $entity, string $langcode = NULL);
+  public function deleteImportStatusOfEntity(EntityInterface $entity, ?string $langcode = NULL);
 
 }

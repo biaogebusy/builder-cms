@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\rest\Functional\EntityResource\ModeratedNode;
 
+use Drupal\Core\Cache\Cache;
 use Drupal\Tests\content_moderation\Traits\ContentModerationTestTrait;
 use Drupal\Tests\node\Functional\Rest\NodeResourceTestBase;
 
@@ -69,6 +72,13 @@ abstract class ModeratedNodeResourceTestBase extends NodeResourceTestBase {
         ],
       ],
     ]);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getExpectedCacheTags() {
+    return Cache::mergeTags(parent::getExpectedCacheTags(), ['config:workflows.workflow.editorial']);
   }
 
 }

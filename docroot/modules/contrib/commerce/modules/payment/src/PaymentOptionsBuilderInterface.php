@@ -35,7 +35,8 @@ interface PaymentOptionsBuilderInterface {
    * Priority:
    * 1) The order's payment method
    * 2) The order's payment gateway (if it does not support payment methods)
-   * 3) First defined option.
+   * 3) User's default payment method.
+   * 4) First defined option.
    *
    * @param \Drupal\commerce_order\Entity\OrderInterface $order
    *   The order.

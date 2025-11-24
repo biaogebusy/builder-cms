@@ -2,10 +2,11 @@
 
 namespace Drupal\commerce_product\Plugin\views\filter;
 
-use Drupal\commerce_product\Entity\ProductAttributeInterface;
-use Drupal\commerce_product\Entity\ProductAttributeValueInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\commerce_product\Entity\ProductAttributeInterface;
+use Drupal\commerce_product\Entity\ProductAttributeValueInterface;
+use Drupal\views\Attribute\ViewsFilter;
 use Drupal\views\Plugin\views\filter\InOperator;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -13,9 +14,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Provides a filter for product attribute values.
  *
  * @ingroup views_filter_handlers
- *
- * @ViewsFilter("commerce_product_attribute_value")
  */
+#[ViewsFilter("commerce_product_attribute_value")]
 class ProductAttributeValue extends InOperator {
 
   /**

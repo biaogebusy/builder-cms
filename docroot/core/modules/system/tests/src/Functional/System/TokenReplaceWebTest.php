@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\System;
 
 use Drupal\Core\EventSubscriber\MainContentViewSubscriber;
@@ -28,7 +30,7 @@ class TokenReplaceWebTest extends BrowserTestBase {
   /**
    * Tests a token replacement on an actual website.
    */
-  public function testTokens() {
+  public function testTokens(): void {
     $node = $this->drupalCreateNode();
     $account = $this->drupalCreateUser();
     $this->drupalLogin($account);

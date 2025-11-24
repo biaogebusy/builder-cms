@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\commerce_cart\Kernel;
 
-use Drupal\commerce_order\OrderQueryAccessHandler;
 use Drupal\Core\Session\AnonymousUserSession;
+use Drupal\commerce_order\OrderQueryAccessHandler;
 use Drupal\entity\QueryAccess\Condition;
 
 /**
@@ -41,7 +41,7 @@ class CartQueryAccessTest extends CartKernelTestBase {
   public function testAccess() {
     // User with full access.
     foreach (['administer commerce_order', 'view commerce_order'] as $permission) {
-      $user = $this->createUser([], [$permission]);
+      $user = $this->createUser([$permission]);
       $conditions = $this->handler->getConditions('view', $user);
       $this->assertEquals(0, $conditions->count());
       $this->assertEquals(['user.permissions'], $conditions->getCacheContexts());

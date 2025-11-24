@@ -308,7 +308,7 @@ class Block extends CoreBlock {
                 // Single-value select elements get their default value set to
                 // 'All' in buildExposedForm(), when that option is added, so set
                 // thir defaults manually.
-                $form['exposed'][$filter_key][$id]['#default_value'] = $block_configuration['exposed'][$filter_key]['value'];
+                $form['exposed'][$filter_key][$id]['#default_value'] = $block_configuration['exposed'][$filter_key]['value'] ?? NULL;
               }
 
               else if ($form_field_type =='entity_autocomplete' && $filter_plugin_id == 'taxonomy_index_tid') {
@@ -660,7 +660,7 @@ class Block extends CoreBlock {
                 $exposed[$identifier] = $value['value']['value'];
               }
               else {
-                $exposed[$identifier] = $value['value'];
+                $exposed[$identifier] = $value['value'] ?? NULL;
               }
             }
 
@@ -674,7 +674,7 @@ class Block extends CoreBlock {
           }
 
           // If the filter is exposed, set a variable to pass that through.
-          if ($config['exposed'][$key]['exposed']) {
+          if (isset($config['exposed'][$key]['exposed']) && $config['exposed'][$key]['exposed']) {
             $handler->options['value_exposed_to_user'] = TRUE;
 
             // If the operator is exposed, set a variable to pass that through.
@@ -834,7 +834,8 @@ class Block extends CoreBlock {
       $identifier = $handler->options['group_info']['identifier'];
       $is_multiple = $handler->multipleExposedInput();
       $value_key = $is_multiple ? 'default_group_multiple' : 'default_group';
-      $value = [$identifier => $input_value['group_info'][$value_key]];
+      $v = $input_value['group_info'][$value_key] ?? NULL;
+      $value = [$identifier => $v];
 
       $handler->group_info = $value[$identifier];
       $handler->options['group_info'][$value_key] = $handler->group_info;
@@ -846,14 +847,14 @@ class Block extends CoreBlock {
       // The value passed to the handler may need defaults that are not
       // passed with the input values, so we have to attempt to merge the
       // expected values on the plugin before overwriting them.
-      if (is_array($input_value['value']) && is_array($handler->options['value'])) {
+      if (isset($input_value['value']) && is_array($input_value['value']) && is_array($handler->options['value'])) {
         $value = [$identifier => $input_value['value'] + $handler->options['value']];
       }
-      elseif (is_string($input_value['value']) && is_array($handler->options['value'])) {
+      elseif (isset($input_value['value']) && is_string($input_value['value']) && is_array($handler->options['value'])) {
         $value = [$identifier => ['value' => $input_value['value']] + $handler->options['value']];
       }
       else {
-        $value = [$identifier => $input_value['value']];
+        $value = [$identifier => $input_value['value'] ?? NULL];
       }
 
       if ($use_operator) {
@@ -966,3 +967,4 @@ class Block extends CoreBlock {
   }
 
 }
+

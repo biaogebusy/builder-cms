@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drush\Exceptions;
 
 /**
@@ -7,7 +9,7 @@ namespace Drush\Exceptions;
  */
 class UserAbortException extends \Exception
 {
-    public function __construct($message = "Cancelled.", $code = 0, \Exception $previous = null)
+    public function __construct($message = "Cancelled.", $code = 0, ?\Exception $previous = null)
     {
         parent::__construct($message, $code, $previous);
     }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\block_content\Functional;
 
 /**
@@ -24,7 +26,7 @@ class BlockContentContextualLinksTest extends BlockContentTestBase {
   /**
    * Tests contextual links.
    */
-  public function testBlockContentContextualLinks() {
+  public function testBlockContentContextualLinks(): void {
     $block_content = $this->createBlockContent();
 
     $block = $this->placeBlock('block_content:' . $block_content->uuid());

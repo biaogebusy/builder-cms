@@ -16,7 +16,7 @@ trait WebformEntityListBuilderSortLabelTrait {
    * @see \Drupal\Core\Entity\EntityListBuilder::getEntityIds
    */
   protected function getEntityIds() {
-    $query = $this->getStorage()->getQuery()->accessCheck()
+    $query = $this->getStorage()->getQuery()->accessCheck(TRUE)
       ->sort($this->entityType->getKey('label'));
 
     // Only add the pager if a limit is specified.

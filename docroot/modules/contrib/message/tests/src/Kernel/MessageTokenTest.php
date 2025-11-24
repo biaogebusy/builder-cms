@@ -19,7 +19,14 @@ class MessageTokenTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['message', 'user', 'system', 'filter'];
+  protected static $modules = [
+    'field',
+    'filter',
+    'message',
+    'system',
+    'token',
+    'user',
+  ];
 
   /**
    * The user object.
@@ -43,7 +50,7 @@ class MessageTokenTest extends KernelTestBase {
 
     $this->installEntitySchema('message');
     $this->installEntitySchema('user');
-    $this->installConfig(['filter']);
+    $this->installConfig(['filter', 'system']);
 
     $this->user = User::create([
       'uid' => mt_rand(5, 10),
@@ -57,6 +64,19 @@ class MessageTokenTest extends KernelTestBase {
    * Test token replacement in a message template.
    */
   public function testTokens() {
+    $message_template = $this->createMessageTemplate('dummy_message', 'Dummy message', '', ['[message:uid:entity:name]']);
+    $message = Message::create(['template' => $message_template->id()])
+      ->setOwnerId($this->user->id());
+
+    $message->save();
+
+    $this->assertEquals('<p>' . Html::escape($this->user->label()) . '</p>', (string) $message, 'The message rendered the author name.');
+  }
+
+  /**
+   * Test deprecated token replacement in a message template.
+   */
+  public function testDeprecatedTokens() {
     $message_template = $this->createMessageTemplate('dummy_message', 'Dummy message', '', ['[message:author:name]']);
     $message = Message::create(['template' => $message_template->id()])
       ->setOwnerId($this->user->id());
@@ -72,7 +92,7 @@ class MessageTokenTest extends KernelTestBase {
   public function testTokenClearing() {
     // Clearing enabled.
     $token_options = ['token options' => ['clear' => TRUE, 'token replace' => TRUE]];
-    $message_template = $this->createMessageTemplate('dummy_message', 'Dummy message', '', ['[message:author:name] [bogus:token]'], $token_options);
+    $message_template = $this->createMessageTemplate('dummy_message', 'Dummy message', '', ['[message:uid:entity:name] [bogus:token]'], $token_options);
     $message = Message::create(['template' => $message_template->id()])
       ->setOwnerId($this->user->id());
 

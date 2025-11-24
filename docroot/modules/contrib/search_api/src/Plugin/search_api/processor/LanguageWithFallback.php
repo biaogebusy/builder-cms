@@ -5,6 +5,8 @@ namespace Drupal\search_api\Plugin\search_api\processor;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\search_api\Attribute\SearchApiProcessor;
 use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Item\ItemInterface;
 use Drupal\search_api\Processor\ProcessorPluginBase;
@@ -14,18 +16,17 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Adds the item's language (with fallbacks) to the indexed data.
- *
- * @SearchApiProcessor(
- *   id = "language_with_fallback",
- *   label = @Translation("Language (with fallback)"),
- *   description = @Translation("Adds the item's language to the indexed data, and considers language fallbacks."),
- *   stages = {
- *     "add_properties" = 0,
- *   },
- *   locked = true,
- *   hidden = true,
- * )
  */
+#[SearchApiProcessor(
+  id: 'language_with_fallback',
+  label: new TranslatableMarkup('Language (with fallback)'),
+  description: new TranslatableMarkup("Adds the item's language to the indexed data, and considers language fallbacks."),
+  stages: [
+    'add_properties' => 0,
+  ],
+  locked: TRUE,
+  hidden: TRUE,
+)]
 class LanguageWithFallback extends ProcessorPluginBase {
 
   /**
@@ -104,7 +105,7 @@ class LanguageWithFallback extends ProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function getPropertyDefinitions(DatasourceInterface $datasource = NULL) {
+  public function getPropertyDefinitions(?DatasourceInterface $datasource = NULL) {
     $properties = [];
 
     if (!$datasource) {
@@ -131,7 +132,7 @@ class LanguageWithFallback extends ProcessorPluginBase {
     try {
       $entity = $item->getOriginalObject()->getValue();
     }
-    catch (SearchApiException $e) {
+    catch (SearchApiException) {
       return;
     }
     if (!($entity instanceof ContentEntityInterface)) {

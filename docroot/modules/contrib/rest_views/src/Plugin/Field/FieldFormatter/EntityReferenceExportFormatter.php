@@ -30,9 +30,17 @@ class EntityReferenceExportFormatter extends EntityReferenceEntityFormatter {
    */
   public function view(FieldItemListInterface $items, $langcode = NULL): array {
     $elements = $this->viewElements($items, $langcode);
+
+    foreach ($items as $k => $item) {
+      if (empty($elements[$k]) && $item->entity) {
+        $items->removeItem($k);
+      }
+    }
+
+    $elements = array_values($elements);
     $output = ['#items' => $items];
 
-    $entity_key = '#' . $this->getFieldSetting('target_type');
+    $entityKey = '#' . $this->getFieldSetting('target_type');
     $extra = $this->getSetting('extra');
 
     foreach ($elements as $delta => $row) {
@@ -46,10 +54,11 @@ class EntityReferenceExportFormatter extends EntityReferenceEntityFormatter {
       }
 
       /** @var \Drupal\Core\Entity\EntityInterface $entity */
-      $entity = $row[$entity_key];
+      $entity = $row[$entityKey];
 
       if (!empty($extra['id'])) {
-        $output[$delta]['id'] = $entity->id();
+        // Cast the ID to an integer if it is a string containing only digits.
+        $output[$delta]['id'] = ctype_digit($entity->id()) ? (int) $entity->id() : $entity->id();
       }
       if (!empty($extra['title'])) {
         $output[$delta]['title'] = $entity->label();
@@ -58,7 +67,7 @@ class EntityReferenceExportFormatter extends EntityReferenceEntityFormatter {
         try {
           $output[$delta]['url'] = $entity->toUrl()->setAbsolute()->toString();
         }
-        catch (\Exception $exception) {
+        catch (\Exception) {
           $output[$delta]['url'] = NULL;
         }
       }
@@ -90,14 +99,14 @@ class EntityReferenceExportFormatter extends EntityReferenceEntityFormatter {
 
         // If the field has no multiple cardinality, unpack the array.
         if (!empty($field['#items'])) {
-          /** @var \Drupal\Core\Field\FieldItemListInterface $field_items */
-          $field_items = $field['#items'];
-          if (!$field_items
+          /** @var \Drupal\Core\Field\FieldItemListInterface $fieldItems */
+          $fieldItems = $field['#items'];
+          if (!$fieldItems
             ->getFieldDefinition()
             ->getFieldStorageDefinition()
             ->isMultiple()
           ) {
-            $output[$delta][$alias] = reset($output[$delta][$alias]);
+            $output[$delta][$alias] = isset($output[$delta][$alias]) && is_array($output[$delta][$alias]) ? reset($output[$delta][$alias]) : NULL;
           }
         }
       }
@@ -121,20 +130,23 @@ class EntityReferenceExportFormatter extends EntityReferenceEntityFormatter {
   /**
    * {@inheritdoc}
    */
-  public function settingsForm(array $form, FormStateInterface $form_state): array {
-    $elements = parent::settingsForm($form, $form_state);
+  public function settingsForm(array $form, FormStateInterface $formState): array {
+    $elements = parent::settingsForm($form, $formState);
     $elements['extra'] = [
       '#type'          => 'checkboxes',
       '#title'         => $this->t('Export metadata'),
       '#default_value' => $this->getSetting('extra'),
       '#options'       => [
-        'id'     => $this->t('ID'),
-        'title'  => $this->t('Title'),
-        'url'    => $this->t('URL'),
-        'type'   => $this->t('Entity type'),
-        'bundle' => $this->t('Entity bundle'),
+        'id'      => $this->t('ID'),
+        'title'   => $this->t('Title'),
+        'url'     => $this->t('URL'),
+        'type'    => $this->t('Entity type'),
+        'bundle'  => $this->t('Entity bundle'),
+        'uid'     => $this->t('Author'),
+        'created' => $this->t('Creation date'),
       ],
     ];
+
     return $elements;
   }
 
@@ -144,8 +156,20 @@ class EntityReferenceExportFormatter extends EntityReferenceEntityFormatter {
   public function settingsSummary(): array {
     $summary = parent::settingsSummary();
     $fields = $this->getSetting('extra');
-    if ($fields) {
-      $summary[] = $this->t('Includes %data', ['%data' => implode(', ', $fields)]);
+    $labels = array_filter([
+      'id'      => $this->t('ID'),
+      'title'   => $this->t('Title'),
+      'url'     => $this->t('URL'),
+      'type'    => $this->t('Entity type'),
+      'bundle'  => $this->t('Entity bundle'),
+      'uid'     => $this->t('Author'),
+      'created' => $this->t('Creation date'),
+    ], static function ($key) use ($fields) {
+      return !empty($fields[$key]);
+    }, ARRAY_FILTER_USE_KEY);
+
+    if ($labels) {
+      $summary[] = $this->t('Includes %data', ['%data' => implode(', ', $labels)]);
     }
     return $summary;
   }

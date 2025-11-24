@@ -37,7 +37,7 @@ class WebformElementTelephoneTest extends WebformElementBrowserTestBase {
     // Check international tel.
     $assert_session->responseContains('<input class="js-webform-telephone-international webform-webform-telephone-international form-tel" data-drupal-selector="edit-tel-international" type="tel" id="edit-tel-international" name="tel_international" value="" size="30" maxlength="128" />');
 
-    // Check international telephone valddation.
+    // Check international telephone validation.
     $assert_session->responseContains('<input data-drupal-selector="edit-tel-validation-e164" type="tel" id="edit-tel-validation-e164" name="tel_validation_e164" value="" size="30" maxlength="128" class="form-tel" />');
 
     // Check USE telephone validation.

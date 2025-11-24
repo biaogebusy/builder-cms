@@ -2,9 +2,9 @@
 
 namespace Drupal\commerce_price\Form;
 
-use Drupal\commerce_price\CurrencyImporterInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\commerce_price\CurrencyImporterInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**

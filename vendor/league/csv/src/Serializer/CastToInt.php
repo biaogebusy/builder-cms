@@ -25,33 +25,44 @@ final class CastToInt implements TypeCasting
 {
     private readonly bool $isNullable;
     private ?int $default = null;
+    private readonly TypeCastingInfo $info;
 
     public function __construct(ReflectionProperty|ReflectionParameter $reflectionProperty)
     {
         $this->isNullable = $this->init($reflectionProperty);
+        $this->info = TypeCastingInfo::fromAccessor($reflectionProperty);
     }
 
-    public function setOptions(?int $default = null): void
+    public function info(): TypeCastingInfo
     {
+        return $this->info;
+    }
+
+    public function setOptions(
+        ?int $default = null,
+        bool $emptyStringAsNull = false,
+    ): void {
         $this->default = $default;
     }
 
     /**
      * @throws TypeCastingFailed
      */
-    public function toVariable(?string $value): ?int
+    public function toVariable(mixed $value): ?int
     {
         if (null === $value) {
             return match ($this->isNullable) {
                 true => $this->default,
-                false => throw TypeCastingFailed::dueToNotNullableType('integer'),
+                false => throw TypeCastingFailed::dueToNotNullableType('integer', info: $this->info),
             };
         }
+
+        is_scalar($value) || throw TypeCastingFailed::dueToInvalidValue($value, Type::Int->value, info: $this->info);
 
         $int = filter_var($value, Type::Int->filterFlag());
 
         return match ($int) {
-            false => throw TypeCastingFailed::dueToInvalidValue($value, Type::Int->value),
+            false => throw TypeCastingFailed::dueToInvalidValue($value, Type::Int->value, info: $this->info),
             default => $int,
         };
     }
@@ -74,9 +85,7 @@ final class CastToInt implements TypeCasting
             }
         }
 
-        if (null === $type) {
-            throw throw MappingFailed::dueToTypeCastingUnsupportedType($reflectionProperty, $this, 'int', 'float', 'null', 'mixed');
-        }
+        null !== $type || throw throw MappingFailed::dueToTypeCastingUnsupportedType($reflectionProperty, $this, 'int', 'float', 'null', 'mixed');
 
         return $isNullable;
     }

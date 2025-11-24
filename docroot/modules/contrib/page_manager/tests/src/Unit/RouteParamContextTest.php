@@ -2,13 +2,13 @@
 
 namespace Drupal\Tests\page_manager\Unit;
 
-use Prophecy\PhpUnit\ProphecyTrait;
 use Drupal\Core\Plugin\Context\Context;
 use Drupal\Core\Routing\RouteProviderInterface;
 use Drupal\Core\TypedData\DataDefinition;
 use Drupal\Core\TypedData\TypedDataInterface;
 use Drupal\page_manager\EventSubscriber\RouteParamContext;
 use Prophecy\Argument;
+use Prophecy\PhpUnit\ProphecyTrait;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\Route;
@@ -24,6 +24,7 @@ use Symfony\Component\Routing\RouteCollection;
 class RouteParamContextTest extends PageContextTestBase {
 
   use ProphecyTrait;
+
   /**
    * @covers ::onPageContext
    */

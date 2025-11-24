@@ -2,11 +2,11 @@ name: Redis
 description: Provide a module placeholder, for using as dependency for module that needs Redis.
 package: Performance
 type: module
-core_version_requirement: ^9.3 || ^10
-configure: redis.admin_display
+core_version_requirement: ^9.3 || ^10 || ^11
+configure: redis.report
 php: 7.1.0
 
-# Information added by Drupal.org packaging script on 2023-06-07
-version: '8.x-1.7'
+# Information added by Drupal.org packaging script on 2025-11-09
+version: '2.0.0-alpha1'
 project: 'redis'
-datestamp: 1686175625
+datestamp: 1762689228

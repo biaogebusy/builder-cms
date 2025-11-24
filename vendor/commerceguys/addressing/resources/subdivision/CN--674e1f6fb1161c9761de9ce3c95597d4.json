@@ -1,0 +1,89 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"TW",
+		"Changhua County"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Beidou Township": {
+			"local_name": "北斗鎮"
+		},
+		"Puxin Township": {
+			"local_name": "埔心鄉"
+		},
+		"Puyan Township": {
+			"local_name": "埔鹽鄉"
+		},
+		"Dacheng Township": {
+			"local_name": "大城鄉"
+		},
+		"Dacun Township": {
+			"local_name": "大村鄉"
+		},
+		"Erlin Township": {
+			"local_name": "二林鎮"
+		},
+		"Ershui Township": {
+			"local_name": "二水鄉"
+		},
+		"Fangyuan Township": {
+			"local_name": "芳苑鄉"
+		},
+		"Fenyuan Township": {
+			"local_name": "芬園鄉"
+		},
+		"Fuxing Township": {
+			"local_name": "福興鄉"
+		},
+		"Hemei Township": {
+			"local_name": "和美鎮"
+		},
+		"Huatan Township": {
+			"local_name": "花壇鄉"
+		},
+		"Lukang Township": {
+			"local_name": "鹿港鎮"
+		},
+		"Pitou Township": {
+			"local_name": "埤頭鄉"
+		},
+		"Shetou Township": {
+			"local_name": "社頭鄉"
+		},
+		"Shengang Township": {
+			"local_name": "伸港鄉"
+		},
+		"Tianwei Township": {
+			"local_name": "田尾鄉"
+		},
+		"Tianzhong Township": {
+			"local_name": "田中鎮"
+		},
+		"Xihu Township": {
+			"local_name": "溪湖鎮"
+		},
+		"Xizhou Township": {
+			"local_name": "溪州鄉"
+		},
+		"Xianxi Township": {
+			"local_name": "線西鄉"
+		},
+		"Xiushui Township": {
+			"local_name": "秀水鄉"
+		},
+		"Yongjing Township": {
+			"local_name": "永靖鄉"
+		},
+		"Yuanlin City": {
+			"local_name": "員林市"
+		},
+		"Changhua City": {
+			"local_name": "彰化市"
+		},
+		"Zhutang Township": {
+			"local_name": "竹塘鄉"
+		}
+	}
+}

@@ -46,7 +46,7 @@ class ViewsIntegrationTest extends OrderKernelTestBase {
   /**
    * Tests the filter plugin dependencies.
    */
-  public function testFilterPluginDependenciesDontExplode() {
+  public function testFilterPluginDependencies() {
     $view = Views::getView('payment_methods');
     // This will cause an exception if the fix is not implemented in
     // \Drupal\commerce\Plugin\views\filter\EntityBundle::calculateDependencies.

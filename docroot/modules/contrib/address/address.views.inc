@@ -28,6 +28,7 @@ function address_field_views_data(FieldStorageConfigInterface $field) {
       'sorting_code' => 'standard',
       'address_line1' => 'standard',
       'address_line2' => 'standard',
+      'address_line3' => 'standard',
       'organization' => 'standard',
       'given_name' => 'standard',
       'additional_name' => 'standard',

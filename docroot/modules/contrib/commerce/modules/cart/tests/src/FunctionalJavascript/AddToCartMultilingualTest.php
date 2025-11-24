@@ -2,11 +2,10 @@
 
 namespace Drupal\Tests\commerce_cart\FunctionalJavascript;
 
-use Drupal\commerce_order\Entity\Order;
+use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\commerce_product\Entity\Product;
 use Drupal\commerce_product\Entity\ProductVariation;
 use Drupal\commerce_product\Entity\ProductVariationType;
-use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\language\Entity\ConfigurableLanguage;
 
 /**
@@ -196,7 +195,7 @@ class AddToCartMultilingualTest extends CartWebDriverTestBase {
     $this->assertAttributeDoesNotExist('purchased_entity[0][attributes][attribute_size]', $this->sizeAttributes['large']->id());
     $this->getSession()->getPage()->pressButton('Add to cart');
 
-    $this->cart = Order::load($this->cart->id());
+    $this->cart = $this->reloadEntity($this->cart);
     $order_items = $this->cart->getItems();
     $this->assertOrderItemInOrder($this->variations[0]->getTranslation('fr'), $order_items[0]);
     $this->assertOrderItemInOrder($this->variations[5]->getTranslation('fr'), $order_items[1]);
@@ -256,7 +255,7 @@ class AddToCartMultilingualTest extends CartWebDriverTestBase {
     $this->assertSession()->pageTextContains('Mon super produit - FR Blue, FR Medium');
     $this->getSession()->getPage()->pressButton('Add to cart');
 
-    $this->cart = Order::load($this->cart->id());
+    $this->cart = $this->reloadEntity($this->cart);
     $order_items = $this->cart->getItems();
     $this->assertOrderItemInOrder($this->variations[0]->getTranslation('fr'), $order_items[0]);
     $this->assertOrderItemInOrder($this->variations[5]->getTranslation('fr'), $order_items[1]);

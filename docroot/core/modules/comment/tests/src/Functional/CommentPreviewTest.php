@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Functional;
 
 use Drupal\comment\CommentManagerInterface;
@@ -20,9 +22,7 @@ class CommentPreviewTest extends CommentTestBase {
   }
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['olivero_test', 'test_user_config'];
 
@@ -34,21 +34,18 @@ class CommentPreviewTest extends CommentTestBase {
   /**
    * Tests comment preview.
    */
-  public function testCommentPreview() {
-    // As admin user, configure comment settings.
-    $this->drupalLogin($this->adminUser);
+  public function testCommentPreview(): void {
     $this->setCommentPreview(DRUPAL_OPTIONAL);
     $this->setCommentForm(TRUE);
     $this->setCommentSubject(TRUE);
     $this->setCommentSettings('default_mode', CommentManagerInterface::COMMENT_MODE_THREADED, 'Comment paging changed.');
-    $this->drupalLogout();
 
     // Log in as web user.
     $this->drupalLogin($this->webUser);
 
     // Test escaping of the username on the preview form.
     \Drupal::service('module_installer')->install(['user_hooks_test']);
-    \Drupal::state()->set('user_hooks_test_user_format_name_alter', TRUE);
+    \Drupal::keyValue('user_hooks_test')->set('user_format_name_alter', TRUE);
     $edit = [];
     $edit['subject[0][value]'] = $this->randomMachineName(8);
     $edit['comment_body[0][value]'] = $this->randomMachineName(16);
@@ -56,7 +53,7 @@ class CommentPreviewTest extends CommentTestBase {
     $this->submitForm($edit, 'Preview');
     $this->assertSession()->assertEscaped('<em>' . $this->webUser->id() . '</em>');
 
-    \Drupal::state()->set('user_hooks_test_user_format_name_alter_safe', TRUE);
+    \Drupal::keyValue('user_hooks_test')->set('user_format_name_alter_safe', TRUE);
     $this->drupalGet('node/' . $this->node->id());
     $this->submitForm($edit, 'Preview');
     $this->assertInstanceOf(MarkupInterface::class, $this->webUser->getDisplayName());
@@ -93,14 +90,11 @@ class CommentPreviewTest extends CommentTestBase {
   /**
    * Tests comment preview.
    */
-  public function testCommentPreviewDuplicateSubmission() {
-    // As admin user, configure comment settings.
-    $this->drupalLogin($this->adminUser);
+  public function testCommentPreviewDuplicateSubmission(): void {
     $this->setCommentPreview(DRUPAL_OPTIONAL);
     $this->setCommentForm(TRUE);
     $this->setCommentSubject(TRUE);
     $this->setCommentSettings('default_mode', CommentManagerInterface::COMMENT_MODE_THREADED, 'Comment paging changed.');
-    $this->drupalLogout();
 
     // Log in as web user.
     $this->drupalLogin($this->webUser);
@@ -137,7 +131,7 @@ class CommentPreviewTest extends CommentTestBase {
   /**
    * Tests comment edit, preview, and save.
    */
-  public function testCommentEditPreviewSave() {
+  public function testCommentEditPreviewSave(): void {
     $web_user = $this->drupalCreateUser([
       'access comments',
       'post comments',
@@ -182,7 +176,7 @@ class CommentPreviewTest extends CommentTestBase {
     // Check that saving a comment produces a success message.
     $this->drupalGet('comment/' . $comment->id() . '/edit');
     $this->submitForm($edit, 'Save');
-    $this->assertSession()->pageTextContains('Your comment has been posted.');
+    $this->assertSession()->pageTextContains('Your comment has been updated.');
 
     // Check that the comment fields are correct after loading the saved comment.
     $this->drupalGet('comment/' . $comment->id() . '/edit');

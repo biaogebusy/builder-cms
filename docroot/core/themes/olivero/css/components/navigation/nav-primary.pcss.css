@@ -3,7 +3,7 @@
  * Nav Primary.
  */
 
-@import "../../base/variables.pcss.css";
+@import "../../base/media-queries.pcss.css";
 
 .primary-nav__menu {
   flex-wrap: wrap;
@@ -33,7 +33,7 @@
 .primary-nav__menu-link {
   flex-grow: 1;
   text-decoration: none;
-  color: var(--color--gray-0);
+  color: var(--color-text-neutral-loud);
   font-size: 28px;
   font-weight: bold;
   line-height: var(--sp2);
@@ -43,7 +43,7 @@
   }
 
   &:focus {
-    outline: auto 2px var(--color--blue-50);
+    outline: auto 2px var(--color--primary-50);
     outline-offset: 2px;
   }
 }
@@ -52,7 +52,7 @@
   padding-block: var(--sp0-5);
   padding-inline-start: 0;
   padding-inline-end: 0;
-  color: var(--color--gray-20);
+  color: var(--color-text-neutral-soft);
   font-weight: normal;
 }
 
@@ -70,8 +70,8 @@
   &.primary-nav__menu-link--has-children {
     padding-inline-end: var(--sp3); /* Ensure text does not overlap icon. */
 
-    &:before,
-    &:after {
+    &::before,
+    &::after {
       position: absolute;
       inset-inline-end: 9px;
       inset-block-start: calc(var(--sp0-5) + 17px); /* Visually align button with menu link text. */
@@ -79,15 +79,15 @@
       height: 0;
       content: "";
       /* Intentionally not using CSS logical properties. */
-      border-top: solid 3px var(--color--blue-50);
+      border-top: solid 3px var(--color--primary-50);
     }
 
-    &:after {
+    &::after {
       transition: opacity 0.2s;
       transform: rotate(90deg);
     }
 
-    &[aria-expanded="true"]:after {
+    &[aria-expanded="true"]::after {
       opacity: 0;
     }
   }
@@ -101,7 +101,7 @@
   padding-inline-start: 0;
   padding-inline-end: 0;
 
-  &:after {
+  &::after {
     position: absolute;
     inset-block-end: 0;
     inset-inline-start: 0;
@@ -112,10 +112,10 @@
     transform: scaleX(0);
     transform-origin: left;
     /* Intentionally not using CSS logical properties. */
-    border-top: solid 5px var(--color--blue-50);
+    border-top: solid 5px var(--color--primary-50);
   }
 
-  &:after {
+  &::after {
     @nest .primary-nav__menu-link:hover & {
       transform: scaleX(1);
     }
@@ -151,15 +151,28 @@
   margin-block: 0;
   margin-inline-start: calc(-1 * var(--sp));
   padding-inline-start: var(--sp2-5);
-  transition: opacity 0.2s, visibility 0.2s, max-height 0.2s;
+  transition:
+    opacity 0.2s,
+    visibility 0.2s,
+    max-height 0.2s;
   opacity: 0;
-  border-inline-start: solid var(--sp) var(--color--blue-50);
+  border-inline-start: solid var(--sp) var(--color--primary-50);
 
   &.is-active-menu-parent {
     visibility: visible;
     max-height: none;
     margin-block-start: var(--sp1-5);
     opacity: 1;
+  }
+
+  & .primary-nav__menu-item--level-2 {
+    &:first-child {
+      padding-block-start: var(--sp0-25);
+    }
+
+    &:last-child {
+      padding-block-end: var(--sp0-25);
+    }
   }
 
   @media (--md) {
@@ -194,7 +207,7 @@ html:not(.js) {
 
 [dir="rtl"] {
   & .primary-nav__menu-link-inner {
-    &:after {
+    &::after {
       transform-origin: right;
     }
   }

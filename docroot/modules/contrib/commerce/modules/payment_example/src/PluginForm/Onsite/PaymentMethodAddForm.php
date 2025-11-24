@@ -2,8 +2,8 @@
 
 namespace Drupal\commerce_payment_example\PluginForm\Onsite;
 
-use Drupal\commerce_payment\PluginForm\PaymentMethodAddForm as BasePaymentMethodAddForm;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\commerce_payment\PluginForm\PaymentMethodAddForm as BasePaymentMethodAddForm;
 
 class PaymentMethodAddForm extends BasePaymentMethodAddForm {
 

@@ -13,7 +13,7 @@
 $breakpoints: (
   mobile: 320px,
   tablet: 740px,
-  desktop: 980px,
+  deskinset-block-start: 980px,
   wide: 1300px,
 ) !default;
 
@@ -278,15 +278,15 @@ $media-type: all !default;
 ) {
   body:before {
     background-color: #fcf8e3;
-    border-bottom: 1px solid #fbeed5;
-    border-left: 1px solid #fbeed5;
+    border-block-end: 1px solid #fbeed5;
+    border-inline-start: 1px solid #fbeed5;
     color: #c09853;
     font: small-caption;
     padding: 3px 6px;
     pointer-events: none;
     position: fixed;
-    right: 0;
-    top: 0;
+    inset-inline-end: 0;
+    inset-block-start: 0;
     z-index: 100;
 
     // Loop through the breakpoints that should be shown

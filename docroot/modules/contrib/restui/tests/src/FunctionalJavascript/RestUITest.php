@@ -15,17 +15,17 @@ class RestUITest extends WebDriverTestBase {
   /**
    * {@inheritdoc}
    */
-  protected $defaultTheme = 'classy';
+  protected $defaultTheme = 'stark';
 
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['node', 'restui'];
+  protected static $modules = ['node', 'restui'];
 
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Create a user with permissions to manage.
@@ -42,7 +42,7 @@ class RestUITest extends WebDriverTestBase {
   /**
    * Tests enabling a resource and accessing it.
    */
-  public function testConsumers() {
+  public function testConsumers(): void {
     // Check that user can access the administration interface.
     $this->drupalGet('admin/config/services/rest');
     $this->assertSession()->elementExists('css', 'div.rest-ui-list-section');

@@ -12,7 +12,7 @@ trait DataAdaptorValidatorTrait {
   /**
    * {@inheritdoc}
    */
-  public function conformsToInternalShape($data, Context $context = NULL) {
+  public function conformsToInternalShape($data, ?Context $context = NULL) {
     return $this->getInternalValidator()->isValid($data);
   }
 

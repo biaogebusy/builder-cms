@@ -20,7 +20,7 @@ class TwitterApiException extends \Exception {
    *
    * @see https://dev.twitter.com/overview/api/response-codes
    */
-  public function __construct(array $errors, $code = 0, \Exception $previous = NULL) {
+  public function __construct(array $errors, $code = 0, ?\Exception $previous = NULL) {
     $errors = array_map(
       function (array $error) {
         return sprintf('[%d] %s', $error['code'], $error['message']);

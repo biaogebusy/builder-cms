@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.data.mda.lefttraffic.query request
  *
  * @author auto create
- * @since 1.0, 2023-08-25 21:21:42
+ * @since 1.0, 2025-08-13 14:32:39
  */
 class AlipayDataMdaLefttrafficQueryRequest
 {

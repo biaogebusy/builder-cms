@@ -2,9 +2,11 @@
 
 namespace Drupal\datetime_range\Plugin\Field\FieldType;
 
+use Drupal\Core\Field\Attribute\FieldType;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\DataDefinition;
 use Drupal\datetime\DateTimeComputed;
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItem;
@@ -12,16 +14,20 @@ use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
 
 /**
  * Plugin implementation of the 'daterange' field type.
- *
- * @FieldType(
- *   id = "daterange",
- *   label = @Translation("Date range"),
- *   description = @Translation("Create and store date ranges."),
- *   default_widget = "daterange_default",
- *   default_formatter = "daterange_default",
- *   list_class = "\Drupal\datetime_range\Plugin\Field\FieldType\DateRangeFieldItemList"
- * )
  */
+#[FieldType(
+  id: "daterange",
+  label: new TranslatableMarkup("Date range"),
+  description: [
+    new TranslatableMarkup("Ideal for storing durations that consist of start and end dates (and times)"),
+    new TranslatableMarkup("Choose between setting both date and time, or date only, for each duration"),
+    new TranslatableMarkup("The system automatically validates that the end date (and time) is later than the start, and both fields are completed"),
+  ],
+  category: "date_time",
+  default_widget: "daterange_default",
+  default_formatter: "daterange_default",
+  list_class: DateRangeFieldItemList::class,
+)]
 class DateRangeItem extends DateTimeItem {
 
   /**
@@ -94,7 +100,7 @@ class DateRangeItem extends DateTimeItem {
 
     // Just pick a date in the past year. No guidance is provided by this Field
     // type.
-    $start = REQUEST_TIME - mt_rand(0, 86400 * 365) - 86400;
+    $start = \Drupal::time()->getRequestTime() - mt_rand(0, 86400 * 365) - 86400;
     $end = $start + 86400;
     if ($type == static::DATETIME_TYPE_DATETIME) {
       $values['value'] = gmdate(DateTimeItemInterface::DATETIME_STORAGE_FORMAT, $start);

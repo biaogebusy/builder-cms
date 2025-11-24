@@ -3,7 +3,9 @@
 namespace Drupal\devel\Element;
 
 use Drupal\Component\Utility\Html;
-use Drupal\Core\Render\Element\RenderElement;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Render\Element\RenderElementBase;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a render element for filterable table data.
@@ -24,13 +26,28 @@ use Drupal\Core\Render\Element\RenderElement;
  *
  * @RenderElement("devel_table_filter")
  */
-class ClientSideFilterTable extends RenderElement {
+class ClientSideFilterTable extends RenderElementBase implements ContainerFactoryPluginInterface {
+
+  // phpcs:ignore Generic.CodeAnalysis.UselessOverridingMethod.Found
+  final public function __construct(array $configuration, string $plugin_id, string|array $plugin_definition) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  }
 
   /**
    * {@inheritdoc}
    */
-  public function getInfo() {
-    $class = get_class($this);
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): static {
+    $instance = new static($configuration, $plugin_id, $plugin_definition);
+    $instance->stringTranslation = $container->get('string_translation');
+
+    return $instance;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getInfo(): array {
+    $class = static::class;
     return [
       '#filter_label' => $this->t('Search'),
       '#filter_placeholder' => $this->t('Search'),
@@ -56,7 +73,7 @@ class ClientSideFilterTable extends RenderElement {
    * @return array
    *   The $element with prepared render array ready for rendering.
    */
-  public static function preRenderTable(array $element) {
+  public static function preRenderTable(array $element): array {
     $build['#attached']['library'][] = 'devel/devel-table-filter';
     $identifier = Html::getUniqueId('js-devel-table-filter');
 
@@ -75,7 +92,7 @@ class ClientSideFilterTable extends RenderElement {
       '#placeholder' => $element['#filter_placeholder'],
       '#attributes' => [
         'class' => ['table-filter-text'],
-        'data-table' => ".$identifier",
+        'data-table' => '.' . $identifier,
         'autocomplete' => 'off',
         'title' => $element['#filter_description'],
       ],
@@ -83,9 +100,15 @@ class ClientSideFilterTable extends RenderElement {
 
     foreach ($element['#rows'] as &$row) {
       foreach ($row as &$cell) {
-        if (isset($cell['data']) && !empty($cell['filter'])) {
-          $cell['class'][] = 'table-filter-text-source';
+        if (!isset($cell['data'])) {
+          continue;
         }
+
+        if (empty($cell['filter'])) {
+          continue;
+        }
+
+        $cell['class'][] = 'table-filter-text-source';
       }
     }
 

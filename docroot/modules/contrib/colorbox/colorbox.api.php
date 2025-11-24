@@ -25,7 +25,7 @@
  */
 function hook_colorbox_settings_alter(&$settings, &$style) {
   // @codingStandardsIgnoreEnd
-  // Disable automatic downscaling of images to maxWidth/maxHeight size.
+  // Disable automatic down scaling of images to maxWidth/maxHeight size.
   $settings['scalePhotos'] = FALSE;
 
   // Use custom style plugin specifically for node/123.

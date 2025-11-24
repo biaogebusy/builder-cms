@@ -27,16 +27,6 @@ class VocabularyRouteProvider extends AdminHtmlRouteProvider {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  protected function getCollectionRoute(EntityTypeInterface $entity_type) {
-    if ($route = parent::getCollectionRoute($entity_type)) {
-      $route->setRequirement('_permission', 'access taxonomy overview+administer taxonomy');
-      return $route;
-    }
-  }
-
-  /**
    * Gets the reset page route.
    *
    * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
@@ -49,7 +39,7 @@ class VocabularyRouteProvider extends AdminHtmlRouteProvider {
     $route = new Route('/admin/structure/taxonomy/manage/{taxonomy_vocabulary}/reset');
     $route->setDefault('_entity_form', 'taxonomy_vocabulary.reset');
     $route->setDefault('_title', 'Reset');
-    $route->setRequirement('_permission', $entity_type->getAdminPermission());
+    $route->setRequirement('_entity_access', 'taxonomy_vocabulary.reset all weights');
     $route->setOption('_admin_route', TRUE);
     $route->setOption('parameters', [
       'taxonomy_vocabulary' => [

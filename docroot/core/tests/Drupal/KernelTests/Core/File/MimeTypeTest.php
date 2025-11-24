@@ -1,6 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\File;
+
+// cspell:ignore garply tarz
 
 /**
  * Tests filename mimetype detection.
@@ -10,16 +14,14 @@ namespace Drupal\KernelTests\Core\File;
 class MimeTypeTest extends FileTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['file_test'];
 
   /**
    * Tests mapping of mimetypes from filenames.
    */
-  public function testFileMimeTypeDetection() {
+  public function testFileMimeTypeDetection(): void {
     $prefixes = ['public://', 'private://', 'temporary://', 'dummy-remote://'];
 
     $test_case = [
@@ -30,13 +32,20 @@ class MimeTypeTest extends FileTestBase {
       'test.jar.jpg' => 'image/jpeg',
       'test.jpg.jar' => 'application/java-archive',
       'test.pcf.Z' => 'application/x-font',
-      'pcf.z' => 'application/octet-stream',
+      'test.garply.waldo' => 'application/x-garply-waldo',
+      'pcf.z' => 'application/x-compress',
       'jar' => 'application/octet-stream',
+      'garply.waldo' => 'application/octet-stream',
       'some.junk' => 'application/octet-stream',
-      'foo.file_test_1' => 'madeup/file_test_1',
-      'foo.file_test_2' => 'madeup/file_test_2',
-      'foo.doc' => 'madeup/doc',
+      'foo.file_test_1' => 'made_up/file_test_1',
+      'foo.file_test_2' => 'made_up/file_test_2',
+      'foo.doc' => 'made_up/doc',
       'test.ogg' => 'audio/ogg',
+      'foobar.z' => 'application/x-compress',
+      'foobar.tar' => 'application/x-tar',
+      'foobar.tar.z' => 'application/x-tarz',
+      'foobar.0.zip' => 'application/zip',
+      'foobar..zip' => 'application/zip',
     ];
 
     $guesser = $this->container->get('file.mime_type.guesser');
@@ -67,18 +76,23 @@ class MimeTypeTest extends FileTestBase {
 
     $test_case = [
       'test.jar' => 'application/java-archive',
-      'test.jpeg' => 'application/octet-stream',
+      'test.jpeg' => NULL,
       'test.jpg' => 'image/jpeg',
       'test.jar.jpg' => 'image/jpeg',
       'test.jpg.jar' => 'application/java-archive',
-      'test.pcf.z' => 'application/octet-stream',
-      'pcf.z' => 'application/octet-stream',
-      'jar' => 'application/octet-stream',
-      'some.junk' => 'application/octet-stream',
-      'foo.file_test_1' => 'application/octet-stream',
-      'foo.file_test_2' => 'application/octet-stream',
-      'foo.doc' => 'application/octet-stream',
-      'test.ogg' => 'application/octet-stream',
+      'test.pcf.z' => NULL,
+      'test.garply.waldo' => NULL,
+      'pcf.z' => NULL,
+      'jar' => NULL,
+      'garply.waldo' => NULL,
+      'some.junk' => NULL,
+      'foo.file_test_1' => NULL,
+      'foo.file_test_2' => NULL,
+      'foo.doc' => NULL,
+      'test.ogg' => NULL,
+      'foobar.z' => NULL,
+      'foobar.tar' => NULL,
+      'foobar.tar.z' => NULL,
     ];
     $extension_guesser = $this->container->get('file.mime_type.guesser.extension');
     $extension_guesser->setMapping($mapping);
@@ -87,21 +101,6 @@ class MimeTypeTest extends FileTestBase {
       $output = $extension_guesser->guessMimeType($input);
       $this->assertSame($expected, $output);
     }
-  }
-
-  /**
-   * Test deprecations.
-   *
-   * @group legacy
-   */
-  public function testFileMimeTypeDetectionDeprecation() {
-    $this->expectDeprecation('The "Symfony\Component\HttpFoundation\File\MimeType\MimeTypeGuesser" class is deprecated since Symfony 4.3, use "Symfony\Component\Mime\MimeTypes" instead.');
-    $this->expectDeprecation('The "Symfony\Component\HttpFoundation\File\MimeType\FileBinaryMimeTypeGuesser" class is deprecated since Symfony 4.3, use "Symfony\Component\Mime\FileBinaryMimeTypeGuesser" instead.');
-    $this->expectDeprecation('The "Symfony\Component\HttpFoundation\File\MimeType\FileinfoMimeTypeGuesser" class is deprecated since Symfony 4.3, use "Symfony\Component\Mime\FileinfoMimeTypeGuesser" instead.');
-    $this->expectDeprecation('Drupal\Core\File\MimeType\MimeTypeGuesser::guess() is deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. Use ::guessMimeType() instead. See https://www.drupal.org/node/3133341');
-    $guesser = $this->container->get('file.mime_type.guesser');
-    $output = $guesser->guess('public://test.jar');
-    $this->assertSame('application/java-archive', $output);
   }
 
 }

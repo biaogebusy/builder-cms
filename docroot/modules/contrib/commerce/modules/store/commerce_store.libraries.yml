@@ -1,5 +1,0 @@
-form:
-  version: VERSION
-  css:
-    theme:
-      css/store.form.css: {}

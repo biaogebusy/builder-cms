@@ -2,10 +2,10 @@
 
 namespace Drupal\config_filter_split_test\Plugin\ConfigFilter;
 
-use Drupal\config_filter\Plugin\ConfigFilterBase;
 use Drupal\Core\Config\DatabaseStorage;
 use Drupal\Core\Config\StorageInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\config_filter\Plugin\ConfigFilterBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**

@@ -44,9 +44,9 @@ final class SmsFrameworkPushedDeliveryReportTest extends SmsFrameworkKernelBase 
     $gateway = $this->createMemoryGateway();
     $name = 'sms.delivery_report.receive.' . $gateway->id();
     $route = $this->routeProvider->getRouteByName($name);
-    $this->assertEquals(
+    static::assertEquals(
       $gateway->getPushReportPath(),
-      $route->getPath()
+      $route->getPath(),
     );
   }
 

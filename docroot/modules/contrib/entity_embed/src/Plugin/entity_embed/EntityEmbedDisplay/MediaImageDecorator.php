@@ -51,7 +51,7 @@ class MediaImageDecorator implements EntityEmbedDisplayInterface {
   /**
    * {@inheritdoc}
    */
-  public function access(AccountInterface $account = NULL) {
+  public function access(?AccountInterface $account = NULL) {
     return $this->decorated->access($account);
   }
 

@@ -55,8 +55,8 @@ class RenderedEntity extends FieldWidgetDisplayBase implements ContainerFactoryP
         '@title' => $entity->label(),
       ];
       $restricted_access_label = $entity->access('view label')
-       ?  new FormattableMarkup('@label @id (@title)', $parameters)
-       :  new FormattableMarkup('@label @id', $parameters);
+       ? new FormattableMarkup('@label @id (@title)', $parameters)
+       : new FormattableMarkup('@label @id', $parameters);
       return ['#markup' => $restricted_access_label];
     }
 

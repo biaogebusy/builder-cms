@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.iservice.cognitive.ocr.vehicleplate.query request
  *
  * @author auto create
- * @since 1.0, 2023-08-24 21:57:27
+ * @since 1.0, 2025-08-13 15:42:42
  */
 class AlipayIserviceCognitiveOcrVehicleplateQueryRequest
 {

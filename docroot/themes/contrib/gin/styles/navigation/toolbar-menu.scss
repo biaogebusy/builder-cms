@@ -193,8 +193,8 @@
     inline-size: var(--space-xs);
     block-size: var(--space-xs);
     position: absolute;
-    left: -11px;
-    top: 10px;
+    inset-inline-start: -11px;
+    inset-block-start: 10px;
     border-radius: 50%;
     background-color: var(--color-blue-600);
     z-index: 1;
@@ -206,7 +206,7 @@
   }
 }
 
-/* Left grey border for submenu items. */
+/* Left gray border for submenu items. */
 .toolbar-menu__item--level-2 > .toolbar-link,
 .toolbar-menu__item--level-3 > .toolbar-link,
 .toolbar-menu__item--level-2.toolbar-menu__item--expanded > .toolbar-menu {
@@ -215,14 +215,14 @@
     block-size: 100%;
     inline-size: 1px;
     position: absolute;
-    left: -8px;
-    top: 0;
+    inset-inline-start: calc(var(--gin-spacing-xs) * -1);
+    inset-block-start: 0;
     background-color: var(--color-gray-300);
   }
 }
 
 .toolbar-menu__item--level-2.toolbar-menu__item--expanded > .toolbar-menu::before {
-  left: 0;
+  inset-inline-start: 0;
 }
 
 .toolbar-menu__item--level-2 {
@@ -288,8 +288,8 @@ html:not(.admin-toolbar-expanded) {
   /* Cloned flyout. */
   & .cloned-flyout {
     position: absolute;
-    top: 0;
-    left: calc(100% + 8px);
+    inset-block-start: 0;
+    inset-inline-start: calc(100% + var(--gin-spacing-xs));
     width: 248px;
     background-color: var(--color-gray-050);
     border-radius: var(--space-xs);

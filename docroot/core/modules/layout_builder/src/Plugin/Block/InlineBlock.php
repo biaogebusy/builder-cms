@@ -115,6 +115,7 @@ class InlineBlock extends BlockBase implements ContainerFactoryPluginInterface, 
   public function defaultConfiguration() {
     return [
       'view_mode' => 'full',
+      'block_id' => NULL,
       'block_revision_id' => NULL,
       'block_serialized' => NULL,
     ];
@@ -149,7 +150,7 @@ class InlineBlock extends BlockBase implements ContainerFactoryPluginInterface, 
   }
 
   /**
-   * Process callback to insert a Custom Block form.
+   * Process callback to insert a Content Block form.
    *
    * @param array $element
    *   The containing element.
@@ -157,7 +158,7 @@ class InlineBlock extends BlockBase implements ContainerFactoryPluginInterface, 
    *   The form state.
    *
    * @return array
-   *   The containing element, with the Custom Block form inserted.
+   *   The containing element, with the Content Block form inserted.
    */
   public static function processBlockForm(array $element, FormStateInterface $form_state) {
     /** @var \Drupal\block_content\BlockContentInterface $block */
@@ -283,12 +284,13 @@ class InlineBlock extends BlockBase implements ContainerFactoryPluginInterface, 
     }
 
     if ($block) {
-      // Since the custom block is only set if it was unserialized, the flag
+      // Since the content block is only set if it was unserialized, the flag
       // will only effect blocks which were modified or serialized originally.
       if ($new_revision) {
         $block->setNewRevision();
       }
       $block->save();
+      $this->configuration['block_id'] = $block->id();
       $this->configuration['block_revision_id'] = $block->getRevisionId();
       $this->configuration['block_serialized'] = NULL;
     }

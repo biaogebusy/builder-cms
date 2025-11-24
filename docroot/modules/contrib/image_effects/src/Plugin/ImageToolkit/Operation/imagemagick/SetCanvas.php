@@ -1,21 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageToolkit\Operation\imagemagick;
 
+use Drupal\Core\ImageToolkit\Attribute\ImageToolkitOperation;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\image_effects\Plugin\ImageToolkit\Operation\SetCanvasTrait;
 use Drupal\imagemagick\Plugin\ImageToolkit\Operation\imagemagick\ImagemagickImageToolkitOperationBase;
 
 /**
  * Defines ImageMagick set canvas operation.
- *
- * @ImageToolkitOperation(
- *   id = "image_effects_imagemagick_set_canvas",
- *   toolkit = "imagemagick",
- *   operation = "set_canvas",
- *   label = @Translation("Set canvas"),
- *   description = @Translation("Lay the image over a colored canvas.")
- * )
  */
+#[ImageToolkitOperation(
+  id: 'image_effects_imagemagick_set_canvas',
+  toolkit: 'imagemagick',
+  operation: 'set_canvas',
+  label: new TranslatableMarkup('Set canvas'),
+  description: new TranslatableMarkup('Lay the image over a colored canvas.'),
+)]
 class SetCanvas extends ImagemagickImageToolkitOperationBase {
 
   use ImagemagickOperationTrait;
@@ -35,7 +38,7 @@ class SetCanvas extends ImagemagickImageToolkitOperationBase {
 
     // Determine background.
     if ($arguments['canvas_color']) {
-      $bg = '-background ' . $this->escapeArgument($arguments['canvas_color']);
+      $bg = ['-background', $arguments['canvas_color']];
     }
     else {
       $format = $toolkit_arguments->getDestinationFormat() ?: $toolkit_arguments->getSourceFormat();
@@ -43,15 +46,18 @@ class SetCanvas extends ImagemagickImageToolkitOperationBase {
       if ($mime_type === 'image/jpeg') {
         // JPEG does not allow transparency. Set to white.
         // @todo allow to be configurable.
-        $bg = '-background ' . $this->escapeArgument('#FFFFFF');
+        $bg = ['-background', '#FFFFFF'];
       }
       else {
-        $bg = '-background transparent';
+        $bg = ['-background', 'transparent'];
       }
     }
 
-    // Add argument.
-    $this->addArgument("-gravity none {$bg} -compose src-over -extent {$geometry}");
+    // Add arguments.
+    $args = ["-gravity", "none"];
+    $args = array_merge($args, $bg);
+    $args = array_merge($args, ["-compose", "src-over", "-extent", $geometry]);
+    $this->addArguments($args);
 
     // Set dimensions.
     $this->getToolkit()

@@ -7,6 +7,8 @@ use Drupal\commerce\PurchasableEntityInterface;
 
 /**
  * Defines the interface for price resolvers.
+ *
+ * Interface for services tagged as 'commerce_price.price_resolver'.
  */
 interface PriceResolverInterface {
 

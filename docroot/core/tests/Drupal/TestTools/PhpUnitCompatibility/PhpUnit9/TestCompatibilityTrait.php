@@ -1,20 +1,32 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\TestTools\PhpUnitCompatibility\PhpUnit9;
 
-use Prophecy\PhpUnit\ProphecyTrait;
-
-// @todo Replace with a proper dependency when we stop supporting PHPUnit 8.
-if (!trait_exists(ProphecyTrait::class)) {
-  print "Drupal requires Prophecy PhpUnit when using PHPUnit 9 or greater. Please use 'composer require --dev phpspec/prophecy-phpunit:^2' to ensure that it is present.\n";
-  exit(1);
-}
+use PHPUnit\Util\Test;
 
 /**
  * Drupal's forward compatibility layer with multiple versions of PHPUnit.
  */
 trait TestCompatibilityTrait {
 
-  use ProphecyTrait;
+  /**
+   * Get test name.
+   */
+  public function name(): string {
+    return $this->getName();
+  }
+
+  /**
+   * Gets @covers defined on the test class.
+   *
+   * @return string[]
+   *   An array of classes listed with the @covers annotation.
+   */
+  public function getTestClassCovers(): array {
+    $annotations = Test::parseTestMethodAnnotations(static::class, $this->name());
+    return $annotations['class']['covers'] ?? [];
+  }
 
 }

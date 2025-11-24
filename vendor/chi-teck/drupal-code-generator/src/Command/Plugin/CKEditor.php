@@ -1,40 +1,54 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace DrupalCodeGenerator\Command\Plugin;
 
 use DrupalCodeGenerator\Application;
+use DrupalCodeGenerator\Asset\Assets;
+use DrupalCodeGenerator\Attribute\Generator;
+use DrupalCodeGenerator\Command\BaseGenerator;
+use DrupalCodeGenerator\GeneratorType;
 use DrupalCodeGenerator\Utils;
 
-/**
- * Implements plugin:ckeditor command.
- */
-final class CKEditor extends PluginGenerator {
-
-  protected string $name = 'plugin:ckeditor';
-  protected string $description = 'Generates CKEditor plugin';
-  protected string $alias = 'ckeditor';
-  protected string $label = 'CKEditor';
-  protected string $templatePath = Application::TEMPLATE_PATH . '/plugin/ckeditor';
+#[Generator(
+  name: 'plugin:ckeditor',
+  description: 'Generates CKEditor plugin',
+  aliases: ['ckeditor', 'ckeditor-plugin'],
+  templatePath: Application::TEMPLATE_PATH . '/Plugin/_ckeditor',
+  type: GeneratorType::MODULE_COMPONENT,
+  label: 'CKEditor',
+)]
+final class CKEditor extends BaseGenerator {
 
   /**
    * {@inheritdoc}
    */
-  protected function generate(array &$vars): void {
-    $this->collectDefault($vars);
+  protected function generate(array &$vars, Assets $assets): void {
+    $ir = $this->createInterviewer($vars);
+    $vars['machine_name'] = $ir->askMachineName();
+    $vars['plugin_label'] = $ir->askPluginLabel();
+    $vars['plugin_id'] = $ir->askPluginId();
 
-    $unprefixed_plugin_id = \preg_replace('/^' . $vars['machine_name'] . '_/', '', $vars['plugin_id']);
+    $vars['unprefixed_plugin_id'] = Utils::removePrefix($vars['plugin_id'], $vars['machine_name'] . '_');
+    $vars['class'] = Utils::camelize($vars['unprefixed_plugin_id']);
 
     // Convert plugin ID to hyphen case.
-    $vars['short_plugin_id'] = \str_replace('_', '-', $unprefixed_plugin_id);
-    $vars['command_name'] = Utils::camelize($unprefixed_plugin_id, FALSE);
+    $vars['fe_plugin_id'] = Utils::camelize($vars['unprefixed_plugin_id'], FALSE);
 
-    $this->addFile('src/Plugin/CKEditorPlugin/{class}.php', 'ckeditor');
-    $this->addFile('js/plugins/{short_plugin_id}/plugin.js', 'plugin');
-    $this->addFile('js/plugins/{short_plugin_id}/dialogs/{short_plugin_id}.js', 'dialog');
-
-    $this->addFile('js/plugins/{short_plugin_id}/icons/{short_plugin_id}.png')
-      ->content(\file_get_contents(Application::TEMPLATE_PATH . '/plugin/ckeditor/icon.png'))
+    $assets->addFile('webpack.config.js', 'webpack.config.js');
+    $assets->addFile('package.json', 'package.json.twig');
+    $assets->addFile('.gitignore', 'gitignore');
+    $assets->addFile('{machine_name}.libraries.yml', 'model.libraries.yml.twig')
       ->appendIfExists();
+    $assets->addFile('{machine_name}.ckeditor5.yml', 'model.ckeditor5.yml.twig')
+      ->appendIfExists();
+
+    $assets->addFile('css/{unprefixed_plugin_id|u2h}.admin.css', 'css/model.admin.css.twig');
+    $assets->addFile('icons/{unprefixed_plugin_id|u2h}.svg', 'icons/example.svg');
+    $assets->addFile('js/ckeditor5_plugins/{fe_plugin_id}/src/{class}.js', 'js/ckeditor5_plugins/example/src/Example.js.twig');
+    $assets->addFile('js/ckeditor5_plugins/{fe_plugin_id}/src/index.js', 'js/ckeditor5_plugins/example/src/index.js.twig');
+    $assets->addDirectory('js/build');
   }
 
 }

@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\webform\Functional\Element;
 
+use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\webform\Entity\Webform;
 
 /**
@@ -125,7 +126,12 @@ webform_element_composite_advanced:
     $assert_session->responseContains('<fieldset data-drupal-selector="edit-radios-wrapper-fieldset-hidden-title" id="edit-radios-wrapper-fieldset-hidden-title--wrapper" class="radios--wrapper fieldgroup form-composite webform-composite-hidden-title required js-webform-type-radios webform-type-radios js-form-item form-item js-form-wrapper form-wrapper">');
 
     // Check form element wrapper.
-    $assert_session->responseContains('<div class="js-form-item form-item js-form-type-radios form-item-radios-wrapper-form-element js-form-item-radios-wrapper-form-element">');
+    DeprecationHelper::backwardsCompatibleCall(
+      currentVersion: \Drupal::VERSION,
+      deprecatedVersion: '10.2',
+      currentCallable: fn() => $assert_session->responseContains('<div class="js-form-item form-item form-type-radio js-form-type-radio form-item-radios-wrapper-form-element js-form-item-radios-wrapper-form-element">'),
+      deprecatedCallable: fn() => $assert_session->responseContains('<div class="js-form-item form-item js-form-type-radios form-item-radios-wrapper-form-element js-form-item-radios-wrapper-form-element">'),
+    );
 
     // Check container wrapper.
     $assert_session->responseContains('<div data-drupal-selector="edit-radios-wrapper-container" id="edit-radios-wrapper-container--wrapper" class="radios--wrapper fieldgroup form-composite js-form-wrapper form-wrapper">');
@@ -136,7 +142,12 @@ webform_element_composite_advanced:
 
     // Check wrapper with #states.
     $assert_session->responseContains('<fieldset data-drupal-selector="edit-states-fieldset" class="js-webform-states-hidden radios--wrapper fieldgroup form-composite webform-composite-visible-title js-webform-type-radios webform-type-radios js-form-item form-item js-form-wrapper form-wrapper" id="edit-states-fieldset--wrapper" data-drupal-states="{&quot;visible&quot;:{&quot;.webform-submission-test-element-composite-wrapper-add-form :input[name=\u0022states_checkbox\u0022]&quot;:{&quot;checked&quot;:true}}}">');
-    $assert_session->responseContains('<div class="js-webform-states-hidden js-form-item form-item js-form-type-radios form-item-states-form-item js-form-item-states-form-item" data-drupal-states="{&quot;visible&quot;:{&quot;.webform-submission-test-element-composite-wrapper-add-form :input[name=\u0022states_checkbox\u0022]&quot;:{&quot;checked&quot;:true}}}">');
+    DeprecationHelper::backwardsCompatibleCall(
+      currentVersion: \Drupal::VERSION,
+      deprecatedVersion: '10.2',
+      currentCallable: fn() => $assert_session->responseContains('<div class="js-webform-states-hidden js-form-item form-item form-type-radios js-form-type-radios form-item-states-form-item js-form-item-states-form-item" data-drupal-states="{&quot;visible&quot;:{&quot;.webform-submission-test-element-composite-wrapper-add-form :input[name=\u0022states_checkbox\u0022]&quot;:{&quot;checked&quot;:true}}}">'),
+      deprecatedCallable: fn() => $assert_session->responseContains('<div class="js-webform-states-hidden js-form-item form-item js-form-type-radios form-item-states-form-item js-form-item-states-form-item" data-drupal-states="{&quot;visible&quot;:{&quot;.webform-submission-test-element-composite-wrapper-add-form :input[name=\u0022states_checkbox\u0022]&quot;:{&quot;checked&quot;:true}}}">'),
+    );
     $assert_session->responseContains('<div data-drupal-selector="edit-states-container" class="js-webform-states-hidden radios--wrapper fieldgroup form-composite js-form-wrapper form-wrapper" id="edit-states-container--wrapper" data-drupal-states="{&quot;visible&quot;:{&quot;.webform-submission-test-element-composite-wrapper-add-form :input[name=\u0022states_checkbox\u0022]&quot;:{&quot;checked&quot;:true}}}">');
 
     // Below tests are only failing on Drupal.org and pass locally.

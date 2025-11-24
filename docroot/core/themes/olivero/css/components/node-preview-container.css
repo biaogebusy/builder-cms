@@ -10,35 +10,22 @@
  * Node preview container styling.
  */
 
-[dir="ltr"] .node-preview-container {
-  padding-left: 0.5625rem;
-}
-
-[dir="rtl"] .node-preview-container {
-  padding-right: 0.5625rem;
-}
-
-[dir="ltr"] .node-preview-container {
-  padding-right: 0.5625rem;
-}
-
-[dir="rtl"] .node-preview-container {
-  padding-left: 0.5625rem;
-}
-
 .node-preview-container {
-  padding-top: 0;
-  padding-bottom: 0;
-  background: #fff;
+  padding-block: 0;
+  padding-inline-start: calc(var(--sp0-5) + var(--drupal-displace-offset-left, 0rem));
+  padding-inline-end: calc(var(--sp0-5) + var(--drupal-displace-offset-right, 0rem));
+  background: var(--color--white);
   box-shadow: -36px 1px 36px rgba(0, 0, 0, 0.08); /* LTR */
 }
 
 [dir="rtl"] .node-preview-container {
+  padding-inline-start: calc(var(--sp0-5) + var(--drupal-displace-offset-right, 0rem));
+  padding-inline-end: calc(var(--sp0-5) + var(--drupal-displace-offset-left, 0rem));
   box-shadow: 36px 1px 36px rgba(0, 0, 0, 0.08);
 }
 
-body.toolbar-vertical.toolbar-tray-open .node-preview-container {
-  max-width: calc(100vw - 15.875rem);
+.toolbar-vertical.toolbar-tray-open .node-preview-container {
+  max-width: calc(100vw - var(--toolbar-tray-vertical-width) - var(--scrollbar-width));
 }
 
 .node-preview-form-select {
@@ -47,23 +34,8 @@ body.toolbar-vertical.toolbar-tray-open .node-preview-container {
   align-items: center;
 }
 
-[dir="ltr"] .node-preview-backlink {
-  margin-left: 0;
-}
-
-[dir="rtl"] .node-preview-backlink {
-  margin-right: 0;
-}
-
-[dir="ltr"] .node-preview-backlink {
-  margin-right: auto;
-}
-
-[dir="rtl"] .node-preview-backlink {
-  margin-left: auto;
-}
-
 .node-preview-backlink {
-  margin-top: 0.5625rem;
-  margin-bottom: 0.5625rem;
+  margin-block: var(--sp0-5);
+  margin-inline-start: 0;
+  margin-inline-end: auto;
 }

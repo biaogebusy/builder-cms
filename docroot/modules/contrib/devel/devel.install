@@ -5,6 +5,23 @@
  * Install, update and uninstall functions for the devel module.
  */
 
+use Drupal\devel\Plugin\Devel\Dumper\VarDumper;
+
+/**
+ * Implements hook_install().
+ */
+function devel_install() {
+  $rich_dumper = NULL;
+  if (VarDumper::checkRequirements()) {
+    $rich_dumper = 'var_dumper';
+  }
+  if (isset($rich_dumper)) {
+    \Drupal::configFactory()->getEditable('devel.settings')
+      ->set('devel_dumper', $rich_dumper)
+      ->save(TRUE);
+  }
+}
+
 /**
  * Implements hook_requirements().
  */
@@ -25,25 +42,8 @@ function devel_requirements($phase) {
 }
 
 /**
- * Set the default devel dumper plugin.
+ * Implements hook_update_last_removed().
  */
-function devel_update_8001() {
-  $kint_enabled = \Drupal::moduleHandler()->moduleExists('kint');
-
-  $default_dumper = $kint_enabled ? 'kint' : 'default';
-
-  // Set the default dumper plugin to kint if kint module is available.
-  \Drupal::configFactory()->getEditable('devel.settings')
-    ->set('devel_dumper', $default_dumper)
-    ->save(TRUE);
-}
-
-/**
- * Add enforced dependencies to system.menu.devel.
- */
-function devel_update_8002() {
-  $config = \Drupal::configFactory()->getEditable('system.menu.devel');
-  $dependencies = $config->get('dependencies');
-  $dependencies['enforced']['module'][] = 'devel';
-  $config->set('dependencies', $dependencies)->save(TRUE);
+function devel_update_last_removed(): int {
+  return 8002;
 }

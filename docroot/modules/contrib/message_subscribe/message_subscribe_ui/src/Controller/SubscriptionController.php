@@ -7,12 +7,14 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\Core\Utility\Error;
 use Drupal\flag\FlagInterface;
 use Drupal\flag\FlagServiceInterface;
 use Drupal\message_subscribe\Exception\MessageSubscribeException;
 use Drupal\message_subscribe\SubscribersInterface;
 use Drupal\user\UserInterface;
 use Drupal\views\Views;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -49,6 +51,13 @@ final class SubscriptionController extends ControllerBase {
   protected $subscribers;
 
   /**
+   * The logger channel service.
+   *
+   * @var \Psr\Log\LoggerInterface
+   */
+  protected $logger;
+
+  /**
    * Construct the subscriptions controller.
    *
    * @param \Drupal\Core\Session\AccountProxyInterface $current_user
@@ -59,12 +68,15 @@ final class SubscriptionController extends ControllerBase {
    *   The message subscribers service.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The config factory service.
+   * @param \Psr\Log\LoggerInterface $logger
+   *   The logger channel service.
    */
-  public function __construct(AccountProxyInterface $current_user, FlagServiceInterface $flag_service, SubscribersInterface $subscribers, ConfigFactoryInterface $config_factory) {
+  public function __construct(AccountProxyInterface $current_user, FlagServiceInterface $flag_service, SubscribersInterface $subscribers, ConfigFactoryInterface $config_factory, LoggerInterface $logger) {
     $this->currentUser = $current_user;
     $this->flagService = $flag_service;
     $this->subscribers = $subscribers;
     $this->config = $config_factory->get('message_subscribe.settings');
+    $this->logger = $logger;
   }
 
   /**
@@ -75,7 +87,8 @@ final class SubscriptionController extends ControllerBase {
       $container->get('current_user'),
       $container->get('flag'),
       $container->get('message_subscribe.subscribers'),
-      $container->get('config.factory')
+      $container->get('config.factory'),
+      $container->get('logger.channel.message_subscribe')
     );
   }
 
@@ -90,7 +103,7 @@ final class SubscriptionController extends ControllerBase {
    * @return \Drupal\Core\Access\AccessResultInterface
    *   Returns TRUE if access is granted.
    */
-  public function tabAccess(AccountInterface $user, FlagInterface $flag = NULL) {
+  public function tabAccess(AccountInterface $user, ?FlagInterface $flag = NULL) {
     if (!$flag) {
       // We are inside /message-subscribe so get the first flag.
       $flags = $this->subscribers->getFlags();
@@ -142,18 +155,30 @@ final class SubscriptionController extends ControllerBase {
    * @return array
    *   A render array.
    */
-  public function tab(UserInterface $user, FlagInterface $flag = NULL) {
+  public function tab(UserInterface $user, ?FlagInterface $flag = NULL) {
     if (!$flag) {
       // We are inside /message-subscribe so get the first flag.
       $flags = $this->subscribers->getFlags();
       $flag = reset($flags);
     }
+    $result = [];
+    try {
+      $view = $this->getView($user, $flag);
+      $result = $view->preview();
+      $result['#cache']['tags'] = $flag->getCacheTags() + $view->getCacheTags();
+    }
+    catch (MessageSubscribeException $e) {
+      if (version_compare(\Drupal::VERSION, '10.1.0', '<')) {
+        // @phpstan-ignore-next-line
+        watchdog_exception('message_subscribe_ui', $e);
+      }
+      else {
+        Error::logException($this->logger, $e);
+      }
 
-    $view = $this->getView($user, $flag);
-    $result = $view->preview();
+      $result['#markup'] = $this->t('There was an exception displaying the subscriptions for this user. View recently logged messages for more information.');
+    }
 
-    // Add cache tags for this flag and view.
-    $result['#cache']['tags'] = $flag->getCacheTags() + $view->getCacheTags();
     return $result;
   }
 
@@ -201,7 +226,7 @@ final class SubscriptionController extends ControllerBase {
       // Check that the flag is valid.
       $rel_flag = $this->flagService->getFlagById($relationship['flag']);
       if (!$rel_flag || (!$rel_flag->status())) {
-        throw new MessageSubscribeException('Flag "' . $relationships['flag'] . '" is not setup correctly. It is probably disabled or have no bundles configured.');
+        throw new MessageSubscribeException('Flag "' . $relationship['flag'] . '" is not setup correctly. It is probably disabled or have no bundles configured.');
       }
     }
 

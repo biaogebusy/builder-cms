@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate_drupal_ui\Kernel;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\KernelTests\FileSystemModuleDiscoveryDataProviderTrait;
 use Drupal\Tests\migrate_drupal\Kernel\MigrateDrupalTestBase;
 
@@ -18,7 +19,7 @@ class MigrationLabelExistTest extends MigrateDrupalTestBase {
   /**
    * Tests that labels exist for all migrations.
    */
-  public function testLabelExist() {
+  public function testLabelExist(): void {
     // Install all available modules.
     $module_handler = $this->container->get('module_handler');
     $modules = $this->coreModuleListDataProvider();
@@ -33,7 +34,7 @@ class MigrationLabelExistTest extends MigrateDrupalTestBase {
     /** @var \Drupal\migrate\Plugin\Migration $migration */
     foreach ($migrations as $migration) {
       $migration_id = $migration->getPluginId();
-      $this->assertNotEmpty($migration->label(), new FormattableMarkup('Label found for @migration_id.', ['@migration_id' => $migration_id]));
+      $this->assertNotEmpty($migration->label(), "Label found for $migration_id.");
     }
   }
 

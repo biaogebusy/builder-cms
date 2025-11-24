@@ -24,6 +24,7 @@ class PopupConfigTest extends WebDriverTestBase {
    * @var array
    */
   protected static $modules = [
+    'system',
     'user',
     'autologout',
   ];

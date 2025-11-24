@@ -2,11 +2,7 @@
 
 namespace Drupal\entity_print\Form;
 
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Form\ConfigFormBase;
-use Drupal\entity_print\Plugin\EntityPrintPluginManagerInterface;
-use Drupal\entity_print\Plugin\ExportTypeManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Drupal\Core\Form\FormStateInterface;
@@ -38,34 +34,14 @@ class SettingsForm extends ConfigFormBase {
   protected $exportTypeManager;
 
   /**
-   * Constructs a \Drupal\system\ConfigFormBase object.
-   *
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   The factory for configuration objects.
-   * @param \Drupal\entity_print\Plugin\EntityPrintPluginManagerInterface $plugin_manager
-   *   The plugin manager object.
-   * @param \Drupal\entity_print\Plugin\ExportTypeManagerInterface $export_type_manager
-   *   The export type manager interface.
-   * @param \Drupal\Core\Entity\EntityStorageInterface $entity_storage
-   *   The config storage.
-   */
-  public function __construct(ConfigFactoryInterface $config_factory, EntityPrintPluginManagerInterface $plugin_manager, ExportTypeManagerInterface $export_type_manager, EntityStorageInterface $entity_storage) {
-    parent::__construct($config_factory);
-    $this->pluginManager = $plugin_manager;
-    $this->exportTypeManager = $export_type_manager;
-    $this->storage = $entity_storage;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('config.factory'),
-      $container->get('plugin.manager.entity_print.print_engine'),
-      $container->get('plugin.manager.entity_print.export_type'),
-      $container->get('entity_type.manager')->getStorage('print_engine')
-    );
+    $instance = parent::create($container);
+    $instance->pluginManager = $container->get('plugin.manager.entity_print.print_engine');
+    $instance->exportTypeManager = $container->get('plugin.manager.entity_print.export_type');
+    $instance->storage = $container->get('entity_type.manager')->getStorage('print_engine');
+    return $instance;
   }
 
   /**
@@ -87,7 +63,7 @@ class SettingsForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, Request $request = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?Request $request = NULL) {
     $print_engines = [];
     foreach ($this->pluginManager->getDefinitions() as $plugin_id => $definition) {
       /** @var \Drupal\entity_print\Plugin\PrintEngineInterface $class */

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Entity;
 
 use Drupal\Core\Cache\Context\CacheContextsManager;
@@ -7,6 +9,7 @@ use Drupal\Core\DependencyInjection\Container;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\node\NodeInterface;
+use Symfony\Component\HttpFoundation\InputBag;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\Routing\Route;
 use Drupal\Core\Access\AccessibleInterface;
@@ -29,6 +32,8 @@ class EntityAccessCheckTest extends UnitTestCase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    parent::setUp();
+
     $cache_contexts_manager = $this->prophesize(CacheContextsManager::class)->reveal();
     $container = new Container();
     $container->set('cache_contexts_manager', $cache_contexts_manager);
@@ -38,7 +43,7 @@ class EntityAccessCheckTest extends UnitTestCase {
   /**
    * Tests the method for checking access to routes.
    */
-  public function testAccess() {
+  public function testAccess(): void {
     $route = new Route('/foo/{var_name}', [], ['_entity_access' => 'var_name.update'], ['parameters' => ['var_name' => ['type' => 'entity:node']]]);
     /** @var \Drupal\Core\Session\AccountInterface $account */
     $account = $this->prophesize(AccountInterface::class)->reveal();
@@ -50,7 +55,7 @@ class EntityAccessCheckTest extends UnitTestCase {
 
     /** @var \Drupal\Core\Routing\RouteMatchInterface|\Prophecy\Prophecy\ObjectProphecy $route_match */
     $route_match = $this->prophesize(RouteMatchInterface::class);
-    $route_match->getRawParameters()->willReturn(new ParameterBag(['var_name' => 1]));
+    $route_match->getRawParameters()->willReturn(new InputBag(['var_name' => 1]));
     $route_match->getParameters()->willReturn(new ParameterBag(['var_name' => $node]));
     $route_match = $route_match->reveal();
 
@@ -61,7 +66,7 @@ class EntityAccessCheckTest extends UnitTestCase {
   /**
    * @covers ::access
    */
-  public function testAccessWithTypePlaceholder() {
+  public function testAccessWithTypePlaceholder(): void {
     $route = new Route('/foo/{entity_type}/{var_name}', [], ['_entity_access' => 'var_name.update'], ['parameters' => ['var_name' => ['type' => 'entity:{entity_type}']]]);
     /** @var \Drupal\Core\Session\AccountInterface $account */
     $account = $this->prophesize(AccountInterface::class)->reveal();
@@ -81,7 +86,7 @@ class EntityAccessCheckTest extends UnitTestCase {
   /**
    * @covers ::access
    */
-  public function testAccessWithDifferentRouteParameters() {
+  public function testAccessWithDifferentRouteParameters(): void {
     $route = new Route(
       '/foo/{var_name}',
       [],
@@ -118,7 +123,7 @@ class EntityAccessCheckTest extends UnitTestCase {
    */
   private function createRouteMatchForObject(\stdClass $object) {
     $route_match = $this->prophesize(RouteMatchInterface::class);
-    $route_match->getRawParameters()->willReturn(new ParameterBag(['entity_type' => 'node', 'var_name' => 1]));
+    $route_match->getRawParameters()->willReturn(new InputBag(['entity_type' => 'node', 'var_name' => 1]));
     $route_match->getParameters()->willReturn(new ParameterBag(['entity_type' => 'node', 'var_name' => $object]));
     return $route_match->reveal();
   }

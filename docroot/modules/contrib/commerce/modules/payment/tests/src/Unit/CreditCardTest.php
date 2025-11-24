@@ -2,10 +2,10 @@
 
 namespace Drupal\Tests\commerce_payment\Unit;
 
-use Drupal\commerce_payment\CreditCard;
-use Drupal\commerce_payment\CreditCardType;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Tests\UnitTestCase;
+use Drupal\commerce_payment\CreditCard;
+use Drupal\commerce_payment\CreditCardType;
 
 /**
  * @coversDefaultClass \Drupal\commerce_payment\CreditCard
@@ -97,7 +97,7 @@ class CreditCardTest extends UnitTestCase {
    * @return array
    *   A list of testValidateNumber function arguments.
    */
-  public function cardsProvider() {
+  public static function cardsProvider() {
     return [
       // Non-numeric value.
       ['invalid', NULL, FALSE],
@@ -123,7 +123,7 @@ class CreditCardTest extends UnitTestCase {
    * @return array
    *   A list of testValidateExpirationDate function arguments.
    */
-  public function expirationDateProvider() {
+  public static function expirationDateProvider() {
     return [
       // Invalid month.
       [0, 2020, FALSE],
@@ -141,7 +141,7 @@ class CreditCardTest extends UnitTestCase {
    * @return array
    *   A list of testValidateSecurityCode function arguments.
    */
-  public function securityCodeProvider() {
+  public static function securityCodeProvider() {
     return [
       // Invalid lengths.
       [1, 'visa', FALSE],

@@ -44,7 +44,7 @@ final class SmsTestEventSubscriber implements EventSubscriberInterface {
   /**
    * Adds event name to execution order when a message is processed.
    *
-   * @param \Symfony\Component\EventDispatcher\Event $event
+   * @param \Symfony\Contracts\EventDispatcher\Event $event
    *   The event.
    * @param string $eventName
    *   The event name.

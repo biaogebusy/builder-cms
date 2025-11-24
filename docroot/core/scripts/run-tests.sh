@@ -16,18 +16,23 @@ use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Timer;
 use Drupal\Core\Composer\Composer;
 use Drupal\Core\Database\Database;
-use Drupal\Core\File\Exception\FileException;
 use Drupal\Core\Test\EnvironmentCleaner;
 use Drupal\Core\Test\PhpUnitTestRunner;
+use Drupal\Core\Test\SimpletestTestRunResultsStorage;
 use Drupal\Core\Test\RunTests\TestFileParser;
 use Drupal\Core\Test\TestDatabase;
+use Drupal\Core\Test\TestRun;
 use Drupal\Core\Test\TestRunnerKernel;
+use Drupal\Core\Test\TestRunResultsStorageInterface;
 use Drupal\Core\Test\TestDiscovery;
-use Drupal\TestTools\PhpUnitCompatibility\PhpUnit8\ClassWriter;
+use Drupal\BuildTests\Framework\BuildTestBase;
+use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
+use Drupal\KernelTests\KernelTestBase;
+use Drupal\Tests\BrowserTestBase;
+use Drupal\TestTools\PhpUnitCompatibility\ClassWriter;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Runner\Version;
 use Symfony\Component\Console\Output\ConsoleOutput;
-use Symfony\Component\Filesystem\Filesystem as SymfonyFilesystem;
 use Symfony\Component\HttpFoundation\Request;
 
 // Define some colors for display.
@@ -56,13 +61,15 @@ if ($args['help'] || $count == 0) {
 simpletest_script_init();
 
 if (!class_exists(TestCase::class)) {
-  echo "\nrun-tests.sh requires the PHPUnit testing framework. Please use 'composer install' to ensure that it is present.\n\n";
+  echo "\nrun-tests.sh requires the PHPUnit testing framework. Use 'composer install' to ensure that it is present.\n\n";
   exit(SIMPLETEST_SCRIPT_EXIT_FAILURE);
 }
 
 if ($args['execute-test']) {
   simpletest_script_setup_database();
-  simpletest_script_run_one_test($args['test-id'], $args['execute-test']);
+  $test_run_results_storage = simpletest_script_setup_test_run_results_storage();
+  $test_run = TestRun::get($test_run_results_storage, $args['test-id']);
+  simpletest_script_run_one_test($test_run, $args['execute-test']);
   // Sub-process exited already; this is just for clarity.
   exit(SIMPLETEST_SCRIPT_EXIT_SUCCESS);
 }
@@ -127,12 +134,16 @@ if ($args['list-files'] || $args['list-files-json']) {
 
 simpletest_script_setup_database(TRUE);
 
+// Setup the test run results storage environment. Currently, this coincides
+// with the simpletest database schema.
+$test_run_results_storage = simpletest_script_setup_test_run_results_storage(TRUE);
+
 if ($args['clean']) {
   // Clean up left-over tables and directories.
   $cleaner = new EnvironmentCleaner(
     DRUPAL_ROOT,
     Database::getConnection(),
-    TestDatabase::getConnection(),
+    $test_run_results_storage,
     new ConsoleOutput(),
     \Drupal::service('file_system')
   );
@@ -170,7 +181,7 @@ for ($i = 0; $i < $args['repeat']; $i++) {
 }
 
 // Execute tests.
-$status = simpletest_script_execute_batch($tests_to_run);
+$status = simpletest_script_execute_batch($test_run_results_storage, $tests_to_run);
 
 // Stop the timer.
 simpletest_script_reporter_timer_stop();
@@ -182,10 +193,10 @@ simpletest_script_reporter_timer_stop();
 TestDatabase::releaseAllTestLocks();
 
 // Display results before database is cleared.
-simpletest_script_reporter_display_results();
+simpletest_script_reporter_display_results($test_run_results_storage);
 
 if ($args['xml']) {
-  simpletest_script_reporter_write_xml_results();
+  simpletest_script_reporter_write_xml_results($test_run_results_storage);
 }
 
 // Clean up all test results.
@@ -194,11 +205,11 @@ if (!$args['keep-results']) {
     $cleaner = new EnvironmentCleaner(
       DRUPAL_ROOT,
       Database::getConnection(),
-      TestDatabase::getConnection(),
+      $test_run_results_storage,
       new ConsoleOutput(),
       \Drupal::service('file_system')
     );
-    $cleaner->cleanResultsTable();
+    $cleaner->cleanResults();
   }
   catch (Exception $e) {
     echo (string) $e;
@@ -247,7 +258,7 @@ All arguments are long options.
 
   --sqlite    A pathname to use for the SQLite database of the test runner.
               Required unless this script is executed with a working Drupal
-              installation that has Simpletest module installed.
+              installation.
               A relative pathname is interpreted relative to the Drupal root
               directory.
               Note that ':memory:' cannot be used, because this script spawns
@@ -264,7 +275,7 @@ All arguments are long options.
               Required when running tests without a Drupal installation that
               contains default database connection info in settings.php.
               Examples:
-                mysql://username:password@localhost/databasename#table_prefix
+                mysql://username:password@localhost/database_name#table_prefix
                 sqlite://localhost/relative/path/db.sqlite
                 sqlite://localhost//absolute/path/db.sqlite
 
@@ -283,14 +294,14 @@ All arguments are long options.
 
   --file      Run tests identified by specific file names, instead of group names.
               Specify the path and the extension
-              (i.e. 'core/modules/user/user.test'). This argument must be last
-              on the command line.
+              (i.e. 'core/modules/user/tests/src/Functional/UserCreateTest.php').
+              This argument must be last on the command line.
 
   --types
 
               Runs just tests from the specified test type, for example
               run-tests.sh
-              (i.e. --types "Simpletest,PHPUnit-Functional")
+              (i.e. --types "PHPUnit-Unit,PHPUnit-Kernel")
 
   --directory Run all tests found within the specified file directory.
 
@@ -328,11 +339,19 @@ All arguments are long options.
               will be used. The default is that any unexpected silenced
               deprecation error will fail tests.
 
+  --ci-parallel-node-total
+
+              The total number of instances of this job running in parallel.
+
+  --ci-parallel-node-index
+
+              The index of the job in the job set.
+
   <test1>[,<test2>[,<test3> ...]]
 
               One or more tests to be run. By default, these are interpreted
-              as the names of test groups as shown at
-              admin/config/development/testing.
+              as the names of test groups which are derived from test class
+              @group annotations.
               These group names typically correspond to module names like "User"
               or "Profile" or "System", but there is also a group "Database".
               If --class is specified then these are interpreted as the names of
@@ -345,11 +364,10 @@ Drupal installation as the webserver user (differs per configuration), or root:
 sudo -u [wwwrun|www-data|etc] php ./core/scripts/{$args['script']}
   --url http://example.com/ --all
 sudo -u [wwwrun|www-data|etc] php ./core/scripts/{$args['script']}
-  --url http://example.com/ --class "Drupal\block\Tests\BlockTest"
+  --url http://example.com/ --class Drupal\Tests\block\Functional\BlockTest
 
-Without a preinstalled Drupal site and enabled Simpletest module, specify a
-SQLite database pathname to create and the default database connection info to
-use in tests:
+Without a preinstalled Drupal site, specify a SQLite database pathname to create
+and the default database connection info to use in tests:
 
 sudo -u [wwwrun|www-data|etc] php ./core/scripts/{$args['script']}
   --sqlite /tmpfs/drupal/test.sqlite
@@ -398,6 +416,8 @@ function simpletest_script_parse_args() {
     'execute-test' => '',
     'xml' => '',
     'non-html' => FALSE,
+    'ci-parallel-node-index' => 1,
+    'ci-parallel-node-total' => 1,
   ];
 
   // Override with set values.
@@ -581,8 +601,8 @@ function simpletest_script_init() {
  * parameters were passed).
  *
  * Otherwise, there are three database connections of concern:
- * - --sqlite: The test runner connection, providing access to Simpletest
- *   database tables for recording test IDs and assertion results.
+ * - --sqlite: The test runner connection, providing access to database tables
+ *   for recording test IDs and assertion results.
  * - --dburl: A database connection that is used as base connection info for all
  *   tests; i.e., every test will spawn from this connection. In case this
  *   connection uses e.g. SQLite, then all tests will run against SQLite. This
@@ -631,10 +651,18 @@ function simpletest_script_setup_database($new = FALSE) {
     exit(SIMPLETEST_SCRIPT_EXIT_FAILURE);
   }
   Database::addConnectionInfo('default', 'default', $databases['default']['default']);
+}
 
-  // If no --sqlite parameter has been passed, then Simpletest module is assumed
-  // to be installed, so the test runner database connection is the default
-  // database connection.
+/**
+ * Sets up the test runs results storage.
+ */
+function simpletest_script_setup_test_run_results_storage($new = FALSE) {
+  global $args;
+
+  $databases['default'] = Database::getConnectionInfo('default');
+
+  // If no --sqlite parameter has been passed, then the test runner database
+  // connection is the default database connection.
   if (empty($args['sqlite'])) {
     $sqlite = FALSE;
     $databases['test-runner']['default'] = $databases['default']['default'];
@@ -664,36 +692,27 @@ function simpletest_script_setup_database($new = FALSE) {
   // Add the test runner database connection.
   Database::addConnectionInfo('test-runner', 'default', $databases['test-runner']['default']);
 
-  // Create the Simpletest schema.
+  // Create the test result schema.
   try {
-    $connection = Database::getConnection('default', 'test-runner');
-    $schema = $connection->schema();
+    $test_run_results_storage = new SimpletestTestRunResultsStorage(Database::getConnection('default', 'test-runner'));
   }
   catch (\PDOException $e) {
     simpletest_script_print_error($databases['test-runner']['default']['driver'] . ': ' . $e->getMessage());
     exit(SIMPLETEST_SCRIPT_EXIT_FAILURE);
   }
   if ($new && $sqlite) {
-    foreach (TestDatabase::testingSchema() as $name => $table_spec) {
-      try {
-        $table_exists = $schema->tableExists($name);
-        if (empty($args['keep-results-table']) && $table_exists) {
-          $connection->truncate($name)->execute();
-        }
-        if (!$table_exists) {
-          $schema->createTable($name, $table_spec);
-        }
-      }
-      catch (Exception $e) {
-        echo (string) $e;
-        exit(SIMPLETEST_SCRIPT_EXIT_EXCEPTION);
-      }
+    try {
+      $test_run_results_storage->buildTestingResultsEnvironment(!empty($args['keep-results-table']));
+    }
+    catch (Exception $e) {
+      echo (string) $e;
+      exit(SIMPLETEST_SCRIPT_EXIT_EXCEPTION);
     }
   }
-  // Verify that the Simpletest database schema exists by checking one table.
+  // Verify that the test result database schema exists by checking one table.
   try {
-    if (!$schema->tableExists('simpletest')) {
-      simpletest_script_print_error('Missing Simpletest database schema. Either install Simpletest module or use the --sqlite parameter.');
+    if (!$test_run_results_storage->validateTestingResultsEnvironment()) {
+      simpletest_script_print_error('Missing test result database schema. Use the --sqlite parameter.');
       exit(SIMPLETEST_SCRIPT_EXIT_FAILURE);
     }
   }
@@ -701,12 +720,14 @@ function simpletest_script_setup_database($new = FALSE) {
     echo (string) $e;
     exit(SIMPLETEST_SCRIPT_EXIT_EXCEPTION);
   }
+
+  return $test_run_results_storage;
 }
 
 /**
  * Execute a batch of tests.
  */
-function simpletest_script_execute_batch($test_classes) {
+function simpletest_script_execute_batch(TestRunResultsStorageInterface $test_run_results_storage, $test_classes) {
   global $args, $test_ids;
 
   $total_status = SIMPLETEST_SCRIPT_EXIT_SUCCESS;
@@ -720,20 +741,17 @@ function simpletest_script_execute_batch($test_classes) {
       }
 
       try {
-        $test_id = Database::getConnection('default', 'test-runner')
-          ->insert('simpletest_test_id')
-          ->useDefaults(['test_id'])
-          ->execute();
+        $test_run = TestRun::createNew($test_run_results_storage);
       }
       catch (Exception $e) {
         echo (string) $e;
         exit(SIMPLETEST_SCRIPT_EXIT_EXCEPTION);
       }
-      $test_ids[] = $test_id;
+      $test_ids[] = $test_run->id();
 
       $test_class = array_shift($test_classes);
       // Fork a child process.
-      $command = simpletest_script_command($test_id, $test_class);
+      $command = simpletest_script_command($test_run, $test_class);
       $process = proc_open($command, [], $pipes, NULL, NULL, ['bypass_shell' => TRUE]);
 
       if (!is_resource($process)) {
@@ -744,14 +762,14 @@ function simpletest_script_execute_batch($test_classes) {
       // Register our new child.
       $children[] = [
         'process' => $process,
-        'test_id' => $test_id,
+        'test_run' => $test_run,
         'class' => $test_class,
         'pipes' => $pipes,
       ];
     }
 
-    // Wait for children every 200ms.
-    usleep(200000);
+    // Wait for children every 2ms.
+    usleep(2000);
 
     // Check if some children finished.
     foreach ($children as $cid => $child) {
@@ -770,25 +788,25 @@ function simpletest_script_execute_batch($test_classes) {
           // @see https://www.drupal.org/node/2780087
           $total_status = max(SIMPLETEST_SCRIPT_EXIT_FAILURE, $total_status);
           // Insert a fail for xml results.
-          TestDatabase::insertAssert($child['test_id'], $child['class'], FALSE, $message, 'run-tests.sh check');
+          $child['test_run']->insertLogEntry([
+            'test_class' => $child['class'],
+            'status' => 'fail',
+            'message' => $message,
+            'message_group' => 'run-tests.sh check',
+          ]);
           // Ensure that an error line is displayed for the class.
           simpletest_script_reporter_display_summary(
             $child['class'],
             ['#pass' => 0, '#fail' => 1, '#exception' => 0, '#debug' => 0]
           );
           if ($args['die-on-fail']) {
-            $db_prefix = TestDatabase::lastTestGet($child['test_id'])['last_prefix'];
-            $test_db = new TestDatabase($db_prefix);
+            $test_db = new TestDatabase($child['test_run']->getDatabasePrefix());
             $test_directory = $test_db->getTestSitePath();
-            echo 'Simpletest database and files kept and test exited immediately on fail so should be reproducible if you change settings.php to use the database prefix ' . $db_prefix . ' and config directories in ' . $test_directory . "\n";
+            echo 'Test database and files kept and test exited immediately on fail so should be reproducible if you change settings.php to use the database prefix ' . $child['test_run']->getDatabasePrefix() . ' and config directories in ' . $test_directory . "\n";
             $args['keep-results'] = TRUE;
             // Exit repeat loop immediately.
             $args['repeat'] = -1;
           }
-        }
-        // Free-up space by removing any potentially created resources.
-        if (!$args['keep-results']) {
-          simpletest_script_cleanup($child['test_id'], $child['class'], $status['exitcode']);
         }
 
         // Remove this child.
@@ -802,15 +820,15 @@ function simpletest_script_execute_batch($test_classes) {
 /**
  * Run a PHPUnit-based test.
  */
-function simpletest_script_run_phpunit($test_id, $class) {
+function simpletest_script_run_phpunit(TestRun $test_run, $class) {
   $reflection = new \ReflectionClass($class);
   if ($reflection->hasProperty('runLimit')) {
     set_time_limit($reflection->getStaticPropertyValue('runLimit'));
   }
 
   $runner = PhpUnitTestRunner::create(\Drupal::getContainer());
-  $results = $runner->runTests($test_id, [$class], $status);
-  TestDatabase::processPhpUnitResults($results);
+  $results = $runner->execute($test_run, [$class], $status);
+  $runner->processPhpUnitResults($test_run, $results);
 
   $summaries = $runner->summarizeResults($results);
   foreach ($summaries as $class => $summary) {
@@ -822,51 +840,14 @@ function simpletest_script_run_phpunit($test_id, $class) {
 /**
  * Run a single test, bootstrapping Drupal if needed.
  */
-function simpletest_script_run_one_test($test_id, $test_class) {
+function simpletest_script_run_one_test(TestRun $test_run, $test_class) {
   global $args;
 
   try {
-    // Default to status = success. This could mean that we didn't discover any
-    // tests and that none ran.
-    $status = SIMPLETEST_SCRIPT_EXIT_SUCCESS;
-    if (strpos($test_class, '::') > 0) {
-      [$class_name, $method] = explode('::', $test_class, 2);
-      $methods = [$method];
-    }
-    else {
-      $class_name = $test_class;
-      // Use empty array to run all the test methods.
-      $methods = [];
-    }
-    $test = new $class_name($test_id);
     if ($args['suppress-deprecations']) {
       putenv('SYMFONY_DEPRECATIONS_HELPER=disabled');
     }
-    if (is_subclass_of($test_class, TestCase::class)) {
-      $status = simpletest_script_run_phpunit($test_id, $test_class);
-    }
-    // If we aren't running a PHPUnit-based test, then we might have a
-    // Simpletest-based one. Ensure that: 1) The simpletest framework exists,
-    // and 2) that our test belongs to that framework.
-    elseif (class_exists('Drupal\simpletest\TestBase') && is_subclass_of($test_class, 'Drupal\simpletest\TestBase')) {
-      $test->dieOnFail = (bool) $args['die-on-fail'];
-      $test->verbose = (bool) $args['verbose'];
-      $test->run($methods);
-      simpletest_script_reporter_display_summary($test_class, $test->results);
-
-      $status = SIMPLETEST_SCRIPT_EXIT_SUCCESS;
-      // Finished, kill this runner.
-      if ($test->results['#fail'] || $test->results['#exception']) {
-        $status = SIMPLETEST_SCRIPT_EXIT_FAILURE;
-      }
-    }
-    // If the test is not a PHPUnit test, and either we don't have the
-    // Simpletest module or the \Drupal\simpletest\TestBase class available.
-    else {
-      simpletest_script_print_error(sprintf('Can not run %s. If this is a WebTestBase test the simpletest module must be installed. See https://www.drupal.org/node/3030340', $test_class));
-      $status = SIMPLETEST_SCRIPT_EXIT_FAILURE;
-    }
-
+    $status = simpletest_script_run_phpunit($test_run, $test_class);
     exit($status);
   }
   // DrupalTestCase::run() catches exceptions already, so this is only reached
@@ -888,7 +869,7 @@ function simpletest_script_run_one_test($test_id, $test_class) {
  * @return string
  *   The assembled command string.
  */
-function simpletest_script_command($test_id, $test_class) {
+function simpletest_script_command(TestRun $test_run, $test_class) {
   global $args, $php;
 
   $command = escapeshellarg($php) . ' ' . escapeshellarg('./core/scripts/' . $args['script']);
@@ -900,7 +881,7 @@ function simpletest_script_command($test_id, $test_class) {
     $command .= ' --dburl ' . escapeshellarg($args['dburl']);
   }
   $command .= ' --php ' . escapeshellarg($php);
-  $command .= " --test-id $test_id";
+  $command .= " --test-id {$test_run->id()}";
   foreach (['verbose', 'keep-results', 'color', 'die-on-fail', 'suppress-deprecations'] as $arg) {
     if ($args[$arg]) {
       $command .= ' --' . $arg;
@@ -909,112 +890,6 @@ function simpletest_script_command($test_id, $test_class) {
   // --execute-test and class name needs to come last.
   $command .= ' --execute-test ' . escapeshellarg($test_class);
   return $command;
-}
-
-/**
- * Removes all remnants of a test runner.
- *
- * In case a fatal error occurs after the test site has been fully setup and
- * the error happens in many tests, the environment that executes the tests can
- * easily run out of memory or disk space. This function ensures that all
- * created resources are properly cleaned up after every executed test.
- *
- * This clean-up only exists in this script, since SimpleTest module itself does
- * not use isolated sub-processes for each test being run, so a fatal error
- * halts not only the test, but also the test runner (i.e., the parent site).
- *
- * @param int $test_id
- *   The test ID of the test run.
- * @param string $test_class
- *   The class name of the test run.
- * @param int $exitcode
- *   The exit code of the test runner.
- *
- * @see simpletest_script_run_one_test()
- */
-function simpletest_script_cleanup($test_id, $test_class, $exitcode) {
-  if (is_subclass_of($test_class, TestCase::class)) {
-    // PHPUnit test, move on.
-    return;
-  }
-  // Retrieve the last database prefix used for testing.
-  try {
-    $last_test = TestDatabase::lastTestGet($test_id);
-    $db_prefix = $last_test['last_prefix'];
-  }
-  catch (Exception $e) {
-    echo (string) $e;
-    exit(SIMPLETEST_SCRIPT_EXIT_EXCEPTION);
-  }
-
-  // If no database prefix was found, then the test was not set up correctly.
-  if (empty($db_prefix)) {
-    echo "\nFATAL $test_class: Found no database prefix for test ID $test_id. (Check whether setUp() is invoked correctly.)";
-    return;
-  }
-
-  // Do not output verbose cleanup messages in case of a positive exitcode.
-  $output = !empty($exitcode);
-  $messages = [];
-
-  $messages[] = "- Found database prefix '$db_prefix' for test ID $test_id.";
-
-  // Read the log file in case any fatal errors caused the test to crash.
-  try {
-    (new TestDatabase($db_prefix))->logRead($test_id, $last_test['test_class']);
-  }
-  catch (Exception $e) {
-    echo (string) $e;
-    exit(SIMPLETEST_SCRIPT_EXIT_EXCEPTION);
-  }
-
-  // Check whether a test site directory was setup already.
-  // @see \Drupal\simpletest\TestBase::prepareEnvironment()
-  $test_db = new TestDatabase($db_prefix);
-  $test_directory = DRUPAL_ROOT . '/' . $test_db->getTestSitePath();
-  if (is_dir($test_directory)) {
-    // Output the error_log.
-    if (is_file($test_directory . '/error.log')) {
-      if ($errors = file_get_contents($test_directory . '/error.log')) {
-        $output = TRUE;
-        $messages[] = $errors;
-      }
-    }
-    // Delete the test site directory.
-    // simpletest_clean_temporary_directories() cannot be used here, since it
-    // would also delete file directories of other tests that are potentially
-    // running concurrently.
-    try {
-      \Drupal::service('file_system')->deleteRecursive($test_directory, ['\Drupal\Tests\BrowserTestBase', 'filePreDeleteCallback']);
-      $messages[] = "- Removed test site directory.";
-    }
-    catch (FileException $e) {
-      // Ignore failed deletes.
-    }
-  }
-
-  // Clear out all database tables from the test.
-  try {
-    $schema = Database::getConnection('default', 'default')->schema();
-    $count = 0;
-    foreach ($schema->findTables($db_prefix . '%') as $table) {
-      $schema->dropTable($table);
-      $count++;
-    }
-  }
-  catch (Exception $e) {
-    echo (string) $e;
-    exit(SIMPLETEST_SCRIPT_EXIT_EXCEPTION);
-  }
-
-  if ($count) {
-    $messages[] = "- Removed $count leftover tables.";
-  }
-
-  if ($output) {
-    echo implode("\n", $messages);
-    echo "\n";
-  }
 }
 
 /**
@@ -1035,20 +910,57 @@ function simpletest_script_get_test_list() {
   );
   $types_processed = empty($args['types']);
   $test_list = [];
-  if ($args['all'] || $args['module']) {
+  $slow_tests = [];
+  if ($args['all'] || $args['module'] || $args['directory']) {
     try {
-      $groups = $test_discovery->getTestClasses($args['module'], $args['types']);
+      $groups = $test_discovery->getTestClasses($args['module'], $args['types'], $args['directory']);
       $types_processed = TRUE;
     }
     catch (Exception $e) {
       echo (string) $e;
       exit(SIMPLETEST_SCRIPT_EXIT_EXCEPTION);
     }
-    $all_tests = [];
-    foreach ($groups as $group => $tests) {
-      $all_tests = array_merge($all_tests, array_keys($tests));
+    // Ensure that tests marked explicitly as @group #slow are run at the
+    // beginning of each job.
+    if (key($groups) === '#slow') {
+      $slow_tests = array_keys(array_shift($groups));
     }
-    $test_list = array_unique($all_tests);
+    $not_slow_tests = [];
+    foreach ($groups as $group => $tests) {
+      $not_slow_tests = array_merge($not_slow_tests, array_keys($tests));
+    }
+    // Filter slow tests out of the not slow tests and ensure a unique list
+    // since tests may appear in more than one group.
+    $not_slow_tests = array_unique(array_diff($not_slow_tests, $slow_tests));
+
+    // If the tests are not being run in parallel, then ensure slow tests run
+    // all together first.
+    if ((int) $args['ci-parallel-node-total'] <= 1 ) {
+      sort_tests_by_type_and_methods($slow_tests);
+      sort_tests_by_type_and_methods($not_slow_tests);
+      $test_list = array_merge($slow_tests, $not_slow_tests);
+    }
+    else {
+      // Sort all tests by the number of public methods on the test class.
+      // This is a proxy for the approximate time taken to run the test,
+      // which is used in combination with @group #slow to start the slowest tests
+      // first and distribute tests between test runners.
+      sort_tests_by_public_method_count($slow_tests);
+      sort_tests_by_public_method_count($not_slow_tests);
+
+      // Now set up a bin per test runner.
+      $bin_count = (int) $args['ci-parallel-node-total'];
+
+      // Now loop over the slow tests and add them to a bin one by one, this
+      // distributes the tests evenly across the bins.
+      $binned_slow_tests = place_tests_into_bins($slow_tests, $bin_count);
+      $slow_tests_for_job = $binned_slow_tests[$args['ci-parallel-node-index'] - 1];
+
+      // And the same for the rest of the tests.
+      $binned_other_tests = place_tests_into_bins($not_slow_tests, $bin_count);
+      $other_tests_for_job = $binned_other_tests[$args['ci-parallel-node-index'] - 1];
+      $test_list = array_merge($slow_tests_for_job, $other_tests_for_job);
+    }
   }
   else {
     if ($args['class']) {
@@ -1084,42 +996,6 @@ function simpletest_script_get_test_list() {
           simpletest_script_print_error('File not found: ' . $file);
           exit(SIMPLETEST_SCRIPT_EXIT_FAILURE);
         }
-        $test_list = array_merge($test_list, $parser->getTestListFromFile($file));
-      }
-    }
-    elseif ($args['directory']) {
-      // Extract test case class names from specified directory.
-      // Find all tests in the PSR-X structure; Drupal\$extension\Tests\*.php
-      // Since we do not want to hard-code too many structural file/directory
-      // assumptions about PSR-4 files and directories, we check for the
-      // minimal conditions only; i.e., a '*.php' file that has '/Tests/' in
-      // its path.
-      // Ignore anything from third party vendors.
-      $ignore = ['.', '..', 'vendor'];
-      $files = [];
-      if ($args['directory'][0] === '/') {
-        $directory = $args['directory'];
-      }
-      else {
-        $directory = DRUPAL_ROOT . "/" . $args['directory'];
-      }
-      foreach (\Drupal::service('file_system')->scanDirectory($directory, '/\.php$/', $ignore) as $file) {
-        // '/Tests/' can be contained anywhere in the file's path (there can be
-        // sub-directories below /Tests), but must be contained literally.
-        // Case-insensitive to match all Simpletest and PHPUnit tests:
-        // ./lib/Drupal/foo/Tests/Bar/Baz.php
-        // ./foo/src/Tests/Bar/Baz.php
-        // ./foo/tests/Drupal/foo/Tests/FooTest.php
-        // ./foo/tests/src/FooTest.php
-        // $file->filename doesn't give us a directory, so we use $file->uri
-        // Strip the drupal root directory and trailing slash off the URI.
-        $filename = substr($file->uri, strlen(DRUPAL_ROOT) + 1);
-        if (stripos($filename, '/Tests/')) {
-          $files[$filename] = $filename;
-        }
-      }
-      $parser = new TestFileParser();
-      foreach ($files as $file) {
         $test_list = array_merge($test_list, $parser->getTestListFromFile($file));
       }
     }
@@ -1163,7 +1039,105 @@ function simpletest_script_get_test_list() {
     simpletest_script_print_error('No valid tests were specified.');
     exit(SIMPLETEST_SCRIPT_EXIT_FAILURE);
   }
+
   return $test_list;
+}
+
+/**
+ * Sort tests by test type and number of public methods.
+ */
+function sort_tests_by_type_and_methods(array &$tests) {
+  usort($tests, function ($a, $b) {
+    if (get_test_type_weight($a) === get_test_type_weight($b)) {
+      return get_test_class_method_count($b) <=> get_test_class_method_count($a);
+    }
+    return get_test_type_weight($b) <=> get_test_type_weight($a);
+  });
+}
+
+/**
+ * Sort tests by the number of public methods in the test class.
+ *
+ * Tests with several methods take longer to run than tests with a single
+ * method all else being equal, so this allows tests runs to be sorted by
+ * approximately the slowest to fastest tests. Tests that are exceptionally
+ * slow can be added to the '#slow' group so they are placed first in each
+ * test run regardless of the number of methods.
+ *
+ * @param string[] $tests
+ *   An array of test class names.
+ */
+function sort_tests_by_public_method_count(array &$tests): void {
+  usort($tests, function ($a, $b) {
+    return get_test_class_method_count($b) <=> get_test_class_method_count($a);
+  });
+}
+
+/**
+ * Weights a test class based on which test base class it extends.
+ *
+ * @param string $class
+ *   The test class name.
+ */
+function get_test_type_weight(string $class): int {
+  return match(TRUE) {
+    is_subclass_of($class, WebDriverTestBase::class) => 3,
+    is_subclass_of($class, BrowserTestBase::class) => 2,
+    is_subclass_of($class, BuildTestBase::class) => 2,
+    is_subclass_of($class, KernelTestBase::class) => 1,
+    default => 0,
+  };
+}
+
+/**
+ * Get an approximate test method count for a test class.
+ *
+ * @param string $class
+ *   The test class name.
+ */
+function get_test_class_method_count(string $class): int {
+  $reflection = new \ReflectionClass($class);
+  $count = 0;
+  foreach ($reflection->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
+    // If a method uses a dataProvider, increase the count by 20 since data
+    // providers result in a single method running multiple times.
+    $comments = $method->getDocComment();
+    preg_match_all('#@(.*?)\n#s', $comments, $annotations);
+    foreach ($annotations[1] as $annotation) {
+      if (str_starts_with($annotation, 'dataProvider')) {
+        $count = $count + 20;
+        continue;
+      }
+    }
+    $count++;
+  }
+  return $count;
+}
+
+/**
+ * Distribute tests into bins.
+ *
+ * The given array of tests is split into the available bins. The distribution
+ * starts with the first test, placing the first test in the first bin, the
+ * second test in the second bin and so on. This results each bin having a
+ * similar number of test methods to run in total.
+ *
+ * @param string[] $tests
+ *   An array of test class names.
+ * @param int $bin_count
+ *   The number of bins available.
+ *
+ * @return array
+ *   An associative array of bins and the test class names in each bin.
+ */
+ function place_tests_into_bins(array $tests, int $bin_count) {
+  // Create a bin corresponding to each parallel test job.
+  $bins = array_fill(0, $bin_count, []);
+  // Go through each test and add them to one bin at a time.
+  foreach ($tests as $key => $test) {
+    $bins[($key % $bin_count)][] = $test;
+  }
+  return $bins;
 }
 
 /**
@@ -1232,11 +1206,11 @@ function simpletest_script_reporter_display_summary($class, $results) {
 /**
  * Display jUnit XML test results.
  */
-function simpletest_script_reporter_write_xml_results() {
+function simpletest_script_reporter_write_xml_results(TestRunResultsStorageInterface $test_run_results_storage) {
   global $args, $test_ids, $results_map;
 
   try {
-    $results = simpletest_script_load_messages_by_test_id($test_ids);
+    $results = simpletest_script_load_messages_by_test_id($test_run_results_storage, $test_ids);
   }
   catch (Exception $e) {
     echo (string) $e;
@@ -1257,7 +1231,7 @@ function simpletest_script_reporter_write_xml_results() {
         }
         $test_class = $result->test_class;
         if (!isset($xml_files[$test_class])) {
-          $doc = new DomDocument('1.0');
+          $doc = new DomDocument('1.0', 'utf-8');
           $root = $doc->createElement('testsuite');
           $root = $doc->appendChild($root);
           $xml_files[$test_class] = ['doc' => $doc, 'suite' => $root];
@@ -1270,7 +1244,7 @@ function simpletest_script_reporter_write_xml_results() {
       // Create the XML element for this test case:
       $case = $dom_document->createElement('testcase');
       $case->setAttribute('classname', $test_class);
-      if (strpos($result->function, '->') !== FALSE) {
+      if (str_contains($result->function, '->')) {
         [$class, $name] = explode('->', $result->function, 2);
       }
       else {
@@ -1325,7 +1299,7 @@ function simpletest_script_reporter_timer_stop() {
 /**
  * Display test results.
  */
-function simpletest_script_reporter_display_results() {
+function simpletest_script_reporter_display_results(TestRunResultsStorageInterface $test_run_results_storage) {
   global $args, $test_ids, $results_map;
 
   if ($args['verbose']) {
@@ -1334,7 +1308,7 @@ function simpletest_script_reporter_display_results() {
     echo "---------------------\n";
 
     try {
-      $results = simpletest_script_load_messages_by_test_id($test_ids);
+      $results = simpletest_script_load_messages_by_test_id($test_run_results_storage, $test_ids);
     }
     catch (Exception $e) {
       echo (string) $e;
@@ -1375,7 +1349,7 @@ function simpletest_script_format_result($result) {
 
   $message = trim(strip_tags($result->message));
   if ($args['non-html']) {
-    $message = Html::decodeEntities($message, ENT_QUOTES, 'UTF-8');
+    $message = Html::decodeEntities($message);
   }
   $lines = explode("\n", wordwrap($message), 76);
   foreach ($lines as $line) {
@@ -1461,7 +1435,7 @@ function simpletest_script_print_alternatives($string, $array, $degree = 4) {
   $alternatives = [];
   foreach ($array as $item) {
     $lev = levenshtein($string, $item);
-    if ($lev <= strlen($item) / $degree || FALSE !== strpos($string, $item)) {
+    if ($lev <= strlen($item) / $degree || str_contains($string, $item)) {
       $alternatives[] = $item;
     }
   }
@@ -1474,7 +1448,7 @@ function simpletest_script_print_alternatives($string, $array, $degree = 4) {
 }
 
 /**
- * Loads the simpletest messages from the database.
+ * Loads test result messages from the database.
  *
  * Messages are ordered by test class and message id.
  *
@@ -1482,9 +1456,9 @@ function simpletest_script_print_alternatives($string, $array, $degree = 4) {
  *   Array of test IDs of the messages to be loaded.
  *
  * @return array
- *   Array of simpletest messages from the database.
+ *   Array of test result messages from the database.
  */
-function simpletest_script_load_messages_by_test_id($test_ids) {
+function simpletest_script_load_messages_by_test_id(TestRunResultsStorageInterface $test_run_results_storage, $test_ids) {
   global $args;
   $results = [];
 
@@ -1499,10 +1473,11 @@ function simpletest_script_load_messages_by_test_id($test_ids) {
 
   foreach ($test_id_chunks as $test_id_chunk) {
     try {
-      $result_chunk = Database::getConnection('default', 'test-runner')
-        ->query("SELECT * FROM {simpletest} WHERE [test_id] IN ( :test_ids[] ) ORDER BY [test_class], [message_id]", [
-          ':test_ids[]' => $test_id_chunk,
-        ])->fetchAll();
+      $result_chunk = [];
+      foreach ($test_id_chunk as $test_id) {
+        $test_run = TestRun::get($test_run_results_storage, $test_id);
+        $result_chunk = array_merge($result_chunk, $test_run->getLogEntriesByTestClass());
+      }
     }
     catch (Exception $e) {
       echo (string) $e;

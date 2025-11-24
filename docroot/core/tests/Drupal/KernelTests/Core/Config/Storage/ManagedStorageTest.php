@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Config\Storage;
 
 use Drupal\Core\Config\StorageManagerInterface;
@@ -28,8 +30,6 @@ class ManagedStorageTest extends ConfigStorageTestBase implements StorageManager
   protected function setUp(): void {
     parent::setUp();
     $this->storage = new ManagedStorage($this);
-    // ::listAll() verifications require other configuration data to exist.
-    $this->storage->write('system.performance', []);
   }
 
   /**
@@ -63,7 +63,7 @@ class ManagedStorageTest extends ConfigStorageTestBase implements StorageManager
   /**
    * {@inheritdoc}
    */
-  public function testInvalidStorage() {
+  public function testInvalidStorage(): void {
     $this->markTestSkipped('ManagedStorage cannot be invalid.');
   }
 

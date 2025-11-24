@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\flag_bookmark\Kernel;
 
-use Drupal\flag\Entity\Flag;
 use Drupal\Tests\flag\Kernel\FlagKernelTestBase;
+use Drupal\flag\Entity\Flag;
 use Drupal\views\Entity\View;
 
 /**
@@ -13,8 +15,11 @@ use Drupal\views\Entity\View;
  */
 class FlagBookmarkInstallUninstallTest extends FlagKernelTestBase {
 
+  /**
+   * Test Install Uninstall.
+   */
   public function testInstallUninstall() {
-    // Provides configuraiton depended on by the view.
+    // Provides configuration depended on by the view.
     $this->installConfig(['system']);
     // Tables necessary for uninstall.
     $this->installSchema('user', ['users_data']);
@@ -33,6 +38,9 @@ class FlagBookmarkInstallUninstallTest extends FlagKernelTestBase {
     $this->doTestsOnInstall();
   }
 
+  /**
+   * Do Tests On Install.
+   */
   protected function doTestsOnInstall() {
     $this->assertEquals(['node', 'flag_bookmark'], Flag::load('bookmark')->getDependencies()['module']);
     $this->assertEquals(['flag.flag.bookmark', 'system.menu.main'], View::load('flag_bookmark')->getDependencies()['config']);

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Kernel\Views;
 
 use Drupal\node\Entity\Node;
@@ -49,7 +51,7 @@ class ArgumentUidRevisionTest extends ViewsKernelTestBase {
   /**
    * Tests the node_uid_revision argument.
    */
-  public function testArgument() {
+  public function testArgument(): void {
     $expected_result = [];
 
     $author = $this->createUser();

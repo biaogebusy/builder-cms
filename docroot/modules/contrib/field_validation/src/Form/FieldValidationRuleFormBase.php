@@ -2,18 +2,21 @@
 
 namespace Drupal\field_validation\Form;
 
+use Drupal\Component\Plugin\Exception\PluginNotFoundException;
+use Drupal\Core\Entity\EntityFieldManagerInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\CachedDiscoveryClearerInterface;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\field_validation\ConfigurableFieldValidationRuleInterface;
+use Drupal\field_validation\ConstraintFieldValidationRuleBase;
 use Drupal\field_validation\FieldValidationRuleSetInterface;
-use Drupal\Component\Plugin\Exception\PluginNotFoundException;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Drupal\user\Entity\Role;
+use Drupal\user\RoleInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Entity\EntityFieldManagerInterface;
-use Drupal\Core\Plugin\CachedDiscoveryClearerInterface;
-use Drupal\Core\Extension\ModuleHandlerInterface;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * Provides a base form for FieldValidationRule.
@@ -108,7 +111,7 @@ abstract class FieldValidationRuleFormBase extends FormBase {
    *
    * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
    */
-  public function buildForm(array $form, FormStateInterface $form_state, FieldValidationRuleSetInterface $field_validation_rule_set = NULL, $field_validation_rule = NULL, $field_name = '') {
+  public function buildForm(array $form, FormStateInterface $form_state, FieldValidationRuleSetInterface $field_validation_rule_set = NULL, $field_validation_rule = NULL) {
     $this->fieldValidationRuleSet = $field_validation_rule_set;
     try {
       $this->fieldValidationRule = $this->prepareFieldValidationRule($field_validation_rule);
@@ -121,6 +124,8 @@ abstract class FieldValidationRuleFormBase extends FormBase {
     if (!($this->fieldValidationRule instanceof ConfigurableFieldValidationRuleInterface)) {
       throw new NotFoundHttpException();
     }
+
+    $is_constraint_rule = ($this->fieldValidationRule instanceof ConstraintFieldValidationRuleBase);
 
     // $form['#attached']['library'][] = 'field_validation/admin';
     $form['uuid'] = [
@@ -157,50 +162,54 @@ abstract class FieldValidationRuleFormBase extends FormBase {
       }
     }
     $default_field_name = $this->fieldValidationRule->getFieldName();
-    if (!empty($field_name)) {
-      $default_field_name = $field_name;
+    if (empty($default_field_name)) {
+      $default_field_name = $request->query->get('field_name');
     }
-    $user_input = $form_state->getUserInput();
-    $default_field_name = $user_input['field_name'] ?? $default_field_name;
-
+    //$user_input = $form_state->getUserInput();
+    //$default_field_name = $user_input['field_name'] ?? $default_field_name;
+    // Always disabled field name.
     $form['field_name'] = [
       '#type' => 'select',
       '#title' => $this->t('Field name'),
       '#options' => $field_options,
       '#default_value' => $default_field_name,
       '#required' => TRUE,
-      '#ajax' => [
-        'callback' => [$this, 'updateColumn'],
-        'wrapper' => 'edit-field-name-wrapper',
-        'event' => 'change',
-      ],
+      '#disabled' => TRUE,
+      //'#ajax' => [
+      //  'callback' => [$this, 'updateColumn'],
+      //  'wrapper' => 'edit-field-name-wrapper',
+      //  'event' => 'change',
+      //],
     ];
 
     $default_column = $this->fieldValidationRule->getColumn();
-    $default_column = $user_input['column'] ?? $default_column;
+    //$default_column = $user_input['column'] ?? $default_column;
     $column_options = $this->findColumn($default_field_name);
     if (!in_array($default_column, $column_options)) {
       $default_column = "";
     }
+    if (!$is_constraint_rule || $this->fieldValidationRule->isPropertyConstraint()) {
+      $form['column'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Column of field'),
+        '#options' => $column_options,
+        '#default_value' => $default_column,
+        '#required' => TRUE,
+        '#validated' => TRUE,
+      ];
+	}
 
-    $form['column'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Column of field'),
-      '#options' => $column_options,
-      '#default_value' => $default_column,
-      '#required' => TRUE,
-      '#prefix' => '<div id="edit-field-name-wrapper">',
-      '#suffix' => '</div>',
-      '#validated' => TRUE,
-    ];
     $form['data'] = $this->fieldValidationRule->buildConfigurationForm([], $form_state);
-    $form['error_message'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Error message'),
-      '#default_value' => $this->fieldValidationRule->getErrorMessage(),
-      '#required' => TRUE,
-      '#maxlength' => 255,
-    ];
+    //Not display it for constraint rule
+    if (!$is_constraint_rule) {
+      $form['error_message'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Error message'),
+        '#default_value' => $this->fieldValidationRule->getErrorMessage(),
+        '#required' => TRUE,
+        '#maxlength' => 255,
+      ];
+    }
     $form['data']['#tree'] = TRUE;
     // Add a token link.
     if ($this->moduleHandler->moduleExists('token')) {
@@ -210,13 +219,25 @@ abstract class FieldValidationRuleFormBase extends FormBase {
           $entity_type_id = str_replace('taxonomy_', '', $entity_type_id);
           break;
       }
+      $form['pattern_container'] = [
+        '#type' => 'details',
+        '#open' => TRUE,
+        '#tree' => TRUE,
+        '#title' => $this->t('Token'),
+        '#states' => [
+          // Hide it when validate mode is direct.
+          'invisible' => [
+            ':input[name="data[validate_mode]"]' => ['value' => 'direct'],
+          ],
+        ],
+      ];
       // Show the token help link.
       $form['pattern_container']['token_help'] = [
         '#theme' => 'token_tree_link',
         '#token_types' => [$entity_type_id],
       ];
     }
-	  
+
     // Check the URL for a weight, then the fieldValidationRule
     // otherwise use default.
     $form['weight'] = [
@@ -225,12 +246,20 @@ abstract class FieldValidationRuleFormBase extends FormBase {
     ];
 
     $test_roles = $this->fieldValidationRule->getApplicableRoles();
+    $roles = Role::loadMultiple();
+    $names =  array_map(fn(RoleInterface $role) => $role->label(), $roles);
     $form['roles'] = [
       '#type' => 'checkboxes',
       '#title' => $this->t('Apply to this roles'),
       '#default_value' => $test_roles,
-      '#options' => array_map('\Drupal\Component\Utility\Html::escape', user_role_names()),
+      '#options' => array_map('\Drupal\Component\Utility\Html::escape', $names),
       '#description' => $this->t('If you select no roles, the rule will be applicable for all users.'),
+      '#states' => [
+        // Hide it when validate mode is direct.
+        'invisible' => [
+          ':input[name="data[validate_mode]"]' => ['value' => 'direct'],
+        ],
+      ],	  
     ];
 
     $condition = $this->fieldValidationRule->getCondition();
@@ -239,6 +268,12 @@ abstract class FieldValidationRuleFormBase extends FormBase {
       '#open' => FALSE,
       '#tree' => TRUE,
       '#title' => $this->t('Condition'),
+      '#states' => [
+        // Hide it when validate mode is direct.
+        'invisible' => [
+          ':input[name="data[validate_mode]"]' => ['value' => 'direct'],
+        ],
+      ],
     ];
 
     $form['condition']['field'] = [
@@ -361,8 +396,10 @@ abstract class FieldValidationRuleFormBase extends FormBase {
     $this->fieldValidationRule->setTitle($form_state->getValue('title'));
     $this->fieldValidationRule->setWeight($form_state->getValue('weight'));
     $this->fieldValidationRule->setFieldName($form_state->getValue('field_name'));
-    $this->fieldValidationRule->setColumn($form_state->getValue('column'));
-    $this->fieldValidationRule->setErrorMessage($form_state->getValue('error_message'));
+    $column = $form_state->getValue('column') ?? "";
+    $this->fieldValidationRule->setColumn($column);
+    $error_message = $form_state->getValue('error_message') ?? "";
+    $this->fieldValidationRule->setErrorMessage($error_message);
     // Update the rule applicable roles.
     $this->fieldValidationRule->setApplicableRoles(array_filter($form_state->getValue('roles')));
     $this->fieldValidationRule->setCondition($form_state->getValue('condition'));
@@ -370,8 +407,9 @@ abstract class FieldValidationRuleFormBase extends FormBase {
       $this->fieldValidationRuleSet->addFieldValidationRule($this->fieldValidationRule->getConfiguration());
     }
     else {
-      $this->fieldValidationRuleSet->deleteFieldValidationRule($this->fieldValidationRule);
-      $this->fieldValidationRuleSet->addFieldValidationRule($this->fieldValidationRule->getConfiguration());
+	  // Do not support ajax. Remove this code.
+      //$this->fieldValidationRuleSet->deleteFieldValidationRule($this->fieldValidationRule);
+      //$this->fieldValidationRuleSet->addFieldValidationRule($this->fieldValidationRule->getConfiguration());
     }
     $this->fieldValidationRuleSet->save();
     $this->messenger()->addMessage($this->t('The rule was successfully applied.'));

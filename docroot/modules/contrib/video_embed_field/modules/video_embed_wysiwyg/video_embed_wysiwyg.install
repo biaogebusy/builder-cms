@@ -1,0 +1,192 @@
+<?php
+
+/**
+ * @file
+ * Install file for Video Embed WYSIWYG.
+ */
+
+use Drupal\Core\Database\Database;
+
+/**
+ * Add title_format setting to video embed settings.
+ */
+function video_embed_wysiwyg_update_10001(&$sandbox) {
+  $database = Database::getConnection();
+  $processed_tables = [];
+
+  // Initialize sandbox if this is the first run.
+  if (!isset($sandbox['progress'])) {
+    $sandbox['progress'] = 0;
+    $sandbox['tables'] = [];
+    $sandbox['current_table'] = 0;
+    $sandbox['updated_records'] = 0;
+
+    // Find all node, paragraph, and block_content text field tables.
+    $field_configs = \Drupal::entityTypeManager()->getStorage('field_config')->loadMultiple();
+
+    foreach ($field_configs as $field_config) {
+      $entity_type = $field_config->getTargetEntityTypeId();
+      $field_type = $field_config->getFieldStorageDefinition()->getType();
+
+      // Only process node, paragraph, and block_content text fields.
+      if (in_array($entity_type, ['node', 'paragraph', 'block_content']) &&
+        in_array($field_type, ['text', 'text_long', 'text_with_summary'])) {
+
+        $field_name = $field_config->getName();
+        $table_name = $entity_type . '__' . $field_name;
+        $revision_table_name = $entity_type . '_revision__' . $field_name;
+
+        // Check if tables exist.
+        if ($database->schema()->tableExists($table_name)) {
+          $sandbox['tables'][] = [
+            'table' => $table_name,
+            'field' => $field_name . '_value',
+            'entity_type' => $entity_type,
+          ];
+        }
+        if ($database->schema()->tableExists($revision_table_name)) {
+          $sandbox['tables'][] = [
+            'table' => $revision_table_name,
+            'field' => $field_name . '_value',
+            'entity_type' => $entity_type,
+          ];
+        }
+      }
+    }
+
+    $sandbox['total_tables'] = count($sandbox['tables']);
+    \Drupal::logger('video_embed_wysiwyg')->notice('Found @count tables to process', ['@count' => $sandbox['total_tables']]);
+  }
+
+  // Process one table at a time.
+  if ($sandbox['current_table'] < $sandbox['total_tables']) {
+    $table_info = $sandbox['tables'][$sandbox['current_table']];
+    $table_name = $table_info['table'];
+    $field_column = $table_info['field'];
+    $entity_type = $table_info['entity_type'];
+
+    \Drupal::logger('video_embed_wysiwyg')->notice('Processing table: @table', ['@table' => $table_name]);
+
+    // Find all records that contain video embed data.
+    $query = $database->select($table_name, 't')
+      ->fields('t')
+      ->condition($field_column, '%"video_url"%', 'LIKE')
+      ->condition($field_column, '%"settings"%', 'LIKE');
+
+    $result = $query->execute();
+    $records_in_table = 0;
+    $updated_in_table = 0;
+
+    foreach ($result as $record) {
+      $records_in_table++;
+      $content = $record->$field_column;
+
+      // Look for the video embed JSON pattern.
+      if (preg_match_all('/\{"preview_thumbnail"[^}]*"video_url"[^}]*"settings":\{[^}]*\}[^}]*\}/i', $content, $matches)) {
+        $updated_content = $content;
+        $made_changes = FALSE;
+
+        foreach ($matches[0] as $json_match) {
+          \Drupal::logger('video_embed_wysiwyg')->notice('Found video embed JSON: @json', ['@json' => substr($json_match, 0, 200) . '...']);
+
+          // Add title_format to the settings object if it doesn't exist.
+          $updated_json = preg_replace_callback(
+            '/"settings":\{([^}]*)\}/',
+            function ($settings_match) {
+              $settings = $settings_match[1];
+
+              // Check if title_format already exists.
+              if (!preg_match('/"title_format"/', $settings)) {
+                // Add title_format setting.
+                $title_format = '"title_format":"@provider | @title"';
+                $title_fallback = '"title_fallback":true';
+
+                // If settings is empty, just add the title_format.
+                if (trim($settings) === '') {
+                  $updated_settings = $title_format . ',' . $title_fallback;
+                }
+                else {
+                  // Add title_format at the end.
+                  $updated_settings = $settings . ',' . $title_format . ',' . $title_fallback;
+                }
+
+                \Drupal::logger('video_embed_wysiwyg')->notice('Added title_format and title_fallback to settings: @old -> @new', [
+                  '@old' => $settings,
+                  '@new' => $updated_settings,
+                ]);
+
+                return '"settings":{' . $updated_settings . '}';
+              }
+
+              // No changes needed.
+              return $settings_match[0];
+            },
+            $json_match
+          );
+
+          if ($updated_json !== $json_match) {
+            $updated_content = str_replace($json_match, $updated_json, $updated_content);
+            $made_changes = TRUE;
+          }
+        }
+
+        // Update the record if changes were made.
+        if ($made_changes) {
+          $key_field = 'entity_id';
+          $revision_field = 'revision_id';
+
+          $update_query = $database->update($table_name)
+            ->fields([$field_column => $updated_content])
+            ->condition($key_field, $record->$key_field)
+            ->condition('langcode', $record->langcode);
+
+          if (property_exists($record, $revision_field)) {
+            $update_query->condition($revision_field, $record->$revision_field);
+          }
+
+          $update_query->execute();
+          $updated_in_table++;
+          $sandbox['updated_records']++;
+
+          \Drupal::logger('video_embed_wysiwyg')->notice('Updated record @id in table @table', [
+            '@id' => $record->$key_field,
+            '@table' => $table_name,
+          ]);
+        }
+      }
+    }
+
+    \Drupal::logger('video_embed_wysiwyg')->notice('Table @table: processed @total records, updated @updated', [
+      '@table' => $table_name,
+      '@total' => $records_in_table,
+      '@updated' => $updated_in_table,
+    ]);
+
+    if ($updated_in_table > 0) {
+      $processed_tables[] = $table_name;
+    }
+
+    $sandbox['current_table']++;
+  }
+
+  // Calculate progress.
+  $sandbox['#finished'] = ($sandbox['total_tables'] == 0) ? 1 : $sandbox['current_table'] / $sandbox['total_tables'];
+
+  // Finish up.
+  if ($sandbox['#finished'] >= 1) {
+    $message = 'Video embed title_format setting added. Updated @count records across @tables tables.';
+    $variables = [
+      '@count' => $sandbox['updated_records'],
+      '@tables' => count($processed_tables),
+    ];
+
+    \Drupal::logger('video_embed_wysiwyg')->notice($message, $variables);
+
+    if ($sandbox['updated_records'] > 0) {
+      return \Drupal::translation()->translate($message, $variables);
+    }
+    else {
+      return \Drupal::translation()->translate('No video embed records required title_format updates.');
+    }
+  }
+}

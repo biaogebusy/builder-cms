@@ -18,7 +18,7 @@ use Drupal\search_api\Query\ResultSetInterface;
  * for which stages it should run, in addition to implementing the corresponding
  * methods.
  *
- * @see \Drupal\search_api\Annotation\SearchApiProcessor
+ * @see \Drupal\search_api\Attribute\SearchApiProcessor
  * @see \Drupal\search_api\Processor\ProcessorPluginManager
  * @see \Drupal\search_api\Processor\ProcessorPluginBase
  * @see plugin_api
@@ -148,7 +148,7 @@ interface ProcessorInterface extends IndexPluginInterface {
    *   An array of property definitions for that datasource, keyed by
    *   property names.
    */
-  public function getPropertyDefinitions(DatasourceInterface $datasource = NULL);
+  public function getPropertyDefinitions(?DatasourceInterface $datasource = NULL);
 
   /**
    * Adds the values of properties defined by this processor to the item.
@@ -226,6 +226,6 @@ interface ProcessorInterface extends IndexPluginInterface {
    *   TRUE if this change means the index should be scheduled for re-indexing;
    *   FALSE otherwise.
    */
-  public function requiresReindexing(array $old_settings = NULL, array $new_settings = NULL);
+  public function requiresReindexing(?array $old_settings = NULL, ?array $new_settings = NULL);
 
 }

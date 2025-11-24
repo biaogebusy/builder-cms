@@ -19,7 +19,7 @@ class AdminFormSettingsTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected $defaultTheme = 'classy';
+  protected $defaultTheme = 'starterkit_theme';
 
   /**
    * Tests the Administrator Settings UI.
@@ -38,8 +38,8 @@ class AdminFormSettingsTest extends BrowserTestBase {
     // Check default theme options.
     $assert_session->optionExists('edit-mailsystem-default-theme', 'current');
     $assert_session->optionExists('edit-mailsystem-default-theme', 'default');
-    $assert_session->optionExists('edit-mailsystem-default-theme', 'stable');
-    $assert_session->optionExists('edit-mailsystem-default-theme', 'classy');
+    $assert_session->optionExists('edit-mailsystem-default-theme', 'stable9');
+    $assert_session->optionExists('edit-mailsystem-default-theme', 'starterkit_theme');
     // Check custom module options labels.
     $assert_session->optionExists('edit-custom-custom-module', '- Select -');
     $assert_session->optionExists('edit-custom-custom-module', 'System');

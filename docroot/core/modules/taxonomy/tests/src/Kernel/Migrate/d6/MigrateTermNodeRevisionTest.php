@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Kernel\Migrate\d6;
 
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
@@ -30,7 +32,7 @@ class MigrateTermNodeRevisionTest extends MigrateDrupal6TestBase {
   /**
    * Tests the Drupal 6 term-node revision association to Drupal 8 migration.
    */
-  public function testTermRevisionNode() {
+  public function testTermRevisionNode(): void {
     $node = \Drupal::entityTypeManager()->getStorage('node')->loadRevision(2001);
     $this->assertCount(2, $node->field_vocabulary_3_i_2_);
     $this->assertSame('4', $node->field_vocabulary_3_i_2_[0]->target_id);

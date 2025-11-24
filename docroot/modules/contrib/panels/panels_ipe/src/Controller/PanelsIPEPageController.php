@@ -73,7 +73,7 @@ class PanelsIPEPageController extends ControllerBase {
    * @param \Drupal\Core\Render\RendererInterface $renderer
    * @param \Drupal\Core\Layout\LayoutPluginManagerInterface $layout_plugin_manager
    * @param \Drupal\panels\Storage\PanelsStorageManagerInterface $panels_storage_manager
-   * @param \Drupal\Core\TempStore\SharedTempStore $temp_store_factory
+   * @param \Drupal\Core\TempStore\SharedTempStoreFactory $temp_store_factory
    * @param \Drupal\Core\Plugin\Context\ContextHandlerInterface $context_handler
    */
   public function __construct(BlockManagerInterface $block_manager, RendererInterface $renderer, LayoutPluginManagerInterface $layout_plugin_manager, PanelsStorageManagerInterface $panels_storage_manager, SharedTempStoreFactory $temp_store_factory, ContextHandlerInterface $context_handler) {
@@ -134,7 +134,7 @@ class PanelsIPEPageController extends ControllerBase {
    *
    * @return \Symfony\Component\HttpFoundation\JsonResponse
    *
-   * @throws \Drupal\Core\TempStore\SharedTempStore
+   * @throws \Drupal\Core\TempStore\TempStoreException
    */
   public function cancel($panels_storage_type, $panels_storage_id) {
     $panels_display = $this->loadPanelsDisplay($panels_storage_type, $panels_storage_id);

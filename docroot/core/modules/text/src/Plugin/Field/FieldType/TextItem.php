@@ -2,21 +2,28 @@
 
 namespace Drupal\text\Plugin\Field\FieldType;
 
+use Drupal\Core\Field\Attribute\FieldType;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Plugin implementation of the 'text' field type.
- *
- * @FieldType(
- *   id = "text",
- *   label = @Translation("Text (formatted)"),
- *   description = @Translation("This field stores a text with a text format."),
- *   category = @Translation("Text"),
- *   default_widget = "text_textfield",
- *   default_formatter = "text_default"
- * )
  */
+#[FieldType(
+  id: "text",
+  label: new TranslatableMarkup("Text (formatted)"),
+  description: [
+    new TranslatableMarkup("Ideal for titles and names that need to support markup such as bold, italics or links"),
+    new TranslatableMarkup("Efficient storage for short text"),
+    new TranslatableMarkup("Requires specifying a maximum length"),
+    new TranslatableMarkup("Good for fields with known or predictable lengths"),
+  ],
+  category: "formatted_text",
+  default_widget: "text_textfield",
+  default_formatter: "text_default",
+  list_class: TextFieldItemList::class,
+)]
 class TextItem extends TextItemBase {
 
   /**

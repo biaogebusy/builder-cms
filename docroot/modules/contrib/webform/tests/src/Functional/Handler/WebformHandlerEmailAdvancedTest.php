@@ -130,7 +130,7 @@ class WebformHandlerEmailAdvancedTest extends WebformBrowserTestBase {
       // Drupal strip_tags() from mail subject.
       // @see \Drupal\Core\Mail\MailManager::doMail
       // @see http://cgit.drupalcode.org/drupal/tree/core/lib/Drupal/Core/Mail/MailManager.php#n285
-      'subject' => 'This has <removed>"special" \'chararacters\'',
+      'subject' => 'This has <removed>"special" \'characters\'',
       'message[value]' => '<p><em>Please enter a message.</em> Test that double "quotes" are not encoded.</p>',
       'checkbox' => FALSE,
     ];
@@ -139,13 +139,13 @@ class WebformHandlerEmailAdvancedTest extends WebformBrowserTestBase {
     $sent_email = $this->getLastEmail();
 
     // Check email subject with special characters.
-    $this->assertEquals($sent_email['subject'], 'This has "special" \'chararacters\'');
+    $this->assertEquals($sent_email['subject'], 'This has "special" \'characters\'');
 
     // Check email body is HTML.
     $this->assertStringContainsString('<b>First name</b><br />John<br /><br />', $sent_email['params']['body']);
     $this->assertStringContainsString('<b>Last name</b><br />Smith<br /><br />', $sent_email['params']['body']);
     $this->assertStringContainsString('<b>Email</b><br /><a href="mailto:from@example.com">from@example.com</a><br /><br />', $sent_email['params']['body']);
-    $this->assertStringContainsString('<b>Subject</b><br />This has &lt;removed&gt;&quot;special&quot; &#039;chararacters&#039;<br /><br />', $sent_email['params']['body']);
+    $this->assertStringContainsString('<b>Subject</b><br />This has &lt;removed&gt;&quot;special&quot; &#039;characters&#039;<br /><br />', $sent_email['params']['body']);
     $this->assertStringContainsString('<b>Message</b><br /><p><em>Please enter a message.</em> Test that double "quotes" are not encoded.</p><br /><br />', $sent_email['params']['body']);
     $this->assertStringContainsString('<p style="color:yellow"><em>Custom styled HTML markup</em></p>', $sent_email['params']['body']);
     $this->assertStringContainsString('<b>File</b><br />', $sent_email['params']['body']);
@@ -214,7 +214,7 @@ class WebformHandlerEmailAdvancedTest extends WebformBrowserTestBase {
     $this->assertStringContainsString('<b>Optional</b><br />{Empty}<br /><br />', $sent_email['params']['body']);
     $this->assertStringContainsString('<b>Checkbox</b><br />No<br /><br />', $sent_email['params']['body']);
 
-    // Logut and use anonymous user account.
+    // Logout and use anonymous user account.
     $this->drupalLogout();
 
     // Check that private is include in email because 'ignore_access' is TRUE.

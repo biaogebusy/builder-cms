@@ -3,7 +3,6 @@
 namespace Drupal\range\Plugin\views\argument;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\range\D8Compatibility\ViewsSqlQueryGetConnectionTrait;
 use Drupal\views\Plugin\views\argument\ArgumentPluginBase;
 
 /**
@@ -14,8 +13,6 @@ use Drupal\views\Plugin\views\argument\ArgumentPluginBase;
  * @ViewsArgument("range")
  */
 class Range extends ArgumentPluginBase {
-
-  use ViewsSqlQueryGetConnectionTrait;
 
   /**
    * {@inheritdoc}
@@ -78,15 +75,15 @@ class Range extends ArgumentPluginBase {
       '<=', '>=',
     ];
 
-    $inlude_endpoints = !($this->options['include_endpoints'] xor ($this->options['operator'] === 'within'));
-    [$op_left, $op_right] = array_slice($operators, $inlude_endpoints ? 2 : 0, 2);
+    $include_endpoints = !($this->options['include_endpoints'] xor ($this->options['operator'] === 'within'));
+    [$op_left, $op_right] = array_slice($operators, $include_endpoints ? 2 : 0, 2);
 
     if ($this->options['operator'] === 'within') {
-      $condition = $this->getDatabaseConnection($this->query)->condition('AND');
+      $condition = $this->query->getConnection()->condition('AND');
       $this->query->addWhere(0, $condition->condition($field_from, $this->argument, $op_left)->condition($field_to, $this->argument, $op_right));
     }
     else {
-      $condition = $this->getDatabaseConnection($this->query)->condition('OR');
+      $condition = $this->query->getConnection()->condition('OR');
       $this->query->addWhere(0, $condition->condition($field_from, $this->argument, $op_right)->condition($field_to, $this->argument, $op_left));
     }
   }

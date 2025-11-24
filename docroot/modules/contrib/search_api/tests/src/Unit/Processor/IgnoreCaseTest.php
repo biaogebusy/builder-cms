@@ -49,11 +49,12 @@ class IgnoreCaseTest extends UnitTestCase {
    * @return array[]
    *   Arrays of arguments for testProcess().
    */
-  public function processDataProvider() {
+  public static function processDataProvider() {
     return [
       ['Foo bar', 'foo bar'],
       ['foo Bar', 'foo bar'],
       ['Foo Bar', 'foo bar'],
+      // cspell:disable-next-line
       ['Foo bar BaZ, ÄÖÜÀÁ<>»«.', 'foo bar baz, äöüàá<>»«.'],
     ];
   }

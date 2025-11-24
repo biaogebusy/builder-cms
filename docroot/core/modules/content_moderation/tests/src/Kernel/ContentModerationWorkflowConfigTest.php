@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_moderation\Kernel;
 
 use Drupal\Core\Config\ConfigImporterException;
@@ -63,6 +65,7 @@ class ContentModerationWorkflowConfigTest extends KernelTestBase {
 
     NodeType::create([
       'type' => 'example',
+      'name' => 'Example',
     ])->save();
 
     $workflow = $this->createEditorialWorkflow();
@@ -80,7 +83,7 @@ class ContentModerationWorkflowConfigTest extends KernelTestBase {
   /**
    * Tests deleting a state via config import.
    */
-  public function testDeletingStateViaConfiguration() {
+  public function testDeletingStateViaConfiguration(): void {
     $config_sync = \Drupal::service('config.storage.sync');
 
     // Alter the workflow data.

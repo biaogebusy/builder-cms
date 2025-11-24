@@ -23,6 +23,7 @@ class CsvEncoderTest extends UnitTestCase {
    * {@inheritdoc}
    */
   public function setUp(): void {
+    parent::setUp();
     $this->encoder = new CsvEncoder();
   }
 

@@ -9,6 +9,7 @@ use Drupal\commerce_price\Price;
 use Drupal\commerce_product\Entity\Product;
 use Drupal\commerce_product\Entity\ProductVariation;
 use Drupal\commerce_product\Entity\ProductVariationType;
+use Drupal\commerce_tax\Entity\TaxType;
 use Drupal\profile\Entity\Profile;
 
 /**
@@ -41,6 +42,7 @@ class OrderTotalSummaryTest extends OrderKernelTestBase {
     'commerce_promotion',
     'commerce_test',
     'commerce_order_test',
+    'commerce_tax',
   ];
 
   /**
@@ -53,7 +55,7 @@ class OrderTotalSummaryTest extends OrderKernelTestBase {
 
     $this->orderTotalSummary = $this->container->get('commerce_order.order_total_summary');
 
-    $user = $this->createUser(['mail' => $this->randomString() . '@example.com']);
+    $user = $this->createUser();
 
     // Turn off title generation to allow explicit values to be used.
     $variation_type = ProductVariationType::load('default');
@@ -276,6 +278,74 @@ class OrderTotalSummaryTest extends OrderKernelTestBase {
     $this->assertEquals(new Price('2.00', 'USD'), $first['amount']);
     $this->assertEquals('us_vat|default|reduced', $first['source_id']);
     $this->assertEquals('0.2', $first['percentage']);
+  }
+
+  /**
+   * Tests that the tax rate is displayed in the label.
+   */
+  public function testDisplayTaxRateInLabel() {
+    TaxType::create([
+      'id' => 'us_vat',
+      'label' => 'US VAT',
+      'plugin' => 'custom',
+      'configuration' => [
+        'display_inclusive' => TRUE,
+        'display_tax_rate_in_label' => TRUE,
+        'rates' => [
+          [
+            'id' => 'standard',
+            'label' => 'Standard',
+            'percentage' => '0.2',
+          ],
+        ],
+        'territories' => [
+          ['country_code' => 'US', 'administrative_area' => 'WI'],
+          ['country_code' => 'US', 'administrative_area' => 'SC'],
+        ],
+      ],
+    ])->save();
+    /** @var \Drupal\commerce_order\Entity\OrderItemInterface $order_item */
+    $order_item = OrderItem::create([
+      'type' => 'default',
+      'quantity' => 1,
+      'unit_price' => new Price('12.00', 'USD'),
+    ]);
+    $order_item->save();
+    $order_item = $this->reloadEntity($order_item);
+    $this->order->addItem($order_item);
+
+    $this->order->addAdjustment(new Adjustment([
+      'type' => 'tax',
+      'label' => 'VAT',
+      'amount' => new Price('2.00', 'USD'),
+      'source_id' => 'us_vat|default|reduced',
+      'percentage' => '0.2',
+    ]));
+    $this->order->save();
+
+    $totals = $this->orderTotalSummary->buildTotals($this->order);
+    $this->assertEquals(new Price('12.00', 'USD'), $totals['subtotal']);
+    $this->assertEquals(new Price('14.00', 'USD'), $totals['total']);
+
+    // Confirm that the tax adjustment label includes the tax rate.
+    $this->assertCount(1, $totals['adjustments']);
+    $first = array_shift($totals['adjustments']);
+    $this->assertEquals('tax', $first['type']);
+    $this->assertEquals('VAT (20%)', $first['label']);
+
+    $tax_type = TaxType::load('us_vat');
+    $configuration = $tax_type->getPluginConfiguration();
+    $tax_type->setPluginConfiguration([
+      'display_tax_rate_in_label' => FALSE,
+    ] + $configuration);
+    $tax_type->save();
+
+    $totals = $this->orderTotalSummary->buildTotals($this->order);
+    // Confirm that the tax adjustment label includes the tax rate.
+    $this->assertCount(1, $totals['adjustments']);
+    $first = array_shift($totals['adjustments']);
+    $this->assertEquals('tax', $first['type']);
+    $this->assertEquals('VAT', $first['label']);
   }
 
 }

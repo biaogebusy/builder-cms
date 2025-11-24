@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\flag\Functional;
 
+use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\flag\Traits\FlagCreateTrait;
 use Drupal\Tests\flag\Traits\FlagPermissionsTrait;
-use Drupal\Tests\BrowserTestBase;
 
 /**
  * Tests for the base entity Flag Type plugin.
@@ -34,7 +36,7 @@ class ShowOnEntityFormTest extends BrowserTestBase {
   /**
    * The flag to be flagged and unflagged.
    *
-   * @var FlagInterface
+   * @var \Drupal\flag\FlagInterface
    */
   protected $flag;
 

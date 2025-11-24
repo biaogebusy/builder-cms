@@ -21,16 +21,14 @@ class SmsMessageDirection extends FieldPluginBase {
    * {@inheritdoc}
    */
   public function render(ResultRow $values) {
-    switch ($this->getValue($values)) {
-      case Direction::INCOMING:
-        return $this->t('Incoming');
-
-      case Direction::OUTGOING:
-        return $this->t('Outgoing');
-
-      default:
-        return $this->t('Unknown direction');
-    }
+    $value = $this->getValue($values);
+    // Match is strict so cast.
+    $value = isset($value) ? (int) $value : NULL;
+    return match ($value) {
+      Direction::INCOMING => $this->t('Incoming'),
+      Direction::OUTGOING => $this->t('Outgoing'),
+      default => $this->t('Unknown direction'),
+    };
   }
 
 }

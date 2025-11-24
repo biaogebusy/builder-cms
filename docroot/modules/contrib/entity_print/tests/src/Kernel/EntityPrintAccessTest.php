@@ -72,7 +72,7 @@ class EntityPrintAccessTest extends KernelTestBase {
   /**
    * Data provider to test access with different combinations of permissions.
    */
-  public function accessPermissionsDataProvider() {
+  public static function accessPermissionsDataProvider() {
     return [
       'Permission "bypass entity print access" only cannot view PDF.' =>
         [['bypass entity print access'], FALSE],
@@ -105,13 +105,13 @@ class EntityPrintAccessTest extends KernelTestBase {
       'bypass entity print access',
       'access content',
     ]);
-    $this->assertSame(FALSE, $this->checkAccess($account, $entity_type, $entity_id, $export_type));
+    $this->assertFalse($this->checkAccess($account, $entity_type, $entity_id, $export_type));
   }
 
   /**
    * Data provider for invalid route params.
    */
-  public function invalidRouteParametersDataProvider() {
+  public static function invalidRouteParametersDataProvider() {
     return [
       'Invalid entity type triggers access denied.' =>
         ['invalid', FALSE, 'pdf'],

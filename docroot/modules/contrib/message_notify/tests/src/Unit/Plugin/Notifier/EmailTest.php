@@ -8,11 +8,11 @@ use Drupal\Core\Language\Language;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Mail\MailManagerInterface;
 use Drupal\Core\Render\RendererInterface;
+use Drupal\Tests\UnitTestCase;
 use Drupal\message\MessageInterface;
 use Drupal\message\MessageTemplateInterface;
 use Drupal\message_notify\Exception\MessageNotifyException;
 use Drupal\message_notify\Plugin\Notifier\Email;
-use Drupal\Tests\UnitTestCase;
 use Drupal\user\UserInterface;
 use Prophecy\Argument;
 
@@ -81,7 +81,14 @@ class EmailTest extends UnitTestCase {
     $this->entityTypeManager = $this->prophesize(EntityTypeManagerInterface::class)->reveal();
     $this->mailManager = $this->prophesize(MailManagerInterface::class)->reveal();
     $renderer = $this->prophesize(RendererInterface::class);
-    $renderer->renderPlain(Argument::any())->willReturn('foo bar');
+
+    if (version_compare(\Drupal::VERSION, '10.3.0', '<')) {
+      $renderer->renderPlain(Argument::any())->willReturn('foo bar');
+    }
+    else {
+      $renderer->renderInIsolation(Argument::any())->willReturn('foo bar');
+    }
+
     $this->renderer = $renderer->reveal();
     $this->pluginId = $this->randomMachineName();
     $this->pluginDefinition['title'] = $this->randomMachineName();
@@ -154,7 +161,7 @@ class EmailTest extends UnitTestCase {
    * @return \Drupal\message_notify\Plugin\Notifier\Email
    *   The email notifier plugin.
    */
-  protected function getNotifier(MessageInterface $message = NULL) {
+  protected function getNotifier(?MessageInterface $message = NULL) {
     $logger = $this->prophesize(LoggerChannelInterface::class)->reveal();
 
     return new Email(
@@ -164,8 +171,8 @@ class EmailTest extends UnitTestCase {
       $logger,
       $this->entityTypeManager,
       $this->renderer,
+      $this->mailManager,
       $message,
-      $this->mailManager
     );
   }
 

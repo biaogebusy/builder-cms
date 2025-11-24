@@ -40,7 +40,7 @@ admin_toolbar_tools.flush:
   menu_name: admin
 
 admin_toolbar_tools.cssjs:
-  title: 'Flush CSS and Javascript'
+  title: 'Flush CSS and JavaScript'
   route_name: admin_toolbar_tools.cssjs
   parent: admin_toolbar_tools.flush
   menu_name: admin
@@ -84,3 +84,9 @@ admin_toolbar_tools.theme_rebuild:
 admin_toolbar_tools.extra_links:
   deriver: \Drupal\admin_toolbar_tools\Plugin\Derivative\ExtraLinks
   menu_name: admin
+
+admin_toolbar_tools.settings:
+  title: 'Admin Toolbar Tools'
+  description: 'Configure the Admin Toolbar Tools module.'
+  route_name: admin_toolbar_tools.settings
+  parent: system.admin_config_ui

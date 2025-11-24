@@ -2,11 +2,11 @@
 
 namespace Drupal\address\Plugin\views\sort;
 
+use CommerceGuys\Addressing\Country\CountryRepositoryInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\views\Plugin\views\sort\SortPluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use CommerceGuys\Addressing\Country\CountryRepositoryInterface;
 
 /**
  * Sort handler for sorting by either country code or name.

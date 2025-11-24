@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\webform\Functional\Element;
 
+use Drupal\Component\Utility\DeprecationHelper;
+
 /**
  * Tests for email_confirm element.
  *
@@ -27,21 +29,41 @@ class WebformElementEmailConfirmTest extends WebformElementBrowserTestBase {
     // Check basic email confirm.
     $assert_session->responseContains('<fieldset id="edit-email-confirm-basic" class="webform-email-confirm--wrapper fieldgroup form-composite webform-composite-hidden-title js-webform-type-webform-email-confirm webform-type-webform-email-confirm js-form-item form-item js-form-wrapper form-wrapper">');
     $assert_session->responseContains('<span class="visually-hidden fieldset-legend">email_confirm_basic</span>');
-    $assert_session->responseContains('<div class="js-form-item form-item js-form-type-email form-item-email-confirm-basic-mail-1 js-form-item-email-confirm-basic-mail-1">');
+    DeprecationHelper::backwardsCompatibleCall(
+      currentVersion: \Drupal::VERSION,
+      deprecatedVersion: '10.2',
+      currentCallable: fn() => $assert_session->responseContains('<div class="js-form-item form-item form-type-email js-form-type-email form-item-email-confirm-basic-mail-1 js-form-item-email-confirm-basic-mail-1">'),
+      deprecatedCallable: fn() => $assert_session->responseContains('<div class="js-form-item form-item js-form-type-email form-item-email-confirm-basic-mail-1 js-form-item-email-confirm-basic-mail-1">'),
+    );
     $assert_session->responseContains('<label for="edit-email-confirm-basic-mail-1">email_confirm_basic</label>');
     $assert_session->responseContains('<input data-drupal-selector="edit-email-confirm-basic-mail-1" class="webform-email form-email" type="email" id="edit-email-confirm-basic-mail-1" name="email_confirm_basic[mail_1]" value="" size="60" maxlength="254" />');
-    $assert_session->responseContains('<div class="js-form-item form-item js-form-type-email form-item-email-confirm-basic-mail-2 js-form-item-email-confirm-basic-mail-2">');
+    DeprecationHelper::backwardsCompatibleCall(
+      currentVersion: \Drupal::VERSION,
+      deprecatedVersion: '10.2',
+      currentCallable: fn() => $assert_session->responseContains('<div class="js-form-item form-item form-type-email js-form-type-email form-item-email-confirm-basic-mail-2 js-form-item-email-confirm-basic-mail-2">'),
+      deprecatedCallable: fn() => $assert_session->responseContains('<div class="js-form-item form-item js-form-type-email form-item-email-confirm-basic-mail-2 js-form-item-email-confirm-basic-mail-2">'),
+    );
     $assert_session->responseContains('<label for="edit-email-confirm-basic-mail-2">Confirm email</label>');
     $assert_session->responseContains('<input data-drupal-selector="edit-email-confirm-basic-mail-2" class="webform-email-confirm form-email" type="email" id="edit-email-confirm-basic-mail-2" name="email_confirm_basic[mail_2]" value="" size="60" maxlength="254" />');
 
     // Check advanced email confirm w/ custom label.
     $assert_session->responseContains('<fieldset id="edit-email-confirm-advanced" class="webform-email-confirm--wrapper fieldgroup form-composite webform-composite-hidden-title js-webform-type-webform-email-confirm webform-type-webform-email-confirm js-form-item form-item js-form-wrapper form-wrapper">');
     $assert_session->responseContains('<span class="visually-hidden fieldset-legend">Email address</span>');
-    $assert_session->responseContains('<div class="js-form-item form-item js-form-type-email form-item-email-confirm-advanced-mail-1 js-form-item-email-confirm-advanced-mail-1">');
+    DeprecationHelper::backwardsCompatibleCall(
+      currentVersion: \Drupal::VERSION,
+      deprecatedVersion: '10.2',
+      currentCallable: fn() => $assert_session->responseContains('<div class="js-form-item form-item form-type-email js-form-type-email form-item-email-confirm-advanced-mail-1 js-form-item-email-confirm-advanced-mail-1">'),
+      deprecatedCallable: fn() => $assert_session->responseContains('<div class="js-form-item form-item js-form-type-email form-item-email-confirm-advanced-mail-1 js-form-item-email-confirm-advanced-mail-1">'),
+    );
     $assert_session->responseContains('<label for="edit-email-confirm-advanced-mail-1">Email address</label>');
     $assert_session->responseContains('<input data-drupal-selector="edit-email-confirm-advanced-mail-1" aria-describedby="edit-email-confirm-advanced-mail-1--description" class="webform-email form-email" type="email" id="edit-email-confirm-advanced-mail-1" name="email_confirm_advanced[mail_1]" value="" size="60" maxlength="254" placeholder="Enter email address" />');
     $assert_session->responseContains('<div id="edit-email-confirm-advanced-mail-1--description" class="webform-element-description">Please make sure to review your email address</div>');
-    $assert_session->responseContains('<div class="js-form-item form-item js-form-type-email form-item-email-confirm-advanced-mail-2 js-form-item-email-confirm-advanced-mail-2">');
+    DeprecationHelper::backwardsCompatibleCall(
+      currentVersion: \Drupal::VERSION,
+      deprecatedVersion: '10.2',
+      currentCallable: fn() => $assert_session->responseContains('<div class="js-form-item form-item form-type-email js-form-type-email form-item-email-confirm-advanced-mail-2 js-form-item-email-confirm-advanced-mail-2">'),
+      deprecatedCallable: fn() => $assert_session->responseContains('<div class="js-form-item form-item js-form-type-email form-item-email-confirm-advanced-mail-2 js-form-item-email-confirm-advanced-mail-2">'),
+    );
     $assert_session->responseContains('<label for="edit-email-confirm-advanced-mail-2">Please confirm your email address</label>');
     $assert_session->responseContains('<input data-drupal-selector="edit-email-confirm-advanced-mail-2" aria-describedby="edit-email-confirm-advanced-mail-2--description" class="webform-email-confirm form-email" type="email" id="edit-email-confirm-advanced-mail-2" name="email_confirm_advanced[mail_2]" value="" size="60" maxlength="254" placeholder="Enter confirmation email address" />');
     $assert_session->responseContains('<div id="edit-email-confirm-advanced-mail-2--description" class="webform-element-description">Please make sure to review your confirmation email address</div>');
@@ -51,8 +73,18 @@ class WebformElementEmailConfirmTest extends WebformElementBrowserTestBase {
 
     // Check inline title.
     $assert_session->responseContains('<fieldset id="edit-email-confirm-inline" class="webform-email-confirm--wrapper fieldgroup form-composite webform-composite-hidden-title js-webform-type-webform-email-confirm webform-type-webform-email-confirm js-form-item form-item js-form-wrapper form-wrapper">');
-    $assert_session->responseContains('<div class="webform-element--title-inline js-form-item form-item js-form-type-email form-item-email-confirm-inline-mail-1 js-form-item-email-confirm-inline-mail-1">');
-    $assert_session->responseContains('<div class="webform-element--title-inline js-form-item form-item js-form-type-email form-item-email-confirm-inline-mail-2 js-form-item-email-confirm-inline-mail-2">');
+    DeprecationHelper::backwardsCompatibleCall(
+      currentVersion: \Drupal::VERSION,
+      deprecatedVersion: '10.2',
+      currentCallable: fn() => $assert_session->responseContains('<div class="webform-element--title-inline js-form-item form-item form-type-email js-form-type-email form-item-email-confirm-inline-mail-1 js-form-item-email-confirm-inline-mail-1">'),
+      deprecatedCallable: fn() => $assert_session->responseContains('<div class="webform-element--title-inline js-form-item form-item js-form-type-email form-item-email-confirm-inline-mail-1 js-form-item-email-confirm-inline-mail-1">'),
+    );
+    DeprecationHelper::backwardsCompatibleCall(
+      currentVersion: \Drupal::VERSION,
+      deprecatedVersion: '10.2',
+      currentCallable: fn() => $assert_session->responseContains('<div class="webform-element--title-inline js-form-item form-item form-type-email js-form-type-email form-item-email-confirm-inline-mail-2 js-form-item-email-confirm-inline-mail-2">'),
+      deprecatedCallable: fn() => $assert_session->responseContains('<div class="webform-element--title-inline js-form-item form-item js-form-type-email form-item-email-confirm-inline-mail-2 js-form-item-email-confirm-inline-mail-2">'),
+    );
 
     // Check flexbox submit.
     $this->drupalGet('/webform/test_element_email_confirm');

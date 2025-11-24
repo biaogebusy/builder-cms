@@ -49,7 +49,7 @@ class ListTest extends TestBase {
       $multiple = $field['cardinality'] !== 1;
       $required = $field['required'];
 
-      // Test checkbox/radios behaviour. Checkboxes/radios that are previewed
+      // Test checkbox/radios behavior. Checkboxes/radios that are previewed
       // shouldn't get an error when returning to editing. Checkboxes with
       // multiple cardinality should be tested with other option checked and
       // without other option checked. Radios with single cardinality

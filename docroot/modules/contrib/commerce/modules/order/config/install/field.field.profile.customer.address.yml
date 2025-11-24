@@ -31,4 +31,7 @@ settings:
     additionalName: additionalName
     familyName: familyName
   langcode_override: ''
+  field_overrides:
+    addressLine3:
+      override: hidden
 field_type: address

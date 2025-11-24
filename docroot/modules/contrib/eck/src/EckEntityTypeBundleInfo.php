@@ -76,7 +76,7 @@ class EckEntityTypeBundleInfo extends EntityTypeBundleInfo {
    *   The number of bundles for the given entity type.
    */
   public function entityTypeBundleCount($entity_type) {
-    return count($this->getBundleInfo($entity_type));
+    return \count($this->getBundleInfo($entity_type));
   }
 
 }

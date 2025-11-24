@@ -9,7 +9,6 @@ use Drupal\image\Entity\ImageStyle;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
 use Drupal\wechat\Entity\WechatUser;
-use Symfony\Component\HttpFoundation\Request;
 
 class CommonUtil {
 

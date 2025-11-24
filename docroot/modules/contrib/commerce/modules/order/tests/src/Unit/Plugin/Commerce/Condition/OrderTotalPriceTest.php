@@ -2,10 +2,10 @@
 
 namespace Drupal\Tests\commerce_order\Unit\Plugin\Commerce\Condition;
 
+use Drupal\Tests\UnitTestCase;
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_order\Plugin\Commerce\Condition\OrderTotalPrice;
 use Drupal\commerce_price\Price;
-use Drupal\Tests\UnitTestCase;
 
 /**
  * @coversDefaultClass \Drupal\commerce_order\Plugin\Commerce\Condition\OrderTotalPrice
@@ -80,7 +80,7 @@ class OrderTotalPriceTest extends UnitTestCase {
    * @return array
    *   A list of testEvaluate function arguments.
    */
-  public function totalPriceProvider() {
+  public static function totalPriceProvider() {
     return [
       ['>', 10, 5, 5, FALSE],
       ['>', 10, 10, 10, FALSE],

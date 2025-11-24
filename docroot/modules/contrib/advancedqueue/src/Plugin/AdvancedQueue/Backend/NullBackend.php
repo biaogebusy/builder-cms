@@ -2,18 +2,19 @@
 
 namespace Drupal\advancedqueue\Plugin\AdvancedQueue\Backend;
 
+use Drupal\advancedqueue\Attribute\AdvancedQueueBackend;
 use Drupal\advancedqueue\Job;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Provides the null queue backend.
  *
  * This does not store jobs, and no jobs are ever available to be claimed.
- *
- * @AdvancedQueueBackend(
- *   id = "null_backend",
- *   label = @Translation("Null"),
- * )
  */
+#[AdvancedQueueBackend(
+  id: "null_backend",
+  label: new TranslatableMarkup("Null"),
+)]
 class NullBackend extends BackendBase implements SupportsDeletingJobsInterface, SupportsListingJobsInterface, SupportsReleasingJobsInterface {
 
   /**

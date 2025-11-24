@@ -3,6 +3,7 @@
 namespace Drupal\Core\Routing;
 
 use Drupal\Core\Path\CurrentPathStack;
+use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Exception\MethodNotAllowedException;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
@@ -85,6 +86,22 @@ class Router extends UrlMatcher implements RequestMatcherInterface, RouterInterf
   }
 
   /**
+   * Adds a deprecated route filter.
+   *
+   * @param \Drupal\Core\Routing\FilterInterface $route_filter
+   *   The route filter.
+   *
+   * @deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use
+   *   route_filter instead.
+   *
+   * @see https://www.drupal.org/node/2894934
+   */
+  public function addDeprecatedRouteFilter(FilterInterface $route_filter) {
+    @trigger_error('non_lazy_route_filter is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use route_filter instead. See https://www.drupal.org/node/2894934', E_USER_DEPRECATED);
+    $this->filters[] = $route_filter;
+  }
+
+  /**
    * Adds a route enhancer.
    *
    * @param \Drupal\Core\Routing\EnhancerInterface $route_enhancer
@@ -95,10 +112,31 @@ class Router extends UrlMatcher implements RequestMatcherInterface, RouterInterf
   }
 
   /**
+   * Adds a deprecated route enhancer.
+   *
+   * @param \Drupal\Core\Routing\EnhancerInterface $route_enhancer
+   *   The route enhancer.
+   *
+   * @deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use
+   *   route_enhancer instead.
+   *
+   * @see https://www.drupal.org/node/2894934
+   */
+  public function addDeprecatedRouteEnhancer(EnhancerInterface $route_enhancer) {
+    @trigger_error('non_lazy_route_enhancer is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use route_enhancer instead. See https://www.drupal.org/node/2894934', E_USER_DEPRECATED);
+    $this->enhancers[] = $route_enhancer;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function match($pathinfo): array {
-    $request = Request::create($pathinfo);
+    try {
+      $request = Request::create($pathinfo);
+    }
+    catch (BadRequestException $e) {
+      throw new ResourceNotFoundException($e->getMessage(), $e->getCode(), $e);
+    }
 
     return $this->matchRequest($request);
   }
@@ -107,51 +145,31 @@ class Router extends UrlMatcher implements RequestMatcherInterface, RouterInterf
    * {@inheritdoc}
    */
   public function matchRequest(Request $request): array {
-    try {
-      $collection = $this->getInitialRouteCollection($request);
-    }
-    // PHP 7.4 introduces changes to its serialization format, which mean that
-    // older versions of PHP are unable to unserialize data that is serialized
-    // in PHP 7.4. If the site's version of PHP has been downgraded, then
-    // attempting to unserialize routes from the database will fail, and so the
-    // router needs to be rebuilt on the current PHP version.
-    // See https://www.php.net/manual/en/migration74.incompatible.php.
-    catch (\TypeError $e) {
-      \Drupal::service('router.builder')->rebuild();
-      $collection = $this->getInitialRouteCollection($request);
-    }
+    $collection = $this->getInitialRouteCollection($request);
     if ($collection->count() === 0) {
       throw new ResourceNotFoundException(sprintf('No routes found for "%s".', $this->currentPath->getPath()));
     }
     $collection = $this->applyRouteFilters($collection, $request);
     $collection = $this->applyFitOrder($collection);
 
-    if ($ret = $this->matchCollection(rawurldecode($this->currentPath->getPath($request)), $collection)) {
-      return $this->applyRouteEnhancers($ret, $request);
-    }
-
-    throw 0 < count($this->allow)
-      ? new MethodNotAllowedException(array_unique($this->allow))
-      : new ResourceNotFoundException(sprintf('No routes found for "%s".', $this->currentPath->getPath()));
+    $ret = $this->matchCollection(rawurldecode($this->currentPath->getPath($request)), $collection);
+    return $this->applyRouteEnhancers($ret, $request);
   }
 
   /**
-   * Tries to match a URL with a set of routes.
-   *
-   * @param string $pathinfo
-   *   The path info to be parsed
-   * @param \Symfony\Component\Routing\RouteCollection $routes
-   *   The set of routes.
-   *
-   * @return array|null
-   *   An array of parameters. NULL when there is no match.
+   * {@inheritdoc}
    */
-  protected function matchCollection($pathinfo, RouteCollection $routes) {
+  protected function matchCollection($pathinfo, RouteCollection $routes): array {
     // Try a case-sensitive match.
     $match = $this->doMatchCollection($pathinfo, $routes, TRUE);
     // Try a case-insensitive match.
     if ($match === NULL && $routes->count() > 0) {
       $match = $this->doMatchCollection($pathinfo, $routes, FALSE);
+    }
+    if ($match === NULL) {
+      throw 0 < count($this->allow)
+        ? new MethodNotAllowedException(array_unique($this->allow))
+        : new ResourceNotFoundException(sprintf('No routes found for "%s".', $this->currentPath->getPath()));
     }
     return $match;
   }
@@ -210,7 +228,9 @@ class Router extends UrlMatcher implements RequestMatcherInterface, RouterInterf
         }
       }
 
-      $status = $this->handleRouteRequirements($pathinfo, $name, $route);
+      $attributes = $this->getAttributes($route, $name, array_replace($matches, $hostMatches));
+
+      $status = $this->handleRouteRequirements($pathinfo, $name, $route, $attributes);
 
       if (self::ROUTE_MATCH === $status[0]) {
         return $status[1];
@@ -221,7 +241,7 @@ class Router extends UrlMatcher implements RequestMatcherInterface, RouterInterf
         continue;
       }
 
-      return $this->getAttributes($route, $name, array_replace($matches, $hostMatches));
+      return $attributes;
     }
   }
 
@@ -329,11 +349,16 @@ class Router extends UrlMatcher implements RequestMatcherInterface, RouterInterf
   }
 
   /**
-   * {@inheritdoc}
+   * This method is intentionally not implemented.
+   *
+   * Use Drupal\Core\Url instead.
+   *
+   * @see https://www.drupal.org/node/2820197
+   *
+   * @throws \BadMethodCallException
    */
   public function generate($name, $parameters = [], $referenceType = self::ABSOLUTE_PATH): string {
-    @trigger_error(__METHOD__ . '() is deprecated in drupal:8.3.0 and will throw an exception from drupal:10.0.0. Use the \Drupal\Core\Url object instead. See https://www.drupal.org/node/2820197', E_USER_DEPRECATED);
-    return $this->urlGenerator->generate($name, $parameters, $referenceType);
+    throw new \BadMethodCallException(__METHOD__ . '() is not supported. Use the \Drupal\Core\Url object instead. See https://www.drupal.org/node/2820197');
   }
 
 }

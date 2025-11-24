@@ -14,46 +14,26 @@ class MigrateAcquiaConnectorConfigurationTest extends MigrateDrupal7TestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['acquia_connector', 'path_alias'];
+  protected static $modules = ['acquia_connector'];
 
   /**
-   * {@inheritdoc}
+   * The module version, default to latest.
+   *
+   * @var int|string
+   */
+  protected $sourceVersion = '7004';
+
+  /**
+   * The expected configuration values.
+   *
+   * @var array[]
    */
   protected $expectedConfig = [
     'acquia_connector.settings' => [
-      'subscription_name' => 'Test',
       'debug' => FALSE,
+      'cron_interval' => 30,
+      'cron_interval_override' => 0,
       'hide_signup_messages' => 0,
-      'spi' => [
-        'server' => 'https://nspi.acquia.com',
-        'ssl_override' => FALSE,
-        'ssl_verify' => TRUE,
-        'admin_priv' => 1,
-        'send_node_user' => 1,
-        'send_watchdog' => 1,
-        'dynamic_banner' => 0,
-        'set_variables_override' => 0,
-        'set_variables_automatic' => [
-          'acquia_spi_set_variables_automatic ',
-          'error_level',
-          'preprocess_js',
-          'page_cache_maximum_age',
-          'block_cache',
-          'preprocess_css',
-          'page_compression',
-          'image_allow_insecure_derivatives',
-          'googleanalytics_cache',
-          'acquia_spi_send_node_user',
-          'acquia_spi_admin_priv',
-          'acquia_spi_send_watchdog',
-        ],
-        'ignored_set_variables' => [],
-        'saved_variables' => [
-          'variables' => [],
-          'time' => 0,
-        ],
-        'cron_interval' => 30,
-      ],
     ],
   ];
 
@@ -135,6 +115,9 @@ class MigrateAcquiaConnectorConfigurationTest extends MigrateDrupal7TestBase {
         'search_service_colony' => 'useast1-c1.acquia-search.com',
       ],
     ],
+    'acquia_connector.application_uuid' => '297dddeb-a730-422d-bf87-f0fb4b0eaa31',
+    'acquia_connector.identifier' => 'ABCD-12345',
+    'acquia_connector.key' => '0db2c95529d76edfc282e9eed0800b21',
   ];
 
   /**
@@ -142,14 +125,7 @@ class MigrateAcquiaConnectorConfigurationTest extends MigrateDrupal7TestBase {
    */
   protected function setUp(): void {
     parent::setUp();
-    if (version_compare(\Drupal::VERSION, '9.3', '>=')) {
-      // phpcs:ignore
-      $path = \Drupal::service('extension.path.resolver')->getPath('module', 'acquia_connector');
-    }
-    else {
-      // @phpstan-ignore-next-line
-      $path = drupal_get_path('module', 'acquia_connector');
-    }
+    $path = \Drupal::service('extension.list.module')->getPath('acquia_connector');
     $this->loadFixture(implode(DIRECTORY_SEPARATOR, [
       DRUPAL_ROOT,
       $path,
@@ -157,11 +133,27 @@ class MigrateAcquiaConnectorConfigurationTest extends MigrateDrupal7TestBase {
       'fixtures',
       'drupal7.php',
     ]));
-
+    // This migration is common between versions.
     $migrations = [
-      'd7_acquia_connector_settings',
       'd7_acquia_connector_subscription_data',
     ];
+    // This needs to vary based on acquia_agent version.
+    // Get this from system table.
+    $query = $this->sourceDatabase->select('system', 's')
+      ->condition('s.name', 'acquia_agent', '=')
+      ->fields('s', ['schema_version']);
+    $result = $query->execute()->fetchAll();
+    // Default to latest.
+    if (!empty($result)) {
+      $result = reset($result);
+      $this->sourceVersion = $result->schema_version;
+    }
+    if ($this->sourceVersion < 7004) {
+      $migrations[] = 'd7_acquia_connector_settings';
+    }
+    elseif ($this->sourceVersion >= 7004) {
+      $migrations[] = 'd7_acquia_connector_settings_state';
+    }
     $this->executeMigrations($migrations);
   }
 
@@ -169,10 +161,13 @@ class MigrateAcquiaConnectorConfigurationTest extends MigrateDrupal7TestBase {
    * Tests that all expected configuration gets migrated.
    */
   public function testConfigurationMigration() {
-    // Test Config.
-    foreach ($this->expectedConfig as $config_id => $values) {
-      $actual = \Drupal::config($config_id)->get();
-      $this->assertSame($values, $actual);
+    // Only run expected config check on legacy version.
+    if ($this->sourceVersion < 7004) {
+      // Test Config.
+      foreach ($this->expectedConfig as $config_id => $values) {
+        $actual = \Drupal::config($config_id)->get();
+        $this->assertSame($values, $actual);
+      }
     }
     // Test State.
     foreach ($this->expectedState as $state_id => $values) {

@@ -1,0 +1,40 @@
+metatag_custom_tags.metatag_custom_tag.*:
+  type: config_entity
+  label: 'Custom tag'
+  mapping:
+    id:
+      type: machine_name
+      label: 'ID'
+    label:
+      type: label
+      label: 'Label'
+    description:
+      type: string
+      label: 'Description'
+    htmlElement:
+      type: string
+      label: 'Element of the HTML tag. e.g. meta, link, etc.'
+      constraints:
+        Choice:
+          - meta
+          - link
+    htmlValueAttribute:
+      type: string
+      label: 'The name of the html value attribute. e.g. content, href, charset, etc.'
+      constraints:
+        Choice:
+          - content
+          - charset
+          - href
+    attributes:
+      type: sequence
+      label: 'Additional attributes'
+      sequence:
+        type: mapping
+        mapping:
+          name:
+            type: string
+            label: 'Attribute name'
+          value:
+            type: string
+            label: 'Attribute value'

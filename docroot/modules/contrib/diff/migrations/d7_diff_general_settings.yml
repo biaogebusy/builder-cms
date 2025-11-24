@@ -1,0 +1,62 @@
+id: d7_diff_general_settings
+label: Diff general settings
+migration_tags:
+  - Drupal 7
+  - Configuration
+source:
+  plugin: variable
+  variables:
+    # Note the 7.x-3.x settings diff_additional_options_node,
+    # diff_show_diff_inline_node_bundles, and diff_theme have no equivalents in
+    # the 8.x-1.x branch.
+    - diff_context_lines_leading
+    - diff_context_lines_trailing
+    - diff_radio_behavior
+  source_module: diff
+process:
+  general_settings.context_lines_leading: diff_context_lines_leading
+  general_settings.context_lines_trailing: diff_context_lines_trailing
+  general_settings.layout_plugins.split_fields.enabled:
+    # Note the 7.x-3.x branch doesn't have this setting, so we use the default
+    # value from config/install/diff.settings.yml.
+    - plugin: default_value
+      default_value: true
+  general_settings.layout_plugins.split_fields.weight:
+    # Note the 7.x-3.x branch doesn't have this setting, so we use the default
+    # value from config/install/diff.settings.yml.
+    - plugin: default_value
+      default_value: 1
+  general_settings.layout_plugins.unified_fields.enabled:
+    # Note the 7.x-3.x branch doesn't have this setting, so we use the default
+    # value from config/install/diff.settings.yml.
+    - plugin: default_value
+      default_value: true
+  general_settings.layout_plugins.unified_fields.weight:
+    # Note the 7.x-3.x branch doesn't have this setting, so we use the default
+    # value from config/install/diff.settings.yml.
+    - plugin: default_value
+      default_value: 2
+  general_settings.layout_plugins.visual_inline.enabled:
+    # Note the 7.x-3.x branch doesn't have this setting, so we use the default
+    # value from config/install/diff.settings.yml.
+    - plugin: default_value
+      default_value: true
+  general_settings.layout_plugins.visual_inline.weight:
+    # Note the 7.x-3.x branch doesn't have this setting, so we use the default
+    # value from config/install/diff.settings.yml.
+    - plugin: default_value
+      default_value: 0
+  general_settings.radio_behavior: diff_radio_behavior
+  general_settings.revision_pager_limit:
+    # Note the 7.x-3.x branch doesn't have this setting, so we use the default
+    # value from config/install/diff.settings.yml.
+    - plugin: default_value
+      default_value: 50
+  general_settings.visual_inline_theme:
+    # Note the 7.x-3.x branch doesn't have this setting, so we use the default
+    # value from config/install/diff.settings.yml.
+    - plugin: default_value
+      default_value: default
+destination:
+  plugin: config
+  config_name: diff.settings

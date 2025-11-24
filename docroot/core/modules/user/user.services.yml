@@ -1,4 +1,6 @@
 services:
+  _defaults:
+    autoconfigure: true
   access_check.permission:
     class: Drupal\user\Access\PermissionAccessCheck
     tags:
@@ -20,38 +22,34 @@ services:
     arguments: ['@session_configuration', '@database', '@messenger']
     tags:
       - { name: authentication_provider, provider_id: 'cookie', priority: 0, global: TRUE }
-      - { name: event_subscriber }
   user.data:
     class: Drupal\user\UserData
     arguments: ['@database']
     tags:
       - { name: backend_overridable }
+  Drupal\user\UserDataInterface: '@user.data'
   user_maintenance_mode_subscriber:
     class: Drupal\user\EventSubscriber\MaintenanceModeSubscriber
     arguments: ['@maintenance_mode', '@current_user']
-    tags:
-      - { name: event_subscriber }
   user_access_denied_subscriber:
     class: Drupal\user\EventSubscriber\AccessDeniedSubscriber
     arguments: ['@current_user']
-    tags:
-      - { name: event_subscriber }
   user_last_access_subscriber:
     class: Drupal\user\EventSubscriber\UserRequestSubscriber
-    arguments: ['@current_user', '@entity_type.manager']
-    tags:
-      - { name: event_subscriber }
+    arguments: ['@current_user', '@entity_type.manager', '@datetime.time']
   theme.negotiator.admin_theme:
     class: Drupal\user\Theme\AdminNegotiator
     arguments: ['@current_user', '@config.factory', '@entity_type.manager', '@router.admin_context']
     tags:
       - { name: theme_negotiator, priority: -40 }
   user.auth:
-    class: Drupal\user\UserAuth
+    class: Drupal\user\UserAuthentication
     arguments: ['@entity_type.manager', '@password']
+  Drupal\user\UserAuthInterface: '@user.auth'
   user.permissions:
     class: Drupal\user\PermissionHandler
-    arguments: ['@module_handler', '@string_translation', '@controller_resolver']
+    arguments: ['@module_handler', '@string_translation', '@callable_resolver', '@extension.list.module']
+  Drupal\user\PermissionHandlerInterface: '@user.permissions'
   user.current_user_context:
     class: Drupal\user\ContextProvider\CurrentUserContext
     arguments: ['@current_user', '@entity_type.manager']
@@ -60,14 +58,22 @@ services:
   user.toolbar_link_builder:
     class: Drupal\user\ToolbarLinkBuilder
     arguments: ['@current_user']
+  Drupal\user\ToolbarLinkBuilder: '@user.toolbar_link_builder'
   user.flood_control:
     class: Drupal\user\UserFloodControl
     arguments: ['@flood', '@event_dispatcher', '@request_stack']
+  Drupal\user\UserFloodControlInterface: '@user.flood_control'
   user.flood_subscriber:
     class: Drupal\user\EventSubscriber\UserFloodSubscriber
     arguments: ['@logger.channel.user']
-    tags:
-      - { name: 'event_subscriber' }
   logger.channel.user:
     parent: logger.channel_base
     arguments: ['user']
+  Drupal\user\ModulePermissionsLinkHelper: '@user.module_permissions_link_helper'
+  user.module_permissions_link_helper:
+    class: Drupal\user\ModulePermissionsLinkHelper
+    arguments: ['@user.permissions', '@access_manager', '@extension.list.module']
+  user.name_validator:
+    class: Drupal\user\UserNameValidator
+    arguments: ['@validation.basic_recursive_validator_factory', '@validation.constraint']
+  Drupal\user\UserNameValidator: '@user.name_validator'

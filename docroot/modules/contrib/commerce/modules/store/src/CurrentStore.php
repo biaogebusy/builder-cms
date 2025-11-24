@@ -22,20 +22,6 @@ use Symfony\Component\HttpFoundation\RequestStack;
 class CurrentStore implements CurrentStoreInterface {
 
   /**
-   * The request stack.
-   *
-   * @var \Symfony\Component\HttpFoundation\RequestStack
-   */
-  protected $requestStack;
-
-  /**
-   * The chain resolver.
-   *
-   * @var \Drupal\commerce_store\Resolver\ChainStoreResolverInterface
-   */
-  protected $chainResolver;
-
-  /**
    * Static cache of resolved stores. One per request.
    *
    * @var \SplObjectStorage
@@ -45,14 +31,12 @@ class CurrentStore implements CurrentStoreInterface {
   /**
    * Constructs a new CurrentStore object.
    *
-   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
+   * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
    *   The request stack.
-   * @param \Drupal\commerce_store\Resolver\ChainStoreResolverInterface $chain_resolver
+   * @param \Drupal\commerce_store\Resolver\ChainStoreResolverInterface $chainResolver
    *   The chain resolver.
    */
-  public function __construct(RequestStack $request_stack, ChainStoreResolverInterface $chain_resolver) {
-    $this->requestStack = $request_stack;
-    $this->chainResolver = $chain_resolver;
+  public function __construct(protected RequestStack $requestStack, protected ChainStoreResolverInterface $chainResolver) {
     $this->stores = new \SplObjectStorage();
   }
 
@@ -61,8 +45,12 @@ class CurrentStore implements CurrentStoreInterface {
    */
   public function getStore() {
     $request = $this->requestStack->getCurrentRequest();
-    if (!$this->stores->contains($request)) {
-      $this->stores[$request] = $this->chainResolver->resolve();
+    if (!$request || !$this->stores->contains($request)) {
+      $store = $this->chainResolver->resolve();
+      if (!$request) {
+        return $store;
+      }
+      $this->stores[$request] = $store;
     }
 
     return $this->stores[$request];

@@ -1,9 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image\Functional;
 
 use Drupal\file\Entity\File;
+use Drupal\Tests\content_translation\Traits\ContentTranslationTestTrait;
 use Drupal\Tests\TestFileCreationTrait;
+
+// cspell:ignore Scarlett Johansson
 
 /**
  * Uploads images to translated nodes.
@@ -12,6 +17,7 @@ use Drupal\Tests\TestFileCreationTrait;
  */
 class ImageOnTranslatedEntityTest extends ImageFieldTestBase {
 
+  use ContentTranslationTestTrait;
   use TestFileCreationTrait {
     getTestFiles as drupalGetTestFiles;
     compareFiles as drupalCompareFiles;
@@ -46,11 +52,11 @@ class ImageOnTranslatedEntityTest extends ImageFieldTestBase {
     // Create the "Basic page" node type.
     // @todo Remove the disabling of new revision creation in
     //   https://www.drupal.org/node/1239558.
-    $this->drupalCreateContentType(['type' => 'basicpage', 'name' => 'Basic page', 'new_revision' => FALSE]);
+    $this->drupalCreateContentType(['type' => 'basic_page', 'name' => 'Basic page', 'new_revision' => FALSE]);
 
     // Create an image field on the "Basic page" node type.
-    $this->fieldName = strtolower($this->randomMachineName());
-    $this->createImageField($this->fieldName, 'basicpage', [], ['title_field' => 1]);
+    $this->fieldName = $this->randomMachineName();
+    $this->createImageField($this->fieldName, 'node', 'basic_page', [], ['title_field' => 1]);
 
     // Create and log in user.
     $permissions = [
@@ -60,51 +66,34 @@ class ImageOnTranslatedEntityTest extends ImageFieldTestBase {
       'administer languages',
       'administer node fields',
       'create content translations',
-      'create basicpage content',
-      'edit any basicpage content',
+      'create basic_page content',
+      'edit any basic_page content',
       'translate any entity',
-      'delete any basicpage content',
+      'delete any basic_page content',
     ];
     $admin_user = $this->drupalCreateUser($permissions);
     $this->drupalLogin($admin_user);
 
     // Add a second and third language.
-    $edit = [];
-    $edit['predefined_langcode'] = 'fr';
-    $this->drupalGet('admin/config/regional/language/add');
-    $this->submitForm($edit, 'Add language');
-
-    $edit = [];
-    $edit['predefined_langcode'] = 'nl';
-    $this->drupalGet('admin/config/regional/language/add');
-    $this->submitForm($edit, 'Add language');
+    static::createLanguageFromLangcode('fr');
+    static::createLanguageFromLangcode('nl');
   }
 
   /**
    * Tests synced file fields on translated nodes.
    */
-  public function testSyncedImages() {
+  public function testSyncedImages(): void {
     // Enable translation for "Basic page" nodes.
-    $edit = [
-      'entity_types[node]' => 1,
-      'settings[node][basicpage][translatable]' => 1,
-      "settings[node][basicpage][fields][$this->fieldName]" => 1,
-      "settings[node][basicpage][columns][$this->fieldName][file]" => 1,
-      // Explicitly disable alt and title since the javascript disables the
-      // checkboxes on the form.
-      "settings[node][basicpage][columns][$this->fieldName][alt]" => FALSE,
-      "settings[node][basicpage][columns][$this->fieldName][title]" => FALSE,
-    ];
-    $this->drupalGet('admin/config/regional/content-language');
-    $this->submitForm($edit, 'Save configuration');
+    $this->enableContentTranslation('node', 'basic_page');
+    static::setFieldTranslatable('node', 'basic_page', $this->fieldName, TRUE);
 
     // Verify that the image field on the "Basic basic" node type is
     // translatable.
-    $definitions = \Drupal::service('entity_field.manager')->getFieldDefinitions('node', 'basicpage');
+    $definitions = \Drupal::service('entity_field.manager')->getFieldDefinitions('node', 'basic_page');
     $this->assertTrue($definitions[$this->fieldName]->isTranslatable(), 'Node image field is translatable.');
 
     // Create a default language node.
-    $default_language_node = $this->drupalCreateNode(['type' => 'basicpage', 'title' => 'Lost in translation']);
+    $default_language_node = $this->drupalCreateNode(['type' => 'basic_page', 'title' => 'Lost in translation']);
 
     // Edit the node to upload a file.
     $edit = [];
@@ -155,11 +144,11 @@ class ImageOnTranslatedEntityTest extends ImageFieldTestBase {
 
     // Upload a different file.
     $edit = [];
-    $edit['title[0][value]'] = 'Akiko Takeshita';
+    $edit['title[0][value]'] = 'Ada Lovelace';
     $name = 'files[' . $this->fieldName . '_0]';
     $edit[$name] = \Drupal::service('file_system')->realpath($this->drupalGetTestFiles('image')[2]->uri);
     $this->submitForm($edit, 'Save (this translation)');
-    $edit = [$this->fieldName . '[0][alt]' => 'Akiko Takeshita image', $this->fieldName . '[0][title]' => 'Akiko Takeshita image title'];
+    $edit = [$this->fieldName . '[0][alt]' => 'Ada Lovelace image', $this->fieldName . '[0][title]' => 'Ada Lovelace image title'];
     $this->submitForm($edit, 'Save (this translation)');
     $third_fid = $this->getLastFileId();
 
@@ -174,8 +163,8 @@ class ImageOnTranslatedEntityTest extends ImageFieldTestBase {
     $this->assertSession()->responseContains('title="Lost in translation image title"');
     // View the translated node.
     $this->drupalGet('nl/node/' . $default_language_node->id());
-    $this->assertSession()->responseContains('alt="Akiko Takeshita image"');
-    $this->assertSession()->responseContains('title="Akiko Takeshita image title"');
+    $this->assertSession()->responseContains('alt="Ada Lovelace image"');
+    $this->assertSession()->responseContains('title="Ada Lovelace image title"');
 
     // Ensure the file status of the second file is permanent.
     $file = File::load($second_fid);

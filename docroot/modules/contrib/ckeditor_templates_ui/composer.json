@@ -1,0 +1,12 @@
+{
+    "name": "drupal/ckeditor_templates_ui",
+    "type": "drupal-module",
+    "description": "Provide ui for adding ckeditor 5 templates",
+    "homepage": "http://drupal.org/project/address",
+    "license": "GPL-2.0-or-later",
+    "require": {
+        "php": "^8.0",
+        "drupal/core": "^10",
+        "drupal/ckeditor5_template": "^1.0.4"
+    }
+}

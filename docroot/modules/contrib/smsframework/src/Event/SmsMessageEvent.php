@@ -21,7 +21,7 @@ class SmsMessageEvent extends Event {
    *
    * @var \Drupal\sms\Message\SmsMessageInterface[]
    */
-  protected $messages;
+  protected array $messages;
 
   /**
    * Constructs the object.

@@ -23,7 +23,7 @@ system.themes_page:
   weight: -6
 system.modules_list:
   title: Extend
-  description: 'Add and enable modules to extend site functionality.'
+  description: 'Add and install modules to extend site functionality.'
   parent: system.admin
   route_name: system.modules_list
   weight: -2
@@ -76,6 +76,12 @@ system.performance_settings:
   description: 'Configure caching and bandwidth optimization.'
   route_name: system.performance_settings
   weight: -20
+system.development_settings:
+  title: Development settings
+  parent: system.admin_config_development
+  description: 'Configure theme development settings'
+  route_name: system.development_settings
+  weight: -19
 system.logging_settings:
   title: 'Logging and errors'
   parent: system.admin_config_development
@@ -84,7 +90,7 @@ system.logging_settings:
   weight: -15
 system.admin_config_regional:
   route_name: system.admin_config_regional
-  title: 'Regional and language'
+  title: 'Region and language'
   parent: system.admin_config
   description: 'Configure regional settings, localization, and translation.'
   weight: -5
@@ -154,3 +160,10 @@ system.status:
   description: 'Get a status report about your site''s operation.'
   route_name: system.status
   weight: -60
+
+system.linkset_settings:
+  title: Menu Linkset Settings
+  description: Enable or disable the menu linkset endpoint
+  parent: system.admin_config_services
+  route_name: system.linkset_settings
+  weight: 10

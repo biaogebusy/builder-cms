@@ -8,6 +8,8 @@ use Drupal\Core\Url;
 use Drupal\field_validation\ConfigurableFieldValidationRuleInterface;
 use Drupal\field_validation\FieldValidationRuleManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Entity\EntityFieldManagerInterface;
+use Drupal\field_validation\ConstraintFieldValidationRuleBase;
 
 /**
  * Controller for blocktabs edit form.
@@ -22,6 +24,13 @@ class FieldValidationRuleSetEditForm extends FieldValidationRuleSetFormBase {
   protected $fieldValidationRuleManager;
 
   /**
+   * The entity field manager.
+   *
+   * @var \Drupal\Core\Entity\EntityFieldManagerInterface
+   */
+  protected $entityFieldManager;
+
+  /**
    * Constructs an FieldValidationRuleSetEditForm object.
    *
    * @param \Drupal\Core\Entity\EntityStorageInterface $entity_storage
@@ -29,9 +38,10 @@ class FieldValidationRuleSetEditForm extends FieldValidationRuleSetFormBase {
    * @param \Drupal\field_validation\FieldValidationRuleManager $field_validation_rule_manager
    *   The field_validation_rule manager service.
    */
-  public function __construct(EntityStorageInterface $entity_storage, FieldValidationRuleManager $field_validation_rule_manager) {
+  public function __construct(EntityStorageInterface $entity_storage, FieldValidationRuleManager $field_validation_rule_manager, EntityFieldManagerInterface $entity_field_manager) {
     parent::__construct($entity_storage);
     $this->fieldValidationRuleManager = $field_validation_rule_manager;
+    $this->entityFieldManager = $entity_field_manager;
   }
 
   /**
@@ -40,7 +50,8 @@ class FieldValidationRuleSetEditForm extends FieldValidationRuleSetFormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('entity_type.manager')->getStorage('field_validation_rule_set'),
-      $container->get('plugin.manager.field_validation.field_validation_rule')
+      $container->get('plugin.manager.field_validation.field_validation_rule'),
+      $container->get('entity_field.manager')
     );
   }
 
@@ -51,7 +62,7 @@ class FieldValidationRuleSetEditForm extends FieldValidationRuleSetFormBase {
     $user_input = $form_state->getUserInput();
     $form['#title'] = $this->t('Edit field validation rule set %name', ['%name' => $this->entity->label()]);
     $form['#tree'] = TRUE;
-    // $form['#attached']['library'][] = 'field_validation/admin';
+    $form['#attached']['library'][] = 'field_validation/admin';
     // Build the list of existing field validation rule for this rule set.
     $form['rules'] = [
       '#type' => 'table',
@@ -136,21 +147,52 @@ class FieldValidationRuleSetEditForm extends FieldValidationRuleSetFormBase {
     }
 
     // Build the new field_validation_rule addition form and add it to the field_validation_rule list.
-    $new_field_validation_rule_options = [];
+    $new_field_validation_rule_options = [
+      "Constraint rule" => [],
+      "Original rule" => [],
+    ];
     $field_validation_rules = $this->fieldValidationRuleManager->getDefinitions();
     uasort($field_validation_rules, function ($a, $b) {
       return strcasecmp($a['id'], $b['id']);
     });
+    $field_validation_rule_manager = \Drupal::service('plugin.manager.field_validation.field_validation_rule');
     foreach ($field_validation_rules as $field_validation_rule => $definition) {
-      $new_field_validation_rule_options[$field_validation_rule] = $definition['label'];
+      $field_validation_rule_instance =  $field_validation_rule_manager->createInstance($field_validation_rule, []);
+	  if ($field_validation_rule_instance instanceof ConstraintFieldValidationRuleBase) {
+        $new_field_validation_rule_options["Constraint rule"][$field_validation_rule] = $definition['label'];
+	  }else{
+        $new_field_validation_rule_options["Original rule"][$field_validation_rule] = $definition['label'];
+      }
     }
     $form['rules']['new'] = [
       '#tree' => FALSE,
       '#weight' => $user_input['weight'] ?? NULL,
       '#attributes' => ['class' => ['draggable']],
     ];
+
+    $field_options = [];
+    $entity_type_id = $this->entity->getAttachedEntityType();
+    $bundle = $this->entity->getAttachedBundle();
+    $baseFieldDefinitions = $this->entityFieldManager->getBaseFieldDefinitions($entity_type_id);
+    foreach ($baseFieldDefinitions as $base_field_name => $base_field_definition) {
+      $field_options[$base_field_name] = $base_field_definition->getLabel();
+    }
+
+    $fieldDefinitions = $this->entityFieldManager->getFieldDefinitions($entity_type_id, $bundle);
+    foreach ($fieldDefinitions as $fieldname => $field_definition) {
+      if (!empty($field_definition->getTargetBundle())) {
+        $field_options[$fieldname] = $field_definition->getLabel();
+      }
+    }	
     $form['rules']['new']['rule'] = [
       'data' => [
+        'field_name' => [
+          '#type' => 'select',
+          '#title' => $this->t('Field'),
+          '#title_display' => 'invisible',
+          '#options' => $field_options,
+          '#empty_option' => $this->t('Select a field to validate'),
+        ],	  
         'new' => [
           '#type' => 'select',
           '#title' => $this->t('Rule'),
@@ -192,6 +234,9 @@ class FieldValidationRuleSetEditForm extends FieldValidationRuleSetFormBase {
     if (!$form_state->getValue('new')) {
       $form_state->setErrorByName('new', $this->t('Select an rule to add.'));
     }
+    if (!$form_state->getValue('field_name')) {
+      $form_state->setErrorByName('field_name', $this->t('Select an field to validate.'));
+    }	
   }
 
   /**
@@ -214,7 +259,7 @@ class FieldValidationRuleSetEditForm extends FieldValidationRuleSetFormBase {
           'field_validation_rule_set' => $this->entity->id(),
           'field_validation_rule' => $form_state->getValue('new'),
         ],
-        ['query' => ['weight' => $form_state->getValue('weight')]]
+        ['query' => ['weight' => $form_state->getValue('weight'), 'field_name' => $form_state->getValue('field_name')]]
       );
     }
     // If there's no form, immediately add the rule.

@@ -4,7 +4,7 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     grid-gap: var(--gin-spacing-m);
-    margin-bottom: var(--gin-spacing-m);
+    margin-block-end: var(--gin-spacing-m);
   }
 
   &.entities-list--single-item .item-container {
@@ -32,7 +32,8 @@
     }
 
     &.label {
-      padding: var(--gin-spacing-s) var(--gin-spacing-xxl) var(--gin-spacing-s) var(--gin-spacing-s);
+      padding-block: var(--gin-spacing-s);
+      padding-inline: var(--gin-spacing-s) var(--gin-spacing-xxl);
     }
 
     img {
@@ -43,16 +44,16 @@
     > .remove-button {
       @include custom-icon-button('trash');
       position: absolute;
-      top: 0;
-      right: 0;
+      inset-block-start: 0;
+      inset-inline-end: 0;
     }
 
     > .replace-button,
     > .edit-button {
       @include custom-icon-button('edit');
       position: absolute;
-      top: 0;
-      right: 2.6rem;
+      inset-block-start: 0;
+      inset-inline-end: 2.6rem;
     }
   }
 }
@@ -90,7 +91,7 @@ table.entities-list {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       grid-gap: var(--gin-spacing-m);
-      margin-bottom: var(--gin-spacing-m);
+      margin-block-end: var(--gin-spacing-m);
     }
 
     .views-row {
@@ -111,8 +112,8 @@ table.entities-list {
 
       .views-field-entity-browser-select {
         position: absolute;
-        top: 0;
-        left: 0;
+        inset-block-start: 0;
+        inset-inline-start: 0;
         margin: var(--gin-spacing-s);
 
         .form-item {
@@ -138,8 +139,8 @@ table.entities-list {
     }
 
     .entities-list {
-      border-top: var(--gin-border-xs) solid var(--gin-border-color-form-element);
-      padding-top: var(--gin-spacing-m);
+      border-block-start: var(--gin-border-xs) solid var(--gin-border-color-form-element);
+      padding-block-start: var(--gin-spacing-m);
     }
   }
 
@@ -164,10 +165,10 @@ table.entities-list {
 }
 
 .eb-tabs {
-  margin-left: var(--gin-spacing-xxs); // Fix for outline
-  margin-bottom: 0.75em;
+  margin-inline-start: var(--gin-spacing-xxs); // Fix for outline
+  margin-block-end: 0.75em;
 
   ul {
-    border-bottom: none; // Remove superflous bottom.
+    border-block-end: none; // Remove superfluous bottom.
   }
 }

@@ -3,7 +3,7 @@
 Conflict
 ========
 
-Fieldwise conflict prevention and resolution.
+Field wise conflict prevention and resolution.
 
 ## Content staging
 

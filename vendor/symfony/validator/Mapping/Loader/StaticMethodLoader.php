@@ -33,10 +33,7 @@ class StaticMethodLoader implements LoaderInterface
         $this->methodName = $methodName;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function loadClassMetadata(ClassMetadata $metadata)
+    public function loadClassMetadata(ClassMetadata $metadata): bool
     {
         /** @var \ReflectionClass $reflClass */
         $reflClass = $metadata->getReflectionClass();
@@ -49,7 +46,7 @@ class StaticMethodLoader implements LoaderInterface
             }
 
             if (!$reflMethod->isStatic()) {
-                throw new MappingException(sprintf('The method "%s::%s()" should be static.', $reflClass->name, $this->methodName));
+                throw new MappingException(\sprintf('The method "%s::%s()" should be static.', $reflClass->name, $this->methodName));
             }
 
             if ($reflMethod->getDeclaringClass()->name != $reflClass->name) {

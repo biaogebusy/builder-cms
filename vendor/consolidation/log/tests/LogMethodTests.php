@@ -47,9 +47,4 @@ class LogMethodTests extends TestCase
     $this->assertEquals(' [debug] Counter incremented.', $outputText);
   }
 
-  function testSuccess() {
-    $this->logger->success('It worked!');
-    $outputText = rtrim($this->output->fetch());
-    $this->assertEquals(' [success] It worked!', $outputText);
-  }
 }

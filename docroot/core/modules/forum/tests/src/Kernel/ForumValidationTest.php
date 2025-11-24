@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\forum\Kernel;
 
 use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
@@ -10,6 +12,7 @@ use Drupal\taxonomy\Entity\Term;
  * Tests forum validation constraints.
  *
  * @group forum
+ * @group legacy
  */
 class ForumValidationTest extends EntityKernelTestBase {
 
@@ -29,7 +32,9 @@ class ForumValidationTest extends EntityKernelTestBase {
   /**
    * Tests the forum validation constraints.
    */
-  public function testValidation() {
+  public function testValidation(): void {
+    $this->installConfig('forum');
+
     // Add a forum.
     $forum = Term::create([
       'name' => 'forum 1',
@@ -63,7 +68,7 @@ class ForumValidationTest extends EntityKernelTestBase {
     $forum_post->set('taxonomy_forums', $container);
     $violations = $forum_post->validate();
     $this->assertCount(1, $violations);
-    $this->assertEquals(t('The item %forum is a forum container, not a forum. Select one of the forums below instead.', ['%forum' => $container->label()]), $violations[0]->getMessage());
+    $this->assertEquals(sprintf('The item %s is a forum container, not a forum. Select one of the forums below instead.', $container->label()), $violations[0]->getMessage());
   }
 
 }

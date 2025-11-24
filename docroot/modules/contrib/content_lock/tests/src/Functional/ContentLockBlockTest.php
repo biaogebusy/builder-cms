@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_lock\Functional;
 
 use Drupal\block_content\Entity\BlockContent;
@@ -26,6 +28,16 @@ class ContentLockBlockTest extends BrowserTestBase {
    * {@inheritdoc}
    */
   protected $defaultTheme = 'stark';
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUp(): void {
+    if (floatval(\Drupal::VERSION) < 10) {
+      $this->markTestSkipped("This test fails on Drupal 9");
+    }
+    parent::setUp();
+  }
 
   /**
    * Creates a custom block.
@@ -89,16 +101,22 @@ class ContentLockBlockTest extends BrowserTestBase {
 
     $admin = $this->drupalCreateUser([
       'administer blocks',
+      'administer block content',
       'administer content lock',
+      'view the administration theme',
     ]);
 
     $user1 = $this->drupalCreateUser([
       'administer blocks',
+      'administer block content',
       'access content',
+      'view the administration theme',
     ]);
     $user2 = $this->drupalCreateUser([
       'administer blocks',
+      'administer block content',
       'break content lock',
+      'view the administration theme',
     ]);
 
     // We protect the bundle created.
@@ -107,56 +125,52 @@ class ContentLockBlockTest extends BrowserTestBase {
       'block_content[bundles][basic]' => 1,
     ];
     $this->drupalGet('admin/config/content/content_lock');
-    $this->submitForm($edit, t('Save configuration'));
+    $this->submitForm($edit, 'Save configuration');
 
     // We lock block1.
     $this->drupalLogin($user1);
     // Edit a node without saving.
-    $this->drupalGet("block/{$block1->id()}");
+    $this->drupalGet("/admin/content/block/{$block1->id()}");
     $assert_session = $this->assertSession();
-    $assert_session->pageTextContains(t('This content is now locked against simultaneous editing.'));
+    $assert_session->pageTextContains('This content is now locked against simultaneous editing.');
 
     // Other user can not edit block1.
     $this->drupalLogin($user2);
-    $this->drupalGet("block/{$block1->id()}");
-    $assert_session->pageTextContains(t('This content is being edited by the user @name and is therefore locked to prevent other users changes.', [
-      '@name' => $user1->getDisplayName(),
-    ]));
-    $assert_session->linkExists(t('Break lock'));
+    $this->drupalGet("/admin/content/block/{$block1->id()}");
+    $assert_session->pageTextContains("This content is being edited by the user {$user1->getDisplayName()} and is therefore locked to prevent other users changes.");
+    $assert_session->linkExists('Break lock');
     $submit = $assert_session->buttonExists('edit-submit');
     $this->assertTrue($submit->hasAttribute('disabled'));
 
     // We save block1 and unlock it.
     $this->drupalLogin($user1);
-    $this->drupalGet("block/{$block1->id()}");
-    $assert_session->pageTextContains(t('This content is now locked by you against simultaneous editing.'));
-    $this->drupalGet('/block/' . $block1->id());
-    $this->submitForm([], t('Save'));
+    $this->drupalGet("/admin/content/block/{$block1->id()}");
+    $assert_session->pageTextContains('This content is now locked by you against simultaneous editing.');
+    $this->drupalGet('/admin/content/block/' . $block1->id());
+    $this->submitForm([], 'Save');
 
     // We lock block1 with user2.
     $this->drupalLogin($user2);
     // Edit a node without saving.
-    $this->drupalGet("block/{$block1->id()}");
-    $assert_session->pageTextContains(t('This content is now locked against simultaneous editing.'));
+    $this->drupalGet("/admin/content/block/{$block1->id()}");
+    $assert_session->pageTextContains('This content is now locked against simultaneous editing.');
 
     // Other user can not edit block1.
     $this->drupalLogin($user1);
-    $this->drupalGet("block/{$block1->id()}");
-    $assert_session->pageTextContains(t('This content is being edited by the user @name and is therefore locked to prevent other users changes.', [
-      '@name' => $user2->getDisplayName(),
-    ]));
-    $assert_session->linkNotExists(t('Break lock'));
+    $this->drupalGet("/admin/content/block/{$block1->id()}");
+    $assert_session->pageTextContains("This content is being edited by the user {$user2->getDisplayName()} and is therefore locked to prevent other users changes.");
+    $assert_session->linkNotExists('Break lock');
     $submit = $assert_session->buttonExists('edit-submit');
     $this->assertTrue($submit->hasAttribute('disabled'));
 
     // We unlock block1 with user2.
     $this->drupalLogin($user2);
     // Edit a node without saving.
-    $this->drupalGet("block/{$block1->id()}");
-    $assert_session->pageTextContains(t('This content is now locked by you against simultaneous editing.'));
-    $this->drupalGet('/block/' . $block1->id());
-    $this->submitForm([], t('Save'));
-    $assert_session->pageTextContains(t('has been updated.'));
+    $this->drupalGet("/admin/content/block/{$block1->id()}");
+    $assert_session->pageTextContains('This content is now locked by you against simultaneous editing.');
+    $this->drupalGet("/admin/content/block/{$block1->id()}");
+    $this->submitForm([], 'Save');
+    $assert_session->pageTextContains('has been updated.');
   }
 
 }

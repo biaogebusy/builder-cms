@@ -7,8 +7,10 @@ namespace Drupal\sms\Provider;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Component\Utility\Random;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\Entity\ConfigEntityStorageInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityStorageException;
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Utility\Token;
@@ -22,70 +24,42 @@ use Drupal\sms\Message\SmsMessage;
 class PhoneNumberVerification implements PhoneNumberVerificationInterface {
 
   /**
-   * The SMS provider.
-   *
-   * @var \Drupal\sms\Provider\SmsProviderInterface
-   */
-  protected $smsProvider;
-
-  /**
    * Storage for phone number settings.
    *
    * @var \Drupal\Core\Config\Entity\ConfigEntityStorageInterface
    */
-  protected $phoneNumberSettings;
+  protected ConfigEntityStorageInterface $phoneNumberSettings;
 
   /**
    * Storage for Phone Number Verification entities.
    *
    * @var \Drupal\Core\Entity\EntityStorageInterface
    */
-  protected $phoneNumberVerificationStorage;
-
-  /**
-   * The token service.
-   *
-   * @var \Drupal\Core\Utility\Token
-   */
-  protected $token;
-
-  /**
-   * The config factory.
-   *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface
-   */
-  protected $configFactory;
-
-  /**
-   * Time.
-   *
-   * @var \Drupal\Component\Datetime\TimeInterface
-   */
-  protected $time;
+  protected EntityStorageInterface $phoneNumberVerificationStorage;
 
   /**
    * Constructs a new PhoneNumberProvider object.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
    *   The config factory.
    * @param \Drupal\Core\Utility\Token $token
    *   The token replacement system.
-   * @param \Drupal\sms\Provider\SmsProviderInterface $sms_provider
+   * @param \Drupal\sms\Provider\SmsProviderInterface $smsProvider
    *   The SMS provider.
    * @param \Drupal\Component\Datetime\TimeInterface $time
    *   Time.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, ConfigFactoryInterface $config_factory, Token $token, SmsProviderInterface $sms_provider, TimeInterface $time) {
-    $this->smsProvider = $sms_provider;
-    $this->phoneNumberSettings = $entity_type_manager
-      ->getStorage('phone_number_settings');
-    $this->phoneNumberVerificationStorage = $entity_type_manager
-      ->getStorage('sms_phone_number_verification');
-    $this->token = $token;
-    $this->configFactory = $config_factory;
-    $this->time = $time;
+  public function __construct(
+    EntityTypeManagerInterface $entityTypeManager,
+    protected ConfigFactoryInterface $configFactory,
+    protected Token $token,
+    protected SmsProviderInterface $smsProvider,
+    protected TimeInterface $time,
+  ) {
+    $this->phoneNumberSettings = $entityTypeManager->getStorage('phone_number_settings');
+    $this->phoneNumberVerificationStorage = $entityTypeManager->getStorage('sms_phone_number_verification');
   }
 
   /**
@@ -266,6 +240,7 @@ class PhoneNumberVerification implements PhoneNumberVerificationInterface {
       $lifetime = $config->get('verification_code_lifetime');
       if (!empty($lifetime)) {
         $verification_ids += $this->phoneNumberVerificationStorage->getQuery()
+          ->accessCheck(FALSE)
           ->condition('entity__target_type', $config->get('entity_type'))
           ->condition('bundle', $config->get('bundle'))
           ->condition('status', 0)
@@ -282,7 +257,7 @@ class PhoneNumberVerification implements PhoneNumberVerificationInterface {
           $purge = $config->getPurgeVerificationPhoneNumber();
           $field_name = $config->getFieldName('phone_number');
           if (!empty($purge) && isset($entity->{$field_name})) {
-            $entity->{$field_name}->filter(function ($item) use ($phone_number_verification) {
+            $entity->{$field_name}->filter(static function ($item) use ($phone_number_verification) {
               return $item->value != $phone_number_verification->getPhoneNumber();
             });
             $entity->save();

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Plugin\Annotation;
 
 use Drupal\Core\Plugin\Context\ContextDefinition;
@@ -19,7 +21,7 @@ class ContextDefinitionTest extends KernelTestBase {
   /**
    * Tests adding constraints via annotations.
    */
-  public function testConstraints() {
+  public function testConstraints(): void {
     $definition = $this->container->get('plugin.manager.block')->getDefinition('test_context_aware');
     $this->assertArrayHasKey('context_definitions', $definition);
     $this->assertArrayHasKey('user', $definition['context_definitions']);

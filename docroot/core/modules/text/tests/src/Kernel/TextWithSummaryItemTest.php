@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\text\Kernel;
 
 use Drupal\Core\Field\FieldItemListInterface;
@@ -17,9 +19,7 @@ use Drupal\filter\Entity\FilterFormat;
 class TextWithSummaryItemTest extends FieldKernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['filter'];
 
@@ -57,7 +57,7 @@ class TextWithSummaryItemTest extends FieldKernelTestBase {
   /**
    * Tests processed properties.
    */
-  public function testCrudAndUpdate() {
+  public function testCrudAndUpdate(): void {
     $entity_type = 'entity_test';
     $this->createField($entity_type);
 
@@ -79,13 +79,13 @@ class TextWithSummaryItemTest extends FieldKernelTestBase {
     $this->assertNull($entity->summary_field->format);
     // Even if no format is given, if text processing is enabled, the default
     // format is used.
-    $this->assertEquals("<p>{$value}</p>\n", $entity->summary_field->processed);
-    $this->assertEquals("<p>{$summary}</p>\n", $entity->summary_field->summary_processed);
+    $this->assertSame("<p>{$value}</p>\n", (string) $entity->summary_field->processed);
+    $this->assertSame("<p>{$summary}</p>\n", (string) $entity->summary_field->summary_processed);
 
     // Change the format, this should update the processed properties.
     $entity->summary_field->format = 'no_filters';
-    $this->assertEquals($value, $entity->summary_field->processed);
-    $this->assertEquals($summary, $entity->summary_field->summary_processed);
+    $this->assertSame($value, (string) $entity->summary_field->processed);
+    $this->assertSame($summary, (string) $entity->summary_field->summary_processed);
 
     // Test the generateSampleValue() method.
     $entity = $this->container->get('entity_type.manager')

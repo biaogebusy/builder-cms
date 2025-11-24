@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\redirect_404\Functional;
 
 use Drupal\Component\Utility\UrlHelper;
@@ -122,7 +124,7 @@ class Fix404RedirectUILanguageTest extends Redirect404TestBase {
     $this->drupalGet('admin/config/search/redirect/404');
     $this->assertLanguageInTableBody('French');
     // Check the error path visit count.
-    $this->assertSession()->elementTextContains('xpath', '//table/tbody/tr/td[2]', 2);
+    $this->assertSession()->elementTextContains('xpath', '//table/tbody/tr/td[2]', '2');
     $this->clickLink('Add redirect');
     // Save the redirect with a different langcode.
     $this->assertSession()->fieldValueEquals('redirect_source[0][path]', 'testing');

@@ -2,25 +2,26 @@
 
 namespace Drupal\Core\Field\Plugin\Field\FieldWidget;
 
+use Drupal\Core\Field\Attribute\FieldWidget;
 use Drupal\Core\Field\FieldFilteredMarkup;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Symfony\Component\Validator\ConstraintViolationInterface;
 
 /**
  * Plugin implementation of the 'number' widget.
- *
- * @FieldWidget(
- *   id = "number",
- *   label = @Translation("Number field"),
- *   field_types = {
- *     "integer",
- *     "decimal",
- *     "float"
- *   }
- * )
  */
+#[FieldWidget(
+  id: 'number',
+  label: new TranslatableMarkup('Number field'),
+  field_types: [
+    'integer',
+    'decimal',
+    'float',
+  ],
+)]
 class NumberWidget extends WidgetBase {
 
   /**
@@ -73,13 +74,12 @@ class NumberWidget extends WidgetBase {
       '#type' => 'number',
       '#default_value' => $value,
       '#placeholder' => $this->getSetting('placeholder'),
-      '#number_type' => $this->fieldDefinition->getType(),
     ];
 
     // Set the step for floating point and decimal numbers.
     switch ($this->fieldDefinition->getType()) {
       case 'decimal':
-        $element['#step'] = number_format(pow(0.1, $field_settings['scale']), $field_settings['scale'], '.', '');
+        $element['#step'] = pow(0.1, $field_settings['scale']);
         break;
 
       case 'float':

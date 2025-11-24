@@ -21,7 +21,8 @@ class WebformOptionsCustomEntity extends WebformOptionsCustom {
       return;
     }
 
-    // Remove any prefine #options so the entity reference options will be used.
+    // Remove any predefined #options so the entity reference options will be
+    // used.
     unset($element['#options']);
     parent::setTemplateOptions($element);
   }

@@ -2,3 +2,8 @@
   title: 'Administer product types'
   description: 'Maintain the types of products available and the fields that are associated with those types.'
   restrict access: true
+
+'translate commerce_product_attribute':
+  title: 'Translate product attribute'
+  description: 'Translate any product attribute.'
+  restrict access: true

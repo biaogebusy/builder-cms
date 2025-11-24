@@ -7,9 +7,9 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Link;
 use Drupal\field\FieldStorageConfigInterface;
 use Drupal\field_permissions\FieldPermissionsServiceInterface;
+use Drupal\field_permissions\Plugin\CustomPermissionsInterface;
 use Drupal\field_permissions\Plugin\FieldPermissionType\Manager;
 use Drupal\field_permissions\Plugin\FieldPermissionTypeInterface;
-use Drupal\field_permissions\Plugin\CustomPermissionsInterface;
 use Drupal\user\RoleInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -169,7 +169,10 @@ class FieldPermissionsController extends ControllerBase {
       }
       else {
         // Use the label and description.
-        $row[4]['data'] = $this->t('@label (@description)', ['@label' => $plugin->getLabel(), '@description' => $plugin->getDescription()]);
+        $row[4]['data'] = $this->t('@label (@description)', [
+          '@label' => $plugin->getLabel(),
+          '@description' => $plugin->getDescription(),
+        ]);
         $row[4]['colspan'] = 5;
       }
     }

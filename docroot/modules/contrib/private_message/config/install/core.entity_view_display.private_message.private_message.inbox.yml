@@ -28,7 +28,7 @@ content:
         past_format: '@interval ago'
         granularity: 2
         refresh: 60
-    third_party_settings: {  }
+    third_party_settings: {}
     type: timestamp
   message:
     label: visually_hidden
@@ -37,7 +37,7 @@ content:
     region: content
     settings:
       trim_length: 200
-    third_party_settings: {  }
+    third_party_settings: {}
   owner:
     label: inline
     type: entity_reference_entity_view
@@ -46,5 +46,5 @@ content:
     settings:
       view_mode: private_message_author
       link: false
-    third_party_settings: {  }
-hidden: {  }
+    third_party_settings: {}
+hidden: {}

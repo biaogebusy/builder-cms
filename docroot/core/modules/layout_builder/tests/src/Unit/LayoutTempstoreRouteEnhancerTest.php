@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\layout_builder\Unit;
 
 use Drupal\Core\Routing\RouteObjectInterface;
@@ -20,7 +22,7 @@ class LayoutTempstoreRouteEnhancerTest extends UnitTestCase {
   /**
    * @covers ::enhance
    */
-  public function testEnhance() {
+  public function testEnhance(): void {
     $section_storage = $this->prophesize(SectionStorageInterface::class);
     $layout_tempstore_repository = $this->prophesize(LayoutTempstoreRepositoryInterface::class);
     $layout_tempstore_repository->get($section_storage->reveal())->willReturn('the_return_value');

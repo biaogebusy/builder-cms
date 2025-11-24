@@ -18,24 +18,14 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 class QueueProcessController implements ContainerInjectionInterface {
 
   /**
-   * The QueueUIBatchInterface.
-   *
-   * @var \Drupal\queue_ui\QueueUIBatchInterface
-   */
-  protected $batch;
-
-  /**
    * Constructor for QueueProcessController.
    *
-   * @param \Drupal\queue_ui\QueueUIBatchInterface|null $batch
+   * @param \Drupal\queue_ui\QueueUIBatchInterface $batch
    *   Queue UI batch instance.
    */
-  public function __construct(QueueUIBatchInterface $batch = NULL) {
-    if ($batch === NULL) {
-      $batch = \Drupal::service('queue_ui.batch');
-    }
-    $this->batch = $batch;
-  }
+  public function __construct(
+    protected QueueUIBatchInterface $batch,
+  ) {}
 
   /**
    * {@inheritdoc}

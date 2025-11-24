@@ -3,6 +3,7 @@
 namespace Drupal\menu_ui;
 
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Component\Utility\SortArray;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
@@ -230,7 +231,13 @@ class MenuForm extends EntityForm {
     // We indicate that a menu administrator is running the menu access check.
     $this->getRequest()->attributes->set('_menu_admin', TRUE);
     $manipulators = [
-      ['callable' => 'menu.default_tree_manipulators:checkAccess'],
+      // Use a dedicated menu tree access check manipulator as users editing
+      // this form, granted with 'administer menu' permission, should be able to
+      // access menu links with inaccessible routes. The default menu tree
+      // manipulator only allows the access to menu links with accessible routes.
+      // @see \Drupal\Core\Menu\DefaultMenuLinkTreeManipulators::checkAccess()
+      // @see \Drupal\menu_ui\Menu\MenuUiMenuTreeManipulators::checkAccess()
+      ['callable' => 'menu_ui.menu_tree_manipulators:checkAccess'],
       ['callable' => 'menu.default_tree_manipulators:generateIndexAndSort'],
     ];
     $tree = $this->menuTree->transform($tree, $manipulators);
@@ -433,41 +440,27 @@ class MenuForm extends EntityForm {
           '#type' => 'hidden',
           '#default_value' => $link->getParent(),
         ];
-        // Build a list of operations.
-        $operations = [];
-        $operations['edit'] = [
-          'title' => $this->t('Edit'),
-        ];
-        // Allow for a custom edit link per plugin.
-        $edit_route = $link->getEditRoute();
-        if ($edit_route) {
-          $operations['edit']['url'] = $edit_route;
-          // Bring the user back to the menu overview.
-          $operations['edit']['query'] = $this->getDestinationArray();
-        }
-        else {
-          // Fall back to the standard edit link.
-          $operations['edit'] += [
-            'url' => Url::fromRoute('menu_ui.link_edit', ['menu_link_plugin' => $link->getPluginId()]),
+        $operations = $link->getOperations();
+        if ($element->depth < $this->menuTree->maxDepth()) {
+          $add_link_url = Url::fromRoute(
+            'entity.menu.add_link_form',
+            ['menu' => $this->entity->id()],
+            ['query' => ['parent' => $link->getPluginId()]]
+          );
+          $operations += [
+            'add-child' => [
+              'title' => $this->t('Add child'),
+              'weight' => 20,
+              'url' => $add_link_url,
+            ],
           ];
+          uasort($operations, [SortArray::class, 'sortByWeightElement']);
         }
-        // Links can either be reset or deleted, not both.
-        if ($link->isResettable()) {
-          $operations['reset'] = [
-            'title' => $this->t('Reset'),
-            'url' => Url::fromRoute('menu_ui.link_reset', ['menu_link_plugin' => $link->getPluginId()]),
-          ];
-        }
-        elseif ($delete_link = $link->getDeleteRoute()) {
-          $operations['delete']['url'] = $delete_link;
-          $operations['delete']['query'] = $this->getDestinationArray();
-          $operations['delete']['title'] = $this->t('Delete');
-        }
-        if ($link->isTranslatable()) {
-          $operations['translate'] = [
-            'title' => $this->t('Translate'),
-            'url' => $link->getTranslateRoute(),
-          ];
+        foreach ($operations as $key => $operation) {
+          if (!isset($operations[$key]['query'])) {
+            // Bring the user back to the menu overview.
+            $operations[$key]['query'] = $this->getDestinationArray();
+          }
         }
         $form[$id]['operations'] = [
           '#type' => 'operations',
@@ -527,7 +520,7 @@ class MenuForm extends EntityForm {
         if ($updated_values) {
           // Use the ID from the actual plugin instance since the hidden value
           // in the form could be tampered with.
-          $this->menuLinkManager->updateDefinition($element['#item']->link->getPLuginId(), $updated_values);
+          $this->menuLinkManager->updateDefinition($element['#item']->link->getPluginId(), $updated_values);
         }
       }
     }

@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\entity_reference_revisions\Functional;
 
+use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\node\Entity\Node;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\field_ui\Traits\FieldUiTestTrait;
@@ -143,7 +144,10 @@ class EntityReferenceRevisionsAdminTest extends BrowserTestBase {
       $selected_group = [
         'new_storage_type' => 'reference',
       ];
-      $this->submitForm($selected_group, 'Change field group');
+      // The DeprecationHelper class is available from Drupal Core 10.1.x,
+      // so no need for class_exists here.
+      $submit = DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '10.3', fn() => "Continue", fn() => "Change field group");
+      $this->submitForm($selected_group, $submit);
       $this->assertSession()->pageTextContains('Other (revisions)');
       $edit = array(
         'group_field_options_wrapper' => 'entity_reference_revisions',

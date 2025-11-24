@@ -35,11 +35,19 @@ class QuickNodeCloneNodeSettingsForm extends QuickNodeCloneEntitySettingsForm {
       '#default_value' => $this->getSettings('text_to_prepend_to_title'),
       '#description' => $this->t('Enter text to add to the title of a cloned node to help content editors. A space will be added between this text and the title. Example: "Clone of"'),
     ];
+
+    $default_clone_status = $this->getSettings('clone_status');
     $form['clone_status'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Clone publication status of original?'),
-      '#default_value' => $this->getSettings('clone_status'),
-      '#description' => $this->t('If unchecked, the publication status of the clone will be equal to the default of the content type.'),
+      '#type' => 'radios',
+      '#title' => $this->t('Publication status'),
+      '#description' => $this->t('What should the cloned status be?'),
+      '#default_value' => $default_clone_status,
+      '#options' => [
+        'default' => $this->t('Default - Node type default'),
+        'original' => $this->t('Original - Clone will have the same status as the original'),
+        'published' => $this->t('Published'),
+        'unpublished' => $this->t('Unpublished'),
+      ],
     ];
 
     return parent::buildForm($form, $form_state);
@@ -51,8 +59,12 @@ class QuickNodeCloneNodeSettingsForm extends QuickNodeCloneEntitySettingsForm {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $form_state->cleanValues();
     $form_values = $form_state->getValues();
-    $this->config('quick_node_clone.settings')->set('text_to_prepend_to_title', $form_values['text_to_prepend_to_title'])->save();
-    $this->config('quick_node_clone.settings')->set('clone_status', $form_values['clone_status'])->save();
+
+    $settings = $this->config('quick_node_clone.settings');
+    $settings
+      ->set('text_to_prepend_to_title', $form_values['text_to_prepend_to_title'])
+      ->set('clone_status', $form_values['clone_status'])
+      ->save();
 
     parent::submitForm($form, $form_state);
   }

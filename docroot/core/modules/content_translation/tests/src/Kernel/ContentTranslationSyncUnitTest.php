@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_translation\Kernel;
 
 use Drupal\content_translation\FieldTranslationSynchronizer;
@@ -54,6 +56,9 @@ class ContentTranslationSyncUnitTest extends KernelTestBase {
    */
   protected $unchangedFieldValues;
 
+  /**
+   * {@inheritdoc}
+   */
   protected static $modules = ['language', 'content_translation'];
 
   /**
@@ -85,7 +90,7 @@ class ContentTranslationSyncUnitTest extends KernelTestBase {
   /**
    * Tests the field synchronization algorithm.
    */
-  public function testFieldSync() {
+  public function testFieldSync(): void {
     // Add a new item to the source items and check that its added to all the
     // translations.
     $sync_langcode = $this->langcodes[2];
@@ -176,7 +181,7 @@ class ContentTranslationSyncUnitTest extends KernelTestBase {
   /**
    * Tests that items holding the same values are correctly synchronized.
    */
-  public function testMultipleSyncedValues() {
+  public function testMultipleSyncedValues(): void {
     $sync_langcode = $this->langcodes[1];
     $unchanged_items = $this->unchangedFieldValues[$sync_langcode];
 
@@ -235,7 +240,7 @@ class ContentTranslationSyncUnitTest extends KernelTestBase {
   /**
    * Tests that one change in a synchronized column triggers a change in all columns.
    */
-  public function testDifferingSyncedColumns() {
+  public function testDifferingSyncedColumns(): void {
     $sync_langcode = $this->langcodes[2];
     $unchanged_items = $this->unchangedFieldValues[$sync_langcode];
     $field_values = $this->unchangedFieldValues;
@@ -252,7 +257,7 @@ class ContentTranslationSyncUnitTest extends KernelTestBase {
       for ($delta = 0; $delta < $this->cardinality; $delta++) {
         foreach ($this->columns as $column) {
           // If the column is synchronized, the value should have been synced,
-          // for unsynchronized columns, the value must not change.
+          // for columns that are not synchronized, the value must not change.
           $expected_value = in_array($column, $this->synchronized) ? $changed_items[$delta][$column] : $this->unchangedFieldValues[$langcode][$delta][$column];
           $this->assertEquals($expected_value, $field_values[$langcode][$delta][$column], "Differing Item {$delta} column {$column} for langcode {$langcode} synced correctly");
         }

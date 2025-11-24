@@ -52,7 +52,11 @@ variables:
   _PHPUNIT_CONCURRENT: '1'
   OPT_IN_TEST_PREVIOUS_MAJOR: 1
   OPT_IN_TEST_PREVIOUS_MINOR: 1
-  OPT_IN_TEST_NEXT_MINOR: 1
+  CORE_PREVIOUS_PHP_MIN: 8.1
+
+phpunit (next major):
+  variables:
+    SYMFONY_DEPRECATIONS_HELPER: "disabled"
 
 ###################################################################################
 #

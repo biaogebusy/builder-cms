@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Kernel\Migrate\d6;
 
 use Drupal\comment\Entity\Comment;
@@ -57,12 +59,12 @@ class MigrateCommentTest extends MigrateDrupal6TestBase {
   /**
    * Tests the migrated comments.
    */
-  public function testMigration() {
+  public function testMigration(): void {
     $comment = Comment::load(1);
     $this->assertSame('The first comment.', $comment->getSubject());
     $this->assertSame('The first comment body.', $comment->comment_body->value);
     $this->assertSame('filtered_html', $comment->comment_body->format);
-    $this->assertSame(NULL, $comment->pid->target_id);
+    $this->assertNull($comment->pid->target_id);
     $this->assertSame('1', $comment->getCommentedEntityId());
     $this->assertSame('node', $comment->getCommentedEntityTypeId());
     $this->assertSame('en', $comment->language()->getId());
@@ -84,7 +86,7 @@ class MigrateCommentTest extends MigrateDrupal6TestBase {
 
     $comment = Comment::load(3);
     $this->assertSame('The second comment.', $comment->subject->value);
-    $this->assertSame(NULL, $comment->pid->target_id);
+    $this->assertNull($comment->pid->target_id);
     $this->assertSame('203.0.113.3', $comment->getHostname());
 
     $node = $comment->getCommentedEntity();

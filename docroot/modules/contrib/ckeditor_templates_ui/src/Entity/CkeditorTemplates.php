@@ -28,7 +28,7 @@ use Drupal\Core\Entity\EntityStorageInterface;
  *     "label" = "label",
  *     "description" = "description",
  *     "html" = "html",
- *     "image" = "image",
+ *     "icon" = "icon",
  *     "weight" = "weight"
  *   },
  *   config_export = {
@@ -36,7 +36,7 @@ use Drupal\Core\Entity\EntityStorageInterface;
  *     "label",
  *     "description",
  *     "html",
- *     "image",
+ *     "icon",
  *     "weight"
  *   },
  *   links = {
@@ -99,7 +99,7 @@ class CkeditorTemplates extends ConfigEntityBase implements CkeditorTemplatesUiI
   public static function postLoad(EntityStorageInterface $storage, array &$entities) {
     parent::postLoad($storage, $entities);
     // Sort the queried templates by their weight.
-    uasort($entities, 'static::sort');
+    uasort($entities, static::sort(...));
   }
 
   /**

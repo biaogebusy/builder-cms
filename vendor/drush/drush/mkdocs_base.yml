@@ -14,18 +14,25 @@ theme:
   features:
     - navigation.tabs
     - navigation.tabs.sticky
+    - navigation.tracking
+    - navigation.path
+    - navigation.top
     - toc.integrate
+    - content.action.edit
+    - content.action.view
 site_url: https://www.drush.org/latest/
 repo_url: https://github.com/drush-ops/drush
 #Overridden on many pages via edit_uri plugin. See front matter.
-edit_uri: blob/11.x/docs
+edit_uri: blob/13.x/docs
 extra_css:
   - css/extra.drush.css
 plugins:
   - edit_url
   - search
+  - social
   - mike:
       canonical_version: latest
+      alias_type: redirect
   - git-revision-date-localized:
       exclude:
         - commands/*
@@ -37,6 +44,7 @@ plugins:
 extra:
   version:
     provider: mike
+    alias: true
   social:
     - icon: fontawesome/brands/twitter
       link: https://twitter.com/drushcli
@@ -47,6 +55,7 @@ extra:
 # Concerned about surveillance and spam so not enabling disqus for now.
 #  disqus: drush
 markdown_extensions:
+  - attr_list
   - toc:
       permalink: true
   - admonition: {  }
@@ -67,8 +76,8 @@ markdown_extensions:
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.emoji:
-      emoji_index: '!!python/name:materialx.emoji.twemoji'
-      emoji_generator: '!!python/name:materialx.emoji.to_svg'
+      emoji_index: '!!python/name:material.extensions.emoji.twemoji'
+      emoji_generator: '!!python/name:material.extensions.emoji.to_svg'
 nav:
   - Home: index.md
   - Use:
@@ -77,6 +86,7 @@ nav:
     - Cron: cron.md
     - Drush configuration: using-drush-configuration.md
     - Drupal configuration: config-exporting.md
+    - Drupal dependencies: drupal-dependencies.md
     - Site aliases: site-aliases.md
     - Output Formats, Fields & Filters: output-formats-filters.md
     - Migrate: migrate.md

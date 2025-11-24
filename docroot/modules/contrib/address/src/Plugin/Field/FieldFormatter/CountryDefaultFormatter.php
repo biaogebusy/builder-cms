@@ -3,9 +3,9 @@
 namespace Drupal\address\Plugin\Field\FieldFormatter;
 
 use CommerceGuys\Addressing\Country\CountryRepositoryInterface;
-use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -76,14 +76,14 @@ class CountryDefaultFormatter extends FormatterBase implements ContainerFactoryP
    * {@inheritdoc}
    */
   public function viewElements(FieldItemListInterface $items, $langcode) {
-    $countries = $this->countryRepository->getList();
+    $countries = $this->countryRepository->getList($langcode);
     $elements = [];
     foreach ($items as $delta => $item) {
       $elements[$delta] = [
         '#plain_text' => $countries[$item->value] ?? $item->value,
         '#cache' => [
           'contexts' => [
-            'languages:' . LanguageInterface::TYPE_INTERFACE,
+            'languages:' . LanguageInterface::TYPE_CONTENT,
           ],
         ],
       ];

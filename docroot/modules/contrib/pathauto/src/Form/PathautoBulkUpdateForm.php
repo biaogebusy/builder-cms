@@ -175,10 +175,13 @@ class PathautoBulkUpdateForm extends FormBase {
     else {
       $error_operation = reset($operations);
       \Drupal::service('messenger')
-        ->addMessage(t('An error occurred while processing @operation with arguments : @args'), [
-          '@operation' => $error_operation[0],
-          '@args' => print_r($error_operation[0]),
-        ]);
+        ->addMessage(t(
+          'An error occurred while processing %operation with arguments: %args',
+          [
+            '%operation' => $error_operation[0],
+            '%args' => print_r($error_operation, TRUE),
+          ]
+        ), 'error');
     }
   }
 

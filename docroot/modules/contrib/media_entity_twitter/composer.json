@@ -1,5 +1,6 @@
 {
   "name": "drupal/media_entity_twitter",
+  "description": "Provides Twitter integration for Media entity",
   "type": "drupal-module",
   "license": "GPL-2.0-or-later",
   "require": {

@@ -13,7 +13,7 @@ class AccessConfigure extends ConditionConfigure {
    * {@inheritdoc}
    */
   protected function getParentRouteInfo($cached_values) {
-    /** @var $page \Drupal\page_manager\PageInterface */
+    /** @var \Drupal\page_manager\PageInterface $page */
     $page = $cached_values['page'];
 
     $route_name = $page->isNew() ? 'entity.page.add_step_form' : 'entity.page.edit_form';
@@ -29,7 +29,7 @@ class AccessConfigure extends ConditionConfigure {
    * {@inheritdoc}
    */
   protected function getConditions($cached_values) {
-    /** @var $page \Drupal\page_manager\PageInterface */
+    /** @var \Drupal\page_manager\PageInterface $page */
     $page = $cached_values['page'];
     return $page->get('access_conditions');
   }
@@ -38,7 +38,7 @@ class AccessConfigure extends ConditionConfigure {
    * {@inheritdoc}
    */
   protected function setConditions($cached_values, $conditions) {
-    /** @var $page \Drupal\page_manager\PageInterface */
+    /** @var \Drupal\page_manager\PageInterface $page */
     $page = $cached_values['page'];
     $page->set('access_conditions', $conditions);
     $cached_values['page'] = $page;
@@ -49,7 +49,7 @@ class AccessConfigure extends ConditionConfigure {
    * {@inheritdoc}
    */
   protected function getContexts($cached_values) {
-    /** @var $page \Drupal\page_manager\PageInterface */
+    /** @var \Drupal\page_manager\PageInterface $page */
     $page = $cached_values['page'];
     return $page->getContexts();
   }

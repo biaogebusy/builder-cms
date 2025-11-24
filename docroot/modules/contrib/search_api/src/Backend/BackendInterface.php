@@ -13,7 +13,7 @@ use Drupal\search_api\ServerInterface;
  * CRUD "hook" methods that cannot be present on the server entity (which also
  * implements \Drupal\search_api\Backend\BackendSpecificInterface).
  *
- * @see \Drupal\search_api\Annotation\SearchApiBackend
+ * @see \Drupal\search_api\Attribute\SearchApiBackend
  * @see \Drupal\search_api\Backend\BackendPluginManager
  * @see \Drupal\search_api\Backend\BackendPluginBase
  * @see plugin_api

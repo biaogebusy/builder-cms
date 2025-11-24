@@ -5,26 +5,26 @@
  * Token callbacks for the token module.
  */
 
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\ContentEntityTypeInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Entity\TypedData\EntityDataDefinitionInterface;
+use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Render\BubbleableMetadata;
-use Drupal\Component\Utility\Html;
 use Drupal\Core\Routing\RouteObjectInterface;
 use Drupal\Core\TypedData\DataReferenceDefinitionInterface;
 use Drupal\Core\Url;
 use Drupal\field\FieldStorageConfigInterface;
+use Drupal\image\Entity\ImageStyle;
 use Drupal\menu_link_content\MenuLinkContentInterface;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\node\NodeInterface;
 use Drupal\system\Entity\Menu;
 use Drupal\user\UserInterface;
-use Drupal\Core\Field\FieldStorageDefinitionInterface;
-use Drupal\Core\Entity\ContentEntityTypeInterface;
-use Drupal\image\Entity\ImageStyle;
 
 /**
  * Implements hook_token_info_alter().
@@ -1540,7 +1540,7 @@ function _token_menu_link_best_match(NodeInterface $node, array $links) {
 function _field_token_info_alter(&$info) {
   $type_info = \Drupal::service('plugin.manager.field.field_type')->getDefinitions();
 
-  // Attach field tokens to their respecitve entity tokens.
+  // Attach field tokens to their respective entity tokens.
   foreach (\Drupal::entityTypeManager()->getDefinitions() as $entity_type_id => $entity_type) {
     if (!$entity_type->entityClassImplements(ContentEntityInterface::class)) {
       continue;
@@ -1777,6 +1777,7 @@ function _field_tokens($type, $tokens, array $data, array $options, BubbleableMe
           $display_options = [
             'type' => !empty($field_type_definition['default_token_formatter']) ? $field_type_definition['default_token_formatter'] : $field_type_definition['default_formatter'],
             'label' => 'hidden',
+            'weight' => 0,
           ];
         }
 
@@ -1820,7 +1821,7 @@ function _field_tokens($type, $tokens, array $data, array $options, BubbleableMe
           // more than one nested field it would still replace all in every
           // call. Replace them one by one instead, which is slightly slower
           // but ensures that the number of replacements do not grow
-          // exponentialy.
+          // exponentially.
           foreach ($field_tokens as $field_token_key => $field_token_value) {
             $replacements += \Drupal::token()->generate($field_name, [$field_token_key => $field_token_value], $property_token_data, $options, $bubbleable_metadata);
           }

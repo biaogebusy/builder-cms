@@ -2,23 +2,27 @@
 
 namespace Drupal\commerce\Plugin\Field\FieldType;
 
+use Drupal\Core\Field\Attribute\FieldType;
 use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\DataDefinition;
 
 /**
  * Plugin implementation of the 'commerce_remote_id' field type.
  *
- * @FieldType(
- *   id = "commerce_remote_id",
- *   label = @Translation("Remote ID"),
- *   description = @Translation("Stores remote IDs."),
- *   category = @Translation("Commerce"),
- *   default_widget = "",
- *   default_formatter = "commerce_remote_id_default",
- *   list_class = "\Drupal\commerce\Plugin\Field\FieldType\RemoteIdFieldItemList",
- * )
+ * @property string $provider
+ * @property string $remote_id
  */
+#[FieldType(
+  id: "commerce_remote_id",
+  label: new TranslatableMarkup("Remote ID"),
+  description: new TranslatableMarkup("Stores remote IDs."),
+  category: "commerce",
+  default_widget: "",
+  default_formatter: "commerce_remote_id_default",
+  list_class: RemoteIdFieldItemList::class,
+)]
 class RemoteIdItem extends FieldItemBase {
 
   /**

@@ -48,7 +48,7 @@ class XmlSitemapMultilingualNodeTest extends XmlSitemapMultilingualTestBase {
       'language_configuration[language_alterable]' => TRUE,
     ];
     $this->drupalGet('admin/structure/types/manage/page');
-    $this->submitForm($edit, 'Save content type');
+    $this->submitForm($edit, 'Save');
     $this->assertSession()->responseContains((string) new FormattableMarkup('The content type %content_type has been updated.', [
       '%content_type' => 'Basic page',
     ]));

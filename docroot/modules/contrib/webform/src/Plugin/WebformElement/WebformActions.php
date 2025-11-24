@@ -138,6 +138,7 @@ class WebformActions extends ContainerBase {
       'update' => [
         'title' => $this->t('Update'),
         'label' => $this->t('update'),
+        'default_label' => $this->t('Save'),
         'description' => $this->t('This is used after a submission has been saved and finalized to the database.'),
         'access' => !$webform->isResultsDisabled(),
       ],
@@ -212,7 +213,7 @@ class WebformActions extends ContainerBase {
       $form[$name . '_settings'][$name . '__label'] = [
         '#type' => 'textfield',
         '#title' => $this->t('@title button label', $t_args),
-        '#description' => $this->t('Defaults to: %value', ['%value' => $this->configFactory->get('webform.settings')->get('settings.default_' . $name . '_button_label')]),
+        '#description' => $this->t('Defaults to: %value', ['%value' => $button['default_label'] ?? $this->configFactory->get('webform.settings')->get('settings.default_' . $name . '_button_label')]),
         '#size' => 20,
         '#attributes' => [
           // Make sure default value is never cleared by #states API.

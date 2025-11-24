@@ -286,4 +286,37 @@ class AutologoutTest extends BrowserTestBase {
     $this->assertEquals(5000, $jsSettings['autologout']['timeout']);
   }
 
+  /**
+   * Tests the behaviour when no dialog setting is enabled.
+   */
+  public function testAutologoutNoDialog(): void {
+    // Visit the page and check that user is logged in.
+    $this->drupalGet('node');
+    $this->assertSession()->statusCodeEquals(200);
+    self::assertTrue($this->drupalUserIsLoggedIn($this->privilegedUser));
+
+    // Test that no dialog variable is set to false.
+    $jsSettings = $this->getDrupalSettings();
+    $this->assertEquals(FALSE, $jsSettings['autologout']['no_dialog']);
+
+    // Update the no dialog variable and reload the page.
+    $autologoutSettings = $this->configFactory->getEditable('autologout.settings');
+    $autologoutSettings->set('no_dialog', TRUE)->save();
+    $this->drupalGet('node');
+
+    // Test that the JS no dialog varible is updated.
+    $jsSettings = $this->getDrupalSettings();
+    $this->assertEquals(TRUE, $jsSettings['autologout']['no_dialog']);
+
+    // Wait for timeout period to elapse.
+    sleep(15);
+
+    // Verify user is logged out.
+    $this->drupalGet('node');
+    self::assertFalse($this->drupalUserIsLoggedIn($this->privilegedUser));
+    $this->assertSession()->pageTextContains(
+      $this->t('You have been logged out due to inactivity.')
+    );
+  }
+
 }

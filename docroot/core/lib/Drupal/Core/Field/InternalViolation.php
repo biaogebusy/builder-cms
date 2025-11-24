@@ -77,7 +77,7 @@ final class InternalViolation implements ConstraintViolationInterface {
   /**
    * {@inheritdoc}
    */
-  public function getMessage() {
+  public function getMessage(): string|\Stringable {
     return $this->violation->getMessage();
   }
 
@@ -105,7 +105,7 @@ final class InternalViolation implements ConstraintViolationInterface {
   /**
    * {@inheritdoc}
    */
-  public function getRoot() {
+  public function getRoot(): mixed {
     return $this->violation->getRoot();
   }
 
@@ -119,7 +119,7 @@ final class InternalViolation implements ConstraintViolationInterface {
   /**
    * {@inheritdoc}
    */
-  public function getInvalidValue() {
+  public function getInvalidValue(): mixed {
     return $this->violation->getInvalidValue();
   }
 

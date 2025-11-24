@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.commerce.logistics.waybill.minimct.sync request
  *
  * @author auto create
- * @since 1.0, 2022-11-02 17:26:14
+ * @since 1.0, 2025-08-14 03:07:39
  */
 class AlipayCommerceLogisticsWaybillMinimctSyncRequest
 {

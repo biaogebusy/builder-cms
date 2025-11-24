@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<wsdl:definitions targetNamespace="urn:ec.europa.eu:taxud:vies:services:checkVat" xmlns:tns1="urn:ec.europa.eu:taxud:vies:services:checkVat:types" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:impl="urn:ec.europa.eu:taxud:vies:services:checkVat" xmlns:apachesoap="http://xml.apache.org/xml-soap" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:wsdlsoap="http://schemas.xmlsoap.org/wsdl/soap/">
+<wsdl:definitions targetNamespace="urn:ec.europa.eu:taxud:vies:services:checkVat"
+                  xmlns:tns1="urn:ec.europa.eu:taxud:vies:services:checkVat:types"
+                  xmlns:impl="urn:ec.europa.eu:taxud:vies:services:checkVat"
+                  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+                  xmlns:wsdlsoap="http://schemas.xmlsoap.org/wsdl/soap/">
     <xsd:documentation>
         The objective of this Internet site is to allow persons involved in the intra-Community supply of goods or of services to obtain confirmation of the validity of the VAT identification number of any specified person, in accordance to article 31 of Council Regulation (EC) No. 904/2010 of 7 October 2010. \n
         Any other use and any extraction and use of the data which is not in conformity with the objective of this site is strictly forbidden.
@@ -10,7 +14,7 @@
         - is not professional or legal advice (if you need specific advice, you should always consult a suitably qualified professional);
         - does not in itself give a right to exempt intra-Community supplies from Value Added Tax;
         - does not change any obligations imposed on taxable persons in relation to intra-Community supplies.
-        It is our goal to minimise disruption caused by technical errors. However some data or information on our site may have been created or structured in files or formats which are not error-free and we cannot guarantee that our service will not be interrupted or otherwise affected by such problems. The Commission accepts no responsibility with regard to such problems incurred as a result of using this site or any linked external sites.
+        It is our goal to minimize disruption caused by technical errors. However some data or information on our site may have been created or structured in files or formats which are not error-free and we cannot guarantee that our service will not be interrupted or otherwise affected by such problems. The Commission accepts no responsibility with regard to such problems incurred as a result of using this site or any linked external sites.
         This disclaimer is not intended to limit the liability of the Commission in contravention of any requirements laid down in applicable national law nor to exclude its liability for matters which may not be excluded under that law.
         Collecting or handling personal data falls under the Data Protection Notice. This data protection declaration explains the Processing in the VIES-on-the-web Internet Website of VAT Identification Numbers for intra-Community Transaction on Goods or Services. Details of your legal rights associated with the collection, processing and use of this data are also provided: http://ec.europa.eu/dpo-register/details.htm?id=40647 .
 

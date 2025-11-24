@@ -1,0 +1,22 @@
+{
+	"country_code": "TW",
+	"parents": [
+		"TW",
+		"LIE"
+	],
+	"locale": "zh-Hant",
+	"subdivisions": {
+		"Beigan Township": {
+			"local_name": "北竿鄉"
+		},
+		"Dongyin Township": {
+			"local_name": "東引鄉"
+		},
+		"Nangan Township": {
+			"local_name": "南竿鄉"
+		},
+		"Juguang Township": {
+			"local_name": "莒光鄉"
+		}
+	}
+}

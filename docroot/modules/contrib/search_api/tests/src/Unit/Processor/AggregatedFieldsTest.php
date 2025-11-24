@@ -217,7 +217,7 @@ class AggregatedFieldsTest extends UnitTestCase {
    *
    * @see static::testAggregation()
    */
-  public function aggregationTestsDataProvider() {
+  public static function aggregationTestsDataProvider() {
     return [
       '"Union" aggregation' => [
         'union',
@@ -390,7 +390,7 @@ class AggregatedFieldsTest extends UnitTestCase {
    *
    * @see static::testPropertyIsList()
    */
-  public function propertyIsListTestDataProvider(): array {
+  public static function propertyIsListTestDataProvider(): array {
     return [
       ['union', TRUE],
       ['sum', FALSE],

@@ -1,0 +1,22 @@
+# Configuration file for PHPStan static code checking, see https://phpstan.org.
+
+includes:
+  - phpstan-baseline.neon
+  - phar://phpstan.phar/conf/bleedingEdge.neon
+
+parameters:
+
+  level: 5
+
+  paths:
+    - .
+
+  ignoreErrors:
+    - "#^Unsafe usage of new static#"
+    - "#Drupal calls should be avoided in classes, use dependency injection instead#"
+    -
+      # This is due to Drush 13 doing runtime conditional classloading.
+      message: "#^Call to method choice\\(\\) on an unknown class Drush\\\\Style\\\\DrushStyle\\.$#"
+      count: 1
+      path: src/Commands/ImageEffectsCommands.php
+      reportUnmatched: false

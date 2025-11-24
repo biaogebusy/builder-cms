@@ -5,6 +5,8 @@ namespace Drupal\Tests\core_context\Functional;
 use Drupal\Tests\BrowserTestBase;
 
 /**
+ * Tests integration with Page Manager.
+ *
  * @group core_context
  *
  * @requires module page_manager

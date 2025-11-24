@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\commerce_store\FunctionalJavascript;
 
-use Drupal\commerce_store\Entity\Store;
 use Drupal\Tests\commerce\FunctionalJavascript\CommerceWebDriverTestBase;
+use Drupal\commerce_store\Entity\Store;
 
 /**
  * Tests the store UI.
@@ -41,6 +41,7 @@ class StoreTest extends CommerceWebDriverTestBase {
     $this->assertSession()->fieldExists('address[0][address][country_code]');
     $this->assertSession()->fieldExists('billing_countries[]');
     $this->assertSession()->fieldExists('is_default[value]');
+    $this->assertSession()->fieldExists('status[value]');
 
     $this->getSession()->getPage()->fillField('address[0][address][country_code]', 'US');
     $this->getSession()->wait(4000, 'jQuery(\'select[name="address[0][address][administrative_area]"]\').length > 0 && jQuery.active == 0;');
@@ -62,7 +63,7 @@ class StoreTest extends CommerceWebDriverTestBase {
       $path = 'address[0][address][' . $property . ']';
       $edit[$path] = $value;
     }
-    $this->submitForm($edit, $this->t('Save'));
+    $this->submitForm($edit, (string) $this->t('Save'));
     $this->assertSession()->pageTextContains("Saved the $name store.");
   }
 
@@ -72,8 +73,10 @@ class StoreTest extends CommerceWebDriverTestBase {
   public function testEditStore() {
     $store = $this->createStore('Test');
     $this->drupalGet($store->toUrl('edit-form'));
+    $this->assertSession()->fieldExists('status[value]');
     $edit = [
       'name[0][value]' => 'Test!',
+      'status[value]' => 1,
     ];
     $this->submitForm($edit, 'Save');
     $this->assertSession()->pageTextContains("Saved the Test! store.");
@@ -111,7 +114,7 @@ class StoreTest extends CommerceWebDriverTestBase {
     $store = $this->createStore();
     $this->drupalGet($store->toUrl('delete-form'));
     $this->assertSession()->pageTextContains('This action cannot be undone.');
-    $this->submitForm([], $this->t('Delete'));
+    $this->submitForm([], (string) $this->t('Delete'));
 
     $this->container->get('entity_type.manager')->getStorage('commerce_store')->resetCache([$store->id()]);
     $store_exists = (bool) Store::load($store->id());

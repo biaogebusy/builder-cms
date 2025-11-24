@@ -74,6 +74,8 @@ interface RemoteManagerInterface {
    *
    * @return array
    *   Field mappings as returned by entity_share_server entry point.
+   *
+   * @see \Drupal\entity_share_client\RuntimeImportContext::getFieldMappings()
    */
   public function getfieldMappings(RemoteInterface $remote);
 

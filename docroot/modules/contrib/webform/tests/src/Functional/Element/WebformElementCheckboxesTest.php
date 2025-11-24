@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\webform\Functional\Element;
 
+use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\webform\Entity\Webform;
 
 /**
@@ -43,7 +44,12 @@ class WebformElementCheckboxesTest extends WebformElementBrowserTestBase {
     $assert_session->responseContains('<label class="webform-options-display-buttons-label option" for="edit-checkboxes-buttons-description-one"><div class="webform-options-display-buttons-title">One</div><div class="webform-options-display-buttons-description description">This is a description</div></label>');
 
     // Check options (custom) properties wrapper attributes.
-    $assert_session->responseContains('<div data-custom="custom wrapper data" style="border: red 1px solid" class="one-custom-wrapper-class js-form-item form-item js-form-type-checkbox form-item-checkboxes-options-properties-two js-form-item-checkboxes-options-properties-two">');
+    DeprecationHelper::backwardsCompatibleCall(
+      currentVersion: \Drupal::VERSION,
+      deprecatedVersion: '10.2',
+      currentCallable: fn() => $assert_session->responseContains('<div data-custom="custom wrapper data" style="border: red 1px solid" class="one-custom-wrapper-class js-form-item form-item form-type-checkbox js-form-type-checkbox form-item-checkboxes-options-properties-two js-form-item-checkboxes-options-properties-two">'),
+      deprecatedCallable: fn() => $assert_session->responseContains('<div data-custom="custom wrapper data" style="border: red 1px solid" class="one-custom-wrapper-class js-form-item form-item js-form-type-checkbox form-item-checkboxes-options-properties-two js-form-item-checkboxes-options-properties-two">'),
+    );
 
     // Check options (custom) properties label attributes.
     $assert_session->responseContains('<label data-custom="custom label data" style="border: blue 1px solid" class="one-custom-label-class option" for="edit-checkboxes-options-properties-two">Two</label>');

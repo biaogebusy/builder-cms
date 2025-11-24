@@ -2,15 +2,15 @@
 
 namespace Drupal\views_add_button\Plugin\views\area;
 
-use Drupal\Component\Utility\Html;
+use Drupal\Core\Entity\EntityTypeBundleInfo;
+use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\views\Plugin\views\area\TokenizeAreaPluginBase;
-use Drupal\Core\Entity\ContentEntityType;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Link;
-use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\views_add_button\Plugin\views\ViewsAddButtonTrait;
 use Drupal\views_add_button\Plugin\views_add_button\ViewsAddButtonDefault;
+use Drupal\views_add_button\Service\ViewsAddButtonService;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Defines a views area plugin.
@@ -24,67 +24,52 @@ class ViewsAddButtonArea extends TokenizeAreaPluginBase {
   use ViewsAddButtonTrait;
 
   /**
+   * @var ViewsAddButtonService
+   */
+  protected $vab;
+
+  /**
+   * @var EntityTypeManager
+   */
+  protected $entityTypeManager;
+
+  /**
+   * @var EntityTypeBundleInfo
+   */
+  protected $bundleInfo;
+
+  /**
+   * ViewsAddButtonField constructor.
+   * @param array $configuration
+   * @param $plugin_id
+   * @param $plugin_definition
+   * @param ViewsAddButtonService $vab
+   * @param EntityTypeManager $entityTypeManager
+   * @param EntityTypeBundleInfo $bundleInfo
+   */
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, ViewsAddButtonService $vab, EntityTypeManager $entityTypeManager, EntityTypeBundleInfo $bundleInfo) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+    $this->vab = $vab;
+    $this->entityTypeManager = $entityTypeManager;
+    $this->bundleInfo = $bundleInfo;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static($configuration, $plugin_id, $plugin_definition,
+      $container->get('views_add_button.service'),
+      $container->get('entity_type.manager'),
+      $container->get('entity_type.bundle.info')
+    );
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function query() {
     // Leave empty to avoid a query on this field.
-  }
-
-  /**
-   * Build Bundle Type List.
-   */
-  public function createPluginList() {
-    $plugin_manager = \Drupal::service('plugin.manager.views_add_button');
-    $plugin_definitions = $plugin_manager->getDefinitions();
-
-    $options = ['Any Entity' => []];
-    $entity_info = \Drupal::entityTypeManager()->getDefinitions();
-    foreach ($plugin_definitions as $pd) {
-      $label = $pd['label'];
-      if ($pd['label'] instanceof TranslatableMarkup) {
-        $label = $pd['label']->render();
-      }
-
-      $type_info = isset($pd['target_entity']) && isset($entity_info[$pd['target_entity']]) ? $entity_info[$pd['target_entity']] : 'default';
-      $type_label = t('Any Entity');
-      if ($type_info instanceof ContentEntityType) {
-        $type_label = $type_info->getLabel();
-      }
-      if ($type_label instanceof TranslatableMarkup) {
-        $type_label = $type_label->render();
-      }
-      $options[$type_label][$pd['id']] = $label;
-    }
-    return $options;
-  }
-
-  /**
-   * Build Bundle Type List.
-   */
-  public function createEntityBundleList() {
-    $ret = [];
-    $entity_info = \Drupal::entityTypeManager()->getDefinitions();
-    $bundle_info = \Drupal::service('entity_type.bundle.info');
-    foreach ($entity_info as $type => $info) {
-      // Is this a content/front-facing entity?
-      if ($info instanceof ContentEntityType) {
-        $label = $info->getLabel();
-        if ($label instanceof TranslatableMarkup) {
-          $label = $label->render();
-        }
-        $ret[$label] = [];
-        $bundles = $bundle_info->getBundleInfo($type);
-        foreach ($bundles as $key => $bundle) {
-          if ($bundle['label'] instanceof TranslatableMarkup) {
-            $ret[$label][$type . '+' . $key] = $bundle['label']->render();
-          }
-          else {
-            $ret[$label][$type . '+' . $key] = $bundle['label'];
-          }
-        }
-      }
-    }
-    return $ret;
   }
 
   /**
@@ -119,7 +104,7 @@ class ViewsAddButtonArea extends TokenizeAreaPluginBase {
     $form['type'] = [
       '#type' => 'select',
       '#title' => t('Entity Type'),
-      '#options' => $this->createEntityBundleList(),
+      '#options' => $this->vab->createEntityBundleList(),
       '#empty_option' => '- Select -',
       '#default_value' => $this->options['type'],
       '#weight' => -10,
@@ -130,7 +115,7 @@ class ViewsAddButtonArea extends TokenizeAreaPluginBase {
       '#title' => t('Custom Rendering Plugin'),
       '#description' => t('If you would like to specify a plugin to use for generating the URL and creating the 
         link, set it here. Leave unset to use the entity default plugin (recommended).'),
-      '#options' => $this->createPluginList(),
+      '#options' => $this->vab->createPluginList(),
       '#empty_option' => '- Select -',
       '#default_value' => $this->options['render_plugin'],
       '#weight' => -10,
@@ -140,7 +125,7 @@ class ViewsAddButtonArea extends TokenizeAreaPluginBase {
       '#title' => t('Custom Access Plugin'),
       '#description' => t('If you would like to specify an access plugin to use, set it here. 
         Leave unset to use the entity default plugin (recommended).'),
-      '#options' => $this->createPluginList(),
+      '#options' => $this->vab->createPluginList(),
       '#empty_option' => '- Select -',
       '#default_value' => $this->options['access_plugin'],
       '#weight' => -10,
@@ -148,8 +133,7 @@ class ViewsAddButtonArea extends TokenizeAreaPluginBase {
     $form['context'] = [
       '#type' => 'textfield',
       '#title' => t('Entity Context'),
-      '#description' => t('Certain entities require a special context parameter. Set the context (or relevant 
-      token) here. Check the help for the relevant Views Add Button module for further questions.'),
+      '#description' => t('Certain entities require a special context parameter. Set the context (or relevant token) here. Check the help for the relevant Views Add Button module for further questions.'),
       '#default_value' => $this->options['context'],
       '#weight' => -9,
     ];
@@ -164,7 +148,6 @@ class ViewsAddButtonArea extends TokenizeAreaPluginBase {
       '#type' => 'textfield',
       '#title' => t('Query string to append to the add link'),
       '#description' => t('Add the query string, without the "?" .'),
-      '#maxlength' => 1024,
       '#default_value' => $this->options['query_string'],
       '#weight' => -6,
     ];
@@ -230,8 +213,7 @@ class ViewsAddButtonArea extends TokenizeAreaPluginBase {
       $access = $plugin_class::checkAccess($entity_type, $bundle, $context);
     }
     else {
-      $entity_manager = \Drupal::entityTypeManager();
-      $access_handler = $entity_manager->getAccessControlHandler($entity_type);
+      $access_handler = $this->entityTypeManager->getAccessControlHandler($entity_type);
       if ($bundle) {
         $access = $access_handler->createAccess($bundle);
       }
@@ -253,8 +235,7 @@ class ViewsAddButtonArea extends TokenizeAreaPluginBase {
     $bundle = isset($type[1]) ? $type[1] : $type[0];
 
     // Load ViewsAddButton plugin definitions, and find the right one.
-    $plugin_manager = \Drupal::service('plugin.manager.views_add_button');
-    $plugin_definitions = $plugin_manager->getDefinitions();
+    $plugin_definitions = $this->vab->getPluginDefinitions();
 
     $plugin_class = $plugin_definitions['views_add_button_default']['class'];
     if (isset($this->options['render_plugin']) && !empty($this->options['render_plugin'])) {
@@ -289,10 +270,10 @@ class ViewsAddButtonArea extends TokenizeAreaPluginBase {
       }
     }
 
-
     if ($this->checkButtonAccess($plugin_definitions, $plugin_class, $entity_type, $bundle)) {
       // Build URL Options.
       $opts = [];
+      $opts['query'] = [];
 
       if ($this->options['destination']) {
         $dest = Url::fromRoute('<current>');
@@ -315,7 +296,7 @@ class ViewsAddButtonArea extends TokenizeAreaPluginBase {
 
       // Build query string.
       if ($this->options['query_string']) {
-        $opts['query'] = $this->getQueryString();
+        $opts['query'] = array_merge($opts['query'], $this->getQueryString());
       }
 
       // Get the url from the plugin and build the link.
@@ -326,9 +307,10 @@ class ViewsAddButtonArea extends TokenizeAreaPluginBase {
       else {
         $url = $plugin_class::generateUrl($entity_type, $bundle, $opts);
       }
-      $text = $this->options['button_text'] ? $this->options['button_text'] : 'Add ' . $bundle;
+      $bundles = $this->bundleInfo->getBundleInfo($entity_type);
+      $bundle_label = $bundles[$bundle]['label'] ?? $bundle;
+      $text = $this->options['button_text'] ? $this->options['button_text'] : $this->t('Add @bundle', ['@bundle' => $bundle_label]);
       $text = $this->options['tokenize'] ? $this->tokenizeValue($text) : $text;
-      $text = t($text);
 
       // Generate the link.
       $l = NULL;

@@ -102,6 +102,8 @@ trait RangeTestTrait {
           'scale' => 4,
         ];
     }
+
+    return [];
   }
 
   /**
@@ -123,23 +125,25 @@ trait RangeTestTrait {
           'min' => 0,
           'max' => 100000,
           'field' => [
-            'prefix' => 'field_prefix',
-            'suffix' => 'field_suffix',
+            'prefix' => 'field_prefix_',
+            'suffix' => '_field_suffix',
           ],
           'from' => [
-            'prefix' => 'from_prefix',
-            'suffix' => 'from_suffix',
+            'prefix' => 'from_prefix_',
+            'suffix' => '_from_suffix',
           ],
           'to' => [
-            'prefix' => 'to_prefix',
-            'suffix' => 'to_suffix',
+            'prefix' => 'to_prefix_',
+            'suffix' => '_to_suffix',
           ],
           'combined' => [
-            'prefix' => 'combined_prefix',
-            'suffix' => 'combined_suffix',
+            'prefix' => 'combined_prefix_',
+            'suffix' => '_combined_suffix',
           ],
         ];
     }
+
+    return [];
   }
 
   /**

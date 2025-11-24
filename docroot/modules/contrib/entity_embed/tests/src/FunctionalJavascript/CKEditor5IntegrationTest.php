@@ -554,7 +554,7 @@ class CKEditor5IntegrationTest extends WebDriverTestBase {
     $this->assertEmpty($xpath->query('//a'));
   }
 
-  public function providerLinkability(): array {
+  public static function providerLinkability(): array {
     return [
       'restricted' => [FALSE],
       'unrestricted' => [TRUE],
@@ -667,7 +667,6 @@ class CKEditor5IntegrationTest extends WebDriverTestBase {
       else {
         // If the filter isn't enabled, there won't be an error, but the
         // preview shouldn't be rendered.
-        $assert_session->assertWaitOnAjaxRequest();
         $assert_session->elementNotExists('css', 'article.node');
       }
     }
@@ -679,7 +678,7 @@ class CKEditor5IntegrationTest extends WebDriverTestBase {
   /**
    * Data provider for ::testEmbedPreviewAccess.
    */
-  public function previewAccessProvider() {
+  public static function previewAccessProvider(): array {
     return [
       'entity_embed filter enabled' => [
         TRUE,

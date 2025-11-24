@@ -4,21 +4,20 @@ namespace Drupal\commerce_product\Plugin\Field\FieldWidget;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Field\Attribute\FieldWidget;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Plugin implementation of the 'commerce_product_variation_title' widget.
- *
- * @FieldWidget(
- *   id = "commerce_product_variation_title",
- *   label = @Translation("Product variation title"),
- *   field_types = {
- *     "entity_reference"
- *   }
- * )
  */
+#[FieldWidget(
+  id: "commerce_product_variation_title",
+  label: new TranslatableMarkup("Product variation title"),
+  field_types: ["entity_reference"],
+)]
 class ProductVariationTitleWidget extends ProductVariationWidgetBase implements ContainerFactoryPluginInterface {
 
   /**

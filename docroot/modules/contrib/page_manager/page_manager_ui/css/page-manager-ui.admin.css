@@ -66,13 +66,9 @@
 }
 
 /* Wide screens */
-@media
-  screen and (min-width: 780px),
-  (orientation: landscape) and (min-device-height: 780px) {
+@media screen and (min-width: 780px), (orientation: landscape) and (min-device-height: 780px) {
 
-  /**
-   * Overall layout.
-   */
+  /* Overall layout. */
   .page-manager-wizard-main {
     display: flex;
   }
@@ -86,16 +82,12 @@
     margin-left: 20%; /* LTR */
   }
 
-  /**
-   * Make the borders look nice.
-   */
+  /* Make the borders look nice. */
   .page-manager-wizard-tree > ul {
     border-right: 0; /* LTR */
   }
 
-  /**
-   * Right-to-left support.
-   */
+  /* Right-to-left support. */
   [dir="rtl"] .page-manager-wizard-tree,
   [dir="rtl"] .page-manager-wizard-form {
     float: right;

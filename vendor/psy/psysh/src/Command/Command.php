@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2023 Justin Hileman
+ * (c) 2012-2025 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -37,6 +37,19 @@ abstract class Command extends BaseCommand
         }
 
         parent::setApplication($application);
+    }
+
+    /**
+     * getApplication, but is guaranteed to return a Shell instance.
+     */
+    protected function getShell(): Shell
+    {
+        $shell = $this->getApplication();
+        if (!$shell instanceof Shell) {
+            throw new \RuntimeException('PsySH Commands require an instance of Psy\Shell');
+        }
+
+        return $shell;
     }
 
     /**
@@ -140,9 +153,11 @@ abstract class Command extends BaseCommand
                     $default = '';
                 }
 
+                $name = $argument->getName();
+                $pad = \str_pad('', $max - \strlen($name));
                 $description = \str_replace("\n", "\n".\str_pad('', $max + 2, ' '), $argument->getDescription());
 
-                $messages[] = \sprintf(" <info>%-{$max}s</info> %s%s", $argument->getName(), $description, $default);
+                $messages[] = \sprintf(' <info>%s</info>%s %s%s', $name, $pad, $description, $default);
             }
 
             $messages[] = '';

@@ -3,6 +3,9 @@
   "type": "drupal-module",
   "license": "GPL-2.0-or-later",
   "description": "Provides a user interface for the Token API, some missing core tokens.",
+  "require-dev": {
+    "drupal/book": "*"
+  },
   "extra": {
     "drush": {
       "services": {

@@ -1,15 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\ckeditor5\FunctionalJavascript;
 
 use Drupal\Component\Utility\Html;
 use Drupal\editor\Entity\Editor;
 use Drupal\filter\Entity\FilterFormat;
-use Drupal\node\Entity\Node;
 use Drupal\Tests\TestFileCreationTrait;
 use Drupal\Tests\ckeditor5\Traits\CKEditor5TestTrait;
 
-// cspell:ignore imageresize imageupload
+// cspell:ignore imageresize
 
 /**
  * @coversDefaultClass \Drupal\ckeditor5\Plugin\CKEditor5Plugin\Image
@@ -55,7 +56,11 @@ abstract class ImageTestBase extends CKEditor5TestBase {
    * @return string[]
    */
   protected function imageAttributes() {
-    return ['src' => '/core/misc/druplicon.png'];
+    return [
+      'src' => base_path() . 'core/misc/druplicon.png',
+      'width' => '88',
+      'height' => '100',
+    ];
   }
 
   /**
@@ -84,11 +89,11 @@ abstract class ImageTestBase extends CKEditor5TestBase {
     $page = $this->getSession()->getPage();
     $src = $this->imageAttributes()['src'];
     $this->waitForEditor();
-    $this->pressEditorButton('Insert image');
-    $panel = $page->find('css', '.ck-dropdown__panel.ck-image-insert__panel');
-    $src_input = $panel->find('css', 'input[type=text]');
+    $this->pressEditorButton('Insert image via URL');
+    $dialog = $page->find('css', '.ck-dialog');
+    $src_input = $dialog->find('css', '.ck-image-insert-url input[type=text]');
     $src_input->setValue($src);
-    $panel->find('xpath', "//button[span[text()='Insert']]")->click();
+    $dialog->find('xpath', "//button[span[text()='Insert']]")->click();
     // Wait for the image to be uploaded and rendered by CKEditor 5.
     $this->assertNotEmpty($this->assertSession()->waitForElementVisible('css', '.ck-widget.image > img[src="' . $src . '"]'));
   }
@@ -96,7 +101,7 @@ abstract class ImageTestBase extends CKEditor5TestBase {
   /**
    * Ensures that attributes are retained on conversion.
    */
-  public function testAttributeRetentionDuringUpcasting() {
+  public function testAttributeRetentionDuringUpcasting(): void {
     // Run test cases in a single test to make the test run faster.
     $attributes_to_retain = [
       '-none-' => 'inline',
@@ -120,7 +125,7 @@ abstract class ImageTestBase extends CKEditor5TestBase {
           "<p>$img_tag</p>",
           $expected_upcast_behavior_when_wrapped_in_block_element === 'inline' ? "<p>$img_tag</p>" : $img_tag,
         ],
-        // Image tag wrapped with an unallowed paragraph-like element (<div).
+        // Image tag wrapped with a disallowed paragraph-like element (<div).
         // When inline is the expected upcast behavior, it will wrap in <p>
         // because it still must wrap in a paragraph-like element, and <p> is
         // available to be that element.
@@ -155,10 +160,8 @@ abstract class ImageTestBase extends CKEditor5TestBase {
 
   /**
    * Tests that arbitrary attributes are allowed via GHS.
-   *
-   * @dataProvider providerLinkability
    */
-  public function testImageArbitraryHtml(string $image_type, bool $unrestricted) {
+  public function testImageArbitraryHtml(): void {
     $editor = Editor::load('test_format');
     $settings = $editor->getSettings();
 
@@ -166,32 +169,36 @@ abstract class ImageTestBase extends CKEditor5TestBase {
     $settings['plugins']['ckeditor5_sourceEditing']['allowed_tags'] = ['<img data-foo>'];
     $editor->setSettings($settings);
     $editor->save();
+    $format = FilterFormat::load('test_format');
+    $original_config = $format->filters('filter_html')
+      ->getConfiguration();
 
-    // Disable filter_html.
-    if ($unrestricted) {
-      FilterFormat::load('test_format')
-        ->setFilterConfig('filter_html', ['status' => FALSE])
+    foreach ($this->providerLinkability() as $data) {
+      [$image_type, $unrestricted] = $data;
+
+      $format_config = $unrestricted ? ['status' => FALSE] : $original_config;
+      $format->setFilterConfig('filter_html', $format_config)
         ->save();
+
+      // Make the test content have either a block image or an inline image.
+      $img_tag = '<img data-foo="bar" alt="drupalimage test image" data-entity-type="file" ' . $this->imageAttributesAsString() . ' />';
+      $this->host->body->value .= $image_type === 'block'
+        ? $img_tag
+        : "<p>$img_tag</p>";
+      $this->host->save();
+
+      $expected_widget_selector = $image_type === 'block' ? 'image img' : 'image-inline';
+
+      $this->drupalGet($this->host->toUrl('edit-form'));
+      $this->waitForEditor();
+
+      $drupalimage = $this->assertSession()->waitForElementVisible('css', ".ck-content .ck-widget.$expected_widget_selector");
+      $this->assertNotEmpty($drupalimage);
+      $this->assertEquals('bar', $drupalimage->getAttribute('data-foo'));
+
+      $xpath = new \DOMXPath($this->getEditorDataAsDom());
+      $this->assertNotEmpty($xpath->query('//img[@data-foo="bar"]'));
     }
-
-    // Make the test content have either a block image or an inline image.
-    $img_tag = '<img data-foo="bar" alt="drupalimage test image" data-entity-type="file" ' . $this->imageAttributesAsString() . ' />';
-    $this->host->body->value .= $image_type === 'block'
-      ? $img_tag
-      : "<p>$img_tag</p>";
-    $this->host->save();
-
-    $expected_widget_selector = $image_type === 'block' ? 'image img' : 'image-inline';
-
-    $this->drupalGet($this->host->toUrl('edit-form'));
-    $this->waitForEditor();
-
-    $drupalimage = $this->assertSession()->waitForElementVisible('css', ".ck-content .ck-widget.$expected_widget_selector");
-    $this->assertNotEmpty($drupalimage);
-    $this->assertEquals('bar', $drupalimage->getAttribute('data-foo'));
-
-    $xpath = new \DOMXPath($this->getEditorDataAsDom());
-    $this->assertNotEmpty($xpath->query('//img[@data-foo="bar"]'));
   }
 
   /**
@@ -202,151 +209,154 @@ abstract class ImageTestBase extends CKEditor5TestBase {
    * These are CKEditor 5 concepts.
    *
    * @see https://ckeditor.com/docs/ckeditor5/latest/framework/guides/architecture/editing-engine.html#conversion
-   *
-   * @dataProvider providerLinkability
    */
-  public function testLinkability(string $image_type, bool $unrestricted) {
-    assert($image_type === 'inline' || $image_type === 'block');
+  public function testLinkability(): void {
+    $format = FilterFormat::load('test_format');
+    $original_config = $format->filters('filter_html')
+      ->getConfiguration();
+    $original_body_value = $this->host->body->value;
+    foreach ($this->providerLinkability() as $data) {
+      [$image_type, $unrestricted] = $data;
+      assert($image_type === 'inline' || $image_type === 'block');
 
-    // Disable filter_html.
-    if ($unrestricted) {
-      FilterFormat::load('test_format')
-        ->setFilterConfig('filter_html', ['status' => FALSE])
+      $format_config = $unrestricted ? ['status' => FALSE] : $original_config;
+
+      $format->setFilterConfig('filter_html', $format_config)
         ->save();
+
+      // Make the test content have either a block image or an inline image.
+      $img_tag = '<img alt="drupalimage test image" data-entity-type="file" ' . $this->imageAttributesAsString() . ' />';
+      $this->host->body->value = $original_body_value . ($image_type === 'block'
+        ? $img_tag
+        : "<p>$img_tag</p>");
+      $this->host->save();
+
+      $this->drupalGet($this->host->toUrl('edit-form'));
+      $page = $this->getSession()->getPage();
+      // Adjust the expectations accordingly.
+      $expected_widget_class = $image_type === 'block' ? 'image' : 'image-inline';
+
+      $this->waitForEditor();
+      $assert_session = $this->assertSession();
+
+      // Initial state: the image CKEditor Widget is not selected.
+      $drupalimage = $assert_session->waitForElementVisible('css', ".ck-content .ck-widget.$expected_widget_class");
+      $this->assertNotEmpty($drupalimage);
+      $this->assertFalse($drupalimage->hasClass('.ck-widget_selected'));
+
+      $src = basename($this->imageAttributes()['src']);
+      // Assert the "editingDowncast" HTML before making changes.
+      $assert_session->elementExists('css', '.ck-content .ck-widget.' . $expected_widget_class . ' > img[src*="' . $src . '"][alt="drupalimage test image"]');
+
+      // Assert the "dataDowncast" HTML before making changes.
+      $xpath = new \DOMXPath($this->getEditorDataAsDom());
+      $this->assertNotEmpty($xpath->query('//img[@alt="drupalimage test image"]'));
+      $this->assertEmpty($xpath->query('//a'));
+
+      // Assert the link button is present and not pressed.
+      $link_button = $this->getEditorButton('Link');
+      $this->assertSame('false', $link_button->getAttribute('aria-pressed'));
+
+      // Tests linking images.
+      $drupalimage->click();
+      $this->assertTrue($drupalimage->hasClass('ck-widget_selected'));
+      $this->assertEditorButtonEnabled('Link');
+      // Assert structure of image toolbar balloon.
+      $this->assertVisibleBalloon('.ck-toolbar[aria-label="Image toolbar"]');
+      $link_image_button = $this->getBalloonButton('Link image');
+      // Click the "Link image" button.
+      $this->assertSame('false', $link_image_button->getAttribute('aria-pressed'));
+      $link_image_button->press();
+      // Assert structure of link form balloon.
+      $balloon = $this->assertVisibleBalloon('.ck-link-form');
+      $url_input = $balloon->find('css', '.ck-labeled-field-view__input-wrapper .ck-input-text[inputmode=url]');
+      // Fill in link form balloon's <input> and hit "Insert".
+      $url_input->setValue('http://www.drupal.org/association');
+      $balloon->pressButton('Insert');
+
+      // Assert the "editingDowncast" HTML after making changes. First assert the
+      // link exists, then assert the expected DOM structure in detail.
+      $assert_session->elementExists('css', '.ck-content a[href*="//www.drupal.org/association"]');
+      // For inline images, the link is wrapping the widget; for block images the
+      // link lives inside the widget. (This is how it is implemented upstream, it
+      // could be implemented differently, we just want to ensure we do not break
+      // it. Drupal only cares about having its own "dataDowncast", the
+      // "editingDowncast" is considered an implementation detail.)
+      $assert_session->elementExists('css', $image_type === 'inline'
+        ? '.ck-content a[href*="//www.drupal.org/association"] .ck-widget.' . $expected_widget_class . ' > img[src*="' . $src . '"][alt="drupalimage test image"]'
+        : '.ck-content .ck-widget.' . $expected_widget_class . ' a[href*="//www.drupal.org/association"] > img[src*="' . $src . '"][alt="drupalimage test image"]'
+      );
+
+      // Assert the "dataDowncast" HTML after making changes.
+      $xpath = new \DOMXPath($this->getEditorDataAsDom());
+      $this->assertCount(1, $xpath->query('//a[@href="http://www.drupal.org/association"]/img[@alt="drupalimage test image"]'));
+      $this->assertEmpty($xpath->query('//a[@href="http://www.drupal.org/association" and @class="trusted"]'));
+
+      // Add `class="trusted"` to the link.
+      $xpath = new \DOMXPath($this->getEditorDataAsDom());
+      $this->assertEmpty($xpath->query('//a[@href="http://www.drupal.org/association" and @class="trusted"]'));
+      $this->pressEditorButton('Source');
+      $source_text_area = $assert_session->waitForElement('css', '.ck-source-editing-area textarea');
+      $this->assertNotEmpty($source_text_area);
+      $new_value = str_replace('<a ', '<a class="trusted" ', $source_text_area->getValue());
+      $source_text_area->setValue('<p>temp</p>');
+      $source_text_area->setValue($new_value);
+      $this->pressEditorButton('Source');
+
+      // When unrestricted, additional attributes on links should be retained.
+      $xpath = new \DOMXPath($this->getEditorDataAsDom());
+      $this->assertCount($unrestricted ? 1 : 0, $xpath->query('//a[@href="http://www.drupal.org/association" and @class="trusted"]'));
+
+      // Save the entity whose text field is being edited.
+      $page->pressButton('Save');
+
+      // Assert the HTML the end user sees.
+      $assert_session->elementExists('css', $unrestricted
+        ? 'a[href="http://www.drupal.org/association"].trusted img[src*="' . $src . '"]'
+        : 'a[href="http://www.drupal.org/association"] img[src*="' . $src . '"]');
+
+      // Go back to edit the now *linked* <drupal-media>. Everything from this
+      // point onwards is effectively testing "upcasting" and proving there is no
+      // data loss.
+      $this->drupalGet($this->host->toUrl('edit-form'));
+      $this->waitForEditor();
+
+      // Assert the "dataDowncast" HTML before making changes.
+      $xpath = new \DOMXPath($this->getEditorDataAsDom());
+      $this->assertNotEmpty($xpath->query('//img[@alt="drupalimage test image"]'));
+      $this->assertNotEmpty($xpath->query('//a[@href="http://www.drupal.org/association"]'));
+      $this->assertNotEmpty($xpath->query('//a[@href="http://www.drupal.org/association"]/img[@alt="drupalimage test image"]'));
+      $this->assertCount($unrestricted ? 1 : 0, $xpath->query('//a[@href="http://www.drupal.org/association" and @class="trusted"]'));
+
+      // Tests unlinking images.
+      $drupalimage->click();
+      $this->assertEditorButtonEnabled('Link');
+      $this->assertSame('true', $this->getEditorButton('Link')->getAttribute('aria-pressed'));
+      // Assert structure of image toolbar balloon.
+      $this->assertVisibleBalloon('.ck-toolbar[aria-label="Image toolbar"]');
+      $link_image_button = $this->getBalloonButton('Link image');
+      $this->assertSame('true', $link_image_button->getAttribute('aria-pressed'));
+      $link_image_button->click();
+      // Assert structure of link actions balloon.
+      $this->getBalloonButton('Edit link');
+      $unlink_image_button = $this->getBalloonButton('Unlink');
+      // Click the "Unlink" button.
+      $unlink_image_button->click();
+      $this->assertSame('false', $this->getEditorButton('Link')->getAttribute('aria-pressed'));
+
+      // Assert the "editingDowncast" HTML after making changes. Assert the
+      // widget exists but not the link, or *any* link for that matter. Then
+      // assert the expected DOM structure in detail.
+      $assert_session->elementExists('css', '.ck-content .ck-widget.' . $expected_widget_class);
+      $assert_session->elementNotExists('css', '.ck-content a');
+      $assert_session->elementExists('css', '.ck-content .ck-widget.' . $expected_widget_class . ' > img[src*="' . $src . '"][alt="drupalimage test image"]');
+
+      // Assert the "dataDowncast" HTML after making changes.
+      $xpath = new \DOMXPath($this->getEditorDataAsDom());
+      $this->assertCount(0, $xpath->query('//a[@href="http://www.drupal.org/association"]/img[@alt="drupalimage test image"]'));
+      $this->assertCount(1, $xpath->query('//img[@alt="drupalimage test image"]'));
+      $this->assertCount(0, $xpath->query('//a'));
     }
-
-    // Make the test content have either a block image or an inline image.
-    $img_tag = '<img alt="drupalimage test image" data-entity-type="file" ' . $this->imageAttributesAsString() . ' />';
-    $this->host->body->value .= $image_type === 'block'
-      ? $img_tag
-      : "<p>$img_tag</p>";
-    $this->host->save();
-    // Adjust the expectations accordingly.
-    $expected_widget_class = $image_type === 'block' ? 'image' : 'image-inline';
-
-    $page = $this->getSession()->getPage();
-
-    $this->drupalGet($this->host->toUrl('edit-form'));
-    $this->waitForEditor();
-    $assert_session = $this->assertSession();
-
-    // Initial state: the image CKEditor Widget is not selected.
-    $drupalimage = $assert_session->waitForElementVisible('css', ".ck-content .ck-widget.$expected_widget_class");
-    $this->assertNotEmpty($drupalimage);
-    $this->assertFalse($drupalimage->hasClass('.ck-widget_selected'));
-
-    $src = basename($this->imageAttributes()['src']);
-    // Assert the "editingDowncast" HTML before making changes.
-    $assert_session->elementExists('css', '.ck-content .ck-widget.' . $expected_widget_class . ' > img[src*="' . $src . '"][alt="drupalimage test image"]');
-
-    // Assert the "dataDowncast" HTML before making changes.
-    $xpath = new \DOMXPath($this->getEditorDataAsDom());
-    $this->assertNotEmpty($xpath->query('//img[@alt="drupalimage test image"]'));
-    $this->assertEmpty($xpath->query('//a'));
-
-    // Assert the link button is present and not pressed.
-    $link_button = $this->getEditorButton('Link');
-    $this->assertSame('false', $link_button->getAttribute('aria-pressed'));
-
-    // Tests linking images.
-    $drupalimage->click();
-    $this->assertTrue($drupalimage->hasClass('ck-widget_selected'));
-    $this->assertEditorButtonEnabled('Link');
-    // Assert structure of image toolbar balloon.
-    $this->assertVisibleBalloon('.ck-toolbar[aria-label="Image toolbar"]');
-    $link_image_button = $this->getBalloonButton('Link image');
-    // Click the "Link image" button.
-    $this->assertSame('false', $link_image_button->getAttribute('aria-pressed'));
-    $link_image_button->press();
-    // Assert structure of link form balloon.
-    $balloon = $this->assertVisibleBalloon('.ck-link-form');
-    $url_input = $balloon->find('css', '.ck-labeled-field-view__input-wrapper .ck-input-text');
-    // Fill in link form balloon's <input> and hit "Save".
-    $url_input->setValue('http://www.drupal.org/association');
-    $balloon->pressButton('Save');
-
-    // Assert the "editingDowncast" HTML after making changes. First assert the
-    // link exists, then assert the expected DOM structure in detail.
-    $assert_session->elementExists('css', '.ck-content a[href*="//www.drupal.org/association"]');
-    // For inline images, the link is wrapping the widget; for block images the
-    // link lives inside the widget. (This is how it is implemented upstream, it
-    // could be implemented differently, we just want to ensure we do not break
-    // it. Drupal only cares about having its own "dataDowncast", the
-    // "editingDowncast" is considered an implementation detail.)
-    $assert_session->elementExists('css', $image_type === 'inline'
-      ? '.ck-content a[href*="//www.drupal.org/association"] .ck-widget.' . $expected_widget_class . ' > img[src*="' . $src . '"][alt="drupalimage test image"]'
-      : '.ck-content .ck-widget.' . $expected_widget_class . ' a[href*="//www.drupal.org/association"] > img[src*="' . $src . '"][alt="drupalimage test image"]'
-    );
-
-    // Assert the "dataDowncast" HTML after making changes.
-    $xpath = new \DOMXPath($this->getEditorDataAsDom());
-    $this->assertCount(1, $xpath->query('//a[@href="http://www.drupal.org/association"]/img[@alt="drupalimage test image"]'));
-    $this->assertEmpty($xpath->query('//a[@href="http://www.drupal.org/association" and @class="trusted"]'));
-
-    // Add `class="trusted"` to the link.
-    $xpath = new \DOMXPath($this->getEditorDataAsDom());
-    $this->assertEmpty($xpath->query('//a[@href="http://www.drupal.org/association" and @class="trusted"]'));
-    $this->pressEditorButton('Source');
-    $source_text_area = $assert_session->waitForElement('css', '.ck-source-editing-area textarea');
-    $this->assertNotEmpty($source_text_area);
-    $new_value = str_replace('<a ', '<a class="trusted" ', $source_text_area->getValue());
-    $source_text_area->setValue('<p>temp</p>');
-    $source_text_area->setValue($new_value);
-    $this->pressEditorButton('Source');
-
-    // When unrestricted, additional attributes on links should be retained.
-    $xpath = new \DOMXPath($this->getEditorDataAsDom());
-    $this->assertCount($unrestricted ? 1 : 0, $xpath->query('//a[@href="http://www.drupal.org/association" and @class="trusted"]'));
-
-    // Save the entity whose text field is being edited.
-    $page->pressButton('Save');
-
-    // Assert the HTML the end user sees.
-    $assert_session->elementExists('css', $unrestricted
-      ? 'a[href="http://www.drupal.org/association"].trusted img[src*="' . $src . '"]'
-      : 'a[href="http://www.drupal.org/association"] img[src*="' . $src . '"]');
-
-    // Go back to edit the now *linked* <drupal-media>. Everything from this
-    // point onwards is effectively testing "upcasting" and proving there is no
-    // data loss.
-    $this->drupalGet($this->host->toUrl('edit-form'));
-    $this->waitForEditor();
-
-    // Assert the "dataDowncast" HTML before making changes.
-    $xpath = new \DOMXPath($this->getEditorDataAsDom());
-    $this->assertNotEmpty($xpath->query('//img[@alt="drupalimage test image"]'));
-    $this->assertNotEmpty($xpath->query('//a[@href="http://www.drupal.org/association"]'));
-    $this->assertNotEmpty($xpath->query('//a[@href="http://www.drupal.org/association"]/img[@alt="drupalimage test image"]'));
-    $this->assertCount($unrestricted ? 1 : 0, $xpath->query('//a[@href="http://www.drupal.org/association" and @class="trusted"]'));
-
-    // Tests unlinking images.
-    $drupalimage->click();
-    $this->assertEditorButtonEnabled('Link');
-    $this->assertSame('true', $this->getEditorButton('Link')->getAttribute('aria-pressed'));
-    // Assert structure of image toolbar balloon.
-    $this->assertVisibleBalloon('.ck-toolbar[aria-label="Image toolbar"]');
-    $link_image_button = $this->getBalloonButton('Link image');
-    $this->assertSame('true', $link_image_button->getAttribute('aria-pressed'));
-    $link_image_button->click();
-    // Assert structure of link actions balloon.
-    $this->getBalloonButton('Edit link');
-    $unlink_image_button = $this->getBalloonButton('Unlink');
-    // Click the "Unlink" button.
-    $unlink_image_button->click();
-    $this->assertSame('false', $this->getEditorButton('Link')->getAttribute('aria-pressed'));
-
-    // Assert the "editingDowncast" HTML after making changes. Assert the
-    // widget exists but not the link, or *any* link for that matter. Then
-    // assert the expected DOM structure in detail.
-    $assert_session->elementExists('css', '.ck-content .ck-widget.' . $expected_widget_class);
-    $assert_session->elementNotExists('css', '.ck-content a');
-    $assert_session->elementExists('css', '.ck-content .ck-widget.' . $expected_widget_class . ' > img[src*="' . $src . '"][alt="drupalimage test image"]');
-
-    // Assert the "dataDowncast" HTML after making changes.
-    $xpath = new \DOMXPath($this->getEditorDataAsDom());
-    $this->assertCount(0, $xpath->query('//a[@href="http://www.drupal.org/association"]/img[@alt="drupalimage test image"]'));
-    $this->assertCount(1, $xpath->query('//img[@alt="drupalimage test image"]'));
-    $this->assertCount(0, $xpath->query('//a'));
   }
 
   /**
@@ -356,7 +366,7 @@ abstract class ImageTestBase extends CKEditor5TestBase {
    *
    * @dataProvider providerAltTextRequired
    */
-  public function testAltTextRequired(bool $unrestricted) {
+  public function testAltTextRequired(bool $unrestricted): void {
     // Disable filter_html.
     if ($unrestricted) {
       FilterFormat::load('test_format')
@@ -365,7 +375,11 @@ abstract class ImageTestBase extends CKEditor5TestBase {
     }
 
     // Make the test content has a block image and an inline image.
-    $img_tag = '<img ' . $this->imageAttributesAsString() . ' width="500" />';
+    $img_tag = preg_replace(
+      '/width="\d+" height="\d+"/',
+      'width="500"',
+      '<img ' . $this->imageAttributesAsString() . ' />'
+    );
     $this->host->body->value .= $img_tag . "<p>$img_tag</p>";
     $this->host->save();
 
@@ -441,14 +455,14 @@ abstract class ImageTestBase extends CKEditor5TestBase {
     $this->assertVisibleBalloon('.ck-text-alternative-form');
   }
 
-  public function providerAltTextRequired(): array {
+  public static function providerAltTextRequired(): array {
     return [
       'Restricted' => [FALSE],
       'Unrestricted' => [TRUE],
     ];
   }
 
-  public function providerLinkability(): array {
+  protected function providerLinkability(): array {
     return [
       'BLOCK image, restricted' => ['block', FALSE],
       'BLOCK image, unrestricted' => ['block', TRUE],
@@ -519,7 +533,7 @@ abstract class ImageTestBase extends CKEditor5TestBase {
     $this->assertFalse($drupal_media_element->hasAttribute('data-align'));
   }
 
-  public function providerAlignment() {
+  public static function providerAlignment() {
     return [
       'Block image' => ['block'],
       'Inline image' => ['inline'],
@@ -538,6 +552,15 @@ abstract class ImageTestBase extends CKEditor5TestBase {
     $page = $this->getSession()->getPage();
     $assert_session = $this->assertSession();
 
+    // Despite the absence of a `height` attribute on the `<img>`, CKEditor 5
+    // should generate an appropriate `height`, matching with the aspect ratio
+    // of the image.
+    $expected_computed_height = $width;
+    if (!str_ends_with($width, '%')) {
+      $ratio = $width / (int) $this->imageAttributes()['width'];
+      $expected_computed_height = (string) (int) round($ratio * (int) $this->imageAttributes()['height']);
+    }
+
     // Add image to the host body.
     $this->host->body->value = sprintf('<img data-foo="bar" alt="drupalimage test image" ' . $this->imageAttributesAsString() . ' width="%s" />', $width);
     $this->host->save();
@@ -548,22 +571,25 @@ abstract class ImageTestBase extends CKEditor5TestBase {
     // Ensure that the image is upcast as expected. In the editing view, the
     // width attribute should downcast to an inline style on the container
     // element.
-    $this->assertNotEmpty($assert_session->waitForElementVisible('css', '.ck-widget.image[style] img'));
+    $assert_session->waitForElementVisible('css', ".ck-widget.image");
+    $this->assertNotEmpty($assert_session->waitForElementVisible('css', ".ck-widget.image[style] img"));
 
     // Ensure that the width attribute is retained on downcast.
     $editor_data = $this->getEditorDataAsDom();
-    $width_from_editor = $editor_data->getElementsByTagName('img')->item(0)->getAttribute('width');
-    $this->assertSame($width, $width_from_editor);
+    $img_in_editor = $editor_data->getElementsByTagName('img')->item(0);
+    $this->assertSame($width, $img_in_editor->getAttribute('width'));
+    $this->assertSame($expected_computed_height, $img_in_editor->getAttribute('height'));
 
-    // Save the node and ensure that the width attribute is retained.
+    // Save the node and ensure that the width attribute is retained, and ensure
+    // that a natural image ratio-respecting height attribute has been added.
     $page->pressButton('Save');
-    $this->assertNotEmpty($assert_session->waitForElement('css', "img[width='$width']"));
+    $this->assertNotEmpty($assert_session->waitForElement('css', "img[width='$width'][height='$expected_computed_height']"));
   }
 
   /**
    * Ensures that images can have caption set.
    */
-  public function testImageCaption() {
+  public function testImageCaption(): void {
     $page = $this->getSession()->getPage();
     $assert_session = $this->assertSession();
 
@@ -587,7 +613,9 @@ abstract class ImageTestBase extends CKEditor5TestBase {
     $page->pressButton('Save');
 
     $src = $this->imageAttributes()['src'];
-    $this->assertEquals('<img ' . $this->imageAttributesAsString(TRUE) . ' alt="drupalimage test image" data-caption="Alpacas &lt;em&gt;are&lt;/em&gt; cute&lt;br&gt;really!">', Node::load(1)->get('body')->value);
+    $expected = '<img ' . $this->imageAttributesAsString(TRUE) . ' alt="drupalimage test image" data-caption="Alpacas &lt;em&gt;are&lt;/em&gt; cute&lt;br&gt;really!">';
+    $expected_dom = Html::load($expected);
+    $this->assertEquals($expected_dom->getElementsByTagName('body')->item(0)->C14N(), $editor_dom->getElementsByTagName('body')->item(0)->C14N());
     $assert_session->elementExists('xpath', '//figure/img[@src="' . $src . '" and not(@data-caption)]');
     $assert_session->responseContains('<figcaption>Alpacas <em>are</em> cute<br>really!</figcaption>');
   }
@@ -595,9 +623,9 @@ abstract class ImageTestBase extends CKEditor5TestBase {
   /**
    * Data provider for ::testWidth().
    *
-   * @return \string[][]
+   * @return string[][]
    */
-  public function providerWidth(): array {
+  public static function providerWidth(): array {
     return [
       'Image resize with percent unit (only allowed in HTML 4)' => [
         'width' => '33%',
@@ -651,7 +679,7 @@ abstract class ImageTestBase extends CKEditor5TestBase {
    * @return array
    *   The test cases.
    */
-  public function providerResize(): array {
+  public static function providerResize(): array {
     return [
       'Image resize is enabled' => [
         'is_resize_enabled' => TRUE,

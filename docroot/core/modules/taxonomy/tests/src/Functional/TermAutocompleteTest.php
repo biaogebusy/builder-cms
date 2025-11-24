@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Functional;
 
 use Drupal\Component\Serialization\Json;
@@ -17,9 +19,7 @@ use Drupal\field\Entity\FieldStorageConfig;
 class TermAutocompleteTest extends TaxonomyTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['node'];
 
@@ -98,7 +98,7 @@ class TermAutocompleteTest extends TaxonomyTestBase {
 
     // Create a taxonomy_term_reference field on the article Content Type that
     // uses a taxonomy_autocomplete widget.
-    $this->fieldName = mb_strtolower($this->randomMachineName());
+    $this->fieldName = $this->randomMachineName();
     FieldStorageConfig::create([
       'field_name' => $this->fieldName,
       'entity_type' => 'node',
@@ -137,7 +137,7 @@ class TermAutocompleteTest extends TaxonomyTestBase {
     $this->adminUser = $this->drupalCreateUser(['create article content']);
     $this->drupalLogin($this->adminUser);
 
-    // Retrieve the autocomplete url.
+    // Retrieve the autocomplete URL.
     $this->drupalGet('node/add/article');
     $field = $this->assertSession()->fieldExists("{$this->fieldName}[0][target_id]");
     $this->autocompleteUrl = $this->getAbsoluteUrl($field->getAttribute('data-autocomplete-path'));
@@ -166,7 +166,7 @@ class TermAutocompleteTest extends TaxonomyTestBase {
    *
    * @see \Drupal\taxonomy\Controller\TermAutocompleteController::autocomplete()
    */
-  public function testAutocompleteCountResults() {
+  public function testAutocompleteCountResults(): void {
     // Test that no matching term found.
     $data = $this->drupalGetJson(
       $this->autocompleteUrl,
@@ -202,7 +202,7 @@ class TermAutocompleteTest extends TaxonomyTestBase {
    *
    * @see \Drupal\taxonomy\Controller\TermAutocompleteController::autocomplete()
    */
-  public function testAutocompleteOrderedResults() {
+  public function testAutocompleteOrderedResults(): void {
     $expectedResults = [
       'aaa 10 bbb',
       'aaa 11 bbb',

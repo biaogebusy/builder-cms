@@ -6,12 +6,11 @@
  */
 
 use Drupal\Core\Batch\BatchBuilder;
-use Drupal\Core\Url;
 use Drupal\Core\File\Exception\FileException;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\Core\Url;
 use Drupal\file\FileInterface;
 use Drupal\locale\Gettext;
-use Drupal\locale\Locale;
 
 /**
  * Prepare a batch to import all translations.
@@ -34,10 +33,9 @@ use Drupal\locale\Locale;
  * @return array|bool
  *   The batch structure, or FALSE if no files are used to build the batch.
  *
- * @todo
- *   Integrate with update status to identify projects needed and integrate
+ * @todo Integrate with update status to identify projects needed and integrate
  *   l10n_update functionality to feed in translation files alike.
- *   See https://www.drupal.org/node/1191488.
+ *   https://www.drupal.org/node/1191488
  */
 function locale_translate_batch_import_files(array $options, $force = FALSE) {
   $options += [
@@ -308,7 +306,7 @@ function locale_translate_batch_refresh(&$context) {
       foreach ($context['results']['stats'] as $report) {
         $strings[] = $report['strings'];
       }
-      $strings = array_merge([], ...$strings);
+      $strings = array_merge(...$strings);
     }
     if ($strings) {
       // Initialize multi-step string refresh.
@@ -328,7 +326,8 @@ function locale_translate_batch_refresh(&$context) {
   }
   elseif ($name = array_shift($context['sandbox']['refresh']['names'])) {
     // Refresh all languages for one object at a time.
-    $count = Locale::config()->updateConfigTranslations([$name], $context['sandbox']['refresh']['languages']);
+    $count = \Drupal::service('locale.config_manager')
+      ->updateConfigTranslations([$name], $context['sandbox']['refresh']['languages']);
     $context['results']['stats']['config'] += $count;
     // Inherit finished information from the "parent" string lookup step so
     // visual display of status will make sense.
@@ -344,7 +343,8 @@ function locale_translate_batch_refresh(&$context) {
     // Clear cache and force refresh of JavaScript translations.
     _locale_refresh_translations($context['sandbox']['refresh']['languages'], $next);
     // Check whether we need to refresh configuration objects.
-    if ($names = Locale::config()->getStringNames($next)) {
+    if ($names = \Drupal::service('locale.config_manager')
+      ->getStringNames($next)) {
       $context['sandbox']['refresh']['names_finished'] = $context['finished'];
       $context['sandbox']['refresh']['names'] = $names;
     }
@@ -547,7 +547,7 @@ function locale_translate_delete_translation_files(array $projects = [], array $
  */
 function locale_config_batch_update_components(array $options, array $langcodes = [], array $components = [], bool $update_default_config_langcodes = FALSE) {
   $langcodes = $langcodes ? $langcodes : array_keys(\Drupal::languageManager()->getLanguages());
-  if ($langcodes && $names = Locale::config()->getComponentNames($components)) {
+  if ($langcodes && $names = \Drupal::service('locale.config_manager')->getComponentNames($components)) {
     // If the component list is empty we need to ensure that all configuration
     // in the default collection is using the site's default langcode.
     return locale_config_batch_build($names, $langcodes, $options, $update_default_config_langcodes);
@@ -586,23 +586,17 @@ function locale_config_batch_build(array $names, array $langcodes, array $option
     $batch_builder->addOperation('locale_config_batch_set_config_langcodes');
   }
 
-  $i = 0;
-  $batch_names = [];
-  foreach ($names as $name) {
-    $batch_names[] = $name;
-    $i++;
+  // Chunking the array of names into batches of 20 for better performance.
+  $name_chunks = array_chunk($names, 20);
+
+  foreach ($name_chunks as $chunk) {
     // During installation the caching of configuration objects is disabled so
     // it is very expensive to initialize the \Drupal::config() object on each
     // request. We batch a small number of configuration object upgrades
     // together to improve the overall performance of the process.
-    if ($i % 20 == 0) {
-      $batch_builder->addOperation('locale_config_batch_refresh_name', [$batch_names, $langcodes]);
-      $batch_names = [];
-    }
+    $batch_builder->addOperation('locale_config_batch_refresh_name', [$chunk, $langcodes]);
   }
-  if (!empty($batch_names)) {
-    $batch_builder->addOperation('locale_config_batch_refresh_name', [$batch_names, $langcodes]);
-  }
+
   if (!empty($options['finish_feedback'])) {
     $batch_builder->setFinishCallback('locale_config_batch_finished');
   }
@@ -618,7 +612,7 @@ function locale_config_batch_build(array $names, array $langcodes, array $option
  *   The batch context.
  */
 function locale_config_batch_set_config_langcodes(&$context) {
-  Locale::config()->updateDefaultConfigLangcodes();
+  \Drupal::service('locale.config_manager')->updateDefaultConfigLangcodes();
   $context['finished'] = 1;
   $context['message'] = t('Updated default configuration to %langcode', ['%langcode' => \Drupal::languageManager()->getDefaultLanguage()->getId()]);
 }
@@ -638,14 +632,15 @@ function locale_config_batch_set_config_langcodes(&$context) {
  * @see locale_config_batch_build()
  */
 function locale_config_batch_refresh_name(array $names, array $langcodes, &$context) {
-  if (!isset($context['result']['stats']['config'])) {
-    $context['result']['stats']['config'] = 0;
+  if (!isset($context['results']['stats']['config'])) {
+    $context['results']['stats']['config'] = 0;
   }
-  $context['result']['stats']['config'] += Locale::config()->updateConfigTranslations($names, $langcodes);
+  $context['results']['stats']['config'] += \Drupal::service('locale.config_manager')
+    ->updateConfigTranslations($names, $langcodes);
   foreach ($names as $name) {
-    $context['result']['names'][] = $name;
+    $context['results']['names'][] = $name;
   }
-  $context['result']['langcodes'] = $langcodes;
+  $context['results']['langcodes'] = $langcodes;
   $context['finished'] = 1;
 }
 

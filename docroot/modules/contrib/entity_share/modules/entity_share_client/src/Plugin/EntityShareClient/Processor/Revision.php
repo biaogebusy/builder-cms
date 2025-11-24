@@ -97,7 +97,6 @@ class Revision extends ImportProcessorPluginBase implements PluginFormInterface 
       && $this->configuration['enforce_new_revision']
       && $import_status_entity
     ) {
-
       $processed_entity->setNewRevision();
       if ($this->configuration['translation_affected']) {
         $processed_entity->setRevisionTranslationAffected(TRUE);

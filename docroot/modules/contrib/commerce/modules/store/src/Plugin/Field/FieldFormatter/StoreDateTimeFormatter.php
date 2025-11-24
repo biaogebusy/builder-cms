@@ -2,16 +2,18 @@
 
 namespace Drupal\commerce_store\Plugin\Field\FieldFormatter;
 
-use Drupal\commerce_store\CurrentStoreInterface;
-use Drupal\commerce_store\Entity\Store;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce_store\CurrentStoreInterface;
+use Drupal\commerce_store\Entity\Store;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -21,15 +23,12 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * as opposed to the user's timezone.
  *
  * @see \Drupal\commerce_store\Plugin\Field\FieldWidget\StoreDateTimeWidget
- *
- * @FieldFormatter(
- *   id = "commerce_store_datetime",
- *   label = @Translation("Default (Store timezone)"),
- *   field_types = {
- *     "datetime"
- *   }
- * )
  */
+#[FieldFormatter(
+  id: "commerce_store_datetime",
+  label: new TranslatableMarkup("Default (Store timezone)"),
+  field_types: ["datetime"],
+)]
 class StoreDateTimeFormatter extends FormatterBase implements ContainerFactoryPluginInterface {
 
   /**

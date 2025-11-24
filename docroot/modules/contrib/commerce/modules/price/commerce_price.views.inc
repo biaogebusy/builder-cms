@@ -15,7 +15,13 @@ use Drupal\field\FieldStorageConfigInterface;
  * Views integration for price fields.
  */
 function commerce_price_field_views_data(FieldStorageConfigInterface $field_storage) {
-  $data = views_field_default_views_data($field_storage);
+  if (\Drupal::hasService('views.field_data_provider')) {
+    $data = \Drupal::service('views.field_data_provider')->defaultFieldImplementation($field_storage);
+  }
+  else {
+    $deprecated_function = 'views_field_default_views_data';
+    $data = $deprecated_function($field_storage);
+  }
   $field_name = $field_storage->getName();
   foreach ($data as $table_name => $table_data) {
     if (isset($table_data[$field_name])) {

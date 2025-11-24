@@ -5,8 +5,8 @@
  * Functionality for search of Admin Toolbar.
  */
 
-use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Url;
 
 /**
  * Implements hook_help().
@@ -33,38 +33,128 @@ function admin_toolbar_search_toolbar_alter(&$items) {
   $admin_toolbar_tools_enabled = \Drupal::service('module_handler')
     ->moduleExists('admin_toolbar_tools');
 
-  $items['administration_search'] = [
-    "#type" => "toolbar_item",
-    '#weight' => 100,
-    'tab' => [
-      'search' => [
-        '#type' => 'textfield',
-        '#size' => 30,
+  $admin_toolbar_search_settings = \Drupal::config('admin_toolbar_search.settings');
+  $display_menu_item = $admin_toolbar_search_settings->get('display_menu_item');
+  // Admin Toolbar Search field labels.
+  $search_field_title = t('Search');
+  $search_field_placeholder = t('Admin Toolbar Search (Alt+a)');
+  $search_field_title_attribute = t('Keyboard shortcut: Alt + a');
+
+  if (!$display_menu_item) {
+    // The search field is displayed directly in the Toolbar.
+    $items['administration_mobile_search'] = [
+      '#type' => 'toolbar_item',
+      '#weight' => 100,
+      'tab' => [
+        '#type' => 'link',
+        '#title' => $search_field_title,
+        '#url' => Url::fromRoute('system.admin'),
         '#attributes' => [
-          'id' => 'admin-toolbar-search-input',
-          'aria-labelledby' => 'toolbar-item-administration-search',
-          'placeholder' => new TranslatableMarkup('Admin Toolbar quick search'),
+          'class' => [
+            'toolbar-icon',
+          ],
         ],
       ],
-    ],
-    '#attached' => [
-      'library' => [
-        'admin_toolbar_search/search',
+      '#wrapper_attributes' => [
+        'id' => 'admin-toolbar-mobile-search-tab',
       ],
-      'drupalSettings' => [
-        'adminToolbarSearch' => [
-          'loadExtraLinks' => $admin_toolbar_tools_enabled,
+    ];
+
+    $items['administration_search'] = [
+      "#type" => "toolbar_item",
+      '#weight' => 101,
+      'tab' => [
+        'search' => [
+          '#title' => $search_field_title,
+          '#title_display' => 'invisible',
+          '#type' => 'search',
+          '#size' => 30,
+          '#attributes' => [
+            'placeholder' => $search_field_placeholder,
+            'title' => $search_field_title_attribute,
+          ],
+          '#id' => 'admin-toolbar-search-input',
         ],
       ],
-    ],
-    '#wrapper_attributes' => [
-      'id' => 'admin-toolbar-search-tab',
-    ],
-    '#cache' => [
-      'contexts' => [
-        'user.permissions',
+      '#attached' => [
+        'library' => [
+          'admin_toolbar_search/search',
+        ],
+        'drupalSettings' => [
+          'adminToolbarSearch' => [
+            'loadExtraLinks' => $admin_toolbar_tools_enabled,
+          ],
+        ],
       ],
-    ],
-  ];
+      '#wrapper_attributes' => [
+        'id' => 'admin-toolbar-search-tab',
+      ],
+      '#cache' => [
+        'contexts' => [
+          'user.permissions',
+        ],
+        'tags' => [
+          'config:admin_toolbar_search.settings',
+        ],
+      ],
+    ];
+  }
+  else {
+    // The search field is displayed in a specific Tray under the Search Tab.
+    $items['administration_search'] = [
+      "#type" => "toolbar_item",
+      'tab' => [
+        '#type' => 'link',
+        '#title' => $search_field_title,
+        '#url' => URL::fromRoute('system.admin'),
+        '#attributes' => [
+          'class' => [
+            'toolbar-icon',
+          ],
+        ],
+      ],
+      'tray' => [
+        'search' => [
+          '#title' => $search_field_title,
+          '#type' => 'search',
+          '#size' => 60,
+          '#id' => 'admin-toolbar-search-input',
+          '#attributes' => [
+            'placeholder' => $search_field_placeholder,
+            'title' => $search_field_title_attribute,
+          ],
+        ],
+      ],
+      '#attached' => [
+        'library' => [
+          'admin_toolbar_search/search',
+        ],
+        'drupalSettings' => [
+          'adminToolbarSearch' => [
+            'loadExtraLinks' => $admin_toolbar_tools_enabled,
+          ],
+        ],
+      ],
+      '#wrapper_attributes' => [
+        "id" => "admin-toolbar-search-tab",
+      ],
+      '#cache' => [
+        'contexts' => [
+          'user.permissions',
+        ],
+        'tags' => [
+          'config:admin_toolbar_search.settings',
+        ],
+      ],
+    ];
+  }
+
+  // Add the keyboard shortcut library if enabled.
+  if ($admin_toolbar_search_settings->get('enable_keyboard_shortcut')) {
+    $items['administration_search']['#attached']['library'][] = 'admin_toolbar_search/search.keyboard_shortcut';
+    // The display menu item setting is used to determine if the search input
+    // should be displayed as a menu item or directly in the toolbar.
+    $items['administration_search']['#attached']['drupalSettings']['adminToolbarSearch']['displayMenuItem'] = $display_menu_item;
+  }
 
 }

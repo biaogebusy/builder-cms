@@ -14,7 +14,7 @@ better_exposed_filters_filter_widget:
           type: boolean
           label: 'Sort filter options alphabetically'
         placeholder_text:
-          type: string
+          type: label
           label: 'Placeholder text for the filter'
         rewrite:
           type: mapping
@@ -23,12 +23,21 @@ better_exposed_filters_filter_widget:
             filter_rewrite_values:
               type: text
               label: 'Rewrite filter option'
+            filter_rewrite_values_key:
+              type: boolean
+              label: 'Rewrite the text displayed based on key'
         collapsible:
           type: boolean
           label: 'Make sort options collapsible'
+        collapsible_disable_automatic_open:
+          type: boolean
+          label: 'Disable the automatic opening of collapsed filters with selections'
         is_secondary:
           type: boolean
           label: 'This filter is a secondary option'
+        hide_label:
+          type: boolean
+          label: 'Hide the label'
 
 # BEF exposed filter widgets
 better_exposed_filters.filter.*:
@@ -83,7 +92,7 @@ better_exposed_filters.filter.bef_sliders:
       label: 'Animation speed'
     animate_ms:
       type: string
-      label: 'Animation speed in milliseconds'
+      label: 'Custom animation speed in milliseconds'
     orientation:
       type: string
       label: 'Orientation'

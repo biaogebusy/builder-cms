@@ -76,7 +76,7 @@ function webform_access_node_delete(EntityInterface $entity) {
  * Implements hook_field_config_delete().
  */
 function webform_access_field_config_delete(EntityInterface $entity) {
-  /** @var Drupal\field\Entity\FieldConfig $definition */
+  /** @var \Drupal\field\Entity\FieldConfig $definition */
   if ($entity->getType() === 'webform' && $entity->getEntityTypeId() === 'node') {
     $entity_ids = \Drupal::entityQuery('webform_access_group')
       ->condition('type', $entity->getTargetBundle())
@@ -95,7 +95,7 @@ function webform_access_field_config_delete(EntityInterface $entity) {
  * Implements hook_field_storage_config_delete().
  */
 function webform_access_field_storage_config_delete(EntityInterface $entity) {
-  /** @var Drupal\field\Entity\FieldStorageConfig $entity */
+  /** @var \Drupal\field\Entity\FieldStorageConfig $entity */
   if ($entity->getType() === 'webform') {
     \Drupal::database()->delete('webform_access_group_entity')
       ->condition('entity_type', $entity->getEntityTypeId())

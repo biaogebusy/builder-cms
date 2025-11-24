@@ -1,6 +1,6 @@
 # Site Process
 
-A thin wrapper around the Symfony Process Component that allows applications to use the Site Alias library to specify the target for a remote call. 
+A thin wrapper around the Symfony Process Component that allows applications to use the Site Alias library to specify the target for a remote call.
 
 [![ci](https://github.com/consolidation/site-process/workflows/CI/badge.svg)](https://travis-ci.org/consolidation/site-process)
 [![scrutinizer](https://scrutinizer-ci.com/g/consolidation/site-process/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/consolidation/site-process/?branch=master)
@@ -41,7 +41,7 @@ local:
   host: localhost
   uri: http://localhost
   ssh:
-    options: -o PasswordAuthentication=no -i $HOME/.ssh/id_rsa 
+    options: -o PasswordAuthentication=no -i $HOME/.ssh/id_rsa
 
 ```
 ### Vagrant
@@ -65,6 +65,7 @@ local:
   docker:
     service: drupal
     compose:
+      version: 1
       options: --project dockerComposeProjectName --file docker-compose.yml --project-directory dockerComposeWorkDir
     exec:
       options: --user www-data
@@ -78,7 +79,15 @@ docker-compose --project dockerComposeProjectName --file docker-compose.yml --pr
 
 `docker.project` and `compose.options --project` do the same thing, docker.project existed before options.
 
-`docker.service` is the exact name of the service as it appears in docker-compos.yml
+`docker.service` is the exact name of the service as it appears in docker-compose.yml
+
+`docker.compose.version` defaults to `1`. Set to `2` to use the new syntax:
+
+```
+docker compose --project dockerComposeProjectName --file docker-compose.yml --project-directory dockerComposeWorkDir exec --user www-data -T drupal
+```
+The default behaviour is to use `docker-compose exec` to invoke a command on a running container.
+You can change this to use `docker-compose run` for containers which by default are not running, with the property `compose.command`.
 
 Check the [docker-compose](https://docs.docker.com/compose/reference/overview/) manual for all available options.
 
@@ -94,7 +103,7 @@ The test suite may be run locally by way of some simple composer scripts:
 | Run all tests    | `composer test`
 | PHPUnit tests    | `composer unit`
 | PHP linter       | `composer lint`
-| Code style       | `composer cs`     
+| Code style       | `composer cs`
 | Fix style errors | `composer cbf`
 
 
@@ -112,7 +121,8 @@ We use [SemVer](http://semver.org/) for versioning. For the versions available, 
 
 | Branch       | Symfony Versions | PHP Versions
 | ------------ | ---------------- | ------------
-| main (4.x) | ^4               | 7.1+
+| main (5.x)   | ^5 | ^6          | 8.0+
+| 4.x          | ^4               | 7.1+
 | 2.x          | ^2 | ^3          | 5.6+
 
 Note that all 3.x releases of consolidation/site-process were skipped simply to align the 4.x versions with Symfony 4.x support.

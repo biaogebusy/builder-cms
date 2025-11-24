@@ -7,6 +7,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
 use Drupal\Core\TypedData\TranslatableInterface;
+use Drupal\paragraphs\Attribute\ParagraphsConversion;
 
 /**
  * Plugin type manager for paragraphs type conversion plugins.
@@ -36,7 +37,7 @@ class ParagraphsConversionManager extends DefaultPluginManager {
    *   The entity type manager.
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler, EntityTypeManagerInterface $entity_type_manager) {
-    parent::__construct('Plugin/paragraphs/Conversion', $namespaces, $module_handler, 'Drupal\paragraphs\ParagraphsConversionInterface', 'Drupal\paragraphs\Annotation\ParagraphsConversion');
+    parent::__construct('Plugin/paragraphs/Conversion', $namespaces, $module_handler, ParagraphsConversionInterface::class, ParagraphsConversion::class, 'Drupal\paragraphs\Annotation\ParagraphsConversion');
     $this->setCacheBackend($cache_backend, 'paragraphs_conversion_plugins');
     $this->alterInfo('paragraphs_conversion_info');
     $this->entityTypeManager = $entity_type_manager;
@@ -65,7 +66,7 @@ class ParagraphsConversionManager extends DefaultPluginManager {
    * @return array
    *   The applicable conversion plugins.
    */
-  public function getApplicableDefinitions(ParagraphInterface $paragraph, array $allowed_types = NULL) {
+  public function getApplicableDefinitions(ParagraphInterface $paragraph, ?array $allowed_types = NULL) {
     $definitions = $this->getDefinitions();
     $applicable_plugins = [];
     foreach ($definitions as $key => $definition) {
@@ -91,7 +92,7 @@ class ParagraphsConversionManager extends DefaultPluginManager {
    * @return bool
    *   TRUE if the plugin is applicable. Otherwise, FALSE.
    */
-  protected function isApplicable(ParagraphsConversionInterface $plugin, ParagraphInterface $paragraph, array $allowed_types = NULL) {
+  protected function isApplicable(ParagraphsConversionInterface $plugin, ParagraphInterface $paragraph, ?array $allowed_types = NULL) {
     if (!$plugin->supports($paragraph, $allowed_types)) {
       return FALSE;
     }
@@ -134,7 +135,7 @@ class ParagraphsConversionManager extends DefaultPluginManager {
    * @return bool
    *   Whether the current paragraph supports conversion.
    */
-  public function supportsConversion(ParagraphInterface $paragraph, array $allowed_types = NULL) {
+  public function supportsConversion(ParagraphInterface $paragraph, ?array $allowed_types = NULL) {
     $definitions = $this->getDefinitions();
     foreach ($definitions as $key => $definition) {
       /** @var \Drupal\paragraphs\ParagraphsConversionInterface $plugin */

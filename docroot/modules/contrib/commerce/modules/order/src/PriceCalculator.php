@@ -2,11 +2,11 @@
 
 namespace Drupal\commerce_order;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\commerce\Context;
 use Drupal\commerce\PurchasableEntityInterface;
 use Drupal\commerce_order\Resolver\ChainOrderTypeResolverInterface;
 use Drupal\commerce_price\Resolver\ChainPriceResolverInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 class PriceCalculator implements PriceCalculatorInterface {

@@ -1,7 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\migrate_tools;
 
+use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\KeyValueStore\KeyValueFactoryInterface;
+use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\migrate\Event\MigrateEvents;
 use Drupal\migrate\Event\MigrateImportEvent;
 use Drupal\migrate\Event\MigrateMapDeleteEvent;
@@ -10,6 +15,7 @@ use Drupal\migrate\Event\MigratePreRowSaveEvent;
 use Drupal\migrate\Event\MigrateRollbackEvent;
 use Drupal\migrate\Event\MigrateRowDeleteEvent;
 use Drupal\migrate\MigrateExecutable as MigrateExecutableBase;
+use Drupal\migrate\MigrateMessage;
 use Drupal\migrate\MigrateMessageInterface;
 use Drupal\migrate\Plugin\MigrateIdMapInterface;
 use Drupal\migrate\Plugin\MigrationInterface;
@@ -24,10 +30,9 @@ class MigrateExecutable extends MigrateExecutableBase {
   /**
    * Counters of map statuses.
    *
-   * @var array
    *   Set of counters, keyed by MigrateIdMapInterface::STATUS_* constant.
    */
-  protected $saveCounters = [
+  protected array $saveCounters = [
     MigrateIdMapInterface::STATUS_FAILED => 0,
     MigrateIdMapInterface::STATUS_IGNORED => 0,
     MigrateIdMapInterface::STATUS_IMPORTED => 0,
@@ -43,10 +48,8 @@ class MigrateExecutable extends MigrateExecutableBase {
 
   /**
    * Counter of map deletions.
-   *
-   * @var int
    */
-  protected $deleteCounter = 0;
+  protected int $deleteCounter = 0;
 
   /**
    * Maximum number of items to process in this migration.
@@ -66,10 +69,8 @@ class MigrateExecutable extends MigrateExecutableBase {
 
   /**
    * List of specific source IDs to import.
-   *
-   * @var array
    */
-  protected $idlist = [];
+  protected array $idlist = [];
 
   /**
    * Count of number of items processed so far in this migration.
@@ -83,7 +84,7 @@ class MigrateExecutable extends MigrateExecutableBase {
    *
    * @var bool
    */
-  protected $preExistingItem = FALSE;
+  protected bool $preExistingItem = FALSE;
 
   /**
    * List of event listeners we have registered.
@@ -93,9 +94,60 @@ class MigrateExecutable extends MigrateExecutableBase {
   protected $listeners = [];
 
   /**
+   * The key/value factory.
+   *
+   * @var \Drupal\Core\KeyValueStore\KeyValueFactoryInterface
+   */
+  protected KeyValueFactoryInterface $keyValue;
+
+  /**
+   * The time service.
+   *
+   * @var \Drupal\Component\Datetime\TimeInterface|mixed
+   */
+  protected TimeInterface $time;
+
+  /**
+   * The translation manager.
+   *
+   * @var \Drupal\Core\StringTranslation\TranslationInterface
+   */
+  protected TranslationInterface $translation;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(MigrationInterface $migration, MigrateMessageInterface $message = NULL, array $options = []) {
+  public function __construct(
+    MigrationInterface $migration,
+    ?MigrateMessageInterface $message = NULL,
+    KeyValueFactoryInterface|array $keyValue = [],
+    ?TimeInterface $time = NULL,
+    ?TranslationInterface $translation = NULL,
+    array $options = [],
+  ) {
+    if (!$message instanceof MigrateMessageInterface) {
+      @trigger_error('Calling ' . __METHOD__ . '() without the $message argument is deprecated in migrate_tools:6.1.0 and it will be required in migrate_tools:7.0.0. See https://www.drupal.org/node/3537201', E_USER_DEPRECATED);
+      $message = new MigrateMessage();
+    }
+    if (!$keyValue instanceof KeyValueFactoryInterface) {
+      // If options aren't passed, the keyValue parameter must be the options.
+      if (!isset($options)) {
+        $options = $keyValue;
+      }
+      @trigger_error('Calling ' . __METHOD__ . '() without the $keyValue argument is deprecated in migrate_tools:6.1.0 and it will be required in migrate_tools:7.0.0. See https://www.drupal.org/node/3537201', E_USER_DEPRECATED);
+      $keyValue = \Drupal::service('keyvalue');
+    }
+    if (!$time instanceof TimeInterface) {
+      @trigger_error('Calling ' . __METHOD__ . '() without the $time argument is deprecated in migrate_tools:6.1.0 and it will be required in migrate_tools:7.0.0. See https://www.drupal.org/node/3537201', E_USER_DEPRECATED);
+      $time = \Drupal::service('datetime.time');
+    }
+    if (!$translation instanceof TranslationInterface) {
+      @trigger_error('Calling ' . __METHOD__ . '() without the $translation argument is deprecated in migrate_tools:6.1.0 and it will be required in migrate_tools:7.0.0. See https://www.drupal.org/node/3537201', E_USER_DEPRECATED);
+      $translation = \Drupal::service('string_translation');
+    }
+    $this->keyValue = $keyValue;
+    $this->time = $time;
+    $this->translation = $translation;
     parent::__construct($migration, $message);
     if (isset($options['limit'])) {
       $this->itemLimit = $options['limit'];
@@ -108,13 +160,36 @@ class MigrateExecutable extends MigrateExecutableBase {
     }
     $this->idlist = MigrateTools::buildIdList($options);
 
-    $this->listeners[MigrateEvents::MAP_SAVE] = [$this, 'onMapSave'];
-    $this->listeners[MigrateEvents::MAP_DELETE] = [$this, 'onMapDelete'];
-    $this->listeners[MigrateEvents::POST_IMPORT] = [$this, 'onPostImport'];
-    $this->listeners[MigrateEvents::POST_ROLLBACK] = [$this, 'onPostRollback'];
-    $this->listeners[MigrateEvents::PRE_ROW_SAVE] = [$this, 'onPreRowSave'];
-    $this->listeners[MigrateEvents::POST_ROW_DELETE] = [$this, 'onPostRowDelete'];
-    $this->listeners[MigratePlusEvents::PREPARE_ROW] = [$this, 'onPrepareRow'];
+    $this->listeners[MigrateEvents::MAP_SAVE] = [
+      $this,
+      'onMapSave',
+    ];
+    $this->listeners[MigrateEvents::MAP_DELETE] = [
+      $this,
+      'onMapDelete',
+    ];
+    $this->listeners[MigrateEvents::POST_IMPORT] = [
+      $this,
+      'onPostImport',
+    ];
+    $this->listeners[MigrateEvents::POST_ROLLBACK] = [
+      $this,
+      'onPostRollback',
+    ];
+    $this->listeners[MigrateEvents::PRE_ROW_SAVE] = [
+      $this,
+      'onPreRowSave',
+    ];
+    $this->listeners[MigrateEvents::POST_ROW_DELETE] = [
+      $this,
+      'onPostRowDelete',
+    ];
+    if (class_exists(MigratePlusEvents::class)) {
+      $this->listeners[MigratePlusEvents::PREPARE_ROW] = [
+        $this,
+        'onPrepareRow',
+      ];
+    }
     foreach ($this->listeners as $event => $listener) {
       $this->resetListeners($event);
       $this->getEventDispatcher()->addListener($event, $listener);
@@ -237,17 +312,15 @@ class MigrateExecutable extends MigrateExecutableBase {
    *   The map event.
    */
   public function onPostImport(MigrateImportEvent $event) {
-    $migrate_last_imported_store = \Drupal::keyValue('migrate_last_imported');
-    $migrate_last_imported_store->set($event->getMigration()->id(), round(\Drupal::time()->getCurrentMicroTime() * 1000));
+    $migrate_last_imported_store = $this->keyValue->get('migrate_last_imported');
+    $migrate_last_imported_store->set($event->getMigration()->id(), round($this->time->getCurrentMicroTime() * 1000));
     $this->progressMessage();
     $this->removeListeners();
 
     $unused_ids = $this->getSource()->getRemainingIdList();
     if ($unused_ids) {
       $this->message->display($this->t("The following specified IDs were not found in the source IDs: @idlist.", [
-        '@idlist' => implode(', ', array_map(static function ($ids) {
-          return implode(':', $ids);
-        }, $unused_ids)),
+        '@idlist' => implode(', ', array_map(static fn($ids): string => implode(':', $ids), $unused_ids)),
       ]));
     }
   }
@@ -272,7 +345,10 @@ class MigrateExecutable extends MigrateExecutableBase {
    *   The name of the event to remove.
    */
   protected function resetListeners(string $event_name) {
-    if (in_array($event_name, [MigrateEvents::POST_IMPORT, MigrateEvents::POST_ROLLBACK], TRUE)) {
+    if (in_array($event_name, [
+      MigrateEvents::POST_IMPORT,
+      MigrateEvents::POST_ROLLBACK,
+    ], TRUE)) {
       foreach ($this->getEventDispatcher()->getListeners($event_name) as $registered_listener) {
         if ($registered_listener[0] instanceof self) {
           $this->getEventDispatcher()->removeListener($event_name, $registered_listener);
@@ -293,16 +369,16 @@ class MigrateExecutable extends MigrateExecutableBase {
     $processed = $this->getProcessedCount();
     if ($done) {
       $singular_message = "Processed 1 item (@created created, @updated updated, @failures failed, @ignored ignored) - done with '@name'";
-      $plural_message = "Processed @numitems items (@created created, @updated updated, @failures failed, @ignored ignored) - done with '@name'";
+      $plural_message = "Processed @numItems items (@created created, @updated updated, @failures failed, @ignored ignored) - done with '@name'";
     }
     else {
       $singular_message = "Processed 1 item (@created created, @updated updated, @failures failed, @ignored ignored) - continuing with '@name'";
-      $plural_message = "Processed @numitems items (@created created, @updated updated, @failures failed, @ignored ignored) - continuing with '@name'";
+      $plural_message = "Processed @numItems items (@created created, @updated updated, @failures failed, @ignored ignored) - continuing with '@name'";
     }
-    $this->message->display(\Drupal::translation()->formatPlural($processed,
+    $this->message->display($this->translation->formatPlural($processed,
       $singular_message, $plural_message,
         [
-          '@numitems' => $processed,
+          '@numItems' => $processed,
           '@created' => $this->getCreatedCount(),
           '@updated' => $this->getUpdatedCount(),
           '@failures' => $this->getFailedCount(),
@@ -319,7 +395,7 @@ class MigrateExecutable extends MigrateExecutableBase {
    *   The map event.
    */
   public function onPostRollback(MigrateRollbackEvent $event) {
-    $migrate_last_imported_store = \Drupal::keyValue('migrate_last_imported');
+    $migrate_last_imported_store = $this->keyValue->get('migrate_last_imported');
     $migrate_last_imported_store->set($event->getMigration()->id(), FALSE);
     $this->rollbackMessage();
     // If this is a sync import, then don't remove listeners or post import will
@@ -338,9 +414,8 @@ class MigrateExecutable extends MigrateExecutableBase {
    *   TRUE if this is the last items to rollback. Otherwise FALSE.
    */
   protected function rollbackMessage($done = TRUE) {
-    $translation = \Drupal::translation();
     if (($rolled_back = $this->getRollbackCount()) === 0) {
-      $this->message->display($translation->translate(
+      $this->message->display($this->translation->translate(
         "No item has been rolled back - done with '@name'",
         ['@name' => $this->migration->id()])
       );
@@ -348,16 +423,16 @@ class MigrateExecutable extends MigrateExecutableBase {
     }
     if ($done) {
       $singular_message = "Rolled back 1 item - done with '@name'";
-      $plural_message = "Rolled back @numitems items - done with '@name'";
+      $plural_message = "Rolled back @numItems items - done with '@name'";
     }
     else {
       $singular_message = "Rolled back 1 item - continuing with '@name'";
-      $plural_message = "Rolled back @numitems items - continuing with '@name'";
+      $plural_message = "Rolled back @numItems items - continuing with '@name'";
     }
-    $this->message->display($translation->formatPlural($rolled_back,
+    $this->message->display($this->translation->formatPlural($rolled_back,
       $singular_message, $plural_message,
       [
-        '@numitems' => $rolled_back,
+        '@numItems' => $rolled_back,
         '@name' => $this->migration->id(),
       ]
     ));
@@ -426,7 +501,7 @@ class MigrateExecutable extends MigrateExecutableBase {
   /**
    * {@inheritdoc}
    */
-  protected function getIdMap() {
+  protected function getIdMap(): IdMapFilter {
     return new IdMapFilter(parent::getIdMap(), $this->idlist);
   }
 

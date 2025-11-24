@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Functional;
 
 use Drupal\language\Entity\ConfigurableLanguage;
@@ -17,9 +19,7 @@ use Drupal\Tests\BrowserTestBase;
 class NodeTypeTranslationTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'block',
@@ -102,8 +102,8 @@ class NodeTypeTranslationTest extends BrowserTestBase {
   /**
    * Tests the node type translation.
    */
-  public function testNodeTypeTranslation() {
-    $type = mb_strtolower($this->randomMachineName(16));
+  public function testNodeTypeTranslation(): void {
+    $type = $this->randomMachineName(16);
     $name = $this->randomString();
     $this->drupalLogin($this->adminUser);
     $this->drupalCreateContentType(['type' => $type, 'name' => $name]);
@@ -139,8 +139,8 @@ class NodeTypeTranslationTest extends BrowserTestBase {
   /**
    * Tests the node type title label translation.
    */
-  public function testNodeTypeTitleLabelTranslation() {
-    $type = mb_strtolower($this->randomMachineName(16));
+  public function testNodeTypeTitleLabelTranslation(): void {
+    $type = $this->randomMachineName(16);
     $name = $this->randomString();
     $this->drupalLogin($this->adminUser);
     $this->drupalCreateContentType(['type' => $type, 'name' => $name]);
@@ -148,7 +148,7 @@ class NodeTypeTranslationTest extends BrowserTestBase {
 
     // Edit the title label for it to be displayed on the translation form.
     $this->drupalGet("admin/structure/types/manage/{$type}");
-    $this->submitForm(['title_label' => 'Edited title'], 'Save content type');
+    $this->submitForm(['title_label' => 'Edited title'], 'Save');
 
     // Assert that the title label is displayed on the translation form with the right value.
     $this->drupalGet("admin/structure/types/manage/$type/translate/$langcode/add");
@@ -166,17 +166,19 @@ class NodeTypeTranslationTest extends BrowserTestBase {
     $this->drupalGet("$langcode/node/add/$type");
     $this->assertSession()->pageTextContains('Translated title');
 
-    // Add an e-mail field.
+    // Add an email field.
     $this->drupalGet("admin/structure/types/manage/{$type}/fields/add-field");
     $this->submitForm([
       'new_storage_type' => 'email',
+    ], 'Continue');
+    $this->submitForm([
       'label' => 'Email',
       'field_name' => 'email',
-    ], 'Save and continue');
-    $this->submitForm([], 'Save field settings');
+    ], 'Continue');
+    $this->submitForm([], 'Update settings');
     $this->submitForm([], 'Save settings');
 
-    $type = mb_strtolower($this->randomMachineName(16));
+    $type = $this->randomMachineName(16);
     $name = $this->randomString();
     $this->drupalCreateContentType(['type' => $type, 'name' => $name]);
 
@@ -188,8 +190,8 @@ class NodeTypeTranslationTest extends BrowserTestBase {
     $this->submitForm(['site_default_language' => 'es'], 'Save configuration');
 
     // Try re-using the email field.
-    $this->drupalGet("es/admin/structure/types/manage/$type/fields/add-field");
-    $this->submitForm(['existing_storage_name' => 'field_email', 'existing_storage_label' => 'Email'], 'Save and continue');
+    $this->drupalGet("es/admin/structure/types/manage/$type/fields/reuse");
+    $this->submitForm([], 'Re-use');
     $this->assertSession()->statusCodeEquals(200);
     $this->drupalGet("es/admin/structure/types/manage/$type/fields/node.$type.field_email/translate");
     $this->assertSession()->statusCodeEquals(200);

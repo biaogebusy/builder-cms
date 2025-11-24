@@ -2,12 +2,12 @@
 
 namespace Drupal\Tests\commerce_order\Kernel\Jsonapi;
 
-use Drupal\commerce_order\Entity\Order;
-use Drupal\commerce_order\Entity\OrderItem;
-use Drupal\commerce_price\Price;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Url;
 use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
+use Drupal\commerce_order\Entity\Order;
+use Drupal\commerce_order\Entity\OrderItem;
+use Drupal\commerce_price\Price;
 use Drupal\user\Entity\Role;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -57,6 +57,7 @@ class OrderCollectionFilterTest extends OrderKernelTestBase {
   protected static $modules = [
     'serialization',
     'jsonapi',
+    'file',
   ];
 
   /**
@@ -83,15 +84,15 @@ class OrderCollectionFilterTest extends OrderKernelTestBase {
     int $expected_unfiltered_count,
     array $expected_unfiltered_uuids,
     int $expected_filtered_count,
-    array $expected_filtered_uuids
+    array $expected_filtered_uuids,
   ) {
     $user_ids = [
       'order_customer' => $this->testOrderCustomer->id(),
       'other_customer' => $this->testOtherCustomer->id(),
       'guest_customer' => 0,
       'guest_customer_with_permission' => 0,
-      'admin_user' => $this->createUser([], ['administer commerce_order'])->id(),
-      'view_user' => $this->createUser([], ['view commerce_order'])->id(),
+      'admin_user' => $this->createUser(['administer commerce_order'])->id(),
+      'view_user' => $this->createUser(['view commerce_order'])->id(),
     ];
     $this->assertArrayHasKey($user_type, $user_ids);
     if ($user_type === 'guest_customer_with_permission') {
@@ -128,7 +129,7 @@ class OrderCollectionFilterTest extends OrderKernelTestBase {
    * @return \Generator
    *   The test data.
    */
-  public function filterDataParameters(): \Generator {
+  public static function filterDataParameters(): \Generator {
     yield [
       'order_customer',
       2,

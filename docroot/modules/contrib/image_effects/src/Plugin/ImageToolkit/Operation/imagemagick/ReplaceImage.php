@@ -1,21 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageToolkit\Operation\imagemagick;
 
-use Drupal\imagemagick\Plugin\ImageToolkit\Operation\imagemagick\ImagemagickImageToolkitOperationBase;
+use Drupal\Core\ImageToolkit\Attribute\ImageToolkitOperation;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\image_effects\Plugin\ImageToolkit\Operation\ReplaceImageTrait;
+use Drupal\imagemagick\Plugin\ImageToolkit\Operation\imagemagick\ImagemagickImageToolkitOperationBase;
 
 /**
  * Defines Imagemagick image replace operation.
- *
- * @ImageToolkitOperation(
- *   id = "image_effects_imagemagick_replace_image",
- *   toolkit = "imagemagick",
- *   operation = "replace_image",
- *   label = @Translation("Replace image"),
- *   description = @Translation("Replace the current image with another one.")
- * )
  */
+#[ImageToolkitOperation(
+  id: 'image_effects_imagemagick_replace_image',
+  toolkit: 'imagemagick',
+  operation: 'replace_image',
+  label: new TranslatableMarkup('Replace image'),
+  description: new TranslatableMarkup('Replace the current image with another one.'),
+)]
 class ReplaceImage extends ImagemagickImageToolkitOperationBase {
 
   use ReplaceImageTrait;

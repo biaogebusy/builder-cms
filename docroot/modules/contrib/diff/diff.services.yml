@@ -1,38 +1,46 @@
 services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+
   diff.route_subscriber:
     class: Drupal\diff\Routing\RouteSubscriber
-    tags:
-      - { name: event_subscriber }
 
   diff.diff.formatter:
     class: Drupal\diff\DiffFormatter
-    arguments: ['@config.factory']
+  Drupal\diff\DiffFormatter: "@diff.diff.formatter"
 
   plugin.manager.diff.builder:
     class: Drupal\diff\DiffBuilderManager
     parent: default_plugin_manager
-    arguments: ['@entity_type.manager', '@config.factory']
+    arguments: ["@entity_type.manager", "@config.factory"]
+  Drupal\diff\DiffBuilderManager: "@plugin.manager.diff.builder"
 
   plugin.manager.diff.layout:
     class: Drupal\diff\DiffLayoutManager
     parent: default_plugin_manager
-    arguments: ['@entity_type.manager', '@config.factory']
+    arguments: ["@entity_type.manager", "@config.factory"]
+  Drupal\diff\DiffLayoutManager: "@plugin.manager.diff.layout"
 
   diff.entity_parser:
     class: Drupal\diff\DiffEntityParser
-    arguments: ['@plugin.manager.diff.builder', '@config.factory']
+  Drupal\diff\DiffEntityParser: "@diff.entity_parser"
 
   diff.entity_comparison:
     class: Drupal\diff\DiffEntityComparison
-    arguments: ['@config.factory', '@diff.diff.formatter','@plugin.manager.field.field_type', '@diff.entity_parser', '@plugin.manager.diff.builder']
     calls:
-      - [setModerationInformation, ['@?content_moderation.moderation_information']]
+      - [
+          setModerationInformation,
+          ["@?content_moderation.moderation_information"],
+        ]
+  Drupal\diff\DiffEntityComparison: "@diff.entity_comparison"
 
   diff.html_diff:
     class: HtmlDiffAdvanced
+  HtmlDiffAdvanced: "@diff.html_diff"
 
   theme.negotiator.visual_diff:
     class: Drupal\diff\VisualDiffThemeNegotiator
-    arguments: ['@config.factory']
     tags:
       - { name: theme_negotiator, priority: 0 }
+  Drupal\diff\VisualDiffThemeNegotiator: "@theme.negotiator.visual_diff"

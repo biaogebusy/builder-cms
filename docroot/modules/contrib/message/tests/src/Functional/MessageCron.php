@@ -56,7 +56,7 @@ class MessageCron extends MessageTestBase {
    * Testing the deletion of messages in cron according to settings.
    */
   public function testPurge() {
-    // Create a purgeable message template with max quota 2 and max days 0.
+    // Create a purge-able message template with max quota 2 and max days 0.
     $quota = $this->purgeManager->createInstance('quota', ['data' => ['quota' => 2]]);
     $days = $this->purgeManager->createInstance('days', ['data' => ['days' => 0]]);
     $settings = [
@@ -77,7 +77,7 @@ class MessageCron extends MessageTestBase {
     $message_template = MessageTemplate::load($message_template->id());
     $this->assertEquals($message_template->getSetting('purge_methods'), $settings['purge_methods'], 'Purge settings are stored in message template.');
 
-    // Create a purgeable message template with max quota 1 and max days 2.
+    // Create a purge-able message template with max quota 1 and max days 2.
     $quota = $this->purgeManager->createInstance('quota', ['data' => ['quota' => 1]]);
     $days = $this->purgeManager->createInstance('days', ['data' => ['days' => 2]]);
     $settings = [
@@ -92,7 +92,7 @@ class MessageCron extends MessageTestBase {
       ->setSettings($settings)
       ->save();
 
-    // Create a non purgeable message (no purge methods enabled).
+    // Create a non purge-able message (no purge methods enabled).
     $settings['purge_enabled'] = FALSE;
     $settings = [
       'purge_override' => TRUE,

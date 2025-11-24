@@ -83,6 +83,17 @@ ckeditor5_style:
     elements:
       - <$any-html5-element class>
 
+ckeditor5_htmlComments:
+  ckeditor5:
+    plugins:
+      - htmlSupport.HtmlComment
+  drupal:
+    label: HTML Comment support
+    elements: false
+    library: core/ckeditor5.htmlSupport
+    # @see \Drupal\ckeditor5\Plugin\CKEditor5PluginManagerInterface::getEnabledDefinitions()
+    conditions: []
+
 ckeditor5_arbitraryHtmlSupport:
   ckeditor5:
     plugins: [htmlSupport.GeneralHtmlSupport]
@@ -263,6 +274,7 @@ ckeditor5_codeBlock:
     label: Code Block
     library: ckeditor5/internal.drupal.ckeditor5.codeBlock
     admin_library: ckeditor5/internal.admin.codeBlock
+    class: Drupal\ckeditor5\Plugin\CKEditor5Plugin\CodeBlock
     toolbar_items:
       codeBlock:
         label: Code Block
@@ -328,6 +340,10 @@ ckeditor5_link:
   ckeditor5:
     plugins:
       - link.Link
+    config:
+      link:
+        # @see https://ckeditor.com/docs/ckeditor5/latest/features/link.html#adding-default-link-protocol-to-external-links
+        defaultProtocol: 'https://'
   drupal:
     label: Link
     library: core/ckeditor5.link
@@ -376,13 +392,11 @@ ckeditor5_linkMedia:
 ckeditor5_list:
   ckeditor5:
     plugins:
-      - list.DocumentList
-      - list.DocumentListProperties
+      - list.List
+      - list.ListProperties
     config:
       list:
         properties:
-          reversed: true
-          startIndex: true
           # @todo Make this configurable in https://www.drupal.org/project/drupal/issues/3274635
           styles: false
   drupal:
@@ -440,6 +454,15 @@ ckeditor5_alignment:
     elements:
       - <$text-container class="text-align-left text-align-center text-align-right text-align-justify">
 
+ckeditor5_autoformat:
+  ckeditor5:
+    plugins:
+      - autoformat.Autoformat
+  drupal:
+    label: Autoformat
+    library: core/ckeditor5.autoformat
+    elements: false
+
 ckeditor5_removeFormat:
   ckeditor5:
     plugins: [removeFormat.RemoveFormat]
@@ -490,6 +513,45 @@ ckeditor5_table:
       - <tfoot>
       - <caption>
 
+ckeditor5_table_properties:
+  ckeditor5:
+    plugins:
+      - table.TableProperties
+    config:
+      table:
+        contentToolbar: [tableProperties]
+  drupal:
+    label: Table properties
+    library: ckeditor5/internal.drupal.ckeditor5.table
+    conditions:
+      plugins:
+        - ckeditor5_table
+        # When arbitrary HTML is already allowed, it's harmless to enable CKEditor 5's UI for table properties.
+        - ckeditor5_arbitraryHtmlSupport
+    elements:
+      - <table style>
+
+ckeditor5_table_cell_properties:
+  ckeditor5:
+    plugins:
+      - table.TableCellProperties
+    config:
+      table:
+        contentToolbar: [tableCellProperties]
+  drupal:
+    label: Table cell properties
+    library: ckeditor5/internal.drupal.ckeditor5.table
+    conditions:
+      plugins:
+        - ckeditor5_table
+        # When arbitrary HTML is already allowed, it's harmless to enable CKEditor 5's UI for table cell properties.
+        - ckeditor5_arbitraryHtmlSupport
+    elements:
+      - <td style>
+      - <td rowspan colspan style>
+      - <th style>
+      - <th rowspan colspan style>
+
 ckeditor5_image:
   ckeditor5:
     plugins:
@@ -500,6 +562,10 @@ ckeditor5_image:
     config:
       image:
         toolbar: [drupalImageAlternativeText]
+        insert:
+          # Determine image type (inline or block) by insertion context.
+          type: auto
+          integrations: []
   drupal:
     label: Image
     class: \Drupal\ckeditor5\Plugin\CKEditor5Plugin\Image
@@ -522,6 +588,8 @@ ckeditor5_imageUpload:
     config:
       image:
         upload:
+          # The strings in this array should be IANA media type Names, without the "image/" prefix. So: image subtypes.
+          # https://www.iana.org/assignments/media-types/media-types.xhtml#image
           types: ["jpeg", "png", "gif"]
   drupal:
     label: Image Upload
@@ -534,7 +602,7 @@ ckeditor5_imageUpload:
 ckeditor5_imageUrl:
   ckeditor5:
     plugins:
-      - image.ImageInsertUI
+      - image.ImageInsertViaUrl
   drupal:
     label: Image URL
     elements: false
@@ -548,7 +616,7 @@ ckeditor5_imageResize:
       - image.ImageResize
     config:
       image:
-        resizeUnit: '%'
+        resizeUnit: 'px'
         resizeOptions:
           -
             name: 'resizeImage:original'
@@ -640,6 +708,18 @@ ckeditor5_language:
     elements:
       - <span lang dir>
 
+ckeditor5_showBlocks:
+  ckeditor5:
+    plugins: [showBlocks.ShowBlocks]
+  drupal:
+    label: Show blocks
+    library: core/ckeditor5.showBlocks
+    admin_library: ckeditor5/internal.admin.showBlocks
+    toolbar_items:
+      showBlocks:
+        label: Show blocks
+    elements: false
+
 media_media:
   provider: media
   ckeditor5:
@@ -691,25 +771,25 @@ media_mediaAlign:
         align:
           - name: 'right'
             title: 'Align right and wrap text'
-            icon: 'objectRight'
+            icon: 'IconObjectInlineRight'
             attributeName: 'data-align'
             attributeValue: 'right'
             modelElements: [ 'drupalMedia' ]
           - name: 'left'
             title: 'Align left and wrap text'
-            icon: 'objectLeft'
+            icon: 'IconObjectInlineLeft'
             attributeName: 'data-align'
             attributeValue: 'left'
             modelElements: [ 'drupalMedia' ]
           - name: 'center'
             title: 'Align center and break text'
-            icon: 'objectCenter'
+            icon: 'IconObjectCenter'
             attributeName: 'data-align'
             attributeValue: 'center'
             modelElements: ['drupalMedia']
           - name: 'breakText'
             title: 'Break text'
-            icon: 'objectBlockLeft'
+            icon: 'IconObjectLeft'
             isDefault: true
             modelElements: [ 'drupalMedia' ]
       drupalMedia:
@@ -740,8 +820,9 @@ media_library_mediaLibrary:
             name: Drupal.ckeditor5.openDialog
             invoke: false
         dialogSettings:
+          classes:
+            ui-dialog: media-library-widget-modal
           height: 75%
-          dialogClass: media-library-widget-modal
   drupal:
     label: Media Library
     elements: false

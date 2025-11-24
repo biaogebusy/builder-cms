@@ -198,13 +198,13 @@ abstract class WidgetBase extends CoreWidgetBase {
   /**
    * Returns the array of options for the widget.
    *
-   * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
+   * @param \Drupal\Core\Entity\FieldableEntityInterface|null $entity
    *   The entity this widget is used for.
    *
    * @return array
    *   The array of available options for the widget.
    */
-  abstract protected function getOptions(FieldableEntityInterface $entity = NULL);
+  abstract protected function getOptions(?FieldableEntityInterface $entity = NULL);
 
   /**
    * Determines selected options from the incoming field values.

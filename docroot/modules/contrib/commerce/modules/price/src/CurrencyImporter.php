@@ -6,10 +6,10 @@ use CommerceGuys\Addressing\Country\CountryRepository;
 use CommerceGuys\Intl\Currency\CurrencyRepository;
 use CommerceGuys\Intl\Exception\UnknownCurrencyException;
 use CommerceGuys\Intl\Exception\UnknownLocaleException;
-use Drupal\commerce_price\Entity\CurrencyInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\commerce_price\Entity\CurrencyInterface;
 
 /**
  * Default implementation of the currency importer.

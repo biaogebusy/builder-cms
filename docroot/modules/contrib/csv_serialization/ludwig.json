@@ -1,8 +1,8 @@
 {
   "require": {
     "league/csv": {
-      "version" : "v9.6.2",
-      "url": "https://github.com/thephpleague/csv/archive/9.6.2.zip"
+      "version" : "9.8.0",
+      "url": "https://github.com/thephpleague/csv/archive/9.8.0.zip"
     }
   }
 }

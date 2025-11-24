@@ -1,5 +1,4 @@
 #### Pages
-
 entity.page.collection:
   path: '/admin/structure/page_manager'
   defaults:
@@ -24,7 +23,7 @@ entity.page.add_step_form:
     _title: 'Add new page'
     tempstore_id: page_manager.page
   requirements:
-     _entity_create_access: page
+    _entity_create_access: page
 
 entity.page.edit_form:
   path: '/admin/structure/page_manager/manage/{machine_name}/{step}'

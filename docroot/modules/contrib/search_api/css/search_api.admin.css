@@ -31,6 +31,7 @@
   font-weight: normal;
 }
 
+/* stylelint-disable-next-line -- Error reported inconsistently. */
 .search-api-entity-list--servers-with-indexes .search-api-list-index .search-api-type {
   padding-left: 3em;
 }
@@ -38,7 +39,7 @@
 .search-api-list-disabled .search-api-type,
 .search-api-list-disabled .search-api-title,
 .search-api-list-disabled .search-api-status {
-  opacity: .5;
+  opacity: 0.5;
 }
 
 /*
@@ -53,8 +54,8 @@
 }
 
 details .messages {
-  margin-left: 20px;
   margin-right: 20px;
+  margin-left: 20px;
 }
 
 /*
@@ -93,7 +94,6 @@ details .messages {
  * Miscellaneous
  */
 .search-api-checkboxes-list .form-checkboxes {
-  max-height: 30em;
   overflow: auto;
   margin-left: -1rem;
   padding-left: 1rem;

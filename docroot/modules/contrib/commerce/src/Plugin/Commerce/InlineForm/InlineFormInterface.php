@@ -3,8 +3,8 @@
 namespace Drupal\commerce\Plugin\Commerce\InlineForm;
 
 use Drupal\Component\Plugin\ConfigurableInterface;
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Component\Plugin\PluginInspectionInterface;
+use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Defines the interface for inline forms.

@@ -2,20 +2,19 @@
 
 namespace Drupal\commerce\Plugin\Field\FieldFormatter;
 
+use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Plugin implementation of the 'commerce_plugin_item_default' formatter.
- *
- * @FieldFormatter(
- *   id = "commerce_plugin_item_default",
- *   label = @Translation("Default"),
- *   field_types = {
- *     "commerce_plugin_item"
- *   }
- * )
  */
+#[FieldFormatter(
+  id: "commerce_plugin_item_default",
+  label: new TranslatableMarkup("Default"),
+  field_types: ["commerce_plugin_item"],
+)]
 class PluginItemDefaultFormatter extends FormatterBase {
 
   /**

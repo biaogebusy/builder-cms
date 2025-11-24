@@ -2,10 +2,10 @@
 
 namespace Drupal\Tests\commerce_payment\Kernel;
 
+use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 use Drupal\commerce_payment\Entity\PaymentGateway;
 use Drupal\commerce_payment\Entity\PaymentMethod;
 use Drupal\profile\Entity\Profile;
-use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 use Drupal\user\Entity\User;
 
 /**

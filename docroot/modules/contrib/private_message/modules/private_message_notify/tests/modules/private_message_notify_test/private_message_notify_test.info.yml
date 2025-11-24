@@ -1,0 +1,11 @@
+type: module
+name: Private Message Notify Test
+package: Testing
+core_version_requirement: ^10.3 || ^11
+dependencies:
+  - private_message:private_message_notify
+
+# Information added by Drupal.org packaging script on 2025-02-06
+version: '4.0.0-alpha4'
+project: 'private_message'
+datestamp: 1738835307

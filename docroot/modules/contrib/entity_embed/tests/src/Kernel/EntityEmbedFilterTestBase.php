@@ -3,6 +3,7 @@
 namespace Drupal\Tests\entity_embed\Kernel;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Render\RenderContext;
 use Drupal\filter\FilterPluginCollection;
@@ -62,20 +63,19 @@ abstract class EntityEmbedFilterTestBase extends KernelTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    $this->installSchema('node', 'node_access');
-    $this->installSchema('system', 'sequences');
     $this->installEntitySchema('node');
+    $this->installSchema('node', 'node_access');
     $this->installEntitySchema('user');
     $this->installConfig('filter');
     $this->installConfig('node');
 
     // Create a user with required permissions. Ensure that we don't use user 1
     // because that user is treated in special ways by access control handlers.
-    $admin_user = $this->drupalCreateUser([]);
+    $this->drupalCreateUser([]);
     $user = $this->drupalCreateUser([
       'access content',
     ]);
-    $this->container->set('current_user', $user);
+    $this->container->get('current_user')->setAccount($user);
 
     // Create a sample node to be embedded.
     $this->drupalCreateContentType(['type' => 'page', 'name' => 'Basic page']);
@@ -163,7 +163,7 @@ abstract class EntityEmbedFilterTestBase extends KernelTestBase {
    *
    * @see \Drupal\filter\Element\ProcessedText::preRenderText()
    */
-  protected function processText($text, $langcode = 'und', array $filter_ids = ['entity_embed']) {
+  protected function processText($text, $langcode = LanguageInterface::LANGCODE_NOT_SPECIFIED, array $filter_ids = ['entity_embed']) {
     $manager = $this->container->get('plugin.manager.filter');
     $bag = new FilterPluginCollection($manager, []);
     $filters = [];

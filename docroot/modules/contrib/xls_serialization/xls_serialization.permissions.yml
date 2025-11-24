@@ -1,0 +1,4 @@
+administer xls serialization configuration:
+  title: 'Administer xls serialization configuration'
+  description: 'Access to the Xls Serialization configurations'
+  restrict access: true

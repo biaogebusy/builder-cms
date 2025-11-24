@@ -1,0 +1,20 @@
+{
+	"country_code": "KR",
+	"parents": [
+		"KR",
+		"41",
+		"Yongin-si"
+	],
+	"locale": "ko",
+	"subdivisions": {
+		"Giheung-gu": {
+			"local_name": "기흥구"
+		},
+		"Suji-gu": {
+			"local_name": "수지구"
+		},
+		"Cheoin-gu": {
+			"local_name": "처인구"
+		}
+	}
+}

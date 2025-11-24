@@ -2,8 +2,8 @@
 
 namespace Drupal\commerce_order\Form;
 
-use Drupal\commerce_order\Entity\OrderItemInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\commerce_order\Entity\OrderItemInterface;
 use Drupal\inline_entity_form\Form\EntityInlineForm;
 
 /**

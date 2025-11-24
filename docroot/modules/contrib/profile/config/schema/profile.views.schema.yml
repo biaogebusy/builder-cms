@@ -5,3 +5,11 @@ views.argument_default.current_user_profile:
     type:
       type: string
       label: 'Profile type'
+
+views.relationship.profile_relationship:
+  type: views_relationship
+  label: 'Profile relationship'
+  mapping:
+    profile_type:
+      type: string
+      label: 'Profile type'

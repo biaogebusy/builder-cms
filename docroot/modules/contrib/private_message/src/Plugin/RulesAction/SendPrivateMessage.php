@@ -1,52 +1,65 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\private_message\Plugin\RulesAction;
 
-use Drupal\rules\Core\RulesActionBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\user\UserInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\private_message\Entity\PrivateMessage;
+use Drupal\private_message\Service\PrivateMessageServiceInterface;
+use Drupal\rules\Context\ContextDefinition;
+use Drupal\rules\Core\Attribute\RulesAction;
+use Drupal\rules\Core\RulesActionBase;
+use Drupal\user\UserInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides "Send private message" rules action.
- *
- * @RulesAction(
- *   id = "private_message_send_message",
- *   label = @Translation("Send private message"),
- *   category = @Translation("System"),
- *   context_definitions = {
- *     "author" = @ContextDefinition("entity:user",
- *       label = @Translation("From"),
- *       description = @Translation("The author of the message.")
- *     ),
- *     "recipient" = @ContextDefinition("entity:user",
- *       label = @Translation("To"),
- *       description = @Translation("The recipient of the message.")
- *     ),
- *     "message" = @ContextDefinition("string",
- *       label = @Translation("Message"),
- *       description = @Translation("The message.")
- *     ),
- *   }
- * )
  */
+#[RulesAction(
+  id: 'private_message_send_message',
+  label: new TranslatableMarkup('Send private message'),
+  category: new TranslatableMarkup('System'),
+  context_definitions: [
+    'author' => new ContextDefinition(
+      data_type: 'entity:user',
+      label: new TranslatableMarkup('From'),
+      description: new TranslatableMarkup('The author of the message.')
+    ),
+    'recipient' => new ContextDefinition(
+      data_type: 'entity:user',
+      label: new TranslatableMarkup('To'),
+      description: new TranslatableMarkup('The recipient of the message.')
+    ),
+    'message' => new ContextDefinition(
+      data_type: 'string',
+      label: new TranslatableMarkup('Message'),
+      description: new TranslatableMarkup('The message.')
+    ),
+  ],
+)]
 class SendPrivateMessage extends RulesActionBase implements ContainerFactoryPluginInterface {
 
-  /**
-   * The Private Message service.
-   *
-   * @var \Drupal\private_message\Service\PrivateMessageService
-   */
-  protected $privateMessageService;
+  public function __construct(
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+    protected readonly PrivateMessageServiceInterface $privateMessageService,
+  ) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  }
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    $instance = new static($configuration, $plugin_id, $plugin_definition);
-    $instance->privateMessageService = $container->get('private_message.service');
-    return $instance;
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): self {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('private_message.service'),
+    );
   }
 
   /**
@@ -59,7 +72,7 @@ class SendPrivateMessage extends RulesActionBase implements ContainerFactoryPlug
    * @param string $message
    *   The text of the message.
    */
-  protected function doExecute(UserInterface $author, UserInterface $recipient, $message) {
+  protected function doExecute(UserInterface $author, UserInterface $recipient, string $message): void {
     $members = [$author, $recipient];
     // Create a thread if one does not exist.
     $private_message_thread = $this->privateMessageService->getThreadForMembers($members);

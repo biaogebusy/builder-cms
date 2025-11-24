@@ -4,6 +4,8 @@ namespace Drupal\commerce\Resolver;
 
 /**
  * Defines the interface for country resolvers.
+ *
+ * Interface for services tagged as 'commerce.country_resolver'.
  */
 interface CountryResolverInterface {
 

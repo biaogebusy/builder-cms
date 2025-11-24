@@ -2,12 +2,12 @@
 
 namespace Drupal\Tests\commerce_cart\FunctionalJavascript;
 
-use Drupal\commerce_price\Entity\Currency;
-use Drupal\commerce_product\Entity\ProductInterface;
-use Drupal\commerce_product\Entity\ProductVariationInterface;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\Core\Entity\Entity\EntityViewMode;
+use Drupal\commerce_price\Entity\Currency;
+use Drupal\commerce_product\Entity\ProductInterface;
+use Drupal\commerce_product\Entity\ProductVariationInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 
@@ -162,6 +162,7 @@ class AddToCartFieldReplacementTest extends CartWebDriverTestBase {
     $this->drupalGet($this->product->toUrl());
 
     $page = $this->getSession()->getPage();
+    /** @var \Drupal\Core\Render\RendererInterface $renderer */
     $renderer = $this->container->get('renderer');
 
     $first_variation_price = [
@@ -169,13 +170,13 @@ class AddToCartFieldReplacementTest extends CartWebDriverTestBase {
       '#number' => $this->firstVariation->getPrice()->getNumber(),
       '#currency' => Currency::load($this->firstVariation->getPrice()->getCurrencyCode()),
     ];
-    $first_variation_price = trim($renderer->renderPlain($first_variation_price));
+    $first_variation_price = trim($renderer->renderInIsolation($first_variation_price));
     $second_variation_price = [
       '#theme' => 'commerce_price_plain',
       '#number' => $this->secondVariation->getPrice()->getNumber(),
       '#currency' => Currency::load($this->secondVariation->getPrice()->getCurrencyCode()),
     ];
-    $second_variation_price = trim($renderer->renderPlain($second_variation_price));
+    $second_variation_price = trim($renderer->renderInIsolation($second_variation_price));
 
     $price_field_selector = '.product--variation-field--variation_price__' . $this->product->id();
     $integer_field_selector = '.product--variation-field--variation_field_number__' . $this->product->id();

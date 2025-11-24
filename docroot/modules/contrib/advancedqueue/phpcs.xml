@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<ruleset name="commerce">
-  <description>Default PHP CodeSniffer configuration for Commerce.</description>
+<ruleset name="advancedqueue">
+  <description>Default PHP CodeSniffer configuration for Advanced Queue.</description>
   <file>.</file>
   <arg name="extensions" value="php,module,inc,install,test,profile,theme"/>
   <config name="drupal_core_version" value="8"/>
@@ -13,21 +13,32 @@
   <exclude-pattern>README.md</exclude-pattern>
 
   <rule ref="Drupal">
-    <!-- The following rules are intentionally disabled. -->
-    <exclude name="Drupal.Commenting.ClassComment.Missing"/>
-    <exclude name="Drupal.Files.LineLength.TooLong"/>
+    <!-- The following rule are intentionally disabled. -->
     <exclude name="Drupal.Arrays.Array.LongLineDeclaration"/>
-    <exclude name="Drupal.Semantics.FunctionT.NotLiteralString"/>
-    <!-- Complains about example code. -->
-    <exclude name="Generic.CodeAnalysis.UselessOverridingMethod.Found"/>
-    <!-- Complains about tests which don't need short descriptions. -->
-    <exclude name="Drupal.Commenting.DocComment.MissingShort"/>
-    <exclude name="Drupal.Commenting.DocComment.ShortNotCapital"/>
-    <exclude name="Drupal.Commenting.DocComment.ShortSingleLine"/>
-    <!-- Complains about constraint plugins. -->
-    <exclude name="Drupal.Commenting.VariableComment"/>
-    <!-- Complains about config entity types. -->
-    <exclude name="Drupal.NamingConventions.ValidVariableName.LowerCamelName"/>
   </rule>
+
+  <!-- SlevomatCodingStandard sniffs -->
+  <rule ref="SlevomatCodingStandard.Commenting.ForbiddenAnnotations">
+    <properties>
+      <property name="forbiddenAnnotations" type="array">
+        <element value="@inheritDoc"/>
+        <element value="@inheritdoc"/>
+        <element value="@returns"/>
+      </property>
+    </properties>
+  </rule>
+  <rule ref="SlevomatCodingStandard.Commenting.ForbiddenComments">
+    <properties>
+      <property name="forbiddenCommentPatterns" type="array">
+        <element value="/@inheritDoc/"/>
+      </property>
+    </properties>
+  </rule>
+  <rule ref="SlevomatCodingStandard.TypeHints.DeclareStrictTypes.DeclareStrictTypesMissing">
+    <severity>9</severity>
+    <include-pattern>*/tests/*</include-pattern>
+  </rule>
+  <rule ref="SlevomatCodingStandard.ControlStructures.RequireShortTernaryOperator"/>
+  <rule ref="SlevomatCodingStandard.Exceptions.RequireNonCapturingCatch" />
 
 </ruleset>

@@ -24,7 +24,7 @@ interface PromotionUsageInterface {
    * @param \Drupal\commerce_promotion\Entity\CouponInterface $coupon
    *   (Optional) The used coupon.
    */
-  public function register(OrderInterface $order, PromotionInterface $promotion, CouponInterface $coupon = NULL);
+  public function register(OrderInterface $order, PromotionInterface $promotion, ?CouponInterface $coupon = NULL);
 
   /**
    * Unregisters usage for the given order.
@@ -36,7 +36,7 @@ interface PromotionUsageInterface {
    * @param \Drupal\commerce_promotion\Entity\CouponInterface $coupon
    *   (Optional) The used coupon.
    */
-  public function unregister(OrderInterface $order, PromotionInterface $promotion, CouponInterface $coupon = NULL);
+  public function unregister(OrderInterface $order, PromotionInterface $promotion, ?CouponInterface $coupon = NULL);
 
   /**
    * Reassigns usage to a new customer email.

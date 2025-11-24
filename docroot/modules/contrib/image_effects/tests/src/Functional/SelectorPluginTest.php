@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image_effects\Functional;
 
 /**
@@ -25,7 +27,7 @@ class SelectorPluginTest extends ImageEffectsTestBase {
   /**
    * Image selector test.
    */
-  public function testImageSelector() {
+  public function testImageSelector(): void {
     $image_path = $this->moduleList->getPath('image_effects') . '/tests/images';
     $image_file = 'portrait-painting.jpe';
 
@@ -69,7 +71,7 @@ class SelectorPluginTest extends ImageEffectsTestBase {
   /**
    * Image selector test.
    */
-  public function testFontSelector() {
+  public function testFontSelector(): void {
     $font_path = 'vendor://fileeye/linuxlibertine-fonts/';
     $font_file = 'LinLibertine_Rah.ttf';
     $font_name = 'Linux Libertine';

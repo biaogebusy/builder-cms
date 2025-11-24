@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\DrupalKernel;
 
 use Composer\Autoload\ClassLoader;
@@ -9,7 +11,8 @@ use Drupal\KernelTests\KernelTestBase;
 use org\bovigo\vfs\vfsStream;
 use Prophecy\Argument;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Event\KernelEvent;
+
+// cspell:ignore äöüßαβγδεζηθικλμνξοσὠ
 
 /**
  * Tests DIC compilation to disk.
@@ -22,12 +25,8 @@ class DrupalKernelTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp(): void {
-    // Do not invoke KernelTestBase::setUp(), since that would set up further
-    // environment aspects, which would distort this test, because it tests the
-    // DrupalKernel (re-)building itself.
-    $this->root = static::getDrupalRoot();
-    $this->bootEnvironment();
+  protected function bootKernel() {
+    // Do not boot the kernel, because we are testing aspects of this process.
   }
 
   /**
@@ -40,12 +39,12 @@ class DrupalKernelTest extends KernelTestBase {
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   A request object to use in booting the kernel.
    * @param array $modules_enabled
-   *   A list of modules to enable on the kernel.
+   *   A list of modules to install on the kernel.
    *
    * @return \Drupal\Core\DrupalKernel
    *   New kernel for testing.
    */
-  protected function getTestKernel(Request $request, array $modules_enabled = NULL) {
+  protected function getTestKernel(Request $request, ?array $modules_enabled = NULL) {
     // Manually create kernel to avoid replacing settings.
     $class_loader = require $this->root . '/autoload.php';
     $kernel = DrupalKernel::createFromRequest($request, $class_loader, 'testing');
@@ -60,23 +59,10 @@ class DrupalKernelTest extends KernelTestBase {
   }
 
   /**
-   * Tests KernelEvent class_alias() override.
-   *
-   * @todo https://www.drupal.org/project/drupal/issues/3197482 Remove this test
-   *   once Drupal is using Symfony 5.3 or higher.
-   */
-  public function testKernelEvent() {
-    $request = Request::createFromGlobals();
-    $kernel = $this->getTestKernel($request);
-    $event = new KernelEvent($kernel, $request, $kernel::MASTER_REQUEST);
-    $this->assertTrue($event->isMainRequest());
-  }
-
-  /**
    * Tests DIC compilation.
    */
-  public function testCompileDIC() {
-    // @todo: write a memory based storage backend for testing.
+  public function testCompileDIC(): void {
+    // @todo Write a memory based storage backend for testing.
     $modules_enabled = [
       'system' => 'system',
       'user' => 'user',
@@ -157,7 +143,7 @@ class DrupalKernelTest extends KernelTestBase {
   /**
    * Tests repeated loading of compiled DIC with different environment.
    */
-  public function testRepeatedBootWithDifferentEnvironment() {
+  public function testRepeatedBootWithDifferentEnvironment(): void {
     $request = Request::createFromGlobals();
     $class_loader = require $this->root . '/autoload.php';
 
@@ -179,8 +165,8 @@ class DrupalKernelTest extends KernelTestBase {
   /**
    * Tests setting of site path after kernel boot.
    */
-  public function testPreventChangeOfSitePath() {
-    // @todo: write a memory based storage backend for testing.
+  public function testPreventChangeOfSitePath(): void {
+    // @todo Write a memory based storage backend for testing.
     $modules_enabled = [
       'system' => 'system',
       'user' => 'user',
@@ -207,7 +193,7 @@ class DrupalKernelTest extends KernelTestBase {
    * Data provider for self::testClassLoaderAutoDetect.
    * @return array
    */
-  public function providerClassLoaderAutoDetect() {
+  public static function providerClassLoaderAutoDetect() {
     return [
       'TRUE' => [TRUE],
       'FALSE' => [FALSE],
@@ -228,7 +214,7 @@ class DrupalKernelTest extends KernelTestBase {
    * @param bool $value
    *   The value to set class_loader_auto_detect to.
    */
-  public function testClassLoaderAutoDetect($value) {
+  public function testClassLoaderAutoDetect($value): void {
     // Create a virtual file system containing items that should be
     // excluded. Exception being modules directory.
     vfsStream::setup('root', NULL, [
@@ -261,6 +247,67 @@ class DrupalKernelTest extends KernelTestBase {
     $kernel = new DrupalKernel('test', $classloader->reveal(), FALSE, vfsStream::url('root'));
     $kernel->setSitePath(vfsStream::url('root/sites/default'));
     $kernel->boot();
+  }
+
+  /**
+   * @covers ::resetContainer
+   */
+  public function testResetContainer(): void {
+    $modules_enabled = [
+      'system' => 'system',
+      'user' => 'user',
+    ];
+
+    $request = Request::createFromGlobals();
+    $kernel = $this->getTestKernel($request, $modules_enabled);
+    $container = $kernel->getContainer();
+
+    // Ensure services are reset when ::resetContainer is called.
+    $this->assertFalse($container->initialized('renderer'));
+    $renderer = $container->get('renderer');
+    $this->assertTrue($container->initialized('renderer'));
+
+    // Ensure the current user is maintained through a container reset.
+    $this->assertSame(0, $container->get('current_user')->id());
+    $container->get('current_user')->setInitialAccountId(2);
+
+    // Ensure messages are maintained through a container reset.
+    $this->assertEmpty($container->get('messenger')->messagesByType('Container reset'));
+    $container->get('messenger')->addMessage('Test reset', 'Container reset');
+    $this->assertSame(['Test reset'], $container->get('messenger')->messagesByType('Container reset'));
+
+    // Ensure persisted services are persisted.
+    $request_stack = $container->get('request_stack');
+
+    $kernel->resetContainer();
+
+    // Ensure services are reset when ::resetContainer is called.
+    $this->assertFalse($container->initialized('renderer'));
+    $this->assertNotSame($renderer, $container->get('renderer'));
+    $this->assertTrue($container->initialized('renderer'));
+    $this->assertSame($kernel, $container->get('kernel'));
+
+    // Ensure the current user is maintained through a container reset.
+    $this->assertSame(2, $container->get('current_user')->id());
+
+    // Ensure messages are maintained through a container reset.
+    $this->assertSame(['Test reset'], $container->get('messenger')->messagesByType('Container reset'));
+
+    // Ensure persisted services are persisted.
+    $this->assertSame($request_stack, $container->get('request_stack'));
+  }
+
+  /**
+   * Tests system locale.
+   */
+  public function testLocale(): void {
+    $utf8_string = 'äöüßαβγδεζηθικλμνξοσὠ';
+    // Test environment locale should be UTF-8.
+    $this->assertSame($utf8_string, escapeshellcmd($utf8_string));
+    $request = Request::createFromGlobals();
+    $kernel = $this->getTestKernel($request);
+    // Kernel environment locale should be UTF-8.
+    $this->assertSame($utf8_string, escapeshellcmd($utf8_string));
   }
 
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\module_filter\FunctionalJavascript;
 
 /**
@@ -14,15 +16,27 @@ class ModuleFilterJavascriptInstallPageTest extends ModuleFilterJavascriptTestBa
    *
    * @see https://www.drupal.org/project/module_filter/issues/3327899
    */
-  public function testInstallPageFiltering() {
+  public function testInstallPageFiltering(): void {
     /** @var \Drupal\Tests\WebAssert $assert */
     $assert = $this->assertSession();
 
     $this->drupalLogin($this->adminUser);
     $this->drupalGet('admin/modules');
     $page = $this->getSession()->getPage();
-    $page->clickLink('Testing');
 
+    // Check that module_filter is under Recently Enabled.
+    $page->clickLink('Recently enabled');
+    $assert->pageTextContains('Module Filter');
+
+    // Install a module from Newly Available tab.
+    $page->clickLink('Newly available');
+    $this->submitForm(['edit-modules-announcements-feed-enable' => TRUE], 'Install');
+
+    // Verify Announcements appears under Recently Enabled.
+    $page->clickLink('Recently enabled');
+    $assert->pageTextContains('Announcements');
+
+    $page->clickLink('Testing');
     // Verify that all the modules used in this test are displayed by default.
     $assert->pageTextContains('Roses');
     $assert->pageTextContains('Banana');
@@ -61,10 +75,10 @@ class ModuleFilterJavascriptInstallPageTest extends ModuleFilterJavascriptTestBa
     $assert->pageTextContains('Mountains of Virginia');
 
     // Enter 'low' as the filter and check that both the Red Roses and Yellow
-    // Banana modules are dispayed, and the Blue Ridge module is not. This shows
-    // that filtering can work simultaneously on two different sources, as it
-    // matches 'flowers' in the Roses desciption and also 'yellow' in the Banana
-    // module name.
+    // Banana modules are displayed, and the Blue Ridge module is not. This
+    // shows that filtering can work simultaneously on two different sources, as
+    // it matches 'flowers' in the Roses description and also 'yellow' in the
+    // Banana module name.
     $page->fillField('edit-text', 'low');
     $assert->waitForText('Roses');
     $assert->pageTextContains('Roses');

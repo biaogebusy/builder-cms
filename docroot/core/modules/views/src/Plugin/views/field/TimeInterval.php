@@ -4,6 +4,7 @@ namespace Drupal\views\Plugin\views\field;
 
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\views\Attribute\ViewsField;
 use Drupal\views\ResultRow;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -11,9 +12,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * A handler to provide proper displays for time intervals.
  *
  * @ingroup views_field_handlers
- *
- * @ViewsField("time_interval")
  */
+#[ViewsField("time_interval")]
 class TimeInterval extends FieldPluginBase {
 
   /**
@@ -29,7 +29,7 @@ class TimeInterval extends FieldPluginBase {
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter

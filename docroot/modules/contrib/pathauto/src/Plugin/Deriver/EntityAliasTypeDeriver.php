@@ -86,7 +86,7 @@ class EntityAliasTypeDeriver extends DeriverBase implements ContainerDeriverInte
         $this->derivatives[$entity_type_id]['types'] = [$this->tokenEntityMapper->getTokenTypeForEntityType($entity_type_id)];
         $this->derivatives[$entity_type_id]['provider'] = $entity_type->getProvider();
         $this->derivatives[$entity_type_id]['context_definitions'] = [
-          $entity_type_id => new EntityContextDefinition("entity:$entity_type_id", $this->t('@label being aliased', ['@label' => $entity_type->getLabel()]))
+          $entity_type_id => new EntityContextDefinition("entity:$entity_type_id", $this->t('@label being aliased', ['@label' => $entity_type->getLabel()])),
         ];
       }
     }

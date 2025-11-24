@@ -90,10 +90,10 @@ class WebformEntityTranslationTest extends WebformBrowserTestBase {
 
     // Check translations.
     $this->drupalGet('/admin/structure/webform/manage/test_translation/translate');
-    $assert_session->responseContains('<a href="' . base_path() . 'webform/test_translation"><strong>English (original)</strong></a>');
-    $assert_session->responseContains('<a href="' . base_path() . 'es/webform/test_translation" hreflang="es">Spanish</a>');
-    $assert_session->responseNotContains('<a href="' . base_path() . 'fr/webform/test_translation" hreflang="fr">French</a>');
-    $assert_session->responseContains('<a href="' . base_path() . 'admin/structure/webform/manage/test_translation/translate/es/edit">Edit</a>');
+    $assert_session->linkByHrefExists('/webform/test_translation');
+    $assert_session->linkByHrefExists('/es/webform/test_translation');
+    $assert_session->linkByHrefNotExists('/fr/webform/test_translation');
+    $assert_session->linkByHrefExists('/admin/structure/webform/manage/test_translation/translate/es/edit');
 
     // Check Spanish translation.
     $this->drupalGet('/admin/structure/webform/manage/test_translation/translate/es/edit');

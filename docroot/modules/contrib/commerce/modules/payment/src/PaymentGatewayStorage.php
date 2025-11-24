@@ -2,16 +2,16 @@
 
 namespace Drupal\commerce_payment;
 
-use Drupal\commerce_order\Entity\OrderInterface;
-use Drupal\commerce_payment\Event\FilterPaymentGatewaysEvent;
-use Drupal\commerce_payment\Event\PaymentEvents;
-use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\SupportsStoredPaymentMethodsInterface;
 use Drupal\Component\Uuid\UuidInterface;
 use Drupal\Core\Cache\MemoryCache\MemoryCacheInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\Entity\ConfigEntityStorage;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\commerce_order\Entity\OrderInterface;
+use Drupal\commerce_payment\Event\FilterPaymentGatewaysEvent;
+use Drupal\commerce_payment\Event\PaymentEvents;
+use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\SupportsStoredPaymentMethodsInterface;
 use Drupal\user\UserInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;

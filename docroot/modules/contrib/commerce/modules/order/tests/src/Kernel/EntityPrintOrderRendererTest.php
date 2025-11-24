@@ -46,23 +46,25 @@ class EntityPrintOrderRendererTest extends OrderKernelTestBase {
     $order = Order::create([
       'order_id' => '123',
       'type' => 'default',
+      'order_number' => '321',
     ]);
     $filename = $sut->getFilename([$order]);
-    $this->assertEquals('Order 123 receipt', (string) $filename);
+    $this->assertEquals('Order 321 receipt', (string) $filename);
 
     $second_order = Order::create([
       'order_id' => '789',
       'type' => 'default',
     ]);
+    $second_order->save();
     $filename = $sut->getFilename([$order, $second_order]);
-    $this->assertEquals('Order 123-789 receipts', (string) $filename);
+    $this->assertEquals('Order 321-Draft 789 receipts', (string) $filename);
   }
 
   /**
    * Tests the rendered build output.
    */
   public function testRender() {
-    $user = $this->createUser(['mail' => $this->randomString() . '@example.com']);
+    $user = $this->createUser();
 
     $product = Product::create([
       'type' => 'default',

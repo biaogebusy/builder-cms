@@ -1,17 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drush\Sql;
 
+use Consolidation\Config\Util\Interpolator;
 use Consolidation\SiteProcess\Util\Escape;
 use Drupal\Core\Database\Database;
+use Drush\Boot\DrupalBootLevels;
+use Drush\Config\ConfigAwareTrait;
 use Drush\Drush;
 use Drush\Utils\FsUtils;
-use Drush\Config\ConfigAwareTrait;
 use Robo\Contract\ConfigAwareInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Filesystem\Path;
 use Symfony\Component\Process\Process;
-use Consolidation\Config\Util\Interpolator;
 
 /**
  * The base implementation for Drush database connections.
@@ -20,7 +23,7 @@ use Consolidation\Config\Util\Interpolator;
  * Contrib and custom database drivers can provide their own implementation by
  * extending from this class, and naming the class like 'SqlMydriver'. Note that
  * the camelcasing is required, as well as it is mandatory that the namespace of
- * the extending class be 'Drush\Sql'. In order to avoid autoloadier
+ * the extending class be 'Drush\Sql'. In order to avoid autoloader
  * collisions, it is recommended to place the class outside of the 'src'
  * directory of the module providing the database driver, then adding a
  * 'classmap' entry to the autoload class of the module's composer.json file.
@@ -38,30 +41,22 @@ abstract class SqlBase implements ConfigAwareInterface
     use SqlTableSelectionTrait;
     use ConfigAwareTrait;
 
-    // An Drupal style array containing specs for connecting to database.
-    public array $dbSpec;
-
     // Default code appended to sql connections.
-    public $queryExtra = '';
+    public string $queryExtra = '';
 
     // The way you pass a sql file when issueing a query.
-    public $queryFile = '<';
+    public string $queryFile = '<';
 
-    // An options array.
-    public $options;
-
-    /**
-     * @var Process
-     */
-    protected $process;
+    protected Process $process;
 
     /**
      * Typically, SqlBase instances are constructed via SqlBase::create($options).
      */
-    public function __construct($db_spec, $options)
-    {
-        $this->dbSpec = $db_spec;
-        $this->options = $options;
+    public function __construct(
+        // A Drupal style array containing specs for connecting to database.
+        public array $dbSpec,
+        public array $options
+    ) {
     }
 
     /**
@@ -124,14 +119,29 @@ abstract class SqlBase implements ConfigAwareInterface
     public static function getInstance($db_spec, $options): ?self
     {
         $driver = $db_spec['driver'];
-        $class_name = 'Drush\Sql\Sql' . ucfirst($driver);
-        if (class_exists($class_name)) {
-            $instance = new $class_name($db_spec, $options);
-            // Inject config
-            $instance->setConfig(Drush::config());
-            return $instance;
+        // Drush ships drivers for core database types, and modules/libraries
+        // may define additional Drush DB drivers in this namespace.
+        $class_name = !empty($driver) ? 'Drush\Sql\Sql' . ucfirst($driver) : null;
+        try {
+            if (!$class_name || !class_exists($class_name)) {
+                // Handle custom database drivers which extend a defined driver.
+                $driver_class = $db_spec['namespace'] . '\\Connection';
+                if (!class_exists($driver_class)) {
+                    throw new \InvalidArgumentException();
+                }
+                $connection = (new \ReflectionClass($driver_class))->newInstanceWithoutConstructor();
+                // This will only work if the method is basically static, as most
+                // will be...but we can't truly instantiate the Connection class
+                // here without also calling with a "real" PDO connection.
+                $class_name = 'Drush\Sql\Sql' . ucfirst($connection->databaseType());
+            }
+            $instance = method_exists($class_name, 'make') ? $class_name::make($db_spec, $options) : new $class_name($db_spec, $options);
+        } catch (\Throwable) {
+            return null;
         }
-        return null;
+        // Inject config
+        $instance->setConfig(Drush::config());
+        return $instance;
     }
 
     /*
@@ -161,7 +171,7 @@ abstract class SqlBase implements ConfigAwareInterface
     /**
      * A string for connecting to a database.
      *
-     * @param bool $hide_password
+     * @param $hide_password
      *  If TRUE, DBMS should try to hide password from process list.
      *  On mysql, that means using --defaults-file to supply the user+password.
      */
@@ -177,7 +187,7 @@ abstract class SqlBase implements ConfigAwareInterface
      * @return
      *   Returns path to dump file, or false on failure.
      */
-    public function dump()
+    public function dump(): string|bool|null
     {
         /** @var string|bool $file Path where dump file should be stored. If TRUE, generate a path based on usual backup directory and current date.*/
         $file = $this->getOption('result-file');
@@ -227,7 +237,7 @@ abstract class SqlBase implements ConfigAwareInterface
         if (empty($pipefail)) {
             return $cmd;
         }
-        if (strpos($pipefail, '{{cmd}}') === false) {
+        if (!str_contains($pipefail, '{{cmd}}')) {
             return $pipefail . ' ' . $cmd;
         }
         $interpolator = new Interpolator();
@@ -292,7 +302,7 @@ abstract class SqlBase implements ConfigAwareInterface
      * @param $result_file
      *   A path to save query results to. Can be drush_bit_bucket() if desired.
      *
-     * @return boolean
+     * @return bool
      *   TRUE on success, FALSE on failure
      */
     public function query(string $query, $input_file = null, $result_file = ''): ?bool
@@ -301,6 +311,7 @@ abstract class SqlBase implements ConfigAwareInterface
             return $this->alwaysQuery($query, $input_file, $result_file);
         }
         $this->logQueryInDebugMode($query, $input_file);
+        return true;
     }
 
     /**
@@ -316,7 +327,7 @@ abstract class SqlBase implements ConfigAwareInterface
      * @param $result_file
      *   A path to save query results to. Can be drush_bit_bucket() if desired.
      *
-     * @return
+     * @return bool
      *   TRUE on success, FALSE on failure.
      */
     public function alwaysQuery(string $query, $input_file = null, ?string $result_file = ''): bool
@@ -328,7 +339,7 @@ abstract class SqlBase implements ConfigAwareInterface
             $process->run();
             $this->setProcess($process);
             if ($process->isSuccessful()) {
-                $input_file = trim($input_file, '.gz');
+                $input_file = preg_replace('/\.gz$/i', '', $input_file);
             } else {
                 Drush::logger()->error(dt('Failed to decompress input file.'));
                 return false;
@@ -393,7 +404,7 @@ abstract class SqlBase implements ConfigAwareInterface
     public function queryPrefix($query): ?string
     {
         // Inject table prefixes as needed.
-        if (Drush::bootstrapManager()->hasBootstrapped(DRUSH_BOOTSTRAP_DRUPAL_DATABASE)) {
+        if (Drush::bootstrapManager()->hasBootstrapped(DrupalBootLevels::DATABASE)) {
             // Enable prefix processing which can be dangerous so off by default. See http://drupal.org/node/1219850.
             if ($this->getOption('db-prefix')) {
                 $query = Database::getConnection()->prefixTables($query);
@@ -428,13 +439,13 @@ abstract class SqlBase implements ConfigAwareInterface
     /**
      * Build a SQL string for dropping and creating a database.
      *
-     * @param string dbname
+     * @param $dbname
      *   The database name.
-     * @param boolean $quoted
+     * @param $quoted
      *   Quote the database name. Mysql uses backticks to quote which can cause problems
      *   in a Windows shell. Set TRUE if the CREATE is not running on the bash command line.
      */
-    public function createdbSql($dbname, bool $quoted = false): string
+    public function createdbSql(string $dbname, bool $quoted = false): string
     {
         return '';
     }
@@ -467,7 +478,7 @@ abstract class SqlBase implements ConfigAwareInterface
         if ($this->dbExists()) {
             return $this->drop($this->listTablesQuoted());
         } else {
-            return $this->createdb();
+            return $this->createdb(true);
         }
     }
 
@@ -510,7 +521,7 @@ abstract class SqlBase implements ConfigAwareInterface
     /**
      * Extract the name of all existing tables in the given database.
      *
-     * @return
+     * @return array
      *   An array of table names which exist in the current database,
      *   appropriately quoted for the RDMS.
      */
@@ -576,56 +587,21 @@ abstract class SqlBase implements ConfigAwareInterface
     /**
      * Convert from an old-style database URL to an array of database settings.
      *
-     * @param db_url
+     * @param $db_url
      *   A Drupal 6 db url string to convert, or an array with a 'default' element.
      *   An array of database values containing only the 'default' element of
      *   the db url. If the parse fails the array is empty.
      */
     public static function dbSpecFromDbUrl($db_url): array
     {
-        $db_spec = [];
-
         $db_url_default = is_array($db_url) ? $db_url['default'] : $db_url;
-
-        // If it's a sqlite database, pick the database path and we're done.
-        if (strpos($db_url_default, 'sqlite://') === 0) {
-            $db_spec = [
-                'driver'   => 'sqlite',
-                'database' => substr($db_url_default, strlen('sqlite://')),
-            ];
-        } else {
-            $url = parse_url($db_url_default);
-            if ($url) {
-                // Fill in defaults to prevent notices.
-                $url += [
-                    'scheme' => null,
-                    'user'   => null,
-                    'pass'   => null,
-                    'host'   => null,
-                    'port'   => null,
-                    'path'   => null,
-                ];
-                $url = (object)array_map('urldecode', $url);
-                $db_spec = [
-                    'driver'   => $url->scheme,
-                    'username' => $url->user,
-                    'password' => $url->pass,
-                    'host' => $url->host,
-                    'port' => $url->port,
-                    'database' => ltrim($url->path, '/'),
-                ];
-            }
-        }
-
-        return $db_spec;
+        return Database::convertDbUrlToConnectionInfo($db_url_default, DRUSH_DRUPAL_CORE);
     }
 
     /**
      * Start building the command to run a query.
      *
      * @param $input_file
-     *
-     * @return array
      */
     public function alwaysQueryCommand($input_file): array
     {

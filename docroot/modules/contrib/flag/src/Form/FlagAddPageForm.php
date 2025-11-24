@@ -2,12 +2,12 @@
 
 namespace Drupal\flag\Form;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Routing\RedirectDestinationTrait;
 use Drupal\flag\FlagType\FlagTypePluginManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Routing\RedirectDestinationTrait;
 
 /**
  * Provides the flag add page.
@@ -25,7 +25,7 @@ class FlagAddPageForm extends FormBase {
   /**
    * The flag type plugin manager.
    *
-   * @var Drupal\flag\FlagType\FlagTypePluginManager
+   * @var \Drupal\flag\FlagType\FlagTypePluginManager
    */
   protected $flagTypeManager;
 
@@ -111,7 +111,7 @@ class FlagAddPageForm extends FormBase {
    *   TRUE if the flag exists, FALSE otherwise.
    */
   public function exists($id) {
-    // @todo: Make this injected like ActionFormBase::exists().
+    // @todo Make this injected like ActionFormBase::exists().
     return $this->entityTypeManager->getStorage('flag')->load($id);
   }
 

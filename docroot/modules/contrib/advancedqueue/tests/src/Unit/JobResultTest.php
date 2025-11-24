@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\advancedqueue\Unit;
 
 use Drupal\advancedqueue\Job;
@@ -17,7 +19,7 @@ class JobResultTest extends UnitTestCase {
    * @covers ::getState
    * @covers ::getMessage
    */
-  public function testSuccess() {
+  public function testSuccess(): void {
     $result = JobResult::success('We did it');
     $this->assertEquals(Job::STATE_SUCCESS, $result->getState());
     $this->assertEquals('We did it', $result->getMessage());
@@ -30,7 +32,7 @@ class JobResultTest extends UnitTestCase {
    * @covers ::getMaxRetries
    * @covers ::getRetryDelay
    */
-  public function testFailure() {
+  public function testFailure(): void {
     $result = JobResult::failure('DB down');
     $this->assertEquals(Job::STATE_FAILURE, $result->getState());
     $this->assertEquals('DB down', $result->getMessage());
@@ -45,7 +47,7 @@ class JobResultTest extends UnitTestCase {
    * @covers ::getMaxRetries
    * @covers ::getRetryDelay
    */
-  public function testFailureWithRetryOverride() {
+  public function testFailureWithRetryOverride(): void {
     $result = JobResult::failure('DB down', 2, 10);
     $this->assertEquals(Job::STATE_FAILURE, $result->getState());
     $this->assertEquals('DB down', $result->getMessage());
@@ -60,7 +62,7 @@ class JobResultTest extends UnitTestCase {
    * @covers ::getMaxRetries
    * @covers ::getRetryDelay
    */
-  public function testConstructor() {
+  public function testConstructor(): void {
     $result = new JobResult(Job::STATE_FAILURE, 'Error message', 5);
     $this->assertEquals(Job::STATE_FAILURE, $result->getState());
     $this->assertEquals('Error message', $result->getMessage());

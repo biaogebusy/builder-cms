@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\file\Functional;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\file\Entity\File;
 
 /**
@@ -20,10 +21,10 @@ class FileFieldPathTest extends FileFieldTestBase {
   /**
    * Tests the normal formatter display on node display.
    */
-  public function testUploadPath() {
+  public function testUploadPath(): void {
     /** @var \Drupal\node\NodeStorageInterface $node_storage */
     $node_storage = $this->container->get('entity_type.manager')->getStorage('node');
-    $field_name = strtolower($this->randomMachineName());
+    $field_name = $this->randomMachineName();
     $type_name = 'article';
     $this->createFileField($field_name, 'node', $type_name);
     /** @var \Drupal\file\FileInterface $test_file */
@@ -40,10 +41,10 @@ class FileFieldPathTest extends FileFieldTestBase {
     $date_formatter = $this->container->get('date.formatter');
     $expected_filename =
       'public://' .
-      $date_formatter->format(REQUEST_TIME, 'custom', 'Y') . '-' .
-      $date_formatter->format(REQUEST_TIME, 'custom', 'm') . '/' .
+      $date_formatter->format(\Drupal::time()->getRequestTime(), 'custom', 'Y') . '-' .
+      $date_formatter->format(\Drupal::time()->getRequestTime(), 'custom', 'm') . '/' .
       $test_file->getFilename();
-    $this->assertPathMatch($expected_filename, $node_file->getFileUri(), new FormattableMarkup('The file %file was uploaded to the correct path.', ['%file' => $node_file->getFileUri()]));
+    $this->assertPathMatch($expected_filename, $node_file->getFileUri(), "The file {$node_file->getFileUri()} was uploaded to the correct path.");
 
     // Change the path to contain multiple subdirectories.
     $this->updateFileField($field_name, $type_name, ['file_directory' => 'foo/bar/baz']);
@@ -55,7 +56,7 @@ class FileFieldPathTest extends FileFieldTestBase {
     $node_storage->resetCache([$nid]);
     $node = $node_storage->load($nid);
     $node_file = File::load($node->{$field_name}->target_id);
-    $this->assertPathMatch('public://foo/bar/baz/' . $test_file->getFilename(), $node_file->getFileUri(), new FormattableMarkup('The file %file was uploaded to the correct path.', ['%file' => $node_file->getFileUri()]));
+    $this->assertPathMatch('public://foo/bar/baz/' . $test_file->getFilename(), $node_file->getFileUri(), "The file {$node_file->getFileUri()} was uploaded to the correct path.");
 
     // Check the path when used with tokens.
     // Change the path to contain multiple token directories.
@@ -72,7 +73,7 @@ class FileFieldPathTest extends FileFieldTestBase {
     // the user running the test case.
     $data = ['user' => $this->adminUser];
     $subdirectory = \Drupal::token()->replace('[user:uid]/[user:name]', $data);
-    $this->assertPathMatch('public://' . $subdirectory . '/' . $test_file->getFilename(), $node_file->getFileUri(), new FormattableMarkup('The file %file was uploaded to the correct path with token replacements.', ['%file' => $node_file->getFileUri()]));
+    $this->assertPathMatch('public://' . $subdirectory . '/' . $test_file->getFilename(), $node_file->getFileUri(), "The file {$node_file->getFileUri()} was uploaded to the correct path with token replacements.");
   }
 
   /**

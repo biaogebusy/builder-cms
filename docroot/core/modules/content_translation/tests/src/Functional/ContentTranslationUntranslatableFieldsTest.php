@@ -1,11 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_translation\Functional;
 
 use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\language\Entity\ConfigurableLanguage;
+use Drupal\Tests\language\Traits\LanguageTestTrait;
 
 /**
  * Tests the untranslatable fields behaviors.
@@ -13,6 +16,8 @@ use Drupal\language\Entity\ConfigurableLanguage;
  * @group content_translation
  */
 class ContentTranslationUntranslatableFieldsTest extends ContentTranslationPendingRevisionTestBase {
+
+  use LanguageTestTrait;
 
   /**
    * {@inheritdoc}
@@ -29,14 +34,11 @@ class ContentTranslationUntranslatableFieldsTest extends ContentTranslationPendi
    */
   protected function setUp(): void {
     parent::setUp();
+    $this->doSetup();
 
     // Configure one field as untranslatable.
     $this->drupalLogin($this->administrator);
-    $edit = [
-      'settings[' . $this->entityTypeId . '][' . $this->bundle . '][fields][' . $this->fieldName . ']' => 0,
-    ];
-    $this->drupalGet('admin/config/regional/content-language');
-    $this->submitForm($edit, 'Save configuration');
+    static::setFieldTranslatable($this->entityTypeId, $this->bundle, $this->fieldName, FALSE);
 
     /** @var \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager */
     $entity_field_manager = $this->container->get('entity_field.manager');
@@ -74,7 +76,7 @@ class ContentTranslationUntranslatableFieldsTest extends ContentTranslationPendi
   /**
    * Tests that hiding untranslatable field widgets works correctly.
    */
-  public function testHiddenWidgets() {
+  public function testHiddenWidgets(): void {
     /** @var \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager */
     $entity_type_manager = $this->container->get('entity_type.manager');
     $id = $this->createEntity(['title' => $this->randomString()], 'en');
@@ -176,6 +178,13 @@ class ContentTranslationUntranslatableFieldsTest extends ContentTranslationPendi
     $this->submitForm([$settings_key => 0], 'Save configuration');
     $this->assertSession()->fieldValueEquals($field_name, 1);
     $this->assertSession()->fieldDisabled($field_name);
+
+    // Verify that the untranslatable fields warning message is not displayed
+    // when submitting.
+    $this->drupalGet($it_edit_url);
+    $this->assertSession()->pageTextContains('Fields that apply to all languages are hidden to avoid conflicting changes.');
+    $this->submitForm([], 'Save (this translation)');
+    $this->assertSession()->pageTextNotContains('Fields that apply to all languages are hidden to avoid conflicting changes.');
   }
 
 }

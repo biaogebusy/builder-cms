@@ -196,6 +196,12 @@
 
       if (isResimage) {
         img.srcset = $.attr(el, currSrcset);
+        // Copy the element sizes attribute so the browser pre-loads the correct
+        // image from the srcset when using width descriptors.
+        var imageSizes = $.attr(el, 'sizes');
+        if (imageSizes) {
+          img.sizes = imageSizes;
+        }
       }
     };
 

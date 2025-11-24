@@ -35,8 +35,8 @@ interface EditorXssFilterInterface {
    *   want to adjust the filtering.
    *
    * @return string
-   *   The filtered HTML that cannot cause any XSSes anymore.
+   *   The filtered HTML that cannot cause any XSS anymore.
    */
-  public static function filterXss($html, FilterFormatInterface $format, FilterFormatInterface $original_format = NULL);
+  public static function filterXss($html, FilterFormatInterface $format, ?FilterFormatInterface $original_format = NULL);
 
 }

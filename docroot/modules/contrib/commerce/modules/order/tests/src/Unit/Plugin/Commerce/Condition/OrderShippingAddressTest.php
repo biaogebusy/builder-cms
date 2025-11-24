@@ -3,11 +3,11 @@
 namespace Drupal\Tests\commerce_order\Unit\Plugin\Commerce\Condition;
 
 use CommerceGuys\Addressing\Address;
+use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Tests\UnitTestCase;
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_order\Plugin\Commerce\Condition\OrderShippingAddress;
-use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\profile\Entity\ProfileInterface;
-use Drupal\Tests\UnitTestCase;
 
 /**
  * @coversDefaultClass \Drupal\commerce_order\Plugin\Commerce\Condition\OrderShippingAddress
@@ -61,11 +61,31 @@ class OrderShippingAddressTest extends UnitTestCase {
     $condition = new OrderShippingAddress([
       'zone' => [
         'territories' => [
+          ['country_code' => 'US', 'administrative_area' => 'CA'],
+        ],
+      ],
+      'operator' => 'not in',
+    ], 'order_shipping_address', ['entity_type' => 'commerce_order', 'profile_scope' => 'shipping']);
+    $this->assertTrue($condition->evaluate($order));
+
+    $condition = new OrderShippingAddress([
+      'zone' => [
+        'territories' => [
           ['country_code' => 'US', 'administrative_area' => 'SC'],
         ],
       ],
     ], 'order_shipping_address', ['entity_type' => 'commerce_order', 'profile_scope' => 'shipping']);
     $this->assertTrue($condition->evaluate($order));
+
+    $condition = new OrderShippingAddress([
+      'zone' => [
+        'territories' => [
+          ['country_code' => 'US', 'administrative_area' => 'SC'],
+        ],
+      ],
+      'operator' => 'not in',
+    ], 'order_shipping_address', ['entity_type' => 'commerce_order', 'profile_scope' => 'shipping']);
+    $this->assertFalse($condition->evaluate($order));
   }
 
 }

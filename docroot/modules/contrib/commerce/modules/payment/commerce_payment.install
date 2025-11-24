@@ -5,11 +5,11 @@
  * Install, update and uninstall functions for the commerce_payment module.
  */
 
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\commerce\CommerceContentEntityStorageSchema;
 use Drupal\commerce_payment\Entity\PaymentMethod;
 use Drupal\commerce_payment\Event\PaymentEvent;
-use Drupal\Core\Field\BaseFieldDefinition;
-use Drupal\Core\Session\AccountInterface;
 
 /**
  * Implements hook_install().

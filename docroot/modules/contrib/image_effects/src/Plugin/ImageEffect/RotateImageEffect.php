@@ -1,21 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageEffect;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Image\ImageInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\image\Attribute\ImageEffect;
 use Drupal\image\ConfigurableImageEffectBase;
 use Drupal\image_effects\Component\Rectangle;
 
 /**
  * Rotates an image.
- *
- * @ImageEffect(
- *   id = "image_effects_rotate",
- *   label = @Translation("Rotate [by Image Effects]"),
- *   description = @Translation("Rotate the image by a specified angle, optionally setting the background color.")
- * )
  */
+#[ImageEffect(
+  id: 'image_effects_rotate',
+  label: new TranslatableMarkup('Rotate [by Image Effects]'),
+  description: new TranslatableMarkup('Rotate the image by a specified angle, optionally setting the background color.'),
+)]
 class RotateImageEffect extends ConfigurableImageEffectBase {
 
   /**
@@ -35,17 +38,18 @@ class RotateImageEffect extends ConfigurableImageEffectBase {
    */
   public function applyEffect(ImageInterface $image) {
     switch ($this->configuration['method']) {
-      case static::EXACT:
-        $degrees = $this->configuration['degrees'];
-        break;
-
       case static::PSEUDO_RANDOM:
         $degrees = $this->getRotationFromUri($image->getSource(), $this->configuration['degrees']);
         break;
 
       case static::RANDOM:
-        $max = abs((float) $this->configuration['degrees']);
+        $max = (int) abs((float) $this->configuration['degrees']);
         $degrees = rand(-$max, $max);
+        break;
+
+      case static::EXACT:
+      default:
+        $degrees = $this->configuration['degrees'];
         break;
 
     }
@@ -71,14 +75,13 @@ class RotateImageEffect extends ConfigurableImageEffectBase {
    * {@inheritdoc}
    */
   public function transformDimensions(array &$dimensions, $uri) {
+    $dimensions['width'] = $dimensions['width'] ? (int) $dimensions['width'] : NULL;
+    $dimensions['height'] = $dimensions['height'] ? (int) $dimensions['height'] : NULL;
+
     // If the current dimensions are set, then the new dimensions can be
     // determined.
     if ($dimensions['width'] && $dimensions['height']) {
       switch ($this->configuration['method']) {
-        case static::EXACT:
-          $degrees = $this->configuration['degrees'];
-          break;
-
         case static::PSEUDO_RANDOM:
           $degrees = $this->getRotationFromUri($uri, $this->configuration['degrees']);
           break;
@@ -87,6 +90,11 @@ class RotateImageEffect extends ConfigurableImageEffectBase {
           // For a random rotate, the new dimensions can not be determined.
           $dimensions['width'] = $dimensions['height'] = NULL;
           return;
+
+        case static::EXACT:
+        default:
+          $degrees = $this->configuration['degrees'];
+          break;
 
       }
 
@@ -191,7 +199,10 @@ class RotateImageEffect extends ConfigurableImageEffectBase {
 
     $this->configuration['degrees'] = $form_state->getValue('degrees');
     $this->configuration['background_color'] = $form_state->getValue('background_color');
-    $this->configuration['fallback_transparency_color'] = $form_state->getValue(['transparency_fallback', 'fallback_transparency_color']);
+    $this->configuration['fallback_transparency_color'] = $form_state->getValue([
+      'transparency_fallback',
+      'fallback_transparency_color',
+    ]);
     $this->configuration['method'] = $form_state->getValue('method');
   }
 

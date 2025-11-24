@@ -9,13 +9,15 @@ trait DataAdaptorTransformerTrait {
   /**
    * {@inheritdoc}
    */
-  public function transform($data, Context $context = NULL) {
+  public function transform($data, ?Context $context = NULL) {
     if (!isset($context)) {
       $context = new Context();
     }
     if (!$this->conformsToExpectedInputShape($data, $context)) {
       /** @var \Shaper\Validator\ValidateableInterface $validator */
       $validator = $this->getInputValidator();
+      // Collect all validation errors (again).
+      $validator->isValid();
       $message = sprintf(
         'Adaptor %s received invalid input data: %s',
         __CLASS__,
@@ -40,7 +42,7 @@ trait DataAdaptorTransformerTrait {
   /**
    * {@inheritdoc}
    */
-  public function undoTransform($data, Context $context = NULL) {
+  public function undoTransform($data, ?Context $context = NULL) {
     if (!isset($context)) {
       $context = new Context();
     }

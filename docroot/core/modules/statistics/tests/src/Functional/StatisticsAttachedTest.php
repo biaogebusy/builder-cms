@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\statistics\Functional;
 
 use Drupal\Tests\BrowserTestBase;
@@ -9,6 +11,7 @@ use Drupal\node\Entity\Node;
  * Tests if statistics.js is loaded when content is not printed.
  *
  * @group statistics
+ * @group legacy
  */
 class StatisticsAttachedTest extends BrowserTestBase {
 
@@ -46,7 +49,7 @@ class StatisticsAttachedTest extends BrowserTestBase {
   /**
    * Tests if statistics.js is loaded when content is not printed.
    */
-  public function testAttached() {
+  public function testAttached(): void {
 
     $node = Node::create([
       'type' => 'page',

@@ -16,21 +16,21 @@ class SmsMessageResult implements SmsMessageResultInterface {
    *
    * @var string|null
    */
-  protected $error = NULL;
+  protected ?string $error = NULL;
 
   /**
    * The error message as provided by the gateway API.
    *
    * @var string
    */
-  protected $errorMessage = '';
+  protected string $errorMessage = '';
 
   /**
    * The message delivery reports.
    *
    * @var \Drupal\sms\Message\SmsDeliveryReportInterface[]
    */
-  protected $reports = [];
+  protected array $reports = [];
 
   /**
    * The credit balance after this message is sent, or NULL if unknown.
@@ -39,7 +39,7 @@ class SmsMessageResult implements SmsMessageResultInterface {
    *
    * @var float|null
    */
-  protected $creditsBalance = NULL;
+  protected ?float $creditsBalance = NULL;
 
   /**
    * The credits consumed to process this message, or NULL if unknown.
@@ -48,7 +48,7 @@ class SmsMessageResult implements SmsMessageResultInterface {
    *
    * @var float|null
    */
-  protected $creditsUsed = NULL;
+  protected ?float $creditsUsed = NULL;
 
   /**
    * {@inheritdoc}

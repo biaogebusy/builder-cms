@@ -6,6 +6,7 @@ use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\file\Entity\File;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -68,26 +69,27 @@ class CkeditorTemplateForm extends EntityForm {
       '#default_value' => $template->getDescription(),
       '#description' => $this->t('Your Template description'),
     ];
-    $image = $template->get('image');
-    if ($image) {
-      $image_markup = '<div class="form-item image-preview" style="max-width: 200px; max-height: 200px;">';
-      $image_markup .= '<img src="' . \Drupal::service('file_url_generator')->generateAbsoluteString($image) . '" alt="' . $this->t('Preview') . '" />';
-      $image_markup .= '</div>';
-      $form['image_preview'] = [
+    $icon = $template->get('icon');
+    if ($icon) {
+      $icon_markup = '<div class="form-item image-preview" style="max-width: 200px; max-height: 200px;">';
+      $icon_markup .= '<img src="' . \Drupal::service('file_url_generator')->generateAbsoluteString($icon) . '" alt="' . $this->t('Preview') . '" />';
+      $icon_markup .= '</div>';
+      $form['icon_preview'] = [
         '#type' => 'inline_template',
-        '#template' => $image_markup,
+        '#template' => $icon_markup,
       ];
     }
-    $form['image'] = [
+    $form['icon'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Image path for this template'),
-      '#default_value' => $image,
+      '#title' => $this->t('Icon path for this template'),
+      '#default_value' => $icon,
       '#description' => $this->t('Examples: public://test.png, modules/my_module/test.png, themes/my_theme/test.png, //example.com/test.jpg'),
     ];
-    $form['image_upload'] = [
-      '#title' => $this->t('Upload image for this template'),
-      '#type' => 'file',
+    $form['icon_upload'] = [
+      '#title' => $this->t('Upload icon for this template'),
+      '#type' => 'managed_file',
       '#description' => $this->t('You can use this field if you need to upload the file to the server. Allowed extensions: gif png jpg jpeg.'),
+      '#upload_location' => 'public://ckeditor-templates',
       '#upload_validators' => [
         'file_validate_is_image' => [],
         'file_validate_extensions' => ['gif png jpg jpeg'],
@@ -114,12 +116,12 @@ class CkeditorTemplateForm extends EntityForm {
   public function validateForm(array &$form, FormStateInterface $form_state) {
     parent::validateForm($form, $form_state);
 
-    // Check for a new uploaded image.
+    // Check for a new uploaded icon.
     if (!$form_state->getErrors()) {
-      $file = _file_save_upload_from_form($form['image_upload'], $form_state, 0);
+      $file = _file_save_upload_from_form($form['icon_upload'], $form_state, 0);
       if ($file) {
         // Put the temporary file in form_values so we can save it on submit.
-        $form_state->setValue('image_upload', $file);
+        $form_state->setValue('icon_upload', $file);
       }
     }
   }
@@ -130,17 +132,12 @@ class CkeditorTemplateForm extends EntityForm {
   public function save(array $form, FormStateInterface $form_state) {
     $template = $this->entity;
 
-    $file = $form_state->getValue('image_upload');
+    $file = $form_state->getValue('icon_upload');
     if ($file) {
-      $file_dir = 'public://ckeditor-templates';
-      if (!is_dir($file_dir)) {
-        $this->fileSystem->prepareDirectory($file_dir, FileSystemInterface::CREATE_DIRECTORY);
-      }
-      $file_destination = 'public://ckeditor-templates/' . $file->getFilename();
-      $filename = $this->fileSystem->copy($file->getFileUri(), $file_destination);
-      if ($filename) {
-        $template->set('image', $filename);
-      }
+      $file = File::load($file[0]);
+      $file->setPermanent();
+      $file->save();
+      $template->set('icon', $file->getFileUri());
     }
 
     $status = $template->save();

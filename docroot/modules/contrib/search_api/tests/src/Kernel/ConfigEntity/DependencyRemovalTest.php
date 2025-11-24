@@ -4,22 +4,24 @@ namespace Drupal\Tests\search_api\Kernel\ConfigEntity;
 
 use Drupal\Core\KeyValueStore\KeyValueExpirableFactoryInterface;
 use Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface;
-use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api_test\PluginTestTrait;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests what happens when an index's or a server's dependencies are removed.
  *
  * @group search_api
  */
+#[RunTestsInSeparateProcesses]
 class DependencyRemovalTest extends KernelTestBase {
 
-  use EntityReferenceTestTrait;
+  use EntityReferenceFieldCreationTrait;
   use PluginTestTrait;
 
   /**
@@ -457,7 +459,7 @@ class DependencyRemovalTest extends KernelTestBase {
    * @return array
    *   An array of argument arrays for this class's test methods.
    */
-  public function dependencyTestDataProvider() {
+  public static function dependencyTestDataProvider() {
     return [
       'Remove dependency' => [TRUE],
       'Keep dependency' => [FALSE],
@@ -617,11 +619,51 @@ class DependencyRemovalTest extends KernelTestBase {
    *   An array of argument arrays for
    *   \Drupal\Tests\search_api\Kernel\DependencyRemovalTest::testDataTypeDependency().
    */
-  public function dataTypeDependencyTestDataProvider() {
+  public static function dataTypeDependencyTestDataProvider() {
     return [
       'Module dependency' => ['module'],
       'Config dependency' => ['config'],
     ];
+  }
+
+  /**
+   * Tests that changes and deletions of the server are handled correctly.
+   */
+  public function testServerChanges(): void {
+    // Create a new server and set that as the index's server.
+    $server_2 = Server::create([
+      'id' => 'test_2',
+      'name' => 'Test server 2',
+      'backend' => 'search_api_test',
+    ]);
+    $server_2->save();
+    $this->index->set('server', 'test_2');
+    $this->assertEquals('test_2', $this->index->getServerInstance()->id());
+
+    // Save the index and make sure dependencies are correct.
+    $this->index->save();
+    $this->index = Index::load($this->index->id());
+    $index_dependencies = $this->index->getDependencies();
+    $this->assertEquals(['search_api.server.test_2'], $index_dependencies['config']);
+    $this->assertEquals('test_2', $this->index->getServerInstance()->id());
+
+    // Change the index's server.
+    $this->index->set('server', 'dependency');
+    $this->assertEquals('dependency', $this->index->getServerInstance()->id());
+    $this->index->save();
+
+    // Make sure dependencies are correct.
+    $this->index = Index::load($this->index->id());
+    $index_dependencies = $this->index->getDependencies();
+    $this->assertEquals(['search_api.server.dependency'], $index_dependencies['config']);
+    $this->assertEquals('dependency', $this->index->getServerInstance()->id());
+
+    // Delete the server and make sure the index is disabled.
+    $this->dependency->delete();
+    $this->index = Index::load($this->index->id());
+    $this->assertInstanceOf(Index::class, $this->index);
+    $this->assertFalse($this->index->status());
+    $this->assertNull($this->index->getServerId());
   }
 
   /**

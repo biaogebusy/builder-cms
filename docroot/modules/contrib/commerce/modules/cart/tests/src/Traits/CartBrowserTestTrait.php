@@ -2,10 +2,10 @@
 
 namespace Drupal\Tests\commerce_cart\Traits;
 
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\commerce_order\Entity\OrderItemInterface;
 use Drupal\commerce_product\Entity\ProductInterface;
 use Drupal\commerce_product\Entity\ProductVariationInterface;
-use Drupal\Core\StringTranslation\StringTranslationTrait;
 
 /**
  * Defines a trait for commerce_cart functional tests.

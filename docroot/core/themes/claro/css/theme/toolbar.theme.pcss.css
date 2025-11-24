@@ -47,12 +47,12 @@
 }
 .toolbar .toolbar-bar .toolbar-tab > .toolbar-item:hover,
 .toolbar .toolbar-bar .toolbar-tab > .toolbar-item:focus {
-  background-image: -webkit-linear-gradient(rgba(255, 255, 255, 0.125) 20%, transparent 200%);
   background-image: linear-gradient(rgba(255, 255, 255, 0.125) 20%, transparent 200%);
 }
 .toolbar .toolbar-bar .toolbar-tab > .toolbar-item.is-active {
-  background-image: -webkit-linear-gradient(rgba(255, 255, 255, 0.25) 20%, transparent 200%);
-  background-image: linear-gradient(rgba(255, 255, 255, 0.25) 20%, transparent 200%);
+  color: #000;
+  border-bottom: 1px solid #ddd;
+  background-color: #fff;
 }
 
 /**
@@ -169,4 +169,13 @@
 .toolbar .toolbar-toggle-orientation button {
   display: inline-block;
   cursor: pointer;
+}
+@media (forced-colors: active) {
+  .toolbar-horizontal .toolbar-tray > .toolbar-lining,
+  .toolbar-horizontal .toolbar .toolbar-toggle-orientation .toolbar-icon {
+    border-top: 1px solid transparent;
+  }
+  .toolbar .toolbar-bar {
+    border-bottom: 1px solid transparent;
+  }
 }

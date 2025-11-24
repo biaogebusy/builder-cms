@@ -9,4 +9,4 @@ services:
     class: Drupal\autologout\AutologoutManager
     tags:
       - {name: autologout_manager}
-    arguments: ['@module_handler', '@config.factory', '@messenger', '@current_user', '@logger.factory', '@session_manager', '@user.data', '@datetime.time', '@entity_type.manager', '@string_translation']
+    arguments: ['@module_handler', '@config.factory', '@messenger', '@current_user', '@logger.factory', '@session_manager', '@user.data', '@datetime.time', '@entity_type.manager', '@request_stack']

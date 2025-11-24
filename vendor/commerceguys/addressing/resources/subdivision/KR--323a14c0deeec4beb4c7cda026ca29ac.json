@@ -1,0 +1,23 @@
+{
+	"country_code": "KR",
+	"parents": [
+		"KR",
+		"41",
+		"Suwon-si"
+	],
+	"locale": "ko",
+	"subdivisions": {
+		"Gwonseon-gu": {
+			"local_name": "권선구"
+		},
+		"Yeongtong-gu": {
+			"local_name": "영통구"
+		},
+		"Jangan-gu": {
+			"local_name": "장안구"
+		},
+		"Paldal-gu": {
+			"local_name": "팔달구"
+		}
+	}
+}

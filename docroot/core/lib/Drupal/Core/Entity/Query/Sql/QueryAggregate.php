@@ -22,6 +22,7 @@ class QueryAggregate extends Query implements QueryAggregateInterface {
    */
   public function execute() {
     return $this
+      ->alter()
       ->prepare()
       ->addAggregate()
       ->compile()
@@ -154,7 +155,7 @@ class QueryAggregate extends Query implements QueryAggregateInterface {
   public function createSqlAlias($field, $sql_field) {
     $alias = str_replace('.', '_', $sql_field);
     // If the alias contains of field_*_value remove the _value at the end.
-    if (substr($alias, 0, 6) === 'field_' && substr($field, -6) !== '_value' && substr($alias, -6) === '_value') {
+    if (str_starts_with($alias, 'field_') && !str_ends_with($field, '_value') && str_ends_with($alias, '_value')) {
       $alias = substr($alias, 0, -6);
     }
     return $alias;

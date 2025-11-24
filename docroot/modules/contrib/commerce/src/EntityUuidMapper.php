@@ -8,20 +8,6 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 class EntityUuidMapper implements EntityUuidMapperInterface {
 
   /**
-   * The database connection.
-   *
-   * @var \Drupal\Core\Database\Connection
-   */
-  protected $database;
-
-  /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
    * UUID to ID map, grouped by entity type ID.
    *
    * @var array
@@ -33,13 +19,10 @@ class EntityUuidMapper implements EntityUuidMapperInterface {
    *
    * @param \Drupal\Core\Database\Connection $database
    *   The database connection.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    */
-  public function __construct(Connection $database, EntityTypeManagerInterface $entity_type_manager) {
-    $this->database = $database;
-    $this->entityTypeManager = $entity_type_manager;
-  }
+  public function __construct(protected Connection $database, protected EntityTypeManagerInterface $entityTypeManager) {}
 
   /**
    * {@inheritdoc}

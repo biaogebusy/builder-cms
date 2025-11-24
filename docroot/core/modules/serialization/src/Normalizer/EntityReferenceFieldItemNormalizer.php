@@ -16,11 +16,6 @@ class EntityReferenceFieldItemNormalizer extends FieldItemNormalizer {
   use EntityReferenceFieldItemNormalizerTrait;
 
   /**
-   * {@inheritdoc}
-   */
-  protected $supportedInterfaceOrClass = EntityReferenceItem::class;
-
-  /**
    * The entity repository.
    *
    * @var \Drupal\Core\Entity\EntityRepositoryInterface
@@ -40,7 +35,7 @@ class EntityReferenceFieldItemNormalizer extends FieldItemNormalizer {
   /**
    * {@inheritdoc}
    */
-  public function normalize($field_item, $format = NULL, array $context = []) {
+  public function normalize($field_item, $format = NULL, array $context = []): array|string|int|float|bool|\ArrayObject|NULL {
     $values = parent::normalize($field_item, $format, $context);
 
     $this->normalizeRootReferenceValue($values, $field_item);
@@ -59,7 +54,6 @@ class EntityReferenceFieldItemNormalizer extends FieldItemNormalizer {
         $values['url'] = $url->getGeneratedUrl();
       }
       // @todo Remove in https://www.drupal.org/project/drupal/issues/2925520
-      // @see \Drupal\hal\Normalizer\FileEntityNormalizer
       elseif ($entity instanceof FileInterface) {
         $values['url'] = $entity->createFileUrl(FALSE);
       }
@@ -91,6 +85,15 @@ class EntityReferenceFieldItemNormalizer extends FieldItemNormalizer {
       }
     }
     return parent::constructValue($data, $context);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSupportedTypes(?string $format): array {
+    return [
+      EntityReferenceItem::class => TRUE,
+    ];
   }
 
 }

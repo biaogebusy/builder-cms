@@ -1,0 +1,20 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"TW",
+		"Hsinchu City"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"North District": {
+			"local_name": "北區"
+		},
+		"East District": {
+			"local_name": "東區"
+		},
+		"Xiangshan District": {
+			"local_name": "香山區"
+		}
+	}
+}

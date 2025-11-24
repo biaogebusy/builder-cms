@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin;
 
 use Drupal\Component\Plugin\ConfigurableInterface;
@@ -20,7 +22,7 @@ interface ImageEffectsPluginBaseInterface extends ConfigurableInterface, Contain
    * @return array
    *   Render array of the form element.
    */
-  public function selectionElement(array $options = []);
+  public function selectionElement(array $options = []): array;
 
   /**
    * Get the image_effects plugin type.
@@ -28,7 +30,7 @@ interface ImageEffectsPluginBaseInterface extends ConfigurableInterface, Contain
    * @return string
    *   The plugin type.
    */
-  public function getType();
+  public function getType(): string;
 
   /**
    * Determines if plugin can be used.
@@ -36,6 +38,6 @@ interface ImageEffectsPluginBaseInterface extends ConfigurableInterface, Contain
    * @return bool
    *   TRUE if the plugin is available.
    */
-  public static function isAvailable();
+  public static function isAvailable(): bool;
 
 }

@@ -3,7 +3,7 @@
  * Search results specific styles.
  */
 
-@import "../base/variables.pcss.css";
+@import "../base/media-queries.pcss.css";
 
 .search-results {
   margin-block-end: var(--sp2);
@@ -21,22 +21,24 @@
   margin-block: 0;
   margin-inline-start: 0;
   margin-inline-end: 0;
-  color: var(--color--gray-0);
+  color: var(--color-text-neutral-loud);
   font-size: 20px;
   line-height: var(--line-height-base);
 
   & a {
     padding-block-end: 3px;
-    transition: background-size 0.2s, color 0.2s;
+    transition:
+      background-size 0.2s,
+      color 0.2s;
     text-decoration: none;
     background-color: transparent;
-    background-image: linear-gradient(var(--color--blue-50), var(--color--blue-50)); /* Two values are needed for IE11 support. */
+    background-image: linear-gradient(var(--color--primary-50), var(--color--primary-50)); /* Two values are needed for IE11 support. */
     background-repeat: no-repeat;
     background-position: bottom left; /* LTR */
     background-size: 0 3px;
 
     &:hover {
-      color: var(--color--blue-20);
+      color: var(--color-text-primary-medium);
     }
   }
 
@@ -63,12 +65,12 @@
   display: flex;
   align-items: center;
   margin-block-end: var(--sp1);
-  color: var(--color--gray-20);
+  color: var(--color-text-neutral-soft);
   font-size: 14px;
   line-height: var(--sp);
 
   & a {
-    color: var(--color--blue-20);
+    color: var(--color-text-primary-medium);
     font-weight: bold;
   }
 }
@@ -77,14 +79,14 @@
   position: relative; /* Anchor after pseudo-element. */
   margin-block-end: var(--sp1-5);
 
-  &:after {
+  &::after {
     position: absolute;
     inset-block-end: 0;
     width: var(--sp3);
     height: 0;
     content: "";
     /* Intentionally not using CSS logical properties. */
-    border-top: solid 2px var(--color--gray-80);
+    border-top: solid 2px var(--color--gray-95);
   }
 
   &:last-child {
@@ -93,5 +95,21 @@
 
   @media (--lg) {
     margin-block-end: var(--sp3);
+  }
+}
+
+.empty-search-results-text {
+  color: var(--color-text-neutral-loud);
+  font-family: var(--font-sans);
+  font-size: 20px;
+  font-weight: bold;
+  font-style: normal;
+  line-height: var(--sp1-5);
+  margin-block: var(--sp);
+
+  @media (--md) {
+    margin-block: var(--sp2);
+    font-size: 24px;
+    line-height: var(--sp2);
   }
 }

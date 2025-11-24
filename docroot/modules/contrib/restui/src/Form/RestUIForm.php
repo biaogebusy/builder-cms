@@ -2,18 +2,12 @@
 
 namespace Drupal\restui\Form;
 
-use Drupal\Core\Authentication\AuthenticationCollectorInterface;
-use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Extension\ModuleHandler;
 use Drupal\rest\Plugin\ResourceInterface;
 use Drupal\rest\RestResourceConfigInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Drupal\rest\Plugin\Type\ResourcePluginManager;
-use Drupal\Core\Messenger\MessengerInterface;
 
 /**
  * Provides a REST resource configuration form.
@@ -23,7 +17,7 @@ class RestUIForm extends ConfigFormBase {
   /**
    * The module handler.
    *
-   * @var \Drupal\Core\Extension\ModuleHandler
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
    */
   protected $moduleHandler;
 
@@ -63,46 +57,18 @@ class RestUIForm extends ConfigFormBase {
   protected $messenger;
 
   /**
-   * Constructs a \Drupal\user\RestForm object.
-   *
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   The config factory.
-   * @param \Drupal\Core\Extension\ModuleHandler $module_handler
-   *   The module handler.
-   * @param \Drupal\Core\Authentication\AuthenticationCollectorInterface $authentication_collector
-   *   The authentication collector.
-   * @param array $formats
-   *   The available serialization formats.
-   * @param \Drupal\rest\Plugin\Type\ResourcePluginManager $resourcePluginManager
-   *   The REST plugin manager.
-   * @param \Drupal\Core\Entity\EntityStorageInterface $resource_config_storage
-   *   The REST resource config storage.
-   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
-   *   The messenger service.
-   */
-  public function __construct(ConfigFactoryInterface $config_factory, ModuleHandler $module_handler, AuthenticationCollectorInterface $authentication_collector, array $formats, ResourcePluginManager $resourcePluginManager, EntityStorageInterface $resource_config_storage, MessengerInterface $messenger) {
-    parent::__construct($config_factory);
-    $this->moduleHandler = $module_handler;
-    $this->authenticationCollector = $authentication_collector;
-    $this->formats = $formats;
-    $this->resourcePluginManager = $resourcePluginManager;
-    $this->resourceConfigStorage = $resource_config_storage;
-    $this->messenger = $messenger;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('config.factory'),
-      $container->get('module_handler'),
-      $container->get('authentication_collector'),
-      $container->getParameter('serializer.formats'),
-      $container->get('plugin.manager.rest'),
-      $container->get('entity_type.manager')->getStorage('rest_resource_config'),
-      $container->get('messenger')
-    );
+    $instance = parent::create($container);
+    $instance->moduleHandler = $container->get('module_handler');
+    $instance->authenticationCollector = $container->get('authentication_collector');
+    $instance->formats = $container->getParameter('serializer.formats');
+    $instance->resourcePluginManager = $container->get('plugin.manager.rest');
+    $instance->resourceConfigStorage = $container->get('entity_type.manager')->getStorage('rest_resource_config');
+    $instance->messenger = $container->get('messenger');
+
+    return $instance;
   }
 
   /**
@@ -174,7 +140,6 @@ class RestUIForm extends ConfigFormBase {
     $form['#title'] = $this->t('Settings for resource %label', ['%label' => $pluginDefinition['label']]);
     $form['#tree'] = TRUE;
     $form['resource_id'] = ['#type' => 'value', '#value' => $resource_id];
-
 
     $authentication_providers = array_keys($this->authenticationCollector->getSortedProviders());
     $authentication_providers = array_combine($authentication_providers, $authentication_providers);
@@ -487,9 +452,12 @@ class RestUIForm extends ConfigFormBase {
    * Return the settings part of the form when rebuilding through ajax.
    *
    * @param array $form
+   *   The form array.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current state of the form.
    *
    * @return array
+   *   The form wrapper.
    */
   public function processAjaxForm(array $form, FormStateInterface &$form_state) {
     return $form['wrapper'];

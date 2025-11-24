@@ -4,6 +4,7 @@ namespace Drupal\commerce_order\Plugin\views\area;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\views\Attribute\ViewsArea;
 use Drupal\views\Plugin\views\area\AreaPluginBase;
 use Drupal\views\Plugin\views\argument\NumericArgument;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -15,9 +16,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * View.
  *
  * @ingroup views_area_handlers
- *
- * @ViewsArea("commerce_order_total")
  */
+#[ViewsArea("commerce_order_total")]
 class OrderTotal extends AreaPluginBase {
 
   /**

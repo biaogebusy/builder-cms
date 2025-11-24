@@ -27,15 +27,12 @@ interface MessagePurgeInterface extends ConfigurableInterface, PluginFormInterfa
   public function fetch(MessageTemplateInterface $template);
 
   /**
-   * Process the purgeable messages.
+   * Process the purge-able messages.
    *
    * Normally this is a bulk delete operation.
    *
    * @param array $ids
    *   The message IDs to be processed.
-   *
-   * @return bool
-   *   The result of the process.
    */
   public function process(array $ids);
 

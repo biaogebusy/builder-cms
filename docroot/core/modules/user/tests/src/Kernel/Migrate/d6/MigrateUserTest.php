@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Kernel\Migrate\d6;
 
 use Drupal\migrate\MigrateExecutable;
@@ -22,7 +24,7 @@ class MigrateUserTest extends MigrateDrupal6TestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['language'];
+  protected static $modules = ['language', 'phpass'];
 
   /**
    * {@inheritdoc}
@@ -72,7 +74,7 @@ class MigrateUserTest extends MigrateDrupal6TestBase {
   /**
    * Tests the Drupal6 user to Drupal 8 migration.
    */
-  public function testUser() {
+  public function testUser(): void {
     $users = Database::getConnection('default', 'migrate')
       ->select('users', 'u')
       ->fields('u')

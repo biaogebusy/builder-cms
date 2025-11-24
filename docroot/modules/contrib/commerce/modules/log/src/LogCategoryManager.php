@@ -2,13 +2,13 @@
 
 namespace Drupal\commerce_log;
 
-use Drupal\commerce_log\Plugin\LogCategory\LogCategory;
 use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
 use Drupal\Core\Plugin\Discovery\ContainerDerivativeDiscoveryDecorator;
 use Drupal\Core\Plugin\Discovery\YamlDiscovery;
+use Drupal\commerce_log\Plugin\LogCategory\LogCategory;
 
 /**
  * Manages discovery and instantiation of commerce_log_category plugins.

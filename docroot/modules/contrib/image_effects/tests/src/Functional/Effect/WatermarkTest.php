@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image_effects\Functional\Effect;
 
 use Drupal\Tests\image_effects\Functional\ImageEffectsTestBase;
@@ -23,7 +25,7 @@ class WatermarkTest extends ImageEffectsTestBase {
    *
    * @dataProvider providerToolkits
    */
-  public function testWatermarkEffect($toolkit_id, $toolkit_config, array $toolkit_settings) {
+  public function testWatermarkEffect(string $toolkit_id, string $toolkit_config, array $toolkit_settings): void {
     $this->changeToolkit($toolkit_id, $toolkit_config, $toolkit_settings);
 
     // 1. Basic test.

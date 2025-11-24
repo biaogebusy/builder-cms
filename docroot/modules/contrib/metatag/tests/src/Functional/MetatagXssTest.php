@@ -2,8 +2,9 @@
 
 namespace Drupal\Tests\metatag\Functional;
 
-use Drupal\Tests\BrowserTestBase;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Tests\BrowserTestBase;
+use Drupal\Tests\field_ui\Traits\FieldUiTestTrait;
 
 /**
  * Ensures that meta tags do not allow xss vulnerabilities.
@@ -12,6 +13,8 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
  */
 class MetatagXssTest extends BrowserTestBase {
 
+  use FieldUiTestTrait;
+  use MetatagHelperTrait;
   use StringTranslationTrait;
 
   /**
@@ -107,15 +110,7 @@ class MetatagXssTest extends BrowserTestBase {
     ]);
 
     // Add a metatag field to the content type.
-    $this->drupalGet('admin/structure/types/manage/metatag_node/fields/add-field');
-    $this->assertSession()->statusCodeEquals(200);
-    $edit = [
-      'label' => 'Metatag',
-      'field_name' => 'metatag_field',
-      'new_storage_type' => 'metatag',
-    ];
-    $this->submitForm($edit, $this->t('Save and continue'));
-    $this->submitForm([], $this->t('Save field settings'));
+    $this->fieldUIAddNewField('admin/structure/types/manage/metatag_node', 'metatag_field', 'Metatag', 'metatag');
   }
 
   /**
@@ -157,12 +152,11 @@ class MetatagXssTest extends BrowserTestBase {
    * Verify XSS injected in the entity metatag override field is not rendered.
    */
   public function testXssEntityOverride() {
-
     $this->drupalGet('node/add/metatag_node');
     $session = $this->assertSession();
     $session->statusCodeEquals(200);
     $edit = [
-      'title[0][value]' => $this->randomString(32),
+      'title[0][value]' => $this->randomTitle(),
       'field_metatag_field[0][basic][title]' => $this->xssTitleString,
       'field_metatag_field[0][basic][abstract]' => $this->xssString,
       'field_metatag_field[0][advanced][image_src]' => $this->xssImageString,
@@ -187,7 +181,6 @@ class MetatagXssTest extends BrowserTestBase {
    * Verify XSS injected in the entity titles are not rendered.
    */
   public function testXssEntityTitle() {
-
     $this->drupalGet('node/add/metatag_node');
     $session = $this->assertSession();
     $session->statusCodeEquals(200);
@@ -207,12 +200,11 @@ class MetatagXssTest extends BrowserTestBase {
    * Verify XSS injected in the entity fields are not rendered.
    */
   public function testXssEntityBody() {
-
     $this->drupalGet('node/add/metatag_node');
     $session = $this->assertSession();
     $session->statusCodeEquals(200);
     $edit = [
-      'title[0][value]' => $this->randomString(),
+      'title[0][value]' => $this->randomTitle(),
       'body[0][value]' => $this->xssTitleString,
     ];
     $this->submitForm($edit, 'Save');

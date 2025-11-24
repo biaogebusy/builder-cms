@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\redirect_404\Functional;
 
 use Drupal\Component\Utility\UrlHelper;
@@ -175,14 +177,13 @@ class Fix404RedirectUITest extends Redirect404TestBase {
 
     // Go back to the settings to check the 'Path to ignore' configurations.
     $this->drupalGet('admin/config/search/redirect/settings');
-    $xpath = $this->xpath('//*[@id="edit-ignore-pages"]')[0]->getHtml();
     // Check that the new page to ignore has been saved with leading slash.
-    $this->assertSession()->elementContains('css', '#edit-ignore-pages', '/'. $nodes_to_ignore);
+    $this->assertSession()->elementContains('css', '#edit-ignore-pages', '/' . $nodes_to_ignore);
     $this->assertSession()->elementContains('css', '#edit-ignore-pages', $terms_to_ignore);
     $this->assertSession()->elementNotContains('css', '#edit-ignore-pages', $node_to_ignore);
     $this->assertSession()->elementNotContains('css', '#edit-ignore-pages', $path_to_ignore);
 
-    // Testing whitelines.
+    // Testing newlines.
     $this->drupalGet('llama_page');
     $this->drupalGet('admin/config/search/redirect/404');
     $this->assertSession()->pageTextContains('llama_page');
@@ -210,24 +211,23 @@ class Fix404RedirectUITest extends Redirect404TestBase {
     $this->assertSession()->pageTextNotContains('vicuna');
 
     $this->drupalGet('prefix/jaguar_page/subpage');
-    $this->drupalGet('prefix/tucan_page/subpage');
+    $this->drupalGet('prefix/toucan_page/subpage');
     $this->drupalGet('admin/config/search/redirect/404');
     $this->assertSession()->pageTextContains('jaguar_page');
-    $this->assertSession()->pageTextContains('tucan_page');
+    $this->assertSession()->pageTextContains('toucan_page');
     $this->drupalGet('admin/config/search/redirect/settings');
     $edit = [
-      'ignore_pages' => '*/tucan_page/*',
+      'ignore_pages' => '*/toucan_page/*',
       'clear_ignored' => TRUE,
     ];
     $this->submitForm($edit, 'Save configuration');
     $this->drupalGet('admin/config/search/redirect/404');
     $this->assertSession()->pageTextContains('jaguar_page');
-    $this->assertSession()->pageTextNotContains('tucan_page');
+    $this->assertSession()->pageTextNotContains('toucan_page');
   }
 
   /**
-   * Tests the redirect ignore pages for users without the 'administer redirect
-   * settings' permission.
+   * Tests the redirect ignore pages for users without the 'administer redirect settings' permission.
    */
   public function testIgnorePagesNonAdmin() {
     // Create a node.
@@ -279,7 +279,7 @@ class Fix404RedirectUITest extends Redirect404TestBase {
     $this->drupalGet('non-existing0?test=2');
     $this->drupalGet('non-existing1');
     $this->drupalGet('non-existing2');
-    // Go to the "Fix 404" page and check wheter these 404 entries exist:
+    // Go to the "Fix 404" page and check whether these 404 entries exist:
     $this->drupalGet('admin/config/search/redirect/404');
     $this->assertSession()->pageTextContains('non-existing0?test=1');
     $this->assertSession()->pageTextContains('non-existing0?test=2');
@@ -291,7 +291,7 @@ class Fix404RedirectUITest extends Redirect404TestBase {
     $this->drupalGet('admin/config/search/redirect/settings');
     $this->assertSession()->elementExists('css', '#edit-reset-404');
     $this->getSession()->getPage()->pressButton('Clear all 404 log entries');
-    // Go to the "Fix 404" page and check wheter these 404 entries DO NOT exist:
+    // Go to the "Fix 404" page and check whether these 404 entries DO NOT exist:
     $this->drupalGet('admin/config/search/redirect/404');
     $this->assertSession()->pageTextNotContains('non-existing0?test=1');
     $this->assertSession()->pageTextNotContains('non-existing0?test=2');
@@ -302,7 +302,7 @@ class Fix404RedirectUITest extends Redirect404TestBase {
     // Ensure new 404 entries are created after clearing:
     $this->drupalGet('non-existing0');
     $this->drupalGet('non-existing0?test=1');
-    // Go to the "Fix 404" page and check wheter these 404 entries exist:
+    // Go to the "Fix 404" page and check whether these 404 entries exist:
     $this->drupalGet('admin/config/search/redirect/404');
     $this->assertSession()->pageTextContains('non-existing0');
     $this->assertSession()->pageTextContains('non-existing0?test=1');

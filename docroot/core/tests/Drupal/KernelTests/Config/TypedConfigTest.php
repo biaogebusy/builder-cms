@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Config;
 
+use Drupal\Core\Config\Schema\Sequence;
 use Drupal\Core\Config\Schema\SequenceDataDefinition;
 use Drupal\Core\Config\Schema\TypedConfigInterface;
 use Drupal\Core\TypedData\ComplexDataDefinitionInterface;
@@ -9,7 +12,6 @@ use Drupal\Core\TypedData\ComplexDataInterface;
 use Drupal\Core\TypedData\Type\IntegerInterface;
 use Drupal\Core\TypedData\Type\StringInterface;
 use Drupal\KernelTests\KernelTestBase;
-use PHPUnit\Framework\Error\Error;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 
 /**
@@ -27,6 +29,11 @@ class TypedConfigTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
+  protected static $configSchemaCheckerExclusions = ['config_test.validation'];
+
+  /**
+   * {@inheritdoc}
+   */
   protected function setUp(): void {
     parent::setUp();
 
@@ -36,7 +43,7 @@ class TypedConfigTest extends KernelTestBase {
   /**
    * Verifies that the Typed Data API is implemented correctly.
    */
-  public function testTypedDataAPI() {
+  public function testTypedDataAPI(): void {
     /** @var \Drupal\Core\Config\TypedConfigManagerInterface $typed_config_manager */
     $typed_config_manager = \Drupal::service('config.typed');
 
@@ -45,7 +52,7 @@ class TypedConfigTest extends KernelTestBase {
       $typed_config_manager->get('config_test.non_existent');
       $this->fail('Expected error when trying to get non-existent typed config.');
     }
-    catch (Error $e) {
+    catch (\InvalidArgumentException $e) {
       $this->assertEquals('Missing required data for typed configuration: config_test.non_existent', $e->getMessage());
     }
 
@@ -73,6 +80,9 @@ class TypedConfigTest extends KernelTestBase {
     // Test accessing sequences.
     $sequence = $typed_config->get('giraffe');
     /** @var \Drupal\Core\TypedData\ListInterface $sequence */
+    $this->assertInstanceOf(SequenceDataDefinition::class, $sequence->getDataDefinition());
+    $this->assertSame(Sequence::class, $sequence->getDataDefinition()->getClass());
+    $this->assertSame('sequence', $sequence->getDataDefinition()->getDataType());
     $this->assertInstanceOf(ComplexDataInterface::class, $sequence);
     $this->assertInstanceOf(StringInterface::class, $sequence->get('hum1'));
     $this->assertEquals('hum1', $sequence->get('hum1')->getValue());
@@ -86,11 +96,14 @@ class TypedConfigTest extends KernelTestBase {
     $typed_config_manager = \Drupal::service('config.typed');
     $typed_config = $typed_config_manager->createFromNameAndData('config_test.validation', \Drupal::configFactory()->get('config_test.validation')->get());
     $this->assertInstanceOf(TypedConfigInterface::class, $typed_config);
-    $this->assertEquals(['_core', 'llama', 'cat', 'giraffe', 'uuid'], array_keys($typed_config->getElements()));
+    $this->assertEquals(['_core', 'llama', 'cat', 'giraffe', 'uuid', 'string__not_blank'], array_keys($typed_config->getElements()));
+    $this->assertSame('config_test.validation', $typed_config->getName());
+    $this->assertSame('config_test.validation', $typed_config->getPropertyPath());
+    $this->assertSame('config_test.validation.llama', $typed_config->get('llama')->getPropertyPath());
 
     $config_test_entity = \Drupal::entityTypeManager()->getStorage('config_test')->create([
-      'id' => 'asterix',
-      'label' => 'Asterix',
+      'id' => 'test',
+      'label' => 'Test',
       'weight' => 11,
       'style' => 'test_style',
     ]);
@@ -101,9 +114,37 @@ class TypedConfigTest extends KernelTestBase {
   }
 
   /**
+   * Tests the behavior of `NotBlank` on required data.
+   *
+   * @testWith ["", false, "This value should not be blank."]
+   *           ["", true, "This value should not be blank."]
+   *           [null, false, "This value should not be blank."]
+   *           [null, true, "This value should not be null."]
+   *
+   * @see \Drupal\Core\TypedData\DataDefinition::getConstraints()
+   * @see \Drupal\Core\TypedData\DataDefinitionInterface::isRequired()
+   * @see \Drupal\Core\Validation\Plugin\Validation\Constraint\NotNullConstraint
+   * @see \Symfony\Component\Validator\Constraints\NotBlank::$allowNull
+   */
+  public function testNotBlankInteractionWithNotNull(?string $value, bool $is_required, string $expected_message): void {
+    \Drupal::configFactory()->getEditable('config_test.validation')
+      ->set('string__not_blank', $value)
+      ->save();
+
+    $typed_config = \Drupal::service('config.typed')->get('config_test.validation');
+    $typed_config->get('string__not_blank')->getDataDefinition()->setRequired($is_required);
+    $result = $typed_config->validate();
+
+    // Expect 1 validation error message: the one from `NotBlank` or `NotNull`.
+    $this->assertCount(1, $result);
+    $this->assertSame('string__not_blank', $result->get(0)->getPropertyPath());
+    $this->assertEquals($expected_message, $result->get(0)->getMessage());
+  }
+
+  /**
    * Tests config validation via the Typed Data API.
    */
-  public function testSimpleConfigValidation() {
+  public function testSimpleConfigValidation(): void {
     $config = \Drupal::configFactory()->getEditable('config_test.validation');
     /** @var \Drupal\Core\Config\TypedConfigManagerInterface $typed_config_manager */
     $typed_config_manager = \Drupal::service('config.typed');
@@ -134,7 +175,7 @@ class TypedConfigTest extends KernelTestBase {
     $this->assertEmpty($result);
 
     // Test constrains on nested mapping.
-    $config->set('cat.type', 'miaus');
+    $config->set('cat.type', 'tiger');
     $config->save();
 
     $typed_config = $typed_config_manager->get('config_test.validation');
@@ -169,9 +210,20 @@ class TypedConfigTest extends KernelTestBase {
     $value['zebra'] = 'foo';
     $typed_config->setValue($value);
     $result = $typed_config->validate();
-    $this->assertCount(1, $result);
-    $this->assertEquals('', $result->get(0)->getPropertyPath());
-    $this->assertEquals('Unexpected keys: elephant, zebra', $result->get(0)->getMessage());
+    $this->assertCount(3, $result);
+    // 2 constraint violations triggered by the default validation constraint
+    // for `type: mapping`
+    // @see \Drupal\Core\Validation\Plugin\Validation\Constraint\ValidKeysConstraint
+    $this->assertSame('elephant', $result->get(0)->getPropertyPath());
+    $this->assertEquals("'elephant' is not a supported key.", $result->get(0)->getMessage());
+    $this->assertSame('zebra', $result->get(1)->getPropertyPath());
+    $this->assertEquals("'zebra' is not a supported key.", $result->get(1)->getMessage());
+    // 1 additional constraint violation triggered by the custom
+    // constraint for the `config_test.validation` type, which indirectly
+    // extends `type: mapping` (via `type: config_object`).
+    // @see \Drupal\config_test\ConfigValidation::validateMapping()
+    $this->assertEquals('', $result->get(2)->getPropertyPath());
+    $this->assertEquals('Unexpected keys: elephant, zebra', $result->get(2)->getMessage());
   }
 
 }

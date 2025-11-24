@@ -3,7 +3,7 @@
 namespace Drupal\select_or_other\Element;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Element\FormElement;
+use Drupal\Core\Render\Element\FormElementBase;
 
 /**
  * Base class for select or other form elements.
@@ -14,13 +14,13 @@ use Drupal\Core\Render\Element\FormElement;
  *   or radio buttons depending on cardinality.
  * - #merged_values: Set this to true if the widget should return a single array
  *   with the merged values from both the 'select' and 'other' fields.
- * - #options: An associative array, where the keys are the retured values for
+ * - #options: An associative array, where the keys are the returned values for
  *   each option, and the values are the options to be presented to the user.
  * - #empty_option: The label that will be displayed to denote no selection.
  * - #empty_value: The value of the option that is used to denote no selection.
  * - #input_type: The element type to be used in the 'other' field.
  */
-abstract class ElementBase extends FormElement {
+abstract class ElementBase extends FormElementBase {
 
   /**
    * Adds an '- Other -' option to the selectbox.
@@ -138,7 +138,7 @@ abstract class ElementBase extends FormElement {
     ];
 
     if ($element['#other_allowed'] ?? TRUE) {
-      $element['select']['#options'] = static::addOtherOption($element['select']['#options'], $element['#other_option']);
+      $element['select']['#options'] = static::addOtherOption($element['select']['#options'], $element['#other_option'] ?? '');
     }
   }
 

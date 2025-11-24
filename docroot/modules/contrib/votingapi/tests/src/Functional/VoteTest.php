@@ -171,4 +171,45 @@ class VoteTest extends BrowserTestBase {
     $this->assertCount(0, $votes_from_source_2, 'There are now 0 votes from the second source.');
   }
 
+  /**
+   * Test vote results storage method.
+   */
+  public function testVoteResultsStorage(): void {
+    $vote_storage = $this->container->get('entity_type.manager')->getStorage('vote');
+    $node = $this->drupalCreateNode();
+    $user = $this->drupalCreateUser();
+    $vote_result_storage = $this->container->get('entity_type.manager')->getStorage('vote_result');
+
+    // Save a few votes so that we have data.
+    $values = [10, 20, 60];
+    foreach ($values as $value) {
+      $vote_storage->create([
+        'type' => 'like',
+        'entity_id' => $node->id(),
+        'entity_type' => 'node',
+        'user_id' => $user->id(),
+        'value' => $value,
+      ])->save();
+    }
+
+    $vote_likes_sum = $vote_result_storage->getEntityResults('node', $node->id(), 'like', 'vote_sum');
+    $likes_sum = !empty($vote_likes_sum) ? (int) current($vote_likes_sum)->getValue() : 0;
+    $this->assertEquals(90, $likes_sum, 'Vote sum is correct.');
+
+    $vote_likes_avg = $vote_result_storage->getEntityResults('node', $node->id(), 'like', 'vote_average');
+    $likes_avg = !empty($vote_likes_avg) ? (int) current($vote_likes_avg)->getValue() : 0;
+    $this->assertEquals(30, $likes_avg, 'Vote avg is correct.');
+
+    $vote_likes_count = $vote_result_storage->getEntityResults('node', $node->id(), 'like', 'vote_count');
+    $likes_count = !empty($vote_likes_count) ? (int) current($vote_likes_count)->getValue() : 0;
+    $this->assertEquals(3, $likes_count, 'Vote count is correct.');
+
+    // Deleting entity removes results.
+    $storage_handler = \Drupal::entityTypeManager()->getStorage('node');
+    $entities = $storage_handler->loadMultiple([$node->id()]);
+    $storage_handler->delete($entities);
+    $vote_likes_sum = $vote_result_storage->getEntityResults('node', $node->id(), 'like', 'vote_sum');
+    $this->assertEmpty($vote_likes_sum, 'When an entity is deleted, the voting results are also deleted.');
+  }
+
 }

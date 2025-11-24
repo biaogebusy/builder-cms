@@ -25,6 +25,7 @@ class EntityEmbedFilterDisabledIntegrationsTest extends EntityEmbedFilterTestBas
 
     $this->installConfig('system');
     $this->container->get('current_user')
+      ->getAccount()
       ->addRole($this->drupalCreateRole([
         'access contextual links',
       ]));
@@ -49,7 +50,7 @@ class EntityEmbedFilterDisabledIntegrationsTest extends EntityEmbedFilterTestBas
   /**
    * Data provider for testDisabledIntegrations().
    */
-  public function providerDisabledIntegrations() {
+  public static function providerDisabledIntegrations(): array {
     return [
       'contextual' => [
         'div.embedded-entity > .contextual-region',

@@ -8,6 +8,8 @@
 use Drupal\Core\Config\FileStorage;
 use Drupal\Core\Config\InstallStorage;
 use Drupal\Core\Database\Database;
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\redirect\Entity\Redirect;
 use Drupal\system\Entity\Action;
 use Drupal\user\Entity\Role;
@@ -34,7 +36,7 @@ function redirect_update_8100(&$sandbox) {
     ->execute();
 
   foreach ($result as $row) {
-    $query = !empty($row->redirect_source__query) ? unserialize($row->redirect_source__query): [];
+    $query = !empty($row->redirect_source__query) ? unserialize($row->redirect_source__query) : [];
     $new_hash = Redirect::generateHash($row->redirect_source__path, (array) $query, $row->language);
     if ($row->hash != $new_hash) {
       // Do a direct query to speed things up.
@@ -51,7 +53,6 @@ function redirect_update_8100(&$sandbox) {
   $sandbox['#finished'] = empty($sandbox['max']) ? 1 : ($sandbox['progress'] / $sandbox['max']);
 }
 
-
 /**
  * Update the {redirect} table.
  */
@@ -67,7 +68,6 @@ function redirect_update_8101() {
     ->changeField('redirect', 'hash', 'hash', $schema['redirect']['fields']['hash']);
 
   // Update the last installed field definition and field schema.
-  /** @var \Drupal\Core\KeyValueStore\KeyValueStoreInterface $key_value_store */
   \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
   $key_value_store_definition = \Drupal::keyValue('entity.definitions.installed');
   $storage_definitions = $key_value_store_definition->get('redirect.field_storage_definitions');
@@ -235,4 +235,28 @@ function redirect_update_8109() {
   // Enable the reset button.
   $config->set('display.default.display_options.exposed_form.options.reset_button', TRUE);
   $config->save();
+}
+
+/**
+ * Add a 'enabled' field to the redirect entity.
+ */
+function redirect_update_8110(): TranslatableMarkup {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $entity_type = $definition_update_manager->getEntityType('redirect');
+
+  // Add the 'published' entity key to the redirect entity type.
+  $entity_keys = $entity_type->getKeys();
+  $entity_keys['published'] = 'enabled';
+  $entity_type->set('entity_keys', $entity_keys);
+  $definition_update_manager->updateEntityType($entity_type);
+
+  // Add the 'enabled' field.
+  $enabled = BaseFieldDefinition::create('boolean')
+    ->setLabel(new TranslatableMarkup('Enabled'))
+    ->setRevisionable(TRUE)
+    ->setDefaultValue(TRUE)
+    ->setInitialValue(TRUE);
+  $definition_update_manager->installFieldStorageDefinition('enabled', 'redirect', 'redirect', $enabled);
+
+  return new TranslatableMarkup("The 'enabled' field has been added to redirects.");
 }

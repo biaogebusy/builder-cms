@@ -245,7 +245,7 @@ class XmlSitemapLinkStorage implements XmlSitemapLinkStorageInterface {
   /**
    * {@inheritdoc}
    */
-  public function checkChangedLink(array $link, array $original_link = NULL, $flag = FALSE) {
+  public function checkChangedLink(array $link, ?array $original_link = NULL, $flag = FALSE) {
     $changed = FALSE;
 
     if ($original_link === NULL) {
@@ -406,7 +406,7 @@ class XmlSitemapLinkStorage implements XmlSitemapLinkStorageInterface {
   /**
    * {@inheritdoc}
    */
-  public function getEntityQuery(string $entity_type_id, array $bundles = [], SelectInterface $subquery = NULL, string $subquery_operator = 'IN'): QueryInterface {
+  public function getEntityQuery(string $entity_type_id, array $bundles = [], ?SelectInterface $subquery = NULL, string $subquery_operator = 'IN'): QueryInterface {
     $storage = $this->entityTypeManager->getStorage($entity_type_id);
     $entity_type = $storage->getEntityType();
     $query = $storage->getQuery();

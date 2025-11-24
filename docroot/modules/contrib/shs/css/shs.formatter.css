@@ -5,25 +5,25 @@
 
 ul.shs {
   display: inline-block;
-  list-style: none;
   margin: 0;
   padding: 0;
+  list-style: none;
 }
 ul.shs li {
   float: left;
   padding: 0 5px 0 0;
   white-space: nowrap;
 }
-ul.shs li:after {
-  content: '>';
+ul.shs li::after {
   margin: 0 0 0 5px;
+  content: ">";
 }
 ul.shs li:last-of-type {
   padding-right: 0;
 }
-ul.shs li:last-of-type:after {
-  content: '';
+ul.shs li:last-of-type::after {
   margin: 0;
+  content: "";
 }
 
 [dir="ltr"] ul.shs {

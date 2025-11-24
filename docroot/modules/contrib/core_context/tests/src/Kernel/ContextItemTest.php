@@ -10,6 +10,8 @@ use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\KernelTests\KernelTestBase;
 
 /**
+ * Tests the context field type.
+ *
  * @group core_context
  */
 class ContextItemTest extends KernelTestBase {
@@ -38,9 +40,7 @@ class ContextItemTest extends KernelTestBase {
    * Tests attaching contexts to third-party settings.
    */
   public function testSettings() {
-    EntityTestBundle::create([
-        'id' => 'foobaz',
-      ])
+    EntityTestBundle::create(['id' => 'foobaz'])
       ->setThirdPartySetting('core_context', 'contexts', [
         'wambooli' => [
           'type' => 'string',
@@ -71,7 +71,7 @@ class ContextItemTest extends KernelTestBase {
       'bundle' => 'foobaz',
     ])->save();
 
-    /** @var EntityTest $entity */
+    /** @var \Drupal\entity_test\Entity\EntityTest $entity */
     $entity = EntityTest::create(['type' => 'foobaz'])
       ->set('context', [
         'id' => 'wambooli',

@@ -9,6 +9,7 @@
 
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Session\AnonymousUserSession;
+use Drupal\Core\StringTranslation\ByteSizeMarkup;
 use Drupal\Core\Url;
 use Drupal\user\RoleInterface;
 
@@ -32,7 +33,7 @@ function xmlsitemap_requirements($phase) {
       'severity' => REQUIREMENT_ERROR,
       'description' => $t("The XML Sitemap module requires you to enable the PHP extensions in the following list (see the <a href=\"@xmlsitemap_requirements\">module's system requirements page</a> for more information): @extensions", [
         '@xmlsitemap_requirements' => 'https://www.drupal.org/documentation/modules/xmlsitemap/requirements',
-        '@extensions' => \Drupal::service('renderer')->renderPlain($items),
+        '@extensions' => \Drupal::service('renderer')->renderInIsolation($items),
       ]),
     ];
   }
@@ -70,7 +71,7 @@ function xmlsitemap_requirements($phase) {
         $items = ['#theme' => 'item_list', '#items' => array_keys($directories)];
         $requirements['xmlsitemap_directory']['value'] = $t('Not found or not writable');
         $requirements['xmlsitemap_directory']['severity'] = REQUIREMENT_ERROR;
-        $requirements['xmlsitemap_directory']['description'] = $t('The following directories were not found or are not writable by the server. See <a href="@docpage">@docpage</a> for more information. @directories', ['@directories' => \Drupal::service('renderer')->renderPlain($items), '@docpage' => 'https://www.drupal.org/node/244924']);
+        $requirements['xmlsitemap_directory']['description'] = $t('The following directories were not found or are not writable by the server. See <a href="@docpage">@docpage</a> for more information. @directories', ['@directories' => \Drupal::service('renderer')->renderInIsolation($items), '@docpage' => 'https://www.drupal.org/node/244924']);
       }
     }
     $sitemaps = \Drupal::entityTypeManager()->getStorage('xmlsitemap')->loadMultiple();
@@ -109,10 +110,10 @@ function xmlsitemap_requirements($phase) {
     // Check maximum file size.
     $requirements['xmlsitemap_file_size'] = [
       'title' => $t('XML Sitemap maximum file size'),
-      'value' => format_size($max_filesize),
+      'value' => ByteSizeMarkup::create($max_filesize),
     ];
     if ($max_filesize > XMLSITEMAP_MAX_SITEMAP_FILESIZE) {
-      $requirements['xmlsitemap_file_size']['description'] = $t('You have exceeded the maximum sitemap file size of @size. If possible, decrease the number of links per sitemap page.', ['@size' => format_size(XMLSITEMAP_MAX_SITEMAP_FILESIZE)]);
+      $requirements['xmlsitemap_file_size']['description'] = $t('You have exceeded the maximum sitemap file size of @size. If possible, decrease the number of links per sitemap page.', ['@size' => ByteSizeMarkup::create(XMLSITEMAP_MAX_SITEMAP_FILESIZE)]);
       $requirements['xmlsitemap_file_size']['severity'] = REQUIREMENT_ERROR;
     }
     elseif (!\Drupal::state()->get('xmlsitemap_developer_mode')) {

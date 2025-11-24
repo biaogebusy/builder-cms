@@ -15,13 +15,16 @@ use Drupal\search_api\Processor\ProcessorProperty;
 use Drupal\search_api\Utility\Utility;
 use Drupal\user\Entity\User;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
+use Drupal\views\Render\ViewsRenderPipelineMarkup;
 use Drupal\views\ViewExecutable;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests whether Views pages correctly create search display plugins.
  *
  * @group search_api
  */
+#[RunTestsInSeparateProcesses]
 class ViewsPropertyExtractionTest extends KernelTestBase {
 
   /**
@@ -196,12 +199,15 @@ class ViewsPropertyExtractionTest extends KernelTestBase {
     $field->preRender($values);
 
     $this->assertArrayHasKey($property_path, (array) $row);
-    $this->assertEquals((array) $expected, $row->$property_path);
+    $expected_markup = [];
+    foreach ((array) $expected as $value) {
+      $expected_markup[] = ViewsRenderPipelineMarkup::create($value);
+    }
+    $this->assertEquals($expected_markup, $row->$property_path);
 
     // Check that $field->propertyReplacements was set correctly (if
     // applicable).
     $property_replacements = new \ReflectionProperty($field, 'propertyReplacements');
-    $property_replacements->setAccessible(TRUE);
     $property_replacements = $property_replacements->getValue($field);
     if (isset($original_property_path)) {
       $this->assertArrayHasKey($original_property_path, $property_replacements);
@@ -220,7 +226,7 @@ class ViewsPropertyExtractionTest extends KernelTestBase {
    *
    * @see \Drupal\Tests\search_api\Kernel\Views\ViewsPropertyExtractionTest::testPropertyExtraction()
    */
-  public function propertyExtractionDataProvider(): array {
+  public static function propertyExtractionDataProvider(): array {
     return [
       'extract normal property' => [
         'entity:user/name',

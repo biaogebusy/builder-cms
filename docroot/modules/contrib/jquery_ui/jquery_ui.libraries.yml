@@ -12,3 +12,11 @@ mouse:
 position:
   js: {}
 
+# For functionality related to setting regions with datepicker.
+locale:
+  js:
+    js/locale.js: { }
+  dependencies:
+    - core/drupal
+    - core/drupalSettings
+    - core/jquery

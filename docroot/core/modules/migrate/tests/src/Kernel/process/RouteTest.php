@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Kernel\process;
 
 use Drupal\KernelTests\KernelTestBase;
@@ -37,7 +39,7 @@ class RouteTest extends KernelTestBase {
    *
    * @dataProvider providerTestRoute
    */
-  public function testRoute($value, $expected) {
+  public function testRoute($value, $expected): void {
     $actual = $this->doTransform($value);
     $this->assertSame($expected, $actual);
   }
@@ -49,7 +51,7 @@ class RouteTest extends KernelTestBase {
    *   An array of arrays, where the first element is the input to the Route
    *   process plugin, and the second is the expected results.
    */
-  public function providerTestRoute() {
+  public static function providerTestRoute() {
     // Internal link tests.
     // Valid link path and options.
     $values[0] = [
@@ -198,7 +200,7 @@ class RouteTest extends KernelTestBase {
    *
    * @dataProvider providerTestRouteWithParamQuery
    */
-  public function testRouteWithParamQuery($value, $expected) {
+  public function testRouteWithParamQuery($value, $expected): void {
     // Create a user so that user/1/edit is a valid path.
     $this->setUpCurrentUser();
     $this->installConfig(['user']);
@@ -214,7 +216,7 @@ class RouteTest extends KernelTestBase {
    *   An array of arrays, where the first element is the input to the Route
    *   process plugin, and the second is the expected results.
    */
-  public function providerTestRouteWithParamQuery() {
+  public static function providerTestRouteWithParamQuery() {
     $values = [];
     $expected = [];
     // Valid link path with query options and parameters.

@@ -3,7 +3,7 @@
  * ALIPAY API: zhima.credit.ep.dossier.label.query request
  *
  * @author auto create
- * @since 1.0, 2024-05-06 10:38:38
+ * @since 1.0, 2024-07-10 12:02:05
  */
 class ZhimaCreditEpDossierLabelQueryRequest
 {

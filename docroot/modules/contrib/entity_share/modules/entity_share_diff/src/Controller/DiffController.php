@@ -8,6 +8,8 @@ use Drupal\Component\Diff\Diff;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityChangedInterface;
+use Drupal\Core\Entity\RevisionableStorageInterface;
 use Drupal\Core\Serialization\Yaml;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\entity_share\EntityShareUtility;
@@ -27,6 +29,13 @@ class DiffController extends ControllerBase {
    * @var \Drupal\entity_share_client\Service\RemoteManagerInterface
    */
   private $remoteManager;
+
+  /**
+   * The resource type repository.
+   *
+   * @var \Drupal\jsonapi\ResourceType\ResourceTypeRepositoryInterface
+   */
+  private $resourceTypeRepository;
 
   /**
    * The diff field builder plugin manager.
@@ -87,12 +96,15 @@ class DiffController extends ControllerBase {
     // Get the left/local revision.
     $entity_type_id = $channels_infos[$channel_id]['channel_entity_type'];
     $storage = $this->entityTypeManager()->getStorage($entity_type_id);
+    if (!($storage instanceof RevisionableStorageInterface)) {
+      return [];
+    }
     $left_revision = $storage->loadRevision($left_revision_id);
 
     $this->entityParser->validateNeedToProcess($left_revision->uuid(), FALSE);
     $local_values = $this->entityParser->prepareLocalEntity($left_revision);
 
-    $left_yaml = explode("\n", Yaml::encode($local_values));
+    $left_yaml = \explode("\n", Yaml::encode($local_values));
 
     // Get the right/remote revision.
     $url = $channels_infos[$channel_id]['url'];
@@ -102,11 +114,11 @@ class DiffController extends ControllerBase {
     $json = Json::decode((string) $response->getBody());
 
     // There will be only one result.
-    $entity_data = current(EntityShareUtility::prepareData($json['data']));
+    $entity_data = \current(EntityShareUtility::prepareData($json['data']));
     $this->entityParser->validateNeedToProcess($entity_data['id'], TRUE);
     $remote_values = $this->entityParser->prepareRemoteEntity($entity_data, $remote);
 
-    $right_yaml = explode("\n", Yaml::encode($remote_values));
+    $right_yaml = \explode("\n", Yaml::encode($remote_values));
 
     $header = $this->prepareHeaderlabels($left_revision, $entity_data);
 
@@ -127,7 +139,7 @@ class DiffController extends ControllerBase {
   protected function prepareHeaderlabels(ContentEntityInterface $left_entity, array $remote_entity_data) {
     $header = [];
     // Changes diff table header.
-    if (method_exists($left_entity, 'getChangedTime')) {
+    if ($left_entity->getEntityType()->entityClassImplements(EntityChangedInterface::class)) {
       $left_changed = $this->dateFormatter->format($left_entity->getChangedTime(), 'short');
       $header['left_label'] = $this->t('Local entity: @changed', [
         '@changed' => $left_changed,

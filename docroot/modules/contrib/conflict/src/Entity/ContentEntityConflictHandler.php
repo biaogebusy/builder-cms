@@ -287,6 +287,15 @@ class ContentEntityConflictHandler implements EntityConflictHandlerInterface, En
             $form_state->setError($form, $message);
           }
         }
+
+        // Cleaning up each field's conflict widget information from the field
+        // so that it does not interfere with further processing outside the
+        // conflict module.
+        foreach (array_keys($form_display->getComponents()) as $field_name) {
+          if ($entity->getFieldDefinition($field_name)) {
+            unset($entity->get($field_name)->conflictWidget);
+          }
+        }
       }
     }
   }
@@ -656,7 +665,7 @@ class ContentEntityConflictHandler implements EntityConflictHandlerInterface, En
   /**
    * {@inheritdoc}
    */
-  public function prepareConflictResolution(EntityInterface $entity, EntityInterface $entity_server = NULL) {
+  public function prepareConflictResolution(EntityInterface $entity, ?EntityInterface $entity_server = NULL) {
     // Manual merge is needed if even after the auto-merge of non-edited
     // translations, fields with no edit access and entity metadata there
     // are still conflicts in the current translation and/or

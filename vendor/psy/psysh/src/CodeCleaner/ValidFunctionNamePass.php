@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2023 Justin Hileman
+ * (c) 2012-2025 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -27,7 +27,7 @@ use Psy\Exception\FatalErrorException;
  */
 class ValidFunctionNamePass extends NamespaceAwarePass
 {
-    private $conditionalScopes = 0;
+    private int $conditionalScopes = 0;
 
     /**
      * Store newly defined function names on the way in, to allow recursion.
@@ -59,6 +59,8 @@ class ValidFunctionNamePass extends NamespaceAwarePass
 
             $this->currentScope[\strtolower($name)] = true;
         }
+
+        return null;
     }
 
     /**
@@ -71,6 +73,8 @@ class ValidFunctionNamePass extends NamespaceAwarePass
         if (self::isConditional($node)) {
             $this->conditionalScopes--;
         }
+
+        return null;
     }
 
     private static function isConditional(Node $node)

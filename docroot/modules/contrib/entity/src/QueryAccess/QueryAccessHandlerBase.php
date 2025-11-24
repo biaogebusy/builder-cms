@@ -81,7 +81,7 @@ abstract class QueryAccessHandlerBase implements EntityHandlerInterface, QueryAc
   /**
    * {@inheritdoc}
    */
-  public function getConditions($operation, AccountInterface $account = NULL) {
+  public function getConditions($operation, ?AccountInterface $account = NULL) {
     $account = $account ?: $this->currentUser;
     $entity_type_id = $this->entityType->id();
     $conditions = $this->buildConditions($operation, $account);

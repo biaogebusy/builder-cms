@@ -9,8 +9,6 @@ use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Base class for search form.
- *
- * @package Drupal\entity_share_server\Form
  */
 class SearchBaseForm extends EntityForm {
 
@@ -37,16 +35,15 @@ class SearchBaseForm extends EntityForm {
     $channel = $this->entity;
     $channel_searches = $channel->get('channel_searches');
 
-    if (is_null($channel_searches)) {
+    if ($channel_searches === NULL) {
       return FALSE;
     }
 
     if (isset($channel_searches[$name])) {
       return TRUE;
     }
-    else {
-      return FALSE;
-    }
+
+    return FALSE;
   }
 
   /**

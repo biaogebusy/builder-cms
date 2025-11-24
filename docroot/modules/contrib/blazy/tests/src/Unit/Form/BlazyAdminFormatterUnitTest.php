@@ -2,12 +2,12 @@
 
 namespace Drupal\Tests\blazy\Unit\Form;
 
-use Drupal\blazy\BlazyDefault;
-use Drupal\blazy\Form\BlazyAdminFormatter;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
+use Drupal\Tests\UnitTestCase;
 use Drupal\Tests\blazy\Traits\BlazyManagerUnitTestTrait;
 use Drupal\Tests\blazy\Traits\BlazyUnitTestTrait;
-use Drupal\Tests\UnitTestCase;
+use Drupal\blazy\BlazyDefault;
+use Drupal\blazy\Form\BlazyAdminFormatter;
 
 /**
  * Tests the Blazy admin formatter form.
@@ -54,7 +54,7 @@ class BlazyAdminFormatterUnitTest extends UnitTestCase {
   /**
    * Provide test cases for ::testBuildSettingsForm.
    */
-  public function providerTestBuildSettingsForm() {
+  public static function providerTestBuildSettingsForm() {
     return [
       [FALSE],
       [TRUE],
@@ -93,7 +93,7 @@ class BlazyAdminFormatterUnitTest extends UnitTestCase {
   /**
    * Provider for ::testGetSettingsSummary.
    */
-  public function providerTestGetSettingsSummary() {
+  public static function providerTestGetSettingsSummary() {
     return [
       [FALSE, FALSE, FALSE, '', FALSE],
       [TRUE, TRUE, TRUE, 'blazy_responsive_test', TRUE],

@@ -37,11 +37,10 @@ interface FlagInterface extends ConfigEntityInterface, EntityWithPluginCollectio
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
    *   The flaggable entity.
-   * @param \Drupal\Core\Session\AccountInterface $account
+   * @param \Drupal\Core\Session\AccountInterface|null $account
    *   (optional) The account of the user that flagged the entity.
-   * @param string $session_id
-   *   (optional) The session ID. This must be supplied if $account is the
-   *   anonymous user.
+   * @param string|null $session_id
+   *   (optional) Session id.
    *
    * @return bool
    *   True if the given entity is flagged, FALSE otherwise.
@@ -50,7 +49,7 @@ interface FlagInterface extends ConfigEntityInterface, EntityWithPluginCollectio
    *   Thrown when $account is anonymous but no associated session ID is
    *   specified.
    */
-  public function isFlagged(EntityInterface $entity, AccountInterface $account = NULL);
+  public function isFlagged(EntityInterface $entity, ?AccountInterface $account = NULL, ?string $session_id = NULL);
 
   /**
    * Returns the flaggable entity type ID.
@@ -220,7 +219,7 @@ interface FlagInterface extends ConfigEntityInterface, EntityWithPluginCollectio
    * Sets the unflag long text.
    *
    * @param string $unflag_long
-   *   The unflag lnog text to use.
+   *   The unflag long text to use.
    */
   public function setUnflagLongText($unflag_long);
 
@@ -277,6 +276,6 @@ interface FlagInterface extends ConfigEntityInterface, EntityWithPluginCollectio
    * @return \Drupal\Core\Access\AccessResult
    *   An AccessResult object.
    */
-  public function actionAccess($action, AccountInterface $account = NULL, EntityInterface $flaggable = NULL);
+  public function actionAccess($action, ?AccountInterface $account = NULL, ?EntityInterface $flaggable = NULL);
 
 }

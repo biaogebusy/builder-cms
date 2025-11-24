@@ -1,16 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Element;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Element\FormElement;
+use Drupal\Core\Render\Attribute\FormElement;
+use Drupal\Core\Render\Element\FormElementBase;
 
 /**
  * Implements a form element for a quantity either in pixels or percentage.
- *
- * @FormElement("image_effects_px_perc")
  */
-class ImageEffectsPxPerc extends FormElement {
+#[FormElement('image_effects_px_perc')]
+class ImageEffectsPxPerc extends FormElementBase {
 
   /**
    * {@inheritdoc}
@@ -59,7 +61,7 @@ class ImageEffectsPxPerc extends FormElement {
    * @return array
    *   The processed element.
    */
-  public static function processImageEffectsPxPerc(array &$element, FormStateInterface $form_state, array &$complete_form) {
+  public static function processImageEffectsPxPerc(array &$element, FormStateInterface $form_state, array &$complete_form): array {
     // Make sure element properties are set.
     $element += [
       '#title' => NULL,
@@ -70,7 +72,7 @@ class ImageEffectsPxPerc extends FormElement {
     ];
 
     // Determine UoM and value.
-    $default_value = $element['#default_value'] ?? '';
+    $default_value = (string) ($element['#default_value'] ?? '');
     if (strpos($default_value, '%') !== FALSE) {
       $uom = 'perc';
       $val = str_replace('%', '', $default_value);
@@ -118,7 +120,7 @@ class ImageEffectsPxPerc extends FormElement {
   /**
    * Form element validation handler.
    */
-  public static function validateImageEffectsPxPerc(&$element, FormStateInterface $form_state, &$complete_form) {
+  public static function validateImageEffectsPxPerc(array &$element, FormStateInterface $form_state, array &$complete_form): void {
     $form_state->setValueForElement($element, $element['#value']);
   }
 

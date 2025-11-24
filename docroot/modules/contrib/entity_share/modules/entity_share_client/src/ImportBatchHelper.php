@@ -13,8 +13,6 @@ use Drupal\entity_share\EntityShareUtility;
  * Class ImportBatchHelper.
  *
  * Contains static method to use for batch operations.
- *
- * @package Drupal\entity_share_client
  */
 class ImportBatchHelper {
 
@@ -44,18 +42,18 @@ class ImportBatchHelper {
       $context['sandbox']['entity_list_data'] = $entity_list_data;
 
       $context['sandbox']['progress'] = 0;
-      $context['sandbox']['max'] = count($entity_list_data);
+      $context['sandbox']['max'] = \count($entity_list_data);
       $context['sandbox']['batch_size'] = \Drupal::getContainer()->getParameter('entity_share_client.batch_size');
     }
     if (!isset($context['results']['imported_entity_ids'])) {
       $context['results']['imported_entity_ids'] = [];
     }
 
-    $sub_data = array_slice($context['sandbox']['entity_list_data'], $context['sandbox']['progress'], $context['sandbox']['batch_size']);
+    $sub_data = \array_slice($context['sandbox']['entity_list_data'], $context['sandbox']['progress'], $context['sandbox']['batch_size']);
     $import_service->importEntityListData($sub_data);
 
     $context['results']['imported_entity_ids'] = NestedArray::mergeDeep($context['results']['imported_entity_ids'], $import_service->getRuntimeImportContext()->getImportedEntities());
-    $context['sandbox']['progress'] += count($sub_data);
+    $context['sandbox']['progress'] += \count($sub_data);
     if ($context['sandbox']['progress'] != $context['sandbox']['max']) {
       $context['finished'] = $context['sandbox']['progress'] / $context['sandbox']['max'];
     }
@@ -81,7 +79,7 @@ class ImportBatchHelper {
       // This would require a rework on how imported entities tracking work.
       foreach ($results['imported_entity_ids'] as $langcode => $entity_uuids) {
         $language = $language_manager->getLanguage($langcode);
-        $language_count = count($entity_uuids);
+        $language_count = \count($entity_uuids);
         $total += $language_count;
         $message = new PluralTranslatableMarkup(
           $language_count,
@@ -102,7 +100,7 @@ class ImportBatchHelper {
       \Drupal::messenger()->addStatus($message);
     }
     else {
-      $message = t('Finished with an error.');
+      $message = \t('Finished with an error.');
       \Drupal::messenger()->addError($message);
     }
   }

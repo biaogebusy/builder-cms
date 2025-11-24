@@ -1,0 +1,115 @@
+/**
+ * @file
+ * Commerce metrics styling.
+ */
+
+.commerce-dashboard__metrics.card {
+  margin-top: 0.5rem;
+  padding: 2rem;
+}
+
+.metrics__actions {
+  display: -webkit-box;
+  display: flex;
+  -ms-flex-wrap: wrap;
+  flex-wrap: wrap;
+  -webkit-box-pack: justify;
+  -ms-flex-pack: justify;
+  justify-content: space-between;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--commerce-color--border);
+}
+
+.metrics__actions .form-item {
+  margin-block: 0;
+}
+
+.metrics {
+  display: -ms-grid;
+  display: grid;
+  width: 100%;
+  gap: 2rem;
+  margin: 2rem auto;
+}
+
+.metrics-item {
+  display: -webkit-box;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+  -ms-flex-direction: row;
+  flex-direction: row;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  gap: 1rem;
+}
+
+.metrics-item__label {
+  margin-block: 0.25rem;
+}
+
+.metrics-item__icon {
+  -ms-flex-negative: 0;
+  flex-shrink: 0;
+  width: 2.625rem;
+  height: 2.625rem;
+  border-radius: 50%;
+  background-color: var(--commerce-color--icon-bg);
+}
+
+.metrics-item__icon::before {
+  display: block;
+  width: 100%;
+  height: 100%;
+  content: "";
+  background-color: white;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: 1.5rem;
+  mask-size: 1.5rem;
+  -webkit-mask-image: var(--metrics-icon);
+  mask-image: var(--metrics-icon);
+}
+
+.metrics-item__value--up {
+  color: var(--commerce-color--success);
+}
+
+.metrics-item--carts {
+  --metrics-icon: var(--commerce-icon--cart-plus-fill);
+}
+
+.metrics-item--orders {
+  --metrics-icon: var(--commerce-icon--clipboard-check-fill);
+}
+
+.metrics-item--gross {
+  --metrics-icon: var(--commerce-icon--bar-chart-line-fill);
+}
+
+.metrics-item--avr-orders {
+  --metrics-icon: var(--commerce-icon--clipboard-data-fill);
+}
+
+@media screen and (min-width: 40em) {
+  .metrics {
+    -ms-flex-pack: distribute;
+    grid-template-columns: auto auto;
+    justify-content: space-around;
+    -ms-grid-columns: auto auto;
+  }
+}
+
+@media screen and (min-width: 62em) {
+  .metrics__tables {
+    display: -webkit-box;
+    display: flex;
+    gap: 1rem;
+    -webkit-box-pack: justify;
+    -ms-flex-pack: justify;
+    justify-content: space-between;
+  }
+}

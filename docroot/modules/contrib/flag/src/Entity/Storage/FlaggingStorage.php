@@ -20,6 +20,7 @@ class FlaggingStorage extends SqlContentEntityStorage implements FlaggingStorage
 
   /**
    * Stores global flags per entity type and IDs.
+   *
    * @var array
    */
   protected $globalFlagIdsByEntity = [];
@@ -27,7 +28,7 @@ class FlaggingStorage extends SqlContentEntityStorage implements FlaggingStorage
   /**
    * {@inheritdoc}
    */
-  public function resetCache(array $ids = NULL) {
+  public function resetCache(?array $ids = NULL) {
     parent::resetCache($ids);
     $this->flagIdsByEntity = [];
     $this->globalFlagIdsByEntity = [];
@@ -97,7 +98,7 @@ class FlaggingStorage extends SqlContentEntityStorage implements FlaggingStorage
     $this->globalFlagIdsByEntity[$entity_type_id] += $ids_to_load;
     $flag_ids_by_entity += $ids_to_load;
 
-    // Directly query the table to avoid he overhead of loading the content
+    // Directly query the table to avoid the overhead of loading the content
     // entities.
     $query = $this->database->select('flagging', 'f')
       ->fields('f', ['entity_id', 'flag_id', 'global'])
@@ -143,15 +144,19 @@ class FlaggingStorage extends SqlContentEntityStorage implements FlaggingStorage
 
     parent::doPostSave($entity, $update);
 
-    // After updating or creating a flagging, add it to the cached flagging by entity if already in static cache.
+    // After updating or creating a flagging, add it to the cached flagging by
+    // entity if already in static cache.
+    /** @var \Drupal\flag\Entity\Flagging $entity */
     if ($entity->get('global')->value) {
-      // If the global flags by entity for this entity have already been cached, then add the newly created flagging.
+      // If the global flags by entity for this entity have already been cached,
+      // then add the newly created flagging.
       if (isset($this->globalFlagIdsByEntity[$entity->get('entity_type')->value][$entity->get('entity_id')->value])) {
         $this->globalFlagIdsByEntity[$entity->get('entity_type')->value][$entity->get('entity_id')->value][$entity->get('flag_id')->value] = $entity->get('flag_id')->value;
       }
     }
     else {
-      // If the flags by entity for this entity/user have already been cached, then add the newly created flagging.
+      // If the flags by entity for this entity/user have already been cached,
+      // then add the newly created flagging.
       if (isset($this->flagIdsByEntity[$entity->get('uid')->target_id][$entity->get('entity_type')->value][$entity->get('entity_id')->value])) {
         $this->flagIdsByEntity[$entity->get('uid')->target_id][$entity->get('entity_type')->value][$entity->get('entity_id')->value][$entity->get('flag_id')->value] = $entity->get('flag_id')->value;
       }
@@ -167,7 +172,8 @@ class FlaggingStorage extends SqlContentEntityStorage implements FlaggingStorage
 
     /** @var \Drupal\Core\Entity\ContentEntityInterface[] $entities */
     foreach ($entities as $entity) {
-      // After deleting a flagging, remove it from the cached flagging by entity if already in static cache.
+      // After deleting a flagging, remove it from the cached flagging by entity
+      // if already in static cache.
       if ($entity->get('global')->value) {
         if (isset($this->globalFlagIdsByEntity[$entity->get('entity_type')->value][$entity->get('entity_id')->value][$entity->get('flag_id')->value])) {
           unset($this->globalFlagIdsByEntity[$entity->get('entity_type')->value][$entity->get('entity_id')->value][$entity->get('flag_id')->value]);

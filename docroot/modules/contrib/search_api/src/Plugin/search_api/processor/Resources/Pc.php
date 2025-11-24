@@ -12,10 +12,12 @@ class Pc implements UnicodeCharacterPropertyInterface {
    */
   public static function getRegularExpression() {
     // phpcs:disable
+    // cspell:disable
     return
       '\x{005F}\x{203F}\x{2040}\x{2054}\x{FE33}\x{FE34}\x{FE4D}' .
       '\x{FE4E}\x{FE4F}\x{FF3F}';
     // phpcs:enable
+    // cspell:enable
   }
 
 }

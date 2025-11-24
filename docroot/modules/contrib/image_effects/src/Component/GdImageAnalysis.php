@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Component;
 
 /**
@@ -10,13 +12,13 @@ abstract class GdImageAnalysis {
   /**
    * Calculates the mean pixel intensity.
    *
-   * @param resource $image
-   *   A GD image resource.
+   * @param \GDImage $image
+   *   A GD image.
    *
    * @return float
    *   The mean pixel intensity value.
    */
-  public static function mean($image) {
+  public static function mean(\GDImage $image): float {
     $mean = 0;
     $size = imagesx($image) * imagesy($image) * 3;
     for ($i = 0; $i < imagesx($image); $i++) {
@@ -34,20 +36,20 @@ abstract class GdImageAnalysis {
   }
 
   /**
-   * Generates a GD resource calculating the difference of two images.
+   * Generates a GD image calculating the difference of two images.
    *
    * The images must have the same dimensions.
    *
-   * @param resource $image1
-   *   A GD image resource.
-   * @param resource $image2
-   *   A GD image resource.
+   * @param \GDImage $image1
+   *   A GD image.
+   * @param \GDImage $image2
+   *   A GD image.
    *
-   * @return resource
-   *   A GD image resource, with the subtracted image, or NULL if the dimensions
-   *   of the two images differ.
+   * @return \GDImage|null
+   *   A GD image, with the subtracted image, or NULL if the dimensions of the
+   *   two images differ.
    */
-  public static function difference($image1, $image2) {
+  public static function difference(\GDImage $image1, \GDImage $image2): ?\GDImage {
     if (imagesx($image1) !== imagesx($image2) || imagesy($image1) !== imagesy($image2)) {
       return NULL;
     }
@@ -78,13 +80,13 @@ abstract class GdImageAnalysis {
   /**
    * Computes the histogram of an image.
    *
-   * @param resource $img
-   *   A GD image resource.
+   * @param \GDImage $img
+   *   A GD image.
    *
    * @return array
    *   The image histogram as an array.
    */
-  public static function histogram($img) {
+  public static function histogram(\GDImage $img): array {
     $histogram = array_fill(0, 768, 0);
     for ($i = 0; $i < imagesx($img); $i++) {
       for ($j = 0; $j < imagesy($img); $j++) {
@@ -103,13 +105,13 @@ abstract class GdImageAnalysis {
   /**
    * Computes the entropy of an image, defined as -sum(p.*log2(p)).
    *
-   * @param resource $img
-   *   A GD image resource.
+   * @param \GDImage $img
+   *   A GD image.
    *
    * @return float
    *   The entropy of the image.
    */
-  public static function entropy($img) {
+  public static function entropy(\GDImage $img): float {
     $histogram = static::histogram($img);
     $histogram_size = array_sum($histogram);
     $entropy = 0;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Kernel\Views;
 
 use Drupal\KernelTests\KernelTestBase;
@@ -48,7 +50,7 @@ class UserViewsDataTest extends KernelTestBase {
   /**
    * Tests if user views data object doesn't contain pass field.
    */
-  public function testUserPasswordFieldNotAvailableToViews() {
+  public function testUserPasswordFieldNotAvailableToViews(): void {
     $field_definitions = $this->entityFieldManager->getBaseFieldDefinitions('user');
     $this->assertArrayHasKey('pass', $field_definitions);
     $this->assertArrayNotHasKey('pass', $this->viewsData->get('users_field_data'));

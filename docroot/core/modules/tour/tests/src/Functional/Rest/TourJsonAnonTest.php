@@ -1,11 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\tour\Functional\Rest;
 
 use Drupal\Tests\rest\Functional\AnonResourceTestTrait;
 
 /**
  * @group rest
+ * @group legacy
  */
 class TourJsonAnonTest extends TourResourceTestBase {
 

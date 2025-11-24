@@ -29,7 +29,7 @@ class ViewsDisplayDeriver extends DisplayDeriverBase {
         $views_storage = $this->entityTypeManager->getStorage('view');
         $all_views = $views_storage->loadMultiple();
       }
-      catch (PluginNotFoundException $e) {
+      catch (PluginNotFoundException) {
         return $this->derivatives;
       }
 

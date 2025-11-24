@@ -4,12 +4,14 @@ namespace Drupal\Tests\search_api\Functional;
 
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api_test\PluginTestTrait;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests integration of hooks.
  *
  * @group search_api
  */
+#[RunTestsInSeparateProcesses]
 class HooksTest extends SearchApiBrowserTestBase {
 
   use PluginTestTrait;
@@ -119,6 +121,7 @@ class HooksTest extends SearchApiBrowserTestBase {
     $this->assertSession()->pageTextContains('Stormy');
 
     // hook_search_api_items_indexed() was invoked.
+    // cspell:disable-next-line
     $this->assertSession()->pageTextContains('Please set me at ease');
 
     // hook_search_api_index_reindex() was invoked.

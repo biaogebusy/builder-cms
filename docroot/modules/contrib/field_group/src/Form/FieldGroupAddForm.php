@@ -2,6 +2,7 @@
 
 namespace Drupal\field_group\Form;
 
+use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\MessengerInterface;
@@ -73,16 +74,26 @@ class FieldGroupAddForm extends FormBase {
   protected $messenger;
 
   /**
+   * The cache backend service.
+   *
+   * @var \Drupal\Core\Cache\CacheBackendInterface
+   */
+  protected $cacheBackend;
+
+  /**
    * FieldGroupAddForm constructor.
    *
    * @param \Drupal\field_group\FieldGroupFormatterPluginManager $fieldGroupFormatterPluginManager
    *   The field group formatter plugin manager.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger.
+   * @param \Drupal\Core\Cache\CacheBackendInterface $cacheBackend
+   *   The cache backend service.
    */
-  public function __construct(FieldGroupFormatterPluginManager $fieldGroupFormatterPluginManager, MessengerInterface $messenger) {
+  public function __construct(FieldGroupFormatterPluginManager $fieldGroupFormatterPluginManager, MessengerInterface $messenger, CacheBackendInterface $cacheBackend) {
     $this->fieldGroupFormatterPluginManager = $fieldGroupFormatterPluginManager;
     $this->messenger = $messenger;
+    $this->cacheBackend = $cacheBackend;
   }
 
   /**
@@ -91,7 +102,8 @@ class FieldGroupAddForm extends FormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('plugin.manager.field_group.formatters'),
-      $container->get('messenger')
+      $container->get('messenger'),
+      $container->get('cache.default')
     );
   }
 
@@ -288,7 +300,7 @@ class FieldGroupAddForm extends FormBase {
       $this->messenger->addMessage($this->t('New group %label successfully created.', ['%label' => $new_group->label]));
 
       $form_state->setRedirectUrl(FieldgroupUi::getFieldUiRoute($new_group));
-      \Drupal::cache()->invalidate('field_groups');
+      $this->cacheBackend->invalidate('field_groups');
 
     }
 

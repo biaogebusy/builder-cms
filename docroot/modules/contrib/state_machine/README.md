@@ -8,7 +8,7 @@ An order might have checkout and payment workflows. A node might have legal and 
 Workflow groups are used to group workflows used for the same purpose (e.g. payment workflows).
 
 ## Architecture
-[Workflow](https://github.com/bojanz/state_machine/blob/8.x-1.x/src/Plugin/Workflow/WorkflowInterface.php) and [WorkflowGroup](https://github.com/bojanz/state_machine/blob/8.x-1.x/src/Plugin/WorkflowGroup/WorkflowGroupInterface.php) are plugins defined in YAML, similar to menu links.
+[Workflow](https://git.drupalcode.org/project/state_machine/-/blob/8.x-1.x/src/Plugin/Workflow/WorkflowInterface.php) and [WorkflowGroup](https://git.drupalcode.org/project/state_machine/-/blob/8.x-1.x/src/Plugin/WorkflowGroup/WorkflowGroupInterface.php) are plugins defined in YAML, similar to menu links.
 This leaves room for a future entity-based UI.
 
 Example yourmodule.workflow_groups.yml:
@@ -49,7 +49,7 @@ default:
       to: canceled
 ```
 
-Transitions can be further restricted by [guards](https://github.com/bojanz/state_machine/blob/8.x-1.x/src/Guard/GuardInterface.php), which are implemented as tagged services:
+Transitions can be further restricted by [guards](https://git.drupalcode.org/project/state_machine/-/blob/8.x-1.x/src/Guard/GuardInterface.php), which are implemented as tagged services:
 ```yaml
   mymodule.fulfillment_guard:
     class: Drupal\mymodule\Guard\FulfillmentGuard
@@ -59,7 +59,7 @@ Transitions can be further restricted by [guards](https://github.com/bojanz/stat
 The group argument allows the guard factory to only instantiate the guards relevant
 to a specific workflow group.
 
-The current state is stored in a [StateItem](https://github.com/bojanz/state_machine/blob/8.x-1.x/src/Plugin/Field/FieldType/StateItem.php) field.
+The current state is stored in a [StateItem](https://git.drupalcode.org/project/state_machine/-/blob/8.x-1.x/src/Plugin/Field/FieldType/StateItem.php) field.
 A field setting specifies the used workflow, or a value callback that allows
 the workflow to be resolved at runtime (checkout workflow based on the used plugin, etc.
 A validator is provided that ensures that the specified state is valid (exists in the

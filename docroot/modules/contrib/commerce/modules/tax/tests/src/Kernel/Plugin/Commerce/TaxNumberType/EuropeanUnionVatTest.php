@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\commerce_tax\Kernel\Plugin\Commerce\TaxNumberType;
 
+use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 use Drupal\commerce_tax\Plugin\Commerce\TaxNumberType\EuropeanUnionVat;
 use Drupal\commerce_tax\Plugin\Commerce\TaxNumberType\VerificationResult;
-use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 
 /**
  * @coversDefaultClass \Drupal\commerce_tax\Plugin\Commerce\TaxNumberType\EuropeanUnionVat
@@ -81,6 +81,7 @@ class EuropeanUnionVatTest extends OrderKernelTestBase {
     }
 
     $invalid_numbers = [
+      // cspell:disable-next-line
       'AT13585626', 'ATX13585626', 'BE0428', 'DEABCDEFGHI', 'DK135856279',
     ];
     foreach ($invalid_numbers as $number) {
@@ -90,7 +91,7 @@ class EuropeanUnionVatTest extends OrderKernelTestBase {
     // Confirm that a valid number without a prefix is not accepted.
     $this->assertFalse($this->plugin->validate('U13585626'));
 
-    // Confirm that numbers are treated as case sensitive.
+    // Confirm that numbers are treated as case-sensitive.
     $this->assertFalse($this->plugin->validate('atU13585626'));
     $this->assertFalse($this->plugin->validate('ATu13585626'));
   }
@@ -101,7 +102,7 @@ class EuropeanUnionVatTest extends OrderKernelTestBase {
   public function testVerify() {
     $request_time = $this->container->get('datetime.time')->getRequestTime();
     $wsdl = \Drupal::service('extension.list.module')->getPath('commerce_tax') . '/tests/fixtures/checkVatService.wsdl';
-    $soap_client = $this->getMockFromWsdl($wsdl);
+    $soap_client = $this->createMock(\SoapClient::class);
     // Modify the plugin's protected property to use the mock.
     $property = new \ReflectionProperty(EuropeanUnionVat::class, 'soapClient');
     $property->setAccessible(TRUE);
@@ -114,26 +115,34 @@ class EuropeanUnionVatTest extends OrderKernelTestBase {
 
     $valid_result = new \stdClass();
     $valid_result->valid = TRUE;
+    // cspell:disable-next-line
     $valid_result->name = 'SLRL ALTEA EXPERTISE COMPTABLE';
+    // cspell:disable-next-line
     $valid_result->address = '59 RUE DU MURIER';
 
-    $parameters = [
+    $parameters1 = [
       'countryCode' => 'AT',
       'vatNumber' => 'U13585626',
     ];
-    $soap_client->expects($this->at(0))
-      ->method('__soapCall')
-      ->with('checkVat', [$parameters])
-      ->will($this->returnValue($invalid_result));
-
-    $parameters = [
+    $parameters2 = [
       'countryCode' => 'FR',
       'vatNumber' => 'K7399859412',
     ];
-    $soap_client->expects($this->at(1))
+    $expectedCalls = [
+      ['checkVat', [$parameters1], $invalid_result],
+      ['checkVat', [$parameters2], $valid_result],
+    ];
+
+    $soap_client->expects($this->exactly(2))
       ->method('__soapCall')
-      ->with('checkVat', [$parameters])
-      ->will($this->returnValue($valid_result));
+      ->with($this->callback(function ($method) use (&$expectedCalls) {
+        return $method === $expectedCalls[0][0];
+      }), $this->callback(function ($params) use (&$expectedCalls) {
+        return $params === $expectedCalls[0][1];
+      }))
+      ->willReturnCallback(function () use (&$expectedCalls) {
+        return array_shift($expectedCalls)[2];
+      });
 
     $result = $this->plugin->verify('123456');
     $this->assertTrue($result->isFailure());
@@ -149,7 +158,9 @@ class EuropeanUnionVatTest extends OrderKernelTestBase {
     $this->assertTrue($result->isSuccess());
     $this->assertEquals($request_time, $result->getTimestamp());
     $this->assertEquals([
+      // cspell:disable-next-line
       'name' => 'SLRL ALTEA EXPERTISE COMPTABLE',
+      // cspell:disable-next-line
       'address' => '59 RUE DU MURIER',
     ], $result->getData());
   }

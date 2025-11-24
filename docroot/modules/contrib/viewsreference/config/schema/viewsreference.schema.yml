@@ -39,7 +39,7 @@ field.field_settings.viewsreference:
       type: sequence
       label: 'Enabled settings'
       sequence:
-        type: viewsreference.enabled_settings.[%key]
+        type: string
 
 field.value.viewsreference:
   type: mapping
@@ -53,26 +53,6 @@ field.value.viewsreference:
     data:
       type: string
       label: 'Serialized data'
-
-viewsreference.enabled_settings.argument:
-  type: string
-  label: 'Argument settings'
-
-viewsreference.enabled_settings.limit:
-  type: integer
-  label: 'Limit results settings'
-
-viewsreference.enabled_settings.offset:
-  type: integer
-  label: 'Offset results settings'
-
-viewsreference.enabled_settings.pager:
-  type: string
-  label: 'Pagination settings'
-
-viewsreference.enabled_settings.title:
-  type: boolean
-  label: 'Include View Title settings'
 
 viewsreference.plugin_types:
   type: sequence

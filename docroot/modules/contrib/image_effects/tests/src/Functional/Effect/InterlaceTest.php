@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image_effects\Functional\Effect;
 
 use Drupal\Core\Image\ImageInterface;
@@ -15,7 +17,7 @@ class InterlaceTest extends ImageEffectsTestBase {
   /**
    * {@inheritdoc}
    */
-  public function providerToolkits() {
+  public static function providerToolkits(): array {
     $toolkits = parent::providerToolkits();
     // @todo This effect does not work on GraphicsMagick.
     unset($toolkits['ImageMagick-graphicsmagick']);
@@ -34,7 +36,7 @@ class InterlaceTest extends ImageEffectsTestBase {
    *
    * @dataProvider providerToolkits
    */
-  public function testInterlaceEffect($toolkit_id, $toolkit_config, array $toolkit_settings) {
+  public function testInterlaceEffect(string $toolkit_id, string $toolkit_config, array $toolkit_settings): void {
     $this->changeToolkit($toolkit_id, $toolkit_config, $toolkit_settings);
 
     $test_data = [
@@ -66,7 +68,7 @@ class InterlaceTest extends ImageEffectsTestBase {
     }
 
     // Remove effect.
-    $uuid = $this->removeEffectFromTestStyle($uuid);
+    $this->removeEffectFromTestStyle($uuid);
   }
 
   /**
@@ -80,7 +82,7 @@ class InterlaceTest extends ImageEffectsTestBase {
    *
    * @see http://stackoverflow.com/questions/14235600/php-test-if-image-is-interlaced
    */
-  protected function isPngInterlaced(ImageInterface $image) {
+  protected function isPngInterlaced(ImageInterface $image): bool {
     $source = $image->getSource();
 
     $real_path = $this->container->get('file_system')->realpath($source);

@@ -20,8 +20,8 @@ use Drupal\toolbar\Controller\ToolbarController;
 function toolbar_help($route_name, RouteMatchInterface $route_match) {
   switch ($route_name) {
     case 'help.page.toolbar':
-      $output = '<h3>' . t('About') . '</h3>';
-      $output .= '<p>' . t('The Toolbar module provides a toolbar for site administrators, which displays tabs and trays provided by the Toolbar module itself and other modules. For more information, see the <a href=":toolbar_docs">online documentation for the Toolbar module</a>.', [':toolbar_docs' => 'https://www.drupal.org/documentation/modules/toolbar']) . '</p>';
+      $output = '<h2>' . t('About') . '</h2>';
+      $output .= '<p>' . t('The Toolbar module provides a toolbar for site administrators, which displays tabs and trays provided by the Toolbar module itself and other modules. For more information, see the <a href=":toolbar_docs">online documentation for the Toolbar module</a>.', [':toolbar_docs' => 'https://www.drupal.org/docs/8/core/modules/toolbar']) . '</p>';
       $output .= '<h4>' . t('Terminology') . '</h4>';
       $output .= '<dl>';
       $output .= '<dt>' . t('Tabs') . '</dt>';
@@ -252,9 +252,7 @@ function toolbar_preprocess_html(&$variables) {
   if (!\Drupal::currentUser()->hasPermission('access toolbar')) {
     return;
   }
-  $variables['attributes']['class'][] = 'toolbar-tray-open';
-  $variables['attributes']['class'][] = 'toolbar-horizontal';
-  $variables['attributes']['class'][] = 'toolbar-fixed';
+
   $variables['attributes']['class'][] = 'toolbar-loading';
 }
 

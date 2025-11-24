@@ -1,0 +1,9 @@
+{
+    "name": "drupal/fpa",
+    "type": "drupal-module",
+    "description": "Fast filtering on permissions administration form.",
+    "require": {
+        "drupal/core": "^9.4 | ^10.3 | ^11",
+        "drupal/js_cookie": "^1.0"
+    }
+}

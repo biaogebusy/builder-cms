@@ -62,7 +62,7 @@ class FilenameGeneratorTest extends KernelTestBase {
    * @return array
    *   An array of data rows for testing filename generation.
    */
-  public function generateFilenameDataProvider() {
+  public static function generateFilenameDataProvider() {
     return [
       // $node_title, $expected_filename.
       ['Random Node Title', 'Random Node Title'],

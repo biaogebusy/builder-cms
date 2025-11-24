@@ -2,10 +2,10 @@
 
 namespace Drupal\blazy;
 
-use Drupal\blazy\internals\Internals;
-use Drupal\blazy\Theme\Lightbox;
 use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\Core\Url;
+use Drupal\blazy\Theme\Lightbox;
+use Drupal\blazy\internals\Internals;
 
 /**
  * Implements a public facing blazy manager.
@@ -95,6 +95,8 @@ class BlazyManager extends BlazyManagerBase implements BlazyManagerInterface, Tr
         $this->toLink($element, $blazies);
       }
       elseif ($blazies->is('lightbox')) {
+        // Allows altering the lightbox item.
+        $this->moduleHandler->alter('blazy_lightbox', $element);
         Lightbox::build($element);
       }
     }
@@ -286,7 +288,7 @@ class BlazyManager extends BlazyManagerBase implements BlazyManagerInterface, Tr
     // Supports HTML content for lightboxes as long as having image trigger.
     // Only limit to local media to not conflict with Image rendered by its
     // formatter option, Facebook, Twitter, etc.
-    // Since 2.17, any content can be lightboxed along long as supported.
+    // Since 2.17, any content can be lightboxed as long as supported.
     // Only possible if having hires image via `Main stage` aka cross image,
     // and the lightbox is capable to display it.
     $image   = $blazies->get('field.formatter.image', $settings['image'] ?? NULL);
@@ -330,7 +332,7 @@ class BlazyManager extends BlazyManagerBase implements BlazyManagerInterface, Tr
         // @todo make it usable for non-media contents here.
         if (!$unlazy && $media) {
           $content = $this->toHtml($build['content'], 'div', 'media__html');
-          $content = $this->renderer->renderPlain($content);
+          $content = $this->renderInIsolation($content);
           $content = preg_replace('/\s+/', ' ', $content->__toString());
           $content = base64_encode($content);
 
@@ -352,6 +354,8 @@ class BlazyManager extends BlazyManagerBase implements BlazyManagerInterface, Tr
    * Build out (Responsive) image.
    *
    * Since 2.9, many were moved into BlazyTheme to support custom work better.
+   *
+   * @todo remove all these after moving item_attributes to image.attributes.
    */
   private function buildMedia(array &$element, array &$build): void {
     $item  = $build['#item'];
@@ -407,7 +411,7 @@ class BlazyManager extends BlazyManagerBase implements BlazyManagerInterface, Tr
     $item       = $build['#item'];
     $settings   = &$build['#settings'];
     $blazies    = $settings['blazies'];
-    $attributes = $build['#attributes'];
+    $attributes = &$build['#attributes'];
     $captions   = Internals::toContent($build, TRUE, ['captions', 'caption']);
     $captions   = array_filter($captions);
 
@@ -430,6 +434,7 @@ class BlazyManager extends BlazyManagerBase implements BlazyManagerInterface, Tr
     }
 
     // Initial feature checks, URI, delta, media features, etc.
+    // @todo remove this before 3.x release.
     $item_attributes = &$build['#item_attributes'];
 
     // Ensures CheckItem::essentials() called once.
@@ -540,7 +545,7 @@ class BlazyManager extends BlazyManagerBase implements BlazyManagerInterface, Tr
    * Returns a theme_field() output.
    */
   private function themeField(array $data, array $settings): array {
-    // If not a grid, pass items as regular index children to theme_field().
+    // Pass items as regular index children to theme_field().
     // Runs after settings.
     $build = $this->toElementChildren($data);
 
@@ -583,10 +588,9 @@ class BlazyManager extends BlazyManagerBase implements BlazyManagerInterface, Tr
       $element['#captions'] = $output;
 
       // @todo remove debug:
-      if (!$self && !$blazies->ui('deprecated_class')) {
-        $element['#caption_attributes']['class'][] = 'blazy__caption';
-      }
-
+      // if (!$self) {
+      // $element['#caption_attributes']['class'][] = 'blazy__caption';
+      // }
       $element['#caption_attributes']['class'][] = $id . '__caption';
 
       // Overlays are media players/ nested sliders over images seen at Slick/
@@ -633,12 +637,13 @@ class BlazyManager extends BlazyManagerBase implements BlazyManagerInterface, Tr
   private function toLink(array &$element, $blazies): void {
     $url = $blazies->get('media.link') ?: $blazies->get('entity.url');
     $switch = $blazies->get('switch');
-
-    if ($switch == 'link') {
-      $url = $blazies->get('field.values.link', []);
-      if (is_array($url)) {
-        $url = reset($url);
-      }
+    // @todo enable $delta = $blazies->get('delta');
+    if ($switch == 'link' && $urls = $blazies->get('field.values.link', [])) {
+      $url = reset($urls);
+      // @todo add option to map links to images.
+      // if (isset($urls[$delta])) {
+      // $url = $urls[$delta];
+      // }
     }
 
     if ($url) {
@@ -655,6 +660,10 @@ class BlazyManager extends BlazyManagerBase implements BlazyManagerInterface, Tr
       if ($url) {
         $element['#url'] = $url;
         $element['#url_attributes']['class'][] = 'b-link';
+
+        if ($blazies->is('bg')) {
+          $element['#url_attributes']['class'][] = 'b-link--bg';
+        }
       }
     }
   }

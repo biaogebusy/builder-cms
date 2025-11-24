@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\language\Kernel\Migrate\d6;
 
 use Drupal\language\Entity\ContentLanguageSettings;
@@ -37,7 +39,7 @@ class MigrateLanguageContentCommentSettingsTest extends MigrateDrupal6TestBase {
   /**
    * Tests migration of comment content language settings.
    */
-  public function testLanguageCommentSettings() {
+  public function testLanguageCommentSettings(): void {
     // Article and Employee content type have multilingual settings of 'Enabled,
     // with Translation'. Assert that comments are not translatable and the
     // default language is 'current_interface'.

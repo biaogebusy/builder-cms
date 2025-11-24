@@ -13,8 +13,8 @@ content:
   partial_1:
     weight: 0
     region: content
-    settings: {  }
-    third_party_settings: {  }
+    settings: {}
+    third_party_settings: {}
 hidden:
   field_message_private_message: true
   partial_0: true

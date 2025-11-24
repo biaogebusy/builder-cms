@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Theme;
 
 use Drupal\Tests\BrowserTestBase;
@@ -38,7 +40,7 @@ class ThemeTokenTest extends BrowserTestBase {
   /**
    * Tests if the 'theme_token' key of 'ajaxPageState' is computed.
    */
-  public function testThemeToken() {
+  public function testThemeToken(): void {
     // Visit the block administrative page with default theme. We use that page
     // because 'misc/ajax.js' is loaded there and we can test the token
     // generation.

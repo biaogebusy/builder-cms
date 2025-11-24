@@ -38,12 +38,12 @@ class MigrateEntityPrintTest extends MigrateDrupal7TestBase {
    */
   public function testMigration(): void {
     $config_before = $this->config('entity_print.settings');
-    $this->assertSame(TRUE, $config_before->get('default_css'));
+    $this->assertTrue($config_before->get('default_css'));
 
     $this->executeMigration('entity_print_settings');
 
     $config_after = $this->config('entity_print.settings');
-    $this->assertSame(FALSE, $config_after->get('default_css'));
+    $this->assertFalse($config_after->get('default_css'));
   }
 
 }

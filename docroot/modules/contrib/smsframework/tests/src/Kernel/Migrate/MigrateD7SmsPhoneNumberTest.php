@@ -23,20 +23,20 @@ final class MigrateD7SmsPhoneNumberTest extends MigrateDrupal7TestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp(): void {
-    parent::setUp();
-    $this->loadFixture(__DIR__ . '/../../../fixtures/migrate/drupal7.php');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   protected static $modules = [
     'sms',
     'telephone',
     'dynamic_entity_reference',
     'filter',
   ];
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUp(): void {
+    parent::setUp();
+    $this->loadFixture(__DIR__ . '/../../../fixtures/migrate/drupal7.php');
+  }
 
   /**
    * Tests that the requirements for the d7_sms_number migration are enforced.

@@ -14,14 +14,14 @@ class SmsProcessingResponse {
    *
    * @var \Drupal\sms\Message\SmsMessageInterface[]
    */
-  protected $messages = [];
+  protected array $messages = [];
 
   /**
    * The response to pass to the request controller.
    *
    * @var mixed
    */
-  protected $response;
+  protected mixed $response;
 
   /**
    * Get an array of messages to process.

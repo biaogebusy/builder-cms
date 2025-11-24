@@ -2,6 +2,7 @@
 
 namespace Drupal\slick;
 
+// @todo use Drupal\blazy\Skin\SkinManagerBase;
 use Drupal\Component\Plugin\Mapper\MapperInterface;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
@@ -10,15 +11,14 @@ use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
-use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\slick\Entity\Slick;
 
 /**
  * Provides Slick skin manager.
+ *
+ * @todo extends SkinManagerBase
  */
 class SlickSkinManager extends DefaultPluginManager implements SlickSkinManagerInterface, MapperInterface {
-
-  use StringTranslationTrait;
 
   /**
    * The app root.
@@ -70,11 +70,36 @@ class SlickSkinManager extends DefaultPluginManager implements SlickSkinManagerI
   protected $slickPath;
 
   /**
-   * The breaking change: Slick 1.9.0, or Accessible Slick.
+   * The breaking change: Slick 1.8.1+, or Accessible Slick.
    *
    * @var bool
    */
   protected $isBreaking;
+
+  /**
+   * {@inheritdoc}
+   */
+  protected static $namespace = 'slick';
+
+  /**
+   * {@inheritdoc}
+   */
+  protected static $path = 'Plugin/slick';
+
+  /**
+   * {@inheritdoc}
+   */
+  protected static $interface = 'Drupal\slick\SlickSkinPluginInterface';
+
+  /**
+   * {@inheritdoc}
+   */
+  protected static $annotation = 'Drupal\slick\Annotation\SlickSkin';
+
+  /**
+   * {@inheritdoc}
+   */
+  protected static $key = 'slick_skin';
 
   /**
    * The skin methods.
@@ -91,15 +116,16 @@ class SlickSkinManager extends DefaultPluginManager implements SlickSkinManagerI
     CacheBackendInterface $cache_backend,
     ModuleHandlerInterface $module_handler,
     $root,
-    ConfigFactoryInterface $config
+    ConfigFactoryInterface $config,
   ) {
-    parent::__construct(
-      'Plugin/slick',
-      $namespaces,
-      $module_handler,
-      SlickSkinPluginInterface::class,
-      'Drupal\slick\Annotation\SlickSkin'
-    );
+    // parent::__construct(
+    // 'Plugin/slick',
+    // $namespaces,
+    // $module_handler,
+    // SlickSkinPluginInterface::class,
+    // 'Drupal\slick\Annotation\SlickSkin'
+    // );.
+    parent::__construct(static::$path, $namespaces, $module_handler, static::$interface, static::$annotation);
 
     $this->root = $root;
     $this->config = $config;
@@ -224,7 +250,7 @@ class SlickSkinManager extends DefaultPluginManager implements SlickSkinManagerI
    * {@inheritdoc}
    */
   public function getEasingPath(): ?string {
-    if (!isset($this->easingPath)) {
+    if (!$this->easingPath) {
       $path = NULL;
       if ($manager = self::service('slick.manager')) {
         $easings = ['easing', 'jquery.easing'];
@@ -265,7 +291,7 @@ class SlickSkinManager extends DefaultPluginManager implements SlickSkinManagerI
    * {@inheritdoc}
    */
   public function getSkins(): array {
-    if (!isset($this->skinDefinition)) {
+    if (!$this->skinDefinition) {
       $cid = 'slick_skins_data';
       $cache = $this->cacheBackend->get($cid);
 
@@ -280,14 +306,6 @@ class SlickSkinManager extends DefaultPluginManager implements SlickSkinManagerI
             $items[$method] = $skin->{$method}();
           }
           $skins = NestedArray::mergeDeep($skins, $items);
-        }
-
-        // @todo remove for the new plugin system at slick:8.x-3.0.
-        $disabled = $this->config('disable_old_skins');
-        if (empty($disabled)) {
-          if ($old_skins = $this->buildSkins($methods)) {
-            $skins = NestedArray::mergeDeep($old_skins, $skins);
-          }
         }
 
         $count = isset($items['skins']) ? count($items['skins']) : count($items);
@@ -334,40 +352,8 @@ class SlickSkinManager extends DefaultPluginManager implements SlickSkinManagerI
    * {@inheritdoc}
    */
   public function libraryInfoBuild(): array {
-    if (!isset($this->libraryInfoBuild)) {
-      if ($this->config('library') == 'accessible-slick') {
-        $libraries['slick.css'] = [
-          'dependencies' => ['slick/accessible-slick'],
-          'css' => [
-            'theme' => ['/libraries/accessible-slick/slick/accessible-slick-theme.min.css' => ['weight' => -2]],
-          ],
-        ];
-      }
-      else {
-        $libraries['slick.css'] = [
-          'dependencies' => ['slick/slick'],
-          'css' => [
-            'theme' => ['/libraries/slick/slick/slick-theme.css' => ['weight' => -2]],
-          ],
-        ];
-      }
-
-      foreach ($this->getConstantSkins() as $group) {
-        if ($skins = $this->getSkinsByGroup($group)) {
-          foreach ($skins as $key => $skin) {
-            $provider = $skin['provider'] ?? 'slick';
-            $id = $provider . '.' . $group . '.' . $key;
-
-            foreach (['css', 'js', 'dependencies'] as $property) {
-              if (isset($skin[$property]) && is_array($skin[$property])) {
-                $libraries[$id][$property] = $skin[$property];
-              }
-            }
-          }
-        }
-      }
-
-      $this->libraryInfoBuild = $libraries;
+    if (!$this->libraryInfoBuild) {
+      $this->libraryInfoBuild = $this->getSkinLibraries();
     }
     return $this->libraryInfoBuild;
   }
@@ -376,7 +362,7 @@ class SlickSkinManager extends DefaultPluginManager implements SlickSkinManagerI
    * {@inheritdoc}
    */
   public function getSlickPath(): ?string {
-    if (!isset($this->slickPath)) {
+    if (!$this->slickPath) {
       if ($manager = self::service('slick.manager')) {
         if ($this->config('library') == 'accessible-slick') {
           $libs = ['accessible360--accessible-slick', 'accessible-slick'];
@@ -400,11 +386,13 @@ class SlickSkinManager extends DefaultPluginManager implements SlickSkinManagerI
         $libraries['accessible-slick']['js'] = ['/' . $path . '/slick/slick.min.js' => ['weight' => -3]];
         $libraries['accessible-slick']['css']['base'] = ['/' . $path . '/slick/slick.min.css' => []];
         $libraries['slick.css']['css']['theme'] = ['/' . $path . '/slick/accessible-slick-theme.min.css' => ['weight' => -2]];
+
         $libraries_to_alter = [
           'slick.load',
           'slick.colorbox',
           'vanilla',
         ];
+
         foreach ($libraries_to_alter as $library_name) {
           $key = array_search('slick/slick', $libraries[$library_name]['dependencies']);
           $libraries[$library_name]['dependencies'][$key] = 'slick/accessible-slick';
@@ -439,41 +427,65 @@ class SlickSkinManager extends DefaultPluginManager implements SlickSkinManagerI
    */
   public function isBreaking(): bool {
     if (!isset($this->isBreaking)) {
-      $this->isBreaking = FALSE;
-      if ($this->config('library') == 'accessible-slick') {
-        $this->isBreaking = TRUE;
-      }
+      $this->isBreaking = $this->config('library') == 'accessible-slick';
     }
     return $this->isBreaking;
   }
 
   /**
-   * Collects defined skins as registered via hook_MODULE_NAME_skins_info().
-   *
-   * This deprecated is adopted from BlazyManager to allow its removal anytime.
-   *
-   * @todo deprecate and remove at slick:3.x+.
-   * @see https://www.drupal.org/node/2233261
-   * @see https://www.drupal.org/node/3105670
+   * {@inheritdoc}
    */
-  private function buildSkins(array $methods = []) {
-    $skin_class = '\Drupal\slick\SlickSkin';
-    $classes    = $this->moduleHandler->invokeAll('slick_skins_info');
-    $classes    = array_merge([$skin_class], $classes);
-    $items      = $skins = [];
-    foreach ($classes as $class) {
-      if (class_exists($class)) {
-        $reflection = new \ReflectionClass($class);
-        if ($reflection->implementsInterface($skin_class . 'Interface')) {
-          $skin = new $class();
-          foreach ($methods as $method) {
-            $items[$method] = method_exists($skin, $method) ? $skin->{$method}() : [];
+  protected function getSkinLibraries(): array {
+    $libraries = [];
+    if ($this->config('library') == 'accessible-slick') {
+      $libraries['slick.css'] = [
+        'dependencies' => ['slick/accessible-slick'],
+        'css' => [
+          'theme' => ['/libraries/accessible-slick/slick/accessible-slick-theme.min.css' => ['weight' => -2]],
+        ],
+      ];
+    }
+    else {
+      $libraries['slick.css'] = [
+        'dependencies' => ['slick/slick'],
+        'css' => [
+          'theme' => ['/libraries/slick/slick/slick-theme.css' => ['weight' => -2]],
+        ],
+      ];
+    }
+
+    foreach ($this->getConstantSkins() as $group) {
+      if ($skins = $this->getSkinsByGroup($group)) {
+        foreach ($skins as $key => $skin) {
+          $provider = $skin['provider'] ?? 'slick';
+          $id = $provider . '.' . $group . '.' . $key;
+
+          $libraries[$id]['dependencies'] = [];
+          foreach (['css', 'js', 'dependencies'] as $property) {
+            if (isset($skin[$property]) && is_array($skin[$property])) {
+              $libraries[$id][$property] = $skin[$property];
+            }
+          }
+
+          $libraries[$id]['version'] = 'VERSION';
+
+          if ($dependencies = $this->getDependencies()) {
+            $libraries[$id]['dependencies'] = array_merge(
+              $libraries[$id]['dependencies'],
+              $dependencies
+            );
           }
         }
       }
-      $skins = NestedArray::mergeDeep($skins, $items);
     }
-    return $skins;
+    return $libraries;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getDependencies(): array {
+    return ['blazy/dblazy'];
   }
 
   /**

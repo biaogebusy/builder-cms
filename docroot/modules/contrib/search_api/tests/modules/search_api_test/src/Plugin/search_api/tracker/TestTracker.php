@@ -4,20 +4,22 @@ namespace Drupal\search_api_test\Plugin\search_api\tracker;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\search_api\Attribute\SearchApiTracker;
+use Drupal\search_api\Plugin\IndexPluginBase;
 use Drupal\search_api\Plugin\PluginFormTrait;
-use Drupal\search_api\Tracker\TrackerPluginBase;
+use Drupal\search_api\Tracker\TrackerInterface;
 use Drupal\search_api_test\TestPluginTrait;
 
 /**
- * Provides a tracker implementation which uses a FIFO-like processing order.
- *
- * @SearchApiTracker(
- *   id = "search_api_test",
- *   label = @Translation("&quot;Test&quot; tracker"),
- *   description = @Translation("This is the <em>test tracker</em> plugin description."),
- * )
+ * Provides a dummy tracker for testing purposes.
  */
-class TestTracker extends TrackerPluginBase implements PluginFormInterface {
+#[SearchApiTracker(
+  id: 'search_api_test',
+  label: new TranslatableMarkup('&quot;Test&quot; tracker'),
+  description: new TranslatableMarkup('This is the <em>test tracker</em> plugin description.'),
+)]
+class TestTracker extends IndexPluginBase implements TrackerInterface, PluginFormInterface {
 
   use PluginFormTrait;
   use TestPluginTrait;
@@ -76,7 +78,7 @@ class TestTracker extends TrackerPluginBase implements PluginFormInterface {
   /**
    * {@inheritdoc}
    */
-  public function trackItemsDeleted(array $ids = NULL) {
+  public function trackItemsDeleted(?array $ids = NULL) {
     $this->logMethodCall(__FUNCTION__, func_get_args());
   }
 

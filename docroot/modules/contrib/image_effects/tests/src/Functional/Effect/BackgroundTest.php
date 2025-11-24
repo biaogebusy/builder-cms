@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image_effects\Functional\Effect;
 
 use Drupal\Tests\image_effects\Functional\ImageEffectsTestBase;
@@ -14,7 +16,7 @@ class BackgroundTest extends ImageEffectsTestBase {
   /**
    * {@inheritdoc}
    */
-  public function providerToolkits() {
+  public static function providerToolkits(): array {
     $toolkits = parent::providerToolkits();
     // @todo This effect does not work on GraphicsMagick.
     unset($toolkits['ImageMagick-graphicsmagick']);
@@ -33,7 +35,7 @@ class BackgroundTest extends ImageEffectsTestBase {
    *
    * @dataProvider providerToolkits
    */
-  public function testBackgroundEffect($toolkit_id, $toolkit_config, array $toolkit_settings) {
+  public function testBackgroundEffect(string $toolkit_id, string $toolkit_config, array $toolkit_settings): void {
     $this->changeToolkit($toolkit_id, $toolkit_config, $toolkit_settings);
 
     $original_uri = $this->getTestImageCopyUri('core/tests/fixtures/files/image-test.png');
@@ -85,11 +87,9 @@ class BackgroundTest extends ImageEffectsTestBase {
     // Toolkit-specific tests.
     switch ($this->imageFactory->getToolkitId()) {
       case 'gd':
-        // For the GD toolkit, test we are not left with orphan resource after
+        // For the GD toolkit, test we are not left with orphan image after
         // applying the operation.
         $image = $this->imageFactory->get($original_uri);
-        // Store the original GD resource.
-        $old_res = $image->getToolkit()->getResource();
         // Apply the operation.
         $image->apply('background', [
           'x_offset' => 0,
@@ -97,15 +97,6 @@ class BackgroundTest extends ImageEffectsTestBase {
           'opacity' => 100,
           'background_image' => $this->imageFactory->get($background_uri),
         ]);
-        // The operation replaced the resource, check that the old one has
-        // been destroyed.
-        // @todo remove once Drupal 9 is no longer supported.
-        if (PHP_VERSION_ID < 80000) {
-          $new_res = $image->getToolkit()->getResource();
-          $this->assertIsResource($new_res);
-          $this->assertNotEquals($new_res, $old_res);
-          $this->assertFalse(is_resource($old_res));
-        }
         // Save image and compare against original, should differ.
         $this->assertTrue($image->save($original_uri . '.modified.png'));
         $image_original = $this->imageFactory->get($original_uri);

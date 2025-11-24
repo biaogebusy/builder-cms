@@ -5,15 +5,17 @@
  * Post update functions for System.
  */
 
-use Drupal\Core\Site\Settings;
+use Drupal\Core\Config\ConfigManagerInterface;
 use Drupal\Core\Config\Entity\ConfigEntityUpdater;
-use Drupal\Core\Database\Database;
-use Drupal\Core\Entity\Display\EntityDisplayInterface;
+use Drupal\Core\Config\Schema\Mapping;
+use Drupal\Core\Config\TypedConfigManagerInterface;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
-use Drupal\Core\Entity\ContentEntityType;
-use Drupal\Core\Entity\ContentEntityTypeInterface;
-use Drupal\Core\Entity\EntityTypeInterface;
-use Drupal\Core\Extension\Exception\UnknownExtensionException;
+use Drupal\Core\Entity\EntityFormModeInterface;
+use Drupal\Core\Entity\EntityViewModeInterface;
+use Drupal\Core\Field\Plugin\Field\FieldFormatter\TimestampFormatter;
+use Drupal\Core\Site\Settings;
+use Drupal\Core\StringTranslation\PluralTranslatableMarkup;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Implements hook_removed_post_updates().
@@ -37,231 +39,289 @@ function system_removed_post_updates() {
     'system_post_update_clear_menu_cache' => '9.0.0',
     'system_post_update_layout_plugin_schema_change' => '9.0.0',
     'system_post_update_entity_reference_autocomplete_match_limit' => '9.0.0',
+    'system_post_update_extra_fields_form_display' => '10.0.0',
+    'system_post_update_uninstall_simpletest' => '10.0.0',
+    'system_post_update_uninstall_entity_reference_module' => '10.0.0',
+    'system_post_update_entity_revision_metadata_bc_cleanup' => '10.0.0',
+    'system_post_update_uninstall_classy' => '10.0.0',
+    'system_post_update_uninstall_stable' => '10.0.0',
+    'system_post_update_claro_dropbutton_variants' => '10.0.0',
+    'system_post_update_schema_version_int' => '10.0.0',
+    'system_post_update_delete_rss_settings' => '10.0.0',
+    'system_post_update_remove_key_value_expire_all_index' => '10.0.0',
+    'system_post_update_service_advisory_settings' => '10.0.0',
+    'system_post_update_delete_authorize_settings' => '10.0.0',
+    'system_post_update_sort_all_config' => '10.0.0',
+    'system_post_update_enable_provider_database_driver' => '10.0.0',
   ];
 }
 
 /**
- * Update all entity form displays that contain extra fields.
+ * Add new menu linkset endpoint setting.
  */
-function system_post_update_extra_fields_form_display(&$sandbox = NULL) {
-  $config_entity_updater = \Drupal::classResolver(ConfigEntityUpdater::class);
-  $entity_field_manager = \Drupal::service('entity_field.manager');
+function system_post_update_linkset_settings() {
+  $config = \Drupal::configFactory()->getEditable('system.feature_flags');
+  $config->set('linkset_endpoint', FALSE)->save();
+}
 
-  $callback = function (EntityDisplayInterface $display) use ($entity_field_manager) {
-    $display_context = $display instanceof EntityViewDisplayInterface ? 'display' : 'form';
-    $extra_fields = $entity_field_manager->getExtraFields($display->getTargetEntityTypeId(), $display->getTargetBundle());
+/**
+ * Update timestamp formatter settings for entity view displays.
+ */
+function system_post_update_timestamp_formatter(?array &$sandbox = NULL): void {
+  /** @var \Drupal\Core\Field\FormatterPluginManager $field_formatter_manager */
+  $field_formatter_manager = \Drupal::service('plugin.manager.field.formatter');
 
-    // If any extra fields are used as a component, resave the display with the
-    // updated component information.
-    $needs_save = FALSE;
-    if (!empty($extra_fields[$display_context])) {
-      foreach ($extra_fields[$display_context] as $name => $extra_field) {
-        if ($component = $display->getComponent($name)) {
-          $display->setComponent($name, $component);
-          $needs_save = TRUE;
-        }
+  \Drupal::classResolver(ConfigEntityUpdater::class)->update($sandbox, 'entity_view_display', function (EntityViewDisplayInterface $entity_view_display) use ($field_formatter_manager): bool {
+    $update = FALSE;
+    foreach ($entity_view_display->getComponents() as $name => $component) {
+      if (empty($component['type'])) {
+        continue;
+      }
+
+      $plugin_definition = $field_formatter_manager->getDefinition($component['type'], FALSE);
+      // Check also potential plugins extending TimestampFormatter.
+      if (!is_a($plugin_definition['class'], TimestampFormatter::class, TRUE)) {
+        continue;
+      }
+
+      // The 'tooltip' and 'time_diff' settings might have been set, with their
+      // default values, if this entity has been already saved in a previous
+      // (post)update, such as layout_builder_post_update_timestamp_formatter().
+      // Ensure that existing timestamp formatters doesn't show any tooltip.
+      if (!isset($component['settings']['tooltip']) || !isset($component['settings']['time_diff']) || $component['settings']['tooltip']['date_format'] !== '') {
+        // Existing timestamp formatters don't have tooltip.
+        $component['settings']['tooltip'] = [
+          'date_format' => '',
+          'custom_date_format' => '',
+        ];
+        $entity_view_display->setComponent($name, $component);
+        $update = TRUE;
       }
     }
-    return $needs_save;
+    return $update;
+  });
+}
+
+/**
+ * Enable the password compatibility module.
+ */
+function system_post_update_enable_password_compatibility() {
+  \Drupal::service('module_installer')->install(['phpass']);
+}
+
+/**
+ * Remove redundant asset state and config.
+ */
+function system_post_update_remove_asset_entries() {
+  \Drupal::state()->delete('drupal_css_cache_files');
+  \Drupal::state()->delete('system.js_cache_files');
+  $config = \Drupal::configFactory()->getEditable('system.performance');
+  $config->clear('stale_file_threshold');
+  $config->save();
+}
+
+/**
+ * Remove redundant asset query string state.
+ */
+function system_post_update_remove_asset_query_string() {
+  \Drupal::state()->delete('system.css_js_query_string');
+}
+
+/**
+ * Update description for view modes.
+ */
+function system_post_update_add_description_to_entity_view_mode(?array &$sandbox = NULL): void {
+  $config_entity_updater = \Drupal::classResolver(ConfigEntityUpdater::class);
+
+  $callback = function (EntityViewModeInterface $entity_view_mode) {
+    return $entity_view_mode->get('description') === NULL;
   };
 
-  $config_entity_updater->update($sandbox, 'entity_form_display', $callback);
+  $config_entity_updater->update($sandbox, 'entity_view_mode', $callback);
 }
 
 /**
- * Uninstall SimpleTest.
- *
- * @see https://www.drupal.org/project/drupal/issues/3110862
+ * Update description for form modes.
  */
-function system_post_update_uninstall_simpletest() {
-  \Drupal::service('module_installer')->uninstall(['simpletest']);
+function system_post_update_add_description_to_entity_form_mode(?array &$sandbox = NULL): void {
+  $config_entity_updater = \Drupal::classResolver(ConfigEntityUpdater::class);
+
+  $callback = function (EntityFormModeInterface $entity_form_mode) {
+    return $entity_form_mode->get('description') === NULL;
+  };
+
+  $config_entity_updater->update($sandbox, 'entity_form_mode', $callback);
 }
 
 /**
- * Uninstall entity_reference.
- *
- * @see https://www.drupal.org/project/drupal/issues/3111645
+ * Updates system.theme.global:logo.url config if it's still at the default.
  */
-function system_post_update_uninstall_entity_reference_module() {
-  \Drupal::service('module_installer')->uninstall(['entity_reference']);
-}
-
-/**
- * Remove backwards-compatibility leftovers from entity type definitions.
- */
-function system_post_update_entity_revision_metadata_bc_cleanup() {
-  /** @var \Drupal\Core\Entity\EntityLastInstalledSchemaRepositoryInterface $last_installed_schema_repository */
-  $last_installed_schema_repository = \Drupal::service('entity.last_installed_schema.repository');
-
-  // Get a list of content entity types.
-  /** @var \Drupal\Core\Entity\EntityTypeInterface[] $last_installed_definitions */
-  $last_installed_definitions = array_filter($last_installed_schema_repository->getLastInstalledDefinitions(), function (EntityTypeInterface $entity_type) {
-    return $entity_type instanceof ContentEntityTypeInterface;
-  });
-
-  // Remove the '$requiredRevisionMetadataKeys' property for these entity types.
-  foreach ($last_installed_definitions as $entity_type) {
-    $closure = function (ContentEntityTypeInterface $entity_type) {
-      return get_object_vars($entity_type);
-    };
-    $closure = \Closure::bind($closure, NULL, $entity_type);
-
-    $entity_type_definition = $closure($entity_type);
-    unset($entity_type_definition["\x00*\x00requiredRevisionMetadataKeys"]);
-    $entity_type = new ContentEntityType($entity_type_definition);
-
-    $last_installed_schema_repository->setLastInstalledDefinition($entity_type);
+function system_post_update_set_blank_log_url_to_null() {
+  $global_theme_settings = \Drupal::configFactory()->getEditable('system.theme.global');
+  if ($global_theme_settings->get('logo.url') === '') {
+    $global_theme_settings
+      ->set('logo.url', NULL)
+      ->save(TRUE);
   }
 }
 
 /**
- * Uninstall Classy if it is no longer needed.
+ * Add new default mail transport dsn.
  */
-function system_post_update_uninstall_classy() {
-  /** @var \Drupal\Core\Extension\ThemeInstallerInterface $theme_installer */
-  $theme_installer = \Drupal::getContainer()->get('theme_installer');
-  try {
-    $theme_installer->uninstall(['classy']);
+function system_post_update_mailer_dsn_settings() {
+}
+
+/**
+ * Add new default mail transport dsn.
+ */
+function system_post_update_mailer_structured_dsn_settings() {
+  $config = \Drupal::configFactory()->getEditable('system.mail');
+  $config->set('mailer_dsn', [
+    'scheme' => 'sendmail',
+    'host' => 'default',
+    'user' => NULL,
+    'password' => NULL,
+    'port' => NULL,
+    'options' => [],
+  ])->save();
+}
+
+/**
+ * Fix path in README.txt in CONFIG_SYNC_DIRECTORY.
+ */
+function system_post_update_amend_config_sync_readme_url() {
+  $configuration_directory = Settings::get('config_sync_directory');
+  $readme_path = $configuration_directory . '/README.txt';
+  if (!file_exists($readme_path)) {
+    // No operation if the original file is not there.
+    return;
   }
-  catch (\InvalidArgumentException | UnknownExtensionException $exception) {
-    // Exception is thrown if Classy wasn't installed or if there are themes
-    // depending on it.
+  $writable = is_writable($readme_path) || (!file_exists($readme_path) && is_writable($configuration_directory));
+  if (!$writable) {
+    // Cannot write the README.txt file, nothing to do.
+    return;
+  }
+  $original_content = file_get_contents($readme_path);
+  $changed_content = str_replace('admin/config/development/configuration/sync', 'admin/config/development/configuration', $original_content);
+  file_put_contents($readme_path, $changed_content);
+  return \t('Amended configuration synchronization readme file content.');
+}
+
+/**
+ * Adds default value for the mail_notification config parameter.
+ */
+function system_post_update_mail_notification_setting() {
+  $config = \Drupal::configFactory()->getEditable('system.site');
+  // If the value doesn't exist it always returns NULL.
+  if (is_null($config->get('mail_notification'))) {
+    $config->set('mail_notification', NULL)->save();
   }
 }
 
 /**
- * Uninstall Stable if it is no longer needed.
- *
- * This needs to run after system_post_update_uninstall_classy(). This will be
- * the case since getAvailableUpdateFunctions() returns an alphabetically sorted
- * list of post_update hooks to be run.
- *
- * @see Drupal\Core\Update\UpdateRegistry::getAvailableUpdateFunctions()
+ * Fix system.cron:logging values to boolean.
  */
-function system_post_update_uninstall_stable() {
-  /** @var \Drupal\Core\Extension\ThemeInstallerInterface $theme_installer */
-  $theme_installer = \Drupal::getContainer()->get('theme_installer');
-  try {
-    $theme_installer->uninstall(['stable']);
-  }
-  catch (\InvalidArgumentException | UnknownExtensionException $exception) {
-    // Exception is thrown if Stable wasn't installed or if there are themes
-    // depending on it.
+function system_post_update_set_cron_logging_setting_to_boolean(): void {
+  $config = \Drupal::configFactory()->getEditable('system.cron');
+  $logging = $config->get('logging');
+  if (!is_bool($logging)) {
+    $config->set('logging', (bool) $logging)->save();
   }
 }
 
 /**
- * Clear caches due to trustedCallbacks changing in ClaroPreRender.
+ * Adds a langcode to all simple config which needs it.
  */
-function system_post_update_claro_dropbutton_variants() {
-  // Empty post-update hook.
-}
+function system_post_update_add_langcode_to_all_translatable_config(&$sandbox = NULL): TranslatableMarkup {
+  $config_factory = \Drupal::configFactory();
 
-/**
- * Update schema version to integers.
- *
- * @see https://www.drupal.org/project/drupal/issues/3143713
- */
-function system_post_update_schema_version_int() {
-  $registry = \Drupal::keyValue('system.schema');
-  foreach ($registry->getAll() as $name => $schema) {
-    if (is_string($schema)) {
-      $registry->set($name, (int) $schema);
+  // If this is the first run, populate the sandbox with the names of all
+  // config objects.
+  if (!isset($sandbox['names'])) {
+    $sandbox['names'] = $config_factory->listAll();
+    $sandbox['max'] = count($sandbox['names']);
+  }
+
+  /** @var \Drupal\Core\Config\TypedConfigManagerInterface $typed_config_manager */
+  $typed_config_manager = \Drupal::service(TypedConfigManagerInterface::class);
+  /** @var \Drupal\Core\Config\ConfigManagerInterface $config_manager */
+  $config_manager = \Drupal::service(ConfigManagerInterface::class);
+  $default_langcode = \Drupal::languageManager()->getDefaultLanguage()->getId();
+
+  $names = array_splice($sandbox['names'], 0, Settings::get('entity_update_batch_size', 50));
+  foreach ($names as $name) {
+    // We're only dealing with simple config, which won't map to an entity type.
+    // But if this is a simple config object that has no schema, we can't do
+    // anything here and we don't need to, because config must have schema in
+    // order to be translatable.
+    if ($config_manager->getEntityTypeIdByName($name) || !$typed_config_manager->hasConfigSchema($name)) {
+      continue;
     }
-  }
-}
 
-/**
- * Remove obsolete system.rss configuration.
- */
-function system_post_update_delete_rss_settings() {
-  \Drupal::configFactory()->getEditable('system.rss')
-    ->clear('channel')
-    ->clear('items.limit')
-    ->clear('langcode')
-    ->save();
-}
+    $config = \Drupal::configFactory()->getEditable($name);
+    $typed_config = $typed_config_manager->createFromNameAndData($name, $config->getRawData());
+    // Simple config is always a mapping.
+    assert($typed_config instanceof Mapping, "Failed on config name '$name'");
 
-/**
- * Drop the 'all' index on the 'key_value_expire' table.
- */
-function system_post_update_remove_key_value_expire_all_index() {
-  $schema = \Drupal::database()->schema();
-  if ($schema->tableExists('key_value_expire')) {
-    $schema->dropIndex('key_value_expire', 'all');
-  }
-}
-
-/**
- * Add new security advisory retrieval settings.
- */
-function system_post_update_service_advisory_settings() {
-  $config = \Drupal::configFactory()->getEditable('system.advisories');
-  $config->set('interval_hours', 6)->set('enabled', TRUE)->save();
-}
-
-/**
- * Remove obsolete system.authorize configuration.
- */
-function system_post_update_delete_authorize_settings() {
-  \Drupal::configFactory()->getEditable('system.authorize')->delete();
-}
-
-/**
- * Sort all configuration according to its schema.
- */
-function system_post_update_sort_all_config(&$sandbox) {
-  $factory = \Drupal::configFactory();
-  $iteration_size = Settings::get('entity_update_batch_size', 50);
-
-  if (empty($sandbox['progress'])) {
-    $sandbox['progress'] = 0;
-    $sandbox['all_config_names'] = $factory->listAll();
-    $sandbox['max'] = count($sandbox['all_config_names']);
-  }
-
-  $start = $sandbox['progress'];
-  $end = min($sandbox['max'], $start + $iteration_size);
-  for ($i = $start; $i < $end; $i++) {
-    try {
-      $factory->getEditable($sandbox['all_config_names'][$i])->save();
-    }
-    catch (\Exception $e) {
-      watchdog_exception('system', $e);
-    }
-  }
-
-  if ($sandbox['max'] > 0 && $end < $sandbox['max']) {
-    $sandbox['progress'] = $end;
-    $sandbox['#finished'] = ($end - 1) / $sandbox['max'];
-  }
-  else {
-    $sandbox['#finished'] = 1;
-  }
-}
-
-/**
- * Enable the modules that are providing the listed database drivers.
- */
-function system_post_update_enable_provider_database_driver() {
-  $modules_to_install = [];
-  foreach (Database::getAllConnectionInfo() as $targets) {
-    foreach ($targets as $target) {
-      // Provider determination taken from Connection::getProvider().
-      [$first, $second] = explode('\\', $target['namespace'] ?? '', 3);
-      $provider = ($first === 'Drupal' && strtolower($second) === $second) ? $second : 'core';
-      if ($provider !== 'core' && !\Drupal::moduleHandler()->moduleExists($provider)) {
-        $autoload = $target['autoload'] ?? '';
-        // We are only enabling the module for database drivers that are
-        // provided by a module.
-        if (str_contains($autoload, 'src/Driver/Database/')) {
-          $modules_to_install[$provider] = TRUE;
-        }
+    // If this config contains any elements (at any level of nesting) which
+    // are translatable, but the config hasn't got a langcode, assign one. But
+    // if nothing in the config structure is translatable, the config shouldn't
+    // have a langcode at all.
+    if ($typed_config->hasTranslatableElements()) {
+      if ($config->get('langcode')) {
+        continue;
       }
+      $config->set('langcode', $default_langcode);
     }
+    else {
+      if (!array_key_exists('langcode', $config->get())) {
+        continue;
+      }
+      $config->clear('langcode');
+    }
+    $config->save();
   }
 
-  if ($modules_to_install !== []) {
-    \Drupal::service('module_installer')->install(array_keys($modules_to_install));
+  $sandbox['#finished'] = empty($sandbox['max']) || empty($sandbox['names']) ? 1 : ($sandbox['max'] - count($sandbox['names'])) / $sandbox['max'];
+  if ($sandbox['#finished'] === 1) {
+    return new TranslatableMarkup('Finished updating simple config langcodes.');
+  }
+  return new PluralTranslatableMarkup($sandbox['max'] - count($sandbox['names']),
+    'Processed @count items of @total.',
+    'Processed @count items of @total.',
+    ['@total' => $sandbox['max']],
+  );
+}
+
+/**
+ * Move development settings from state to raw key-value storage.
+ */
+function system_post_update_move_development_settings_to_keyvalue(): void {
+  $state = \Drupal::state();
+  $development_settings = $state->getMultiple([
+    'twig_debug',
+    'twig_cache_disable',
+    'disable_rendered_output_cache_bins',
+  ]);
+  \Drupal::keyValue('development_settings')->setMultiple($development_settings);
+  $state->deleteMultiple(array_keys($development_settings));
+}
+
+/**
+ * Updates system.date config to NULL for empty country and timezone defaults.
+ */
+function system_post_update_convert_empty_country_and_timezone_settings_to_null(): void {
+  $system_date_settings = \Drupal::configFactory()->getEditable('system.date');
+  $changed = FALSE;
+  if ($system_date_settings->get('country.default') === '') {
+    $system_date_settings->set('country.default', NULL);
+    $changed = TRUE;
+  }
+  if ($system_date_settings->get('timezone.default') === '') {
+    $system_date_settings->set('timezone.default', NULL);
+    $changed = TRUE;
+  }
+  if ($changed) {
+    $system_date_settings->save();
   }
 }

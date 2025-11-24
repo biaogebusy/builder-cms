@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image_effects\Unit;
 
 use Drupal\image_effects\Component\ImageUtility;
@@ -17,7 +19,7 @@ class ImageUtilityTest extends TestCase {
   /**
    * Data provider for testPercentFilter.
    */
-  public function percentFilterProvider() {
+  public static function percentFilterProvider(): array {
     return [
       [50, 400, 50],
       ['50', 400, 50],
@@ -37,14 +39,14 @@ class ImageUtilityTest extends TestCase {
    * @covers ::percentFilter
    * @dataProvider percentFilterProvider
    */
-  public function testPercentFilter($length_specification, $current_length, $expected_result) {
+  public function testPercentFilter(int|string|NULL $length_specification, ?int $current_length, ?int $expected_result): void {
     $this->assertSame($expected_result, ImageUtility::percentFilter($length_specification, $current_length));
   }
 
   /**
    * Data provider for testResizeDimensions.
    */
-  public function resizeDimensionsProvider() {
+  public static function resizeDimensionsProvider(): array {
     return [
       // Square = FALSE.
       [NULL, 100, 50, 25, FALSE, 50, 25],
@@ -77,14 +79,14 @@ class ImageUtilityTest extends TestCase {
    * @covers ::resizeDimensions
    * @dataProvider resizeDimensionsProvider
    */
-  public function testResizeDimensions($source_width, $source_height, $width_specification, $height_specification, $square, $expected_width, $expected_height) {
+  public function testResizeDimensions(?int $source_width, ?int $source_height, int|string|NULL $width_specification, int|string|NULL $height_specification, bool $square, ?int $expected_width, ?int $expected_height): void {
     $result = ImageUtility::resizeDimensions($source_width, $source_height, $width_specification, $height_specification, $square);
     $this->assertSame($expected_width, $result['width']);
     $this->assertSame($expected_height, $result['height']);
   }
 
   /**
-   * @covers ::getKeywordOffset()
+   * @covers ::getKeywordOffset
    */
   public function testInvalidGetKeywordOffset(): void {
     $this->expectException(\InvalidArgumentException::class);
@@ -93,7 +95,7 @@ class ImageUtilityTest extends TestCase {
   }
 
   /**
-   * @covers ::getKeywordOffset()
+   * @covers ::getKeywordOffset
    *
    * @dataProvider providerTestGetKeywordOffset
    */
@@ -107,11 +109,11 @@ class ImageUtilityTest extends TestCase {
    * @return array
    *   Keyed array containing:
    *   - 'input' - Array which contains input for Image::getKeywordOffset().
-   *   - 'return' - The expected output.
+   *   - 'expected' - The expected output.
    *
    * @see testGetKeywordOffset()
    */
-  public function providerTestGetKeywordOffset(): array {
+  public static function providerTestGetKeywordOffset(): array {
     // Define input / output datasets to test different branch conditions.
     $tests = [];
 
@@ -122,7 +124,7 @@ class ImageUtilityTest extends TestCase {
         'current' => 100,
         'new' => 20,
       ],
-      'return' => 0,
+      'expected' => 0,
     ];
     $tests[] = [
       'input' => [
@@ -130,7 +132,7 @@ class ImageUtilityTest extends TestCase {
         'current' => 100,
         'new' => 20,
       ],
-      'return' => 0,
+      'expected' => 0,
     ];
 
     // Right and bottom => return (current - new).
@@ -140,7 +142,7 @@ class ImageUtilityTest extends TestCase {
         'current' => 100,
         'new' => 20,
       ],
-      'return' => 80,
+      'expected' => 80,
     ];
     $tests[] = [
       'input' => [
@@ -148,7 +150,7 @@ class ImageUtilityTest extends TestCase {
         'current' => 100,
         'new' => 30,
       ],
-      'return' => 70,
+      'expected' => 70,
     ];
 
     // Center => return (current - new)/2.
@@ -158,7 +160,7 @@ class ImageUtilityTest extends TestCase {
         'current' => 100,
         'new' => 20,
       ],
-      'return' => 40,
+      'expected' => 40,
     ];
     $tests[] = [
       'input' => [
@@ -166,7 +168,7 @@ class ImageUtilityTest extends TestCase {
         'current' => 100,
         'new' => 91,
       ],
-      'return' => 5,
+      'expected' => 5,
     ];
 
     return $tests;

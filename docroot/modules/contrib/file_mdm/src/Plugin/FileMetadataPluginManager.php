@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\file_mdm\Plugin;
 
 use Drupal\Component\Utility\NestedArray;
@@ -7,32 +9,35 @@ use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
+use Drupal\file_mdm\Plugin\Annotation\FileMetadata as FileMetadataAnnotation;
+use Drupal\file_mdm\Plugin\Attribute\FileMetadata as FileMetadataAttribute;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Plugin manager for FileMetadata plugins.
  */
-class FileMetadataPluginManager extends DefaultPluginManager {
+class FileMetadataPluginManager extends DefaultPluginManager implements FileMetadataPluginManagerInterface {
 
-  /**
-   * The config factory service.
-   *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface
-   */
-  protected $configFactory;
-
-  /**
-   * {@inheritdoc}
-   */
-  public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler, ConfigFactoryInterface $config_factory) {
-    parent::__construct('Plugin/FileMetadata', $namespaces, $module_handler, 'Drupal\file_mdm\Plugin\FileMetadataPluginInterface', 'Drupal\file_mdm\Plugin\Annotation\FileMetadata');
+  public function __construct(
+    #[Autowire(service: 'container.namespaces')]
+    \Traversable $namespaces,
+    #[Autowire(service: 'cache.discovery')]
+    CacheBackendInterface $cache,
+    ModuleHandlerInterface $module_handler,
+    protected readonly ConfigFactoryInterface $configFactory,
+  ) {
+    parent::__construct(
+      'Plugin/FileMetadata',
+      $namespaces,
+      $module_handler,
+      FileMetadataPluginInterface::class,
+      FileMetadataAttribute::class,
+      FileMetadataAnnotation::class,
+    );
     $this->alterInfo('file_metadata_plugin_info');
-    $this->setCacheBackend($cache_backend, 'file_metadata_plugins');
-    $this->configFactory = $config_factory;
+    $this->setCacheBackend($cache, 'file_metadata_plugins');
   }
 
-  /**
-   * {@inheritdoc}
-   */
   public function createInstance($plugin_id, array $configuration = []) {
     $plugin_definition = $this->getDefinition($plugin_id);
     $default_config = call_user_func($plugin_definition['class'] . '::defaultConfiguration');

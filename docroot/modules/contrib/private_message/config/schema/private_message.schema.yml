@@ -14,9 +14,6 @@ private_message.settings:
     number_of_seconds_considered_away:
       type: integer
       label: 'The number of seconds after a user has accessed a thread, after which they should be considered as not viewing the thread anymore'
-    hide_form_filter_tips:
-      type: boolean
-      label: 'Whether or not to hide the filter tips on the message form'
     hide_recipient_field_when_prefilled:
       type: boolean
       label: 'Whether or not to hide the recipient field when a recipient is passed through the URL'
@@ -26,6 +23,25 @@ private_message.settings:
     save_message_label:
       type: label
       label: 'The label of the button to send a new message.'
+    ban_mode:
+      type: string
+      label: 'The blocking mode.'
+      constraints:
+        Choice:
+          - passive
+          - active
+    ban_message:
+      type: string
+      label: 'The message to show to the user when they are blocked.'
+    ban_label:
+      type: label
+      label: 'The label of the button to block a user.'
+    unban_label:
+      type: label
+      label: 'The label of the button to unblock a user.'
+    ban_page_label:
+      type: label
+      label: 'The label of the link to the block page.'
     autofocus_enable:
       type: boolean
       label: 'Whether or not the message autofocus feature is enabled.'
@@ -52,6 +68,12 @@ field.formatter.settings.private_message_thread_member_formatter:
     separator:
       type: string
       label: 'Separator'
+    prefix_separator:
+      type: boolean
+      label: 'Prefix Separator'
+    display_current_user:
+      type: boolean
+      label: 'Display Current User'
 
 field.formatter.settings.private_message_thread_message_formatter:
   type: mapping
@@ -72,6 +94,12 @@ field.formatter.settings.private_message_thread_message_formatter:
     view_mode:
       type: string
       label: 'The view mode used to render private messages'
+    message_insert_speed:
+      type: integer
+      label: 'The speed of the effect of newly added messages'
+    message_insert_style:
+      type: string
+      label: 'The jQuery effect of newly added messages'
 
 field.widget.settings.private_message_thread_member_widget:
   type: mapping
@@ -114,3 +142,6 @@ block.settings.private_message_notification_block:
     ajax_refresh_rate:
       type: integer
       label: 'Ajax refresh rate'
+    count_method:
+      type: string
+      label: 'Return of count messages or threads'

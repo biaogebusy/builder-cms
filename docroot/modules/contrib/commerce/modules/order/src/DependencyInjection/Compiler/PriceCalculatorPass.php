@@ -3,8 +3,8 @@
 namespace Drupal\commerce_order\DependencyInjection\Compiler;
 
 use Drupal\commerce_order\OrderProcessorInterface;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Exception\LogicException;
 use Symfony\Component\DependencyInjection\Reference;
 
@@ -16,7 +16,7 @@ class PriceCalculatorPass implements CompilerPassInterface {
   /**
    * {@inheritdoc}
    */
-  public function process(ContainerBuilder $container) {
+  public function process(ContainerBuilder $container): void {
     $definition = $container->getDefinition('commerce_order.price_calculator');
     $processor_interface = OrderProcessorInterface::class;
     $processors = [];

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Kernel\Plugin;
 
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
@@ -30,7 +32,7 @@ class ViewsSqlExceptionTest extends ViewsKernelTestBase {
   /**
    * Tests for the SQL exception.
    */
-  public function testSqlException() {
+  public function testSqlException(): void {
     $view = Views::getView('test_filter');
     $view->initDisplay();
 

@@ -13,9 +13,9 @@
 }
 .order-total-line-label {
   display: inline-block;
+  padding: 0 10px;
 }
 .order-total-line-value {
   display: inline-block;
-  width: 80px;
   text-align: right;
 }

@@ -28,7 +28,7 @@ class WebformTableRow extends RenderElement {
   }
 
   /**
-   * Processes a webfrom table row element.
+   * Processes a webform table row element.
    */
   public static function processTableRow(&$element, FormStateInterface $form_state, &$complete_form) {
     $element['#attributes']['class'][] = 'webform-table-row';

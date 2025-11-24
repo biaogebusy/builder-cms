@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Composer\Plugin\Scaffold;
 
 use Composer\Console\Application;
@@ -235,7 +237,7 @@ class Fixtures {
    *
    * @see \Drupal\Composer\Plugin\Scaffold\ScaffoldFilePath::destinationPath()
    */
-  public function destinationPath($destination, Interpolator $interpolator = NULL, $package_name = NULL) {
+  public function destinationPath($destination, ?Interpolator $interpolator = NULL, $package_name = NULL) {
     $interpolator = $interpolator ?: $this->getLocationReplacements();
     $package_name = $package_name ?: $interpolator->interpolate('[package-name]');
     return ScaffoldFilePath::destinationPath($package_name, $destination, $interpolator);
@@ -301,7 +303,7 @@ class Fixtures {
   /**
    * Calls 'tearDown' in any test that copies fixtures to transient locations.
    */
-  public function tearDown(): void {
+  public function tearDown() {
     // Remove any temporary directories that were created.
     $filesystem = new Filesystem();
     foreach ($this->tmpDirs as $dir) {

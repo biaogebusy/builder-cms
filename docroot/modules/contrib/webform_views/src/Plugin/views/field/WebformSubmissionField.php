@@ -117,6 +117,11 @@ class WebformSubmissionField extends FieldPluginBase {
    * {@inheritdoc}
    */
   public function query() {
+    if ($this->definition['multiple'] && $this->options['webform_multiple_value']) {
+      // Do not join multiple value fields.
+      return;
+    }
+
     parent::query();
 
     // Webform submission might have multiple values stored for the webform

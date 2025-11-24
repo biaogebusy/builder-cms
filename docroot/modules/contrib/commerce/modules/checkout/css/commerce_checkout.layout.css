@@ -4,14 +4,14 @@
  */
 
 .form-wrapper__login-option {
-  width: 100%;
-  padding: 20px;
   -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box;
   box-sizing: border-box;
+  width: 100%;
+  padding: 20px;
 }
 
-.form-wrapper__login-option input:not([type="submit"]):not([type="password"]),
+.form-wrapper__login-option input:not([type="submit"], [type="password"]),
 .form-wrapper__returning-customer input[type="password"] {
   width: 100%;
 }
@@ -24,18 +24,18 @@
   margin-top: 0;
 }
 
-@media(min-width: 780px) {
+@media (min-width: 780px) {
   #edit-login {
     overflow: auto;
   }
 
   .form-wrapper__returning-customer {
-    width: 48%;
     float: left;
+    width: 48%;
   }
 
   .form-wrapper__guest-checkout {
-    width: 48%;
     float: right;
+    width: 48%;
   }
 }

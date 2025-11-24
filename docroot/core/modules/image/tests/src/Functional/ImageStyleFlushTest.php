@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image\Functional;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\image\Entity\ImageStyle;
 use Drupal\Tests\TestFileCreationTrait;
 
@@ -57,10 +58,10 @@ class ImageStyleFlushTest extends ImageFieldTestBase {
   /**
    * General test to flush a style.
    */
-  public function testFlush() {
+  public function testFlush(): void {
 
     // Setup a style to be created and effects to add to it.
-    $style_name = strtolower($this->randomMachineName(10));
+    $style_name = $this->randomMachineName(10);
     $style_label = $this->randomString();
     $style_path = 'admin/config/media/image-styles/manage/' . $style_name;
     $effect_edits = [
@@ -100,11 +101,11 @@ class ImageStyleFlushTest extends ImageFieldTestBase {
     $image_path = $this->createSampleImage($style, 'public');
     // Expecting to find 2 images, one is the sample.png image shown in
     // image style preview.
-    $this->assertEquals(2, $this->getImageCount($style, 'public'), new FormattableMarkup('Image style %style image %file successfully generated.', ['%style' => $style->label(), '%file' => $image_path]));
+    $this->assertEquals(2, $this->getImageCount($style, 'public'), "Image style {$style->label()} image $image_path successfully generated.");
 
     // Create an image for the 'private' wrapper.
     $image_path = $this->createSampleImage($style, 'private');
-    $this->assertEquals(1, $this->getImageCount($style, 'private'), new FormattableMarkup('Image style %style image %file successfully generated.', ['%style' => $style->label(), '%file' => $image_path]));
+    $this->assertEquals(1, $this->getImageCount($style, 'private'), "Image style {$style->label()} image $image_path successfully generated.");
 
     // Remove the 'image_scale' effect and updates the style, which in turn
     // forces an image style flush.
@@ -121,10 +122,17 @@ class ImageStyleFlushTest extends ImageFieldTestBase {
     $this->assertSession()->statusCodeEquals(200);
 
     // Post flush, expected 1 image in the 'public' wrapper (sample.png).
-    $this->assertEquals(1, $this->getImageCount($style, 'public'), new FormattableMarkup('Image style %style flushed correctly for %wrapper wrapper.', ['%style' => $style->label(), '%wrapper' => 'public']));
+    $this->assertEquals(1, $this->getImageCount($style, 'public'), "Image style {$style->label()} flushed correctly for public wrapper.");
 
     // Post flush, expected no image in the 'private' wrapper.
-    $this->assertEquals(0, $this->getImageCount($style, 'private'), new FormattableMarkup('Image style %style flushed correctly for %wrapper wrapper.', ['%style' => $style->label(), '%wrapper' => 'private']));
+    $this->assertEquals(0, $this->getImageCount($style, 'private'), "Image style {$style->label()} flushed correctly for private wrapper.");
+
+    $state = \Drupal::state();
+    $state->set('image_module_test_image_style_flush.called', FALSE);
+    $style->flush();
+    $this->assertNull($state->get('image_module_test_image_style_flush.called'));
+    $style->flush('/made/up/path');
+    $this->assertSame('/made/up/path', $state->get('image_module_test_image_style_flush.called'));
   }
 
 }

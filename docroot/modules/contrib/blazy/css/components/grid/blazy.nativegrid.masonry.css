@@ -8,7 +8,7 @@
  * reflow due to using JS.
  *
  * Classes:
- *  - .is-b-native, as the original two-dimensional, the real Native Grid.
+ *  - .is-b-nativegrid, as the original two-dimensional, the real Native Grid.
  *  - .is-b-masonry, as the tweaked one-dimensional, the Masonry.
  *
  * Warning! The percentage values are affected by :root--bnColGap. Adjust.
@@ -31,8 +31,16 @@ To have gapless, simply add `is-b-gapless` class via template_preprocess. */
   --bn-row-height-masonry: 15px;
 }
 
-.b-nativegrid.is-b-masonry-disabled > .grid {
+.b-nativegrid.is-b-masonry-disabled:not(.is-b-gapless) > .grid,
+.item-list > .is-b-masonry-disabled:not(.is-b-gapless) > .grid {
   margin-top: 0 !important;
+  margin-bottom: var(--bn-col-gap);
+}
+
+.b-nativegrid.is-b-masonry-disabled,
+.blazy.b-nativegrid.is-b-masonry-disabled,
+.item-list > .b-nativegrid.is-b-masonry-disabled {
+  display: block;
 }
 
 /** 480px = 30em with 16px base font. */
@@ -57,13 +65,6 @@ To have gapless, simply add `is-b-gapless` class via template_preprocess. */
     grid-row-end: span 2;
     align-self: start;
   }
-
-  /*
-  .b-nativegrid.is-b-masonry.is-b-captioned .grid,
-  .b-nativegrid.is-b-masonry.is-b-captioned .grid__content {
-    min-height: fit-content;
-  }
-  */
 
   /* To make even bottom gaps when using CSS background Blazy formatter.
   See Troubleshooting for more details on this.

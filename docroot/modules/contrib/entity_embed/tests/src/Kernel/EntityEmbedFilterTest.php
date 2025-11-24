@@ -71,7 +71,7 @@ class EntityEmbedFilterTest extends EntityEmbedFilterTestBase {
   /**
    * Data provider for testBasics().
    */
-  public function providerTestBasics() {
+  public static function providerTestBasics(): array {
     return [
       'data-entity-uuid + data-view-mode=teaser' => [
         [
@@ -190,6 +190,7 @@ class EntityEmbedFilterTest extends EntityEmbedFilterTestBase {
     // Are we testing as a user who is allowed to view the embedded entity?
     if ($allowed_to_view_unpublished) {
       $this->container->get('current_user')
+        ->getAccount()
         ->addRole($this->drupalCreateRole(['view own unpublished content']));
     }
 
@@ -217,7 +218,7 @@ class EntityEmbedFilterTest extends EntityEmbedFilterTestBase {
   /**
    * Data provider for testAccessUnpublished().
    */
-  public function providerAccessUnpublished() {
+  public static function providerAccessUnpublished(): array {
     return [
       'user cannot access embedded entity' => [
         FALSE,
@@ -240,7 +241,12 @@ class EntityEmbedFilterTest extends EntityEmbedFilterTestBase {
             'user:2',
             'user_view',
           ])
-          ->setCacheContexts(['timezone', 'user', 'user.permissions'])
+          ->setCacheContexts(array_filter([
+            'timezone',
+            'user',
+            'user.permissions',
+            version_compare(\Drupal::VERSION, '11.1', '<') ? NULL : 'user.roles:authenticated',
+          ]))
           ->setCacheMaxAge(Cache::PERMANENT),
         ['library' => ['entity_embed/caption']],
       ],
@@ -284,7 +290,7 @@ class EntityEmbedFilterTest extends EntityEmbedFilterTestBase {
   /**
    * Data provider for testMissingEntityIndicator().
    */
-  public function providerMissingEntityIndicator() {
+  public static function providerMissingEntityIndicator(): array {
     return [
       'node; valid UUID but for a deleted entity' => [
         'node',
@@ -385,7 +391,7 @@ class EntityEmbedFilterTest extends EntityEmbedFilterTestBase {
   /**
    * Data provider for testFilterIntegration().
    */
-  public function providerFilterIntegration() {
+  public static function providerFilterIntegration(): array {
     $default_asset_libraries = ['entity_embed/caption'];
 
     $caption_additional_attributes = ['data-caption' => 'Yo.'];

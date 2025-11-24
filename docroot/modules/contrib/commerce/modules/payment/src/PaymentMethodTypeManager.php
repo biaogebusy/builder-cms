@@ -6,6 +6,8 @@ use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
+use Drupal\commerce_payment\Attribute\CommercePaymentMethodType;
+use Drupal\commerce_payment\Plugin\Commerce\PaymentMethodType\PaymentMethodTypeInterface;
 
 /**
  * Manages discovery and instantiation of payment method type plugins.
@@ -27,7 +29,14 @@ class PaymentMethodTypeManager extends DefaultPluginManager {
    *   The module handler.
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
-    parent::__construct('Plugin/Commerce/PaymentMethodType', $namespaces, $module_handler, 'Drupal\commerce_payment\Plugin\Commerce\PaymentMethodType\PaymentMethodTypeInterface', 'Drupal\commerce_payment\Annotation\CommercePaymentMethodType');
+    parent::__construct(
+      'Plugin/Commerce/PaymentMethodType',
+      $namespaces,
+      $module_handler,
+      PaymentMethodTypeInterface::class,
+      CommercePaymentMethodType::class,
+      'Drupal\commerce_payment\Annotation\CommercePaymentMethodType'
+    );
 
     $this->alterInfo('commerce_payment_method_type_info');
     $this->setCacheBackend($cache_backend, 'commerce_payment_method_type_plugins');

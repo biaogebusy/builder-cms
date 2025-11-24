@@ -2,12 +2,14 @@
 
 namespace Drupal\commerce_checkout;
 
-use Drupal\commerce_checkout\Plugin\Commerce\CheckoutFlow\CheckoutFlowInterface;
 use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Component\Plugin\Factory\DefaultFactory;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
+use Drupal\commerce_checkout\Attribute\CommerceCheckoutPane;
+use Drupal\commerce_checkout\Plugin\Commerce\CheckoutFlow\CheckoutFlowInterface;
+use Drupal\commerce_checkout\Plugin\Commerce\CheckoutPane\CheckoutPaneInterface;
 
 /**
  * Manages checkout pane plugins.
@@ -23,6 +25,7 @@ class CheckoutPaneManager extends DefaultPluginManager {
     'id' => '',
     'label' => '',
     'admin_label' => '',
+    'admin_description' => '',
     'default_step' => '_disabled',
     'wrapper_element' => 'container',
   ];
@@ -39,7 +42,14 @@ class CheckoutPaneManager extends DefaultPluginManager {
    *   The module handler.
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
-    parent::__construct('Plugin/Commerce/CheckoutPane', $namespaces, $module_handler, 'Drupal\commerce_checkout\Plugin\Commerce\CheckoutPane\CheckoutPaneInterface', 'Drupal\commerce_checkout\Annotation\CommerceCheckoutPane');
+    parent::__construct(
+      'Plugin/Commerce/CheckoutPane',
+      $namespaces,
+      $module_handler,
+      CheckoutPaneInterface::class,
+      CommerceCheckoutPane::class,
+      'Drupal\commerce_checkout\Annotation\CommerceCheckoutPane'
+    );
 
     $this->alterInfo('commerce_checkout_pane_info');
     $this->setCacheBackend($cache_backend, 'commerce_checkout_pane_plugins');
@@ -48,7 +58,7 @@ class CheckoutPaneManager extends DefaultPluginManager {
   /**
    * {@inheritdoc}
    */
-  public function createInstance($plugin_id, array $configuration = [], CheckoutFlowInterface $checkout_flow = NULL) {
+  public function createInstance($plugin_id, array $configuration = [], ?CheckoutFlowInterface $checkout_flow = NULL) {
     $plugin_definition = $this->getDefinition($plugin_id);
     $plugin_class = DefaultFactory::getPluginClass($plugin_id, $plugin_definition);
     // If the plugin provides a factory method, pass the container to it.

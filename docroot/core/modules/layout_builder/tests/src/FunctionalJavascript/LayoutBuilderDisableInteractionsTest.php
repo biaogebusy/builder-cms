@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\layout_builder\FunctionalJavascript;
 
 use Behat\Mink\Element\NodeElement;
@@ -11,10 +13,13 @@ use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\Tests\contextual\FunctionalJavascript\ContextualLinkClickTrait;
 use Drupal\Tests\system\Traits\OffCanvasTestTrait;
 
+// cspell:ignore fieldbody
+
 /**
  * Tests the Layout Builder disables interactions of rendered blocks.
  *
  * @group layout_builder
+ * @group #slow
  */
 class LayoutBuilderDisableInteractionsTest extends WebDriverTestBase {
 
@@ -91,7 +96,7 @@ class LayoutBuilderDisableInteractionsTest extends WebDriverTestBase {
   /**
    * Tests that forms and links are disabled in the Layout Builder preview.
    */
-  public function testFormsLinksDisabled() {
+  public function testFormsLinksDisabled(): void {
     // Resize window due to bug in Chromedriver when clicking on overlays over
     // iFrames.
     // @see https://bugs.chromium.org/p/chromedriver/issues/detail?id=2758
@@ -174,14 +179,14 @@ class LayoutBuilderDisableInteractionsTest extends WebDriverTestBase {
   }
 
   /**
-   * Checks if element is unclickable.
+   * Checks if element is not clickable.
    *
    * @param \Behat\Mink\Element\NodeElement $element
    *   Element being checked for.
    *
    * @internal
    */
-  protected function assertElementUnclickable(NodeElement $element): void {
+  protected function assertElementNotClickable(NodeElement $element): void {
     try {
       $element->click();
       $tag_name = $element->getTagName();
@@ -203,11 +208,11 @@ class LayoutBuilderDisableInteractionsTest extends WebDriverTestBase {
 
     $this->assertNotEmpty($assert_session->waitForElement('css', '.block-search'));
     $searchButton = $assert_session->buttonExists('Search');
-    $this->assertElementUnclickable($searchButton);
+    $this->assertElementNotClickable($searchButton);
     $assert_session->linkExists('Take me away');
-    $this->assertElementUnclickable($page->findLink('Take me away'));
+    $this->assertElementNotClickable($page->findLink('Take me away'));
     $iframe = $assert_session->elementExists('css', '#iframe-that-should-be-disabled');
-    $this->assertElementUnclickable($iframe);
+    $this->assertElementNotClickable($iframe);
   }
 
   /**

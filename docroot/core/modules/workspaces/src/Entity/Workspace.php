@@ -28,6 +28,7 @@ use Drupal\workspaces\WorkspaceInterface;
  *     "list_builder" = "\Drupal\workspaces\WorkspaceListBuilder",
  *     "view_builder" = "Drupal\workspaces\WorkspaceViewBuilder",
  *     "access" = "Drupal\workspaces\WorkspaceAccessControlHandler",
+ *     "views_data" = "Drupal\views\EntityViewsData",
  *     "route_provider" = {
  *       "html" = "\Drupal\Core\Entity\Routing\AdminHtmlRouteProvider",
  *     },
@@ -38,6 +39,7 @@ use Drupal\workspaces\WorkspaceInterface;
  *       "delete" = "\Drupal\workspaces\Form\WorkspaceDeleteForm",
  *       "activate" = "\Drupal\workspaces\Form\WorkspaceActivateForm",
  *     },
+ *     "workspace" = "\Drupal\workspaces\Entity\Handler\IgnoredWorkspaceHandler",
  *   },
  *   admin_permission = "administer workspaces",
  *   base_table = "workspace",
@@ -173,16 +175,27 @@ class Workspace extends ContentEntityBase implements WorkspaceInterface {
   public static function postDelete(EntityStorageInterface $storage, array $entities) {
     parent::postDelete($storage, $entities);
 
-    // Add the IDs of the deleted workspaces to the list of workspaces that will
-    // be purged on cron.
-    $state = \Drupal::state();
-    $deleted_workspace_ids = $state->get('workspace.deleted', []);
-    $deleted_workspace_ids += array_combine(array_keys($entities), array_keys($entities));
-    $state->set('workspace.deleted', $deleted_workspace_ids);
+    /** @var \Drupal\workspaces\WorkspaceManagerInterface $workspace_manager */
+    $workspace_manager = \Drupal::service('workspaces.manager');
+    // Disable the currently active workspace if it has been deleted.
+    if ($workspace_manager->hasActiveWorkspace()
+      && in_array($workspace_manager->getActiveWorkspace()->id(), array_keys($entities), TRUE)) {
+      $workspace_manager->switchToLive();
+    }
 
-    // Trigger a batch purge to allow empty workspaces to be deleted
-    // immediately.
-    \Drupal::service('workspaces.manager')->purgeDeletedWorkspacesBatch();
+    // Ensure that workspace batch purging does not happen inside a workspace.
+    $workspace_manager->executeOutsideWorkspace(function () use ($workspace_manager, $entities) {
+      // Add the IDs of the deleted workspaces to the list of workspaces that will
+      // be purged on cron.
+      $state = \Drupal::state();
+      $deleted_workspace_ids = $state->get('workspace.deleted', []);
+      $deleted_workspace_ids += array_combine(array_keys($entities), array_keys($entities));
+      $state->set('workspace.deleted', $deleted_workspace_ids);
+
+      // Trigger a batch purge to allow empty workspaces to be deleted
+      // immediately.
+      $workspace_manager->purgeDeletedWorkspacesBatch();
+    });
   }
 
 }

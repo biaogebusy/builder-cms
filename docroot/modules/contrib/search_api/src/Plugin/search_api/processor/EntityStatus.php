@@ -3,22 +3,23 @@
 namespace Drupal\search_api\Plugin\search_api\processor;
 
 use Drupal\Core\Entity\EntityPublishedInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\search_api\Attribute\SearchApiProcessor;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Processor\ProcessorPluginBase;
 use Drupal\user\UserInterface;
 
 /**
  * Excludes unpublished nodes from node indexes.
- *
- * @SearchApiProcessor(
- *   id = "entity_status",
- *   label = @Translation("Entity status"),
- *   description = @Translation("Exclude inactive users and unpublished entities (which have a ""Published"" state) from being indexed."),
- *   stages = {
- *     "alter_items" = 0,
- *   },
- * )
  */
+#[SearchApiProcessor(
+  id: 'entity_status',
+  label: new TranslatableMarkup('Entity status'),
+  description: new TranslatableMarkup('Exclude inactive users and unpublished entities (which have a "Published"" state) from being indexed.'),
+  stages: [
+    'alter_items' => 0,
+  ],
+)]
 class EntityStatus extends ProcessorPluginBase {
 
   /**

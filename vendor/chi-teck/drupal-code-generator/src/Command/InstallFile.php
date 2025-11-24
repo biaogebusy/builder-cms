@@ -1,24 +1,30 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace DrupalCodeGenerator\Command;
 
 use DrupalCodeGenerator\Application;
+use DrupalCodeGenerator\Asset\AssetCollection;
+use DrupalCodeGenerator\Attribute\Generator;
+use DrupalCodeGenerator\GeneratorType;
 
-/**
- * Implements install-file command.
- */
-final class InstallFile extends ModuleGenerator {
-
-  protected string $name = 'install-file';
-  protected string $description = 'Generates an install file';
-  protected string $templatePath = Application::TEMPLATE_PATH . '/install-file';
+#[Generator(
+  name: 'install-file',
+  description: 'Generates an install file',
+  templatePath: Application::TEMPLATE_PATH . '/_install-file',
+  type: GeneratorType::MODULE_COMPONENT,
+)]
+final class InstallFile extends BaseGenerator {
 
   /**
    * {@inheritdoc}
    */
-  protected function generate(array &$vars): void {
-    $this->collectDefault($vars);
-    $this->addFile('{machine_name}.install', 'install');
+  protected function generate(array &$vars, AssetCollection $assets): void {
+    $ir = $this->createInterviewer($vars);
+    $vars['machine_name'] = $ir->askMachineName();
+    $vars['name'] = $ir->askName();
+    $assets->addFile('{machine_name}.install', 'install.twig');
   }
 
 }

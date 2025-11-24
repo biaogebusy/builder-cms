@@ -14,6 +14,9 @@ metatag.settings:
           sequence:
             type: string
             label: 'Group'
+    separator:
+      type: string
+      label: 'Separator'
     tag_trim_method:
       type: string
       label: 'Trim method for trimmable tags.'
@@ -29,3 +32,9 @@ metatag.settings:
     tag_scroll_max_height:
       type: string
       label: 'Add max height value'
+    tag_trim_end:
+      type: string
+      label: 'End of the word trimming'
+    trim_suffix:
+      type: string
+      label: 'Optional suffix to add'

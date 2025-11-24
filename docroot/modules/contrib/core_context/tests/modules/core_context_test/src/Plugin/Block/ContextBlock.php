@@ -5,6 +5,8 @@ namespace Drupal\core_context_test\Plugin\Block;
 use Drupal\Core\Block\BlockBase;
 
 /**
+ * Defines a block plugin that requires context values.
+ *
  * @Block(
  *   id = "context_block",
  *   admin_label = @Translation("Context block"),

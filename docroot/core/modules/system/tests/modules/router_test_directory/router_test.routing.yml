@@ -23,7 +23,7 @@ router_test.4:
   path: '/router_test/test4/{value}'
   defaults:
     _controller: '\Drupal\router_test\TestControllers::test4'
-    value: 'narf'
+    value: 'Lassie'
   requirements:
     _access: 'TRUE'
 
@@ -165,7 +165,7 @@ router_test.25:
 router_test.26:
   path: '/router_test/test26'
   defaults:
-    _form: '\Drupal\system\Form\LoggingForm'
+    _form: '\Drupal\router_test\Form'
     _title: 'Cron'
   requirements:
     _access: 'TRUE'
@@ -245,5 +245,12 @@ router_test.case_sensitive_duplicate3:
   path: '/router-test/case-sensitive-duplicate-path3'
   defaults:
     _controller: '\Drupal\router_test\TestControllers::testRouteName'
+  requirements:
+    _access: 'TRUE'
+
+router_test.rejects_query_strings:
+  path: '/router-test/rejects-query-strings'
+  defaults:
+    _controller: '\Drupal\router_test\TestControllers::rejectsQueryStrings'
   requirements:
     _access: 'TRUE'

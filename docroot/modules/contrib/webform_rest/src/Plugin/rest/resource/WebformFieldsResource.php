@@ -7,6 +7,7 @@ use Drupal\rest\Plugin\ResourceBase;
 use Drupal\rest\ModifiedResourceResponse;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Creates a resource for retrieving webform elements.
@@ -20,6 +21,23 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  * )
  */
 class WebformFieldsResource extends ResourceBase {
+
+  /**
+   * The token manager.
+   *
+   * @var \Drupal\webform\WebformTokenManagerInterface
+   */
+  protected $tokenManager;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->tokenManager = $container->get('webform.token_manager');
+    return $instance;
+  }
+
 
   /**
    * Responds to GET requests, returns webform elements.
@@ -45,7 +63,9 @@ class WebformFieldsResource extends ResourceBase {
     if ($webform) {
 
       // Return only the form elements.
-      return new ModifiedResourceResponse($webform->getElementsInitialized());
+      $elements = $webform->getElementsInitialized();
+      $elements = $this->tokenManager->replace($elements, $webform);
+      return new ModifiedResourceResponse($elements);
     }
 
     throw new NotFoundHttpException(t("Can't load webform."));

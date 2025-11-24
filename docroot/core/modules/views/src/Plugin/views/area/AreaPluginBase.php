@@ -13,7 +13,7 @@ use Drupal\views\Plugin\views\HandlerBase;
  * Plugins governing areas of views, such as header, footer, and empty text.
  *
  * Area handler plugins extend \Drupal\views\Plugin\views\area\AreaPluginBase.
- * They must be annotated with \Drupal\views\Annotation\ViewsArea annotation,
+ * They must be attributed with \Drupal\views\Attribute\ViewsArea attribute,
  * and they must be in namespace directory Plugin\views\area.
  *
  * @ingroup views_plugins
@@ -38,7 +38,7 @@ abstract class AreaPluginBase extends HandlerBase {
    * Make sure that no result area handlers are set to be shown when the result
    * is empty.
    */
-  public function init(ViewExecutable $view, DisplayPluginBase $display, array &$options = NULL) {
+  public function init(ViewExecutable $view, DisplayPluginBase $display, ?array &$options = NULL) {
     parent::init($view, $display, $options);
 
     if ($this->areaType == 'empty') {

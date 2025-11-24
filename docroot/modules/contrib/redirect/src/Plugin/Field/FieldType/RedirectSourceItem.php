@@ -21,6 +21,9 @@ use Drupal\Core\Url;
  *   default_formatter = "redirect_source",
  *   no_ui = TRUE
  * )
+ *
+ * @property string|null $path
+ * @property array|null $query
  */
 class RedirectSourceItem extends FieldItemBase {
 

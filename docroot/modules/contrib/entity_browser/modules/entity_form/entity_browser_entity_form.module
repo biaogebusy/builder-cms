@@ -29,7 +29,7 @@ function entity_browser_entity_form_inline_entity_form_reference_form_alter(&$re
 
   /** @var \Drupal\Core\Entity\Display\EntityFormDisplayInterface $form_display */
   $entity_form_id = $instance->getTargetEntityTypeId() . '.' . $instance->getTargetBundle() . '.default';
-  // TODO - 'default' might become configurable or something else in the future.
+  // @todo 'default' might become configurable or something else in the future.
   // See https://www.drupal.org/node/2510274
   $form_display = \Drupal::entityTypeManager()->getStorage('entity_form_display')->load($entity_form_id);
 
@@ -80,7 +80,7 @@ function entity_browser_entity_form_inline_entity_form_reference_form_alter(&$re
 /**
  * Validates the form for adding existing entities.
  *
- * TODO see if we can get away without overriding entire IEF function.
+ * @todo see if we can get away without overriding entire IEF function.
  *
  * @param array $reference_form
  *   The reference entity form.
@@ -118,7 +118,7 @@ function entity_browser_entity_form_reference_form_validate(array &$reference_fo
  *
  * Adds the specified entity to the IEF form state.
  *
- * TODO see if we can get away without overriding entire IEF function.
+ * @todo see if we can get away without overriding entire IEF function.
  *
  * @param array $reference_form
  *   The reference entity form.

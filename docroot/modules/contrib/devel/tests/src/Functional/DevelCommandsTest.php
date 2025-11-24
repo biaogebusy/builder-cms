@@ -3,6 +3,7 @@
 namespace Drupal\Tests\devel\Functional;
 
 use Drupal\Tests\BrowserTestBase;
+use Drupal\devel\Drush\Commands\DevelCommands;
 use Drush\TestTraits\DrushTestTrait;
 
 /**
@@ -12,7 +13,7 @@ use Drush\TestTraits\DrushTestTrait;
  */
 
 /**
- * @coversDefaultClass \Drupal\devel\Commands\DevelCommands
+ * @coversDefaultClass \Drupal\devel\Drush\Commands\DevelCommands
  * @group devel
  */
 class DevelCommandsTest extends BrowserTestBase {
@@ -22,7 +23,7 @@ class DevelCommandsTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['devel'];
+  protected static $modules = ['devel'];
 
   /**
    * {@inheritdoc}
@@ -32,13 +33,13 @@ class DevelCommandsTest extends BrowserTestBase {
   /**
    * Tests drush commands.
    */
-  public function testCommands() {
-    $this->drush('devel:token', [], ['format' => 'json']);
+  public function testCommands(): void {
+    $this->drush(DevelCommands::TOKEN, [], ['format' => 'json']);
     $output = $this->getOutputFromJSON();
     $tokens = array_column($output, 'token');
     $this->assertContains('account-name', $tokens);
 
-    $this->drush('devel:services', [], ['format' => 'json']);
+    $this->drush(DevelCommands::SERVICES, [], ['format' => 'json']);
     $output = $this->getOutputFromJSON();
     $this->assertContains('current_user', $output);
   }

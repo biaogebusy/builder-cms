@@ -17,16 +17,16 @@ class Single extends FilterWidgetBase {
   /**
    * {@inheritdoc}
    */
-  public static function isApplicable($filter = NULL, array $filter_options = []) {
-    /** @var \Drupal\views\Plugin\views\filter\FilterPluginBase $filter */
+  public static function isApplicable(mixed $handler = NULL, array $options = []): bool {
+    /** @var \Drupal\views\Plugin\views\filter\FilterPluginBase $handler */
     $is_applicable = FALSE;
 
     // Sanity check to ensure we have a filter to work with.
-    if (is_null($filter)) {
+    if (is_null($handler)) {
       return FALSE;
     }
 
-    if (is_a($filter, 'Drupal\views\Plugin\views\filter\BooleanOperator') || ($filter->isAGroup() && count($filter->options['group_info']['group_items']) == 1)) {
+    if (is_a($handler, 'Drupal\views\Plugin\views\filter\BooleanOperator') || ($handler->isAGroup() && count($handler->options['group_info']['group_items']) == 1)) {
       $is_applicable = TRUE;
     }
 
@@ -36,7 +36,7 @@ class Single extends FilterWidgetBase {
   /**
    * {@inheritdoc}
    */
-  public function exposedFormAlter(array &$form, FormStateInterface $form_state) {
+  public function exposedFormAlter(array &$form, FormStateInterface $form_state): void {
     /** @var \Drupal\views\Plugin\views\filter\FilterPluginBase $filter */
     $filter = $this->handler;
     // Form element is designated by the element ID which is user-

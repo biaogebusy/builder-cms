@@ -6,7 +6,7 @@ package: Testing
 dependencies:
   - ctools:ctools
 
-# Information added by Drupal.org packaging script on 2023-05-17
-version: '8.x-3.14'
+# Information added by Drupal.org packaging script on 2024-06-11
+version: '8.x-3.15'
 project: 'ctools'
-datestamp: 1684299796
+datestamp: 1718145172

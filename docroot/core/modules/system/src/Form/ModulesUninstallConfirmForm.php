@@ -76,13 +76,16 @@ class ModulesUninstallConfirmForm extends ConfirmFormBase {
    *   The entity type manager.
    * @param \Drupal\Core\Extension\ModuleExtensionList $extension_list_module
    *   The module extension list.
+   * @param string|false|null $installProfile
+   *   The install profile.
    */
-  public function __construct(ModuleInstallerInterface $module_installer, KeyValueStoreExpirableInterface $key_value_expirable, ConfigManagerInterface $config_manager, EntityTypeManagerInterface $entity_type_manager, ModuleExtensionList $extension_list_module) {
+  public function __construct(ModuleInstallerInterface $module_installer, KeyValueStoreExpirableInterface $key_value_expirable, ConfigManagerInterface $config_manager, EntityTypeManagerInterface $entity_type_manager, ModuleExtensionList $extension_list_module, protected string|false|null $installProfile = NULL) {
     $this->moduleInstaller = $module_installer;
     $this->keyValueExpirable = $key_value_expirable;
     $this->configManager = $config_manager;
     $this->entityTypeManager = $entity_type_manager;
     $this->moduleExtensionList = $extension_list_module;
+    $this->installProfile ??= \Drupal::installProfile();
   }
 
   /**
@@ -94,7 +97,8 @@ class ModulesUninstallConfirmForm extends ConfirmFormBase {
       $container->get('keyvalue.expirable')->get('modules_uninstall'),
       $container->get('config.manager'),
       $container->get('entity_type.manager'),
-      $container->get('extension.list.module')
+      $container->get('extension.list.module'),
+      $container->getParameter('install_profile')
     );
   }
 
@@ -143,7 +147,7 @@ class ModulesUninstallConfirmForm extends ConfirmFormBase {
 
     // Prevent this page from showing when the module list is empty.
     if (empty($this->modules)) {
-      $this->messenger()->addError($this->t('The selected modules could not be uninstalled, either due to a website problem or due to the uninstall confirmation form timing out. Please try again.'));
+      $this->messenger()->addError($this->t('The selected modules could not be uninstalled, either due to a website problem or due to the uninstall confirmation form timing out.'));
       return $this->redirect('system.modules_uninstall');
     }
 
@@ -155,6 +159,10 @@ class ModulesUninstallConfirmForm extends ConfirmFormBase {
         return $data[$module]->info['name'];
       }, $this->modules),
     ];
+
+    if (!empty($this->installProfile) && in_array($this->installProfile, $this->modules, TRUE)) {
+      $form['profile']['#markup'] = '<p>' . $this->t('Once uninstalled, the %install_profile profile cannot be reinstalled.', ['%install_profile' => $data[$this->installProfile]->info['name']]) . '</p>';
+    }
 
     // List the dependent entities.
     $this->addDependencyListsToForm($form, 'module', $this->modules, $this->configManager, $this->entityTypeManager);

@@ -3,13 +3,13 @@
  * Site header.
  */
 
-@import "../base/variables.pcss.css";
+@import "../base/media-queries.pcss.css";
 
 .site-header {
   position: relative;
   /**
    * Ensure mobile site header is always above other elements including
-   * contextual links, quick-edit, and Tour.
+   * contextual links, and Tour.
    */
   z-index: 101;
 
@@ -26,7 +26,7 @@
   display: flex;
   align-items: flex-end;
   align-self: stretch;
-  background-color: var(--color--blue-50);
+  background-color: var(--color--primary-50);
 }
 
 .site-header__fixable {
@@ -48,28 +48,17 @@
     & .site-header__fixable.is-fixed {
       position: fixed;
       z-index: 102; /* Appear above body content that is position: relative */
-      inset-block-start: calc(-1 * var(--sp4));
+      inset-block-start: calc(var(--drupal-displace-offset-top, 0px) - var(--sp4));
       max-width: var(--max-bg-color);
-    }
-
-    /* Toolbar is fixed, and tray is either vertical or closed and horizontal. */
-    &.toolbar-vertical.toolbar-fixed,
-    &.toolbar-horizontal.toolbar-fixed {
-      & .site-header__fixable.is-fixed {
-        inset-block-start: calc(var(--toolbar-height) - var(--sp4));
-      }
-    }
-    /* Toolbar is fixed, and tray is open and horizontal. */
-    &.toolbar-horizontal.toolbar-fixed.toolbar-tray-open .site-header__fixable.is-fixed {
-      inset-block-start: calc(var(--toolbar-tray-height) + var(--toolbar-height) - var(--sp4));
     }
   }
 }
 
 .site-header__inner {
+  position: relative;
   z-index: 1; /* Appear in front of Drupal's tabs. */
   flex-grow: 1;
-  width: calc(100vw - var(--content-left));
+  width: calc(100vw - var(--content-left) - var(--drupal-displace-offset-left, 0px) - var(--drupal-displace-offset-right, 0px));
   background: var(--color--white);
 }
 
@@ -79,7 +68,10 @@
  */
 html.js body:not(.is-always-mobile-nav) .site-header__inner {
   @media (--nav) {
-    transition: opacity 0.3s, transform 0.3s, box-shadow 0.3s;
+    transition:
+      opacity 0.3s,
+      transform 0.3s,
+      box-shadow 0.3s;
   }
 }
 
@@ -112,4 +104,9 @@ body:not(.is-always-mobile-nav) .site-header__fixable.is-fixed:not(.is-expanded)
 .site-header__inner__container {
   display: flex;
   justify-content: space-between;
+}
+
+/* Reset width set by layout.css */
+body.is-fixed .site-header__inner__container {
+  width: auto;
 }

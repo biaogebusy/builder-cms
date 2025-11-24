@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\entity_share_client\Service;
 
 use Drupal\Component\Serialization\Json;
+use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\entity_share_client\Entity\RemoteInterface;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\ClientException;
@@ -14,8 +15,6 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Service to wrap requests logic.
- *
- * @package Drupal\entity_share_client\Service
  */
 class RemoteManager implements RemoteManagerInterface {
 
@@ -24,14 +23,14 @@ class RemoteManager implements RemoteManagerInterface {
    *
    * @var bool
    */
-  const STANDARD_CLIENT = FALSE;
+  public const STANDARD_CLIENT = FALSE;
 
   /**
    * A constant to document the call for a JSON:API client.
    *
    * @var bool
    */
-  const JSON_API_CLIENT = TRUE;
+  public const JSON_API_CLIENT = TRUE;
 
   /**
    * Logger.
@@ -39,6 +38,13 @@ class RemoteManager implements RemoteManagerInterface {
    * @var \Psr\Log\LoggerInterface
    */
   protected $logger;
+
+  /**
+   * The cache backend.
+   *
+   * @var \Drupal\Core\Cache\CacheBackendInterface
+   */
+  protected $cacheBackend;
 
   /**
    * HTTP clients prepared per remote.
@@ -66,11 +72,15 @@ class RemoteManager implements RemoteManagerInterface {
    *
    * @param \Psr\Log\LoggerInterface $logger
    *   The logger service.
+   * @param \Drupal\Core\Cache\CacheBackendInterface $cache_backend
+   *   The cache backend.
    */
   public function __construct(
-    LoggerInterface $logger
+    LoggerInterface $logger,
+    CacheBackendInterface $cache_backend,
   ) {
     $this->logger = $logger;
+    $this->cacheBackend = $cache_backend;
   }
 
   /**
@@ -102,10 +112,17 @@ class RemoteManager implements RemoteManagerInterface {
           'field_mappings' => [],
         ],
       ];
-      if (!is_null($response)) {
+      if ($response !== NULL) {
         $json = Json::decode((string) $response->getBody());
       }
       $this->remoteInfos[$remote_id] = $json['data'];
+
+      // Cache the channel labels for the import status list.
+      $channel_labels = array_combine(array_keys($json['data']['channels']), array_column($json['data']['channels'], 'label'));
+      $cache = $this->cacheBackend->get('entity_share_client:channels');
+      $all_channel_labels = $cache->data ?? [];
+      $all_channel_labels[$remote_id] = $channel_labels;
+      $this->cacheBackend->set('entity_share_client:channels', $all_channel_labels);
     }
 
     return $this->remoteInfos[$remote_id]['channels'];

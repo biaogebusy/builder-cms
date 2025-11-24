@@ -30,7 +30,7 @@ class TextWithSummaryFieldDiffParser extends DiffGeneratorPluginBase {
       $values = $field_item->getValue();
       // Handle the text summary.
       if (isset($values['summary'])) {
-        if ($values['summary'] != "") {
+        if ($values['summary'] != '') {
           $label = (string) $this->t('Summary');
           $result[$field_key][$label] = $values['summary'];
         }

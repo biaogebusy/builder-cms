@@ -260,7 +260,8 @@ class ConfigFactory implements ConfigFactoryInterface, EventSubscriberInterface 
 
     // Prime the cache and load the configuration with the correct overrides.
     $config = $this->get($new_name);
-    $this->eventDispatcher->dispatch(new ConfigRenameEvent($config, $old_name), ConfigEvents::RENAME);
+    $event_name = $this->storage->getCollectionName() === StorageInterface::DEFAULT_COLLECTION ? ConfigEvents::RENAME : ConfigCollectionEvents::RENAME_IN_COLLECTION;
+    $this->eventDispatcher->dispatch(new ConfigRenameEvent($config, $old_name), $event_name);
     return $this;
   }
 
@@ -309,7 +310,7 @@ class ConfigFactory implements ConfigFactoryInterface, EventSubscriberInterface 
     return array_filter(array_keys($this->cache), function ($key) use ($name) {
       // Return TRUE if the key is the name or starts with the configuration
       // name plus the delimiter.
-      return $key === $name || strpos($key, $name . ':') === 0;
+      return $key === $name || str_starts_with($key, $name . ':');
     });
   }
 
@@ -382,7 +383,7 @@ class ConfigFactory implements ConfigFactoryInterface, EventSubscriberInterface 
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     $events[ConfigEvents::SAVE][] = ['onConfigSave', 255];
     $events[ConfigEvents::DELETE][] = ['onConfigDelete', 255];
     return $events;

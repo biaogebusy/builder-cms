@@ -2,11 +2,9 @@
 
 namespace Drupal\commerce_product\ContextProvider;
 
-use Drupal\commerce_product\Entity\ProductInterface;
-use Drupal\commerce_product\Entity\ProductType;
-use Drupal\commerce_product\ProductVariationStorageInterface;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\Display\EntityDisplayInterface;
+use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\Context\Context;
 use Drupal\Core\Plugin\Context\ContextProviderInterface;
@@ -15,6 +13,8 @@ use Drupal\Core\Plugin\Context\EntityContextDefinition;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce_product\Entity\ProductInterface;
+use Drupal\commerce_product\Entity\ProductVariationInterface;
 use Drupal\layout_builder\DefaultsSectionStorageInterface;
 use Drupal\layout_builder\Entity\SampleEntityGeneratorInterface;
 use Drupal\layout_builder\OverridesSectionStorageInterface;
@@ -27,38 +27,27 @@ class ProductVariationContext implements ContextProviderInterface {
   use StringTranslationTrait;
 
   /**
-   * The route match.
-   *
-   * @var \Drupal\Core\Routing\RouteMatchInterface
-   */
-  protected $routeMatch;
-
-  /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
    * The sample entity generator.
    *
    * @var \Drupal\layout_builder\Entity\SampleEntityGeneratorInterface|null
    */
-  protected $sampleEntityGenerator;
+  protected $sampleEntityGenerator = NULL;
 
   /**
    * Constructs a new ProductVariationContext object.
    *
-   * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
+   * @param \Drupal\Core\Routing\RouteMatchInterface $routeMatch
    *   The route match.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
+   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entityTypeBundleInfo
+   *   The entity type bundle info.
    */
-  public function __construct(RouteMatchInterface $route_match, EntityTypeManagerInterface $entity_type_manager) {
-    $this->routeMatch = $route_match;
-    $this->entityTypeManager = $entity_type_manager;
-  }
+  public function __construct(
+    protected RouteMatchInterface $routeMatch,
+    protected EntityTypeManagerInterface $entityTypeManager,
+    protected EntityTypeBundleInfoInterface $entityTypeBundleInfo,
+  ) {}
 
   /**
    * Set the sample entity generator.
@@ -76,54 +65,73 @@ class ProductVariationContext implements ContextProviderInterface {
   public function getRuntimeContexts(array $unqualified_context_ids) {
     $context_definition = new EntityContextDefinition('entity:commerce_product_variation', new TranslatableMarkup('Product variation'));
     $value = $this->routeMatch->getParameter('commerce_product_variation');
-    if ($value === NULL) {
-      $product = $this->routeMatch->getParameter('commerce_product');
-      if ($product instanceof ProductInterface) {
-        $product_variation_storage = $this->entityTypeManager->getStorage('commerce_product_variation');
-        assert($product_variation_storage instanceof ProductVariationStorageInterface);
-        $value = $product_variation_storage->loadFromContext($product);
-        if ($value === NULL) {
-          $product_type = ProductType::load($product->bundle());
-          $variation_types = $product_type->getVariationTypeIds();
-          $value = $product_variation_storage->create([
-            'type' => reset($variation_types),
-          ]);
+    $context_key = 'commerce_product_variation';
+    $cacheability = new CacheableMetadata();
+    $cacheability->setCacheContexts(['route']);
+    $layout_page = str_contains((string) $this->routeMatch->getRouteName(), 'layout_builder');
+
+    // Just set variation from route params if it exists, and return the result.
+    if ($value instanceof ProductVariationInterface) {
+      $context = new Context($context_definition, $value);
+      $context->addCacheableDependency($cacheability);
+      return [$context_key => $context];
+    }
+
+    /** @var \Drupal\commerce_product\ProductVariationStorageInterface $product_variation_storage */
+    $product_variation_storage = $this->entityTypeManager->getStorage('commerce_product_variation');
+    $product_type_storage = $this->entityTypeManager->getStorage('commerce_product_type');
+    $product = $this->routeMatch->getParameter('commerce_product');
+    if ($product instanceof ProductInterface) {
+      $value = $product_variation_storage->loadFromContext($product);
+      $bundle = $product->bundle();
+    }
+    // @todo Simplify this logic once EntityTargetInterface is available
+    // @see https://www.drupal.org/project/drupal/issues/3054490
+    elseif ($layout_page) {
+      /** @var \Drupal\layout_builder\SectionStorageInterface $section_storage */
+      $section_storage = $this->routeMatch->getParameter('section_storage');
+      if ($section_storage instanceof DefaultsSectionStorageInterface) {
+        $context = $section_storage->getContextValue('display');
+        assert($context instanceof EntityDisplayInterface);
+        if ($context->getTargetEntityTypeId() === 'commerce_product') {
+          $bundle = $context->getTargetBundle();
         }
       }
-      // @todo Simplify this logic once EntityTargetInterface is available
-      // @see https://www.drupal.org/project/drupal/issues/3054490
-      elseif (strpos((string) $this->routeMatch->getRouteName(), 'layout_builder') !== FALSE) {
-        /** @var \Drupal\layout_builder\SectionStorageInterface $section_storage */
-        $section_storage = $this->routeMatch->getParameter('section_storage');
-        if ($section_storage instanceof DefaultsSectionStorageInterface) {
-          $context = $section_storage->getContextValue('display');
-          assert($context instanceof EntityDisplayInterface);
-          if ($context->getTargetEntityTypeId() === 'commerce_product') {
-            $product_type = ProductType::load($context->getTargetBundle());
-            $variation_types = $product_type->getVariationTypeIds();
-            $value = $this->sampleEntityGenerator->get('commerce_product_variation', reset($variation_types));
-          }
-        }
-        elseif ($section_storage instanceof OverridesSectionStorageInterface) {
-          $context = $section_storage->getContextValue('entity');
-          if ($context instanceof ProductInterface) {
-            $value = $context->getDefaultVariation();
-            if ($value === NULL) {
-              $product_type = ProductType::load($context->bundle());
-              $variation_types = $product_type->getVariationTypeIds();
-              $value = $this->sampleEntityGenerator->get('commerce_product_variation', reset($variation_types));
-            }
-          }
+      elseif ($section_storage instanceof OverridesSectionStorageInterface) {
+        $context = $section_storage->getContextValue('entity');
+        if ($context instanceof ProductInterface) {
+          $value = $context->getDefaultVariation();
+          $bundle = $context->bundle();
         }
       }
     }
 
-    $cacheability = new CacheableMetadata();
-    $cacheability->setCacheContexts(['route']);
+    // For the existing bundle load list of the variation types related to it,
+    // in another case get all variation types.
+    if (isset($bundle)) {
+      /** @var \Drupal\commerce_product\Entity\ProductTypeInterface $product_type */
+      $product_type = $product_type_storage->load($bundle);
+      $variation_types = $product_type->getVariationTypeIds();
+    }
+    else {
+      $variation_types = array_keys($this->entityTypeBundleInfo->getBundleInfo('commerce_product_variation'));
+    }
+
+    if (!($value instanceof ProductVariationInterface)) {
+      if ($this->sampleEntityGenerator && !empty($layout_page)) {
+        $value = $this->sampleEntityGenerator->get('commerce_product_variation', reset($variation_types));
+      }
+      else {
+        $value = $product_variation_storage->create([
+          'type' => reset($variation_types),
+        ]);
+      }
+    }
+
     $context = new Context($context_definition, $value);
     $context->addCacheableDependency($cacheability);
 
-    return ['commerce_product_variation' => $context];
+    return [$context_key => $context];
   }
 
   /**

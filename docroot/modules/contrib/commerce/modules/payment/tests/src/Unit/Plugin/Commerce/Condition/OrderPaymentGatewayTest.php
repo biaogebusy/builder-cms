@@ -2,11 +2,11 @@
 
 namespace Drupal\Tests\commerce_payment\Unit\Plugin\Commerce\Condition;
 
-use Drupal\commerce_order\Entity\OrderInterface;
-use Drupal\commerce_payment\Plugin\Commerce\Condition\OrderPaymentGateway;
 use Drupal\Core\Field\EntityReferenceFieldItemList;
 use Drupal\Core\Field\Plugin\Field\FieldType\EntityReferenceItem;
 use Drupal\Tests\UnitTestCase;
+use Drupal\commerce_order\Entity\OrderInterface;
+use Drupal\commerce_payment\Plugin\Commerce\Condition\OrderPaymentGateway;
 
 /**
  * @coversDefaultClass \Drupal\commerce_payment\Plugin\Commerce\Condition\OrderPaymentGateway

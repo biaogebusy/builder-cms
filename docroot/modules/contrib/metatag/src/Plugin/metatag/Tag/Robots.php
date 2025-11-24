@@ -25,15 +25,9 @@ class Robots extends MetaNameBase {
   use StringTranslationTrait;
 
   /**
-   * Sets the value of this tag.
-   *
-   * @param string|array $value
-   *   The value to set to this tag.
-   *   It can be an array if it comes from a form submission or from field
-   *   defaults, in which case
-   *   we transform it to a comma-separated string.
+   * {@inheritdoc}
    */
-  public function setValue($value) {
+  public function setValue($value): void {
     if (is_array($value)) {
       $value = array_filter($value);
       $value = implode(', ', array_keys($value));
@@ -44,7 +38,7 @@ class Robots extends MetaNameBase {
   /**
    * {@inheritdoc}
    */
-  public function form(array $element = []) {
+  public function form(array $element = []): array {
     $form = [];
     $form['robots'] = [
       '#type' => 'checkboxes',
@@ -149,7 +143,7 @@ class Robots extends MetaNameBase {
    * @return array
    *   A list of values available for this select tag.
    */
-  protected function formValues() {
+  protected function formValues(): array {
     return [
       'index' => $this->t('index - Allow search engines to index this page (assumed).'),
       'follow' => $this->t('follow - Allow search engines to follow links on this page (assumed).'),
@@ -165,7 +159,58 @@ class Robots extends MetaNameBase {
   /**
    * {@inheritdoc}
    */
-  public static function validateTag(array &$element, FormStateInterface $form_state) {
+  public function getTestFormXpath(): array {
+    $paths = [];
+    foreach ($this->formValues() as $key => $value) {
+      $paths[] = "//input[@name='robots[{$key}]' and @type='checkbox']";
+    }
+    return $paths;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTestFormData(): array {
+    return [
+      // @todo Expand this?
+      'robots[index]' => TRUE,
+      'robots[nofollow]' => TRUE,
+      // 'robots[follow]',
+      'robots-keyed[max-snippet]' => 10,
+      'robots-keyed[max-video-preview]' => 20,
+      'robots-keyed[max-image-preview]' => 'none',
+      'robots-keyed[unavailable_after]' => '2022-12-31',
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTestOutputValuesXpath(array $values): array {
+    // This tag outputs its multiple possible values as a comma-separated string
+    // so just use the standard test output once the values are joined together
+    // as a single string.
+    $new_values = [];
+    foreach ($values as $form_field_name => $value) {
+      // The strings are stored as e.g. "robots[index]", "robots[nofollow]",
+      // etc. So in order to get the value names we need to remove the first
+      // part and the wrapping brackets.
+      if (strpos($form_field_name, 'robots[') !== FALSE) {
+        $new_values[] = substr($form_field_name, 7, -1);
+      }
+      // Newer strings are stored with the form name "robots-keyed[something]",
+      // so those need the substring to be extracted and then.
+      elseif (strpos($form_field_name, 'robots-keyed[') !== FALSE) {
+        $new_values[] = substr($form_field_name, 13, -1) . ':' . $value;
+      }
+    }
+    return parent::getTestOutputValuesXpath([implode(', ', $new_values)]);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function validateTag(array &$element, FormStateInterface $form_state): void {
     $robots_combined_value = $form_state->getValue($element['#parents']);
     $robots_root_parents = array_slice($element['#parents'], 0, -1);
     $robots_keyed = $form_state->getValue(array_merge($robots_root_parents, ['robots-keyed']));

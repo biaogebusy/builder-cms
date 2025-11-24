@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Kernel\Handler;
 
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
@@ -23,7 +25,7 @@ class AreaTitleTest extends ViewsKernelTestBase {
   /**
    * Tests the title area handler.
    */
-  public function testTitleText() {
+  public function testTitleText(): void {
     $view = Views::getView('test_area_title');
 
     $view->setDisplay('default');

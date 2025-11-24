@@ -1,0 +1,14 @@
+{#
+/**
+ * @file
+ * Theme implementation for embedding a Youtube video within the Commerce dashboard.
+ *
+ * Available variables
+ * - youtube_id: YouTube video id.
+ *
+ * @ingroup themeable
+ */
+#}
+<div class="commerce-dashboard--video">
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/{{ youtube_id }}?rel=0&modestbranding=1{{ autoplay ? '&autoplay=1' : '' }}"{{ autoplay ? 'allow="autoplay"' : '' }} title="YouTube video" allowfullscreen></iframe>
+</div>

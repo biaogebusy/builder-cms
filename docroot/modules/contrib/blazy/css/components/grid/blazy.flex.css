@@ -30,9 +30,11 @@
   height: auto;
   min-height: 40px;
   margin: 0 auto;
-  padding: 0;
   list-style: none;
-  transition: min-height 0.3s;
+}
+
+ul.blazy.b-flex {
+  padding: 0;
 }
 
 .b-flex > .grid,
@@ -47,26 +49,14 @@
   overlapping .grid placement, yet best for dynamic var calculation. */
   margin: 0 auto var(--bf-col-gap);
   padding: 0;
-}
-
-.b-flex.is-b-flex-disabled > .grid {
-  margin-top: 0 !important;
-}
-
-/** @todo listen to transitionend. */
-.b-flex.is-b-flex-done:not(.is-b-flex-resized) > .grid {
-  transition: transform 0.5s;
-}
-
-.b-flex.is-b-flex-resized > .grid,
-[data-once*="ajax-pager"] .is-b-flex-done:not(.is-b-flex-resized) > .grid {
+  /* At most grids, transition is causing issues than helpful. */
   transition: none;
 }
 
-.b-flex .grid__content {
-  position: relative;
-  overflow: visible;
-  max-width: 100%;
+.b-flex.is-b-flex-disabled:not(.is-b-gapless) > .grid,
+.item-list > .is-b-flex-disabled:not(.is-b-gapless) > .grid {
+  margin-top: 0 !important;
+  margin-bottom: var(--bf-col-gap);
 }
 
 /** 480px with 16px base font. */

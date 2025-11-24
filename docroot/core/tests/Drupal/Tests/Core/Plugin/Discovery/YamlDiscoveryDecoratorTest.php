@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Plugin\Discovery;
 
 use Drupal\Tests\UnitTestCase;
@@ -70,7 +72,7 @@ class YamlDiscoveryDecoratorTest extends UnitTestCase {
   /**
    * Tests the getDefinitions() method.
    */
-  public function testGetDefinitions() {
+  public function testGetDefinitions(): void {
     $definitions = $this->discoveryDecorator->getDefinitions();
 
     $this->assertIsArray($definitions);

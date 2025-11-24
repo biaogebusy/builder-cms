@@ -72,7 +72,7 @@ function hook_shs_FIELDNAME_js_settings_alter(array &$settings_shs, $bundle, $fi
     t('Country'),
     t('City'),
   ];
-  // Small speed-up for anmiations (defaults to 400ms).
+  // Small speed-up for animations (defaults to 400ms).
   $settings_shs['display']['animationSpeed'] = 100;
 }
 
@@ -82,7 +82,7 @@ function hook_shs_FIELDNAME_js_settings_alter(array &$settings_shs, $bundle, $fi
  * @param array $data
  *   Array with term data used for a single SHS widget.
  * @param array $context
- *   Associativ array containing information about the current context:
+ *   Associative array containing information about the current context:
  *   - bundle: Name of vocabulary the data is fetched from
  *   - identifier: Identifier of field to fetch the data for
  *   - parent: Term Id of parent term (0 for first level)
@@ -102,7 +102,7 @@ function hook_shs_term_data_alter(array &$data, array $context) {
  * @param array $data
  *   Array with term data used for a single SHS widget.
  * @param array $context
- *   Associativ array containing information about the current context:
+ *   Associative array containing information about the current context:
  *   - bundle: Name of vocabulary the data is fetched from
  *   - identifier: Identifier of field to fetch the data for
  *   - parent: Term Id of parent term (0 for first level)
@@ -110,7 +110,7 @@ function hook_shs_term_data_alter(array &$data, array $context) {
  * @see ShsController::getTermData()
  * @see hook_shs_term_data_alter()
  */
-function hook_shs__bundle_BUNDLENAME__term_data_alter(array &$data, array $context) {
+function hook_shs__bundle_BUNDLE_NAME__term_data_alter(array &$data, array $context) {
 
 }
 
@@ -120,7 +120,7 @@ function hook_shs__bundle_BUNDLENAME__term_data_alter(array &$data, array $conte
  * @param array $data
  *   Array with term data used for a single SHS widget.
  * @param array $context
- *   Associativ array containing information about the current context:
+ *   Associative array containing information about the current context:
  *   - bundle: Name of vocabulary the data is fetched from
  *   - identifier: Identifier of field to fetch the data for
  *   - parent: Term Id of parent term (0 for first level)
@@ -141,7 +141,7 @@ function hook_shs__field_IDENTIFIER__term_data_alter(array &$data, array $contex
  * @param string $content
  *   Json encoded string with data from ShsController::getTermData().
  * @param array $context
- *   Associativ array containing information about the current context:
+ *   Associative array containing information about the current context:
  *   - bundle: Name of vocabulary the data is fetched from
  *   - identifier: Identifier of field to fetch the data for
  *   - parent: Term Id of parent term (0 for first level)
@@ -153,7 +153,7 @@ function hook_shs_term_data_response_alter(&$content, array $context) {
   array_walk($data, function (&$term, &$key) {
     $term->name = $key . ': ' . $term->name;
   });
-  $options = isset($context['encodingOptions']) ? $context['encodingOptions'] : 0;
+  $options = $context['encodingOptions'] ?? 0;
   $content = json_encode($data, $options);
 }
 
@@ -163,7 +163,7 @@ function hook_shs_term_data_response_alter(&$content, array $context) {
  * @param string $content
  *   Json encoded string with data from ShsController::getTermData().
  * @param array $context
- *   Associativ array containing information about the current context:
+ *   Associative array containing information about the current context:
  *   - bundle: Name of vocabulary the data is fetched from
  *   - identifier: Identifier of field to fetch the data for
  *   - parent: Term Id of parent term (0 for first level)
@@ -171,7 +171,7 @@ function hook_shs_term_data_response_alter(&$content, array $context) {
  *
  * @see hook_shs_term_data_response_alter()
  */
-function hook_shs__bundle_BUNDLENAME__term_data_response_alter(&$content, array $context) {
+function hook_shs__bundle_BUNDLE_NAME__term_data_response_alter(&$content, array $context) {
 
 }
 
@@ -181,7 +181,7 @@ function hook_shs__bundle_BUNDLENAME__term_data_response_alter(&$content, array 
  * @param string $content
  *   Json encoded string with data from ShsController::getTermData().
  * @param array $context
- *   Associativ array containing information about the current context:
+ *   Associative array containing information about the current context:
  *   - bundle: Name of vocabulary the data is fetched from
  *   - identifier: Identifier of field to fetch the data for
  *   - parent: Term Id of parent term (0 for first level)

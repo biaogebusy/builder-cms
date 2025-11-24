@@ -13,7 +13,7 @@ class InstagramUrlResolver extends UrlResolver {
   /**
    * {@inheritdoc}
    */
-  public function getResourceUrl($url, $max_width = NULL, $max_height = NULL, $settings = []) {
+  public function getResourceUrl($url, $max_width = NULL, $max_height = NULL, $settings = []): string {
     // Try to get the resource URL from the static cache.
     if (isset($this->urlCache[$url])) {
       return $this->urlCache[$url];

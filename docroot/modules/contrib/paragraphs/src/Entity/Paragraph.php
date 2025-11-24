@@ -4,6 +4,9 @@ namespace Drupal\paragraphs\Entity;
 
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Component\Utility\Unicode;
+use Drupal\Core\Entity\Attribute\ContentEntityType;
+use Drupal\Core\Entity\ContentEntityDeleteForm;
+use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityPublishedTrait;
 use Drupal\Core\Entity\EntityStorageInterface;
@@ -15,13 +18,18 @@ use Drupal\Core\Field\EntityReferenceFieldItemListInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\TranslatableInterface;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\entity_reference_revisions\EntityNeedsSaveTrait;
 use Drupal\field\FieldConfigInterface;
+use Drupal\paragraphs\ParagraphAccessControlHandler;
 use Drupal\paragraphs\ParagraphInterface;
+use Drupal\paragraphs\ParagraphStorageSchema;
+use Drupal\paragraphs\ParagraphViewBuilder;
 use Drupal\user\EntityOwnerInterface;
 use Drupal\user\UserInterface;
+use Drupal\views\EntityViewsData;
 
 /**
  * Defines the Paragraph entity.
@@ -97,6 +105,76 @@ use Drupal\user\UserInterface;
  *   }
  * )
  */
+#[ContentEntityType(
+  id: 'paragraph',
+  label: new TranslatableMarkup('Paragraph'),
+  label_collection: new TranslatableMarkup('Paragraphs'),
+  label_singular: new TranslatableMarkup('Paragraph'),
+  label_plural: new TranslatableMarkup('Paragraphs'),
+  render_cache: FALSE,
+  entity_keys: [
+    'id' => 'id',
+    'uuid' => 'uuid',
+    'bundle' => 'type',
+    'langcode' => 'langcode',
+    'revision' => 'revision_id',
+    'published' => 'status',
+  ],
+  handlers: [
+    'view_builder' => ParagraphViewBuilder::class,
+    'access' => ParagraphAccessControlHandler::class,
+    'storage_schema' => ParagraphStorageSchema::class,
+    'form' => [
+      'default' => ContentEntityForm::class,
+      'delete' => ContentEntityDeleteForm::class,
+      'edit' => ContentEntityForm::class,
+    ],
+    'views_data' => EntityViewsData::class,
+  ],
+  bundle_entity_type: 'paragraphs_type',
+  bundle_label: new TranslatableMarkup('Paragraph type'),
+  base_table: 'paragraphs_item',
+  data_table: 'paragraphs_item_field_data',
+  revision_table: 'paragraphs_item_revision',
+  revision_data_table: 'paragraphs_item_revision_field_data',
+  translatable: TRUE,
+  label_count: [
+    'singular' => '@count Paragraph',
+    'plural' => '@count Paragraphs',
+  ],
+  field_ui_base_route: 'entity.paragraphs_type.edit_form',
+  additional: [
+    'content_translation_ui_skip' => TRUE,
+    'entity_revision_parent_type_field' => 'parent_type',
+    'entity_revision_parent_id_field' => 'parent_id',
+    'entity_revision_parent_field_name_field' => 'parent_field_name',
+    'common_reference_revisions_target' => TRUE,
+    'default_reference_revision_settings' => [
+      'field_storage_config' => [
+        'cardinality' => -1,
+          'settings' => [
+          'target_type' => 'paragraph'
+        ],
+      ],
+      'field_config' => [
+      'settings' => [
+        'handler' => 'default:paragraph'
+        ],
+      ],
+      'entity_form_display' => [
+      'type' => 'paragraphs'
+      ],
+      'entity_view_display' => [
+      'type' => 'entity_reference_revisions_entity_view'
+      ],
+    ],
+    'serialized_field_property_names' => [
+    'behavior_settings' => [
+      'value'
+      ],
+    ],
+  ]
+)]
 class Paragraph extends ContentEntityBase implements ParagraphInterface {
 
   use EntityNeedsSaveTrait;
@@ -125,7 +203,12 @@ class Paragraph extends ContentEntityBase implements ParagraphInterface {
       return NULL;
     }
 
-    $parent = \Drupal::entityTypeManager()->getStorage($this->get('parent_type')->value)->load($this->get('parent_id')->value);
+    $entityTypeManager = \Drupal::entityTypeManager();
+    if ($entityTypeManager->hasDefinition($this->get('parent_type')->value)) {
+      $parent = $entityTypeManager
+        ->getStorage($this->get('parent_type')->value)
+        ->load($this->get('parent_id')->value);
+    }
 
     // Return current translation of parent entity, if it exists.
     if ($parent != NULL && ($parent instanceof TranslatableInterface) && $parent->hasTranslation($this->language()->getId())) {
@@ -422,7 +505,9 @@ class Paragraph extends ContentEntityBase implements ParagraphInterface {
    foreach ($duplicate->getFields() as $fieldItemList) {
      if ($fieldItemList instanceof EntityReferenceFieldItemListInterface && $fieldItemList->getSetting('target_type') === $this->getEntityTypeId()) {
        foreach ($fieldItemList as $delta => $item) {
-         if ($item->entity) {
+         // Duplicate child paragraphs, remove when requiring 10.2+.
+         // @see \Drupal\paragraphs\Hook\EntityHooks::duplicate()
+         if ($item->entity && !$item->entity->isNew()) {
            $fieldItemList[$delta] = $item->entity->createDuplicate();
          }
        }
@@ -496,7 +581,7 @@ class Paragraph extends ContentEntityBase implements ParagraphInterface {
         foreach ($referenced_entities as $referenced_entity) {
           if ($referenced_entity->access('view label')) {
             // Switch to the entity translation in the current context.
-            $entity = \Drupal::service('entity.repository')->getTranslationFromContext($referenced_entity, $this->activeLangcode);
+            $entity = \Drupal::service('entity.repository')->getTranslationFromContext($referenced_entity, $this->language()->getId());
             $summary['content'][] = $entity->label();
           }
         }
@@ -697,7 +782,7 @@ class Paragraph extends ContentEntityBase implements ParagraphInterface {
         $entity = $item->entity;
         if ($entity instanceof ParagraphInterface) {
           // Switch to the entity translation in the current context if exists.
-          $entity = \Drupal::service('entity.repository')->getTranslationFromContext($entity, $this->activeLangcode);
+          $entity = \Drupal::service('entity.repository')->getTranslationFromContext($entity, $this->language()->getId());
           $content_summary_items = $entity->getSummaryItems($options)['content'];
           $summary_content = array_merge($summary_content, array_values($content_summary_items));
           $this->summaryCount++;
@@ -751,5 +836,4 @@ class Paragraph extends ContentEntityBase implements ParagraphInterface {
 
     return $summary;
   }
-
 }

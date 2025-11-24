@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\commerce_order\Kernel\Entity;
 
+use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 use Drupal\commerce_order\Adjustment;
 use Drupal\commerce_order\Entity\Order;
 use Drupal\commerce_order\Entity\OrderInterface;
@@ -9,7 +10,6 @@ use Drupal\commerce_order\Entity\OrderItem;
 use Drupal\commerce_price\Exception\CurrencyMismatchException;
 use Drupal\commerce_price\Price;
 use Drupal\profile\Entity\Profile;
-use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 use Drupal\user\UserInterface;
 
 /**
@@ -383,7 +383,7 @@ class OrderTest extends OrderKernelTestBase {
    * Tests that an order's email updates with the customer.
    */
   public function testOrderEmail() {
-    $customer = $this->createUser(['mail' => 'test@example.com']);
+    $customer = $this->createUser();
     $order_with_customer = Order::create([
       'type' => 'default',
       'state' => 'completed',
@@ -657,6 +657,28 @@ class OrderTest extends OrderKernelTestBase {
     ]);
     $another_order->save();
     $this->assertEquals(1, $another_order->getData('order_test_called'));
+
+    // Confirm that the event is not dispatched for free draft orders.
+    $order_item = OrderItem::create([
+      'type' => 'test',
+      'quantity' => '1',
+      'unit_price' => new Price('0.00', 'USD'),
+    ]);
+    $order_item->save();
+    $order = Order::create([
+      'type' => 'default',
+      'store_id' => $this->store->id(),
+      'order_items' => [$order_item],
+      'state' => 'draft',
+    ]);
+    $order->setTotalPaid(new Price('0.00', 'USD'));
+    $order->save();
+    $this->assertNull($order->getData('order_test_called'));
+
+    // Confirm that the event is not dispatched for free canceled orders.
+    $order->set('state', 'canceled');
+    $order->save();
+    $this->assertNull($order->getData('order_test_called'));
   }
 
   /**
@@ -667,6 +689,7 @@ class OrderTest extends OrderKernelTestBase {
       'type' => 'default',
       'uid' => $this->user->id(),
       'state' => 'draft',
+      'store_id' => $this->store->id(),
     ]);
     $order->setRefreshState(OrderInterface::REFRESH_ON_LOAD);
     $order->save();

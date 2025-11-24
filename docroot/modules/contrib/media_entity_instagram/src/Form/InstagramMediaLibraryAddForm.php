@@ -2,6 +2,7 @@
 
 namespace Drupal\media_entity_instagram\Form;
 
+use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
@@ -16,14 +17,14 @@ class InstagramMediaLibraryAddForm extends AddFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'media_entity_instagram_media_library_add';
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function buildInputElement(array $form, FormStateInterface $form_state) {
+  protected function buildInputElement(array $form, FormStateInterface $form_state): array {
     $media_type = $this->getMediaType($form_state);
 
     $form['container'] = [
@@ -71,7 +72,7 @@ class InstagramMediaLibraryAddForm extends AddFormBase {
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The form state.
    */
-  public function addButtonSubmit(array $form, FormStateInterface $form_state) {
+  public function addButtonSubmit(array $form, FormStateInterface $form_state): void {
     $this->processInputValues([$form_state->getValue('url')], $form, $form_state);
   }
 
@@ -84,7 +85,7 @@ class InstagramMediaLibraryAddForm extends AddFormBase {
    * @return \Drupal\Core\Field\FieldDefinitionInterface|null
    *   The field definition.
    */
-  protected function getSourceFieldDefinition(MediaTypeInterface $media_type) {
+  protected function getSourceFieldDefinition(MediaTypeInterface $media_type): ?FieldDefinitionInterface {
     return $media_type->getSource()->getSourceFieldDefinition($media_type);
   }
 

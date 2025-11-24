@@ -55,7 +55,7 @@ interface QueryInterface extends ConditionSetInterface {
    *
    * @param \Drupal\search_api\IndexInterface $index
    *   The index for which the query should be created.
-   * @param array $options
+   * @param array<string, mixed> $options
    *   (optional) The options to set for the query.
    *
    * @return static
@@ -148,7 +148,7 @@ interface QueryInterface extends ConditionSetInterface {
    *
    * @return $this
    */
-  public function setLanguages(array $languages = NULL);
+  public function setLanguages(?array $languages = NULL);
 
   /**
    * Creates a new condition group to use with this query object.
@@ -196,12 +196,12 @@ interface QueryInterface extends ConditionSetInterface {
    *
    * If this is not called, all fulltext fields will be searched.
    *
-   * @param array $fields
-   *   An array containing fulltext fields that should be searched.
+   * @param string[] $fields
+   *   An array containing fulltext field IDs that should be searched.
    *
    * @return $this
    */
-  public function setFulltextFields(array $fields = NULL);
+  public function setFulltextFields(?array $fields = NULL);
 
   /**
    * Adds a sort directive to this search query.
@@ -291,8 +291,8 @@ interface QueryInterface extends ConditionSetInterface {
    * Retrieves the error message explaining why this query was aborted, if any.
    *
    * @return \Drupal\Component\Render\MarkupInterface|string|null
-   *   An error message, if set, or NULL if none was set. Please be aware that
-   *   a NULL message does not have to mean that the query was not aborted.
+   *   An error message, if set, or NULL if none was set. Be aware that a NULL
+   *   message does not have to mean that the query was not aborted.
    */
   public function getAbortMessage();
 

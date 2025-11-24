@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views_ui\Functional;
 
 use Drupal\views\Entity\View;
@@ -67,7 +69,7 @@ class ExposedFormUITest extends UITestBase {
   /**
    * Tests the admin interface of exposed filter and sort items.
    */
-  public function testExposedAdminUi() {
+  public function testExposedAdminUi(): void {
     $edit = [];
 
     $this->drupalGet('admin/structure/views/nojs/handler/test_exposed_admin_ui/default/filter/type');
@@ -150,8 +152,11 @@ class ExposedFormUITest extends UITestBase {
     $this->submitForm($edit, 'Apply');
     $this->assertSession()->pageTextContains('Sort field identifier field is required.');
 
-    // Try with an invalid identifier.
+    // Try with an invalid identifiers.
     $edit['options[expose][field_identifier]'] = 'abc&! ###08.';
+    $this->submitForm($edit, 'Apply');
+    $this->assertSession()->pageTextContains('This identifier has illegal characters.');
+    $edit['options[expose][field_identifier]'] = '^abcde';
     $this->submitForm($edit, 'Apply');
     $this->assertSession()->pageTextContains('This identifier has illegal characters.');
 
@@ -181,7 +186,7 @@ class ExposedFormUITest extends UITestBase {
   /**
    * Tests the admin interface of exposed grouped filters.
    */
-  public function testGroupedFilterAdminUi() {
+  public function testGroupedFilterAdminUi(): void {
     $edit = [];
 
     $this->drupalGet('admin/structure/views/nojs/handler/test_exposed_admin_ui/default/filter/type');
@@ -263,7 +268,7 @@ class ExposedFormUITest extends UITestBase {
     $this->assertNoGroupedFilterErrors();
   }
 
-  public function testGroupedFilterAdminUiErrors() {
+  public function testGroupedFilterAdminUiErrors(): void {
     // Select the empty operator without a title specified.
     $this->drupalGet('admin/structure/views/nojs/handler/test_exposed_admin_ui/default/filter/body_value');
     $edit = [];
@@ -311,7 +316,7 @@ class ExposedFormUITest extends UITestBase {
   /**
    * Tests the configuration of grouped exposed filters.
    */
-  public function testExposedGroupedFilter() {
+  public function testExposedGroupedFilter(): void {
     // Click the Expose filter button.
     $this->drupalGet('admin/structure/views/nojs/handler/test_exposed_admin_ui/default/filter/type');
     $this->submitForm([], 'Expose filter');

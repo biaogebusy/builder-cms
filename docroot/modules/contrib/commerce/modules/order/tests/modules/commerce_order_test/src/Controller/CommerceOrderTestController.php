@@ -2,8 +2,8 @@
 
 namespace Drupal\commerce_order_test\Controller;
 
-use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\commerce_order\Entity\OrderInterface;
 
 /**
  * Test controller.

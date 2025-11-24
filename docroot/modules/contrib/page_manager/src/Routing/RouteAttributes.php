@@ -37,7 +37,7 @@ class RouteAttributes {
       }
     }
 
-    // See \Symfony\Cmf\Component\Routing\NestedMatcher\UrlMatcher::getAttributes().
+    // Symfony\Cmf\Component\Routing\NestedMatcher\UrlMatcher::getAttributes().
     $attributes[RouteObjectInterface::ROUTE_OBJECT] = $route;
     $attributes[RouteObjectInterface::ROUTE_NAME] = $name;
 

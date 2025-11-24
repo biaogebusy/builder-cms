@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Component\Serialization;
 
 use PHPUnit\Framework\TestCase;
@@ -12,39 +14,43 @@ abstract class YamlTestBase extends TestCase {
   /**
    * Some data that should be able to be serialized.
    */
-  public function providerEncodeDecodeTests() {
+  public static function providerEncodeDecodeTests() {
     return [
       [
-        'foo' => 'bar',
-        'id' => 'schnitzel',
-        'ponies' => ['nope', 'thanks'],
-        'how' => [
-          'about' => 'if',
-          'i' => 'ask',
-          'nicely',
-        ],
-        'the' => [
-          'answer' => [
-            'still' => 'would',
-            'be' => 'Y',
+        'data' => [
+          'foo' => 'bar',
+          'id' => 'schnitzel',
+          'ponies' => ['nope', 'thanks'],
+          'how' => [
+            'about' => 'if',
+            'i' => 'ask',
+            'nicely',
           ],
+          'the' => [
+            'answer' => [
+              'still' => 'would',
+              'be' => 'Y',
+            ],
+          ],
+          'how_many_times' => 123,
+          'should_i_ask' => FALSE,
+          1,
+          FALSE,
+          [1, FALSE],
+          [10],
+          [0 => '123456'],
         ],
-        'how_many_times' => 123,
-        'should_i_ask' => FALSE,
-        1,
-        FALSE,
-        [1, FALSE],
-        [10],
-        [0 => '123456'],
       ],
-      [NULL],
+      [
+        'data' => [NULL],
+      ],
     ];
   }
 
   /**
-   * Some data that should be able to be de-serialized.
+   * Some data that should be able to be deserialized.
    */
-  public function providerDecodeTests() {
+  public static function providerDecodeTests() {
     $data = [
       // NULL files.
       ['', NULL],
@@ -72,18 +78,18 @@ jquery.ui.accordion:
     ];
 
     // 1.2 Bool values.
-    foreach ($this->providerBoolTest() as $test) {
+    foreach (static::providerBoolTest() as $test) {
       $data[] = ['bool: ' . $test[0], ['bool' => $test[1]]];
     }
-    $data = array_merge($data, $this->providerBoolTest());
+    $data = array_merge($data, static::providerBoolTest());
 
     return $data;
   }
 
   /**
-   * Tests different boolean serialization and de-serialization.
+   * Tests different boolean serialization and deserialization.
    */
-  public function providerBoolTest() {
+  public static function providerBoolTest() {
     return [
       ['true', TRUE],
       ['TRUE', TRUE],

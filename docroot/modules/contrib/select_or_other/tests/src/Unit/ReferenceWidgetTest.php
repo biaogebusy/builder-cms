@@ -48,11 +48,11 @@ class ReferenceWidgetTest extends UnitTestBase {
     }
 
     // Configure the mockBuilder.
-    $field_definition = $this->getMockForAbstractClass('\Drupal\Core\Field\FieldDefinitionInterface');
+    $field_definition = $this->createMock('\Drupal\Core\Field\FieldDefinitionInterface');
     $field_definition->expects($this->any())
       ->method('getFieldStorageDefinition')
-      ->willReturn($this->getMockForAbstractClass('Drupal\Core\Field\FieldStorageDefinitionInterface'));
-    $user = $this->getMockForAbstractClass('\Drupal\Core\Session\AccountInterface');
+      ->willReturn($this->createMock('Drupal\Core\Field\FieldStorageDefinitionInterface'));
+    $user = $this->createMock('\Drupal\Core\Session\AccountInterface');
     $user->method('id')->willReturn('1');
     $constructor_arguments = [
       '',
@@ -68,20 +68,12 @@ class ReferenceWidgetTest extends UnitTestBase {
     $builder->setConstructorArgs($constructor_arguments)
       ->onlyMethods($methods);
 
-    if ($tested_class_name) {
-      $class = new \ReflectionClass($tested_class_name);
-      $mock = $class->isAbstract() ? $builder->getMockForAbstractClass() : $builder->getMock();
-    }
-    else {
-      $mock = $builder->getMock();
-    }
-
     // Configure the mock.
+    $mock = $builder->getMock();
     $mock->method('getColumn')->willReturn('column');
     $mock->method('getOptions')->willReturn([]);
     $mock->method('getSelectedOptions')->willReturn([]);
-    $mock->method('getFieldSetting')
-      ->willReturnOnConsecutiveCalls($target_type, 'some_handler', [], $target_type);
+    $mock->method('getFieldSetting')->willReturnOnConsecutiveCalls($target_type, 'some_handler', [], $target_type);
     if ($tested_class_name === FALSE) {
       $mock->method('getAutoCreateBundle')
         ->willReturn('autoCreateBundle');
@@ -96,9 +88,7 @@ class ReferenceWidgetTest extends UnitTestBase {
   public function testGetOptions() {
     $entity_id = 1;
     $entity_label = 'Label';
-    $entity_mock = $this->getMockBuilder('\Drupal\Core\Entity\EntityBase')
-      ->disableOriginalConstructor()
-      ->getMock();
+    $entity_mock = $this->createMock('\Drupal\Core\Entity\EntityBase');
     $entity_mock->expects($this->exactly(1))
       ->method('id')
       ->willReturn($entity_id);
@@ -106,7 +96,7 @@ class ReferenceWidgetTest extends UnitTestBase {
       ->method('label')
       ->willReturn($entity_label);
 
-    $entity_storage_mock = $this->getMockForAbstractClass('\Drupal\Core\Entity\EntityStorageInterface');
+    $entity_storage_mock = $this->createMock('\Drupal\Core\Entity\EntityStorageInterface');
     $entity_storage_mock->expects($this->exactly(2))
       ->method('loadByProperties')
       ->willReturnOnConsecutiveCalls([], [$entity_mock]);
@@ -132,12 +122,12 @@ class ReferenceWidgetTest extends UnitTestBase {
     $get_options->setAccessible(TRUE);
 
     // First invocation returns an empty array because there are no entities.
-    $options = $get_options->invoke($mock, $this->getMockForAbstractClass('Drupal\Core\Entity\FieldableEntityInterface'));
+    $options = $get_options->invoke($mock, $this->createMock('Drupal\Core\Entity\FieldableEntityInterface'));
     $expected = [];
     $this->assertEquals($options, $expected);
 
     // Second invocation returns a key=>value array because there is one entity.
-    $options = $get_options->invoke($mock, $this->getMockForAbstractClass('Drupal\Core\Entity\FieldableEntityInterface'));
+    $options = $get_options->invoke($mock, $this->createMock('Drupal\Core\Entity\FieldableEntityInterface'));
     $expected = ["{$entity_label} ({$entity_id})" => $entity_label];
     $this->assertEquals($options, $expected);
   }
@@ -147,7 +137,7 @@ class ReferenceWidgetTest extends UnitTestBase {
    */
   public function testFormElement() {
     foreach (['node', 'taxonomy_term'] as $target_type) {
-      $access = $this->getMockForAbstractClass('\Drupal\Core\Access\AccessResultInterface');
+      $access = $this->createMock('\Drupal\Core\Access\AccessResultInterface');
       $access->method('isAllowed')->willReturn(TRUE);
       /** @var \Drupal\select_or_other\Plugin\Field\FieldWidget\ReferenceWidget $mock */
       $mock = $this->prepareFormElementMock($target_type);
@@ -155,8 +145,8 @@ class ReferenceWidgetTest extends UnitTestBase {
       /** @var \Drupal\select_or_other\Plugin\Field\FieldWidget\WidgetBase $parent */
       $parent = $this->prepareFormElementMock($target_type, 'Drupal\select_or_other\Plugin\Field\FieldWidget\WidgetBase');
 
-      $entity = $this->getMockForAbstractClass('Drupal\Core\Entity\FieldableEntityInterface');
-      $items = $this->getMockForAbstractClass('Drupal\Core\Field\FieldItemListInterface');
+      $entity = $this->createMock('Drupal\Core\Entity\FieldableEntityInterface');
+      $items = $this->createMock('Drupal\Core\Field\FieldItemListInterface');
       $items->method('getEntity')->willReturn($entity);
       /** @var \Drupal\Core\Field\FieldItemListInterface $items */
       $delta = 1;
@@ -221,21 +211,19 @@ class ReferenceWidgetTest extends UnitTestBase {
    * Tests if the widget correctly determines if it is applicable.
    */
   public function testIsApplicable() {
-    $entity_reference_selection = $this->getMockBuilder('Drupal\Core\Entity\EntityReferenceSelection\SelectionPluginManager')
-      ->disableOriginalConstructor()
-      ->getMock();
+    $entity_reference_selection = $this->createMock('Drupal\Core\Entity\EntityReferenceSelection\SelectionPluginManager');
     $entity_reference_selection->expects($this->exactly(4))
       ->method('getInstance')
       ->willReturnOnConsecutiveCalls(
-        $this->getMockForAbstractClass('Drupal\Core\Entity\EntityReferenceSelection\SelectionInterface'),
-        $this->getMockForAbstractClass('Drupal\Core\Entity\EntityReferenceSelection\SelectionWithAutocreateInterface'),
-        $this->getMockForAbstractClass('Drupal\Core\Entity\EntityReferenceSelection\SelectionInterface'),
-        $this->getMockForAbstractClass('Drupal\Core\Entity\EntityReferenceSelection\SelectionWithAutocreateInterface')
+        $this->createMock('Drupal\Core\Entity\EntityReferenceSelection\SelectionInterface'),
+        $this->createMock('Drupal\Core\Entity\EntityReferenceSelection\SelectionWithAutocreateInterface'),
+        $this->createMock('Drupal\Core\Entity\EntityReferenceSelection\SelectionInterface'),
+        $this->createMock('Drupal\Core\Entity\EntityReferenceSelection\SelectionWithAutocreateInterface')
       );
     $this->registerServiceWithContainerMock('plugin.manager.entity_reference_selection', $entity_reference_selection);
 
     $definition = $this->getMockBuilder('Drupal\Core\Field\FieldDefinitionInterface')
-      ->getMockForAbstractClass();
+      ->getMock();
     $definition->expects($this->exactly(4))
       ->method('getSettings')
       ->willReturnOnConsecutiveCalls(
@@ -252,14 +240,12 @@ class ReferenceWidgetTest extends UnitTestBase {
   }
 
   /**
-   * Tests if the selected options are propery prepared.
+   * Tests if the selected options are properly prepared.
    */
   public function testPrepareSelectedOptions() {
     $entity_id = 1;
     $entity_label = 'Label';
-    $entity_mock = $this->getMockBuilder('\Drupal\Core\Entity\EntityBase')
-      ->disableOriginalConstructor()
-      ->getMock();
+    $entity_mock = $this->createMock('\Drupal\Core\Entity\EntityBase');
     $entity_mock->expects($this->any())
       ->method('id')
       ->willReturn($entity_id);
@@ -267,7 +253,7 @@ class ReferenceWidgetTest extends UnitTestBase {
       ->method('label')
       ->willReturn($entity_label);
 
-    $entity_storage_mock = $this->getMockForAbstractClass('\Drupal\Core\Entity\EntityStorageInterface');
+    $entity_storage_mock = $this->createMock('\Drupal\Core\Entity\EntityStorageInterface');
     $entity_storage_mock->expects($this->exactly(2))
       ->method('loadMultiple')
       ->willReturnOnConsecutiveCalls([], [$entity_mock]);

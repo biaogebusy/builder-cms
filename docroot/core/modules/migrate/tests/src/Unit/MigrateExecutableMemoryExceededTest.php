@@ -1,6 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Unit;
+
+use Prophecy\Argument;
 
 /**
  * Tests the \Drupal\migrate\MigrateExecutable::memoryExceeded() method.
@@ -19,7 +23,7 @@ class MigrateExecutableMemoryExceededTest extends MigrateTestCase {
   /**
    * The mocked migrate message.
    *
-   * @var \Drupal\migrate\MigrateMessageInterface|\PHPUnit\Framework\MockObject\MockObject
+   * @var \Drupal\migrate\MigrateMessageInterface|\Prophecy\Prophecy\ObjectProphecy
    */
   protected $message;
 
@@ -52,9 +56,9 @@ class MigrateExecutableMemoryExceededTest extends MigrateTestCase {
   protected function setUp(): void {
     parent::setUp();
     $this->migration = $this->getMigration();
-    $this->message = $this->createMock('Drupal\migrate\MigrateMessageInterface');
+    $this->message = $this->prophesize('Drupal\migrate\MigrateMessageInterface');
 
-    $this->executable = new TestMigrateExecutable($this->migration, $this->message);
+    $this->executable = new TestMigrateExecutable($this->migration, $this->message->reveal());
     $this->executable->setStringTranslation($this->getStringTranslationStub());
   }
 
@@ -78,24 +82,14 @@ class MigrateExecutableMemoryExceededTest extends MigrateTestCase {
     $this->executable->setMemoryUsage($memory_usage_first ?: $this->memoryLimit, $memory_usage_second ?: $this->memoryLimit);
     $this->executable->setMemoryThreshold(0.85);
     if ($message) {
-      $this->executable->message->expects($this->exactly(2))
-        ->method('display')
-        ->withConsecutive(
-          [
-            $this->callback(function ($subject) {
-              return mb_stripos((string) $subject, 'reclaiming memory') !== FALSE;
-            }),
-          ],
-          [
-            $this->callback(function ($subject) use ($message) {
-              return mb_stripos((string) $subject, $message) !== FALSE;
-            }),
-          ],
-        );
+      $this->message->display(Argument::that(fn(string $subject) => str_contains($subject, 'reclaiming memory')), 'warning')
+        ->shouldBeCalledOnce();
+      $this->message->display(Argument::that(fn(string $subject) => str_contains($subject, $message)), 'warning')
+        ->shouldBeCalledOnce();
     }
     else {
-      $this->executable->message->expects($this->never())
-        ->method($this->anything());
+      $this->message->display(Argument::cetera())
+        ->shouldNotBeCalled();
     }
     $result = $this->executable->memoryExceeded();
     $this->assertEquals($memory_exceeded, $result);
@@ -104,7 +98,7 @@ class MigrateExecutableMemoryExceededTest extends MigrateTestCase {
   /**
    * Tests memoryExceeded method when a new batch is needed.
    */
-  public function testMemoryExceededNewBatch() {
+  public function testMemoryExceededNewBatch(): void {
     // First case try reset and then start new batch.
     $this->runMemoryExceededTest('starting new batch', TRUE);
   }
@@ -112,14 +106,14 @@ class MigrateExecutableMemoryExceededTest extends MigrateTestCase {
   /**
    * Tests memoryExceeded method when enough is cleared.
    */
-  public function testMemoryExceededClearedEnough() {
+  public function testMemoryExceededClearedEnough(): void {
     $this->runMemoryExceededTest('reclaimed enough', FALSE, $this->memoryLimit, $this->memoryLimit * 0.75);
   }
 
   /**
    * Tests memoryExceeded when memory usage is not exceeded.
    */
-  public function testMemoryNotExceeded() {
+  public function testMemoryNotExceeded(): void {
     $this->runMemoryExceededTest('', FALSE, floor($this->memoryLimit * 0.85) - 1);
   }
 

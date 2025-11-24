@@ -17,8 +17,6 @@ use Drush\Commands\DrushCommands;
  * Class EntityShareClientCommands.
  *
  * These are the Drush >= 9 commands.
- *
- * @package Drupal\entity_share_client\Commands
  */
 class EntityShareClientCommands extends DrushCommands implements SiteAliasManagerAwareInterface {
 
@@ -77,8 +75,11 @@ class EntityShareClientCommands extends DrushCommands implements SiteAliasManage
    *   The import config entity ID.
    *
    * @command entity-share-client:pull
+   *
    * @validate-remote-id
+   *
    * @validate-import-config-id
+   *
    * @usage drush entity-share-client:pull site_1 articles_en default
    *   Pull a channel from a remote website. The "Include count in collection
    *   queries" option should be enabled on the server website. This option is
@@ -95,13 +96,18 @@ class EntityShareClientCommands extends DrushCommands implements SiteAliasManage
    *   The remote entity ID.
    * @param string $import_config_id
    *   The import config entity ID.
+   * @param array $options
+   *   (Optional) Options array.
    *
    * @option ignore-channel-ids
    *   Comma separated list of channel ids to be ignored.
    *
    * @command entity-share-client:pull-all
+   *
    * @validate-remote-id
+   *
    * @validate-import-config-id
+   *
    * @usage drush entity-share-client:pull-all site_1 default
    *   Pull all channels from a remote website. The "Include count in collection
    *   queries" option should be enabled on the server website. This option is
@@ -111,8 +117,8 @@ class EntityShareClientCommands extends DrushCommands implements SiteAliasManage
    * @usage drush entity-share-client:pull-all site_1 default --ignore-channel-ids=nodes,terms
    *   Same as above, except the channels "nodes" and "terms".
    */
-  public function pullAllChannels(string $remote_id, string $import_config_id, $options = ['ignore-channel-ids' => '']): void {
-    $ignoredChannelIds = explode(',', $options['ignore-channel-ids']);
+  public function pullAllChannels(string $remote_id, string $import_config_id, array $options = ['ignore-channel-ids' => '']): void {
+    $ignoredChannelIds = \explode(',', $options['ignore-channel-ids']);
 
     /** @var \Drupal\entity_share_client\Entity\RemoteInterface $remote */
     $remote = $this->entityTypeManager->getStorage('remote')->load($remote_id);
@@ -120,19 +126,19 @@ class EntityShareClientCommands extends DrushCommands implements SiteAliasManage
 
     // Check channels.
     if (empty($channels)) {
-      $this->io()->warning(dt('Channel list is empty.'));
+      $this->io()->warning(\dt('Channel list is empty.'));
       return;
     }
 
     $selfRecord = $this->siteAliasManager()->getSelf();
-    foreach (array_keys($channels) as $channel_id) {
-      if (in_array($channel_id, $ignoredChannelIds, TRUE)) {
-        $this->io()->write(dt('Ignoring @channel_id', [
+    foreach (\array_keys($channels) as $channel_id) {
+      if (\in_array($channel_id, $ignoredChannelIds, TRUE)) {
+        $this->io()->write(\dt('Ignoring @channel_id', [
           '@channel_id' => $channel_id,
         ]), TRUE);
         continue;
       }
-      $this->io()->write(dt('Synchronizing @channel_id', [
+      $this->io()->write(\dt('Synchronizing @channel_id', [
         '@channel_id' => $channel_id,
       ]), TRUE);
       $args = [
@@ -161,7 +167,7 @@ class EntityShareClientCommands extends DrushCommands implements SiteAliasManage
     $remote_id = $commandData->input()->getArgument($arg_name);
     $remote = $this->entityTypeManager->getStorage('remote')->load($remote_id);
     if ($remote === NULL) {
-      $message = dt('Impossible to load the remote website with the ID: @remote_id', [
+      $message = \dt('Impossible to load the remote website with the ID: @remote_id', [
         '@remote_id' => $remote_id,
       ]);
       return new CommandError($message);
@@ -185,7 +191,7 @@ class EntityShareClientCommands extends DrushCommands implements SiteAliasManage
     $import_config_id = $commandData->input()->getArgument($arg_name);
     $import_config = $this->entityTypeManager->getStorage('import_config')->load($import_config_id);
     if ($import_config == NULL) {
-      $message = dt('Impossible to load the import config with the ID: @import_config_id', [
+      $message = \dt('Impossible to load the import config with the ID: @import_config_id', [
         '@import_config_id' => $import_config_id,
       ]);
       return new CommandError($message);

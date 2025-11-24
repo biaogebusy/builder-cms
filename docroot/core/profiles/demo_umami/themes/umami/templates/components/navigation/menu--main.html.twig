@@ -9,7 +9,7 @@
  *   - attributes: HTML attributes for the menu item.
  *   - below: The menu item child items.
  *   - title: The menu link title.
- *   - url: The menu link url, instance of \Drupal\Core\Url
+ *   - url: The menu link URL, instance of \Drupal\Core\Url
  *   - localized_options: Menu link localized options.
  *   - is_expanded: TRUE if the link has visible children within the current
  *     menu tree.
@@ -23,7 +23,7 @@
 
 {#
   We call a macro which calls itself to render the full tree.
-  @see https://twig.symfony.com/doc/1.x/tags/macro.html
+  @see https://twig.symfony.com/doc/3.x/tags/macro.html
 
   1. We use menu_name (see above) to create a CSS class name from it.
   See https://www.drupal.org/node/2649076
@@ -46,7 +46,7 @@
   %}
   {% if items %}
     {% if menu_level == 0 %}
-      <ul{{ attributes.addClass(menu_classes).setAttribute('data-drupal-selector','menu-main') }}> {# 1. #}
+      <ul{{ attributes.addClass(menu_classes).setAttribute('data-drupal-selector', 'menu-main') }}> {# 1. #}
     {% else %}
       <ul{{ attributes.removeClass(menu_classes).addClass(submenu_classes) }}> {# 1. #}
     {% endif %}

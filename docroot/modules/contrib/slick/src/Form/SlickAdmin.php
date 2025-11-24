@@ -2,11 +2,11 @@
 
 namespace Drupal\slick\Form;
 
-use Drupal\blazy\Form\BlazyAdminInterface;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Render\Element;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
+use Drupal\blazy\Form\BlazyAdminInterface;
 use Drupal\slick\SlickManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -41,7 +41,7 @@ class SlickAdmin implements SlickAdminInterface {
    */
   public function __construct(
     BlazyAdminInterface $blazy_admin,
-    SlickManagerInterface $manager
+    SlickManagerInterface $manager,
   ) {
     $this->blazyAdmin = $blazy_admin;
     $this->manager = $manager;
@@ -262,18 +262,6 @@ class SlickAdmin implements SlickAdminInterface {
    */
   public function mediaSwitchForm(array &$form, array $definition): void {
     $this->blazyAdmin->mediaSwitchForm($form, $definition);
-
-    if (isset($form['media_switch'])) {
-      if (!empty($definition['multimedia']) && isset($definition['fieldable_form'])) {
-        $form['media_switch']['#description'] .= ' ' . $this->t('<li>Image rendered by its formatter: image-related settings here will be ignored: breakpoints, image style, CSS background, aspect ratio, lazyload, etc. Only choose if needing a special image formatter such as Image Link Formatter.</li>');
-      }
-
-      $form['media_switch']['#description'] .= ' ' . $this->t('</ol> Try selecting "<strong>- None -</strong>" first before changing if trouble with this complex form states.');
-    }
-
-    if (isset($form['ratio']['#description'])) {
-      $form['ratio']['#description'] .= ' ' . $this->t('Required if using media entity to switch between iframe and overlay image, otherwise DIY.');
-    }
   }
 
   /**
@@ -285,8 +273,6 @@ class SlickAdmin implements SlickAdminInterface {
 
     if (!isset($form['image_style'])) {
       $this->blazyAdmin->imageStyleForm($form, $definition);
-
-      $form['image_style']['#description'] = $this->t('The main image style. This will be treated as the fallback image, which is normally smaller, if Breakpoints are provided, and if <strong>Use CSS background</strong> is disabled. Otherwise this is the only image displayed. Ignored by Responsive image option.');
     }
 
     if (isset($form['thumbnail_style'])) {
@@ -471,7 +457,7 @@ class SlickAdmin implements SlickAdminInterface {
     array $target_bundles = [],
     array $allowed_field_types = [],
     $entity_type = 'media',
-    $target_type = ''
+    $target_type = '',
   ): array {
     return $this->blazyAdmin->getFieldOptions($target_bundles, $allowed_field_types, $entity_type, $target_type);
   }

@@ -24,7 +24,7 @@ class MonkeysInTheControlRoom implements HttpKernelInterface {
   /**
    * The settings.
    */
-  protected $settings;
+  protected Settings $settings;
 
   /**
    * MonkeysInTheControlRoom constructor.
@@ -42,7 +42,7 @@ class MonkeysInTheControlRoom implements HttpKernelInterface {
   /**
    * {@inheritdoc}
    */
-  public function handle(Request $request, $type = self::MASTER_REQUEST, $catch = TRUE): Response {
+  public function handle(Request $request, $type = self::MAIN_REQUEST, $catch = TRUE): Response {
     if (\Drupal::state()->get('error_service_test.break_bare_html_renderer')) {
       // Let the bedlam begin.
       // 1) Force a container rebuild.
@@ -67,20 +67,7 @@ class MonkeysInTheControlRoom implements HttpKernelInterface {
       throw new \Exception('Deforestation');
     }
 
-    if ($this->settings->get('teapots', FALSE) && class_exists('\TypeError')) {
-      try {
-        $return = $this->app->handle($request, $type, $catch);
-      }
-      catch (\TypeError $e) {
-        header('HTTP/1.1 418 I\'m a teapot');
-        print('Oh oh, flying teapots');
-        exit;
-      }
-    }
-    else {
-      $return = $this->app->handle($request, $type, $catch);
-    }
-    return $return;
+    return $this->app->handle($request, $type, $catch);
   }
 
 }

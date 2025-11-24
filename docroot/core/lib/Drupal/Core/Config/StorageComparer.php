@@ -2,7 +2,11 @@
 
 namespace Drupal\Core\Config;
 
+use Drupal\Component\Datetime\Time;
+use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Cache\MemoryBackend;
+use Drupal\Core\Cache\NullBackend;
 use Drupal\Core\Config\Entity\ConfigDependencyManager;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 
@@ -10,7 +14,10 @@ use Drupal\Core\DependencyInjection\DependencySerializationTrait;
  * Defines a config storage comparer.
  */
 class StorageComparer implements StorageComparerInterface {
-  use DependencySerializationTrait;
+  use DependencySerializationTrait {
+    __sleep as defaultSleep;
+    __wakeup as defaultWakeup;
+  }
 
   /**
    * The source storage used to discover configuration changes.
@@ -77,9 +84,20 @@ class StorageComparer implements StorageComparerInterface {
   /**
    * A memory cache backend to statically cache target configuration data.
    *
-   * @var \Drupal\Core\Cache\MemoryBackend
+   * @var \Drupal\Core\Cache\CacheBackendInterface
    */
-  protected $targetCacheStorage;
+  protected CacheBackendInterface $targetCacheStorage;
+
+  /**
+   * Indicates whether the target storage should be wrapped in a cache.
+   *
+   * In write mode the StorageComparer no longer wraps the target storage in a
+   * static cache. When writing to active configuration, the target storage must
+   * reflect any secondary writes to configuration that occur.
+   *
+   * @var bool
+   */
+  protected bool $writeMode = FALSE;
 
   /**
    * Constructs the Configuration storage comparer.
@@ -97,18 +115,25 @@ class StorageComparer implements StorageComparerInterface {
       $target_storage = $target_storage->createCollection(StorageInterface::DEFAULT_COLLECTION);
     }
 
-    // Wrap the storages in a static cache so that multiple reads of the same
-    // raw configuration object are not costly.
-    $this->sourceCacheStorage = new MemoryBackend();
-    $this->sourceStorage = new CachedStorage(
-      $source_storage,
-      $this->sourceCacheStorage
-    );
-    $this->targetCacheStorage = new MemoryBackend();
-    $this->targetStorage = new CachedStorage(
-      $target_storage,
-      $this->targetCacheStorage
-    );
+    $time = \Drupal::hasService(TimeInterface::class) ? \Drupal::service(TimeInterface::class) : new Time();
+    if ($source_storage instanceof FileStorage) {
+      // FileStorage has its own static cache so that multiple reads of the
+      // same raw configuration object are not costly.
+      $this->sourceCacheStorage = new NullBackend('storage_comparer');
+      $this->sourceStorage = $source_storage;
+    }
+    else {
+      // Wrap the source storage in a static cache so that multiple reads of the
+      // same raw configuration object are not costly.
+      $this->sourceCacheStorage = new MemoryBackend($time);
+      $this->sourceStorage = new CachedStorage(
+        $source_storage,
+        $this->sourceCacheStorage
+      );
+    }
+
+    $this->targetCacheStorage = new MemoryBackend($time);
+    $this->targetStorage = $target_storage;
     $this->changelist[StorageInterface::DEFAULT_COLLECTION] = $this->getEmptyChangelist();
   }
 
@@ -132,14 +157,33 @@ class StorageComparer implements StorageComparerInterface {
    */
   public function getTargetStorage($collection = StorageInterface::DEFAULT_COLLECTION) {
     if (!isset($this->targetStorages[$collection])) {
-      if ($collection == StorageInterface::DEFAULT_COLLECTION) {
-        $this->targetStorages[$collection] = $this->targetStorage;
+      $target = $this->targetStorage;
+      if ($collection !== StorageInterface::DEFAULT_COLLECTION) {
+        $target = $target->createCollection($collection);
       }
-      else {
-        $this->targetStorages[$collection] = $this->targetStorage->createCollection($collection);
+      // If we are not in write mode wrap the storage in a static cache so that
+      // multiple reads of the same configuration object are cheap.
+      if (!$this->writeMode) {
+        $target = new CachedStorage(
+          $target,
+          $this->targetCacheStorage
+        );
       }
+      $this->targetStorages[$collection] = $target;
     }
     return $this->targetStorages[$collection];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function writeMode(): static {
+    if (!$this->writeMode) {
+      $this->writeMode = TRUE;
+      $this->targetCacheStorage = new NullBackend('storage_comparer');
+      $this->targetStorages = [];
+    }
+    return $this;
   }
 
   /**
@@ -173,11 +217,11 @@ class StorageComparer implements StorageComparerInterface {
    *   The change operation performed. Either delete, create, rename, or update.
    * @param array $changes
    *   Array of changes to add to the changelist.
-   * @param array $sort_order
-   *   Array to sort that can be used to sort the changelist. This array must
-   *   contain all the items that are in the change list.
+   * @param array|null $sort_order
+   *   (optional) Array to sort that can be used to sort the changelist. This
+   *   array must contain all the items that are in the change list.
    */
-  protected function addChangeList($collection, $op, array $changes, array $sort_order = NULL) {
+  protected function addChangeList($collection, $op, array $changes, ?array $sort_order = NULL) {
     // Only add changes that aren't already listed.
     $changes = array_diff($changes, $this->changelist[$collection][$op]);
     $this->changelist[$collection][$op] = array_merge($this->changelist[$collection][$op], $changes);
@@ -456,6 +500,22 @@ class StorageComparer implements StorageComparerInterface {
       array_unshift($collections, StorageInterface::DEFAULT_COLLECTION);
     }
     return $collections;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __sleep(): array {
+    return array_diff($this->defaultSleep(), ['targetStorages']);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __wakeup(): void {
+    $this->defaultWakeup();
+    $this->targetStorages = [];
+    $this->targetCacheStorage->deleteAll();
   }
 
 }

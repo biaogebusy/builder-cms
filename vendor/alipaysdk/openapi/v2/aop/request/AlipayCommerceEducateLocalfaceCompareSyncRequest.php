@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.commerce.educate.localface.compare.sync request
  *
  * @author auto create
- * @since 1.0, 2023-09-04 00:55:35
+ * @since 1.0, 2025-08-13 14:47:41
  */
 class AlipayCommerceEducateLocalfaceCompareSyncRequest
 {

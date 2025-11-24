@@ -4,6 +4,7 @@ namespace Drupal\migrate\Plugin\migrate\process;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\migrate\Attribute\MigrateProcess;
 use Drupal\migrate\Plugin\MigrationInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -76,11 +77,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *
  * @see \Drupal\migrate\Plugin\migrate\process\MakeUniqueBase
  * @see \Drupal\migrate\Plugin\MigrateProcessInterface
- *
- * @MigrateProcessPlugin(
- *   id = "make_unique_entity_field"
- * )
  */
+#[MigrateProcess('make_unique_entity_field')]
 class MakeUniqueEntityField extends MakeUniqueBase implements ContainerFactoryPluginInterface {
 
   /**
@@ -109,7 +107,7 @@ class MakeUniqueEntityField extends MakeUniqueBase implements ContainerFactoryPl
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration = NULL) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, ?MigrationInterface $migration = NULL) {
     return new static(
       $configuration,
       $plugin_id,

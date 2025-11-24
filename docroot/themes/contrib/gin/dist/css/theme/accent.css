@@ -2,6 +2,7 @@
   --gin-color-primary: rgb(var(--gin-color-primary-rgb));
   --gin-color-primary-light: rgba(var(--gin-color-primary-rgb), .15);
   --gin-bg-app: rgb(var(--gin-bg-app-rgb));
+  --gin-bg-item: rgba(var(--gin-color-primary-rgb), .05);
   --gin-bg-item-hover: rgba(var(--gin-color-primary-rgb), .1);
   --gin-color-primary-light-hover: rgba(var(--gin-color-primary-rgb), .2);
   --gin-color-primary-light-active: rgba(var(--gin-color-primary-rgb), .3);
@@ -25,13 +26,13 @@
 }
 
 [data-gin-accent=light_blue] {
-  --gin-color-primary-rgb: 50, 117, 224;
-  --gin-color-primary-light-rgb: 214, 227, 249;
-  --gin-color-primary-hover: #2b63be;
-  --gin-color-primary-active: #2658a8;
+  --gin-color-primary-rgb: 47, 109, 208;
+  --gin-color-primary-light-rgb: 213, 226, 246;
+  --gin-color-primary-hover: #285db1;
+  --gin-color-primary-active: #23529c;
   --gin-bg-app-rgb: 249, 251, 254;
-  --gin-bg-header: #e6eefb;
-  --gin-color-sticky-rgb: 239, 244, 253;
+  --gin-bg-header: #e6edf9;
+  --gin-color-sticky-rgb: 238, 243, 251;
 }
 
 [data-gin-accent=dark_purple] {
@@ -93,33 +94,33 @@
 }
 
 [data-gin-accent=orange] {
-  --gin-color-primary-rgb: 239, 92, 32;
-  --gin-color-primary-light-rgb: 252, 222, 210;
-  --gin-color-primary-hover: #cb4e1b;
-  --gin-color-primary-active: #b34518;
-  --gin-bg-app-rgb: 255, 250, 248;
-  --gin-bg-header: #fdebe4;
-  --gin-color-sticky-rgb: 254, 242, 237;
+  --gin-color-primary-rgb: 218, 99, 1;
+  --gin-color-primary-light-rgb: 248, 224, 204;
+  --gin-color-primary-hover: #b95401;
+  --gin-color-primary-active: #a44a01;
+  --gin-bg-app-rgb: 254, 250, 247;
+  --gin-bg-header: #fbece1;
+  --gin-color-sticky-rgb: 252, 243, 235;
 }
 
 [data-gin-accent=yellow] {
-  --gin-color-primary-rgb: 197, 137, 0;
-  --gin-color-primary-light-rgb: 243, 231, 204;
-  --gin-color-primary-hover: #a77400;
-  --gin-color-primary-active: #946700;
+  --gin-color-primary-rgb: 179, 122, 0;
+  --gin-color-primary-light-rgb: 240, 228, 204;
+  --gin-color-primary-hover: #986800;
+  --gin-color-primary-active: #865c00;
   --gin-bg-app-rgb: 253, 251, 247;
-  --gin-bg-header: #f8f1e0;
-  --gin-color-sticky-rgb: 250, 246, 235;
+  --gin-bg-header: #f6efe0;
+  --gin-color-sticky-rgb: 249, 244, 235;
 }
 
 [data-gin-accent=pink] {
-  --gin-color-primary-rgb: 226, 49, 119;
-  --gin-color-primary-light-rgb: 249, 214, 228;
-  --gin-color-primary-hover: #c02a65;
-  --gin-color-primary-active: #aa2559;
+  --gin-color-primary-rgb: 209, 47, 112;
+  --gin-color-primary-light-rgb: 246, 213, 226;
+  --gin-color-primary-hover: #b2285f;
+  --gin-color-primary-active: #9d2354;
   --gin-bg-app-rgb: 254, 249, 251;
-  --gin-bg-header: #fce6ef;
-  --gin-color-sticky-rgb: 253, 239, 244;
+  --gin-bg-header: #f9e6ee;
+  --gin-color-sticky-rgb: 251, 238, 244;
 }
 
 [data-gin-accent=neutral] {
@@ -259,34 +260,36 @@
   --gin-bg-header: #454547;
 }
 
-.gin--high-contrast-mode {
-  --gin-bg-app: #d9dbde;
-  --gin-color-text: rgba(0, 0, 0, .8);
-  --gin-color-text-light: rgba(0, 0, 0, .8);
-  --gin-icon-color: rgba(0, 0, 0, .8);
-  --gin-color-focus: rgba(0, 0, 0, .8);
-  --gin-border-color: rgba(0, 0, 0, .8);
-  --gin-border-color-secondary: rgba(0, 0, 0, .6);
-  --gin-border-color-layer: rgba(0, 0, 0, .6);
-  --gin-border-color-layer2: rgba(0, 0, 0, .8);
-  --gin-border-color-table: rgba(0, 0, 0, .8);
-  --gin-border-color-table-header: rgba(0, 0, 0, .8);
-  --gin-border-color-form-element: rgba(0, 0, 0, .8);
-}
+@media (forced-colors: none) {
+  .gin--high-contrast-mode {
+    --gin-bg-app: #d9dbde;
+    --gin-color-text: rgba(0, 0, 0, .8);
+    --gin-color-text-light: rgba(0, 0, 0, .8);
+    --gin-icon-color: rgba(0, 0, 0, .8);
+    --gin-color-focus: rgba(0, 0, 0, .8);
+    --gin-border-color: rgba(0, 0, 0, .8);
+    --gin-border-color-secondary: rgba(0, 0, 0, .6);
+    --gin-border-color-layer: rgba(0, 0, 0, .6);
+    --gin-border-color-layer2: rgba(0, 0, 0, .8);
+    --gin-border-color-table: rgba(0, 0, 0, .8);
+    --gin-border-color-table-header: rgba(0, 0, 0, .8);
+    --gin-border-color-form-element: rgba(0, 0, 0, .8);
+  }
 
-.gin--dark-mode .gin--high-contrast-mode {
-  --gin-bg-app: #000;
-  --gin-color-text: rgba(255, 255, 255, .8);
-  --gin-color-text-light: rgba(255, 255, 255, .8);
-  --gin-icon-color: rgba(255, 255, 255, .8);
-  --gin-color-focus: rgba(255, 255, 255, .8);
-  --gin-border-color: rgba(255, 255, 255, .8);
-  --gin-border-color-secondary: rgba(255, 255, 255, .6);
-  --gin-border-color-layer: rgba(255, 255, 255, .6);
-  --gin-border-color-layer2: rgba(255, 255, 255, .8);
-  --gin-border-color-table: rgba(255, 255, 255, .8);
-  --gin-border-color-table-header: rgba(255, 255, 255, .8);
-  --gin-border-color-form-element: rgba(255, 255, 255, .8);
+  .gin--dark-mode .gin--high-contrast-mode {
+    --gin-bg-app: #000;
+    --gin-color-text: rgba(255, 255, 255, .8);
+    --gin-color-text-light: rgba(255, 255, 255, .8);
+    --gin-icon-color: rgba(255, 255, 255, .8);
+    --gin-color-focus: rgba(255, 255, 255, .8);
+    --gin-border-color: rgba(255, 255, 255, .8);
+    --gin-border-color-secondary: rgba(255, 255, 255, .6);
+    --gin-border-color-layer: rgba(255, 255, 255, .6);
+    --gin-border-color-layer2: rgba(255, 255, 255, .8);
+    --gin-border-color-table: rgba(255, 255, 255, .8);
+    --gin-border-color-table-header: rgba(255, 255, 255, .8);
+    --gin-border-color-form-element: rgba(255, 255, 255, .8);
+  }
 }
 
 [data-gin-focus=green] {

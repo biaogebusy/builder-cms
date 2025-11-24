@@ -90,6 +90,6 @@ interface EntityConflictHandlerInterface {
    *   NULL if the entity has been deleted or in case of inline reference the
    *   relationship was removed.
    */
-  public function prepareConflictResolution(EntityInterface $entity, EntityInterface $entity_server = NULL);
+  public function prepareConflictResolution(EntityInterface $entity, ?EntityInterface $entity_server = NULL);
 
 }

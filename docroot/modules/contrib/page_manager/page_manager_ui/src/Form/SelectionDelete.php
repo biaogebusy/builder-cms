@@ -5,6 +5,9 @@ namespace Drupal\page_manager_ui\Form;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ctools\Form\ConditionDelete;
 
+/**
+ * Delete selection condition.
+ */
 class SelectionDelete extends ConditionDelete {
 
   /**
@@ -21,13 +24,14 @@ class SelectionDelete extends ConditionDelete {
    *   The cached values from the wizard.
    *
    * @return \Drupal\page_manager\PageVariantInterface
+   *   The Page Variant.
    */
   protected function getPageVariant($cached_values) {
     if (isset($cached_values['page_variant'])) {
       return $cached_values['page_variant'];
     }
 
-    /** @var $page \Drupal\page_manager\PageInterface */
+    /** @var \Drupal\page_manager\PageInterface $page */
     $page = $cached_values['page'];
     return $page->getVariant($this->variantMachineName);
   }
@@ -36,7 +40,7 @@ class SelectionDelete extends ConditionDelete {
    * {@inheritdoc}
    */
   protected function getParentRouteInfo($cached_values) {
-    /** @var $page \Drupal\page_manager\PageInterface */
+    /** @var \Drupal\page_manager\PageInterface $page */
     $page = $cached_values['page'];
 
     if ($page->isNew()) {
@@ -57,7 +61,7 @@ class SelectionDelete extends ConditionDelete {
   }
 
   /**
-   * @inheritDoc
+   * {@inheritDoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $id = NULL, $tempstore_id = NULL, $machine_name = NULL, $variant_machine_name = NULL) {
     $this->variantMachineName = $variant_machine_name;

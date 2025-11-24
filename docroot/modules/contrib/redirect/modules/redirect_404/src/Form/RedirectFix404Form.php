@@ -91,7 +91,7 @@ class RedirectFix404Form extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $destination = $this->getDestinationArray();
 
-    $search = $this->getRequest()->get('search');
+    $search = $this->getRequest()->query->get('search');
     $form['#attributes'] = ['class' => ['search-form']];
 
     $form['basic'] = [
@@ -167,7 +167,7 @@ class RedirectFix404Form extends FormBase {
       $rows[] = $row;
     }
 
-    $form['redirect_404_table']  = [
+    $form['redirect_404_table'] = [
       '#theme' => 'table',
       '#header' => $header,
       '#rows' => $rows,

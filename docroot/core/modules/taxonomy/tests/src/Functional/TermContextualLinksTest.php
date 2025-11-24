@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Functional;
 
 /**
@@ -24,7 +26,7 @@ class TermContextualLinksTest extends TaxonomyTestBase {
   /**
    * Tests contextual links.
    */
-  public function testTermContextualLinks() {
+  public function testTermContextualLinks(): void {
     $vocabulary = $this->createVocabulary();
     $term = $this->createTerm($vocabulary);
 

@@ -25,10 +25,10 @@ class EnforcedResponseException extends \Exception {
    *   (optional) The exception message.
    * @param int $code
    *   (optional) A user defined exception code.
-   * @param \Exception $previous
+   * @param \Throwable $previous
    *   (optional) The previous exception for nested exceptions
    */
-  public function __construct(Response $response, $message = "", $code = 0, \Exception $previous = NULL) {
+  public function __construct(Response $response, $message = "", $code = 0, ?\Throwable $previous = NULL) {
     parent::__construct($message, $code, $previous);
 
     $this->response = $response;
@@ -37,7 +37,7 @@ class EnforcedResponseException extends \Exception {
   /**
    * Return the response to be enforced.
    *
-   * @returns \Symfony\Component\HttpFoundation\Response $response
+   * @return \Symfony\Component\HttpFoundation\Response
    *   The response to be enforced.
    */
   public function getResponse() {

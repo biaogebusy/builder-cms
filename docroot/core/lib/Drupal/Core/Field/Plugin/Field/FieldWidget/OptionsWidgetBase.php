@@ -35,22 +35,23 @@ abstract class OptionsWidgetBase extends WidgetBase {
   /**
    * Tracks whether the field is required.
    */
-  protected $required;
+  protected bool $required;
 
   /**
    * Tracks whether the data is multi-valued.
    */
-  protected $multiple;
+  protected bool $multiple;
 
   /**
    * Tracks whether the field has a value.
    */
-  protected $has_value;
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
+  protected bool $has_value;
 
   /**
    * The array of options for the widget.
    */
-  protected $options;
+  protected array $options;
 
   /**
    * {@inheritdoc}
@@ -90,7 +91,12 @@ abstract class OptionsWidgetBase extends WidgetBase {
    */
   public static function validateElement(array $element, FormStateInterface $form_state) {
     if ($element['#required'] && $element['#value'] == '_none') {
-      $form_state->setError($element, new TranslatableMarkup('@name field is required.', ['@name' => $element['#title']]));
+      if (isset($element['#required_error'])) {
+        $form_state->setError($element, $element['#required_error']);
+      }
+      else {
+        $form_state->setError($element, new TranslatableMarkup('@name field is required.', ['@name' => $element['#title']]));
+      }
     }
 
     // Massage submitted form values.
@@ -146,6 +152,7 @@ abstract class OptionsWidgetBase extends WidgetBase {
       $context = [
         'fieldDefinition' => $this->fieldDefinition,
         'entity' => $entity,
+        'widget' => $this,
       ];
       $module_handler->alter('options_list', $options, $context);
 

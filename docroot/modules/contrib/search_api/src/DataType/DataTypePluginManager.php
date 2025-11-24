@@ -4,14 +4,17 @@ namespace Drupal\search_api\DataType;
 
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\search_api\Annotation\SearchApiDataType as SearchApiDataTypeAnnotation;
+use Drupal\search_api\Attribute\SearchApiDataType as SearchApiDataTypeAttribute;
 use Drupal\search_api\Event\SearchApiEvents;
 use Drupal\search_api\SearchApiPluginManager;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Manages data type plugins.
  *
- * @see \Drupal\search_api\Annotation\SearchApiDataType
+ * @see \Drupal\search_api\Attribute\SearchApiDataType
  * @see \Drupal\search_api\DataType\DataTypeInterface
  * @see \Drupal\search_api\DataType\DataTypePluginBase
  * @see plugin_api
@@ -37,21 +40,23 @@ class DataTypePluginManager extends SearchApiPluginManager {
    */
   protected $allCreated = FALSE;
 
-  /**
-   * Constructs a DataTypePluginManager object.
-   *
-   * @param \Traversable $namespaces
-   *   An object that implements \Traversable which contains the root paths
-   *   keyed by the corresponding namespace to look for plugin implementations.
-   * @param \Drupal\Core\Cache\CacheBackendInterface $cache_backend
-   *   Cache backend instance to use.
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
-   *   The module handler.
-   * @param \Symfony\Contracts\EventDispatcher\EventDispatcherInterface $eventDispatcher
-   *   The event dispatcher.
-   */
-  public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler, EventDispatcherInterface $eventDispatcher) {
-    parent::__construct('Plugin/search_api/data_type', $namespaces, $module_handler, $eventDispatcher, 'Drupal\search_api\DataType\DataTypeInterface', 'Drupal\search_api\Annotation\SearchApiDataType');
+  public function __construct(
+    #[Autowire(service: 'container.namespaces')]
+    \Traversable $namespaces,
+    #[Autowire(service: 'cache.discovery')]
+    CacheBackendInterface $cache_backend,
+    ModuleHandlerInterface $module_handler,
+    EventDispatcherInterface $eventDispatcher
+  ) {
+    parent::__construct(
+      'Plugin/search_api/data_type',
+      $namespaces,
+      $module_handler,
+      $eventDispatcher,
+      DataTypeInterface::class,
+      SearchApiDataTypeAttribute::class,
+      SearchApiDataTypeAnnotation::class,
+    );
 
     $this->setCacheBackend($cache_backend, 'search_api_data_type');
     $this->alterInfo('search_api_data_type_info');

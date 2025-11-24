@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\flag\Functional;
 
 /**
@@ -47,7 +49,7 @@ class LinkTypeReloadTest extends FlagTestBase {
     $flag_id = $this->flag->id();
 
     // Grant the flag permissions to the authenticated role, so that both
-    // users have the same roles and share the render cache. ???? TODO
+    // users have the same roles and share the render cache. ???? TODO.
     $this->grantFlagPermissions($this->flag);
 
     // Create and login a new user.
@@ -57,15 +59,15 @@ class LinkTypeReloadTest extends FlagTestBase {
     // Get the flag count before the flagging, querying the database directly.
     $flag_count_pre = \Drupal::database()->query('SELECT count FROM {flag_counts}
       WHERE flag_id = :flag_id AND entity_type = :entity_type AND entity_id = :entity_id', [
-      ':flag_id' => $flag_id,
-      ':entity_type' => 'node',
-      ':entity_id' => $node_id,
-    ])->fetchField();
+        ':flag_id' => $flag_id,
+        ':entity_type' => 'node',
+        ':entity_id' => $node_id,
+      ])->fetchField();
 
     // Attempt to load the reload link URL without the token.
     // We (probably) can't obtain the URL from the route rather than hardcoding
     // it, as that would probably give us the token too.
-    $this->drupalGet("flag/flag/$flag_id/$node_id");
+    $this->drupalGet("flag/flag/$flag_id/$node_id/full");
     $this->assertSession()->statusCodeEquals(403);
 
     // Click the flag link.
@@ -79,14 +81,14 @@ class LinkTypeReloadTest extends FlagTestBase {
     // Check the flag count was incremented.
     $flag_count_flagged = \Drupal::database()->query('SELECT count FROM {flag_counts}
       WHERE flag_id = :flag_id AND entity_type = :entity_type AND entity_id = :entity_id', [
-      ':flag_id' => $flag_id,
-      ':entity_type' => 'node',
-      ':entity_id' => $node_id,
-    ])->fetchField();
-    $this->assertEquals($flag_count_pre + 1, $flag_count_flagged,"The flag count was incremented.");
+        ':flag_id' => $flag_id,
+        ':entity_type' => 'node',
+        ':entity_id' => $node_id,
+      ])->fetchField();
+    $this->assertEquals($flag_count_pre + 1, $flag_count_flagged, "The flag count was incremented.");
 
     // Attempt to load the reload link URL without the token.
-    $this->drupalGet("flag/unflag/$flag_id/$node_id");
+    $this->drupalGet("flag/unflag/$flag_id/$node_id/full");
     $this->assertSession()->statusCodeEquals(403);
 
     // Unflag the node.
@@ -100,10 +102,10 @@ class LinkTypeReloadTest extends FlagTestBase {
     // Check the flag count was decremented.
     $flag_count_unflagged = \Drupal::database()->query('SELECT count FROM {flag_counts}
       WHERE flag_id = :flag_id AND entity_type = :entity_type AND entity_id = :entity_id', [
-      ':flag_id' => $flag_id,
-      ':entity_type' => 'node',
-      ':entity_id' => $node_id,
-    ])->fetchField();
+        ':flag_id' => $flag_id,
+        ':entity_type' => 'node',
+        ':entity_id' => $node_id,
+      ])->fetchField();
     $this->assertEquals($flag_count_flagged - 1, $flag_count_unflagged, "The flag count was decremented.");
   }
 

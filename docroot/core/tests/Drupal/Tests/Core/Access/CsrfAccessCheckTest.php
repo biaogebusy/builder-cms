@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Access;
 
 use Drupal\Core\Access\AccessResult;
@@ -39,6 +41,8 @@ class CsrfAccessCheckTest extends UnitTestCase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    parent::setUp();
+
     $this->csrfToken = $this->getMockBuilder('Drupal\Core\Access\CsrfTokenGenerator')
       ->disableOriginalConstructor()
       ->getMock();
@@ -51,7 +55,7 @@ class CsrfAccessCheckTest extends UnitTestCase {
   /**
    * Tests the access() method with a valid token.
    */
-  public function testAccessTokenPass() {
+  public function testAccessTokenPass(): void {
     $this->csrfToken->expects($this->once())
       ->method('validate')
       ->with('test_query', 'test-path/42')
@@ -70,7 +74,7 @@ class CsrfAccessCheckTest extends UnitTestCase {
   /**
    * @covers ::access
    */
-  public function testCsrfTokenInvalid() {
+  public function testCsrfTokenInvalid(): void {
     $this->csrfToken->expects($this->once())
       ->method('validate')
       ->with('test_query', 'test-path')
@@ -89,7 +93,7 @@ class CsrfAccessCheckTest extends UnitTestCase {
   /**
    * @covers ::access
    */
-  public function testCsrfTokenMissing() {
+  public function testCsrfTokenMissing(): void {
     $this->csrfToken->expects($this->once())
       ->method('validate')
       ->with('', 'test-path')

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Unit\Event;
 
 use Drupal\migrate\Event\MigrateImportEvent;
@@ -17,7 +19,7 @@ class MigrateImportEventTest extends UnitTestCase {
    * @covers ::__construct
    * @covers ::getMigration
    */
-  public function testGetMigration() {
+  public function testGetMigration(): void {
     $migration = $this->prophesize('\Drupal\migrate\Plugin\MigrationInterface')->reveal();
     $message_service = $this->prophesize('\Drupal\migrate\MigrateMessageInterface')->reveal();
     $event = new MigrateImportEvent($migration, $message_service);
@@ -30,7 +32,7 @@ class MigrateImportEventTest extends UnitTestCase {
    * @covers ::__construct
    * @covers ::logMessage
    */
-  public function testLogMessage() {
+  public function testLogMessage(): void {
     $migration = $this->prophesize('\Drupal\migrate\Plugin\MigrationInterface');
     $message_service = $this->prophesize('\Drupal\migrate\MigrateMessageInterface');
     $event = new MigrateImportEvent($migration->reveal(), $message_service->reveal());

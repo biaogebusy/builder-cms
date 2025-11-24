@@ -33,6 +33,7 @@ class FlagAddForm extends FlagFormBase {
    * {@inheritdoc}
    */
   public function getEntityFromRouteMatch(RouteMatchInterface $route_match, $entity_type_id) {
+    /** @var \Drupal\flag\FlagInterface $flag */
     $flag = parent::getEntityFromRouteMatch($route_match, $entity_type_id);
 
     // Set the flag type from the route parameter. This is set by the redirect

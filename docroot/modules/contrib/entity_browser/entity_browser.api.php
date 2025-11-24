@@ -5,6 +5,8 @@
  * Hooks related to entity browser and it's plugins.
  */
 
+use Drupal\views\ViewExecutable;
+
 /**
  * @addtogroup hooks
  * @{
@@ -93,3 +95,22 @@ function hook_form_entity_browser_ENTITY_BROWSER_ID_form_alter(&$form, FormState
 /**
  * @} End of "addtogroup hooks".
  */
+
+/**
+ * Alter the view in the view widget before rendering.
+ *
+ * @param \Drupal\views\ViewExecutable $view
+ *   The view executable.
+ * @param array $configuration
+ *   The entity browser view widget configuration.
+ * @param array $context
+ *   Helpful contextual information.
+ *
+ * @see \Drupal\entity_browser\Plugin\EntityBrowser\Widget\View::getContext()
+ */
+function hook_entity_browser_view_executable_alter(ViewExecutable &$view, array &$configuration, array $context) {
+  if ($context['original_route_match']->getParameter('node') && $view->id() == 'my_entity_browser_view') {
+    $original_node = $context['original_route_match']->getParameter('node');
+    $view->args = [$original_node->id()];
+  }
+}

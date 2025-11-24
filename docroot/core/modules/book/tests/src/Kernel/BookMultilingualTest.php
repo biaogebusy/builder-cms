@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\book\Kernel;
 
 use Drupal\Core\Language\LanguageInterface;
@@ -14,12 +16,15 @@ use Drupal\node\Entity\NodeType;
 use Drupal\Tests\user\Traits\UserCreationTrait;
 use Drupal\user\Plugin\LanguageNegotiation\LanguageNegotiationUser;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 use Symfony\Component\Routing\Route;
 
 /**
  * Tests multilingual books.
  *
  * @group book
+ * @group legacy
  */
 class BookMultilingualTest extends KernelTestBase {
 
@@ -51,7 +56,7 @@ class BookMultilingualTest extends KernelTestBase {
     parent::setUp();
     // Create the translation language.
     $this->installConfig(['language']);
-    ConfigurableLanguage::create(['id' => self::LANGCODE])->save();
+    ConfigurableLanguage::createFromLangcode(self::LANGCODE)->save();
     // Set up language negotiation.
     $config = $this->config('language.types');
     $config->set('configurable', [
@@ -85,7 +90,6 @@ class BookMultilingualTest extends KernelTestBase {
     $this->installEntitySchema('user');
     $this->installSchema('book', ['book']);
     $this->installSchema('node', ['node_access']);
-    $this->installSchema('system', ['sequences']);
     $this->installConfig(['node', 'book', 'field']);
     $node_type = NodeType::create([
       'type' => $this->randomMachineName(),
@@ -168,14 +172,14 @@ class BookMultilingualTest extends KernelTestBase {
    *
    * @dataProvider langcodesProvider
    */
-  public function testMultilingualBookManager(string $langcode) {
+  public function testMultilingualBookManager(string $langcode): void {
     $this->setCurrentLanguage($langcode);
     /** @var \Drupal\book\BookManagerInterface $bm */
     $bm = $this->container->get('book.manager');
     $books = $bm->getAllBooks();
     $this->assertNotEmpty($books);
     foreach ($books as $book) {
-      $bid = $book['bid'];
+      $bid = (int) $book['bid'];
       $build = $bm->bookTreeOutput($bm->bookTreeAllData($bid));
       $items = $build['#items'];
       $this->assertBookItemIsCorrectlyTranslated($items[$bid], $langcode);
@@ -206,7 +210,7 @@ class BookMultilingualTest extends KernelTestBase {
    *
    * @dataProvider langcodesProvider
    */
-  public function testMultilingualBookBreadcrumbBuilder(string $langcode) {
+  public function testMultilingualBookBreadcrumbBuilder(string $langcode): void {
     $this->setCurrentLanguage($langcode);
     // Test a level 3 node.
     $nid = 7;
@@ -218,7 +222,7 @@ class BookMultilingualTest extends KernelTestBase {
     $bbb = $this->container->get('book.breadcrumb');
     $links = $bbb->build($route_match)->getLinks();
     $link = array_shift($links);
-    $rendered_link = Link::fromTextAndUrl($link->getText(), $link->getUrl())->toString();
+    $rendered_link = (string) Link::fromTextAndUrl($link->getText(), $link->getUrl())->toString();
     $this->assertStringContainsString("http://$langcode.book.test.domain/", $rendered_link);
     $link = array_shift($links);
     $this->assertNodeLinkIsCorrectlyTranslated(1, $link->getText(), $link->getUrl(), $langcode);
@@ -232,7 +236,7 @@ class BookMultilingualTest extends KernelTestBase {
    *
    * @dataProvider langcodesProvider
    */
-  public function testMultilingualBookExport(string $langcode) {
+  public function testMultilingualBookExport(string $langcode): void {
     $this->setCurrentLanguage($langcode);
     /** @var \Drupal\book\BookExport $be */
     $be = $this->container->get('book.export');
@@ -255,7 +259,7 @@ class BookMultilingualTest extends KernelTestBase {
   /**
    * Data provider for ::testMultilingualBooks().
    */
-  public function langcodesProvider() {
+  public static function langcodesProvider() {
     return [
       [self::LANGCODE],
       ['en'],
@@ -272,7 +276,9 @@ class BookMultilingualTest extends KernelTestBase {
    *   is used instead of the content language.
    */
   protected function setCurrentLanguage(string $langcode): void {
-    \Drupal::requestStack()->push(Request::create("http://$langcode.book.test.domain/"));
+    $request = Request::create("http://$langcode.book.test.domain/");
+    $request->setSession(new Session(new MockArraySessionStorage()));
+    \Drupal::requestStack()->push($request);
     $language_manager = $this->container->get('language_manager');
     $language_manager->reset();
     $current_user = \Drupal::currentUser();
@@ -293,7 +299,7 @@ class BookMultilingualTest extends KernelTestBase {
    * @internal
    */
   protected function assertBookItemIsCorrectlyTranslated(array $item, string $langcode): void {
-    $this->assertNodeLinkIsCorrectlyTranslated($item['original_link']['nid'], $item['title'], $item['url'], $langcode);
+    $this->assertNodeLinkIsCorrectlyTranslated((int) $item['original_link']['nid'], $item['title'], $item['url'], $langcode);
   }
 
   /**
@@ -313,7 +319,7 @@ class BookMultilingualTest extends KernelTestBase {
   protected function assertNodeLinkIsCorrectlyTranslated(int $nid, string $title, Url $url, string $langcode): void {
     $node = Node::load($nid);
     $this->assertSame($node->getTranslation($langcode)->label(), $title);
-    $rendered_link = Link::fromTextAndUrl($title, $url)->toString();
+    $rendered_link = (string) Link::fromTextAndUrl($title, $url)->toString();
     $this->assertStringContainsString("http://$langcode.book.test.domain/node/$nid", $rendered_link);
   }
 

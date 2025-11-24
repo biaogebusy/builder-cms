@@ -3,19 +3,23 @@
 namespace Drupal\system_test\Controller;
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Cache\CacheableRedirectResponse;
 use Drupal\Core\Cache\CacheableResponse;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\Core\Messenger\MessengerInterface;
-use Drupal\Core\Security\TrustedCallbackInterface;
-use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\Routing\LocalRedirectResponse;
+use Drupal\Core\Routing\TrustedRedirectResponse;
+use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Drupal\Core\Lock\LockBackendInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Controller routines for system_test routes.
@@ -70,26 +74,29 @@ class SystemTestController extends ControllerBase implements TrustedCallbackInte
    *   The renderer.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger service.
+   * @param \Drupal\Core\PageCache\ResponsePolicy\KillSwitch|null $killSwitch
+   *   The page cache kill switch. This is here to test nullable types with
+   *   \Drupal\Core\DependencyInjection\AutowireTrait::create().
+   * @param \Drupal\Core\PageCache\ResponsePolicy\KillSwitch|null $killSwitch2
+   *   The page cache kill switch. This is here to test nullable types with
+   *   \Drupal\Core\DependencyInjection\AutowireTrait::create().
    */
-  public function __construct(LockBackendInterface $lock, LockBackendInterface $persistent_lock, AccountInterface $current_user, RendererInterface $renderer, MessengerInterface $messenger) {
+  public function __construct(
+    #[Autowire(service: 'lock')]
+    LockBackendInterface $lock,
+    #[Autowire(service: 'lock.persistent')]
+    LockBackendInterface $persistent_lock,
+    AccountInterface $current_user,
+    RendererInterface $renderer,
+    MessengerInterface $messenger,
+    public ?KillSwitch $killSwitch = NULL,
+    public KillSwitch|null $killSwitch2 = NULL,
+  ) {
     $this->lock = $lock;
     $this->persistentLock = $persistent_lock;
     $this->currentUser = $current_user;
     $this->renderer = $renderer;
     $this->messenger = $messenger;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('lock'),
-      $container->get('lock.persistent'),
-      $container->get('current_user'),
-      $container->get('renderer'),
-      $container->get('messenger')
-    );
   }
 
   /**
@@ -259,7 +266,7 @@ class SystemTestController extends ControllerBase implements TrustedCallbackInte
   /**
    * Set cache max-age on the returned render array.
    */
-  public function system_test_cache_maxage_page() {
+  public function system_test_cache_max_age_page() {
     $build['main'] = [
       '#cache' => ['max-age' => 90],
       'message' => [
@@ -296,7 +303,7 @@ class SystemTestController extends ControllerBase implements TrustedCallbackInte
     $response = new CacheableResponse();
     $response->headers->set($query['name'], $query['value']);
     $response->getCacheableMetadata()->addCacheContexts(['url.query_args:name', 'url.query_args:value']);
-    $response->setContent($this->t('The following header was set: %name: %value', ['%name' => $query['name'], '%value' => $query['value']]));
+    $response->setContent((string) $this->t('The following header was set: %name: %value', ['%name' => $query['name'], '%value' => $query['value']]));
 
     return $response;
   }
@@ -332,8 +339,8 @@ class SystemTestController extends ControllerBase implements TrustedCallbackInte
     // the exception message can not be tested.
     // @see _drupal_shutdown_function()
     // @see \Drupal\system\Tests\System\ShutdownFunctionsTest
-    if (function_exists('fastcgi_finish_request')) {
-      return ['#markup' => 'The function fastcgi_finish_request exists when serving the request.'];
+    if (function_exists('fastcgi_finish_request') || ob_get_status()) {
+      return ['#markup' => 'The response will flush before shutdown functions are called.'];
     }
     return [];
   }
@@ -418,6 +425,27 @@ class SystemTestController extends ControllerBase implements TrustedCallbackInte
    */
   public function getCacheableResponseWithCustomCacheControl() {
     return new CacheableResponse('Foo', 200, ['Cache-Control' => 'bar']);
+  }
+
+  /**
+   * Returns a CacheableRedirectResponse with the given status code.
+   */
+  public function respondWithCacheableRedirectResponse(int $status_code): CacheableRedirectResponse {
+    return new CacheableRedirectResponse('/llamas', $status_code);
+  }
+
+  /**
+   * Returns a LocalRedirectResponse with the given status code.
+   */
+  public function respondWithLocalRedirectResponse(int $status_code): LocalRedirectResponse {
+    return new LocalRedirectResponse('/llamas', $status_code);
+  }
+
+  /**
+   * Returns a TrustedRedirectResponse with the given status code.
+   */
+  public function respondWithTrustedRedirectResponse(int $status_code): TrustedRedirectResponse {
+    return new TrustedRedirectResponse('/llamas', $status_code);
   }
 
   /**

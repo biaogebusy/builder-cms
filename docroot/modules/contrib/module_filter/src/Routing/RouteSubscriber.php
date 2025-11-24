@@ -13,7 +13,7 @@ class RouteSubscriber extends RouteSubscriberBase {
   /**
    * {@inheritdoc}
    */
-  public function alterRoutes(RouteCollection $collection) {
+  public function alterRoutes(RouteCollection $collection): void {
     if ($route = $collection->get('update.status')) {
       $route->setDefault('_controller', 'Drupal\module_filter\Controller\ModuleFilterUpdateController::updateStatus');
     }

@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\admin_toolbar\Functional;
 
+use Drupal\Tests\BrowserTestBase;
 use Drupal\media\Entity\MediaType;
 use Drupal\system\Entity\Menu;
-use Drupal\Tests\BrowserTestBase;
 
 /**
  * Tests Admin Toolbar tools functionality.
@@ -14,9 +14,7 @@ use Drupal\Tests\BrowserTestBase;
 class AdminToolbarToolsSortTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'toolbar',
@@ -42,6 +40,9 @@ class AdminToolbarToolsSortTest extends BrowserTestBase {
 
   /**
    * Tests that menu updates on entity add/update/delete.
+   *
+   * @return void
+   *   Nothing to return.
    */
   public function testMenuUpdate() {
 
@@ -108,6 +109,9 @@ class AdminToolbarToolsSortTest extends BrowserTestBase {
 
   /**
    * Tests sorting of menus by label rather than machine name.
+   *
+   * @return void
+   *   Nothing to return.
    */
   public function testMenuSorting() {
 
@@ -120,18 +124,23 @@ class AdminToolbarToolsSortTest extends BrowserTestBase {
     ]);
 
     $menus = [
-      'aaa' => 'lll',
-      'bbb' => 'kkk',
-      'ccc' => 'jjj',
-      'ddd' => 'iii',
-      'eee' => 'hhh',
-      'fff' => 'ggg',
-      'ggg' => 'fff',
-      'hhh' => 'eee',
-      'iii' => 'ddd',
-      'jjj' => 'ccc',
-      'kkk' => 'bbb',
-      'lll' => 'aaa',
+      'aaa' => 'qqq',
+      'bbb' => 'ppp',
+      'ccc' => 'ooo',
+      'ddd' => 'nnn',
+      'eee' => 'mmm',
+      'fff' => 'lll',
+      'ggg' => 'kkk',
+      'hhh' => 'jjj',
+      'iii' => 'iii',
+      'jjj' => 'hhh',
+      'kkk' => 'ggg',
+      'lll' => 'fff',
+      'mmm' => 'eee',
+      'nnn' => 'ddd',
+      'ooo' => 'ccc',
+      'ppp' => 'bbb',
+      'qqq' => 'aaa',
     ];
 
     foreach ($menus as $machine_name => $label) {
@@ -155,39 +164,68 @@ class AdminToolbarToolsSortTest extends BrowserTestBase {
     }
 
     $expected = [
-      0 => '/admin/structure/menu/manage/lll',
-      1 => '/admin/structure/menu/manage/lll/add',
-      2 => '/admin/structure/menu/manage/lll/delete',
+      0 => '/admin/structure/menu/manage/qqq',
+      1 => '/admin/structure/menu/manage/qqq/add',
+      2 => '/admin/structure/menu/manage/qqq/delete',
       3 => '/admin/structure/menu/manage/admin',
       4 => '/admin/structure/menu/manage/admin/add',
-      5 => '/admin/structure/menu/manage/kkk',
-      6 => '/admin/structure/menu/manage/kkk/add',
-      7 => '/admin/structure/menu/manage/kkk/delete',
-      8 => '/admin/structure/menu/manage/jjj',
-      9 => '/admin/structure/menu/manage/jjj/add',
-      10 => '/admin/structure/menu/manage/jjj/delete',
-      11 => '/admin/structure/menu/manage/iii',
-      12 => '/admin/structure/menu/manage/iii/add',
-      13 => '/admin/structure/menu/manage/iii/delete',
-      14 => '/admin/structure/menu/manage/hhh',
-      15 => '/admin/structure/menu/manage/hhh/add',
-      16 => '/admin/structure/menu/manage/hhh/delete',
-      17 => '/admin/structure/menu/manage/ggg',
-      18 => '/admin/structure/menu/manage/ggg/add',
-      19 => '/admin/structure/menu/manage/ggg/delete',
+      5 => '/admin/structure/menu/manage/ppp',
+      6 => '/admin/structure/menu/manage/ppp/add',
+      7 => '/admin/structure/menu/manage/ppp/delete',
+      8 => '/admin/structure/menu/manage/ooo',
+      9 => '/admin/structure/menu/manage/ooo/add',
+      10 => '/admin/structure/menu/manage/ooo/delete',
+      11 => '/admin/structure/menu/manage/nnn',
+      12 => '/admin/structure/menu/manage/nnn/add',
+      13 => '/admin/structure/menu/manage/nnn/delete',
+      14 => '/admin/structure/menu/manage/mmm',
+      15 => '/admin/structure/menu/manage/mmm/add',
+      16 => '/admin/structure/menu/manage/mmm/delete',
+      17 => '/admin/structure/menu/manage/lll',
+      18 => '/admin/structure/menu/manage/lll/add',
+      19 => '/admin/structure/menu/manage/lll/delete',
       20 => '/admin/structure/menu/manage/footer',
       21 => '/admin/structure/menu/manage/footer/add',
-      22 => '/admin/structure/menu/manage/fff',
-      23 => '/admin/structure/menu/manage/fff/add',
-      24 => '/admin/structure/menu/manage/fff/delete',
-      25 => '/admin/structure/menu/manage/eee',
-      26 => '/admin/structure/menu/manage/eee/add',
-      27 => '/admin/structure/menu/manage/eee/delete',
+      22 => '/admin/structure/menu/manage/kkk',
+      23 => '/admin/structure/menu/manage/kkk/add',
+      24 => '/admin/structure/menu/manage/kkk/delete',
+      25 => '/admin/structure/menu/manage/jjj',
+      26 => '/admin/structure/menu/manage/jjj/add',
+      27 => '/admin/structure/menu/manage/jjj/delete',
+      28 => '/admin/structure/menu/manage/iii',
+      29 => '/admin/structure/menu/manage/iii/add',
+      30 => '/admin/structure/menu/manage/iii/delete',
+      31 => '/admin/structure/menu/manage/hhh',
+      32 => '/admin/structure/menu/manage/hhh/add',
+      33 => '/admin/structure/menu/manage/hhh/delete',
+      34 => '/admin/structure/menu/manage/ggg',
+      35 => '/admin/structure/menu/manage/ggg/add',
+      36 => '/admin/structure/menu/manage/ggg/delete',
+      37 => '/admin/structure/menu/manage/fff',
+      38 => '/admin/structure/menu/manage/fff/add',
+      39 => '/admin/structure/menu/manage/fff/delete',
+      40 => '/admin/structure/menu/manage/main',
+      41 => '/admin/structure/menu/manage/main/add',
+      42 => '/admin/structure/menu/manage/eee',
+      43 => '/admin/structure/menu/manage/eee/add',
+      44 => '/admin/structure/menu/manage/eee/delete',
+      45 => '/admin/structure/menu/manage/ddd',
+      46 => '/admin/structure/menu/manage/ddd/add',
+      47 => '/admin/structure/menu/manage/ddd/delete',
+      48 => '/admin/structure/menu/manage/ccc',
+      49 => '/admin/structure/menu/manage/ccc/add',
+      50 => '/admin/structure/menu/manage/ccc/delete',
+      51 => '/admin/structure/menu/manage/bbb',
+      52 => '/admin/structure/menu/manage/bbb/add',
+      53 => '/admin/structure/menu/manage/bbb/delete',
+      54 => '/admin/structure/menu/manage/aaa',
+      55 => '/admin/structure/menu/manage/aaa/add',
+      56 => '/admin/structure/menu/manage/aaa/delete',
     ];
 
     foreach ($links as $key => $link) {
       // Using assert contains because prefaces the urls with "/subdirectory".
-      $this->assertContains($expected[$key], $link);
+      $this->assertStringContainsString($expected[$key], $link);
     }
   }
 
@@ -196,6 +234,9 @@ class AdminToolbarToolsSortTest extends BrowserTestBase {
    *
    * @param string $url
    *   The url to assert exists in the admin menu.
+   *
+   * @return void
+   *   Nothing to return.
    *
    * @throws \Behat\Mink\Exception\ElementNotFoundException
    */
@@ -209,6 +250,9 @@ class AdminToolbarToolsSortTest extends BrowserTestBase {
    *
    * @param string $url
    *   The url to assert exists in the admin menu.
+   *
+   * @return void
+   *   Nothing to return.
    *
    * @throws \Behat\Mink\Exception\ExpectationException
    */

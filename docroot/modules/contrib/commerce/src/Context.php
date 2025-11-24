@@ -2,8 +2,8 @@
 
 namespace Drupal\commerce;
 
-use Drupal\commerce_store\Entity\StoreInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\commerce_store\Entity\StoreInterface;
 
 /**
  * Contains known global information (customer, store, time).
@@ -55,7 +55,7 @@ final class Context {
    * @param array $data
    *   The data.
    */
-  public function __construct(AccountInterface $customer, StoreInterface $store, int $time = NULL, array $data = []) {
+  public function __construct(AccountInterface $customer, StoreInterface $store, ?int $time = NULL, array $data = []) {
     $this->customer = $customer;
     $this->store = $store;
     $this->time = $time ?: time();

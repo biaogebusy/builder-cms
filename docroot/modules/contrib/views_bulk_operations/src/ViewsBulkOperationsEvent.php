@@ -2,7 +2,7 @@
 
 namespace Drupal\views_bulk_operations;
 
-use Symfony\Component\EventDispatcher\Event;
+use Drupal\Component\EventDispatcher\Event;
 use Drupal\views\ViewExecutable;
 
 /**
@@ -10,42 +10,21 @@ use Drupal\views\ViewExecutable;
  */
 class ViewsBulkOperationsEvent extends Event {
 
-  const NAME = 'views_bulk_operations.view_data';
-
-  /**
-   * The provider of the current view.
-   *
-   * @var string
-   */
-  protected $provider;
-
-  /**
-   * The views data of the current view.
-   *
-   * @var array
-   */
-  protected $viewData;
-
-  /**
-   * The current view object.
-   *
-   * @var \Drupal\views\ViewExecutable
-   */
-  protected $view;
+  public const NAME = 'views_bulk_operations.view_data';
 
   /**
    * IDs of entity types returned by the view.
    *
    * @var array
    */
-  protected $entityTypeIds;
+  protected array $entityTypeIds = [];
 
   /**
    * Row entity getter information.
    *
    * @var array
    */
-  protected $entityGetter;
+  protected array $entityGetter = [];
 
   /**
    * Object constructor.
@@ -57,11 +36,11 @@ class ViewsBulkOperationsEvent extends Event {
    * @param \Drupal\views\ViewExecutable $view
    *   The current view.
    */
-  public function __construct($provider, array $viewData, ViewExecutable $view) {
-    $this->provider = $provider;
-    $this->viewData = $viewData;
-    $this->view = $view;
-  }
+  public function __construct(
+    protected string $provider,
+    protected array $viewData,
+    protected ViewExecutable $view
+  ) {}
 
   /**
    * Get view provider.
@@ -69,17 +48,17 @@ class ViewsBulkOperationsEvent extends Event {
    * @return string
    *   The view provider
    */
-  public function getProvider() {
+  public function getProvider(): string {
     return $this->provider;
   }
 
   /**
    * Get view data.
    *
-   * @return string
+   * @return array
    *   The current view data
    */
-  public function getViewData() {
+  public function getViewData(): array {
     return $this->viewData;
   }
 
@@ -89,7 +68,7 @@ class ViewsBulkOperationsEvent extends Event {
    * @return \Drupal\views\ViewExecutable
    *   The current view object
    */
-  public function getView() {
+  public function getView(): ViewExecutable {
     return $this->view;
   }
 
@@ -99,7 +78,7 @@ class ViewsBulkOperationsEvent extends Event {
    * @return array
    *   Entity type IDs.
    */
-  public function getEntityTypeIds() {
+  public function getEntityTypeIds(): array {
     return $this->entityTypeIds;
   }
 
@@ -109,7 +88,7 @@ class ViewsBulkOperationsEvent extends Event {
    * @return array
    *   Entity getter information.
    */
-  public function getEntityGetter() {
+  public function getEntityGetter(): array {
     return $this->entityGetter;
   }
 
@@ -119,7 +98,7 @@ class ViewsBulkOperationsEvent extends Event {
    * @param array $entityTypeIds
    *   Entity type IDs.
    */
-  public function setEntityTypeIds(array $entityTypeIds) {
+  public function setEntityTypeIds(array $entityTypeIds): void {
     $this->entityTypeIds = $entityTypeIds;
   }
 
@@ -129,7 +108,7 @@ class ViewsBulkOperationsEvent extends Event {
    * @param array $entityGetter
    *   Entity getter information.
    */
-  public function setEntityGetter(array $entityGetter) {
+  public function setEntityGetter(array $entityGetter): void {
     if (!isset($entityGetter['callable'])) {
       throw new \Exception('Views Bulk Operations entity getter callable is not defined.');
     }

@@ -1,21 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageEffect;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Image\ImageInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\image\Attribute\ImageEffect;
 use Drupal\image\ConfigurableImageEffectBase;
 use Drupal\image_effects\Component\ImageUtility;
 
 /**
  * Crop an image preserving the portion with the most entropy.
- *
- * @ImageEffect(
- *   id = "image_effects_smart_crop",
- *   label = @Translation("Smart Crop"),
- *   description = @Translation("Similar to Crop, but preserves the portion of the image with the most entropy.")
- * )
  */
+#[ImageEffect(
+  id: 'image_effects_smart_crop',
+  label: new TranslatableMarkup('Smart Crop'),
+  description: new TranslatableMarkup('Similar to Crop, but preserves the portion of the image with the most entropy.'),
+)]
 class SmartCropImageEffect extends ConfigurableImageEffectBase {
 
   /**
@@ -141,7 +144,11 @@ class SmartCropImageEffect extends ConfigurableImageEffectBase {
    * {@inheritdoc}
    */
   public function transformDimensions(array &$dimensions, $uri) {
-    if (!$dimensions['width'] || !$dimensions['height']) {
+    $dimensions['width'] = $dimensions['width'] ? (int) $dimensions['width'] : NULL;
+    $dimensions['height'] = $dimensions['height'] ? (int) $dimensions['height'] : NULL;
+
+    if ($dimensions['width'] === NULL || $dimensions['height'] === NULL) {
+      $dimensions['width'] = $dimensions['height'] = NULL;
       return;
     }
     if ($this->configuration['simulate']) {

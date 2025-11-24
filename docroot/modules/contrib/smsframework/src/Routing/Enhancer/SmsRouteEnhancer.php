@@ -5,8 +5,8 @@ declare(strict_types = 1);
 namespace Drupal\sms\Routing\Enhancer;
 
 use Drupal\Core\Routing\EnhancerInterface;
+use Drupal\Core\Routing\RouteObjectInterface;
 use Drupal\sms\Entity\SmsGateway;
-use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**

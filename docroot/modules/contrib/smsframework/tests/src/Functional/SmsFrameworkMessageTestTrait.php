@@ -26,7 +26,7 @@ trait SmsFrameworkMessageTestTrait {
     $sender = $this->randomMachineName();
     $sms_message = $this->createSmsMessage();
     $sms_message->setSender($sender);
-    $this->assertEquals($sender, $sms_message->getSender());
+    static::assertEquals($sender, $sms_message->getSender());
   }
 
   /**
@@ -39,7 +39,7 @@ trait SmsFrameworkMessageTestTrait {
     $number = '1234567890';
     $sms_message = $this->createSmsMessage();
     $sms_message->setSenderNumber($number);
-    $this->assertEquals($number, $sms_message->getSenderNumber());
+    static::assertEquals($number, $sms_message->getSenderNumber());
   }
 
   /**
@@ -52,7 +52,7 @@ trait SmsFrameworkMessageTestTrait {
     $message = $this->randomMachineName();
     $sms_message1 = $this->createSmsMessage();
     $sms_message1->setMessage($message);
-    $this->assertEquals($message, $sms_message1->getMessage());
+    static::assertEquals($message, $sms_message1->getMessage());
   }
 
   /**
@@ -70,9 +70,9 @@ trait SmsFrameworkMessageTestTrait {
     $sms_message2->addRecipients(['1234567890', '9087654321']);
 
     // Test that getRecipients return arrays.
-    $this->assertEquals([], $sms_message0->getRecipients());
-    $this->assertEquals(['1234567890'], $sms_message1->getRecipients());
-    $this->assertEquals(['1234567890', '9087654321'], $sms_message2->getRecipients());
+    static::assertEquals([], $sms_message0->getRecipients());
+    static::assertEquals(['1234567890'], $sms_message1->getRecipients());
+    static::assertEquals(['1234567890', '9087654321'], $sms_message2->getRecipients());
   }
 
   /**
@@ -87,13 +87,13 @@ trait SmsFrameworkMessageTestTrait {
     $sms_message1
       ->addRecipient($recipient1)
       ->addRecipient($recipient2);
-    $this->assertEquals([$recipient1, $recipient2], $sms_message1->getRecipients());
+    static::assertEquals([$recipient1, $recipient2], $sms_message1->getRecipients());
 
     // Check duplicate recipients are not added.
     $sms_message2 = $this->createSmsMessage();
     $sms_message2
       ->addRecipients([$recipient1, $recipient1, $recipient1, $recipient2]);
-    $this->assertEquals([$recipient1, $recipient2], $sms_message2->getRecipients());
+    static::assertEquals([$recipient1, $recipient2], $sms_message2->getRecipients());
   }
 
   /**
@@ -107,7 +107,7 @@ trait SmsFrameworkMessageTestTrait {
     $sms_message2 = $this->createSmsMessage();
     $sms_message2
       ->addRecipients([$recipient1, $recipient2]);
-    $this->assertEquals([$recipient1, $recipient2], $sms_message2->getRecipients());
+    static::assertEquals([$recipient1, $recipient2], $sms_message2->getRecipients());
   }
 
   /**
@@ -123,7 +123,7 @@ trait SmsFrameworkMessageTestTrait {
       ->addRecipient($recipient1)
       ->addRecipient($recipient2);
     $sms_message1->removeRecipient($recipient1);
-    $this->assertEquals([$recipient2], $sms_message1->getRecipients());
+    static::assertEquals([$recipient2], $sms_message1->getRecipients());
   }
 
   /**
@@ -137,10 +137,10 @@ trait SmsFrameworkMessageTestTrait {
     $sms_message = $this->createSmsMessage();
     $sms_message
       ->addRecipients($recipients);
-    $this->assertEquals($recipients, $sms_message->getRecipients());
+    static::assertEquals($recipients, $sms_message->getRecipients());
     $sms_message
       ->removeRecipients(['123123123', '234234234']);
-    $this->assertEquals(['456456456'], $sms_message->getRecipients());
+    static::assertEquals(['456456456'], $sms_message->getRecipients());
   }
 
   /**
@@ -152,11 +152,11 @@ trait SmsFrameworkMessageTestTrait {
   public function testDirection(): void {
     $sms_message2 = $this->createSmsMessage()
       ->setDirection(Direction::OUTGOING);
-    $this->assertEquals(Direction::OUTGOING, $sms_message2->getDirection());
+    static::assertEquals(Direction::OUTGOING, $sms_message2->getDirection());
 
     $sms_message3 = $this->createSmsMessage()
       ->setDirection(Direction::INCOMING);
-    $this->assertEquals(Direction::INCOMING, $sms_message3->getDirection());
+    static::assertEquals(Direction::INCOMING, $sms_message3->getDirection());
   }
 
   /**
@@ -169,7 +169,7 @@ trait SmsFrameworkMessageTestTrait {
     $options = ['foo' => $this->randomMachineName()];
     $sms_message1 = $this->createSmsMessage();
     $sms_message1->setOption('foo', $options['foo']);
-    $this->assertEquals($options, $sms_message1->getOptions());
+    static::assertEquals($options, $sms_message1->getOptions());
   }
 
   /**
@@ -187,7 +187,7 @@ trait SmsFrameworkMessageTestTrait {
     $sms_message1->setOption('bar', $options['bar']);
     $sms_message1->removeOption('foo');
     unset($options['foo']);
-    $this->assertEquals($options, $sms_message1->getOptions());
+    static::assertEquals($options, $sms_message1->getOptions());
   }
 
   /**
@@ -201,7 +201,7 @@ trait SmsFrameworkMessageTestTrait {
   public function testResults(): void {
     $error_message = $this->getRandomGenerator()->string();
     $recipients = ['2345678901', '1234567890'];
-    $reports = array_combine($recipients, array_map(function ($recipient) {
+    $reports = array_combine($recipients, array_map(static function ($recipient) {
       return (new SmsDeliveryReport())
         ->setRecipient($recipient)
         ->setStatus(SmsMessageReportStatus::DELIVERED);
@@ -214,10 +214,10 @@ trait SmsFrameworkMessageTestTrait {
       ->setResult($result);
 
     $result_actual = $sms_message->getResult();
-    $this->assertEquals($error_message, $result_actual->getErrorMessage());
-    $this->assertEquals($result->getErrorMessage(), $result_actual->getErrorMessage());
-    $this->assertEquals($reports['1234567890']->getStatus(), $sms_message->getReport('1234567890')->getStatus());
-    $this->assertEquals($reports['2345678901']->getStatus(), $sms_message->getReport('2345678901')->getStatus());
+    static::assertEquals($error_message, $result_actual->getErrorMessage());
+    static::assertEquals($result->getErrorMessage(), $result_actual->getErrorMessage());
+    static::assertEquals($reports['1234567890']->getStatus(), $sms_message->getReport('1234567890')->getStatus());
+    static::assertEquals($reports['2345678901']->getStatus(), $sms_message->getReport('2345678901')->getStatus());
   }
 
   /**
@@ -230,12 +230,12 @@ trait SmsFrameworkMessageTestTrait {
     $sms_message1 = $this->createSmsMessage();
 
     // Default value.
-    $this->assertEquals($sms_message1->getUid(), NULL);
+    static::assertEquals($sms_message1->getUid(), NULL);
 
     // Set value.
     $sms_message2 = $this->createSmsMessage();
     $sms_message2->setUid(22);
-    $this->assertEquals(22, $sms_message2->getUid());
+    static::assertEquals(22, $sms_message2->getUid());
   }
 
   /**
@@ -248,11 +248,11 @@ trait SmsFrameworkMessageTestTrait {
     $sms_message1 = $this->createSmsMessage();
 
     // Default.
-    $this->assertEquals(TRUE, $sms_message1->isAutomated());
+    static::assertEquals(TRUE, $sms_message1->isAutomated());
 
     $sms_message2 = $this->createSmsMessage();
     $sms_message2->setAutomated(FALSE);
-    $this->assertEquals(FALSE, $sms_message2->isAutomated());
+    static::assertEquals(FALSE, $sms_message2->isAutomated());
   }
 
   /**
@@ -265,7 +265,7 @@ trait SmsFrameworkMessageTestTrait {
     $sms2 = $this->createSmsMessage();
 
     // Test that UUIDs are different.
-    $this->assertNotEquals($sms1->getUuid(), $sms2->getUuid());
+    static::assertNotEquals($sms1->getUuid(), $sms2->getUuid());
   }
 
   /**
@@ -277,10 +277,10 @@ trait SmsFrameworkMessageTestTrait {
     $sms_message = $this->createSmsMessage();
     $sms_message->addRecipients(['100', '200', '300', '400', '500']);
     $sms_messages = $sms_message->chunkByRecipients(2);
-    $this->assertCount(3, $sms_messages);
-    $this->assertEquals(['100', '200'], $sms_messages[0]->getRecipients());
-    $this->assertEquals(['300', '400'], $sms_messages[1]->getRecipients());
-    $this->assertEquals(['500'], $sms_messages[2]->getRecipients());
+    static::assertCount(3, $sms_messages);
+    static::assertEquals(['100', '200'], $sms_messages[0]->getRecipients());
+    static::assertEquals(['300', '400'], $sms_messages[1]->getRecipients());
+    static::assertEquals(['500'], $sms_messages[2]->getRecipients());
   }
 
 }

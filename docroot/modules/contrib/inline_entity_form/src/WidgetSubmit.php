@@ -44,6 +44,7 @@ class WidgetSubmit {
     // interaction. We sort them lexicographically in reverse order to get inner
     // forms before outer forms, to ensure inside-out saving of entities.
     // @see \Drupal\inline_entity_form\Plugin\Field\FieldWidget\InlineEntityFormBase::makeIefId
+    $widget_states = $widget_states ?? [];
     krsort($widget_states, SORT_STRING);
     foreach ($widget_states as &$widget_state) {
       $widget_state += ['entities' => [], 'delete' => []];

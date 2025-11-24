@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\book\Unit;
 
 use Drupal\book\BookManager;
@@ -10,6 +12,7 @@ use Drupal\Tests\UnitTestCase;
 /**
  * @coversDefaultClass \Drupal\book\BookManager
  * @group book
+ * @group legacy
  */
 class BookManagerTest extends UnitTestCase {
 
@@ -73,6 +76,8 @@ class BookManagerTest extends UnitTestCase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    parent::setUp();
+
     $this->entityTypeManager = $this->createMock(EntityTypeManagerInterface::class);
     $this->translation = $this->getStringTranslationStub();
     $this->configFactory = $this->getConfigFactoryStub([]);
@@ -90,7 +95,7 @@ class BookManagerTest extends UnitTestCase {
    *
    * @dataProvider providerTestGetBookParents
    */
-  public function testGetBookParents($book, $parent, $expected) {
+  public function testGetBookParents($book, $parent, $expected): void {
     $this->assertEquals($expected, $this->bookManager->getBookParents($book, $parent));
   }
 
@@ -100,7 +105,7 @@ class BookManagerTest extends UnitTestCase {
    * @return array
    *   The test data.
    */
-  public function providerTestGetBookParents() {
+  public static function providerTestGetBookParents() {
     $empty = [
       'p1' => 0,
       'p2' => 0,

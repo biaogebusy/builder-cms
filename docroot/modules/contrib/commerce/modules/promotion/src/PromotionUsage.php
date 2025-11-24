@@ -2,20 +2,13 @@
 
 namespace Drupal\commerce_promotion;
 
+use Drupal\Core\Database\Connection;
 use Drupal\commerce\EntityHelper;
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_promotion\Entity\CouponInterface;
 use Drupal\commerce_promotion\Entity\PromotionInterface;
-use Drupal\Core\Database\Connection;
 
 class PromotionUsage implements PromotionUsageInterface {
-
-  /**
-   * The database connection to use.
-   *
-   * @var \Drupal\Core\Database\Connection
-   */
-  protected $connection;
 
   /**
    * Constructs a new PromotionUsage object.
@@ -23,14 +16,12 @@ class PromotionUsage implements PromotionUsageInterface {
    * @param \Drupal\Core\Database\Connection $connection
    *   The database connection to use.
    */
-  public function __construct(Connection $connection) {
-    $this->connection = $connection;
-  }
+  public function __construct(protected Connection $connection) {}
 
   /**
    * {@inheritdoc}
    */
-  public function register(OrderInterface $order, PromotionInterface $promotion, CouponInterface $coupon = NULL) {
+  public function register(OrderInterface $order, PromotionInterface $promotion, ?CouponInterface $coupon = NULL) {
     $this->connection->insert('commerce_promotion_usage')
       ->fields([
         'promotion_id' => $promotion->id(),
@@ -44,7 +35,7 @@ class PromotionUsage implements PromotionUsageInterface {
   /**
    * {@inheritdoc}
    */
-  public function unregister(OrderInterface $order, PromotionInterface $promotion, CouponInterface $coupon = NULL) {
+  public function unregister(OrderInterface $order, PromotionInterface $promotion, ?CouponInterface $coupon = NULL) {
     $query = $this->connection->delete('commerce_promotion_usage');
     $query->condition('promotion_id', $promotion->id());
     $query->condition('order_id', $order->id());

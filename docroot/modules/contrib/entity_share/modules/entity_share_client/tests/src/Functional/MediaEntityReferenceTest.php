@@ -15,6 +15,7 @@ use Drupal\Tests\TestFileCreationTrait;
  * @group entity_share_client
  */
 class MediaEntityReferenceTest extends EntityShareClientFunctionalTestBase {
+
   use TestFileCreationTrait;
 
   /**
@@ -64,13 +65,6 @@ class MediaEntityReferenceTest extends EntityShareClientFunctionalTestBase {
   ];
 
   /**
-   * An array of file size keyed by file UUID.
-   *
-   * @var array
-   */
-  protected $filesSize = [];
-
-  /**
    * {@inheritdoc}
    *
    * @SuppressWarnings(PHPMD.UndefinedVariable)
@@ -81,7 +75,7 @@ class MediaEntityReferenceTest extends EntityShareClientFunctionalTestBase {
     $this->getTestFiles('image');
     // Special case for the image created using native helper method.
     if (isset(static::$filesData['file_image'])) {
-      $this->filesSize['file_image'] = filesize(static::$filesData['file_image']['uri']);
+      $this->filesSize['file_image'] = \filesize(static::$filesData['file_image']['uri']);
     }
 
     $this->postSetupFixture();

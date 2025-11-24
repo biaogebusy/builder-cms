@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Kernel\Plugin;
 
 use Drupal\Core\Database\Database;
@@ -35,7 +37,7 @@ class RelationshipTest extends RelationshipJoinTestBase {
   /**
    * Tests the query result of a view with a relationship.
    */
-  public function testRelationshipQuery() {
+  public function testRelationshipQuery(): void {
     $connection = Database::getConnection();
     // Set the first entry to have the admin as author.
     $connection->update('views_test_data')
@@ -143,7 +145,7 @@ class RelationshipTest extends RelationshipJoinTestBase {
   /**
    * Tests rendering of a view with a relationship.
    */
-  public function testRelationshipRender() {
+  public function testRelationshipRender(): void {
     $connection = Database::getConnection();
     $author1 = $this->createUser();
     $connection->update('views_test_data')

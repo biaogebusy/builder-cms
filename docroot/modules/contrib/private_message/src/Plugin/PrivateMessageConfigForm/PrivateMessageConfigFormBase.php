@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\private_message\Plugin\PrivateMessageConfigForm;
 
+use Drupal\Component\Render\MarkupInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginBase;
-use Drupal\Core\Config\ConfigFactoryInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -12,40 +15,19 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 abstract class PrivateMessageConfigFormBase extends PluginBase implements PrivateMessageConfigFormPluginInterface {
 
-  /**
-   * The private message config form plugin manager.
-   *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface
-   */
-  protected ConfigFactoryInterface $configFactory;
-
-  /**
-   * Constructs a PrivateMessageForm object.
-   *
-   * @param array $configuration
-   *   The plugin configuration.
-   * @param string $plugin_id
-   *   The plugin ID.
-   * @param mixed $plugin_definition
-   *   The plugin definitions.
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
-   *   The configuration factory service.
-   */
   public function __construct(
     array $configuration,
-    $plugin_id,
-    $plugin_definition,
-    ConfigFactoryInterface $configFactory
+    string $plugin_id,
+    mixed $plugin_definition,
+    protected ConfigFactoryInterface $configFactory,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
-
-    $this->configFactory = $configFactory;
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): self {
     return new static(
       $configuration,
       $plugin_id,
@@ -57,20 +39,23 @@ abstract class PrivateMessageConfigFormBase extends PluginBase implements Privat
   /**
    * {@inheritdoc}
    */
-  public function getName() {
+  public function getName(): MarkupInterface|string {
+    @trigger_error(__METHOD__ . '() is deprecated in private_message:4.0.0 and is removed from private_message:5.0.0. Instead, you should just use the plugin definition "name" value $plugin->getPluginDefinition()["name"]. See https://www.drupal.org/node/3501696', E_USER_DEPRECATED);
     return $this->pluginDefinition['name'];
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getId() {
-    return $this->pluginDefinition['id'];
+  public function getId(): string {
+    @trigger_error(__METHOD__ . '() is deprecated in private_message:4.0.0 and is removed from private_message:5.0.0. Instead, you should just use the plugin ::getPluginId() method. See https://www.drupal.org/node/3501696', E_USER_DEPRECATED);
+    return $this->getPluginId();
   }
 
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $formState) {}
+  public function validateForm(array &$form, FormStateInterface $formState): void {
+  }
 
 }

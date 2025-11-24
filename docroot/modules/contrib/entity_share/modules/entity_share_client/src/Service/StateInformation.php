@@ -6,6 +6,7 @@ namespace Drupal\entity_share_client\Service;
 
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Exception\UndefinedLinkTemplateException;
@@ -16,10 +17,9 @@ use Drupal\jsonapi\ResourceType\ResourceTypeRepositoryInterface;
 
 /**
  * Service to handle presentation of import state.
- *
- * @package Drupal\entity_share_client\Service
  */
 class StateInformation implements StateInformationInterface {
+
   use StringTranslationTrait;
 
   /**
@@ -90,14 +90,13 @@ class StateInformation implements StateInformationInterface {
     $status_info = $this->statusInfoArray(StateInformationInterface::INFO_ID_UNDEFINED);
 
     // Get the entity type and entity storage.
-    $parsed_type = explode('--', $data['type']);
+    $parsed_type = \explode('--', $data['type']);
     $entity_type_id = $parsed_type[0];
     try {
       $entity_storage = $this->entityTypeManager->getStorage($entity_type_id);
     }
     catch (\Exception $exception) {
-      $status_info = $this->statusInfoArray(StateInformationInterface::INFO_ID_UNKNOWN);
-      return $status_info;
+      return $this->statusInfoArray(StateInformationInterface::INFO_ID_UNKNOWN);
     }
 
     // Check if an entity already exists.
@@ -111,7 +110,7 @@ class StateInformation implements StateInformationInterface {
     // Check if the entity type has a changed date.
     else {
       /** @var \Drupal\Core\Entity\ContentEntityInterface $existing_entity */
-      $existing_entity = array_shift($existing_entities);
+      $existing_entity = \array_shift($existing_entities);
 
       $resource_type = $this->resourceTypeRepository->get(
         $parsed_type[0],
@@ -123,7 +122,7 @@ class StateInformation implements StateInformationInterface {
         $changed_public_name = $resource_type->getPublicName('changed');
       }
 
-      if (!empty($data['attributes'][$changed_public_name]) && method_exists($existing_entity, 'getChangedTime')) {
+      if (!empty($data['attributes'][$changed_public_name]) &&  $existing_entity->getEntityType()->entityClassImplements(EntityChangedInterface::class)) {
         $entity_changed_time = EntityShareUtility::convertChangedTime($data['attributes'][$changed_public_name]);
 
         $entity_keys = $entity_storage
@@ -203,13 +202,13 @@ class StateInformation implements StateInformationInterface {
    *
    * @param string $status_info_id
    *   An identifier of the status info (the value of 'INFO_ID_...' constant).
-   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   * @param \Drupal\Core\Entity\ContentEntityInterface|null $entity
    *   A Drupal content entity.
    *
    * @return array
    *   The same as return value of getStatusInfo().
    */
-  protected function statusInfoArray(string $status_info_id, ContentEntityInterface $entity = NULL) {
+  protected function statusInfoArray(string $status_info_id, ?ContentEntityInterface $entity = NULL) {
     $status_definition = $this->getStatusDefinition($status_info_id);
     $status_info = [
       'label' => $status_definition['label'],
@@ -223,7 +222,7 @@ class StateInformation implements StateInformationInterface {
     if ($this->entityImportStatus) {
       $policy = $this->entityImportStatus->getPolicy();
       $policy_plugin = $this->policiesManager->getDefinition($policy, FALSE);
-      $status_info['policy'] = !is_null($policy_plugin) ? $policy_plugin['label'] : $this->t('Unknown policy: @policy', [
+      $status_info['policy'] = $policy_plugin !== NULL ? $policy_plugin['label'] : $this->t('Unknown policy: @policy', [
         '@policy' => $policy,
       ]);
     }
@@ -263,9 +262,7 @@ class StateInformation implements StateInformationInterface {
     }
     // If for some reason the "Entity import status" entity doesn't exist,
     // simply compare by modification dates on remote and local.
-    else {
-      return $entity->getChangedTime() != $remote_changed_time;
-    }
+    return $entity->getChangedTime() != $remote_changed_time;
   }
 
   /**
@@ -302,7 +299,7 @@ class StateInformation implements StateInformationInterface {
   /**
    * {@inheritdoc}
    */
-  public function getImportStatusByParameters(string $uuid, string $entity_type_id, string $langcode = NULL) {
+  public function getImportStatusByParameters(string $uuid, string $entity_type_id, ?string $langcode = NULL) {
     // A content entity can be uniquely identified by entity type, UUID and
     // language code (if entity type supports languages).
     $search_criteria = [
@@ -316,7 +313,7 @@ class StateInformation implements StateInformationInterface {
     $entity_storage = $this->entityTypeManager->getStorage('entity_import_status');
     $import_status_entities = $entity_storage->loadByProperties($search_criteria);
     if (!empty($import_status_entities)) {
-      return current($import_status_entities);
+      return \current($import_status_entities);
     }
     return FALSE;
   }
@@ -336,12 +333,12 @@ class StateInformation implements StateInformationInterface {
   /**
    * {@inheritdoc}
    */
-  public function deleteImportStatusOfEntity(EntityInterface $entity, string $langcode = NULL) {
+  public function deleteImportStatusOfEntity(EntityInterface $entity, ?string $langcode = NULL) {
     // If entity is not supported by "entity import", do nothing.
     if (!$entity instanceof ContentEntityInterface) {
       return;
     }
-    if (in_array($entity->getEntityTypeId(), ['user', 'entity_import_status'])) {
+    if (\in_array($entity->getEntityTypeId(), ['user', 'entity_import_status'], TRUE)) {
       return;
     }
     if (!$entity->uuid()) {

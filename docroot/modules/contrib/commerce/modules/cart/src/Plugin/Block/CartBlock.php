@@ -2,27 +2,24 @@
 
 namespace Drupal\commerce_cart\Plugin\Block;
 
-use Drupal\commerce_cart\CartProviderInterface;
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Block\BlockBase;
-use Drupal\Core\Cache\Cache;
-use Drupal\Core\Cache\CacheableMetadata;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Drupal\Core\Url;
+use Drupal\Core\Render\PlaceholderGeneratorInterface;
+use Drupal\Core\Security\TrustedCallbackInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a cart block.
- *
- * @Block(
- *   id = "commerce_cart",
- *   admin_label = @Translation("Cart"),
- *   category = @Translation("Commerce")
- * )
  */
-class CartBlock extends BlockBase implements ContainerFactoryPluginInterface {
+#[Block(
+  id: "commerce_cart",
+  admin_label: new TranslatableMarkup('Cart'),
+  category: new TranslatableMarkup('Commerce'),
+)]
+class CartBlock extends BlockBase implements ContainerFactoryPluginInterface, TrustedCallbackInterface {
 
   /**
    * The cart provider.
@@ -46,45 +43,22 @@ class CartBlock extends BlockBase implements ContainerFactoryPluginInterface {
   protected $moduleExtensionList;
 
   /**
-   * Constructs a new CartBlock.
+   * The render placeholder generator.
    *
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The plugin ID for the plugin instance.
-   * @param mixed $plugin_definition
-   *   The plugin implementation definition.
-   * @param \Drupal\commerce_cart\CartProviderInterface $cart_provider
-   *   The cart provider.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
-   * @param \Drupal\Core\Extension\ModuleExtensionList|null $module_extension_list
-   *   The module extension list.
+   * @var \Drupal\Core\Render\PlaceholderGeneratorInterface
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, CartProviderInterface $cart_provider, EntityTypeManagerInterface $entity_type_manager, ModuleExtensionList $module_extension_list = NULL) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
-
-    $this->cartProvider = $cart_provider;
-    $this->entityTypeManager = $entity_type_manager;
-    if (!$module_extension_list) {
-      @trigger_error('Calling ' . __METHOD__ . '() without the $module_extension_list argument is deprecated in commerce:8.x-2.32 and is removed from commerce:3.x.');
-      $module_extension_list = \Drupal::service('extension.list.module');
-    }
-    $this->moduleExtensionList = $module_extension_list;
-  }
+  protected PlaceholderGeneratorInterface $renderPlaceholderGenerator;
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('commerce_cart.cart_provider'),
-      $container->get('entity_type.manager'),
-      $container->get('extension.list.module')
-    );
+    $instance = new static($configuration, $plugin_id, $plugin_definition);
+    $instance->cartProvider = $container->get('commerce_cart.cart_provider');
+    $instance->entityTypeManager = $container->get('entity_type.manager');
+    $instance->moduleExtensionList = $container->get('extension.list.module');
+    $instance->renderPlaceholderGenerator = $container->get('render_placeholder_generator');
+    return $instance;
   }
 
   /**
@@ -93,6 +67,7 @@ class CartBlock extends BlockBase implements ContainerFactoryPluginInterface {
   public function defaultConfiguration() {
     return [
       'dropdown' => TRUE,
+      'show_if_empty' => TRUE,
     ];
   }
 
@@ -109,6 +84,11 @@ class CartBlock extends BlockBase implements ContainerFactoryPluginInterface {
         $this->t('Yes'),
       ],
     ];
+    $form['commerce_show_if_empty'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Display block if the cart is empty'),
+      '#default_value' => (int) $this->configuration['show_if_empty'],
+    ];
 
     return $form;
   }
@@ -118,6 +98,7 @@ class CartBlock extends BlockBase implements ContainerFactoryPluginInterface {
    */
   public function blockSubmit($form, FormStateInterface $form_state) {
     $this->configuration['dropdown'] = $form_state->getValue('commerce_cart_dropdown');
+    $this->configuration['show_if_empty'] = $form_state->getValue('commerce_show_if_empty');
   }
 
   /**
@@ -126,120 +107,51 @@ class CartBlock extends BlockBase implements ContainerFactoryPluginInterface {
    * @return array
    *   A render array.
    */
-  public function build() {
-    $cachable_metadata = new CacheableMetadata();
-    $cachable_metadata->addCacheContexts(['user', 'session']);
-
-    /** @var \Drupal\commerce_order\Entity\OrderInterface[] $carts */
-    $carts = $this->cartProvider->getCarts();
-    $carts = array_filter($carts, function ($cart) {
-      /** @var \Drupal\commerce_order\Entity\OrderInterface $cart */
-      // There is a chance the cart may have converted from a draft order, but
-      // is still in session. Such as just completing check out. So we verify
-      // that the cart is still a cart.
-      return $cart->hasItems() && $cart->cart->value;
-    });
-
-    $count = 0;
-    $cart_views = [];
-    if (!empty($carts)) {
-      $cart_views = $this->getCartViews($carts);
-      foreach ($carts as $cart_id => $cart) {
-        foreach ($cart->getItems() as $order_item) {
-          $count += (int) $order_item->getQuantity();
-        }
-        $cachable_metadata->addCacheableDependency($cart);
-      }
-    }
-
-    $links = [];
-    $links[] = [
-      '#type' => 'link',
-      '#title' => $this->t('Cart'),
-      '#url' => Url::fromRoute('commerce_cart.page'),
-    ];
-
+  public function build(): array {
     return [
-      '#attached' => [
-        'library' => ['commerce_cart/cart_block'],
+      '#pre_render' => [
+        [$this, 'generatePlaceholder'],
       ],
-      '#theme' => 'commerce_cart_block',
-      '#icon' => [
-        '#theme' => 'image',
-        '#uri' => $this->moduleExtensionList->getPath('commerce') . '/icons/ffffff/cart.png',
-        '#alt' => $this->t('Shopping cart'),
-      ],
-      '#count' => $count,
-      '#count_text' => $this->formatPlural($count, '@count item', '@count items'),
-      '#url' => Url::fromRoute('commerce_cart.page')->toString(),
-      '#content' => $cart_views,
-      '#links' => $links,
-      '#cache' => [
-        'contexts' => ['cart'],
-      ],
+      '#include_fallback' => FALSE,
     ];
   }
 
   /**
-   * Gets the cart views for each cart.
+   * A #pre_render callback to generate a placeholder.
    *
-   * @param \Drupal\commerce_order\Entity\OrderInterface[] $carts
-   *   The cart orders.
+   * @param array $element
+   *   A render array.
    *
    * @return array
-   *   An array of view ids keyed by cart order ID.
+   *   The updated render array containing the placeholder.
    */
-  protected function getCartViews(array $carts) {
-    $cart_views = [];
-    if ($this->configuration['dropdown']) {
-      $order_type_ids = array_map(function ($cart) {
-        return $cart->bundle();
-      }, $carts);
-      $order_type_storage = $this->entityTypeManager->getStorage('commerce_order_type');
-      $order_types = $order_type_storage->loadMultiple(array_unique($order_type_ids));
+  public function generatePlaceholder(array $element): array {
+    $build = [
+      '#lazy_builder' => ['commerce_cart.lazy_builders:cartBlock', [$this->configuration['dropdown'], $this->configuration['show_if_empty']]],
+      '#create_placeholder' => TRUE,
+    ];
 
-      $available_views = [];
-      foreach ($order_type_ids as $cart_id => $order_type_id) {
-        /** @var \Drupal\commerce_order\Entity\OrderTypeInterface $order_type */
-        $order_type = $order_types[$order_type_id];
-        $available_views[$cart_id] = $order_type->getThirdPartySetting('commerce_cart', 'cart_block_view', 'commerce_cart_block');
-      }
+    // Directly create a placeholder as we need this to be placeholdered
+    // regardless if this is a POST or GET request.
+    // @todo remove this when https://www.drupal.org/node/2367555 lands.
+    $build = $this->renderPlaceholderGenerator->createPlaceholder($build);
 
-      foreach ($carts as $cart_id => $cart) {
-        $cart_views[] = [
-          '#prefix' => '<div class="cart cart-block">',
-          '#suffix' => '</div>',
-          '#type' => 'view',
-          '#name' => $available_views[$cart_id],
-          '#arguments' => [$cart_id],
-          '#embed' => TRUE,
-        ];
-      }
+    if ($element['#include_fallback']) {
+      return [
+        'fallback' => [
+          '#markup' => '<div data-drupal-cart-block-fallback class="hidden"></div>',
+        ],
+        'message' => $build,
+      ];
     }
-    return $cart_views;
+    return $build;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getCacheContexts() {
-    return Cache::mergeContexts(parent::getCacheContexts(), ['cart']);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getCacheTags() {
-    $cache_tags = parent::getCacheTags();
-    $cart_cache_tags = [];
-
-    /** @var \Drupal\commerce_order\Entity\OrderInterface[] $carts */
-    $carts = $this->cartProvider->getCarts();
-    foreach ($carts as $cart) {
-      // Add tags for all carts regardless items or cart flag.
-      $cart_cache_tags = Cache::mergeTags($cart_cache_tags, $cart->getCacheTags());
-    }
-    return Cache::mergeTags($cache_tags, $cart_cache_tags);
+  public static function trustedCallbacks(): array {
+    return ['generatePlaceholder'];
   }
 
 }

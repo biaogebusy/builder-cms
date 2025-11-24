@@ -3,7 +3,7 @@
  * ALIPAY API: datadigital.fincloud.finsaas.insurance.outproductlist.query request
  *
  * @author auto create
- * @since 1.0, 2023-09-04 01:01:44
+ * @since 1.0, 2024-08-29 15:13:03
  */
 class DatadigitalFincloudFinsaasInsuranceOutproductlistQueryRequest
 {

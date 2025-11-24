@@ -96,6 +96,7 @@ class EntityEmbedFilterOverridesTest extends EntityEmbedFilterTestBase {
     $source_field->setSetting('title_field', TRUE);
     $source_field->save();
     $this->container->get('current_user')
+      ->getAccount()
       ->addRole($this->drupalCreateRole(['view media']));
 
     $media = Media::create([

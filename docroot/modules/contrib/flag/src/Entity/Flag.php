@@ -2,12 +2,12 @@
 
 namespace Drupal\flag\Entity;
 
-use Drupal\Core\Plugin\DefaultSingleLazyPluginCollection;
-use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Config\Entity\ConfigEntityBundleBase;
-use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Plugin\DefaultSingleLazyPluginCollection;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\flag\FlagInterface;
 
 /**
@@ -71,7 +71,7 @@ use Drupal\flag\FlagInterface;
  * )
  */
 class Flag extends ConfigEntityBundleBase implements FlagInterface {
-  // @todo: Define flag reset method.
+
   /**
    * The entity type this flag works with.
    *
@@ -197,13 +197,14 @@ class Flag extends ConfigEntityBundleBase implements FlagInterface {
   /**
    * {@inheritdoc}
    */
-  public function isFlagged(EntityInterface $entity, AccountInterface $account = NULL, $session_id = NULL) {
+  public function isFlagged(EntityInterface $entity, ?AccountInterface $account = NULL, ?string $session_id = NULL) {
     \Drupal::service('flag')->populateFlaggerDefaults($account, $session_id);
 
     // Load the is flagged list from the flagging storage, check if this flag
     // is in the list.
-    $flag_ids = \Drupal::entityTypeManager()->getStorage('flagging')
-      ->loadIsFlagged($entity, $account, $session_id);
+    /** @var \Drupal\flag\Entity\Storage\FlaggingStorageInterface $storage */
+    $storage = \Drupal::entityTypeManager()->getStorage('flagging');
+    $flag_ids = $storage->loadIsFlagged($entity, $account, $session_id);
     return isset($flag_ids[$this->id()]);
 
   }
@@ -253,7 +254,7 @@ class Flag extends ConfigEntityBundleBase implements FlagInterface {
   /**
    * Encapsulates the creation of the flag type's plugin collection.
    *
-   * @return \Drupal\Component\Plugin\DefaultSingleLazyPluginCollection
+   * @return \Drupal\Core\Plugin\DefaultSingleLazyPluginCollection
    *   The flag type's plugin collection.
    */
   protected function getFlagTypeCollection() {
@@ -286,6 +287,7 @@ class Flag extends ConfigEntityBundleBase implements FlagInterface {
     );
 
     // Get the entity type from the plugin definition.
+    /** @var \Drupal\flag\Plugin\Flag\EntityFlagType $plugin */
     $plugin = $this->getFlagTypePlugin();
     $plugin_def = $plugin->getPluginDefinition();
     $this->entity_type = $plugin_def['entity_type'];
@@ -301,7 +303,7 @@ class Flag extends ConfigEntityBundleBase implements FlagInterface {
   /**
    * Encapsulates the creation of the link type's plugin collection.
    *
-   * @return \Drupal\Component\Plugin\DefaultSingleLazyPluginCollection
+   * @return \Drupal\Core\Plugin\DefaultSingleLazyPluginCollection
    *   The link type's plugin collection.
    */
   protected function getLinkTypeCollection() {
@@ -338,7 +340,7 @@ class Flag extends ConfigEntityBundleBase implements FlagInterface {
   /**
    * {@inheritdoc}
    */
-  public function actionAccess($action, AccountInterface $account = NULL, EntityInterface $flaggable = NULL) {
+  public function actionAccess($action, ?AccountInterface $account = NULL, ?EntityInterface $flaggable = NULL) {
     $account = $account ?: \Drupal::currentUser();
     return $this->getFlagTypePlugin()->actionAccess($action, $this, $account, $flaggable);
   }
@@ -472,7 +474,7 @@ class Flag extends ConfigEntityBundleBase implements FlagInterface {
     // Save the Link Type configuration.
     $linkTypePlugin = $this->getLinkTypePlugin();
     $this->set('linkTypeConfig', $linkTypePlugin->getConfiguration());
-    */
+     */
 
     // Reset the render cache for the entity.
     \Drupal::entityTypeManager()

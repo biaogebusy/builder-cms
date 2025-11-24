@@ -8,7 +8,7 @@
 use Drupal\image\ImageStyleInterface;
 
 function image_module_test_file_download($uri) {
-  $default_uri = \Drupal::state()->get('image.test_file_download', FALSE);
+  $default_uri = \Drupal::keyValue('image')->get('test_file_download', FALSE);
   if ($default_uri == $uri) {
     return ['X-Image-Owned-By' => 'image_module_test'];
   }
@@ -37,4 +37,12 @@ function image_module_test_image_effect_info_alter(&$effects) {
  */
 function image_module_test_image_style_presave(ImageStyleInterface $style) {
   $style->setThirdPartySetting('image_module_test', 'foo', 'bar');
+}
+
+/**
+ * Implements hook_image_style_flush().
+ */
+function image_module_test_image_style_flush($style, $path = NULL) {
+  $state = \Drupal::state();
+  $state->set('image_module_test_image_style_flush.called', $path);
 }

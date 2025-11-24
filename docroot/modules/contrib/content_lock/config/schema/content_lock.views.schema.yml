@@ -13,3 +13,6 @@ views.field.content_lock_break_link:
 views.sort.content_lock_sort:
   type: views.sort.standard
   label: 'Content lock sort'
+
+views.access.content_lock_access_check:
+  type: views.access.perm

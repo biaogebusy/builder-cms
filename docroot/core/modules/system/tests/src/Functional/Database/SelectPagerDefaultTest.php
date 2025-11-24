@@ -1,11 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Database;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Database\Query\PagerSelectExtender;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 
 /**
  * Tests the pager query select extender.
@@ -25,7 +28,7 @@ class SelectPagerDefaultTest extends DatabaseTestBase {
    * Note that we have to make an HTTP request to a test page handler
    * because the pager depends on GET parameters.
    */
-  public function testEvenPagerQuery() {
+  public function testEvenPagerQuery(): void {
     // To keep the test from being too brittle, we determine up front
     // what the page count should be dynamically, and pass the control
     // information forward to the actual query on the other side of the
@@ -49,7 +52,7 @@ class SelectPagerDefaultTest extends DatabaseTestBase {
         $correct_number = $count - ($limit * $page);
       }
 
-      $this->assertCount($correct_number, $data->names, new FormattableMarkup('Correct number of records returned by pager: @number', ['@number' => $correct_number]));
+      $this->assertCount($correct_number, $data->names, "Correct number of records returned by pager: $correct_number");
     }
   }
 
@@ -59,7 +62,7 @@ class SelectPagerDefaultTest extends DatabaseTestBase {
    * Note that we have to make an HTTP request to a test page handler
    * because the pager depends on GET parameters.
    */
-  public function testOddPagerQuery() {
+  public function testOddPagerQuery(): void {
     // To keep the test from being too brittle, we determine up front
     // what the page count should be dynamically, and pass the control
     // information forward to the actual query on the other side of the
@@ -83,7 +86,7 @@ class SelectPagerDefaultTest extends DatabaseTestBase {
         $correct_number = $count - ($limit * $page);
       }
 
-      $this->assertCount($correct_number, $data->names, new FormattableMarkup('Correct number of records returned by pager: @number', ['@number' => $correct_number]));
+      $this->assertCount($correct_number, $data->names, "Correct number of records returned by pager: $correct_number");
     }
   }
 
@@ -92,7 +95,7 @@ class SelectPagerDefaultTest extends DatabaseTestBase {
    *
    * This is a regression test for #467984.
    */
-  public function testInnerPagerQuery() {
+  public function testInnerPagerQuery(): void {
     $connection = Database::getConnection();
     $query = $connection->select('test', 't')
       ->extend(PagerSelectExtender::class);
@@ -116,7 +119,7 @@ class SelectPagerDefaultTest extends DatabaseTestBase {
    *
    * This is a regression test for #467984.
    */
-  public function testHavingPagerQuery() {
+  public function testHavingPagerQuery(): void {
     $query = Database::getConnection()->select('test', 't')
       ->extend(PagerSelectExtender::class);
     $query
@@ -135,12 +138,13 @@ class SelectPagerDefaultTest extends DatabaseTestBase {
   /**
    * Confirms that every pager gets a valid, non-overlapping element ID.
    */
-  public function testElementNumbers() {
+  public function testElementNumbers(): void {
 
     $request = Request::createFromGlobals();
     $request->query->replace([
       'page' => '3, 2, 1, 0',
     ]);
+    $request->setSession(new Session(new MockArraySessionStorage()));
     \Drupal::getContainer()->get('request_stack')->push($request);
 
     $connection = Database::getConnection();
@@ -151,9 +155,6 @@ class SelectPagerDefaultTest extends DatabaseTestBase {
       ->orderBy('age')
       ->limit(1);
     $this->assertSame(2, $query->getElement());
-    // BC for PagerSelectExtender::$maxElement.
-    // @todo remove the assertion below in D10.
-    $this->assertSame(2, PagerSelectExtender::$maxElement);
     $name = $query->execute()
       ->fetchField();
     $this->assertEquals('Paul', $name, 'Pager query #1 with a specified element ID returned the correct results.');
@@ -167,9 +168,6 @@ class SelectPagerDefaultTest extends DatabaseTestBase {
       ->orderBy('age')
       ->limit(1);
     $this->assertSame(1, $query->getElement());
-    // BC for PagerSelectExtender::$maxElement.
-    // @todo remove the assertion below in D10.
-    $this->assertSame(2, PagerSelectExtender::$maxElement);
     $name = $query->execute()
       ->fetchField();
     $this->assertEquals('George', $name, 'Pager query #2 with a specified element ID returned the correct results.');
@@ -180,9 +178,6 @@ class SelectPagerDefaultTest extends DatabaseTestBase {
       ->orderBy('age')
       ->limit(1);
     $this->assertSame(3, $query->getElement());
-    // BC for PagerSelectExtender::$maxElement.
-    // @todo remove the assertion below in D10.
-    $this->assertSame(3, PagerSelectExtender::$maxElement);
     $name = $query->execute()
       ->fetchField();
     $this->assertEquals('John', $name, 'Pager query #3 with a generated element ID returned the correct results.');

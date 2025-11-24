@@ -125,3 +125,53 @@ fieldset .fieldset-legend {
   vertical-align: top;
   width: 100%;
 }
+
+/*========New form style=============*/
+.connector-form-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  border: 1px solid #ccc;
+}
+.form-image-layout {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.left-section {
+  flex: 1;
+  padding: 10px;
+}
+.right-section {
+  flex: 1;
+  padding: 40px;
+}
+.form-image {
+  width: 100%;
+  height: auto;
+}
+input[type="text"],
+input[type="password"] {
+  width: 100%;
+  padding: 8px;
+  margin: 5px 0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+.submit {
+  margin-top: 20px;
+}
+@media (max-width: 768px) {
+  .connector-form-wrapper {
+    flex-direction: column;
+  }
+
+  .left-section,
+  .right-section {
+    display: block;
+    padding: 10px;
+  }
+  .form-image-layout {
+    flex-direction: column;
+  }
+}

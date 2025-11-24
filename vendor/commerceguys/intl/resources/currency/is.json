@@ -78,6 +78,10 @@
 	"BTN": {
 		"name": "bútanskt núltrum"
 	},
+	"XCG": {
+		"name": "Caribbean guilder",
+		"symbol": "Cg."
+	},
 	"KYD": {
 		"name": "caymaneyskur dalur"
 	},
@@ -143,9 +147,6 @@
 	},
 	"SHP": {
 		"name": "helenskt pund"
-	},
-	"ANG": {
-		"name": "hollenskt Antillugyllini"
 	},
 	"HNL": {
 		"name": "hondúrsk lempíra"
@@ -222,9 +223,6 @@
 	},
 	"CUP": {
 		"name": "kúbverskur pesi"
-	},
-	"CUC": {
-		"name": "kúbverskur skiptanlegur pesi"
 	},
 	"KWD": {
 		"name": "kúveiskur denari"
@@ -372,9 +370,6 @@
 	},
 	"SLE": {
 		"name": "síerraleónsk ljóna"
-	},
-	"SLL": {
-		"name": "síerraleónsk ljóna (1964—2022)"
 	},
 	"CLP": {
 		"name": "síleskur pesi"

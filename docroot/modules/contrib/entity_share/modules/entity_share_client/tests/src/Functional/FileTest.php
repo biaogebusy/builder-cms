@@ -14,6 +14,7 @@ use Drupal\Tests\TestFileCreationTrait;
  * @group entity_share_client
  */
 class FileTest extends EntityShareClientFunctionalTestBase {
+
   use TestFileCreationTrait;
 
   /**
@@ -68,13 +69,6 @@ class FileTest extends EntityShareClientFunctionalTestBase {
   ];
 
   /**
-   * An array of file size keyed by file UUID.
-   *
-   * @var array
-   */
-  protected $filesSize = [];
-
-  /**
    * {@inheritdoc}
    *
    * @SuppressWarnings(PHPMD.UndefinedVariable)
@@ -86,10 +80,10 @@ class FileTest extends EntityShareClientFunctionalTestBase {
     $this->getTestFiles('image');
     // Special case for the images created using native helper method.
     if (isset(static::$filesData['public_jpg'])) {
-      $this->filesSize['public_jpg'] = filesize(static::$filesData['public_jpg']['uri']);
+      $this->filesSize['public_jpg'] = \filesize(static::$filesData['public_jpg']['uri']);
     }
     if (isset(static::$filesData['public_png'])) {
-      $this->filesSize['public_png'] = filesize(static::$filesData['public_png']['uri']);
+      $this->filesSize['public_png'] = \filesize(static::$filesData['public_png']['uri']);
     }
 
     $this->postSetupFixture();
@@ -322,7 +316,7 @@ class FileTest extends EntityShareClientFunctionalTestBase {
     $this->resetImportedContent();
 
     foreach (static::$filesData as $file_data) {
-      $this->assertFalse(file_exists($file_data['uri']), 'The physical file ' . $file_data['filename'] . ' has been deleted.');
+      $this->assertFalse(\file_exists($file_data['uri']), 'The physical file ' . $file_data['filename'] . ' has been deleted.');
     }
 
     // Pull just one entity with attached file, and without this plugin
@@ -331,7 +325,7 @@ class FileTest extends EntityShareClientFunctionalTestBase {
     $this->checkCreatedEntities();
 
     foreach (static::$filesData as $file_data) {
-      $this->assertFalse(file_exists($file_data['uri']), 'The physical file ' . $file_data['filename'] . ' has not been pulled and recreated.');
+      $this->assertFalse(\file_exists($file_data['uri']), 'The physical file ' . $file_data['filename'] . ' has not been pulled and recreated.');
     }
 
     // Test rename option.
@@ -354,9 +348,9 @@ class FileTest extends EntityShareClientFunctionalTestBase {
 
     // Test that the files had been recreated without rename.
     foreach (static::$filesData as $file_data) {
-      $this->assertTrue(file_exists($file_data['uri']), 'The physical file ' . $file_data['filename'] . ' has been pulled and recreated.');
+      $this->assertTrue(\file_exists($file_data['uri']), 'The physical file ' . $file_data['filename'] . ' has been pulled and recreated.');
       $replaced_file_info = $this->getReplacedFileInfo($file_data);
-      $this->assertFalse(file_exists($replaced_file_info['uri']), 'The physical file ' . $replaced_file_info['filename'] . ' has not been renamed.');
+      $this->assertFalse(\file_exists($replaced_file_info['uri']), 'The physical file ' . $replaced_file_info['filename'] . ' has not been renamed.');
     }
 
     // Need to remove all imported content (and files) prior to that.
@@ -374,18 +368,18 @@ class FileTest extends EntityShareClientFunctionalTestBase {
 
     // At the first import there should not be duplicated files.
     foreach (static::$filesData as $file_data) {
-      $this->assertTrue(file_exists($file_data['uri']), 'The physical file ' . $file_data['filename'] . ' has been pulled and recreated.');
+      $this->assertTrue(\file_exists($file_data['uri']), 'The physical file ' . $file_data['filename'] . ' has been pulled and recreated.');
       $replaced_file_info = $this->getReplacedFileInfo($file_data);
-      $this->assertFalse(file_exists($replaced_file_info['uri']), 'The physical file ' . $replaced_file_info['filename'] . ' has not been renamed.');
+      $this->assertFalse(\file_exists($replaced_file_info['uri']), 'The physical file ' . $replaced_file_info['filename'] . ' has not been renamed.');
     }
 
     $this->pullEveryChannels();
 
     // At the second import there should be duplicated files.
     foreach (static::$filesData as $file_data) {
-      $this->assertTrue(file_exists($file_data['uri']), 'The physical file ' . $file_data['filename'] . ' still exists.');
+      $this->assertTrue(\file_exists($file_data['uri']), 'The physical file ' . $file_data['filename'] . ' still exists.');
       $replaced_file_info = $this->getReplacedFileInfo($file_data);
-      $this->assertTrue(file_exists($replaced_file_info['uri']), 'The physical file ' . $replaced_file_info['filename'] . ' has been created.');
+      $this->assertTrue(\file_exists($replaced_file_info['uri']), 'The physical file ' . $replaced_file_info['filename'] . ' has been created.');
     }
   }
 
@@ -400,11 +394,11 @@ class FileTest extends EntityShareClientFunctionalTestBase {
   protected function generateBigFile($file_uuid, array $file_data) {
     // 100 MB.
     $size = 100000000;
-    $file_pointer = fopen($file_data['uri'], 'w');
-    fseek($file_pointer, $size - 1, SEEK_CUR);
-    fwrite($file_pointer, 'a');
-    fclose($file_pointer);
-    $this->filesSize[$file_uuid] = filesize($file_data['uri']);
+    $file_pointer = \fopen($file_data['uri'], 'wb');
+    \fseek($file_pointer, $size - 1, \SEEK_CUR);
+    \fwrite($file_pointer, 'a');
+    \fclose($file_pointer);
+    $this->filesSize[$file_uuid] = \filesize($file_data['uri']);
   }
 
   /**
@@ -423,12 +417,12 @@ class FileTest extends EntityShareClientFunctionalTestBase {
     $filename = $file_data['filename'];
 
     // Generate replaced file name.
-    $parts = pathinfo($filename);
+    $parts = \pathinfo($filename);
     $replaced_file_name = $parts['filename'] . '_0.' . $parts['extension'];
     $replaced_file_data['filename'] = $replaced_file_name;
 
     // Generate replaced URI.
-    $replaced_file_data['uri'] = str_replace($filename, $replaced_file_name, $uri);
+    $replaced_file_data['uri'] = \str_replace($filename, $replaced_file_name, $uri);
     return $replaced_file_data;
   }
 

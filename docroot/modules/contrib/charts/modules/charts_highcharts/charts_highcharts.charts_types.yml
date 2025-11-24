@@ -1,0 +1,5 @@
+solidgauge:
+  label: 'Solid Gauge'
+  axis: 'y_only'
+  axis_inverted: false
+  stacking: false

@@ -7,7 +7,8 @@
 .help-icon__description-toggle {
   all: unset;
   flex-shrink: 0;
-  margin: .1rem var(--gin-spacing-m) 0 .3rem;
+  margin-block: .1rem 0;
+  margin-inline: .3rem var(--gin-spacing-m);
   height: 16px;
   width: 16px;
   border-radius: 50%;
@@ -36,33 +37,21 @@
     align-items: normal;
 
     > label {
-      margin-left: 6px;
-    }
-  }
-
-  .checkbox-toggle + .help-icon {
-    padding-left: var(--gin-spacing-xxs);
-  }
-}
-
-.form-type-checkbox {
-  .help-icon__element-has-description {
-    .checkbox-toggle {
-      width: 50px !important;
+      margin-inline-start: 6px;
     }
   }
 }
 
 // Detail summary
 .field-group-details.help-icon__description-container .help-icon__description-toggle {
-  margin-top: 0;
+  margin-block-start: 0;
 }
 
 // Fieldgroup adjustments
 fieldset:not(.fieldgroup) {
   .help-icon {
     > .fieldset__legend .fieldset__label {
-      padding-right: 0;
+      padding-inline-end: 0;
     }
   }
 }
@@ -72,15 +61,15 @@ fieldset.media-library-widget,
 .field--type-datetime fieldset {
   .help-icon {
     > .help-icon__description-toggle {
-      margin-top: 1rem;
+      margin-block-start: 1rem;
     }
   }
 
   .fieldset__description {
-    padding-left: var(--gin-spacing-m);
+    padding-inline-start: var(--gin-spacing-m);
 
     @include mq(small) {
-      padding-left: var(--gin-spacing-l);
+      padding-inline-start: var(--gin-spacing-l);
     }
   }
 }
@@ -92,7 +81,7 @@ fieldset.media-library-widget,
 
   .help-icon__description-toggle {
     position: absolute;
-    right: calc(var(--gin-spacing-xs) * -1);
-    top: var(--gin-spacing-m);
+    inset-inline-end: calc(var(--gin-spacing-xs) * -1);
+    inset-block-start: var(--gin-spacing-m);
   }
 }

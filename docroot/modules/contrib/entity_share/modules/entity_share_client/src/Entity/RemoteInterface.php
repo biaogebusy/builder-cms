@@ -23,10 +23,10 @@ interface RemoteInterface extends ConfigEntityInterface {
   /**
    * Helper method to instantiate auth plugin from this entity.
    *
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
+   *
    * @return \Drupal\entity_share_client\ClientAuthorization\ClientAuthorizationInterface|null
    *   The plugin if it is defined.
-   *
-   * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
   public function getAuthPlugin();
 

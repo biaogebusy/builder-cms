@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_moderation\Unit;
 
 use Drupal\content_moderation\Routing\ContentModerationRouteSubscriber;
@@ -29,6 +31,8 @@ class ContentModerationRouteSubscriberTest extends UnitTestCase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    parent::setUp();
+
     /** @var \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager */
     $entity_type_manager = $this->createMock(EntityTypeManagerInterface::class);
     $this->routeSubscriber = new ContentModerationRouteSubscriber($entity_type_manager);
@@ -42,14 +46,14 @@ class ContentModerationRouteSubscriberTest extends UnitTestCase {
     $definition = $this->createMock(EntityTypeInterface::class);
     $definition->expects($this->any())
       ->method('getClass')
-      ->willReturn(SimpleTestEntity::class);
+      ->willReturn(TestEntity::class);
     $definition->expects($this->any())
       ->method('isRevisionable')
       ->willReturn(FALSE);
     $revisionable_definition = $this->createMock(EntityTypeInterface::class);
     $revisionable_definition->expects($this->any())
       ->method('getClass')
-      ->willReturn(SimpleTestEntity::class);
+      ->willReturn(TestEntity::class);
     $revisionable_definition->expects($this->any())
       ->method('isRevisionable')
       ->willReturn(TRUE);
@@ -59,14 +63,13 @@ class ContentModerationRouteSubscriberTest extends UnitTestCase {
     ];
 
     $reflector = new \ReflectionProperty($this->routeSubscriber, 'moderatedEntityTypes');
-    $reflector->setAccessible(TRUE);
     $reflector->setValue($this->routeSubscriber, $entity_types);
   }
 
   /**
    * Data provider for ::testSetLatestRevisionFlag.
    */
-  public function setLatestRevisionFlagTestCases() {
+  public static function setLatestRevisionFlagTestCases() {
     return [
       'Entity parameter not on an entity form' => [
         [],
@@ -226,7 +229,7 @@ class ContentModerationRouteSubscriberTest extends UnitTestCase {
    *
    * @dataProvider setLatestRevisionFlagTestCases
    */
-  public function testSetLatestRevisionFlag($defaults, $parameters, $expected_parameters = FALSE) {
+  public function testSetLatestRevisionFlag($defaults, $parameters, $expected_parameters = FALSE): void {
     $route = new Route('/foo/{entity_test}', $defaults, [], [
       'parameters' => $parameters,
     ]);
@@ -245,5 +248,5 @@ class ContentModerationRouteSubscriberTest extends UnitTestCase {
 /**
  * A concrete entity.
  */
-class SimpleTestEntity extends EntityBase {
+class TestEntity extends EntityBase {
 }

@@ -21,7 +21,7 @@ module.exports = {
           .click('[data-drupal-selector="edit-actions-submit"]')
           .waitForElementVisible('body');
       });
-    browser.resizeWindow(1600, 800);
+    browser.setWindowSize(1600, 800);
   },
   after(browser) {
     browser.drupalUninstall();
@@ -87,7 +87,7 @@ module.exports = {
       .drupalRelativeURL('/node')
       .waitForElementVisible('body')
       .assert.not.elementPresent('body.is-always-mobile-nav')
-      .resizeWindow(1320, 800)
+      .setWindowSize(1220, 800)
       .execute(() => {
         // Directly modify the width of the site branding name so that it causes
         // the primary navigation to be too long, and switch into mobile mode.

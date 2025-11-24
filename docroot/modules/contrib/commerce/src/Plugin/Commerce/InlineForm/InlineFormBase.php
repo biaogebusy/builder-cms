@@ -2,13 +2,13 @@
 
 namespace Drupal\commerce\Plugin\Commerce\InlineForm;
 
-use Drupal\commerce\AjaxFormTrait;
-use Drupal\commerce\Element\CommerceElementTrait;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
+use Drupal\commerce\AjaxFormTrait;
+use Drupal\commerce\Element\CommerceElementTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**

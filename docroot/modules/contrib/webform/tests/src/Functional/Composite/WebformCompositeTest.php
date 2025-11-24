@@ -85,7 +85,7 @@ class WebformCompositeTest extends WebformBrowserTestBase {
 
     $this->drupalLogin($this->rootUser);
 
-    // Check editing custom options are renderd.
+    // Check editing custom options are rendered.
     $this->drupalGet('/webform/test_composite');
     $assert_session->responseContains('<select data-drupal-selector="edit-address-custom-options-state-province" id="edit-address-custom-options-state-province" name="address_custom_options[state_province]" class="form-select"><option value="" selected="selected">- None -</option><option value="Yes">Yes</option><option value="No">No</option></select>');
     $assert_session->responseContains('<select data-drupal-selector="edit-address-custom-options-country" id="edit-address-custom-options-country" name="address_custom_options[country]" class="form-select"><option value="" selected="selected">- None -</option><option value="one">One</option><option value="two">Two</option><option value="three">Three</option></select>');

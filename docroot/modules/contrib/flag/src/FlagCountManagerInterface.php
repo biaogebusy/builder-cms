@@ -6,7 +6,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
 
 /**
- * Interface FlagCountManagerInterface.
+ * Flag Count Manager Interface.
  */
 interface FlagCountManagerInterface {
 
@@ -18,10 +18,10 @@ interface FlagCountManagerInterface {
    * the flag ID:
    *
    * @code
-   * array(
+   * [
    *   my_flag => 42
    *   another_flag => 57
-   * );
+   * ];
    * @endcode
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity

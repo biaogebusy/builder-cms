@@ -3,7 +3,7 @@
 namespace Drupal\Tests\redis\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
-use Drupal\redis\Flood\PhpRedis;
+use Drupal\redis\Flood\FloodFactory;
 use Drupal\Tests\redis\Traits\RedisTestInterfaceTrait;
 
 /**
@@ -33,7 +33,8 @@ class RedisFloodTest extends KernelTestBase {
 
     $client_factory = \Drupal::service('redis.factory');
     $request_stack = \Drupal::service('request_stack');
-    $flood = new PhpRedis($client_factory, $request_stack);
+    $flood_factory = new FloodFactory($client_factory, $request_stack);
+    $flood = $flood_factory->get();
 
     // By default the event is allowed.
     $this->assertTrue($flood->isAllowed($name, $threshold));

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Functional;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
@@ -14,9 +16,7 @@ use Drupal\field\Entity\FieldStorageConfig;
 class NestedFormTest extends FieldTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['field_test', 'entity_test'];
 
@@ -28,17 +28,17 @@ class NestedFormTest extends FieldTestBase {
   /**
    * @var array
    */
-  protected $fieldStorageSingle;
+  protected array $fieldStorageSingle;
 
   /**
    * @var array
    */
-  protected $fieldStorageUnlimited;
+  protected array $fieldStorageUnlimited;
 
   /**
    * @var array
    */
-  protected $field;
+  protected array $field;
 
   /**
    * {@inheritdoc}
@@ -79,7 +79,7 @@ class NestedFormTest extends FieldTestBase {
   /**
    * Tests Field API form integration within a subform.
    */
-  public function testNestedFieldForm() {
+  public function testNestedFieldForm(): void {
     /** @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface $display_repository */
     $display_repository = \Drupal::service('entity_display.repository');
 
@@ -201,7 +201,7 @@ class NestedFormTest extends FieldTestBase {
   /**
    * Tests entity level validation within subforms.
    */
-  public function testNestedEntityFormEntityLevelValidation() {
+  public function testNestedEntityFormEntityLevelValidation(): void {
     // Create two entities.
     $storage = $this->container->get('entity_type.manager')
       ->getStorage('entity_test_constraints');
@@ -217,11 +217,11 @@ class NestedFormTest extends FieldTestBase {
 
     // Display the 'combined form'.
     $this->drupalGet("test-entity-constraints/nested/{$entity_1->id()}/{$entity_2->id()}");
-    $assert_session->hiddenFieldValueEquals('entity_2[changed]', REQUEST_TIME);
+    $assert_session->hiddenFieldValueEquals('entity_2[changed]', (string) \Drupal::time()->getRequestTime());
 
     // Submit the form and check that the entities are updated accordingly.
     $assert_session->hiddenFieldExists('entity_2[changed]')
-      ->setValue(REQUEST_TIME - 86400);
+      ->setValue(\Drupal::time()->getRequestTime() - 86400);
     $page->pressButton('Save');
 
     $elements = $this->cssSelect('.entity-2.error');

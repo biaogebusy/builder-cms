@@ -2,140 +2,113 @@
 	"country_code": "EG",
 	"locale": "ar",
 	"subdivisions": {
-		"Aswan Governorate": {
-			"local_code": "أسوان",
-			"iso_code": "EG-ASN",
-			"postal_code_pattern": "81"
+		"ASN": {
+			"name": "Aswan Governorate",
+			"local_name": "أسوان"
 		},
-		"Asyut Governorate": {
-			"local_code": "أسيوط",
-			"iso_code": "EG-AST",
-			"postal_code_pattern": "71"
+		"AST": {
+			"name": "Asyut Governorate",
+			"local_name": "أسيوط"
 		},
-		"Alexandria Governorate": {
-			"local_code": "الإسكندرية",
-			"iso_code": "EG-ALX",
-			"postal_code_pattern": "2[13]"
+		"ALX": {
+			"name": "Alexandria Governorate",
+			"local_name": "الإسكندرية"
 		},
-		"Ismailia Governorate": {
-			"local_code": "الإسماعيلية",
-			"iso_code": "EG-IS",
-			"postal_code_pattern": "41"
+		"IS": {
+			"name": "Ismailia Governorate",
+			"local_name": "الإسماعيلية"
 		},
-		"Luxor Governorate": {
-			"local_code": "الأقصر",
-			"iso_code": "EG-LX",
-			"postal_code_pattern": "85"
+		"LX": {
+			"name": "Luxor Governorate",
+			"local_name": "الأقصر"
 		},
-		"Red Sea Governorate": {
-			"local_code": "البحر الأحمر",
-			"iso_code": "EG-BA",
-			"postal_code_pattern": "84"
+		"BA": {
+			"name": "Red Sea Governorate",
+			"local_name": "البحر الأحمر"
 		},
-		"El Beheira Governorate": {
-			"local_code": "البحيرة",
-			"iso_code": "EG-BH",
-			"postal_code_pattern": "22"
+		"BH": {
+			"name": "El Beheira Governorate",
+			"local_name": "البحيرة"
 		},
-		"Giza Governorate": {
-			"local_code": "الجيزة",
-			"iso_code": "EG-GZ",
-			"postal_code_pattern": "12"
+		"GZ": {
+			"name": "Giza Governorate",
+			"local_name": "الجيزة"
 		},
-		"Dakahlia Governorate": {
-			"local_code": "الدقهلية",
-			"iso_code": "EG-DK",
-			"postal_code_pattern": "35"
+		"DK": {
+			"name": "Dakahlia Governorate",
+			"local_name": "الدقهلية"
 		},
-		"Suez Governorate": {
-			"local_code": "السويس",
-			"iso_code": "EG-SUZ",
-			"postal_code_pattern": "43"
+		"SUZ": {
+			"name": "Suez Governorate",
+			"local_name": "السويس"
 		},
-		"Ash Sharqia Governorate": {
-			"local_code": "الشرقية",
-			"iso_code": "EG-SHR",
-			"postal_code_pattern": "44"
+		"SHR": {
+			"name": "Ash Sharqia Governorate",
+			"local_name": "الشرقية"
 		},
-		"Gharbia Governorate": {
-			"local_code": "الغربية",
-			"iso_code": "EG-GH",
-			"postal_code_pattern": "31"
+		"GH": {
+			"name": "Gharbia Governorate",
+			"local_name": "الغربية"
 		},
-		"Faiyum Governorate": {
-			"local_code": "الفيوم",
-			"iso_code": "EG-FYM",
-			"postal_code_pattern": "63"
+		"FYM": {
+			"name": "Faiyum Governorate",
+			"local_name": "الفيوم"
 		},
-		"Cairo Governorate": {
-			"local_code": "القاهرة",
-			"iso_code": "EG-C",
-			"postal_code_pattern": "11"
+		"C": {
+			"name": "Cairo Governorate",
+			"local_name": "القاهرة"
 		},
-		"Qalyubia Governorate": {
-			"local_code": "القليوبية",
-			"iso_code": "EG-KB",
-			"postal_code_pattern": "13"
+		"KB": {
+			"name": "Qalyubia Governorate",
+			"local_name": "القليوبية"
 		},
-		"Menofia Governorate": {
-			"local_code": "المنوفية",
-			"iso_code": "EG-MNF",
-			"postal_code_pattern": "32"
+		"MNF": {
+			"name": "Menofia Governorate",
+			"local_name": "المنوفية"
 		},
-		"Menia Governorate": {
-			"local_code": "المنيا",
-			"iso_code": "EG-MN",
-			"postal_code_pattern": "61"
+		"MN": {
+			"name": "Menia Governorate",
+			"local_name": "المنيا"
 		},
-		"New Valley Governorate": {
-			"local_code": "الوادي الجديد",
-			"iso_code": "EG-WAD",
-			"postal_code_pattern": "72"
+		"WAD": {
+			"name": "New Valley Governorate",
+			"local_name": "الوادي الجديد"
 		},
-		"Beni Suef Governorate": {
-			"local_code": "بني سويف",
-			"iso_code": "EG-BNS",
-			"postal_code_pattern": "62"
+		"BNS": {
+			"name": "Beni Suef Governorate",
+			"local_name": "بني سويف"
 		},
-		"Port Said Governorate": {
-			"local_code": "بورسعيد",
-			"iso_code": "EG-PTS",
-			"postal_code_pattern": "42"
+		"PTS": {
+			"name": "Port Said Governorate",
+			"local_name": "بورسعيد"
 		},
-		"South Sinai Governorate": {
-			"local_code": "جنوب سيناء",
-			"iso_code": "EG-JS",
-			"postal_code_pattern": "46"
+		"JS": {
+			"name": "South Sinai Governorate",
+			"local_name": "جنوب سيناء"
 		},
-		"Damietta Governorate": {
-			"local_code": "دمياط",
-			"iso_code": "EG-DT",
-			"postal_code_pattern": "34"
+		"DT": {
+			"name": "Damietta Governorate",
+			"local_name": "دمياط"
 		},
-		"Sohag Governorate": {
-			"local_code": "سوهاج",
-			"iso_code": "EG-SHG",
-			"postal_code_pattern": "82"
+		"SHG": {
+			"name": "Sohag Governorate",
+			"local_name": "سوهاج"
 		},
-		"North Sinai Governorate": {
-			"local_code": "شمال سيناء",
-			"iso_code": "EG-SIN",
-			"postal_code_pattern": "45"
+		"SIN": {
+			"name": "North Sinai Governorate",
+			"local_name": "شمال سيناء"
 		},
-		"Qena Governorate": {
-			"local_code": "قنا",
-			"iso_code": "EG-KN",
-			"postal_code_pattern": "83"
+		"KN": {
+			"name": "Qena Governorate",
+			"local_name": "قنا"
 		},
-		"Kafr El Sheikh Governorate": {
-			"local_code": "كفر الشيخ",
-			"iso_code": "EG-KFS",
-			"postal_code_pattern": "33"
+		"KFS": {
+			"name": "Kafr El Sheikh Governorate",
+			"local_name": "كفر الشيخ"
 		},
-		"Matrouh Governorate": {
-			"local_code": "مطروح",
-			"iso_code": "EG-MT",
-			"postal_code_pattern": "51"
+		"MT": {
+			"name": "Matrouh Governorate",
+			"local_name": "مطروح"
 		}
 	}
 }

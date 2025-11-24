@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.commerce.ec.credit.withdraw.sync request
  *
  * @author auto create
- * @since 1.0, 2023-10-10 15:46:46
+ * @since 1.0, 2024-09-14 11:12:10
  */
 class AlipayCommerceEcCreditWithdrawSyncRequest
 {

@@ -1,0 +1,43 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the Autocomplete Deluxe module.
+ */
+
+use Drupal\Core\Entity\Entity\EntityFormDisplay;
+
+/**
+ * Rename the limit setting to match_limit.
+ */
+function autocomplete_deluxe_update_8001() {
+  $updateCount = 0;
+
+  foreach (EntityFormDisplay::loadMultiple() as $formDisplay) {
+    $changed = FALSE;
+
+    foreach ($formDisplay->getComponents() as $fieldName => $component) {
+      if (!isset($component['type']) || $component['type'] !== 'autocomplete_deluxe') {
+        continue;
+      }
+      if (!isset($component['settings']['limit'])) {
+        continue;
+      }
+      if (isset($component['settings']['match_limit'])) {
+        continue;
+      }
+
+      $component['settings']['match_limit'] = (int) $component['settings']['limit'];
+      $formDisplay->setComponent($fieldName, $component);
+
+      $changed = TRUE;
+      $updateCount++;
+    }
+
+    if ($changed) {
+      $formDisplay->save();
+    }
+  }
+
+  return sprintf('Updated the settings of %d Autocomplete Deluxe widgets.', $updateCount);
+}

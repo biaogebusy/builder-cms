@@ -16,3 +16,7 @@
 .bef-exposed-form .form--inline .bef--secondary {
   clear: left;
 }
+
+.bef-exposed-form .noUi-vertical {
+  height: 150px;
+}

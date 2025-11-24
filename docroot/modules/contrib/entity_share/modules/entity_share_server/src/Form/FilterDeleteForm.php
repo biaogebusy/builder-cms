@@ -8,8 +8,6 @@ use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Form to delete a filter on a channel.
- *
- * @package Drupal\entity_share_server\Form
  */
 class FilterDeleteForm extends FilterBaseForm {
 

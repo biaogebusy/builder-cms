@@ -1,0 +1,44 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"AH",
+		"Anqing Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Zongyang Xian": {
+			"local_name": "枞阳县"
+		},
+		"Daguan Qu": {
+			"local_name": "大观区"
+		},
+		"Huaining Xian": {
+			"local_name": "怀宁县"
+		},
+		"Qianshan Xian": {
+			"local_name": "潜山县"
+		},
+		"Susong Xian": {
+			"local_name": "宿松县"
+		},
+		"Taihu Xian": {
+			"local_name": "太湖县"
+		},
+		"Tongcheng Shi": {
+			"local_name": "桐城市"
+		},
+		"Wangjiang Xian": {
+			"local_name": "望江县"
+		},
+		"Yixiu Qu": {
+			"local_name": "宜秀区"
+		},
+		"Yingjiang Qu": {
+			"local_name": "迎江区"
+		},
+		"Yuexi Xian": {
+			"local_name": "岳西县"
+		}
+	}
+}

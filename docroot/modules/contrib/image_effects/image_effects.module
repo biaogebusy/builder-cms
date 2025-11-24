@@ -5,16 +5,18 @@
  * Provides effects and operations for the Image API.
  */
 
+declare(strict_types=1);
+
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Config\ConfigValueException;
 use Drupal\image\ConfigurableImageEffectBase;
-use Drupal\image_effects\Component\ColorUtility;
 use Drupal\image\Entity\ImageStyle;
+use Drupal\image_effects\Component\ColorUtility;
 
 /**
  * Implements hook_theme().
  */
-function image_effects_theme() {
+function image_effects_theme(): array {
   return [
     // Render a color information box and string.
     'image_effects_color_detail' => [
@@ -126,7 +128,7 @@ function image_effects_theme() {
 /**
  * Implements hook_image_effects_text_overlay_text_alter().
  */
-function image_effects_image_effects_text_overlay_text_alter(&$text, ConfigurableImageEffectBase $image_effect) {
+function image_effects_image_effects_text_overlay_text_alter(string &$text, ConfigurableImageEffectBase $image_effect): void {
   // Skip if the effect is not TextOverlayImageEffect or an alternative
   // implementation.
   if ($image_effect->getPluginId() !== "image_effects_text_overlay") {
@@ -168,7 +170,7 @@ function image_effects_image_effects_text_overlay_text_alter(&$text, Configurabl
  *
  * Default template: image-effects-color-detail.html.twig.
  */
-function image_effects_preprocess_image_effects_color_detail(&$variables) {
+function image_effects_preprocess_image_effects_color_detail(array &$variables): void {
   $variables['#attached']['library'][] = 'image_effects/image_effects.admin.ui';
   if ($variables['color']) {
     if ($variables['border']) {
@@ -191,7 +193,7 @@ function image_effects_preprocess_image_effects_color_detail(&$variables) {
  * switcher effect that refers to the image style itself. If so, this is a
  * circular reference and we should raise an exception.
  */
-function image_effects_image_style_presave(ImageStyle $style) {
+function image_effects_image_style_presave(ImageStyle $style): void {
   $effects = $style->getEffects();
   foreach ($effects as $effect) {
     $effect_data = $effect->getConfiguration()['data'];
@@ -219,7 +221,7 @@ function image_effects_image_style_presave(ImageStyle $style) {
  * aspect switcher effect. If so, the style that contains the aspect switcher
  * effect should be flushed as well.
  */
-function image_effects_image_style_flush(ImageStyle $style) {
+function image_effects_image_style_flush(ImageStyle $style, ?string $path = NULL): void {
   // Retrieve image styles that have an aspect switcher effect that contains
   // the style being flushed.
   $query = \Drupal::entityQuery('image_style');
@@ -232,6 +234,6 @@ function image_effects_image_style_flush(ImageStyle $style) {
   // Flush them all.
   foreach ($image_style_ids as $image_style_id) {
     $image_style = ImageStyle::load($image_style_id);
-    $image_style->flush();
+    $image_style->flush($path);
   }
 }

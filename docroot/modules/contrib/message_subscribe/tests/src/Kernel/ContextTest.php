@@ -6,22 +6,19 @@ use Drupal\comment\CommentInterface;
 use Drupal\comment\Entity\Comment;
 use Drupal\comment\Tests\CommentTestTrait;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
-use Drupal\og\Og;
-use Drupal\og\OgGroupAudienceHelper;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\Entity\Vocabulary;
-use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 
 /**
  * Test getting context from entity.
  *
  * @group message_subscribe
- * @requires module og
  */
 class ContextTest extends MessageSubscribeTestBase {
 
   use CommentTestTrait;
-  use EntityReferenceTestTrait;
+  use EntityReferenceFieldCreationTrait;
 
   /**
    * {@inheritdoc}
@@ -29,7 +26,6 @@ class ContextTest extends MessageSubscribeTestBase {
   protected static $modules = [
     'comment',
     'filter',
-    'og',
     'options',
     'taxonomy',
     'text',
@@ -85,9 +81,8 @@ class ContextTest extends MessageSubscribeTestBase {
 
     $this->installSchema('comment', ['comment_entity_statistics']);
     $this->installEntitySchema('comment');
-    $this->installEntitySchema('og_membership');
     $this->installEntitySchema('taxonomy_term');
-    $this->installConfig(['comment', 'og']);
+    $this->installConfig(['comment']);
 
     foreach (range(1, 3) as $uid) {
       $this->users[$uid] = $this->createUser();
@@ -96,12 +91,10 @@ class ContextTest extends MessageSubscribeTestBase {
     // Create group node-type.
     $type = $this->createContentType();
     $group_type = $type->id();
-    Og::groupTypeManager()->addGroup('node', $group_type);
 
     // Create node-type.
     $type = $this->createContentType();
     $node_type = $type->id();
-    Og::createField(OgGroupAudienceHelper::DEFAULT_FIELD, 'node', $node_type);
 
     // Enable comments on the node type.
     $this->addDefaultCommentField('node', $node_type);
@@ -125,20 +118,11 @@ class ContextTest extends MessageSubscribeTestBase {
     // Create a multiple terms-reference field.
     $this->createEntityReferenceField('node', $node_type, 'field_terms_ref', $this->randomString(), 'taxonomy_term', 'default', [], FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
 
-    // Create OG group.
-    $settings = [];
-    $settings['type'] = $group_type;
-    $settings['uid'] = $this->users[3]->id();
-    $this->group = $this->createNode($settings);
-
     // Create node.
     $settings = [
       'type' => $node_type,
       'uid' => $this->users[1]->id(),
       'field_terms_ref' => $this->terms,
-      OgGroupAudienceHelper::DEFAULT_FIELD => [
-        'target_id' => $this->group->id(),
-      ],
     ];
     $this->node = $this->createNode($settings);
 
@@ -162,7 +146,6 @@ class ContextTest extends MessageSubscribeTestBase {
    */
   public function testGetBasicContext() {
     $node = $this->node;
-    $group = $this->group;
     $comment = $this->comment;
 
     // Get context from comment.
@@ -172,20 +155,16 @@ class ContextTest extends MessageSubscribeTestBase {
     $expected_context['comment'] = array_combine([$comment->id()], [$comment->id()]);
     $expected_context['node'] = array_combine([
       $node->id(),
-      $group->id(),
     ], [
       $node->id(),
-      $group->id(),
     ]);
 
     $expected_context['user'] = array_combine([
       $comment->getOwnerId(),
       $node->getOwnerId(),
-      $group->getOwnerId(),
     ], [
       $comment->getOwnerId(),
       $node->getOwnerId(),
-      $group->getOwnerId(),
     ]);
 
     $expected_context['taxonomy_term'] = array_combine(array_keys($this->terms), array_keys($this->terms));
@@ -200,7 +179,7 @@ class ContextTest extends MessageSubscribeTestBase {
     $original_context = ['node' => [1 => 1], 'user' => [1 => 1]];
     $context = $this->subscribers->getBasicContext($comment, $subscribe_options, $original_context);
 
-    $this->assertEquals($original_context, $context, 'Correct context when skiping context.');
+    $this->assertEquals($original_context, $context, 'Correct context when skipping context.');
   }
 
 }

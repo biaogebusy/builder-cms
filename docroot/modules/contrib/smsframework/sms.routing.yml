@@ -68,6 +68,14 @@ entity.sms_gateway.add:
   requirements:
     _permission: 'administer smsframework'
 
+entity.sms_gateway.canonical:
+  path: '/admin/config/smsframework/gateways/{sms_gateway}'
+  defaults:
+    _entity_form: 'sms_gateway.edit'
+    _title: 'Edit gateway'
+  requirements:
+    _permission: 'administer smsframework'
+
 entity.sms_gateway.edit_form:
   path: '/admin/config/smsframework/gateways/{sms_gateway}'
   defaults:

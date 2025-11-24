@@ -2,6 +2,7 @@
   --gin-color-primary: rgb(var(--gin-color-primary-rgb));
   --gin-color-primary-light: rgba(var(--gin-color-primary-rgb), .15);
   --gin-bg-app: rgb(var(--gin-bg-app-rgb));
+  --gin-bg-item: rgba(var(--gin-color-primary-rgb), .05);
   --gin-bg-item-hover: rgba(var(--gin-color-primary-rgb), .1);
   --gin-color-primary-light-hover: rgba(var(--gin-color-primary-rgb), .2);
   --gin-color-primary-light-active: rgba(var(--gin-color-primary-rgb), .3);
@@ -17,15 +18,15 @@
 // Light mode
 $ginColors: (
   blue: #0550e6,
-  light_blue: #3275e0,
+  light_blue: #2f6dd0,
   dark_purple: #4300bf,
   purple: #5b00ff,
   teal: #10857f,
   green: #00875f,
   red: #d8002f,
-  orange: #ef5c20,
-  yellow: #c58900,
-  pink: #e23177,
+  orange: #da6301,
+  yellow: #b37a00,
+  pink: #d12f70,
   neutral: #111111,
   custom: #111111,
 );
@@ -84,37 +85,39 @@ $ginDarkmodeColors: (
 }
 
 // High contrast mode
-.gin--high-contrast-mode {
-  $highContrastMode: rgba(0, 0, 0, .8);
+@media (forced-colors: none) {
+  .gin--high-contrast-mode {
+    $highContrastMode: rgba(0, 0, 0, .8);
 
-  --gin-bg-app: #d9dbde;
-  --gin-color-text: #{$highContrastMode};
-  --gin-color-text-light: #{$highContrastMode};
-  --gin-icon-color: #{$highContrastMode};
-  --gin-color-focus: #{$highContrastMode};
-  --gin-border-color: #{$highContrastMode};
-  --gin-border-color-secondary: rgba(0, 0, 0, .6);
-  --gin-border-color-layer: rgba(0, 0, 0, .6);
-  --gin-border-color-layer2: #{$highContrastMode};
-  --gin-border-color-table: #{$highContrastMode};
-  --gin-border-color-table-header: #{$highContrastMode};
-  --gin-border-color-form-element: #{$highContrastMode};
-
-  .gin--dark-mode & {
-    $highContrastMode: rgba(255, 255, 255, .8);
-
-    --gin-bg-app: #000;
+    --gin-bg-app: #d9dbde;
     --gin-color-text: #{$highContrastMode};
     --gin-color-text-light: #{$highContrastMode};
     --gin-icon-color: #{$highContrastMode};
     --gin-color-focus: #{$highContrastMode};
     --gin-border-color: #{$highContrastMode};
-    --gin-border-color-secondary: rgba(255, 255, 255, .6);
-    --gin-border-color-layer: rgba(255, 255, 255, .6);
+    --gin-border-color-secondary: rgba(0, 0, 0, .6);
+    --gin-border-color-layer: rgba(0, 0, 0, .6);
     --gin-border-color-layer2: #{$highContrastMode};
     --gin-border-color-table: #{$highContrastMode};
     --gin-border-color-table-header: #{$highContrastMode};
     --gin-border-color-form-element: #{$highContrastMode};
+
+    .gin--dark-mode & {
+      $highContrastMode: rgba(255, 255, 255, .8);
+
+      --gin-bg-app: #000;
+      --gin-color-text: #{$highContrastMode};
+      --gin-color-text-light: #{$highContrastMode};
+      --gin-icon-color: #{$highContrastMode};
+      --gin-color-focus: #{$highContrastMode};
+      --gin-border-color: #{$highContrastMode};
+      --gin-border-color-secondary: rgba(255, 255, 255, .6);
+      --gin-border-color-layer: rgba(255, 255, 255, .6);
+      --gin-border-color-layer2: #{$highContrastMode};
+      --gin-border-color-table: #{$highContrastMode};
+      --gin-border-color-table-header: #{$highContrastMode};
+      --gin-border-color-form-element: #{$highContrastMode};
+    }
   }
 }
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\diff\Functional;
 
 use Drupal\Tests\field_ui\Traits\FieldUiTestTrait;
@@ -86,7 +88,7 @@ class DiffPluginEntityTest extends DiffPluginTestBase {
     $this->drupalPostNodeForm('node/' . $node1->id() . '/edit', $edit, 'Save');
 
     // Check differences between revisions.
-    $this->clickLink(t('Revisions'));
+    $this->clickLink(\t('Revisions'));
     $this->submitForm([], 'Compare selected revisions');
     $this->assertSession()->pageTextContains('Reference');
     $this->assertSession()->pageTextContains('Article B');

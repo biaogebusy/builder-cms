@@ -3,8 +3,8 @@
 namespace Drupal\embed\Ajax;
 
 use Drupal\Core\Ajax\CommandInterface;
-use Drupal\Core\Ajax\CommandWithAttachedAssetsTrait;
 use Drupal\Core\Ajax\CommandWithAttachedAssetsInterface;
+use Drupal\Core\Ajax\CommandWithAttachedAssetsTrait;
 
 /**
  * AJAX command for inserting an embedded item in an editor.

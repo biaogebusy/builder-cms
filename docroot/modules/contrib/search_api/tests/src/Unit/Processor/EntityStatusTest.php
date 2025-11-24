@@ -64,7 +64,7 @@ class EntityStatusTest extends UnitTestCase {
       $datasource = $this->createMock(DatasourceInterface::class);
       $datasource->expects($this->any())
         ->method('getEntityTypeId')
-        ->will($this->returnValue($entity_type));
+        ->willReturn($entity_type);
       $this->datasources["entity:$entity_type"] = $datasource;
     }
   }
@@ -86,7 +86,7 @@ class EntityStatusTest extends UnitTestCase {
       $this->datasources = array_intersect_key($this->datasources, $datasource_ids);
     }
     $this->index->method('getDatasources')
-      ->will($this->returnValue($this->datasources));
+      ->willReturn($this->datasources);
 
     // In supportsIndex(), the entity status processor will use the entity type
     // manager to get the definition of each datasource's entity type and then
@@ -115,7 +115,7 @@ class EntityStatusTest extends UnitTestCase {
    * @return array[]
    *   Array of parameter arrays for testSupportsIndex().
    */
-  public function supportsIndexDataProvider(): array {
+  public static function supportsIndexDataProvider(): array {
     return [
       'all datasources' => [NULL, TRUE],
       'node datasource' => [['entity:node'], TRUE],
@@ -129,36 +129,31 @@ class EntityStatusTest extends UnitTestCase {
    * Tests if unpublished/inactive entities are removed from the indexed items.
    */
   public function testAlterItems() {
-    $entity_types = [
-      'node' => [
-        'class' => Node::class,
-        'method' => 'isPublished',
-      ],
-      'comment' => [
-        'class' => Comment::class,
-        'method' => 'isPublished',
-      ],
-      'user' => [
-        'class' => User::class,
-        'method' => 'isActive',
-      ],
-      'file' => [
-        'class' => File::class,
-      ],
+    $entity_type_classes = [
+      'node' => Node::class,
+      'comment' => Comment::class,
+      'user' => User::class,
+      'file' => File::class,
     ];
     $fields_helper = \Drupal::getContainer()->get('search_api.fields_helper');
     $items = [];
-    foreach ($entity_types as $entity_type => $info) {
+    foreach ($entity_type_classes as $entity_type => $class) {
       $datasource_id = "entity:$entity_type";
       foreach ([1 => TRUE, 2 => FALSE] as $i => $status) {
         $item_id = Utility::createCombinedId($datasource_id, "$i:en");
         $item = $fields_helper->createItem($this->index, $item_id, $this->datasources[$datasource_id]);
-        $entity = $this->getMockBuilder($info['class'])
+        $entity = $this->getMockBuilder($class)
           ->disableOriginalConstructor()
           ->getMock();
-        if (isset($info['method'])) {
-          $entity->method($info['method'])
-            ->will($this->returnValue($status));
+        if ($entity instanceof EntityPublishedInterface) {
+          /** @var \Drupal\Core\Entity\EntityPublishedInterface&\PHPUnit\Framework\MockObject\MockObject $entity */
+          $entity->method('isPublished')
+            ->willReturn($status);
+        }
+        elseif ($entity instanceof User) {
+          /** @var \Drupal\user\Entity\User&\PHPUnit\Framework\MockObject\MockObject $entity */
+          $entity->method('isActive')
+            ->willReturn($status);
         }
         /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
         $item->setOriginalObject(EntityAdapter::createFromEntity($entity));

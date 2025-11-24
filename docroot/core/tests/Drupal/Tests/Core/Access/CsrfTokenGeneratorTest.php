@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Access;
 
 use Drupal\Core\Site\Settings;
@@ -80,7 +82,7 @@ class CsrfTokenGeneratorTest extends UnitTestCase {
    *
    * @covers ::get
    */
-  public function testGet() {
+  public function testGet(): void {
     $this->setupDefaultExpectations();
 
     $this->assertIsString($this->generator->get());
@@ -93,7 +95,7 @@ class CsrfTokenGeneratorTest extends UnitTestCase {
    *
    * @covers ::get
    */
-  public function testGenerateSeedOnGet() {
+  public function testGenerateSeedOnGet(): void {
     $key = Crypt::randomBytesBase64();
     $this->privateKey->expects($this->any())
       ->method('get')
@@ -115,7 +117,7 @@ class CsrfTokenGeneratorTest extends UnitTestCase {
    *
    * @covers ::validate
    */
-  public function testValidate() {
+  public function testValidate(): void {
     $this->setupDefaultExpectations();
 
     $token = $this->generator->get();
@@ -137,11 +139,11 @@ class CsrfTokenGeneratorTest extends UnitTestCase {
    * @covers ::validate
    * @dataProvider providerTestValidateParameterTypes
    */
-  public function testValidateParameterTypes($token, $value) {
+  public function testValidateParameterTypes($token, $value): void {
     $this->setupDefaultExpectations();
 
-    // The following check might throw PHP fatals and notices, so we disable
-    // error assertions.
+    // The following check might throw PHP fatal errors and notices, so we
+    // disable error assertions.
     set_error_handler(function () {
       return TRUE;
     });
@@ -155,7 +157,7 @@ class CsrfTokenGeneratorTest extends UnitTestCase {
    * @return array
    *   An array of data used by the test.
    */
-  public function providerTestValidateParameterTypes() {
+  public static function providerTestValidateParameterTypes() {
     return [
       [[], ''],
       [TRUE, 'foo'],
@@ -174,7 +176,7 @@ class CsrfTokenGeneratorTest extends UnitTestCase {
    * @covers ::validate
    * @dataProvider providerTestInvalidParameterTypes
    */
-  public function testInvalidParameterTypes($token, $value = '') {
+  public function testInvalidParameterTypes($token, $value = ''): void {
     $this->setupDefaultExpectations();
 
     $this->expectException(\InvalidArgumentException::class);
@@ -187,7 +189,7 @@ class CsrfTokenGeneratorTest extends UnitTestCase {
    * @return array
    *   An array of data used by the test.
    */
-  public function providerTestInvalidParameterTypes() {
+  public static function providerTestInvalidParameterTypes() {
     return [
       [NULL, new \stdClass()],
       [0, []],
@@ -201,7 +203,7 @@ class CsrfTokenGeneratorTest extends UnitTestCase {
    *
    * @covers ::get
    */
-  public function testGetWithNoHashSalt() {
+  public function testGetWithNoHashSalt(): void {
     // Update settings with no hash salt.
     new Settings([]);
     $generator = new CsrfTokenGenerator($this->privateKey, $this->sessionMetadata);

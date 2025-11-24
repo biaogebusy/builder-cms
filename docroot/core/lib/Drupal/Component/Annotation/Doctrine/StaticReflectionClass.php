@@ -26,13 +26,11 @@
 
 namespace Drupal\Component\Annotation\Doctrine;
 
-use Drupal\Component\Annotation\Doctrine\Compatibility\ReflectionClass as CompatibilityReflectionClass;
 use ReflectionClass;
 use ReflectionException;
 
 class StaticReflectionClass extends ReflectionClass
 {
-    use CompatibilityReflectionClass;
 
     /**
      * The static reflection parser object.
@@ -79,6 +77,18 @@ class StaticReflectionClass extends ReflectionClass
     public function getUseStatements()
     {
         return $this->staticReflectionParser->getUseStatements();
+    }
+
+    /**
+     * Determines if the class has the provided class attribute.
+     *
+     * @param string $attribute The attribute to check for.
+     *
+     * @return bool
+     */
+    public function hasClassAttribute(string $attribute)
+    {
+        return $this->staticReflectionParser->hasClassAttribute($attribute);
     }
 
     /**
@@ -454,6 +464,24 @@ class StaticReflectionClass extends ReflectionClass
      */
     #[\ReturnTypeWillChange]
     public function setStaticPropertyValue($name, $value)
+    {
+        throw new ReflectionException('Method not implemented');
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    #[\ReturnTypeWillChange]
+    public function getConstants(?int $filter = null)
+    {
+        throw new ReflectionException('Method not implemented');
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    #[\ReturnTypeWillChange]
+    public function newInstance(mixed ...$args)
     {
         throw new ReflectionException('Method not implemented');
     }

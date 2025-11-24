@@ -3,7 +3,6 @@
 namespace Drupal\blazy;
 
 use Drupal\blazy\internals\Internals;
-use Drupal\Component\Render\FormattableMarkup;
 
 /**
  * Defines shared plugin default settings for field formatter and Views style.
@@ -78,7 +77,7 @@ class BlazyDefault {
    * Returns basic plugin settings.
    */
   public static function baseSettings() {
-    $settings = ['cache' => 0];
+    $settings = ['cache' => 0, 'admin_uri' => '', 'use_lb' => FALSE];
 
     self::alterableSettings($settings);
     return $settings;
@@ -112,6 +111,7 @@ class BlazyDefault {
       'preload'                => FALSE,
       'responsive_image_style' => '',
       'use_theme_field'        => FALSE,
+      'use_lb'                 => FALSE,
     ] + self::cherrySettings();
   }
 
@@ -120,6 +120,7 @@ class BlazyDefault {
    */
   public static function imageSettings() {
     return [
+      'by_delta'  => -1,
       'layout'    => '',
       'link'      => '',
       'view_mode' => '',
@@ -297,7 +298,6 @@ class BlazyDefault {
       'visible_class'       => FALSE,
       'noscript'            => FALSE,
       'placeholder'         => '',
-      'responsive_image'    => FALSE,
       'unstyled_extensions' => '',
     ];
   }
@@ -306,12 +306,8 @@ class BlazyDefault {
    * Returns sensible default container settings to shutup notices when lacking.
    */
   public static function htmlSettings() {
-    $params = [
-      '@version' => 'blazy:2.6',
-    ];
     return [
       'blazies' => self::toSettings(self::blazies()),
-      'WARNING' => new FormattableMarkup('Non-configurable settings are deprecated in @version. Use the BlazySettings object instead!', $params),
 
       // Configurable settings are dumped as they are as always.
       // Very few are adjusted into blazies for easy calls/overrides/alters.
@@ -325,14 +321,14 @@ class BlazyDefault {
    *
    * The reserved attributes is defined before entering Blazy as bonus variable.
    * Consider other bonuses: title and content attributes at a later stage.
-   * layering is crucial for mixed media, cannot be simply dumped as
+   * Layering is crucial for mixed media, cannot be simply dumped as
    * indexed children, must have clear properties indentifying their functions.
    *
    * @done prefix non-renderable with # at/by 3.x to minimize render errors.
    * The first error was identified with BVEF due to being out of sync when
    * given an extra property `entity` as seen at BlazyEntity::build().
    * No issues so far with all these, yet conversions will eliminate any.
-   * Initial effort was via Blazy::toHashtag() chekpoint till full migration.
+   * Initial effort was via Blazy::toHashtag() checkpoint till full migration.
    */
   public static function themeProperties() {
     return [
@@ -404,7 +400,6 @@ class BlazyDefault {
       'filter',
       'media',
       'mfp',
-      'photobox',
       'ratio',
     ]);
     return array_merge($components, array_keys(self::dyComponents()));
@@ -435,6 +430,7 @@ class BlazyDefault {
     return [
       'column',
       'flex',
+      'flexbox',
       'grid',
       'nativegrid',
       'nativegrid.masonry',
@@ -449,9 +445,6 @@ class BlazyDefault {
       'eventify',
       'viewport',
       'xlazy',
-      // @todo remove css + dom post sub-module updates at 2.18+.
-      'css',
-      'dom',
       'animate',
       'dataset',
       'background',
@@ -499,7 +492,6 @@ class BlazyDefault {
    */
   public static function deprecatedSettings() {
     return [
-      'breakpoints' => [],
       'current_view_mode' => '',
       'fx' => '',
       'grid_header' => '',
@@ -509,6 +501,7 @@ class BlazyDefault {
       'sizes' => '',
       '_item' => '',
       '_uri' => '',
+      'breakpoints' => '',
     ];
   }
 
@@ -637,70 +630,6 @@ class BlazyDefault {
       return [$id => self::toSettings($items)];
     }
     return [];
-  }
-
-  /**
-   * Returns Blazy specific breakpoints.
-   *
-   * @todo remove custom breakpoints anytime at blazy:3.x, called by BVEF.
-   */
-  public static function getConstantBreakpoints() {
-    @trigger_error('getConstantBreakpoints is deprecated in blazy:8.x-2.0 and is removed from blazy:3.0.0. Use none instead. See https://www.drupal.org/node/3367291', E_USER_DEPRECATED);
-    return ['xs', 'sm', 'md', 'lg', 'xl'];
-  }
-
-  /**
-   * Returns optional grid field formatter and Views settings.
-   *
-   * @todo deprecated/ removed for self::gridSettings() since style is coupled.
-   */
-  public static function gridBaseSettings() {
-    @trigger_error('gridBaseSettings is deprecated in blazy:8.x-2.17 and is removed from blazy:3.0.0. Use self::gridSettings() instead. See https://www.drupal.org/node/3367291', E_USER_DEPRECATED);
-    return [
-      'grid'        => '',
-      'grid_medium' => '',
-      'grid_small'  => '',
-      'style'       => '',
-    ];
-  }
-
-  /**
-   * Returns text settings.
-   *
-   * @todo deprecated/ removed for self::gridSettings() since style is coupled.
-   */
-  public static function textSettings() {
-    @trigger_error('textSettings is deprecated in blazy:8.x-2.17 and is removed from blazy:3.0.0. Use self::gridSettings() instead. See https://www.drupal.org/node/3367291', E_USER_DEPRECATED);
-    return self::gridSettings();
-  }
-
-  /**
-   * Returns settings provided by various UI.
-   *
-   * @todo deprecated/ removed, no longer relevant since 2.17 after blazies.
-   */
-  public static function anywhereSettings() {
-    @trigger_error('anywhereSettings is deprecated in blazy:8.x-2.0 and is removed from blazy:3.0.0. Use none instead. See https://www.drupal.org/node/3367291', E_USER_DEPRECATED);
-    return [
-      'lazy'  => '',
-      'style' => '',
-    ];
-  }
-
-  /**
-   * Returns sensible default item settings to shutup notices when lacking.
-   *
-   * @todo deprecated/ removed, no longer relevant since 2.17 after blazies.
-   * Since using BlazySettings as an object, we no longer have warnings.
-   */
-  public static function itemSettings() {
-    @trigger_error('itemSettings is deprecated in blazy:8.x-2.0 and is removed from blazy:3.0.0. Use blazies object instead. See https://www.drupal.org/node/3367291', E_USER_DEPRECATED);
-    return [
-      'classes' => [],
-      'image_url' => '',
-      'height' => NULL,
-      'width' => NULL,
-    ] + self::htmlSettings();
   }
 
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Functional\Number;
 
 use Drupal\field\Entity\FieldConfig;
@@ -15,9 +17,7 @@ use Drupal\Tests\BrowserTestBase;
 class NumberFieldTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['node', 'entity_test', 'field_ui'];
 
@@ -45,9 +45,9 @@ class NumberFieldTest extends BrowserTestBase {
   /**
    * Tests decimal field.
    */
-  public function testNumberDecimalField() {
+  public function testNumberDecimalField(): void {
     // Create a field with settings to validate.
-    $field_name = mb_strtolower($this->randomMachineName());
+    $field_name = $this->randomMachineName();
     FieldStorageConfig::create([
       'field_name' => $field_name,
       'entity_type' => 'entity_test',
@@ -133,12 +133,12 @@ class NumberFieldTest extends BrowserTestBase {
   /**
    * Tests integer field.
    */
-  public function testNumberIntegerField() {
+  public function testNumberIntegerField(): void {
     $minimum = rand(-4000, -2000);
     $maximum = rand(2000, 4000);
 
     // Create a field with settings to validate.
-    $field_name = mb_strtolower($this->randomMachineName());
+    $field_name = $this->randomMachineName();
     $storage = FieldStorageConfig::create([
       'field_name' => $field_name,
       'entity_type' => 'entity_test',
@@ -283,14 +283,25 @@ class NumberFieldTest extends BrowserTestBase {
     // Verify that the "content" attribute has been set to the value of the
     // field, and the prefix is being displayed.
     $this->assertSession()->elementTextContains('xpath', '//div[@content="' . $integer_value . '"]', 'ThePrefix' . $integer_value);
+
+    $field_configuration_url = 'entity_test/structure/entity_test/fields/entity_test.entity_test.' . $field_name;
+    $this->drupalGet($field_configuration_url);
+
+    // Tests Number validation messages.
+    $edit = [
+      'settings[min]' => 10,
+      'settings[max]' => 8,
+    ];
+    $this->submitForm($edit, 'Save settings');
+    $this->assertSession()->pageTextContains("The minimum value must be less than or equal to {$edit['settings[max]']}.");
   }
 
   /**
    * Tests float field.
    */
-  public function testNumberFloatField() {
+  public function testNumberFloatField(): void {
     // Create a field with settings to validate.
-    $field_name = mb_strtolower($this->randomMachineName());
+    $field_name = $this->randomMachineName();
     FieldStorageConfig::create([
       'field_name' => $field_name,
       'entity_type' => 'entity_test',
@@ -327,7 +338,7 @@ class NumberFieldTest extends BrowserTestBase {
     $this->assertSession()->responseContains('placeholder="0.00"');
 
     // Submit a signed decimal value within the allowed precision and scale.
-    $value = '-1234.5678';
+    $value = -1234.5678;
     $edit = [
       "{$field_name}[0][value]" => $value,
     ];
@@ -379,11 +390,11 @@ class NumberFieldTest extends BrowserTestBase {
   }
 
   /**
-   * Tests setting the minimum value of a float field through the interface.
+   * Tests setting minimum values through the interface.
    */
-  public function testCreateNumberFloatField() {
+  public function testMinimumValues(): void {
     // Create a float field.
-    $field_name = mb_strtolower($this->randomMachineName());
+    $field_name = $this->randomMachineName();
     FieldStorageConfig::create([
       'field_name' => $field_name,
       'entity_type' => 'entity_test',
@@ -401,14 +412,9 @@ class NumberFieldTest extends BrowserTestBase {
     $this->assertSetMinimumValue($field, 0.0001);
     // Set the minimum value to an integer value.
     $this->assertSetMinimumValue($field, 1);
-  }
 
-  /**
-   * Tests setting the minimum value of a decimal field through the interface.
-   */
-  public function testCreateNumberDecimalField() {
     // Create a decimal field.
-    $field_name = mb_strtolower($this->randomMachineName());
+    $field_name = $this->randomMachineName();
     FieldStorageConfig::create([
       'field_name' => $field_name,
       'entity_type' => 'entity_test',

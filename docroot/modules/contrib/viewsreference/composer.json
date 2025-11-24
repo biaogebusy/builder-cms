@@ -13,5 +13,7 @@
   "conflict": {
     "drupal/viewsreferennce": "*"
   },
-  "require": { }
+  "require-dev": {
+    "drupal/views_ajax_history": "1.x-dev"
+  }
 }

@@ -67,10 +67,19 @@ class ThemeHandler implements ThemeHandlerInterface {
   public function listInfo() {
     if (!isset($this->list)) {
       $this->list = [];
-      $installed_themes = $this->configFactory->get('core.extension')->get('theme');
+      $installed_themes = array_keys($this->configFactory->get('core.extension')->get('theme'));
       if (!empty($installed_themes)) {
-        $installed_themes = array_intersect_key($this->themeList->getList(), $installed_themes);
-        array_map([$this, 'addTheme'], $installed_themes);
+        $list = $this->themeList->getList();
+        foreach ($installed_themes as $theme) {
+          // Do not add installed themes that cannot be found by the
+          // extension.list.theme service. If a theme does go missing from the
+          // file system any call to ::getTheme() will result in an exception
+          // and an error being logged. Ignoring the problem here allows the
+          // theme system to fix itself while updating.
+          if (isset($list[$theme])) {
+            $this->addTheme($list[$theme]);
+          }
+        }
       }
     }
     return $this->list;
@@ -125,6 +134,7 @@ class ThemeHandler implements ThemeHandlerInterface {
    * {@inheritdoc}
    */
   public function rebuildThemeData() {
+    @trigger_error("\Drupal\Core\Extension\ThemeHandlerInterface::rebuildThemeData() is deprecated in drupal:10.3.0 and is removed from drupal:12.0.0. Use \Drupal::service('extension.list.theme')->reset()->getList() instead. See https://www.drupal.org/node/3413196", E_USER_DEPRECATED);
     return $this->themeList->reset()->getList();
   }
 
@@ -132,6 +142,7 @@ class ThemeHandler implements ThemeHandlerInterface {
    * {@inheritdoc}
    */
   public function getBaseThemes(array $themes, $theme) {
+    @trigger_error("\Drupal\Core\Extension\ThemeHandlerInterface::getBaseThemes() is deprecated in drupal:10.3.0 and is removed from drupal:12.0.0. There is no direct replacement. See https://www.drupal.org/node/3413187", E_USER_DEPRECATED);
     return $this->themeList->getBaseThemes($themes, $theme);
   }
 

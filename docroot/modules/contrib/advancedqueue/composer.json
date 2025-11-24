@@ -9,5 +9,8 @@
                 "drush.services.yml": "^11"
             }
         }
+    },
+    "require-dev": {
+        "drupal/plugin": "^2"
     }
 }

@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\statistics\Functional;
 
-use Drupal\Core\Database\Database;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\node\Entity\Node;
 
@@ -13,6 +14,7 @@ use Drupal\node\Entity\Node;
  * want to test requests from an anonymous user.
  *
  * @group statistics
+ * @group legacy
  */
 class StatisticsLoggingTest extends BrowserTestBase {
 
@@ -54,7 +56,7 @@ class StatisticsLoggingTest extends BrowserTestBase {
    *
    * @var \Drupal\node\Entity\Node
    */
-  protected $node;
+  protected Node $node;
 
   /**
    * {@inheritdoc}
@@ -99,15 +101,13 @@ class StatisticsLoggingTest extends BrowserTestBase {
       ->set('count_content_views', 1)
       ->save();
 
-    // Clear the logs.
-    Database::getConnection()->truncate('node_counter');
     $this->client = \Drupal::httpClient();
   }
 
   /**
    * Verifies node hit counter logging and script placement.
    */
-  public function testLogging() {
+  public function testLogging(): void {
     $path = 'node/' . $this->node->id();
     $module_path = $this->getModulePath('statistics');
     $stats_path = base_path() . $module_path . '/statistics.php';

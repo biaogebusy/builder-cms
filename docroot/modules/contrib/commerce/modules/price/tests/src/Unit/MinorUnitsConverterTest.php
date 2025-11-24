@@ -3,12 +3,12 @@
 namespace Drupal\Tests\commerce_price\Unit;
 
 use CommerceGuys\Intl\Exception\UnknownCurrencyException;
-use Drupal\commerce_price\Repository\CurrencyRepository;
-use Drupal\commerce_price\MinorUnitsConverter;
-use Drupal\commerce_price\Price;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Tests\UnitTestCase;
+use Drupal\commerce_price\MinorUnitsConverter;
+use Drupal\commerce_price\Price;
+use Drupal\commerce_price\Repository\CurrencyRepository;
 
 /**
  * Tests the MinorUnitsConverter class.
@@ -64,7 +64,7 @@ class MinorUnitsConverterTest extends UnitTestCase {
    * @return array
    *   The test data.
    */
-  public function currencyConversionData() {
+  public static function currencyConversionData() {
     return [
       [new Price(10, 'EUR'), 1000],
       [new Price(1.23, 'USD'), 123],

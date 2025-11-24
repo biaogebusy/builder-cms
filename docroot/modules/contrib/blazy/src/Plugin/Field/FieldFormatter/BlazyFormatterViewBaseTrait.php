@@ -19,7 +19,7 @@ trait BlazyFormatterViewBaseTrait {
   protected function baseViewElements(
     FieldItemListInterface $items,
     $langcode,
-    array $settings = []
+    array $settings = [],
   ): array {
     // Early opt-out if the field is empty.
     if ($items->isEmpty()) {
@@ -47,6 +47,7 @@ trait BlazyFormatterViewBaseTrait {
     $build = ['#settings' => $settings, '#langcode' => $langcode];
 
     // Build the elements, and satisfy phpstan.
+    /* @phpstan-ignore-next-line */
     if (method_exists($this, 'buildElements')) {
       // @todo remove $langcode at 3.x:
       $this->buildElements($build, $items, $langcode);

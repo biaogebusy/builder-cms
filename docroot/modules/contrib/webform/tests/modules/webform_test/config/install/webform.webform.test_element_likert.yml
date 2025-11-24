@@ -68,6 +68,18 @@ elements: |
       1: 'Option 1 -- This is help text'
       2: 'Option 2 -- This is help text'
       3: 'Option 3 -- This is help text'
+  likert_html:
+    '#type': webform_likert
+    '#title': likert_html
+    '#required': true
+    '#questions':
+      q1: 'Question <strong>1</strong>'
+      q2: 'Question <strong>2</strong>'
+      q3: 'Question <strong>3</strong>'
+    '#answers':
+      1: 'Option 1'
+      2: 'Option 2'
+      3: 'Option 3'
   likert_values:
     '#type': webform_likert
     '#title': likert_values

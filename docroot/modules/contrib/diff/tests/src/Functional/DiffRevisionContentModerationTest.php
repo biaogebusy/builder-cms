@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\diff\Functional;
 
 use Drupal\Tests\content_moderation\Traits\ContentModerationTestTrait;
@@ -34,7 +36,7 @@ class DiffRevisionContentModerationTest extends DiffRevisionTest {
     $workflow->save();
 
     // Add necessary admin permissions for moderated content.
-    $this->adminPermissions = array_merge([
+    $this->adminPermissions = \array_merge([
       'use editorial transition create_new_draft',
       'use editorial transition publish',
       'use editorial transition archive',

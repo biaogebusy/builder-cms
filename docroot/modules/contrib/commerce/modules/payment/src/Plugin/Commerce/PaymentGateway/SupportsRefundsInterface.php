@@ -32,6 +32,6 @@ interface SupportsRefundsInterface {
    * @throws \Drupal\commerce_payment\Exception\PaymentGatewayException
    *   Thrown when the transaction fails for any reason.
    */
-  public function refundPayment(PaymentInterface $payment, Price $amount = NULL);
+  public function refundPayment(PaymentInterface $payment, ?Price $amount = NULL);
 
 }

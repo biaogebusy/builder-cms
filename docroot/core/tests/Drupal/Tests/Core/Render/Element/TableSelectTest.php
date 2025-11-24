@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Render\Element;
 
 use Drupal\Core\Form\FormState;
@@ -18,7 +20,7 @@ class TableSelectTest extends UnitTestCase {
   /**
    * @covers ::processTableselect
    */
-  public function testProcessTableselectWithLinkTitle() {
+  public function testProcessTableselectWithLinkTitle(): void {
     $element = [];
     $form_state = new FormState();
     $complete_form = [];
@@ -43,7 +45,7 @@ class TableSelectTest extends UnitTestCase {
   /**
    * @covers ::processTableselect
    */
-  public function testProcessTableselectWithStringTitle() {
+  public function testProcessTableselectWithStringTitle(): void {
     $element = [];
     $form_state = new FormState();
     $complete_form = [];

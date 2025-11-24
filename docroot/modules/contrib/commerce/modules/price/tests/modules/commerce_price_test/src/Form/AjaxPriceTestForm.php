@@ -2,9 +2,9 @@
 
 namespace Drupal\commerce_price_test\Form;
 
-use Drupal\commerce_price\Price;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\commerce_price\Price;
 
 /**
  * A form for testing AJAX on commerce_price elements.

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\file\Functional\Formatter;
 
 use Drupal\entity_test\Entity\EntityTest;
@@ -21,8 +23,9 @@ class FileAudioFormatterTest extends FileMediaFormatterTestBase {
    *
    * @dataProvider dataProvider
    */
-  public function testRender($tag_count, $formatter_settings) {
-    $field_config = $this->createMediaField('file_audio', 'mp3', $formatter_settings);
+  public function testRender($tag_count, $formatter_settings): void {
+    // Create a file field that accepts .mp3 and an unknown file extension.
+    $field_config = $this->createMediaField('file_audio', 'unknown-extension, mp3', $formatter_settings);
 
     file_put_contents('public://file.mp3', str_repeat('t', 10));
     $file1 = File::create([

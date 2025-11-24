@@ -14,7 +14,7 @@ class MultiselectElementJavascriptTest extends WebDriverTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['multiselect', 'multiselect_test'];
+  protected static $modules = ['multiselect', 'multiselect_test'];
 
   /**
    * {@inheritdoc}

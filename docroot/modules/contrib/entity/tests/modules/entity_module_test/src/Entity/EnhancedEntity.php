@@ -106,6 +106,14 @@ class EnhancedEntity extends RevisionableContentEntityBase implements EntityPubl
         'weight' => -5,
       ]);
 
+    // Add a computed entity reference field for testing.
+    $fields['computed_entity_ref'] = BaseFieldDefinition::create('entity_reference')
+      ->setLabel('Test entity reference')
+      ->setSetting('target_type', 'entity_test_enhanced')
+      ->setCardinality(1)
+      ->setComputed(TRUE)
+      ->setClass('Drupal\entity_module_test\Field\ComputedEntityRefItemList');
+
     return $fields;
   }
 

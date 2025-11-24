@@ -2,26 +2,28 @@
 
 namespace Drupal\Core\Action\Plugin\Action;
 
+use Drupal\Core\Action\Plugin\Action\Derivative\EntityDeleteActionDeriver;
+use Drupal\Core\Action\Attribute\Action;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Redirects to an entity deletion form.
- *
- * @Action(
- *   id = "entity:delete_action",
- *   action_label = @Translation("Delete"),
- *   deriver = "Drupal\Core\Action\Plugin\Action\Derivative\EntityDeleteActionDeriver",
- * )
  */
+#[Action(
+  id: 'entity:delete_action',
+  action_label: new TranslatableMarkup('Delete'),
+  deriver: EntityDeleteActionDeriver::class
+)]
 class DeleteAction extends EntityActionBase {
 
   /**
    * The tempstore object.
    *
-   * @var \Drupal\Core\TempStore\SharedTempStore
+   * @var \Drupal\Core\TempStore\PrivateTempStoreFactory
    */
   protected $tempStore;
 
@@ -92,7 +94,7 @@ class DeleteAction extends EntityActionBase {
   /**
    * {@inheritdoc}
    */
-  public function access($object, AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
     return $object->access('delete', $account, $return_as_object);
   }
 

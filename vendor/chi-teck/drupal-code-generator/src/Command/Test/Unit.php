@@ -1,27 +1,34 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace DrupalCodeGenerator\Command\Test;
 
 use DrupalCodeGenerator\Application;
-use DrupalCodeGenerator\Command\ModuleGenerator;
+use DrupalCodeGenerator\Asset\AssetCollection as Assets;
+use DrupalCodeGenerator\Attribute\Generator;
+use DrupalCodeGenerator\Command\BaseGenerator;
+use DrupalCodeGenerator\GeneratorType;
+use DrupalCodeGenerator\Validator\RequiredClassName;
 
-/**
- * Implements test:unit command.
- */
-final class Unit extends ModuleGenerator {
-
-  protected string $name = 'test:unit';
-  protected string $description = 'Generates a unit test';
-  protected string $alias = 'unit-test';
-  protected string $templatePath = Application::TEMPLATE_PATH . '/test/unit';
+#[Generator(
+  name: 'test:unit',
+  description: 'Generates a unit test',
+  aliases: ['unit-test'],
+  templatePath: Application::TEMPLATE_PATH . '/Test/_unit',
+  type: GeneratorType::MODULE_COMPONENT,
+)]
+final class Unit extends BaseGenerator {
 
   /**
    * {@inheritdoc}
    */
-  protected function generate(array &$vars): void {
-    $this->collectDefault($vars);
-    $vars['class'] = $this->ask('Class', 'ExampleTest', '::validateRequiredClassName');
-    $this->addFile('tests/src/Unit/{class}.php', 'unit');
+  protected function generate(array &$vars, Assets $assets): void {
+    $ir = $this->createInterviewer($vars);
+    $vars['machine_name'] = $ir->askMachineName();
+    $vars['name'] = $ir->askName();
+    $vars['class'] = $ir->ask('Class', 'ExampleTest', new RequiredClassName());
+    $assets->addFile('tests/src/Unit/{class}.php', 'unit.twig');
   }
 
 }

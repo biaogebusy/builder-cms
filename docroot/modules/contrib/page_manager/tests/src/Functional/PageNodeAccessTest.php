@@ -28,6 +28,8 @@ class PageNodeAccessTest extends BrowserTestBase {
   protected static $modules = ['page_manager', 'node', 'user'];
 
   /**
+   * The Page Entity.
+   *
    * @var \Drupal\page_manager\PageInterface
    */
   protected $page;

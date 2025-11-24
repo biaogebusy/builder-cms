@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\diff\Routing;
 
 use Drupal\Core\Entity\EntityTypeInterface;
@@ -32,7 +34,7 @@ class DiffRouteProvider implements EntityRouteProviderInterface {
    * @return \Symfony\Component\Routing\Route|null
    *   The diff route.
    */
-  protected function getDiffRoute(EntityTypeInterface $entity_type) {
+  protected function getDiffRoute(EntityTypeInterface $entity_type): ?Route {
     if ($entity_type->hasLinkTemplate('revisions-diff')) {
       $route = new Route($entity_type->getLinkTemplate('revisions-diff'));
       $route->addDefaults([
@@ -49,6 +51,7 @@ class DiffRouteProvider implements EntityRouteProviderInterface {
       ]);
       return $route;
     }
+    return NULL;
   }
 
 }

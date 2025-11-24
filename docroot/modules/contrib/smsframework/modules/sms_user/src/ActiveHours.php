@@ -15,20 +15,13 @@ use Drupal\Core\Datetime\DrupalDateTime;
 class ActiveHours implements ActiveHoursInterface {
 
   /**
-   * The configuration factory.
-   *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface
-   */
-  protected $configFactory;
-
-  /**
    * Whether active hours is enabled in configuration.
    *
    * @var bool|null
    *   Whether active hours is enabled in configuration or NULL if configuration
    *   has not been built yet.
    */
-  protected $status = NULL;
+  protected ?bool $status = NULL;
 
   /**
    * Date ranges as they exist in configuration.
@@ -37,16 +30,17 @@ class ActiveHours implements ActiveHoursInterface {
    *   An unsorted array containing arrays with keys 'start' and 'end' with
    *   values in strtotime() format.
    */
-  protected $ranges = [];
+  protected array $ranges = [];
 
   /**
    * Constructs a ActiveHours object.
    *
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
    *   The configuration factory.
    */
-  public function __construct(ConfigFactoryInterface $config_factory) {
-    $this->configFactory = $config_factory;
+  public function __construct(
+    protected ConfigFactoryInterface $configFactory,
+  ) {
   }
 
   /**
@@ -109,14 +103,14 @@ class ActiveHours implements ActiveHoursInterface {
     foreach ($this->ranges as $range) {
       $dates[] = new ActiveHoursDates(
         new DrupalDateTime($range['start'], $timezone),
-        new DrupalDateTime($range['end'], $timezone)
+        new DrupalDateTime($range['end'], $timezone),
       );
     }
 
     // Sort so nearest date is closest.
     // Can't do this in build() since computed relative dates can be different
     // per timezone.
-    usort($dates, function ($a, $b) {
+    usort($dates, static function ($a, $b) {
       if ($a->getStartDate() == $b->getStartDate()) {
         return 0;
       }

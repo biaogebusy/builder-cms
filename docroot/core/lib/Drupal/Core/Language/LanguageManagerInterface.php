@@ -187,7 +187,7 @@ interface LanguageManagerInterface {
    *
    * @return $this
    */
-  public function setConfigOverrideLanguage(LanguageInterface $language = NULL);
+  public function setConfigOverrideLanguage(?LanguageInterface $language = NULL);
 
   /**
    * Gets the current configuration override language.
@@ -203,7 +203,7 @@ interface LanguageManagerInterface {
    * Language codes are defined by the W3C language tags document for
    * interoperability. Language codes typically have a language and, optionally,
    * a script or regional variant name. See:
-   * http://www.w3.org/International/articles/language-tags/ for more
+   * https://www.w3.org/International/articles/language-tags/ for more
    * information.
    *
    * @return array

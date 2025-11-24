@@ -1,11 +1,9 @@
 admin:
-  version: VERSION
   css:
     theme:
       css/commerce_cart.admin.css: {}
 
 cart_block:
-  version: VERSION
   css:
     layout:
       css/commerce_cart.layout.css: {}
@@ -20,7 +18,6 @@ cart_block:
     - core/drupal.form
 
 cart_form:
-  version: VERSION
   js:
     js/commerce_cart.form.js: {}
   dependencies:

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\EventSubscriber;
 
 use Drupal\Core\EventSubscriber\FinalExceptionSubscriber;
@@ -19,7 +21,7 @@ class FinalExceptionSubscriberTest extends UnitTestCase {
   /**
    * @covers ::onException
    */
-  public function testOnExceptionWithUnknownFormat() {
+  public function testOnExceptionWithUnknownFormat(): void {
     $config_factory = $this->getConfigFactoryStub();
 
     $kernel = $this->prophesize(HttpKernelInterface::class);
@@ -28,14 +30,14 @@ class FinalExceptionSubscriberTest extends UnitTestCase {
     // of this so we'll hard code it here.
     $request->setRequestFormat('bananas');
     $e = new MethodNotAllowedHttpException(['POST', 'PUT'], 'test message');
-    $event = new ExceptionEvent($kernel->reveal(), $request, HttpKernelInterface::MASTER_REQUEST, $e);
+    $event = new ExceptionEvent($kernel->reveal(), $request, HttpKernelInterface::MAIN_REQUEST, $e);
     $subscriber = new TestDefaultExceptionSubscriber($config_factory);
     $subscriber->setStringTranslation($this->getStringTranslationStub());
     $subscriber->onException($event);
     $response = $event->getResponse();
 
     $this->assertInstanceOf(Response::class, $response);
-    $this->stringStartsWith('The website encountered an unexpected error. Please try again later.<br><br><em class="placeholder">Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException</em>: test message in ', $response->getContent());
+    $this->assertStringStartsWith('The website encountered an unexpected error. Try again later.<br><br><em class="placeholder">Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException</em>: test message in ', $response->getContent());
     $this->assertEquals(405, $response->getStatusCode());
     $this->assertEquals('POST, PUT', $response->headers->get('Allow'));
     // Also check that the text/plain content type was added.

@@ -7,6 +7,7 @@ use Drupal\KernelTests\KernelTestBase;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Utility\Utility;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests indexing entities that use string IDs.
@@ -16,6 +17,7 @@ use Drupal\search_api\Utility\Utility;
  *
  * @group search_api
  */
+#[RunTestsInSeparateProcesses]
 class EntityStringIdTest extends KernelTestBase {
 
   /**
@@ -112,7 +114,7 @@ class EntityStringIdTest extends KernelTestBase {
    *
    * @dataProvider entityStringIdList
    */
-  public function testUriStringId($entity_id) {
+  public function testUriStringId(string $entity_id): void {
     $entity = EntityTestStringId::create([
       'id' => $entity_id,
       'name' => 'String Test',
@@ -142,7 +144,7 @@ class EntityStringIdTest extends KernelTestBase {
    *   An array of arrays which contain a list of parameters to be passed to the
    *   testUriStringId() test method.
    */
-  public function entityStringIdList() {
+  public static function entityStringIdList(): array {
     return [
       'Normal machine name' => ['short_string_id'],
       'URL ID (with special characters)' => ['http://drupal.org'],

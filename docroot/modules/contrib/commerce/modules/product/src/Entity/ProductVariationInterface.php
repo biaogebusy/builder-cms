@@ -2,11 +2,11 @@
 
 namespace Drupal\commerce_product\Entity;
 
+use Drupal\Core\Entity\EntityChangedInterface;
+use Drupal\Core\Entity\EntityPublishedInterface;
 use Drupal\commerce\PurchasableEntityInterface;
 use Drupal\commerce_price\Price;
-use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\user\EntityOwnerInterface;
-use Drupal\Core\Entity\EntityPublishedInterface;
 
 /**
  * Defines the interface for product variations.
@@ -68,7 +68,7 @@ interface ProductVariationInterface extends PurchasableEntityInterface, EntityCh
   /**
    * Gets the list price.
    *
-   * @return \Drupal\commerce_price\Price
+   * @return \Drupal\commerce_price\Price|null
    *   The list price.
    */
   public function getListPrice();
@@ -92,32 +92,6 @@ interface ProductVariationInterface extends PurchasableEntityInterface, EntityCh
    * @return $this
    */
   public function setPrice(Price $price);
-
-  /**
-   * Gets whether the variation is active.
-   *
-   * Inactive variations are not visible on add to cart forms.
-   *
-   * @return bool
-   *   TRUE if the variation is active, FALSE otherwise.
-   *
-   * @deprecated in Commerce 8.x-2.11.
-   *   Use $this->isPublished() instead.
-   */
-  public function isActive();
-
-  /**
-   * Sets whether the variation is active.
-   *
-   * @param bool $active
-   *   Whether the variation is active.
-   *
-   * @return $this
-   *
-   * @deprecated in Commerce 8.x-2.11.
-   *   Use $this->setPublished() or $this->setUnpublished() instead.
-   */
-  public function setActive($active);
 
   /**
    * Gets the variation creation timestamp.

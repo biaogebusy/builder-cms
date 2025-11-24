@@ -2,11 +2,13 @@
 
 namespace Drupal\devel\Form;
 
+use Drupal\Core\Form\ConfirmFormHelper;
+use Drupal\Core\Form\ConfirmFormInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Form\ConfirmFormInterface;
-use Drupal\Core\Form\ConfirmFormHelper;
 use Drupal\Core\Url;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Edit config variable form.
@@ -14,21 +16,39 @@ use Drupal\Core\Url;
 class ConfigDeleteForm extends FormBase implements ConfirmFormInterface {
 
   /**
+   * Logger service.
+   */
+  protected LoggerInterface $logger;
+
+  /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public static function create(ContainerInterface $container): static {
+    $instance = parent::create($container);
+    $instance->messenger = $container->get('messenger');
+    $instance->logger = $container->get('logger.channel.devel');
+    $instance->configFactory = $container->get('config.factory');
+    $instance->requestStack = $container->get('request_stack');
+    $instance->stringTranslation = $container->get('string_translation');
+
+    return $instance;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFormId(): string {
     return 'devel_config_system_delete_form';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $config_name = '') {
-    $config = $this->config($config_name);
-
-    if ($config === FALSE || $config->isNew()) {
-      $this->messenger()->addError($this->t('Config @name does not exist in the system.', ['@name' => $config_name]));
-      return;
+  public function buildForm(array $form, FormStateInterface $form_state, $config_name = ''): array {
+    $config = $this->configFactory->get($config_name);
+    if ($config->isNew()) {
+      $this->messenger->addError($this->t('Config @name does not exist in the system.', ['@name' => $config_name]));
+      return $form;
     }
 
     $form['#title'] = $this->getQuestion();
@@ -51,10 +71,12 @@ class ConfigDeleteForm extends FormBase implements ConfirmFormInterface {
       '#type' => 'submit',
       '#value' => $this->getConfirmText(),
       '#submit' => [
-          [$this, 'submitForm'],
+        function (array &$form, FormStateInterface $form_state): void {
+          $this->submitForm($form, $form_state);
+        },
       ],
     ];
-    $form['actions']['cancel'] = ConfirmFormHelper::buildCancelLink($this, $this->getRequest());
+    $form['actions']['cancel'] = ConfirmFormHelper::buildCancelLink($this, $this->requestStack->getCurrentRequest());
 
     return $form;
   }
@@ -62,18 +84,21 @@ class ConfigDeleteForm extends FormBase implements ConfirmFormInterface {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     $config_name = $form_state->getValue('name');
     try {
-      $this->configFactory()->getEditable($config_name)->delete();
-      $this->messenger()->addStatus($this->t('Configuration variable %variable was successfully deleted.', ['%variable' => $config_name]));
-      $this->logger('devel')->info('Configuration variable %variable was successfully deleted.', ['%variable' => $config_name]);
+      $this->configFactory->getEditable($config_name)->delete();
+      $this->messenger->addStatus($this->t('Configuration variable %variable was successfully deleted.', ['%variable' => $config_name]));
+      $this->logger->info('Configuration variable %variable was successfully deleted.', ['%variable' => $config_name]);
 
       $form_state->setRedirectUrl($this->getCancelUrl());
     }
     catch (\Exception $e) {
-      $this->messenger()->addError($e->getMessage());
-      $this->logger('devel')->error('Error deleting configuration variable %variable : %error.', ['%variable' => $config_name, '%error' => $e->getMessage()]);
+      $this->messenger->addError($e->getMessage());
+      $this->logger->error('Error deleting configuration variable %variable : %error.', [
+        '%variable' => $config_name,
+        '%error' => $e->getMessage(),
+      ]);
     }
   }
 
@@ -115,7 +140,7 @@ class ConfigDeleteForm extends FormBase implements ConfirmFormInterface {
   /**
    * {@inheritdoc}
    */
-  public function getFormName() {
+  public function getFormName(): string {
     return 'confirm';
   }
 

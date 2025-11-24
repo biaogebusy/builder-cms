@@ -3,8 +3,6 @@
  * Replacement styles for Field UI admin.
  */
 
-@import "../base/variables.pcss.css";
-
 /* 'Manage fields' and 'Manage display' overviews */
 .field-ui-overview .region-title td {
   font-weight: bold;
@@ -34,6 +32,7 @@
 
 /* Settings edit. */
 .field-plugin-settings-edit-wrapper {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -46,8 +45,9 @@
 }
 
 .field-plugin-settings-edit-wrapper .ajax-progress--throbber {
-  margin-right: 0;
-  margin-left: 0;
+  position: absolute;
+  inset-block-start: 25px;
+  margin-inline: 0;
 }
 
 /* Settings editing subform. */
@@ -64,4 +64,20 @@
 }
 .field-plugin-settings-edit-form .plugin-name {
   font-weight: bold;
+}
+
+.field-settings-summary-cell.field-settings-summary-cell li,
+.storage-settings-summary-cell.storage-settings-summary-cell li {
+  margin: 0;
+  list-style-type: none;
+}
+.field-settings-summary-cell li {
+  font-size: 0.9em;
+}
+.field-settings-summary-cell li:first-child {
+  font-size: 1em;
+}
+
+.allowed-values-table .form-item:where(:not(.hidden)) {
+  display: inline-table;
 }

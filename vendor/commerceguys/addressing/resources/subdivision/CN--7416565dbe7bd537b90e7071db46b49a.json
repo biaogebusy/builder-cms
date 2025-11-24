@@ -1,0 +1,68 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"SC",
+		"Chengdu Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Chenghua Qu": {
+			"local_name": "成华区"
+		},
+		"Chongzhou Shi": {
+			"local_name": "崇州市"
+		},
+		"Dayi Xian": {
+			"local_name": "大邑县"
+		},
+		"Dujiangyan Shi": {
+			"local_name": "都江堰市"
+		},
+		"Jinniu Qu": {
+			"local_name": "金牛区"
+		},
+		"Jintang Xian": {
+			"local_name": "金堂县"
+		},
+		"Jinjiang Qu": {
+			"local_name": "锦江区"
+		},
+		"Longquanyi Qu": {
+			"local_name": "龙泉驿区"
+		},
+		"Pengzhou Shi": {
+			"local_name": "彭州市"
+		},
+		"Pi Xian": {
+			"local_name": "郫县"
+		},
+		"Pujiang Xian": {
+			"local_name": "蒲江县"
+		},
+		"Qingbaijiang Qu": {
+			"local_name": "青白江区"
+		},
+		"Qingyang Qu": {
+			"local_name": "青羊区"
+		},
+		"Qionglai Shi": {
+			"local_name": "邛崃市"
+		},
+		"Shuangliu Xian": {
+			"local_name": "双流县"
+		},
+		"Wenjiang Qu": {
+			"local_name": "温江区"
+		},
+		"Wuhou Qu": {
+			"local_name": "武侯区"
+		},
+		"Xindu Qu": {
+			"local_name": "新都区"
+		},
+		"Xinjin Xian": {
+			"local_name": "新津县"
+		}
+	}
+}

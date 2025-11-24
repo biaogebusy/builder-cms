@@ -37,7 +37,6 @@ class RouteSubscriber extends RouteSubscriberBase {
 
     // Create fieldgroup routes for every entity.
     foreach ($this->entityTypeManager->getDefinitions() as $entity_type_id => $entity_type) {
-      $defaults = [];
       if ($route_name = $entity_type->get('field_ui_base_route')) {
         // Try to get the route from the current collection.
         if (!$entity_route = $collection->get($route_name)) {

@@ -2,10 +2,10 @@
 
 namespace Drupal\commerce_promotion\EventSubscriber;
 
-use Drupal\commerce_promotion\PromotionUsageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Drupal\commerce_promotion\PromotionUsageInterface;
 use Drupal\state_machine\Event\WorkflowTransitionEvent;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class OrderEventSubscriber implements EventSubscriberInterface {
 
@@ -24,13 +24,6 @@ class OrderEventSubscriber implements EventSubscriberInterface {
   protected $couponStorage;
 
   /**
-   * The promotion usage.
-   *
-   * @var \Drupal\commerce_promotion\PromotionUsageInterface
-   */
-  protected $usage;
-
-  /**
    * Constructs a new OrderEventSubscriber object.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -38,16 +31,18 @@ class OrderEventSubscriber implements EventSubscriberInterface {
    * @param \Drupal\commerce_promotion\PromotionUsageInterface $usage
    *   The promotion usage.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, PromotionUsageInterface $usage) {
+  public function __construct(
+    EntityTypeManagerInterface $entity_type_manager,
+    protected PromotionUsageInterface $usage,
+  ) {
     $this->promotionStorage = $entity_type_manager->getStorage('commerce_promotion');
     $this->couponStorage = $entity_type_manager->getStorage(('commerce_promotion_coupon'));
-    $this->usage = $usage;
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     $events = [
       'commerce_order.place.pre_transition' => 'registerUsage',
     ];
@@ -73,7 +68,8 @@ class OrderEventSubscriber implements EventSubscriberInterface {
     $promotion_ids = [];
     $adjustments = $order->collectAdjustments();
     foreach ($adjustments as $adjustment) {
-      if ($adjustment->getType() != 'promotion') {
+      if ($adjustment->getType() !== 'promotion' &&
+        $adjustment->getType() !== 'shipping_promotion') {
         continue;
       }
 

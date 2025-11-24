@@ -27,7 +27,7 @@ class MetatagFieldInstance extends DrupalSqlBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration = NULL) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, ?MigrationInterface $migration = NULL) {
     /** @var static $source */
     $source = parent::create($container, $configuration, $plugin_id, $plugin_definition, $migration);
     $source->setEntityTypeBundleInfo($container->get('entity_type.bundle.info'));
@@ -105,7 +105,7 @@ class MetatagFieldInstance extends DrupalSqlBase {
    * @return \ArrayIterator
    *   An array iterator object containing the entity type and bundle.
    */
-  public function initializeIterator() {
+  public function initializeIterator(): \ArrayIterator {
     $bundles = [];
     foreach (parent::initializeIterator() as $instance) {
       // For entity types for which we support creating derivatives, do not
@@ -140,7 +140,7 @@ class MetatagFieldInstance extends DrupalSqlBase {
   /**
    * {@inheritdoc}
    */
-  public function count($refresh = FALSE) {
+  public function count($refresh = FALSE): int {
     /** @var \ArrayIterator $iterator */
     $iterator = $this->initializeIterator();
     return $iterator->count();

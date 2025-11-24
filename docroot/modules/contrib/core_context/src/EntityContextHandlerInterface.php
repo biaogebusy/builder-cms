@@ -14,8 +14,10 @@ interface EntityContextHandlerInterface extends EntityHandlerInterface {
    * Returns all contexts attached to an entity.
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   An entity.
    *
    * @return \Drupal\Component\Plugin\Context\ContextInterface[]
+   *   The contexts attached to the entity.
    */
   public function getContexts(EntityInterface $entity);
 

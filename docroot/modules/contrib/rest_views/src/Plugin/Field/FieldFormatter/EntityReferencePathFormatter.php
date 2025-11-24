@@ -3,9 +3,9 @@
 namespace Drupal\rest_views\Plugin\Field\FieldFormatter;
 
 use Drupal\Core\Field\FieldItemListInterface;
-use Drupal\link\Plugin\Field\FieldFormatter\LinkFormatter;
-use Drupal\rest_views\SerializedData;
+use Drupal\Core\Field\Plugin\Field\FieldFormatter\EntityReferenceFormatterBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\rest_views\SerializedData;
 
 /**
  * Plugin implementation of the 'entity_path' formatter.
@@ -18,20 +18,25 @@ use Drupal\Core\Form\FormStateInterface;
  *   }
  * )
  */
-class EntityReferencePathFormatter extends LinkFormatter {
+class EntityReferencePathFormatter extends EntityReferenceFormatterBase {
 
   /**
    * {@inheritdoc}
    */
-  public function viewElements(FieldItemListInterface $items, $langcode): array {
+  public function viewElements(FieldItemListInterface $items, $langcode = NULL): array {
     $elements = [];
 
-    foreach ($items as $delta => $item) {
+    foreach ($this->getEntitiesToView($items, $langcode) as $delta => $entity) {
+
+      $absolute = $this->getSetting('absolute') ?? FALSE;
       /** @var \Drupal\Core\Url $url */
-      $url = $item->entity->toUrl();
+      $url = $entity->toUrl(NULL, ['absolute' => $absolute]);
       $elements[$delta] = [
         '#type' => 'data',
         '#data' => SerializedData::create($url->toString()),
+        '#cache' => [
+          'tags' => $entity->getCacheTags(),
+        ],
       ];
     }
 
@@ -42,21 +47,36 @@ class EntityReferencePathFormatter extends LinkFormatter {
    * {@inheritdoc}
    */
   public static function defaultSettings(): array {
-    return [];
+    $settings = parent::defaultSettings();
+
+    $settings['absolute'] = FALSE;
+    return $settings;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function settingsForm(array $form, FormStateInterface $form_state): array {
-    return [];
+  public function settingsForm(array $form, FormStateInterface $formState): array {
+    $form = parent::settingsForm($form, $formState);
+
+    $form['absolute'] = [
+      '#title' => $this->t('Output an absolute path'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->getSetting('absolute'),
+    ];
+    return $form;
   }
 
   /**
    * {@inheritdoc}
    */
   public function settingsSummary(): array {
-    return [];
+    $summary = parent::settingsSummary();
+
+    if ($this->getSetting('absolute')) {
+      $summary[] = $this->t('Outputs an absolute path');
+    }
+    return $summary;
   }
 
 }

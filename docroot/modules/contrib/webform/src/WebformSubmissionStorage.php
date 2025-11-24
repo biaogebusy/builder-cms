@@ -239,12 +239,14 @@ class WebformSubmissionStorage extends SqlContentEntityStorage implements Webfor
     if (isset($values['uid'])) {
       $uids = (array) $values['uid'];
       $accounts = User::loadMultiple($uids);
-      $or_condition_group = $entity_query->orConditionGroup();
-      foreach ($accounts as $account) {
-        $this->addQueryConditions($or_condition_group, NULL, NULL, $account);
+      if ($accounts) {
+        $or_condition_group = $entity_query->orConditionGroup();
+        foreach ($accounts as $account) {
+          $this->addQueryConditions($or_condition_group, NULL, NULL, $account);
+        }
+        $entity_query->condition($or_condition_group);
+        unset($values['uid']);
       }
-      $entity_query->condition($or_condition_group);
-      unset($values['uid']);
     }
 
     parent::buildPropertyQuery($entity_query, $values);

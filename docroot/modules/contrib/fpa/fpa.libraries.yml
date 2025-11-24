@@ -5,9 +5,11 @@ fpa.permissions:
       css/fpa.admin.css: {}
   js:
     js/fpa.js: {}
+
   dependencies:
     - core/jquery
     - core/drupal
     - core/drupalSettings
-    - core/js-cookie
     - core/drupal.user.permissions
+    - core/js-cookie
+

@@ -1,10 +1,10 @@
 div.autocomplete-deluxe-multiple {
-  color: var(--colorGinText);
-  background: var(--colorGinInputBackground);
-  border: 1px solid var(--colorGinFormElementBorder);
-  border-radius: var(--ginBorderDefault);
+  color: var(--gin-color-text);
+  background: var(--gin-bg-input);
+  border: 1px solid var(--gin-border-color-form-element);
+  border-radius: var(--gin-border-m);
   box-sizing: border-box;
-  transition: var(--ginTransition);
+  transition: var(--gin-transition);
 }
 
 .autocomplete-deluxe-container input.autocomplete-deluxe-form {
@@ -13,31 +13,31 @@ div.autocomplete-deluxe-multiple {
 }
 
 .autocomplete-deluxe-item {
-  color: var(--colorGinPrimaryHover);
+  color: var(--gin-color-primary-hover);
   padding: 6px 24px 6px 12px;
-  background-color: var(--colorGinPrimaryLightHover);
-  border-radius: var(--ginBorderMedium);
+  background-color: var(--gin-color-primary-light-hover);
+  border-radius: var(--gin-border-m);
   border: 0 none;
   box-shadow: none;
 }
 
 .autocomplete-deluxe-item:hover,
 .autocomplete-deluxe-item:active {
-  color: var(--colorGinButtonText);
-  background-color: var(--colorGinPrimary);
+  color: var(--gin-color-button-text);
+  background-color: var(--gin-color-primary);
 }
 
 .autocomplete-deluxe-item .autocomplete-deluxe-item-delete {
   top: 6px;
   right: 6px;
-  mask-image: icon('close');
+  mask-image: url('../images/close.svg');
   mask-size: 10px 10px;
   mask-repeat: no-repeat;
   mask-position: center;
-  background: var(--colorGinPrimary);
+  background: var(--gin-color-primary);
 }
 
 .autocomplete-deluxe-item:hover .autocomplete-deluxe-item-delete,
 .autocomplete-deluxe-item .autocomplete-deluxe-item-delete:hover {
-  background: var(--colorGinButtonText);
+  background: var(--gin-color-button-text);
 }

@@ -45,6 +45,18 @@ class CommerceCondition extends Plugin {
   public $display_label;
 
   /**
+   * The condition description.
+   *
+   * Shown in the condition UI when enabling/disabling a condition.
+   * Defaults to empty string.
+   *
+   * @var \Drupal\Core\Annotation\Translation|null
+   *
+   * @ingroup plugin_translatable
+   */
+  public $description;
+
+  /**
    * The condition category.
    *
    * @var \Drupal\Core\Annotation\Translation

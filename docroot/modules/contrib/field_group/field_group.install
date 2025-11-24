@@ -6,36 +6,6 @@
  */
 
 /**
- * Implements hook_requirements().
- */
-function field_group_requirements($phase) {
-  $requirements = [];
-
-  if ($phase == 'runtime') {
-    // Check jQuery UI Accordion module for D9.
-    if (version_compare(\Drupal::VERSION, 9) > 0) {
-      if (!\Drupal::moduleHandler()->moduleExists('jquery_ui_accordion')) {
-        $requirements['field_group_jquery_ui_accordion'] = [
-          'title' => t('Field Group'),
-          'value' => t('jQuery UI Accordion not enabled'),
-          'description' => t('If you want to use the Field Group accordion formatter, you will need to install the <a href=":link" target="_blank">jQuery UI Accordion</a> module.', [':link' => 'https://www.drupal.org/project/jquery_ui_accordion']),
-          'severity' => REQUIREMENT_INFO,
-        ];
-      }
-      else {
-        $requirements['field_group_jquery_ui_accordion'] = [
-          'title' => t('Field Group'),
-          'description' => t('The jQuery UI Accordion module is installed'),
-          'severity' => REQUIREMENT_INFO,
-        ];
-      }
-    }
-  }
-
-  return $requirements;
-}
-
-/**
  * Removed in favor of hook_post_update script.
  */
 function field_group_update_8301() {
@@ -58,5 +28,35 @@ function field_group_update_8302() {
   catch (\Exception $e) {
     return t('If you want to use the Field Group accordion formatter, you will need to install the <a href=":link" target="_blank">jQuery UI Accordion</a> module.',
         [':link' => 'https://www.drupal.org/project/jquery_ui_accordion']);
+  }
+}
+
+/**
+ * Install the field_group_accordion if this site is using accordion.
+ */
+function field_group_update_8303() {
+  $configFactory = Drupal::configFactory();
+  $hasAccordion = FALSE;
+  $displayConfig = [
+    ...\Drupal::service('config.storage')->listAll('core.entity_form_display'),
+    ...\Drupal::service('config.storage')->listAll('core.entity_view_display'),
+  ];
+
+  foreach ($displayConfig as $item) {
+    $config = $configFactory->get($item);
+    $thirdPartySettings = $config->get('third_party_settings');
+    if (is_array($thirdPartySettings) && isset($thirdPartySettings['field_group'])) {
+      foreach ($thirdPartySettings['field_group'] as $group) {
+        if ($group['format_type'] === 'accordion' || $group['format_type'] === 'accordion_item') {
+          $hasAccordion = TRUE;
+          break 2;
+        }
+      }
+    }
+  }
+
+  if ($hasAccordion) {
+    \Drupal::service('module_installer')
+      ->install(['field_group_accordion'], TRUE);
   }
 }

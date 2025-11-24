@@ -22,17 +22,24 @@ use Twig\Node\Node;
  */
 class BlockReferenceExpression extends AbstractExpression
 {
-    public function __construct(Node $name, ?Node $template, int $lineno, string $tag = null)
+    /**
+     * @param AbstractExpression $name
+     */
+    public function __construct(Node $name, ?Node $template, int $lineno)
     {
+        if (!$name instanceof AbstractExpression) {
+            trigger_deprecation('twig/twig', '3.15', 'Not passing a "%s" instance to the "node" argument of "%s" is deprecated ("%s" given).', AbstractExpression::class, static::class, \get_class($name));
+        }
+
         $nodes = ['name' => $name];
         if (null !== $template) {
             $nodes['template'] = $template;
         }
 
-        parent::__construct($nodes, ['is_defined_test' => false, 'output' => false], $lineno, $tag);
+        parent::__construct($nodes, ['is_defined_test' => false, 'output' => false], $lineno);
     }
 
-    public function compile(Compiler $compiler)
+    public function compile(Compiler $compiler): void
     {
         if ($this->getAttribute('is_defined_test')) {
             $this->compileTemplateCall($compiler, 'hasBlock');
@@ -40,8 +47,9 @@ class BlockReferenceExpression extends AbstractExpression
             if ($this->getAttribute('output')) {
                 $compiler->addDebugInfo($this);
 
+                $compiler->write('yield from ');
                 $this
-                    ->compileTemplateCall($compiler, 'displayBlock')
+                    ->compileTemplateCall($compiler, 'yieldBlock')
                     ->raw(";\n");
             } else {
                 $this->compileTemplateCall($compiler, 'renderBlock');
@@ -65,7 +73,7 @@ class BlockReferenceExpression extends AbstractExpression
             ;
         }
 
-        $compiler->raw(sprintf('->%s', $method));
+        $compiler->raw(\sprintf('->unwrap()->%s', $method));
 
         return $this->compileBlockArguments($compiler);
     }
@@ -84,5 +92,3 @@ class BlockReferenceExpression extends AbstractExpression
         return $compiler->raw(')');
     }
 }
-
-class_alias('Twig\Node\Expression\BlockReferenceExpression', 'Twig_Node_Expression_BlockReference');

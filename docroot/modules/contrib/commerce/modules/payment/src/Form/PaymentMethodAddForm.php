@@ -2,15 +2,16 @@
 
 namespace Drupal\commerce_payment\Form;
 
-use Drupal\commerce\InlineFormManager;
-use Drupal\commerce_payment\PaymentOption;
-use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\SupportsCreatingPaymentMethodsInterface;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\commerce\InlineFormManager;
+use Drupal\commerce_payment\Entity\PaymentGatewayInterface;
+use Drupal\commerce_payment\PaymentOption;
+use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\SupportsCreatingPaymentMethodsInterface;
 use Drupal\user\UserInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
@@ -67,7 +68,7 @@ class PaymentMethodAddForm extends FormBase implements ContainerInjectionInterfa
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, UserInterface $user = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?UserInterface $user = NULL) {
     /** @var \Drupal\commerce_payment\PaymentOption[] $payment_options */
     $payment_options = $form_state->get('payment_options');
     if (!$payment_options) {
@@ -82,8 +83,9 @@ class PaymentMethodAddForm extends FormBase implements ContainerInjectionInterfa
     // Core bug #1988968 doesn't allow the payment method add form JS to depend
     // on an external library, so the libraries need to be preloaded here.
     foreach ($payment_gateways as $payment_gateway) {
-      if ($js_library = $payment_gateway->getPlugin()->getJsLibrary()) {
-        $form['#attached']['library'][] = $js_library;
+      assert($payment_gateway instanceof PaymentGatewayInterface);
+      foreach ($payment_gateway->getPlugin()->getLibraries() as $library) {
+        $form['#attached']['library'][] = $library;
       }
     }
 

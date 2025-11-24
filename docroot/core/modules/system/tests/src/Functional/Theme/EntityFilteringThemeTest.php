@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Theme;
 
 use Drupal\comment\Tests\CommentTestTrait;
@@ -24,17 +26,12 @@ class EntityFilteringThemeTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected $defaultTheme = 'stark';
+  protected static $modules = ['block', 'taxonomy', 'comment', 'node', 'views'];
 
   /**
-   * Use the standard profile.
-   *
-   * We test entity theming with the default node, user, comment, and taxonomy
-   * configurations at several paths in the standard profile.
-   *
-   * @var string
+   * {@inheritdoc}
    */
-  protected $profile = 'standard';
+  protected $defaultTheme = 'stark';
 
   /**
    * A list of all available themes.
@@ -91,7 +88,7 @@ class EntityFilteringThemeTest extends BrowserTestBase {
     $listing = new ExtensionDiscovery(\Drupal::root());
     $this->themes = $listing->scan('theme', FALSE);
     /** @var \Drupal\Core\Extension\ThemeHandlerInterface $theme_handler */
-    $theme_data = \Drupal::service('theme_handler')->rebuildThemeData();
+    $theme_data = \Drupal::service('extension.list.theme')->reset()->getList();
     foreach (array_keys($this->themes) as $theme) {
       // Skip obsolete and deprecated themes.
       $info = $theme_data[$theme]->info;
@@ -117,6 +114,7 @@ class EntityFilteringThemeTest extends BrowserTestBase {
     ]);
     $this->term->save();
 
+    $this->createContentType(['type' => 'article']);
     // Add a comment field.
     $this->addDefaultCommentField('node', 'article', 'comment', CommentItemInterface::OPEN);
     // Create a test node tagged with the test term.
@@ -142,7 +140,7 @@ class EntityFilteringThemeTest extends BrowserTestBase {
   /**
    * Checks each themed entity for XSS filtering in available themes.
    */
-  public function testThemedEntity() {
+  public function testThemedEntity(): void {
     // Check paths where various view modes of the entities are rendered.
     $paths = [
       'user',

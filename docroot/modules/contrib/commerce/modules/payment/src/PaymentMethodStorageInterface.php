@@ -2,8 +2,9 @@
 
 namespace Drupal\commerce_payment;
 
-use Drupal\commerce_payment\Entity\PaymentGatewayInterface;
+use Drupal\commerce_payment\Entity\PaymentMethodInterface;
 use Drupal\Core\Entity\ContentEntityStorageInterface;
+use Drupal\commerce_payment\Entity\PaymentGatewayInterface;
 use Drupal\profile\Entity\ProfileInterface;
 use Drupal\user\UserInterface;
 
@@ -46,6 +47,19 @@ interface PaymentMethodStorageInterface extends ContentEntityStorageInterface {
    * @return \Drupal\commerce_payment\Entity\PaymentMethodInterface
    *   A new payment method object.
    */
-  public function createForCustomer($payment_method_type, $payment_gateway_id, $customer_id, ProfileInterface $billing_profile = NULL);
+  public function createForCustomer($payment_method_type, $payment_gateway_id, $customer_id, ?ProfileInterface $billing_profile = NULL);
+
+  /**
+   * Loads the default payment method for the user.
+   *
+   * @param \Drupal\user\UserInterface $account
+   *   The user entity.
+   * @param bool $allow_expired
+   *   By default all expired default payment methods are filtered out.
+   *
+   * @return \Drupal\commerce_payment\Entity\PaymentMethodInterface|null
+   *   The default payment method, NULL if no default payment method found.
+   */
+  public function loadDefaultByUser(UserInterface $account, bool $allow_expired = FALSE): ?PaymentMethodInterface;
 
 }

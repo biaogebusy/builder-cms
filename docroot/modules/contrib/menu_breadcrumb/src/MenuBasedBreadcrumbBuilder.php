@@ -6,6 +6,7 @@ use Drupal\Component\Utility\SortArray;
 use Drupal\Core\Breadcrumb\Breadcrumb;
 use Drupal\Core\Breadcrumb\BreadcrumbBuilderInterface;
 use Drupal\Core\Cache\CacheBackendInterface;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Controller\TitleResolverInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -20,17 +21,18 @@ use Drupal\Core\Menu\MenuActiveTrailInterface;
 use Drupal\Core\Menu\MenuLinkManagerInterface;
 use Drupal\Core\Routing\AdminContext;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\menu_link_content\Plugin\Menu\MenuLinkContent;
 use Drupal\node\NodeInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * {@inheritdoc}
  */
 class MenuBasedBreadcrumbBuilder implements BreadcrumbBuilderInterface {
-  use \Drupal\Core\StringTranslation\StringTranslationTrait;
+  use StringTranslationTrait;
 
   /**
    * The configuration object generator.
@@ -150,7 +152,7 @@ class MenuBasedBreadcrumbBuilder implements BreadcrumbBuilderInterface {
     LanguageManagerInterface $language_manager,
     EntityTypeManagerInterface $entity_type_manager,
     CacheBackendInterface $cache_menu,
-    LockBackendInterface $lock
+    LockBackendInterface $lock,
   ) {
     $this->configFactory = $config_factory;
     $this->menuActiveTrail = $menu_active_trail;
@@ -168,7 +170,11 @@ class MenuBasedBreadcrumbBuilder implements BreadcrumbBuilderInterface {
   /**
    * {@inheritdoc}
    */
-  public function applies(RouteMatchInterface $route_match) {
+  public function applies(RouteMatchInterface $route_match, ?CacheableMetadata $cacheable_metadata = NULL) {
+    // @todo Remove null safe operator in Drupal 12.0.0, see
+    //   https://www.drupal.org/project/drupal/issues/3459277.
+    $cacheable_metadata?->addCacheContexts(['route']);
+
     // This may look heavyweight for applies() but we have to check all ways the
     // current path could be attached to the selected menus before turning over
     // breadcrumb building (and caching) to another builder.  Generally this
@@ -199,7 +205,7 @@ class MenuBasedBreadcrumbBuilder implements BreadcrumbBuilderInterface {
 
     // Check each selected menu, in turn, until a menu or taxonomy match found:
     // then cache its state for building & caching in build() and exit.
-    $menus = $this->config->get('menu_breadcrumb_menus');
+    $menus = $this->getMenus();
     uasort($menus, function ($a, $b) {
       return SortArray::sortByWeightElement($a, $b);
     });
@@ -290,6 +296,10 @@ class MenuBasedBreadcrumbBuilder implements BreadcrumbBuilderInterface {
     if ($this->languageManager->isMultilingual()) {
       $breadcrumb->addCacheContexts(['languages:language_content']);
     }
+
+    // @todo Remove in Drupal 12.0.0, will be added from ::applies(). See
+    //   https://www.drupal.org/project/drupal/issues/3459277
+    $breadcrumb->addCacheContexts(['route']);
 
     // Changing the <front> page will invalidate any breadcrumb generated here:
     $site_config = $this->configFactory->get('system.site');
@@ -425,6 +435,16 @@ class MenuBasedBreadcrumbBuilder implements BreadcrumbBuilderInterface {
       $links[] = Link::fromTextAndUrl($title,
         Url::fromRouteMatch($route_match));
     }
+  }
+
+  /**
+   * Retrieve menus from configuration.
+   *
+   * @return array
+   *   Configuration menus.
+   */
+  protected function getMenus(): array {
+    return $this->config->get('menu_breadcrumb_menus') ?: [];
   }
 
   /**

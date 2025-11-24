@@ -2,11 +2,11 @@
 
 namespace Drupal\Tests\commerce_tax\Kernel;
 
+use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 use Drupal\commerce_order\Entity\Order;
 use Drupal\commerce_order\Entity\OrderItem;
 use Drupal\commerce_price\Price;
 use Drupal\commerce_tax\Entity\TaxType;
-use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 
 /**
  * @coversDefaultClass \Drupal\commerce_tax\StoreTax
@@ -52,7 +52,7 @@ class StoreTaxTest extends OrderKernelTestBase {
     parent::setUp();
 
     $this->installConfig(['commerce_tax']);
-    $user = $this->createUser(['mail' => $this->randomString() . '@example.com']);
+    $user = $this->createUser();
 
     $this->store->set('address', [
       'country_code' => 'FR',

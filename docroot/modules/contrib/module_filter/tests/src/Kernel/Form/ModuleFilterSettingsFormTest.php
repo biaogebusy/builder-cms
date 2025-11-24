@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\module_filter\Kernel\Form;
 
 use Drupal\Core\Form\FormInterface;
@@ -35,7 +37,7 @@ class ModuleFilterSettingsFormTest extends KernelTestBase {
   /**
    * Tests for \Drupal\module_filter\Form\ModuleFilterSettingsForm.
    */
-  public function testModuleFilterSettingsForm() {
+  public function testModuleFilterSettingsForm(): void {
     $this->assertInstanceOf(FormInterface::class, $this->moduleFilterSettingsForm);
 
     $id = $this->moduleFilterSettingsForm->getFormId();

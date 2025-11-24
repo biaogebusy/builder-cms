@@ -7,13 +7,8 @@ source:
   plugin: variable
   variables:
     - acquia_subscription_data
-  source_module:
-    - acquia_spi
-    - acquia_agent
+  source_module: acquia_agent
 process:
   acquia_subscription_data: acquia_subscription_data
 destination:
   plugin: state
-migration_dependencies:
-  required:
-    - d7_acquia_connector_settings

@@ -2,13 +2,13 @@ type: module
 name: Devel
 description: 'Various blocks, pages, and functions for developers.'
 package: Development
-core_version_requirement: ^8.8 || ^9
-php: 7.2
+core_version_requirement: "^10.3 || ^11 || ^12"
+php: 8.1
 configure: devel.admin_settings
 tags:
- - developer
+  - developer
 
-# Information added by Drupal.org packaging script on 2022-09-27
-version: '4.2.1'
+# Information added by Drupal.org packaging script on 2025-07-07
+version: '5.4.0'
 project: 'devel'
-datestamp: 1664317447
+datestamp: 1751916161

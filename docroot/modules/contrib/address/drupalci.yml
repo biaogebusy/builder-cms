@@ -1,14 +1,7 @@
 # https://www.drupal.org/drupalorg/docs/drupal-ci/customizing-drupalci-testing
 build:
-  environment:
-    startcontainers:
-      runcontainers:
-    create_db:
-      dbcreate:
   assessment:
     validate_codebase:
-      phplint:
-      container_composer:
       phpcs:
         # phpcs will use core's specified version of Coder.
         sniff-all-files: true

@@ -2,7 +2,6 @@
 
 namespace Drupal\Tests\field_permissions\Unit;
 
-use Prophecy\PhpUnit\ProphecyTrait;
 use Drupal\comment\CommentManagerInterface;
 use Drupal\Core\DependencyInjection\Container;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -15,6 +14,7 @@ use Drupal\field_permissions\Plugin\FieldPermissionType\Manager;
 use Drupal\field_permissions\Plugin\FieldPermissionTypeInterface;
 use Drupal\Tests\UnitTestCase;
 use Prophecy\Argument;
+use Prophecy\PhpUnit\ProphecyTrait;
 
 /**
  * Tests the field permissions service.
@@ -69,49 +69,25 @@ class FieldPermissionsServiceTest extends UnitTestCase {
    *
    * @dataProvider providerTestGetFieldAccess
    */
-  public function testGetFieldAccess($operation, FieldItemListInterface $items, AccountInterface $account, FieldDefinitionInterface $field_definition, $expected_access) {
-    $this->assertEquals($expected_access, $this->fieldPermissionsService->getFieldAccess($operation, $items, $account, $field_definition));
+  public function testGetFieldAccess($operation, $roles, $permission, $expected_access) {
+    $field_item_list = $this->prophesize(FieldItemListInterface::class)->reveal();
+
+    $account = $this->prophesize(AccountInterface::class);
+    $account->getRoles()->willReturn($roles);
+    $field_definition = $this->prophesize(FieldDefinitionInterface::class);
+    $storage = $this->prophesize(FieldStorageConfigInterface::class);
+    $storage->getThirdPartySetting('field_permissions', 'permission_type', FieldPermissionTypeInterface::ACCESS_PUBLIC)->willReturn($permission);
+    $field_definition->getFieldStorageDefinition()->willReturn($storage->reveal());
+
+    $this->assertEquals($expected_access, $this->fieldPermissionsService->getFieldAccess($operation, $field_item_list, $account->reveal(), $field_definition->reveal()));
   }
 
   /**
    * Data provider for ::testGetFieldAccess.
    */
-  public function providerTestGetFieldAccess() {
-    $cases = [];
-
-    $field_item_list = $this->prophesize(FieldItemListInterface::class)->reveal();
-
-    // Administrator role.
-    $account = $this->prophesize(AccountInterface::class);
-    $account->getRoles()->willReturn(['administrator']);
-    $field_definition = $this->prophesize(FieldDefinitionInterface::class);
-    $storage = $this->prophesize(FieldStorageConfigInterface::class);
-    $storage->getThirdPartySetting('field_permissions', 'permission_type', FieldPermissionTypeInterface::ACCESS_PUBLIC)->willReturn('foo');
-    $field_definition->getFieldStorageDefinition()->willReturn($storage->reveal());
-    $cases[] = [
-      'view',
-      $field_item_list,
-      $account->reveal(),
-      $field_definition->reveal(),
-      TRUE,
-    ];
-
-    // No admin roles, but public access.
-    $account = $this->prophesize(AccountInterface::class);
-    $account->getRoles()->willReturn(['blah']);
-    $field_definition = $this->prophesize(FieldDefinitionInterface::class);
-    $storage = $this->prophesize(FieldStorageConfigInterface::class);
-    $storage->getThirdPartySetting('field_permissions', 'permission_type', FieldPermissionTypeInterface::ACCESS_PUBLIC)->willReturn(FieldPermissionTypeInterface::ACCESS_PUBLIC);
-    $field_definition->getFieldStorageDefinition()->willReturn($storage->reveal());
-    $cases[] = [
-      'view',
-      $field_item_list,
-      $account->reveal(),
-      $field_definition->reveal(),
-      TRUE,
-    ];
-
-    return $cases;
+  public static function providerTestGetFieldAccess(): \Generator {
+    yield 'Administrator access' => ['view', ['administrator'], 'foo', TRUE];
+    yield 'No Admin roles, public access' => ['view', ['blah'], FieldPermissionTypeInterface::ACCESS_PUBLIC, TRUE];
   }
 
   /**

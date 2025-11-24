@@ -2,7 +2,7 @@
 
 namespace Drupal\advancedqueue;
 
-use Drupal\advancedqueue\Annotation\AdvancedQueueBackend;
+use Drupal\advancedqueue\Attribute\AdvancedQueueBackend;
 use Drupal\advancedqueue\Plugin\AdvancedQueue\Backend\BackendInterface;
 use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Core\Cache\CacheBackendInterface;
@@ -36,7 +36,14 @@ class BackendManager extends DefaultPluginManager {
    *   The module handler.
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
-    parent::__construct('Plugin/AdvancedQueue/Backend', $namespaces, $module_handler, BackendInterface::class, AdvancedQueueBackend::class);
+    parent::__construct(
+      'Plugin/AdvancedQueue/Backend',
+      $namespaces,
+      $module_handler,
+      BackendInterface::class,
+      AdvancedQueueBackend::class,
+      'Drupal\advancedqueue\Annotation\AdvancedQueueBackend',
+    );
 
     $this->alterInfo('advancedqueue_backend_info');
     $this->setCacheBackend($cache_backend, 'advancedqueue_backend_plugins');

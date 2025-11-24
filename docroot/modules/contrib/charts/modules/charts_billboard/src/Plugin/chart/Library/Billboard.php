@@ -2,36 +2,40 @@
 
 namespace Drupal\charts_billboard\Plugin\chart\Library;
 
+use Drupal\charts\Attribute\Chart;
 use Drupal\charts\Plugin\chart\Library\ChartBase;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\ElementInfoManagerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Define a concrete class for a Chart.
- *
- * @Chart(
- *   id = "billboard",
- *   name = @Translation("Billboard.js"),
- *   types = {
- *     "area",
- *     "bar",
- *     "bubble",
- *     "column",
- *     "donut",
- *     "gauge",
- *     "line",
- *     "pie",
- *     "scatter",
- *     "spline",
- *   },
- * )
+ * The 'Billboard' chart type attribute.
  */
+#[Chart(
+  id: "billboard",
+  name: new TranslatableMarkup("Billboard.js"),
+  types: [
+    "area",
+    "arearange",
+    "bar",
+    "bubble",
+    "candlestick",
+    "column",
+    "donut",
+    "gauge",
+    "line",
+    "pie",
+    "scatter",
+    "spline",
+  ]
+)]
 class Billboard extends ChartBase implements ContainerFactoryPluginInterface {
 
   /**
@@ -52,9 +56,11 @@ class Billboard extends ChartBase implements ContainerFactoryPluginInterface {
    *   The plugin implementation definition.
    * @param \Drupal\Core\Render\ElementInfoManagerInterface $element_info
    *   The element info manager.
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface|null $module_handler
+   *   The module handler service.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, ElementInfoManagerInterface $element_info) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, ElementInfoManagerInterface $element_info, ?ModuleHandlerInterface $module_handler = NULL) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $module_handler);
     $this->elementInfo = $element_info;
   }
 
@@ -66,8 +72,20 @@ class Billboard extends ChartBase implements ContainerFactoryPluginInterface {
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get('element_info')
+      $container->get('element_info'),
+      $container->get('module_handler'),
     );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function defaultConfiguration() {
+    $configurations = [
+      'monochrome_pie' => FALSE,
+    ] + parent::defaultConfiguration();
+
+    return $configurations;
   }
 
   /**
@@ -80,8 +98,31 @@ class Billboard extends ChartBase implements ContainerFactoryPluginInterface {
         '@issue_link' => Url::fromUri('https://www.drupal.org/project/charts/issues/3046983')->toString(),
       ]),
     ];
+    $form['monochrome_pie'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Monochrome Pie/Donut Charts'),
+      '#description' => $this->t('Previous iterations of this module had pie and donut charts with the same color for all the slices. Check this box if you wish to continue using just one color.'),
+      '#default_value' => !empty($this->configuration['monochrome_pie']),
+    ];
 
     return $form;
+  }
+
+  /**
+   * Submit configurations.
+   *
+   * @param array $form
+   *   The form element.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   */
+  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
+    parent::submitConfigurationForm($form, $form_state);
+
+    if (!$form_state->getErrors()) {
+      $values = $form_state->getValue($form['#parents']);
+      $this->configuration['monochrome_pie'] = $values['monochrome_pie'];
+    }
   }
 
   /**
@@ -126,6 +167,9 @@ class Billboard extends ChartBase implements ContainerFactoryPluginInterface {
     // If Polar is checked, then convert to Radar chart type.
     if ($is_polar) {
       $type = 'radar';
+    }
+    elseif ($chart_type === 'arearange') {
+      $type = 'area-line-range';
     }
     else {
       $type = $chart_type == 'column' ? 'bar' : $chart_type;
@@ -221,8 +265,9 @@ class Billboard extends ChartBase implements ContainerFactoryPluginInterface {
         $element['#gauge']['green_from'],
       ];
     }
-    elseif ($type === 'line' || $type === 'spline') {
+    elseif (in_array($type, ['line', 'spline', 'step', 'area', 'area-spline'])) {
       $chart_definition['point']['show'] = !empty($element['#data_markers']);
+      $chart_definition['line']['connectNull'] = !empty($element['#connect_nulls']);
     }
     else {
       /*
@@ -268,7 +313,11 @@ class Billboard extends ChartBase implements ContainerFactoryPluginInterface {
       if ($type === 'chart_xaxis') {
         $chart_definition['axis']['x']['label'] = $element[$child]['#title'] ?? '';
         $chart_type = $this->getType($element['#chart_type']);
-        $categories = $this->stripLabelTags($element[$child]['#labels']);
+        $categories = !empty($element[$child]['#labels']) ? $this->stripLabelTags($element[$child]['#labels']) : [];
+        if (empty($categories)) {
+          // If no labels are provided, fill the categories with empty values.
+          $categories = $this->fillCategoriesWithoutLabels($chart_definition);
+        }
         if (!in_array($chart_type, ['pie', 'donut'])) {
           if ($chart_type === 'scatter' || $chart_type === 'bubble') {
             // Do nothing.
@@ -370,7 +419,7 @@ class Billboard extends ChartBase implements ContainerFactoryPluginInterface {
                 array_shift($datum);
               }
               $columns[$columns_key_start][] = array_map(function ($item) {
-                return isset($item) ? strip_tags($item) : NULL;
+                return isset($item) ? (float) strip_tags($item) : NULL;
               }, $datum);
             }
             else {
@@ -400,13 +449,19 @@ class Billboard extends ChartBase implements ContainerFactoryPluginInterface {
             unset($datum['color']);
             $datum = array_values($datum);
           }
+          if (!empty($datum[0])) {
+            // Remove any HTML for use in SVG text elements.
+            // E.g. "<h2>This &amp; that</h2>" -> "This & that".
+            $datum[0] = strip_tags(htmlspecialchars_decode($datum[0]));
+          }
           $columns[] = $datum;
         }
 
         // Add colors for each segment.
-        foreach ($child_element['#grouping_colors'] ?? [] as $key => $colors_array) {
-          $color = reset($colors_array);
-          $chart_definition['color']['pattern'][$key] = $color;
+        if (!empty($element['#colors']) && empty($this->configuration['monochrome_pie'])) {
+          foreach ($element['#colors'] as $key => $color) {
+            $chart_definition['color']['pattern'][$key] = $color;
+          }
         }
       }
 
@@ -449,6 +504,35 @@ class Billboard extends ChartBase implements ContainerFactoryPluginInterface {
     }
 
     return $categories;
+  }
+
+  /**
+   * Create an array for when labels are empty.
+   *
+   * @param array $chart_definition
+   *   The chart definition.
+   *
+   * @return array
+   *   An empty array the length of the longest series.
+   */
+  private function fillCategoriesWithoutLabels(array $chart_definition): array {
+    $columns = $chart_definition['data']['columns'];
+    $max_items = 0;
+    foreach ($columns as $column) {
+      // Skip empty series or the x-axis series.
+      if (empty($column) || $column[0] === 'x') {
+        continue;
+      }
+      // Count items in the series (subtract 1 for the series name).
+      $items_count = count($column) - 1;
+
+      // Update max if this series has more items.
+      if ($items_count > $max_items) {
+        $max_items = $items_count;
+      }
+    }
+
+    return array_fill(0, $max_items, []);
   }
 
 }

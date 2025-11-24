@@ -31,30 +31,17 @@ use Drupal\sms\Message\SmsMessageResultInterface;
 class SmsMessageProcessor implements EventSubscriberInterface {
 
   /**
-   * The event dispatcher.
-   *
-   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
-   */
-  protected $eventDispatcher;
-
-  /**
-   * The configuration factory.
-   *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface
-   */
-  protected $configFactory;
-
-  /**
    * Creates a new SmsMessageProcessor controller.
    *
-   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
+   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $eventDispatcher
    *   The event dispatcher.
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
    *   The configuration factory.
    */
-  public function __construct(EventDispatcherInterface $event_dispatcher, ConfigFactoryInterface $config_factory) {
-    $this->eventDispatcher = $event_dispatcher;
-    $this->configFactory = $config_factory;
+  public function __construct(
+    protected EventDispatcherInterface $eventDispatcher,
+    protected ConfigFactoryInterface $configFactory,
+  ) {
   }
 
   /**
@@ -124,10 +111,10 @@ class SmsMessageProcessor implements EventSubscriberInterface {
 
     $message_recipients = $sms_message->getRecipients();
     $result_recipients = array_map(
-      function (SmsDeliveryReportInterface $report) {
+      static function (SmsDeliveryReportInterface $report) {
         return $report->getRecipient();
       },
-      $result->getReports()
+      $result->getReports(),
     );
 
     $difference_count = count(array_diff($message_recipients, $result_recipients));

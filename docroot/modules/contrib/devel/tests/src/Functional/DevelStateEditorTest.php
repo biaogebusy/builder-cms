@@ -21,7 +21,7 @@ class DevelStateEditorTest extends DevelBrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  public function setUp() {
+  protected function setUp(): void {
     parent::setUp();
     $this->state = $this->container->get('state');
     $this->drupalPlaceBlock('page_title_block');
@@ -30,7 +30,7 @@ class DevelStateEditorTest extends DevelBrowserTestBase {
   /**
    * Tests state editor menu link.
    */
-  public function testStateEditMenuLink() {
+  public function testStateEditMenuLink(): void {
     $this->drupalPlaceBlock('system_menu_block:devel');
     $this->drupalLogin($this->develUser);
     // Ensures that the state editor link is present on the devel menu and that
@@ -45,7 +45,7 @@ class DevelStateEditorTest extends DevelBrowserTestBase {
   /**
    * Tests state listing.
    */
-  public function testStateListing() {
+  public function testStateListing(): void {
     $table_selector = 'table.devel-state-list';
 
     // Ensure that state listing page is accessible only by users with the
@@ -98,7 +98,7 @@ class DevelStateEditorTest extends DevelBrowserTestBase {
   /**
    * Tests state edit.
    */
-  public function testStateEdit() {
+  public function testStateEdit(): void {
     // Create some state variables for the test.
     $this->state->set('devel.simple', 0);
     $this->state->set('devel.array', ['devel' => 'value']);
@@ -128,7 +128,7 @@ class DevelStateEditorTest extends DevelBrowserTestBase {
     $this->assertFalse($button->hasAttribute('disabled'));
 
     $edit = ['new_value' => 1];
-    $this->drupalPostForm('devel/state/edit/devel.simple', $edit, 'Save');
+    $this->submitForm($edit, 'Save');
     $this->assertSession()->pageTextContains(strtr('Variable @name was successfully edited.', ['@name' => 'devel.simple']));
     $this->assertEquals(1, $this->state->get('devel.simple'));
 
@@ -144,11 +144,11 @@ class DevelStateEditorTest extends DevelBrowserTestBase {
 
     // Try to save an invalid yaml input.
     $edit = ['new_value' => 'devel: \'value updated'];
-    $this->drupalPostForm('devel/state/edit/devel.array', $edit, 'Save');
+    $this->submitForm($edit, 'Save');
     $this->assertSession()->pageTextContains('Invalid input:');
 
     $edit = ['new_value' => 'devel: \'value updated\''];
-    $this->drupalPostForm('devel/state/edit/devel.array', $edit, 'Save');
+    $this->submitForm($edit, 'Save');
     $this->assertSession()->pageTextContains(strtr('Variable @name was successfully edited.', ['@name' => 'devel.array']));
     $this->assertEquals(['devel' => 'value updated'], $this->state->get('devel.array'));
 
@@ -175,9 +175,7 @@ class DevelStateEditorTest extends DevelBrowserTestBase {
    *   The expected text for the passed in elements.
    */
   protected function assertElementsTextEquals(array $elements, array $expected_elements_text) {
-    $actual_text = array_map(function (NodeElement $element) {
-      return $element->getText();
-    }, $elements);
+    $actual_text = array_map(static fn(NodeElement $element) => $element->getText(), $elements);
     $this->assertSame($expected_elements_text, $actual_text);
   }
 

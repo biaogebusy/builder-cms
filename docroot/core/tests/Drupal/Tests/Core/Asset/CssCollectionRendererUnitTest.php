@@ -1,11 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Asset;
 
+use Drupal\Core\Asset\AssetQueryStringInterface;
 use Drupal\Core\Asset\CssCollectionRenderer;
 use Drupal\Core\File\FileUrlGeneratorInterface;
-use Drupal\Tests\UnitTestCase;
 use Drupal\Core\State\StateInterface;
+use Drupal\Tests\UnitTestCase;
 
 /**
  * Tests the CSS asset collection renderer.
@@ -34,6 +37,7 @@ class CssCollectionRendererUnitTest extends UnitTestCase {
   protected function setUp(): void {
     parent::setUp();
     $state = $this->prophesize(StateInterface::class);
+    $assetQueryString = $this->prophesize(AssetQueryStringInterface::class);
     $file_url_generator = $this->createMock(FileUrlGeneratorInterface::class);
     $file_url_generator->expects($this->any())
       ->method('generateString')
@@ -41,14 +45,13 @@ class CssCollectionRendererUnitTest extends UnitTestCase {
       ->willReturnCallback(function ($uri) {
          return 'generated-relative-url:' . $uri;
       });
-    $state->get('system.css_js_query_string', '0')->shouldBeCalledOnce()->willReturn(NULL);
-    $this->renderer = new CssCollectionRenderer($state->reveal(), $file_url_generator);
+    $assetQueryString->get()->shouldBeCalledOnce()->willReturn('');
+    $this->renderer = new CssCollectionRenderer($assetQueryString->reveal(), $file_url_generator);
     $this->fileCssGroup = [
       'group' => -100,
       'type' => 'file',
       'media' => 'all',
       'preprocess' => TRUE,
-      'browsers' => ['IE' => TRUE, '!IE' => TRUE],
       'items' => [
         0 => [
           'group' => -100,
@@ -57,7 +60,6 @@ class CssCollectionRendererUnitTest extends UnitTestCase {
           'media' => 'all',
           'preprocess' => TRUE,
           'data' => 'tests/Drupal/Tests/Core/Asset/foo.css',
-          'browsers' => ['IE' => TRUE, '!IE' => TRUE],
           'basename' => 'foo.css',
         ],
         1 => [
@@ -67,7 +69,6 @@ class CssCollectionRendererUnitTest extends UnitTestCase {
           'media' => 'all',
           'preprocess' => TRUE,
           'data' => 'tests/Drupal/Tests/Core/Asset/bar.css',
-          'browsers' => ['IE' => TRUE, '!IE' => TRUE],
           'basename' => 'bar.css',
         ],
       ],
@@ -79,8 +80,8 @@ class CssCollectionRendererUnitTest extends UnitTestCase {
    *
    * @see testRender
    */
-  public function providerTestRender() {
-    $create_link_element = function ($href, $media = 'all', $browsers = [], $custom_attributes = []) {
+  public static function providerTestRender() {
+    $create_link_element = function ($href, $media = 'all', $custom_attributes = []) {
       $attributes = [
         'rel' => 'stylesheet',
         'media' => $media,
@@ -90,14 +91,14 @@ class CssCollectionRendererUnitTest extends UnitTestCase {
         '#type' => 'html_tag',
         '#tag' => 'link',
         '#attributes' => array_replace($attributes, $custom_attributes),
-        '#browsers' => $browsers,
       ];
     };
 
     $create_file_css_asset = function ($data, $media = 'all', $preprocess = TRUE) {
-      return ['group' => 0, 'type' => 'file', 'media' => $media, 'preprocess' => $preprocess, 'data' => $data, 'browsers' => []];
+      return ['group' => 0, 'type' => 'file', 'media' => $media, 'preprocess' => $preprocess, 'data' => $data];
     };
 
+    // cspell:disable-next-line
     $custom_attributes = ['integrity' => 'sha384-psK1OYPAYjYUhtDYW+Pj2yc', 'crossorigin' => 'anonymous', 'random-attribute' => 'test'];
 
     return [
@@ -105,7 +106,7 @@ class CssCollectionRendererUnitTest extends UnitTestCase {
       0 => [
         // CSS assets.
         [
-          0 => ['group' => 0, 'type' => 'external', 'media' => 'all', 'preprocess' => TRUE, 'data' => 'http://example.com/popular.js', 'browsers' => []],
+          0 => ['group' => 0, 'type' => 'external', 'media' => 'all', 'preprocess' => TRUE, 'data' => 'http://example.com/popular.js'],
         ],
         // Render elements.
         [
@@ -115,7 +116,7 @@ class CssCollectionRendererUnitTest extends UnitTestCase {
       // Single file CSS asset.
       1 => [
         [
-          0 => ['group' => 0, 'type' => 'file', 'media' => 'all', 'preprocess' => TRUE, 'data' => 'public://css/file-all', 'browsers' => []],
+          0 => ['group' => 0, 'type' => 'file', 'media' => 'all', 'preprocess' => TRUE, 'data' => 'public://css/file-all'],
         ],
         [
           0 => $create_link_element('generated-relative-url:public://css/file-all' . '?', 'all'),
@@ -124,10 +125,10 @@ class CssCollectionRendererUnitTest extends UnitTestCase {
       // Single file CSS asset with custom attributes.
       2 => [
         [
-          0 => ['group' => 0, 'type' => 'file', 'media' => 'all', 'preprocess' => TRUE, 'data' => 'public://css/file-all', 'browsers' => [], 'attributes' => $custom_attributes],
+          0 => ['group' => 0, 'type' => 'file', 'media' => 'all', 'preprocess' => TRUE, 'data' => 'public://css/file-all', 'attributes' => $custom_attributes],
         ],
         [
-          0 => $create_link_element('generated-relative-url:public://css/file-all' . '?', 'all', [], $custom_attributes),
+          0 => $create_link_element('generated-relative-url:public://css/file-all' . '?', 'all', $custom_attributes),
         ],
       ],
       // 31 file CSS assets: expect 31 link elements.
@@ -279,14 +280,14 @@ class CssCollectionRendererUnitTest extends UnitTestCase {
    *
    * @dataProvider providerTestRender
    */
-  public function testRender(array $css_assets, array $render_elements) {
+  public function testRender(array $css_assets, array $render_elements): void {
     $this->assertSame($render_elements, $this->renderer->render($css_assets));
   }
 
   /**
    * Tests a CSS asset group with the invalid 'type' => 'internal'.
    */
-  public function testRenderInvalidType() {
+  public function testRenderInvalidType(): void {
     $this->expectException('Exception');
     $this->expectExceptionMessage('Invalid CSS asset type.');
 
@@ -295,7 +296,6 @@ class CssCollectionRendererUnitTest extends UnitTestCase {
       'type' => 'internal',
       'media' => 'all',
       'preprocess' => TRUE,
-      'browsers' => [],
       'data' => 'http://example.com/popular.js',
     ];
     $this->renderer->render([$css_group]);

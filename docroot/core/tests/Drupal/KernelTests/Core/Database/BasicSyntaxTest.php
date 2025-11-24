@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Database;
 
 /**
@@ -16,7 +18,7 @@ class BasicSyntaxTest extends DatabaseTestBase {
   /**
    * Tests string concatenation.
    */
-  public function testConcatLiterals() {
+  public function testConcatLiterals(): void {
     $result = $this->connection->query('SELECT CONCAT(:a1, CONCAT(:a2, CONCAT(:a3, CONCAT(:a4, :a5))))', [
       ':a1' => 'This',
       ':a2' => ' ',
@@ -35,7 +37,7 @@ class BasicSyntaxTest extends DatabaseTestBase {
    * since its type 'varchar_ascii' may lead to using field-level collations not
    * compatible with the other fields.
    */
-  public function testConcatFields() {
+  public function testConcatFields(): void {
     $result = $this->connection->query(
       'SELECT CONCAT(:a1, CONCAT([job], CONCAT(:a2, CONCAT([age], :a3)))) FROM {test} WHERE [age] = :age', [
         ':a1' => 'The age of ',
@@ -50,7 +52,7 @@ class BasicSyntaxTest extends DatabaseTestBase {
   /**
    * Tests string concatenation with separator.
    */
-  public function testConcatWsLiterals() {
+  public function testConcatWsLiterals(): void {
     $result = $this->connection->query("SELECT CONCAT_WS(', ', :a1, NULL, :a2, :a3, :a4)", [
       ':a1' => 'Hello',
       ':a2' => NULL,
@@ -63,7 +65,7 @@ class BasicSyntaxTest extends DatabaseTestBase {
   /**
    * Tests string concatenation with separator, with field values.
    */
-  public function testConcatWsFields() {
+  public function testConcatWsFields(): void {
     $result = $this->connection->query("SELECT CONCAT_WS('-', :a1, [name], :a2, [age]) FROM {test} WHERE [age] = :age", [
       ':a1' => 'name',
       ':a2' => 'age',
@@ -75,7 +77,7 @@ class BasicSyntaxTest extends DatabaseTestBase {
   /**
    * Tests escaping of LIKE wildcards.
    */
-  public function testLikeEscape() {
+  public function testLikeEscape(): void {
     $this->connection->insert('test')
       ->fields([
         'name' => 'Ring_',
@@ -101,7 +103,7 @@ class BasicSyntaxTest extends DatabaseTestBase {
   /**
    * Tests a LIKE query containing a backslash.
    */
-  public function testLikeBackslash() {
+  public function testLikeBackslash(): void {
     $this->connection->insert('test')
       ->fields(['name'])
       ->values([
@@ -132,42 +134,13 @@ class BasicSyntaxTest extends DatabaseTestBase {
   /**
    * Tests \Drupal\Core\Database\Connection::getFullQualifiedTableName().
    */
-  public function testGetFullQualifiedTableName() {
+  public function testGetFullQualifiedTableName(): void {
     $database = \Drupal::database();
     $num_matches = $database->select($database->getFullQualifiedTableName('test'), 't')
       ->countQuery()
       ->execute()
       ->fetchField();
     $this->assertSame('4', $num_matches, 'Found 4 records.');
-  }
-
-  /**
-   * Tests allowing square brackets in queries.
-   *
-   * @see \Drupal\Core\Database\Connection::prepareQuery()
-   */
-  public function testAllowSquareBrackets() {
-    $this->connection->insert('test')
-      ->fields(['name'])
-      ->values([
-        'name' => '[square]',
-      ])
-      ->execute();
-
-    // Note that this is a very bad example query because arguments should be
-    // passed in via the $args parameter.
-    $result = $this->connection->query("select name from {test} where name = '[square]'", [], ['allow_square_brackets' => TRUE]);
-    $this->assertSame('[square]', $result->fetchField());
-
-    // Test that allow_square_brackets has no effect on arguments.
-    $result = $this->connection->query("select [name] from {test} where [name] = :value", [':value' => '[square]']);
-    $this->assertSame('[square]', $result->fetchField());
-    $result = $this->connection->query("select name from {test} where name = :value", [':value' => '[square]'], ['allow_square_brackets' => TRUE]);
-    $this->assertSame('[square]', $result->fetchField());
-
-    // Test square brackets using the query builder.
-    $result = $this->connection->select('test')->fields('test', ['name'])->condition('name', '[square]')->execute();
-    $this->assertSame('[square]', $result->fetchField());
   }
 
 }

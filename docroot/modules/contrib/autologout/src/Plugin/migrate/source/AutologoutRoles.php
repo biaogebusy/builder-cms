@@ -41,13 +41,13 @@ class AutologoutRoles extends DrupalSqlBase {
    */
   public function prepareRow(Row $row) {
     $row_name = str_replace('_timeout', '', $row->getSourceProperty('name'));
-    $timeout = unserialize($row->getSourceProperty('value'));
+    $timeout = unserialize($row->getSourceProperty('value'), ['allowed_classes' => FALSE]);
     $query = $this->select('variable', 'v')
       ->fields('v', ['value'])
       ->condition('name', $row_name)
       ->execute()
       ->fetchAssoc();
-    $enabled = unserialize($query['value']);
+    $enabled = unserialize($query['value'], ['allowed_classes' => FALSE]);
 
     $row_name = str_replace('_timeout', '', $row->getSourceProperty('name'));
     $rid = explode('_', $row_name)[2];

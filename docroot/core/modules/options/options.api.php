@@ -24,6 +24,7 @@ use Drupal\Core\Field\FieldStorageDefinitionInterface;
  *     (\Drupal\Core\Field\FieldDefinitionInterface).
  *   - entity: The entity object the field is attached to
  *     (\Drupal\Core\Entity\EntityInterface).
+ *   - widget: The widget object (\Drupal\Core\Field\WidgetInterface).
  *
  * @ingroup hooks
  * @see hook_options_list()
@@ -79,7 +80,7 @@ function hook_options_list_alter(array &$options, array $context) {
  * @see options_test_allowed_values_callback()
  * @see options_test_dynamic_values_callback()
  */
-function callback_allowed_values_function(FieldStorageDefinitionInterface $definition, FieldableEntityInterface $entity = NULL, &$cacheable = TRUE) {
+function callback_allowed_values_function(FieldStorageDefinitionInterface $definition, ?FieldableEntityInterface $entity = NULL, &$cacheable = TRUE) {
   if (isset($entity) && ($entity->bundle() == 'not_a_programmer')) {
     $values = [
       1 => 'One',

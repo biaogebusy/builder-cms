@@ -1,22 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageToolkit\Operation\gd;
 
-use Drupal\system\Plugin\ImageToolkit\Operation\gd\GDImageToolkitOperationBase;
+use Drupal\Core\ImageToolkit\Attribute\ImageToolkitOperation;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\image_effects\Component\Rectangle;
 use Drupal\image_effects\Plugin\ImageToolkit\Operation\RotateTrait;
+use Drupal\system\Plugin\ImageToolkit\Operation\gd\GDImageToolkitOperationBase;
 
 /**
  * Defines GD Rotate operation.
- *
- * @ImageToolkitOperation(
- *   id = "image_effects_gd_rotate",
- *   toolkit = "gd",
- *   operation = "rotate_ie",
- *   label = @Translation("Rotate"),
- *   description = @Translation("Rotate image.")
- * )
  */
+#[ImageToolkitOperation(
+  id: 'image_effects_gd_rotate',
+  toolkit: 'gd',
+  operation: 'rotate_ie',
+  label: new TranslatableMarkup('Rotate'),
+  description: new TranslatableMarkup('Rotate image.'),
+)]
 class Rotate extends GDImageToolkitOperationBase {
 
   use GDOperationTrait;
@@ -45,17 +48,17 @@ class Rotate extends GDImageToolkitOperationBase {
     }
 
     // Store the color index for the background as that is what GD uses.
-    $background_idx = imagecolorallocatealpha($this->getToolkit()->getResource(), $background['red'], $background['green'], $background['blue'], $background['alpha']);
+    $background_idx = imagecolorallocatealpha($this->getToolkit()->getImage(), $background['red'], $background['green'], $background['blue'], $background['alpha']);
 
     if ($this->getToolkit()->getType() === IMAGETYPE_GIF) {
       // GIF does not work with a transparency channel, but can define 1 color
       // in its palette to act as transparent.
       // Get the current transparent color, if any.
-      $gif_transparent_id = imagecolortransparent($this->getToolkit()->getResource());
+      $gif_transparent_id = imagecolortransparent($this->getToolkit()->getImage());
       if ($gif_transparent_id !== -1) {
         // The gif already has a transparent color set: remember it to set it on
         // the rotated image as well.
-        $gif_transparent_color = imagecolorsforindex($this->getToolkit()->getResource(), $gif_transparent_id);
+        $gif_transparent_color = imagecolorsforindex($this->getToolkit()->getImage(), $gif_transparent_id);
 
         if ($background['alpha'] >= 127) {
           // We want a transparent background: use the color already set to act
@@ -77,25 +80,21 @@ class Rotate extends GDImageToolkitOperationBase {
     // rotate.
     $degrees = 360 - $arguments['degrees'];
 
-    // Stores the original GD resource.
-    $original_res = $this->getToolkit()->getResource();
-
     // Get expected width and height resulting from the rotation.
     $rotated_rect = (new Rectangle($this->getToolkit()->getWidth(), $this->getToolkit()->getHeight()))->rotate($degrees);
     $expected_width = $rotated_rect->getBoundingWidth();
     $expected_height = $rotated_rect->getBoundingHeight();
 
     // Rotate the image.
-    if ($new_res = imagerotate($this->getToolkit()->getResource(), $degrees, $background_idx)) {
-      $this->getToolkit()->setResource($new_res);
-      imagedestroy($original_res);
+    if ($new_image = imagerotate($this->getToolkit()->getImage(), $degrees, $background_idx)) {
+      $this->getToolkit()->setImage($new_image);
 
       // GIFs need to reassign the transparent color after performing the
       // rotate, but only do so, if the image already had transparency of its
       // own, or the rotate added a transparent background.
       if (!empty($gif_transparent_color)) {
-        $transparent_idx = imagecolorexactalpha($this->getToolkit()->getResource(), $gif_transparent_color['red'], $gif_transparent_color['green'], $gif_transparent_color['blue'], $gif_transparent_color['alpha']);
-        imagecolortransparent($this->getToolkit()->getResource(), $transparent_idx);
+        $transparent_idx = imagecolorexactalpha($this->getToolkit()->getImage(), $gif_transparent_color['red'], $gif_transparent_color['green'], $gif_transparent_color['blue'], $gif_transparent_color['alpha']);
+        imagecolortransparent($this->getToolkit()->getImage(), $transparent_idx);
       }
 
       // Resizes the image if width and height are not as expected.
@@ -121,7 +120,7 @@ class Rotate extends GDImageToolkitOperationBase {
         // a canvas of the expected dimensions.
         if ($this->getToolkit()->getWidth() < $expected_width || $this->getToolkit()->getHeight() < $expected_height) {
           // Store the current GD resource.
-          $temp_res = $this->getToolkit()->getResource();
+          $temp_image = $this->getToolkit()->getImage();
 
           // Prepare the canvas.
           $data = [
@@ -136,26 +135,21 @@ class Rotate extends GDImageToolkitOperationBase {
           }
 
           // Fill the canvas with the required background color.
-          imagefill($this->getToolkit()->getResource(), 0, 0, $background_idx);
+          imagefill($this->getToolkit()->getImage(), 0, 0, $background_idx);
 
           // Overlay the current image on the canvas.
-          imagealphablending($temp_res, TRUE);
-          imagesavealpha($temp_res, TRUE);
-          imagealphablending($this->getToolkit()->getResource(), TRUE);
-          imagesavealpha($this->getToolkit()->getResource(), TRUE);
+          imagealphablending($temp_image, TRUE);
+          imagesavealpha($temp_image, TRUE);
+          imagealphablending($this->getToolkit()->getImage(), TRUE);
+          imagesavealpha($this->getToolkit()->getImage(), TRUE);
           // We determine the position of the top-left point in the canvas
           // where the overlay of the current image should be copied to, so
           // that the current image results centered on the canvas.
-          $x_pos = (int) ($expected_width / 2 - imagesx($temp_res) / 2);
-          $y_pos = (int) ($expected_height / 2 - imagesy($temp_res) / 2);
-          if (imagecopy($this->getToolkit()->getResource(), $temp_res, $x_pos, $y_pos, 0, 0, imagesx($temp_res), imagesy($temp_res))) {
-            imagedestroy($temp_res);
-          }
-          else {
-            // In case of failure, destroy the temporary resource and restore
-            // the original one.
-            imagedestroy($this->getToolkit()->getResource());
-            $this->getToolkit()->setResource($temp_res);
+          $x_pos = (int) ($expected_width / 2 - imagesx($temp_image) / 2);
+          $y_pos = (int) ($expected_height / 2 - imagesy($temp_image) / 2);
+          if (!imagecopy($this->getToolkit()->getImage(), $temp_image, $x_pos, $y_pos, 0, 0, imagesx($temp_image), imagesy($temp_image))) {
+            // In case of failure, restore the original image.
+            $this->getToolkit()->setImage($temp_image);
             return FALSE;
           }
         }

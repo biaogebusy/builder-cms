@@ -1,0 +1,26 @@
+{
+	"country_code": "CR",
+	"subdivisions": {
+		"A": {
+			"name": "Alajuela"
+		},
+		"C": {
+			"name": "Cartago"
+		},
+		"G": {
+			"name": "Guanacaste"
+		},
+		"H": {
+			"name": "Heredia"
+		},
+		"L": {
+			"name": "Limón"
+		},
+		"P": {
+			"name": "Puntarenas"
+		},
+		"SJ": {
+			"name": "San José"
+		}
+	}
+}

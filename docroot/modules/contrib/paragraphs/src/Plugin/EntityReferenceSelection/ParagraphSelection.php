@@ -2,7 +2,9 @@
 
 namespace Drupal\paragraphs\Plugin\EntityReferenceSelection;
 
+use Drupal\Core\Entity\Attribute\EntityReferenceSelection;
 use Drupal\Core\Entity\Plugin\EntityReferenceSelection\DefaultSelection;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Component\Utility\NestedArray;
@@ -18,6 +20,13 @@ use Drupal\Component\Utility\NestedArray;
  *   weight = 0
  * )
  */
+#[EntityReferenceSelection(
+  id: 'default:paragraph',
+  label: new TranslatableMarkup('Paragraphs'),
+  group: 'default',
+  weight: 0,
+  entity_types: ['paragraph']
+ )]
 class ParagraphSelection extends DefaultSelection {
   /**
    * @inheritDoc
@@ -47,6 +56,8 @@ class ParagraphSelection extends DefaultSelection {
       $bundle_options_simple[$bundle_name] = $bundle_info['label'];
       $bundle_options[$bundle_name] = array(
         'label' => $bundle_info['label'],
+        'description' => $this->entityTypeManager->getStorage('paragraphs_type')
+          ->load($bundle_name)?->getDescription(),
         'enabled' => $this->configuration['target_bundles_drag_drop'][$bundle_name]['enabled'] ?? FALSE,
         'weight' => $this->configuration['target_bundles_drag_drop'][$bundle_name]['weight'] ?? $weight,
       );
@@ -78,6 +89,7 @@ class ParagraphSelection extends DefaultSelection {
         '#type' => 'table',
         '#header' => [
           $this->t('Type'),
+          $this->t('Description'),
           $this->t('Weight'),
         ],
         '#attributes' => [
@@ -113,6 +125,10 @@ class ParagraphSelection extends DefaultSelection {
         '#title_display' => 'after',
         '#default_value' => $bundle_info['enabled'],
       );
+
+      $form['target_bundles_drag_drop'][$bundle_name]['description'] = [
+        '#markup' => $bundle_info['description'],
+      ];
 
       $form['target_bundles_drag_drop'][$bundle_name]['weight'] = array(
         '#type' => 'weight',

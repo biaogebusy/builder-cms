@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\datetime\Kernel\Views;
 
 use Drupal\Component\Datetime\DateTimePlus;
@@ -28,14 +30,14 @@ abstract class DateTimeHandlerTestBase extends ViewsKernelTestBase {
    *
    * @var string
    */
-  protected static $field_name = 'field_date';
+  protected static $fieldName = 'field_date';
 
   /**
    * Type of the field.
    *
    * @var string
    */
-  protected static $field_type = 'datetime';
+  protected static $fieldType = 'datetime';
 
   /**
    * Nodes to test.
@@ -49,12 +51,12 @@ abstract class DateTimeHandlerTestBase extends ViewsKernelTestBase {
    *
    * @var string[]
    */
-  protected $map;
+  protected array $map;
 
   /**
    * {@inheritdoc}
    */
-  protected function setUp($import_test_views = TRUE) {
+  protected function setUp($import_test_views = TRUE): void {
     parent::setUp($import_test_views);
 
     $this->installSchema('node', 'node_access');
@@ -68,9 +70,9 @@ abstract class DateTimeHandlerTestBase extends ViewsKernelTestBase {
     ]);
     $node_type->save();
     $fieldStorage = FieldStorageConfig::create([
-      'field_name' => static::$field_name,
+      'field_name' => static::$fieldName,
       'entity_type' => 'node',
-      'type' => static::$field_type,
+      'type' => static::$fieldType,
       'settings' => ['datetime_type' => DateTimeItem::DATETIME_TYPE_DATETIME],
     ]);
     $fieldStorage->save();

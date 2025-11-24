@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\language\Functional;
 
 use Drupal\language\Entity\ConfigurableLanguage;
@@ -16,9 +18,7 @@ class LanguageBreadcrumbTest extends BrowserTestBase {
   use AssertBreadcrumbTrait;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['language', 'block', 'filter'];
 
@@ -40,7 +40,7 @@ class LanguageBreadcrumbTest extends BrowserTestBase {
   /**
    * Tests breadcrumbs with URL prefixes.
    */
-  public function testBreadCrumbs() {
+  public function testBreadCrumbs(): void {
     // /user/login is the default frontpage which only works for an anonymous
     // user. Access the frontpage in different languages, ensure that no
     // breadcrumb is displayed.
@@ -48,7 +48,7 @@ class LanguageBreadcrumbTest extends BrowserTestBase {
     $this->assertBreadcrumb('de/user/login', []);
     $this->assertBreadcrumb('gsw-berne/user/login', []);
 
-    $admin_user = $this->drupalCreateUser(['access administration pages']);
+    $admin_user = $this->drupalCreateUser(['access administration pages', 'administer blocks']);
     $this->drupalLogin($admin_user);
 
     // Use administration routes to assert that breadcrumb is displayed

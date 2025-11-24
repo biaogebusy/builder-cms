@@ -7,11 +7,14 @@
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Render\MarkupInterface;
+use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\Core\Database\DatabaseException;
 use Drupal\Core\Entity\Sql\SqlContentEntityStorageSchema;
+use Drupal\Core\Extension\Requirement\RequirementSeverity;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\search_api\Entity\Server;
+use Drupal\search_api\Hook\SearchApiHooks;
 
 /**
  * Implements hook_schema().
@@ -45,7 +48,7 @@ function search_api_schema() {
         'not null' => TRUE,
       ],
       'status' => [
-        'description' => 'Boolean indicating the reindexation status, "1" when we need to reindex, "0" otherwise',
+        'description' => 'Boolean indicating the indexing status: "1" if item needs to be indexed, "0" otherwise',
         'type' => 'int',
         'not null' => TRUE,
       ],
@@ -74,14 +77,21 @@ function search_api_uninstall() {
  */
 function search_api_requirements($phase) {
   if ($phase == 'runtime') {
+    [$severity_warning, $severity_error] = DeprecationHelper::backwardsCompatibleCall(
+      \Drupal::VERSION,
+      '11.2',
+      fn () => [RequirementSeverity::Warning, RequirementSeverity::Error],
+      fn () => [REQUIREMENT_WARNING, REQUIREMENT_ERROR],
+    );
+
     $requirements = [];
-    $message = _search_api_search_module_warning();
+    $message = \Drupal::getContainer()->get(SearchApiHooks::class)->checkForSearchModule();
     if ($message) {
       $requirements += [
         'search_api_core_search' => [
           'title' => t('Search API'),
           'value' => $message,
-          'severity' => REQUIREMENT_WARNING,
+          'severity' => $severity_warning,
         ],
       ];
     }
@@ -104,7 +114,7 @@ function search_api_requirements($phase) {
             'The following search servers are not available: @servers',
             ['@servers' => implode(', ', $unavailable_servers)]
           ),
-          'severity' => REQUIREMENT_ERROR,
+          'severity' => $severity_error,
         ],
       ];
     }
@@ -130,7 +140,7 @@ function search_api_requirements($phase) {
           'There are @count pending Search API tasks. @link',
           $args
         ),
-        'severity' => REQUIREMENT_WARNING,
+        'severity' => $severity_warning,
       ];
     }
 
@@ -325,7 +335,7 @@ function search_api_update_8106() {
       ->condition('name', 'search_api_views_taxonomy')
       ->execute();
   }
-  catch (DatabaseException $e) {
+  catch (DatabaseException) {
     // The admin might have done this already to get rid of the warning
     // themselves. It's not really important enough to fail on this, in any
     // case. In the worst case, the warning just remains. So, just ignore any

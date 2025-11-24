@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\webform\Functional\Element;
 
+use Drupal\Component\Utility\DeprecationHelper;
+
 /**
  * Tests for webform element radios.
  *
@@ -50,8 +52,12 @@ class WebformElementRadiosTest extends WebformElementBrowserTestBase {
     $assert_session->responseContains('<label class="webform-options-display-buttons-label option" for="edit-radios-buttons-description-one"><div class="webform-options-display-buttons-title">One</div><div class="webform-options-display-buttons-description description">This is a description</div></label>');
 
     // Check options (custom) properties wrapper attributes.
-    $assert_session->responseContains('<div data-custom="custom wrapper data" style="border: red 1px solid" class="one-custom-wrapper-class js-form-item form-item js-form-type-radio form-item-radios-options-properties js-form-item-radios-options-properties">');
-
+    DeprecationHelper::backwardsCompatibleCall(
+      currentVersion: \Drupal::VERSION,
+      deprecatedVersion: '10.2',
+      currentCallable: fn() => $assert_session->responseContains('<div data-custom="custom wrapper data" style="border: red 1px solid" class="one-custom-wrapper-class js-form-item form-item form-type-radio js-form-type-radio form-item-radios-options-properties js-form-item-radios-options-properties">'),
+      deprecatedCallable: fn() => $assert_session->responseContains('<div data-custom="custom wrapper data" style="border: red 1px solid" class="one-custom-wrapper-class js-form-item form-item js-form-type-radio form-item-radios-options-properties js-form-item-radios-options-properties">'),
+    );
     // Check options (custom) properties label attributes.
     $assert_session->responseContains('<label data-custom="custom label data" style="border: blue 1px solid" class="one-custom-label-class option" for="edit-radios-options-properties-two">Two</label>');
 

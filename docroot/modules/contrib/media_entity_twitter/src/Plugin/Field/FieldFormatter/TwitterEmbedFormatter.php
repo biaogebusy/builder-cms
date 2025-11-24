@@ -15,7 +15,7 @@ use Drupal\media_entity_twitter\Plugin\media\Source\Twitter;
  *   id = "twitter_embed",
  *   label = @Translation("Twitter embed"),
  *   field_types = {
- *     "link", "string", "string_long"
+ *     "link", "string", "string_long", "text_long"
  *   }
  * )
  */
@@ -77,6 +77,7 @@ class TwitterEmbedFormatter extends FormatterBase {
         return $item->uri;
 
       case 'string':
+      case 'text_long':
       case 'string_long':
         return $item->value;
 

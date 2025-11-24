@@ -1,12 +1,12 @@
 name: 'Webform Views Integration Example'
 description: 'Webform integration example containing sample form and view.'
-core_version_requirement: ^9.3 || ^10.0
+core_version_requirement: ^10 || ^11
 package: 'Webform'
 type: module
 dependencies:
   - webform_views:webform_views
 
-# Information added by Drupal.org packaging script on 2023-08-10
-version: '8.x-5.2'
+# Information added by Drupal.org packaging script on 2024-11-23
+version: '8.x-5.5'
 project: 'webform_views'
-datestamp: 1691641744
+datestamp: 1732397786

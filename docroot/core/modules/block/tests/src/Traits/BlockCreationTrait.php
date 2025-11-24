@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\block\Traits;
 
 use Drupal\block\Entity\Block;
@@ -21,9 +23,9 @@ trait BlockCreationTrait {
    *   Override the defaults by specifying the key and value in the array, for
    *   example:
    *   @code
-   *     $this->drupalPlaceBlock('system_powered_by_block', array(
+   *     $this->drupalPlaceBlock('system_powered_by_block', [
    *       'label' => t('Hello, world!'),
-   *     ));
+   *     ]);
    *   @endcode
    *   The following defaults are provided:
    *   - label: Random string.
@@ -35,15 +37,14 @@ trait BlockCreationTrait {
    * @return \Drupal\block\Entity\Block
    *   The block entity.
    *
-   * @todo
-   *   Add support for creating custom block instances.
+   * @todo Add support for creating content block instances.
    */
   protected function placeBlock($plugin_id, array $settings = []) {
     $config = \Drupal::configFactory();
     $settings += [
       'plugin' => $plugin_id,
       'region' => 'content',
-      'id' => strtolower($this->randomMachineName(8)),
+      'id' => $this->randomMachineName(8),
       'theme' => $config->get('system.theme')->get('default'),
       'label' => $this->randomMachineName(8),
       'visibility' => [],

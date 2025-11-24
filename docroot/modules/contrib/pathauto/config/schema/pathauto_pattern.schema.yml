@@ -30,9 +30,9 @@ pathauto.pattern.*:
       type: sequence
       label: 'Context definitions'
       sequence:
-        - type: mapping
-          label: 'Relationship'
-          mapping:
-            label:
-              type: label
-              label: 'Label'
+        type: mapping
+        label: 'Relationship'
+        mapping:
+          label:
+            type: label
+            label: 'Label'

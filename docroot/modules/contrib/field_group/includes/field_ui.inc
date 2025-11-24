@@ -140,13 +140,13 @@ function field_group_field_ui_display_form_alter(&$form, FormStateInterface $for
     $table[$name]['parent_wrapper']['parent']['#options'] = $table['#parent_options'];
     // Inherit the value of the parent when default value is empty.
     if (empty($table[$name]['parent_wrapper']['parent']['#default_value'])) {
-      $table[$name]['parent_wrapper']['parent']['#default_value'] = isset($params->parents[$name]) ? $params->parents[$name] : '';
+      $table[$name]['parent_wrapper']['parent']['#default_value'] = $params->parents[$name] ?? '';
     }
   }
 
   $formatter_options = FormatterHelper::formatterOptions($params->context);
 
-  $refresh_rows = isset($form_state_values['refresh_rows']) ? $form_state_values['refresh_rows'] : (isset($form_state->getUserInput()['refresh_rows']) ? $form_state->getUserInput()['refresh_rows'] : NULL);
+  $refresh_rows = $form_state_values['refresh_rows'] ?? ($form_state->getUserInput()['refresh_rows'] ?? NULL);
 
   // Create the group rows and check actions.
   foreach ($form['#fieldgroups'] as $name) {
@@ -156,7 +156,7 @@ function field_group_field_ui_display_form_alter(&$form, FormStateInterface $for
     // formatter settings for the group.
     // Firstly updating all fields before creating form elements.
     if (isset($refresh_rows) && $refresh_rows == $name) {
-      $settings = isset($form_state_values['fields'][$name]) ? $form_state_values['fields'][$name] : (isset($form_state->getUserInput()['fields'][$name]) ? $form_state->getUserInput()['fields'][$name] : NULL);
+      $settings = $form_state_values['fields'][$name] ?? ($form_state->getUserInput()['fields'][$name] ?? NULL);
       if (array_key_exists('settings_edit', $settings)) {
         $group = $field_group_form_state[$name];
       }
@@ -187,6 +187,7 @@ function field_group_field_ui_display_form_alter(&$form, FormStateInterface $for
         '#prefix' => '<span class="group-label">',
         '#suffix' => '</span>',
       ],
+      'machine_name' => NULL,
       'weight' => [
         '#type' => 'textfield',
         '#default_value' => $group->weight,
@@ -198,7 +199,7 @@ function field_group_field_ui_display_form_alter(&$form, FormStateInterface $for
           '#type' => 'select',
           '#options' => $parent_options,
           '#empty_value' => '',
-          '#default_value' => isset($params->parents[$name]) ? $params->parents[$name] : '',
+          '#default_value' => $params->parents[$name] ?? '',
           '#attributes' => ['class' => ['field-parent']],
           '#parents' => ['fields', $name, 'parent'],
         ],
@@ -215,6 +216,21 @@ function field_group_field_ui_display_form_alter(&$form, FormStateInterface $for
         '#attributes' => ['class' => ['field-region']],
       ],
     ];
+
+    // In newer versions of Drupal Core, a machine name column is added.
+    // @todo Remove this condition once 11.1 is oldest supported Drupal Core.
+    $header_column_classes = array_column($table['#header'], 'class');
+    if (!empty($header_column_classes)) {
+      foreach ($header_column_classes as $classes) {
+        if (in_array('machine-name', $classes)) {
+          $table[$name]['machine_name'] = [
+            '#markup' => $name,
+            '#attributes' => ['class' => ['machine-name']],
+          ];
+          break;
+        }
+      }
+    }
 
     // For view settings. Add a spacer cell. Can't use colspan because of JS.
     if ($params->context == 'view') {
@@ -282,10 +298,10 @@ function field_group_field_ui_display_form_alter(&$form, FormStateInterface $for
         ],
       ];
       $table[$name]['#attributes']['class'][] = 'field-formatter-settings-editing';
-      $table[$name]['format']['type']['#attributes']['class'] = ['visually-hidden'];
+      $table[$name]['format']['type']['#wrapper_attributes']['class'] = ['visually-hidden'];
     }
     else {
-      // After saving, the settings are updated here aswell. First we create
+      // After saving, the settings are updated here as well. First we create
       // the element for the table cell.
       $table[$name]['settings_summary'] = ['#markup' => ''];
       if (!empty($group->format_settings)) {
@@ -489,7 +505,7 @@ function field_group_field_overview_submit(array $form, FormStateInterface $form
       $group->region = !in_array($form_values[$group_name]['region'], $layout_regions) ? $default_region : $form_values[$group_name]['region'];
 
       $old_format_type = $group->format_type;
-      $group->format_type = isset($form_values[$group_name]['format']['type']) ? $form_values[$group_name]['format']['type'] : 'visible';
+      $group->format_type = $form_values[$group_name]['format']['type'] ?? 'visible';
       if (isset($field_group_form_state[$group_name]->format_settings)) {
         $group->format_settings = $field_group_form_state[$group_name]->format_settings;
       }
@@ -604,7 +620,7 @@ function field_group_format_settings_summary($group_name, $group) {
     'group' => $group,
   ]);
 
- $summary = !empty($plugin) ? $plugin->settingsSummary() : [];
+  $summary = !empty($plugin) ? $plugin->settingsSummary() : [];
 
   return [
     '#markup' => '<div class="field-plugin-summary">' . implode('<br />', $summary) . '</div>',

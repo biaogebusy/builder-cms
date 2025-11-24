@@ -8,12 +8,14 @@ use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Utility\Utility;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests task integration of the content entity datasource.
  *
  * @group search_api
  */
+#[RunTestsInSeparateProcesses]
 class DatasourceTaskTest extends KernelTestBase {
 
   /**
@@ -78,7 +80,6 @@ class DatasourceTaskTest extends KernelTestBase {
     \Drupal::state()->set($this->testEntityTypeId . '.bundles', $bundles);
 
     $this->installSchema('search_api', ['search_api_item']);
-    $this->installSchema('system', ['sequences']);
     $this->installEntitySchema('entity_test_mulrev_changed');
     $this->installEntitySchema('search_api_task');
 
@@ -189,6 +190,8 @@ class DatasourceTaskTest extends KernelTestBase {
     ];
     $datasource->setConfiguration($configuration);
     $index->save();
+    // Make sure the datasource plugin was not reloaded.
+    $this->assertSame($datasource, $index->getDatasource($datasource_id));
 
     $this->runBatch();
 

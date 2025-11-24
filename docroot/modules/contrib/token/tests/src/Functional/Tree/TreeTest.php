@@ -94,7 +94,12 @@ class TreeTest extends TokenTestBase {
     // Request with show_restricted set to TRUE to show restricted tokens and
     // check for them.
     $this->drupalGet($this->getTokenTreeUrl(['token_types' => ['user'], 'show_restricted' => TRUE]));
-    $this->assertEquals('MISS', $this->getSession()->getResponseHeader('x-drupal-dynamic-cache'), 'Cache was not hit');
+    if (version_compare(\Drupal::VERSION, '11.1', '>=') || (version_compare(\Drupal::VERSION, '10.4', '>=') && version_compare(\Drupal::VERSION, '11.0', '<'))) {
+      $this->assertSession()->responseHeaderEquals('X-Drupal-Dynamic-Cache', 'UNCACHEABLE (poor cacheability)');
+    }
+    else {
+      $this->assertSession()->responseHeaderEquals('X-Drupal-Dynamic-Cache', 'MISS');
+    }
     $this->assertTokenInTree('[user:one-time-login-url]', 'user');
     $this->assertTokenInTree('[user:original:cancel-url]', 'user--original');
   }

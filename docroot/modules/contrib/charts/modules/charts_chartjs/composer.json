@@ -16,7 +16,8 @@
     "require": {
         "oomphinc/composer-installers-extender": "^2",
         "npm-asset/chart.js": "^4.4",
-        "npm-asset/chartjs-adapter-date-fns": "^3.0"
+        "npm-asset/chartjs-adapter-date-fns": "^3.0",
+        "npm-asset/chartjs-plugin-datalabels": "^2.0"
     },
     "extra": {
         "installer-types": [
@@ -28,6 +29,9 @@
             ],
             "web/libraries/chartjs-adapter-date-fns": [
                 "npm-asset/chartjs-adapter-date-fns"
+            ],
+            "web/libraries/chartjs-plugin-datalabels": [
+                "npm-asset/chartjs-plugin-datalabels"
             ]
         }
     }

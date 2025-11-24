@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\message_notify\Kernel;
 
+use Drupal\KernelTests\KernelTestBase;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\KernelTests\KernelTestBase;
 use Drupal\message\Entity\Message;
 use Drupal\message\Entity\MessageTemplate;
 use Drupal\message_notify\Exception\MessageNotifyException;
@@ -27,9 +27,9 @@ class MessageNotifyTest extends KernelTestBase {
   /**
    * The message notification service.
    *
-   * @var \Drupal\message_notify\MessageNotifier
+   * @var \Drupal\message_notify\MessageNotifyInterface
    */
-  protected $messageNotifier;
+  protected $messageNotify;
 
   /**
    * {@inheritdoc}
@@ -64,7 +64,7 @@ class MessageNotifyTest extends KernelTestBase {
 
     $this->messageTemplate = MessageTemplate::load('message_notify_test');
 
-    $this->messageNotifier = $this->container->get('message_notify.sender');
+    $this->messageNotify = $this->container->get('message_notify.sender');
   }
 
   /**
@@ -75,7 +75,7 @@ class MessageNotifyTest extends KernelTestBase {
   public function testDeliver() {
     $message = Message::create(['template' => $this->messageTemplate->id()]);
     $message->message_text_another = 'another field';
-    $this->messageNotifier->send($message, [], 'test');
+    $this->messageNotify->send($message, [], 'test');
 
     // The test notifier added the output to the message.
     $output = $message->output;
@@ -94,12 +94,12 @@ class MessageNotifyTest extends KernelTestBase {
     $account->save();
     $message = Message::create(['template' => $this->messageTemplate->id(), 'uid' => $account->id()]);
     $message->fail = FALSE;
-    $this->messageNotifier->send($message, [], 'test');
+    $this->messageNotify->send($message, [], 'test');
     $this->assertNotNull($message->id(), 'Message saved after successful delivery.');
 
     $message = Message::create(['template' => $this->messageTemplate->id(), 'uid' => $account->id()]);
     $message->fail = TRUE;
-    $this->messageNotifier->send($message, [], 'test');
+    $this->messageNotify->send($message, [], 'test');
     $this->assertNull($message->id(), 'Message not saved after unsuccessful delivery.');
 
     // Disable saving Message on delivery.
@@ -111,17 +111,17 @@ class MessageNotifyTest extends KernelTestBase {
     $message = Message::create(['template' => $this->messageTemplate->id(), 'uid' => $account->id()]);
     // @todo See above.
     $message->fail = FALSE;
-    $this->messageNotifier->send($message, $options, 'test');
+    $this->messageNotify->send($message, $options, 'test');
     $this->assertTrue($message->isNew(), 'Message not saved after successful delivery.');
 
     $message = Message::create(['template' => $this->messageTemplate->id(), 'uid' => $account->id()]);
     $message->fail = TRUE;
-    $this->messageNotifier->send($message, $options, 'test');
+    $this->messageNotify->send($message, $options, 'test');
     $this->assertTrue($message->isNew(), 'Message not saved after unsuccessful delivery.');
   }
 
   /**
-   * Test populating the rednered output to fields.
+   * Test populating the rendered output to fields.
    *
    * @dataProvider providerPostSendRenderedField
    */
@@ -134,7 +134,7 @@ class MessageNotifyTest extends KernelTestBase {
       $this->expectException(MessageNotifyException::class);
     }
 
-    $this->messageNotifier->send($message, $options, 'test');
+    $this->messageNotify->send($message, $options, 'test');
 
     if (!$exception) {
       $this->assertArrayHasKey('rendered fields', $options);
@@ -150,8 +150,9 @@ class MessageNotifyTest extends KernelTestBase {
    * Data provider for ::testPostSendRenderedField.
    *
    * @return array
+   *   The test cases.
    */
-  public function providerPostSendRenderedField():array {
+  public static function providerPostSendRenderedField():array {
     $cases = [];
 
     $cases['plain fields'] = [
@@ -198,7 +199,7 @@ class MessageNotifyTest extends KernelTestBase {
   }
 
   /**
-   * Helper function to attach rendred fields.
+   * Helper function to attach rendered fields.
    *
    * @see MessageNotifyTest::testPostSendRenderedField()
    */

@@ -1,8 +1,16 @@
 commerce.admin_commerce:
   path: '/admin/commerce'
   defaults:
-    _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
+    _controller: '\Drupal\commerce\Controller\DashboardController::dashboardPage'
     _title: 'Commerce'
+  requirements:
+    _permission: 'access commerce administration pages'
+
+commerce.modal:
+  path: '/admin/commerce/modal'
+  defaults:
+    _controller: '\Drupal\commerce\Controller\DashboardController::modal'
+    _title: 'Modal'
   requirements:
     _permission: 'access commerce administration pages'
 
@@ -20,5 +28,19 @@ commerce.store_configuration:
   defaults:
     _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
     _title: 'Store'
+  requirements:
+    _permission: 'access commerce administration pages'
+
+commerce.inbox_message.read:
+  path: '/admin/commerce/inbox-message/{message_id}/read'
+  defaults:
+    _controller: '\Drupal\commerce\Controller\DashboardController::readInboxMessage'
+  requirements:
+    _permission: 'access commerce administration pages'
+
+commerce.inbox_message.dismiss:
+  path: '/admin/commerce/inbox-message/{message_id}/dismiss'
+  defaults:
+    _controller: '\Drupal\commerce\Controller\DashboardController::dismissInboxMessage'
   requirements:
     _permission: 'access commerce administration pages'

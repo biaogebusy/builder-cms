@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\DependencyInjection\Compiler;
 
 use Drupal\Core\DependencyInjection\Compiler\AuthenticationProviderPass;
@@ -17,7 +19,7 @@ class AuthenticationProviderPassTest extends UnitTestCase {
   /**
    * @covers ::process
    */
-  public function testEncoders() {
+  public function testEncoders(): void {
     $container = new ContainerBuilder();
     $definition = new Definition(Serializer::class, [[], []]);
     $definition->setPublic(TRUE);

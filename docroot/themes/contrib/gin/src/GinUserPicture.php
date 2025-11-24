@@ -3,65 +3,31 @@
 namespace Drupal\gin;
 
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
-use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Security\TrustedCallbackInterface;
-use Drupal\Core\Session\AccountInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Url;
 
 /**
  * User picture build callback for the gin theme.
  */
-class GinUserPicture implements ContainerInjectionInterface, TrustedCallbackInterface {
-
-  /**
-   * The currently authenticated user.
-   *
-   * @var \Drupal\Core\Session\AccountInterface
-   */
-  protected $currentUser;
-
-  /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
-   * GinUserPicture constructor.
-   *
-   * @param \Drupal\Core\Session\AccountInterface $current_user
-   *   The current user.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
-   */
-  public function __construct(AccountInterface $current_user, EntityTypeManagerInterface $entity_type_manager) {
-    $this->currentUser = $current_user;
-    $this->entityTypeManager = $entity_type_manager;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('current_user'),
-      $container->get('entity_type.manager')
-    );
-  }
+class GinUserPicture implements TrustedCallbackInterface {
 
   /**
    * Lazy builder callback for the user picture.
    */
-  public function build(): array {
-
+  public static function build(): array {
     /** @var \Drupal\user\UserInterface $user */
-    $user = $this->entityTypeManager->getStorage('user')->load($this->currentUser->id());
+    $current_user = \Drupal::currentUser();
+    $user = \Drupal::entityTypeManager()->getStorage('user')->load($current_user->id());
+    $url = $user->toUrl();
+
+    // If the user is anonymous, we cannot link to the user profile.
+    if ($user->isAnonymous()) {
+      $url = Url::fromUri('route:<nolink>');
+    }
 
     $build = [
       '#type' => 'link',
-      '#url' => $user->toUrl(),
+      '#url' => $url,
       '#title' => [
         '#markup' => $user->getDisplayName(),
       ],
@@ -80,7 +46,7 @@ class GinUserPicture implements ContainerInjectionInterface, TrustedCallbackInte
     /** @var \Drupal\image\ImageStyleInterface $style */
     $style = NULL;
     try {
-      $style = $this->entityTypeManager->getStorage('image_style')->load('thumbnail');
+      $style = \Drupal::entityTypeManager()->getStorage('image_style')->load('thumbnail');
     }
     catch (PluginNotFoundException $e) {
       // The image style plugin does not exists. $style stays NULL and no user

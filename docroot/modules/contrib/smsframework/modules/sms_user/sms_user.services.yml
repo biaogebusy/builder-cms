@@ -1,12 +1,15 @@
 services:
+  _defaults:
+    autoconfigure: true
+    autowire: true
+
   sms_user.active_hours:
     class: Drupal\sms_user\ActiveHours
-    arguments: ['@config.factory']
+  Drupal\sms_user\ActiveHoursInterface: '@sms_user.active_hours'
+
   sms_user.account_registration:
     class: Drupal\sms_user\AccountRegistration
     arguments: ['@config.factory', '@token', '@sms.provider', '@sms.phone_number.verification']
-  sms_user.sms_events:
-    class: Drupal\sms_user\EventSubscriber\SmsEventSubscriber
-    arguments: ['@sms_user.account_registration']
-    tags:
-      - { name: event_subscriber }
+  Drupal\sms_user\AccountRegistrationInterface: '@sms_user.account_registration'
+
+  Drupal\sms_user\EventSubscriber\SmsEventSubscriber: ~

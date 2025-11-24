@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\flag\Functional;
 
 use Drupal\Tests\BrowserTestBase;
@@ -19,6 +21,9 @@ class FlagPermissionsTest extends BrowserTestBase {
    */
   protected $defaultTheme = 'stark';
 
+  /**
+   * {@inheritdoc}
+   */
   protected static $modules = ['flag', 'node', 'user'];
 
   /**

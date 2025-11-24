@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Render\Placeholder;
 
 use Drupal\Core\Render\Placeholder\ChainedPlaceholderStrategy;
 use Drupal\Tests\UnitTestCase;
+use Prophecy\Prophet;
 
 /**
  * @coversDefaultClass \Drupal\Core\Render\Placeholder\ChainedPlaceholderStrategy
@@ -17,7 +20,7 @@ class ChainedPlaceholderStrategyTest extends UnitTestCase {
    *
    * @dataProvider providerProcessPlaceholders
    */
-  public function testProcessPlaceholders($strategies, $placeholders, $result) {
+  public function testProcessPlaceholders($strategies, $placeholders, $result): void {
     $chained_placeholder_strategy = new ChainedPlaceholderStrategy();
 
     foreach ($strategies as $strategy) {
@@ -32,7 +35,8 @@ class ChainedPlaceholderStrategyTest extends UnitTestCase {
    *
    * @return array
    */
-  public function providerProcessPlaceholders() {
+  public static function providerProcessPlaceholders() {
+    $prophet = new Prophet();
     $data = [];
 
     // Empty placeholders.
@@ -43,7 +47,7 @@ class ChainedPlaceholderStrategyTest extends UnitTestCase {
       'remove-me' => ['#markup' => 'I-am-a-llama-that-will-be-removed-sad-face.'],
     ];
 
-    $prophecy = $this->prophesize('\Drupal\Core\Render\Placeholder\PlaceholderStrategyInterface');
+    $prophecy = $prophet->prophesize('\Drupal\Core\Render\Placeholder\PlaceholderStrategyInterface');
     $prophecy->processPlaceholders($placeholders)->willReturn([]);
     $dev_null_strategy = $prophecy->reveal();
 
@@ -54,7 +58,7 @@ class ChainedPlaceholderStrategyTest extends UnitTestCase {
       '67890' => ['#markup' => 'special-placeholder'],
     ];
 
-    $prophecy = $this->prophesize('\Drupal\Core\Render\Placeholder\PlaceholderStrategyInterface');
+    $prophecy = $prophet->prophesize('\Drupal\Core\Render\Placeholder\PlaceholderStrategyInterface');
     $prophecy->processPlaceholders($placeholders)->willReturn($placeholders);
     $single_flush_strategy = $prophecy->reveal();
 
@@ -68,18 +72,18 @@ class ChainedPlaceholderStrategyTest extends UnitTestCase {
       '12345' => ['#markup' => '<esi:include src="/fragment/12345" />'],
     ];
 
-    $prophecy = $this->prophesize('\Drupal\Core\Render\Placeholder\PlaceholderStrategyInterface');
+    $prophecy = $prophet->prophesize('\Drupal\Core\Render\Placeholder\PlaceholderStrategyInterface');
     $prophecy->processPlaceholders($placeholders)->willReturn($result);
     $esi_strategy = $prophecy->reveal();
 
     $data['fake esi strategy'] = [[$esi_strategy], $placeholders, $result];
 
     // ESI + SingleFlush strategy (ESI replaces all).
-    $prophecy = $this->prophesize('\Drupal\Core\Render\Placeholder\PlaceholderStrategyInterface');
+    $prophecy = $prophet->prophesize('\Drupal\Core\Render\Placeholder\PlaceholderStrategyInterface');
     $prophecy->processPlaceholders($placeholders)->willReturn($result);
     $esi_strategy = $prophecy->reveal();
 
-    $prophecy = $this->prophesize('\Drupal\Core\Render\Placeholder\PlaceholderStrategyInterface');
+    $prophecy = $prophet->prophesize('\Drupal\Core\Render\Placeholder\PlaceholderStrategyInterface');
     $prophecy->processPlaceholders($placeholders)->shouldNotBeCalled();
     $prophecy->processPlaceholders($result)->shouldNotBeCalled();
     $prophecy->processPlaceholders([])->shouldNotBeCalled();
@@ -105,11 +109,11 @@ class ChainedPlaceholderStrategyTest extends UnitTestCase {
 
     $result = $esi_result + $normal_result;
 
-    $prophecy = $this->prophesize('\Drupal\Core\Render\Placeholder\PlaceholderStrategyInterface');
+    $prophecy = $prophet->prophesize('\Drupal\Core\Render\Placeholder\PlaceholderStrategyInterface');
     $prophecy->processPlaceholders($placeholders)->willReturn($esi_result);
     $esi_strategy = $prophecy->reveal();
 
-    $prophecy = $this->prophesize('\Drupal\Core\Render\Placeholder\PlaceholderStrategyInterface');
+    $prophecy = $prophet->prophesize('\Drupal\Core\Render\Placeholder\PlaceholderStrategyInterface');
     $prophecy->processPlaceholders($normal_result)->willReturn($normal_result);
     $single_flush_strategy = $prophecy->reveal();
 
@@ -121,7 +125,7 @@ class ChainedPlaceholderStrategyTest extends UnitTestCase {
   /**
    * @covers ::processPlaceholders
    */
-  public function testProcessPlaceholdersNoStrategies() {
+  public function testProcessPlaceholdersNoStrategies(): void {
     // Placeholders but no strategies defined.
     $placeholders = [
       'assert-me' => ['#markup' => 'I-am-a-llama-that-will-lead-to-an-assertion-by-the-chained-placeholder-strategy.'],
@@ -136,7 +140,7 @@ class ChainedPlaceholderStrategyTest extends UnitTestCase {
   /**
    * @covers ::processPlaceholders
    */
-  public function testProcessPlaceholdersWithRoguePlaceholderStrategy() {
+  public function testProcessPlaceholdersWithRoguePlaceholderStrategy(): void {
     // Placeholders but no strategies defined.
     $placeholders = [
       'assert-me' => ['#markup' => 'llama'],

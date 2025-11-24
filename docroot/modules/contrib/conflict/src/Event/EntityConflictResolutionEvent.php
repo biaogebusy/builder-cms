@@ -18,11 +18,11 @@ class EntityConflictResolutionEvent extends EntityConflictDiscoveryEvent {
    * Constructs a conflict discovery event object.
    *
    * @param \Drupal\Core\Entity\EntityInterface $local
-   *   The local part of the comparision - for example the entity built of the
+   *   The local part of the comparison - for example the entity built of the
    *   user input on an entity form submission. This is basically the active
    *   entity object.
    * @param \Drupal\Core\Entity\EntityInterface $remote
-   *   The remote part of the comparision - for example the current version of
+   *   The remote part of the comparison - for example the current version of
    *   the entity from the storage.
    * @param \Drupal\Core\Entity\EntityInterface $base
    *   The initial entity version in concurrent editing or the lowest common
@@ -35,7 +35,7 @@ class EntityConflictResolutionEvent extends EntityConflictDiscoveryEvent {
    * @param \Symfony\Component\HttpFoundation\ParameterBag $context
    *   (optional) The context parameter bag.
    */
-  public function __construct(EntityInterface $local, EntityInterface $remote, EntityInterface $base, EntityInterface $result, array $conflicts, ParameterBag $context = NULL) {
+  public function __construct(EntityInterface $local, EntityInterface $remote, EntityInterface $base, EntityInterface $result, array $conflicts, ?ParameterBag $context = NULL) {
     parent::__construct($local, $remote, $base, $context);
     $this->conflicts = $conflicts;
     $this->resultEntity = $result;

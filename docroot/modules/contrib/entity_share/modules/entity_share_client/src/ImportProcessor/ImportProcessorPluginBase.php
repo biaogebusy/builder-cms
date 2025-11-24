@@ -24,11 +24,15 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   run. Available stages are defined by the STAGE_* constants in
  *   ImportProcessorInterface. This is, by default, used for supportsStage(),
  *   so if you don't provide a value here, your processor might not work as
- *   expected even though it implements the corresponding method.
+ *   expected even though it implements the corresponding method. If a plugin
+ *   runs in more than one stage, the same plugin instance is called for each
+ *   stage, unless the configuration is overridden. This allows plugin classes
+ *   to store data between stages.
  *
  * A complete plugin definition should be written as in this example:
  *
  * @code
+ *
  * @ImportProcessor(
  *   id = "my_processor",
  *   label = @Translation("My Processor"),
@@ -42,6 +46,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   },
  *   locked = false,
  * )
+ *
  * @endcode
  */
 abstract class ImportProcessorPluginBase extends PluginBase implements ImportProcessorInterface, ContainerFactoryPluginInterface {
@@ -152,8 +157,7 @@ abstract class ImportProcessorPluginBase extends PluginBase implements ImportPro
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The current state of the complete form.
    */
-  public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
-  }
+  public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {}
 
   /**
    * Form submission handler.
@@ -171,8 +175,7 @@ abstract class ImportProcessorPluginBase extends PluginBase implements ImportPro
   /**
    * {@inheritdoc}
    */
-  public function prepareEntityData(RuntimeImportContext $runtime_import_context, array &$entity_json_data) {
-  }
+  public function prepareEntityData(RuntimeImportContext $runtime_import_context, array &$entity_json_data) {}
 
   /**
    * {@inheritdoc}
@@ -184,19 +187,16 @@ abstract class ImportProcessorPluginBase extends PluginBase implements ImportPro
   /**
    * {@inheritdoc}
    */
-  public function prepareImportableEntityData(RuntimeImportContext $runtime_import_context, array &$entity_json_data) {
-  }
+  public function prepareImportableEntityData(RuntimeImportContext $runtime_import_context, array &$entity_json_data) {}
 
   /**
    * {@inheritdoc}
    */
-  public function processEntity(RuntimeImportContext $runtime_import_context, ContentEntityInterface $processed_entity, array $entity_json_data) {
-  }
+  public function processEntity(RuntimeImportContext $runtime_import_context, ContentEntityInterface $processed_entity, array $entity_json_data) {}
 
   /**
    * {@inheritdoc}
    */
-  public function postEntitySave(RuntimeImportContext $runtime_import_context, ContentEntityInterface $processed_entity) {
-  }
+  public function postEntitySave(RuntimeImportContext $runtime_import_context, ContentEntityInterface $processed_entity) {}
 
 }

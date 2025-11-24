@@ -1,96 +1,39 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\diff;
 
 use Drupal\Component\Diff\Diff;
-use Drupal\Component\Plugin\PluginManagerInterface;
 use Drupal\Component\Utility\Xss;
 use Drupal\content_moderation\ModerationInformationInterface;
-use Drupal\Core\Config\ConfigFactory;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\RevisionLogInterface;
+use Drupal\Core\Field\FieldTypePluginManagerInterface;
 
 /**
  * Entity comparison service that prepares a diff of a pair of entities.
  */
 class DiffEntityComparison {
 
-  /**
-   * Contains the configuration object factory.
-   *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface
-   */
-  protected $configFactory;
-
-  /**
-   * Wrapper object for simple configuration from diff.plugins.yml.
-   *
-   * @var \Drupal\Core\Config\ImmutableConfig
-   */
-  protected $pluginsConfig;
-
-  /**
-   * The diff formatter.
-   *
-   * @var \Drupal\Core\Diff\DiffFormatter
-   */
-  protected $diffFormatter;
-
-  /**
-   * A list of all the field types from the system and their definitions.
-   *
-   * @var array
-   */
-  protected $fieldTypeDefinitions;
-
-  /**
-   * The entity parser.
-   *
-   * @var \Drupal\diff\DiffEntityParser
-   */
-  protected $entityParser;
-
-  /**
-   * The field diff plugin manager service.
-   *
-   * @var \Drupal\diff\DiffBuilderManager
-   */
-  protected $diffBuilderManager;
-
-  /**
-   * The content moderation service, if available.
-   *
-   * @var \Drupal\content_moderation\ModerationInformationInterface
-   */
-  protected $moderationInformation;
+  protected ImmutableConfig $pluginsConfig;
+  protected array $fieldTypeDefinitions;
+  protected ?ModerationInformationInterface $moderationInformation = NULL;
 
   /**
    * Constructs a DiffEntityComparison object.
-   *
-   * @param \Drupal\Core\Config\ConfigFactory $config_factory
-   *   The configuration factory.
-   * @param \Drupal\diff\DiffFormatter $diff_formatter
-   *   The diff formatter service.
-   * @param \Drupal\Component\Plugin\PluginManagerInterface $plugin_manager
-   *   The plugin manager service.
-   * @param \Drupal\diff\DiffEntityParser $entity_parser
-   *   The entity parser.
-   * @param \Drupal\diff\DiffBuilderManager $diff_builder_manager
-   *   The diff builder manager.
    */
   public function __construct(
-    ConfigFactory $config_factory,
-    DiffFormatter $diff_formatter,
-    PluginManagerInterface $plugin_manager,
-    DiffEntityParser $entity_parser,
-    DiffBuilderManager $diff_builder_manager,
+    protected ConfigFactoryInterface $configFactory,
+    protected DiffFormatter $diffFormatter,
+    FieldTypePluginManagerInterface $plugin_manager,
+    protected DiffEntityParser $entityParser,
+    protected DiffBuilderManager $diffBuilderManager,
   ) {
-    $this->configFactory = $config_factory;
     $this->pluginsConfig = $this->configFactory->get('diff.plugins');
-    $this->diffFormatter = $diff_formatter;
     $this->fieldTypeDefinitions = $plugin_manager->getDefinitions();
-    $this->entityParser = $entity_parser;
-    $this->diffBuilderManager = $diff_builder_manager;
   }
 
   /**
@@ -104,14 +47,14 @@ class DiffEntityComparison {
    * @return array
    *   Items ready to be compared by the Diff component.
    */
-  public function compareRevisions(ContentEntityInterface $left_entity, ContentEntityInterface $right_entity) {
+  public function compareRevisions(ContentEntityInterface $left_entity, ContentEntityInterface $right_entity): array {
     $result = [];
 
     $left_values = $this->entityParser->parseEntity($left_entity);
     $right_values = $this->entityParser->parseEntity($right_entity);
 
     foreach ($left_values as $left_key => $values) {
-      [, $field_key] = explode(':', $left_key);
+      [, $field_key] = \explode(':', $left_key);
       // Get the compare settings for this field type.
       $compare_settings = $this->pluginsConfig->get('fields.' . $field_key);
       $result[$left_key] = [
@@ -135,7 +78,7 @@ class DiffEntityComparison {
 
     // Fields which exist only on the right entity.
     foreach ($right_values as $right_key => $values) {
-      [, $field_key] = explode(':', $right_key);
+      [, $field_key] = \explode(':', $right_key);
       $compare_settings = $this->pluginsConfig->get('fields.' . $field_key);
       $result[$right_key] = [
         '#name' => (isset($compare_settings['settings']['show_header']) && $compare_settings['settings']['show_header'] == 0) ? '' : $values['label'],
@@ -159,12 +102,12 @@ class DiffEntityComparison {
    * @return array
    *   Array resulted after combining the left and right values.
    */
-  protected function combineFields(array $left_values, array $right_values) {
+  protected function combineFields(array $left_values, array $right_values): array {
     $result = [
       '#left' => [],
       '#right' => [],
     ];
-    $max = max([count($left_values), count($right_values)]);
+    $max = \max([\count($left_values), \count($right_values)]);
     for ($delta = 0; $delta < $max; $delta++) {
       // EXPERIMENTAL: Transform thumbnail from ImageFieldBuilder.
       // @todo Make thumbnail / rich diff data pluggable.
@@ -173,25 +116,23 @@ class DiffEntityComparison {
         $value = $left_values[$delta];
         if (isset($value['#thumbnail'])) {
           $result['#left_thumbnail'][] = $value['#thumbnail'];
+          $value = $value['data'];
         }
-        else {
-          $result['#left'][] = is_array($value) ? implode("\n", $value) : $value;
-        }
+        $result['#left'][] = \is_array($value) ? \implode("\n", $value) : $value;
       }
       if (isset($right_values[$delta])) {
         $value = $right_values[$delta];
         if (isset($value['#thumbnail'])) {
           $result['#right_thumbnail'][] = $value['#thumbnail'];
+          $value = $value['data'];
         }
-        else {
-          $result['#right'][] = is_array($value) ? implode("\n", $value) : $value;
-        }
+        $result['#right'][] = \is_array($value) ? \implode("\n", $value) : $value;
       }
     }
 
     // If a field has multiple values combine them into one single string.
-    $result['#left'] = implode("\n", $result['#left']);
-    $result['#right'] = implode("\n", $result['#right']);
+    $result['#left'] = \implode("\n", $result['#left']);
+    $result['#right'] = \implode("\n", $result['#right']);
 
     return $result;
   }
@@ -214,7 +155,7 @@ class DiffEntityComparison {
    *   Array of rows usable with #type => 'table' returned by the core diff
    *   formatter when format a diff.
    */
-  public function getRows($a, $b, $show_header = FALSE, array &$line_stats = NULL) {
+  public function getRows($a, $b, bool $show_header = FALSE, ?array &$line_stats = NULL): array {
     if (!isset($line_stats)) {
       $line_stats = [
         'counter' => ['x' => 0, 'y' => 0],
@@ -235,23 +176,23 @@ class DiffEntityComparison {
    * @param array $diff
    *   Array of strings.
    */
-  public function processStateLine(array &$diff) {
+  public function processStateLine(array &$diff): void {
     $data = $diff['#data'];
     if (isset($data['#left']) && $data['#left'] != '') {
-      if (is_string($data['#left'])) {
-        $diff['#data']['#left'] = explode("\n", $data['#left']);
+      if (\is_string($data['#left'])) {
+        $diff['#data']['#left'] = \explode("\n", $data['#left']);
       }
-      $diff['#data']['#count_left'] = count($diff['#data']['#left']);
+      $diff['#data']['#count_left'] = \count($diff['#data']['#left']);
     }
     else {
       $diff['#data']['#count_left'] = 0;
       $diff['#data']['#left'] = [];
     }
     if (isset($data['#right']) && $data['#right'] != '') {
-      if (is_string($data['#right'])) {
-        $diff['#data']['#right'] = explode("\n", $data['#right']);
+      if (\is_string($data['#right'])) {
+        $diff['#data']['#right'] = \explode("\n", $data['#right']);
       }
-      $diff['#data']['#count_right'] = count($diff['#data']['#right']);
+      $diff['#data']['#count_right'] = \count($diff['#data']['#right']);
     }
     else {
       $diff['#data']['#count_right'] = 0;
@@ -270,7 +211,7 @@ class DiffEntityComparison {
    * @return string
    *   The revision log message.
    */
-  public function getRevisionDescription(ContentEntityInterface $revision, ContentEntityInterface $previous_revision = NULL) {
+  public function getRevisionDescription(ContentEntityInterface $revision, ?ContentEntityInterface $previous_revision = NULL): string {
     $revision_summary = '';
     // Check if the revision has a revision log message.
     if ($revision instanceof RevisionLogInterface) {
@@ -299,7 +240,7 @@ class DiffEntityComparison {
    * @return array
    *   Array of the revision fields with their value and label.
    */
-  protected function summary(ContentEntityInterface $revision) {
+  protected function summary(ContentEntityInterface $revision): array {
     $result = [];
     $entity_type_id = $revision->getEntityTypeId();
     // Loop through entity fields and transform every FieldItemList object
@@ -321,7 +262,7 @@ class DiffEntityComparison {
               $result[$key] = $build;
               $delta = $show_delta ? '<sub>' . ($entity_key + 1) . '</sub> ' : ' - ';
               $result[$key]['label'] = $field_items->getFieldDefinition()->getLabel() . $delta . $result[$key]['label'];
-            };
+            }
           }
         }
         else {
@@ -346,8 +287,8 @@ class DiffEntityComparison {
    * @return string|bool
    *   Returns the label of the moderation state, if available, otherwise FALSE.
    */
-  protected function getModerationState(ContentEntityInterface $entity) {
-    if ($this->moderationInformation && $this->moderationInformation->isModeratedEntity($entity)) {
+  protected function getModerationState(ContentEntityInterface $entity): string|bool {
+    if ($this->moderationInformation instanceof ModerationInformationInterface && $this->moderationInformation->isModeratedEntity($entity)) {
       if ($state = $entity->moderation_state->value) {
         $workflow = $this->moderationInformation->getWorkflowForEntity($entity);
         return $workflow->getTypePlugin()->getState($state)->label();
@@ -363,7 +304,7 @@ class DiffEntityComparison {
    * @param \Drupal\content_moderation\ModerationInformationInterface $moderation_information
    *   The moderation information service.
    */
-  public function setModerationInformation(ModerationInformationInterface $moderation_information) {
+  public function setModerationInformation(ModerationInformationInterface $moderation_information): void {
     $this->moderationInformation = $moderation_information;
   }
 

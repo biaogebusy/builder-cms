@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace DrupalCodeGenerator\Asset;
 
@@ -7,20 +9,10 @@ namespace DrupalCodeGenerator\Asset;
  */
 final class Symlink extends Asset {
 
-  public const ACTION_REPLACE = 0x01;
-  public const ACTION_SKIP = 0x04;
-
-  /**
-   * Action.
-   *
-   * An action to take if specified symlink already exists.
-   */
-  private int $action = self::ACTION_REPLACE;
-
   /**
    * Symlink target.
    */
-  private string $target;
+  private readonly string $target;
 
   /**
    * {@inheritdoc}
@@ -32,39 +24,17 @@ final class Symlink extends Asset {
   }
 
   /**
+   * Named constructor.
+   */
+  public static function create(string $path, string $target): self {
+    return new self($path, $target);
+  }
+
+  /**
    * Getter for symlink target.
-   *
-   * @return string
-   *   Asset action.
    */
   public function getTarget(): string {
     return $this->replaceTokens($this->target);
-  }
-
-  /**
-   * Getter for asset action.
-   *
-   * @return string|callable
-   *   Asset action.
-   */
-  public function getAction() {
-    return $this->action;
-  }
-
-  /**
-   * Sets the "replace" action.
-   */
-  public function replaceIfExists(): self {
-    $this->action = self::ACTION_REPLACE;
-    return $this;
-  }
-
-  /**
-   * Sets the "skip" action.
-   */
-  public function skipIfExists(): self {
-    $this->action = self::ACTION_SKIP;
-    return $this;
   }
 
 }

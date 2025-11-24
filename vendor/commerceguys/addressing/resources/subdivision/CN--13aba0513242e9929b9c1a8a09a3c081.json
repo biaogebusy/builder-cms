@@ -1,0 +1,20 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"NM",
+		"Alxa Meng"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Alxa Youqi": {
+			"local_name": "阿拉善右旗"
+		},
+		"Alxa Zuoqi": {
+			"local_name": "阿拉善左旗"
+		},
+		"Ejin Qi": {
+			"local_name": "额济纳旗"
+		}
+	}
+}

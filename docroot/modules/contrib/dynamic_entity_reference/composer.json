@@ -23,11 +23,10 @@
   "license": "GPL-2.0-or-later",
   "minimum-stability": "dev",
   "require": {
-    "php": ">=7.4",
-    "drupal/core": "^9.3"
+    "php": ">=8.1",
+    "drupal/core": "^10 || ^11"
   },
   "require-dev": {
-    "drupal/diff": "1.x-dev",
     "mglaman/phpstan-drupal": "^1.1",
     "phpstan/phpstan": "^1.1",
     "phpstan/phpstan-deprecation-rules": "^1.0"

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\redirect\Kernel;
 
 use Drupal\language\Entity\ConfigurableLanguage;
@@ -37,6 +39,7 @@ class RedirectAPITest extends KernelTestBase {
 
     $this->installEntitySchema('redirect');
     $this->installEntitySchema('user');
+    $this->installEntitySchema('path_alias');
     $this->installConfig(['redirect']);
 
     $language = ConfigurableLanguage::createFromLangcode('de');
@@ -52,6 +55,18 @@ class RedirectAPITest extends KernelTestBase {
     // Create a redirect and test if hash has been generated correctly.
     /** @var \Drupal\redirect\Entity\Redirect $redirect */
     $redirect = $this->storage->create();
+    // Test getters prior to any data being set.
+    $this->assertSame(0, $redirect->getStatusCode());
+    $this->assertIsInt($redirect->getCreated());
+    $this->assertSame([], $redirect->getSource());
+    $this->assertSame('', $redirect->getSourceUrl());
+    $this->assertSame('/', $redirect->getSourcePathWithQuery());
+    $this->assertSame([], $redirect->getRedirect());
+    $this->assertNull($redirect->getRedirectUrl());
+    $this->assertSame([], $redirect->getRedirectOptions());
+    $this->assertNull($redirect->getRedirectOption('foo'));
+    $this->assertNull($redirect->getHash());
+
     $redirect->setSource('some-url', ['key' => 'val']);
     $redirect->setRedirect('node');
 
@@ -74,6 +89,7 @@ class RedirectAPITest extends KernelTestBase {
     $this->assertEquals(Redirect::generateHash('another-url', ['key1' => 'val1'], 'de'), $redirect->getHash());
     // Create a few more redirects to test the select.
     for ($i = 0; $i < 5; $i++) {
+      /** @var \Drupal\redirect\Entity\Redirect $redirect */
       $redirect = $this->storage->create();
       $redirect->setSource($this->randomMachineName());
       $redirect->save();
@@ -99,6 +115,7 @@ class RedirectAPITest extends KernelTestBase {
     }
 
     // Test passthrough_querystring.
+    /** @var \Drupal\redirect\Entity\Redirect $redirect */
     $redirect = $this->storage->create();
     $redirect->setSource('a-different-url');
     $redirect->setRedirect('node');
@@ -127,6 +144,7 @@ class RedirectAPITest extends KernelTestBase {
     }
 
     // Add a redirect to an external URL.
+    /** @var \Drupal\redirect\Entity\Redirect $external_redirect */
     $external_redirect = $this->storage->create();
     $external_redirect->setSource('google');
     $external_redirect->setRedirect('https://google.com');
@@ -163,9 +181,50 @@ class RedirectAPITest extends KernelTestBase {
   }
 
   /**
+   * Test disabled redirect entity logic.
+   */
+  public function testDisabledRedirectEntity(): void {
+    /** @var \Drupal\redirect\RedirectRepository $repository */
+    $repository = \Drupal::service('redirect.repository');
+
+    /** @var \Drupal\redirect\Entity\Redirect $redirect */
+    $redirect = $this->storage->create();
+    $redirect->setSource('test-disabled-source');
+    $redirect->setRedirect('http://test-disabled-destination.com');
+    $redirect->setUnpublished();
+    $redirect->save();
+
+    // Test RedirectRepository::findMatchingRedirect().
+    $found_matching = $repository->findMatchingRedirect('test-disabled-source');
+    $this->assertEmpty($found_matching);
+
+    // Test RedirectRepository::findBySourcePath().
+    $found_source = $repository->findBySourcePath('test-disabled-source');
+    $this->assertEmpty($found_source);
+
+    // Test RedirectRepository::findByDestinationUri().
+    $found_destination = $repository->findByDestinationUri(['http://test-disabled-destination.com']);
+    $this->assertEmpty($found_destination);
+
+    // Enable the redirect and check that it can be found by all API methods.
+    $redirect->setPublished();
+    $redirect->save();
+
+    $found_matching = $repository->findMatchingRedirect('test-disabled-source');
+    $this->assertEquals('/test-disabled-source', $found_matching->getSourceUrl());
+
+    $found_source = array_values($repository->findBySourcePath('test-disabled-source'));
+    $this->assertEquals('/test-disabled-source', $found_source[0]->getSourceUrl());
+
+    $found_destination = array_values($repository->findByDestinationUri(['http://test-disabled-destination.com']));
+    $this->assertEquals('http://test-disabled-destination.com', $found_destination[0]->getRedirectUrl()->toString());
+  }
+
+  /**
    * Test slash is removed from source path in findMatchingRedirect.
    */
   public function testDuplicateRedirectEntry() {
+    /** @var \Drupal\redirect\Entity\Redirect $redirect */
     $redirect = $this->storage->create();
     // The trailing slash should be removed on pre-save.
     $redirect->setSource('/foo/foo/', []);
@@ -191,7 +250,7 @@ class RedirectAPITest extends KernelTestBase {
         'callback' => 'ksort',
       ],
     ];
-    foreach ($test_cases as $index => $test_case) {
+    foreach ($test_cases as $test_case) {
       $output = $test_case['input'];
       redirect_sort_recursive($output, $test_case['callback']);
       $this->assertSame($test_case['expected'], $output);
@@ -236,7 +295,7 @@ class RedirectAPITest extends KernelTestBase {
       $repository->findMatchingRedirect('third-path');
       $this->fail('Failed to detect a redirect loop.');
     }
-    catch (RedirectLoopException $e) {
+    catch (RedirectLoopException) {
     }
   }
 
@@ -267,29 +326,13 @@ class RedirectAPITest extends KernelTestBase {
   }
 
   /**
-   * Test redirect_parse_url().
-   */
-  public function testParseURL() {
-    //$test_cases = array(
-    //  array(
-    //    'input' => array('b' => 'aa', 'c' => array('c2' => 'aa', 'c1' => 'aa'), 'a' => 'aa'),
-    //    'expected' => array('a' => 'aa', 'b' => 'aa', 'c' => array('c1' => 'aa', 'c2' => 'aa')),
-    //  ),
-    //);
-    //foreach ($test_cases as $index => $test_case) {
-    //  $output = redirect_parse_url($test_case['input']);
-    //  $this->assertIdentical($output, $test_case['expected']);
-    //}
-  }
-
-  /**
    * Test multilingual redirects.
    */
-  public function testMultilanguageCases() {
+  public function testMultilingualCases() {
     // Add a redirect for english.
     /** @var \Drupal\redirect\Entity\Redirect $en_redirect */
     $en_redirect = $this->storage->create();
-    $en_redirect->setSource('langpath');
+    $en_redirect->setSource('lang-path');
     $en_redirect->setRedirect('/about');
     $en_redirect->setLanguage('en');
     $en_redirect->save();
@@ -297,7 +340,7 @@ class RedirectAPITest extends KernelTestBase {
     // Add a redirect for germany.
     /** @var \Drupal\redirect\Entity\Redirect $en_redirect */
     $en_redirect = $this->storage->create();
-    $en_redirect->setSource('langpath');
+    $en_redirect->setSource('lang-path');
     $en_redirect->setRedirect('node');
     $en_redirect->setLanguage('de');
     $en_redirect->save();
@@ -306,10 +349,10 @@ class RedirectAPITest extends KernelTestBase {
     /** @var \Drupal\redirect\RedirectRepository $repository */
     $repository = \Drupal::service('redirect.repository');
 
-    $found = $repository->findBySourcePath('langpath');
+    $found = $repository->findBySourcePath('lang-path');
     if (!empty($found)) {
       $this->assertEquals($found[1]->getRedirectUrl()->toString(), '/about', 'Multilingual redirect resolved properly.');
-      $this->assertEquals($found[1]->get('language')[0]->value, 'en', 'Multilingual redirect resolved properly.');
+      $this->assertEquals($found[1]->get('language')->value, 'en', 'Multilingual redirect resolved properly.');
     }
     else {
       $this->fail('Failed to resolve the multilingual redirect.');
@@ -319,14 +362,59 @@ class RedirectAPITest extends KernelTestBase {
     \Drupal::configFactory()->getEditable('system.site')->set('default_langcode', 'de')->save();
     /** @var \Drupal\redirect\RedirectRepository $repository */
     $repository = \Drupal::service('redirect.repository');
-    $found = $repository->findBySourcePath('langpath');
+    $found = $repository->findBySourcePath('lang-path');
     if (!empty($found)) {
       $this->assertEquals($found[2]->getRedirectUrl()->toString(), '/node', 'Multilingual redirect resolved properly.');
-      $this->assertEquals($found[2]->get('language')[0]->value, 'de', 'Multilingual redirect resolved properly.');
+      $this->assertEquals($found[2]->get('language')->value, 'de', 'Multilingual redirect resolved properly.');
     }
     else {
       $this->fail('Failed to resolve the multilingual redirect.');
     }
+  }
+
+  /**
+   * Tests \Drupal\redirect\Plugin\Validation\Constraint\UniqueHashValidator.
+   */
+  public function testDuplicateRedirectHashValidation() {
+    /** @var \Drupal\redirect\Entity\Redirect $redirect */
+    $redirect = $this->storage->create();
+    $redirect->setSource('lang-path');
+    $redirect->setRedirect('/about');
+    $this->assertCount(0, $redirect->validate());
+    $redirect->save();
+
+    /** @var \Drupal\redirect\Entity\Redirect $redirect2 */
+    $redirect2 = $this->storage->create();
+    $redirect2->setSource('lang-path');
+    $redirect2->setRedirect('/about');
+    $violations = $redirect2->validate();
+    $this->assertCount(1, $violations);
+    $this->assertSame('The source path <em class="placeholder">lang-path</em> is already being redirected. Do you want to <a href="/admin/config/search/redirect/edit/1">edit the existing redirect</a>?', (string) $violations[0]->getMessage());
+
+    $redirect2->setSource('lang-path?foo=bar');
+    $this->assertCount(0, $redirect2->validate());
+    $redirect2->save();
+
+    /** @var \Drupal\redirect\Entity\Redirect $redirect3 */
+    $redirect3 = $this->storage->create();
+    $redirect3->setSource('lang-path?foo=bar');
+    $redirect3->setRedirect('/about');
+    $violations = $redirect3->validate();
+    $this->assertCount(1, $violations);
+    $this->assertSame('The source path <em class="placeholder">lang-path?foo=bar</em> is already being redirected. Do you want to <a href="/admin/config/search/redirect/edit/2">edit the existing redirect</a>?', (string) $violations[0]->getMessage());
+
+    $redirect3->setLanguage('en');
+    $this->assertCount(0, $redirect3->validate());
+    $redirect3->save();
+
+    /** @var \Drupal\redirect\Entity\Redirect $redirect4 */
+    $redirect4 = $this->storage->create();
+    $redirect4->setSource('lang-path?foo=bar');
+    $redirect4->setRedirect('/about');
+    $redirect4->setLanguage('en');
+    $violations = $redirect4->validate();
+    $this->assertCount(1, $violations);
+    $this->assertSame('The source path <em class="placeholder">lang-path?foo=bar</em> is already being redirected. Do you want to <a href="/admin/config/search/redirect/edit/3">edit the existing redirect</a>?', (string) $violations[0]->getMessage());
   }
 
 }

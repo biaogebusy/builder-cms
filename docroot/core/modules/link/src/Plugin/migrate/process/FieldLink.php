@@ -2,6 +2,7 @@
 
 namespace Drupal\link\Plugin\migrate\process;
 
+use Drupal\migrate\Attribute\MigrateProcess;
 use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\ProcessPluginBase;
@@ -32,11 +33,8 @@ use Drupal\migrate\Row;
  *     uri_scheme: 'https://'
  *     source: field_link
  * @endcode
- *
- * @MigrateProcessPlugin(
- *   id = "field_link"
- * )
  */
+#[MigrateProcess('field_link')]
 class FieldLink extends ProcessPluginBase {
 
   /**
@@ -62,7 +60,7 @@ class FieldLink extends ProcessPluginBase {
     // If the path starts with 2 slashes then it is always considered an
     // external URL without an explicit protocol part.
     // @todo Remove this when https://www.drupal.org/node/2744729 lands.
-    if (strpos($uri, '//') === 0) {
+    if (str_starts_with($uri, '//')) {
       return $this->configuration['uri_scheme'] . ltrim($uri, '/');
     }
 
@@ -77,7 +75,7 @@ class FieldLink extends ProcessPluginBase {
     }
 
     // Remove the <front> component of the URL.
-    if (strpos($uri, '<front>') === 0) {
+    if (str_starts_with($uri, '<front>')) {
       $uri = substr($uri, strlen('<front>'));
     }
     else {

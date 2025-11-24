@@ -14,27 +14,22 @@ class StringNormalizer extends NormalizerBase implements DenormalizerInterface {
   /**
    * {@inheritdoc}
    */
-  protected $supportedInterfaceOrClass = StringData::class;
-
-  /**
-   * {@inheritdoc}
-   */
-  public function normalize($object, $format = NULL, array $context = []) {
+  public function normalize($object, $format = NULL, array $context = []): array|string|int|float|bool|\ArrayObject|NULL {
     return str_replace('super', 'NOT', $object->getValue());
   }
 
   /**
    * {@inheritdoc}
    */
-  public function denormalize($data, $class, $format = NULL, array $context = []) {
+  public function denormalize($data, $class, $format = NULL, array $context = []): mixed {
     return str_replace('NOT', 'super', $data);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function hasCacheableSupportsMethod(): bool {
-    return TRUE;
+  public function getSupportedTypes(?string $format): array {
+    return [StringData::class => TRUE];
   }
 
 }

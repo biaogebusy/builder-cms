@@ -3,6 +3,7 @@
 namespace Drupal\Tests\commerce_order\Kernel;
 
 use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\Session\AnonymousUserSession;
 use Drupal\commerce_order\Entity\Order;
 use Drupal\commerce_order\Entity\OrderType;
 use Drupal\commerce_order\OrderRefresh;
@@ -10,7 +11,6 @@ use Drupal\commerce_price\Price;
 use Drupal\commerce_product\Entity\Product;
 use Drupal\commerce_product\Entity\ProductVariation;
 use Drupal\commerce_product\Entity\ProductVariationType;
-use Drupal\Core\Session\AnonymousUserSession;
 use Drupal\profile\Entity\Profile;
 
 /**
@@ -145,8 +145,13 @@ class OrderRefreshTest extends OrderKernelTestBase {
     // Order belongs to the current user.
     $this->container->get('current_user')->setAccount($this->user);
     $this->assertNotEmpty($order_refresh->shouldRefresh($this->order));
+    // Order belongs to the anonymous user.
+    $this->container->get('current_user')->setAccount(new AnonymousUserSession());
+    $this->order->setCustomerId(0);
+    $this->assertEmpty($order_refresh->shouldRefresh($this->order));
 
     // Order should be refreshed for any user.
+    $this->order->setCustomerId($this->user->id());
     $this->container->get('current_user')->setAccount(new AnonymousUserSession());
     $order_type = OrderType::load($this->order->bundle());
     $order_type->setRefreshMode(OrderType::REFRESH_ALWAYS)->save();
@@ -222,6 +227,13 @@ class OrderRefreshTest extends OrderKernelTestBase {
 
     $this->assertEquals($this->variation2->getTitle(), $order_item->label());
     $this->assertEquals($unit_price, $order_item->getUnitPrice());
+
+    $order_item->setTitle('Overwritten title', TRUE);
+    $order_refresh->refresh($this->order);
+    /** @var \Drupal\commerce_order\Entity\OrderItemInterface $order_item */
+    $order_item = $this->reloadEntity($order_item);
+
+    $this->assertEquals('Overwritten title', $order_item->label());
   }
 
   /**

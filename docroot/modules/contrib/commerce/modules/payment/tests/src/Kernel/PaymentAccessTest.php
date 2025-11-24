@@ -2,12 +2,12 @@
 
 namespace Drupal\Tests\commerce_payment\Kernel;
 
+use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 use Drupal\commerce_order\Entity\Order;
 use Drupal\commerce_order\Entity\OrderItem;
-use Drupal\commerce_payment\Entity\PaymentGateway;
 use Drupal\commerce_payment\Entity\Payment;
+use Drupal\commerce_payment\Entity\PaymentGateway;
 use Drupal\commerce_price\Price;
-use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 
 /**
  * Tests the payment access control.
@@ -69,7 +69,7 @@ class PaymentAccessTest extends OrderKernelTestBase {
 
     // Create uid: 1 here so that it's skipped in test cases.
     $admin_user = $this->createUser();
-    $regular_user = $this->createUser(['uid' => 2]);
+    $regular_user = $this->createUser([], NULL, FALSE, ['uid' => 2]);
     \Drupal::currentUser()->setAccount($regular_user);
   }
 
@@ -103,14 +103,14 @@ class PaymentAccessTest extends OrderKernelTestBase {
       'administer commerce_payment',
     ];
     foreach ($insufficient_permissions as $insufficient_permission) {
-      $account = $this->createUser([], [$insufficient_permission]);
+      $account = $this->createUser([$insufficient_permission]);
       $this->assertFalse($payment->access('view', $account));
       $this->assertFalse($payment->access('delete', $account));
       $this->assertFalse($payment->access('capture', $account));
       $this->assertFalse($payment->access('refund', $account));
     }
 
-    $account = $this->createUser([], [
+    $account = $this->createUser([
       'administer commerce_payment',
       'view default commerce_order',
     ]);
@@ -120,7 +120,7 @@ class PaymentAccessTest extends OrderKernelTestBase {
     $this->assertTrue($payment->access('refund', $account));
 
     // Payments can be deleted if they were made in test mode.
-    $account = $this->createUser([], [
+    $account = $this->createUser([
       'administer commerce_payment',
       'view default commerce_order',
     ]);
@@ -131,7 +131,7 @@ class PaymentAccessTest extends OrderKernelTestBase {
     // gateway is missing.
     $payment_gateway->delete();
     $payment = $this->reloadEntity($payment);
-    $account = $this->createUser([], [
+    $account = $this->createUser([
       'administer commerce_payment',
       'view default commerce_order',
     ]);
@@ -147,10 +147,10 @@ class PaymentAccessTest extends OrderKernelTestBase {
   public function testCreateAccess() {
     $access_control_handler = \Drupal::entityTypeManager()->getAccessControlHandler('commerce_payment');
 
-    $account = $this->createUser([], ['access content']);
+    $account = $this->createUser(['access content']);
     $this->assertFalse($access_control_handler->createAccess('payment_default', $account));
 
-    $account = $this->createUser([], ['administer commerce_payment']);
+    $account = $this->createUser(['administer commerce_payment']);
     $this->assertTrue($access_control_handler->createAccess('payment_default', $account));
   }
 

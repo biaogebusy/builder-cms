@@ -4,12 +4,14 @@ namespace Drupal\Tests\search_api\Functional;
 
 use Drupal\search_api_test\MethodOverrides;
 use Drupal\search_api_test\PluginTestTrait;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Contains integration tests for config entities with overrides.
  *
  * @group search_api
  */
+#[RunTestsInSeparateProcesses]
 class ConfigOverrideIntegrationTest extends SearchApiBrowserTestBase {
 
   use PluginTestTrait;
@@ -103,7 +105,7 @@ class ConfigOverrideIntegrationTest extends SearchApiBrowserTestBase {
     ];
     $this->submitForm($edit, 'Save');
     $this->assertSession()
-      ->pageTextContains('Please configure the used datasources.');
+      ->pageTextContains('Configure the used datasources.');
     $this->submitForm([], 'Save');
     $this->checkForMetaRefresh();
     $this->assertSession()

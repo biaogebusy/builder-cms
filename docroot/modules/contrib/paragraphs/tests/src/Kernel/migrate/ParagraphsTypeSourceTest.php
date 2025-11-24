@@ -22,9 +22,9 @@ class ParagraphsTypeSourceTest extends MigrateSqlSourceTestBase {
   /**
    * {@inheritdoc}
    */
-  public function providerSource() {
-    $data = $this->getSourceData();
-    $data[0]['expected_results'] = [
+  public static function providerSource() {
+    $data = static::getSourceData();
+    $data[0]['expected_data'] = [
       [
         'bundle' => 'paragraphs_field',
         'name' => 'Paragraphs Field',

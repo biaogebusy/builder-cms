@@ -48,7 +48,7 @@ class EntityEmbedDialogTest extends EntityEmbedTestBase {
     // Add an empty configuration for the plain_text editor configuration.
     $editor = Editor::create([
       'format' => 'plain_text',
-      'editor' => 'ckeditor',
+      'editor' => 'ckeditor5',
     ]);
     $editor->save();
     $this->drupalGet('/entity-embed/dialog/plain_text/node');
@@ -82,7 +82,7 @@ class EntityEmbedDialogTest extends EntityEmbedTestBase {
     // Add an empty configuration for the plain_text editor configuration.
     $editor = Editor::create([
       'format' => 'plain_text',
-      'editor' => 'ckeditor',
+      'editor' => 'ckeditor5',
     ]);
     $editor->save();
     $this->drupalGet('/entity-embed/dialog/plain_text/node');

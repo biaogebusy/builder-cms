@@ -19,7 +19,7 @@ class MigrateFieldGroupTest extends MigrateDrupal7TestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = [
+  protected static $modules = [
     'field_group',
     'field_group_migrate',
     'comment',

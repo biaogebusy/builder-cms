@@ -7,6 +7,7 @@ use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Menu\MenuLinkManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Url;
+use Drupal\migrate\Attribute\MigrateProcess;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\MigrateLookupInterface;
 use Drupal\migrate\MigrateSkipRowException;
@@ -14,6 +15,8 @@ use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\ProcessPluginBase;
 use Drupal\migrate\Row;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+
+// cspell:ignore plid
 
 /**
  * Determines the parent of a menu link.
@@ -33,7 +36,12 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * - parent_link_path: The Drupal path or external URL the parent of this menu
  *   link points to.
  *
- * Example:
+ * There is one configuration option:
+ * - lookup_migrations: (optional) An array of migration IDs. If missing or
+ *   null, then the current migration is used to look up parent_id. If provided,
+ *   then use just the listed migrations for that look-up.
+ *
+ * Examples:
  *
  * @code
  * process:
@@ -49,13 +57,39 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * combination of a menu name (e.g., 'management') and a parent menu link path
  * (e.g., 'admin/structure').
  *
+ * @code
+ * process:
+ *   parent:
+ *     plugin: menu_link_parent
+ *     source:
+ *       - plid
+ *       - menu_name
+ *       - parent_link_path
+ *     lookup_migrations: []
+ * @endcode
+ * In this example, skip the migration lookup and find the parent item using
+ * just the menu name and the link path.
+ *
+ * @code
+ * process:
+ *   parent:
+ *     plugin: menu_link_parent
+ *     source:
+ *       - plid
+ *       - menu_name
+ *       - parent_link_path
+ *     lookup_migrations:
+ *       - this_migration
+ *       - another_migration
+ * @endcode
+ * In this example, use this_migration and another_migration (in that order) to
+ * look up plid. When lookup_migrations is provided, the current migration is
+ * not added by default. If you want to use it, then include it in the list.
+ *
  * @see https://www.drupal.org/docs/8/api/menu-api
  * @see \Drupal\migrate\Plugin\MigrateProcessInterface
- *
- * @MigrateProcessPlugin(
- *   id = "menu_link_parent"
- * )
  */
+#[MigrateProcess('menu_link_parent')]
 class MenuLinkParent extends ProcessPluginBase implements ContainerFactoryPluginInterface {
 
   /**
@@ -87,12 +121,19 @@ class MenuLinkParent extends ProcessPluginBase implements ContainerFactoryPlugin
   protected $menuLinkStorage;
 
   /**
+   * The migration IDs to use for looking up the parent link.
+   *
+   * @var string[]
+   */
+  protected array $lookupMigrations;
+
+  /**
    * Constructs a MenuLinkParent object.
    *
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\migrate\MigrateLookupInterface $migrate_lookup
@@ -111,12 +152,13 @@ class MenuLinkParent extends ProcessPluginBase implements ContainerFactoryPlugin
     $this->migrateLookup = $migrate_lookup;
     $this->menuLinkManager = $menu_link_manager;
     $this->menuLinkStorage = $menu_link_storage;
+    $this->lookupMigrations = $this->configuration['lookup_migrations'] ?? [$this->migration->id()];
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration = NULL) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, ?MigrationInterface $migration = NULL) {
     return new static(
       $configuration,
       $plugin_id,
@@ -141,9 +183,12 @@ class MenuLinkParent extends ProcessPluginBase implements ContainerFactoryPlugin
       return '';
     }
 
-    $lookup_result = $this->migrateLookup->lookup($this->migration->id(), [$parent_id]);
-    if ($lookup_result) {
-      $already_migrated_id = $lookup_result[0]['id'];
+    foreach ($this->lookupMigrations as $migration_id) {
+      $lookup_result = $this->migrateLookup->lookup($migration_id, [$parent_id]);
+      if ($lookup_result) {
+        $already_migrated_id = $lookup_result[0]['id'];
+        break;
+      }
     }
 
     if (!empty($already_migrated_id) && ($link = $this->menuLinkStorage->load($already_migrated_id))) {

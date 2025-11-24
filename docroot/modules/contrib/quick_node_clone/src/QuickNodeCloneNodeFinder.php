@@ -3,8 +3,7 @@
 namespace Drupal\quick_node_clone;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\path_alias\AliasManager;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\path_alias\AliasManagerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
@@ -22,7 +21,7 @@ class QuickNodeCloneNodeFinder {
   /**
    * Path Alias Manager.
    *
-   * @var \Drupal\Core\Path\AliasManager
+   * @var \Drupal\path_alias\AliasManagerInterface
    */
   protected $aliasManager;
   /**
@@ -33,27 +32,16 @@ class QuickNodeCloneNodeFinder {
   protected $entityTypeManager;
 
   /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('request_stack'),
-      $container->get('path_alias.manager'),
-      $container->get('entity_type.manager')
-    );
-  }
-
-  /**
    * QuickNodeCloneNodeFinder constructor.
    *
    * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
    *   Request stack.
-   * @param \Drupal\Core\Path\AliasManager $aliasManager
-   *   Alias manager.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
+   * @param \Drupal\path_alias\AliasManagerInterface $aliasManager
+   *   Alias manager.
    */
-  public function __construct(RequestStack $requestStack, AliasManager $aliasManager, EntityTypeManagerInterface $entityTypeManager) {
+  public function __construct(RequestStack $requestStack, EntityTypeManagerInterface $entityTypeManager, ?AliasManagerInterface $aliasManager) {
     $this->requestStack = $requestStack;
     $this->aliasManager = $aliasManager;
     $this->entityTypeManager = $entityTypeManager;
@@ -97,18 +85,20 @@ class QuickNodeCloneNodeFinder {
     $i = 0;
     foreach ($parts as $part) {
       if (!empty($part)) {
-        $i++;
+        $i += 1;
       }
       if ($part == $type) {
         break;
       }
     }
-    $i++;
-    // Get entity path if alias.
-    $entity_path = $this->aliasManager->getPathByAlias($path);
+    $i += 1;
+    if ($this->aliasManager) {
+      // Get entity path if alias.
+      $path = $this->aliasManager->getPathByAlias($path);
+    }
 
     // Look! We're using arg() in Drupal 8 because we have to.
-    $args = explode('/', $entity_path);
+    $args = explode('/', $path);
 
     if (isset($args[$i])) {
       $entity = $this->entityTypeManager->getStorage($type)->load($args[$i]);

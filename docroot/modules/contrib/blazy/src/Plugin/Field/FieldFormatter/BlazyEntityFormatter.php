@@ -2,9 +2,9 @@
 
 namespace Drupal\blazy\Plugin\Field\FieldFormatter;
 
+use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\blazy\BlazyDefault;
 use Drupal\blazy\Field\BlazyEntityVanillaBase;
-use Drupal\Core\Field\FieldDefinitionInterface;
 
 /**
  * Provides blazy grid for entity references.

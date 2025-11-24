@@ -2,14 +2,14 @@
 
 namespace Drupal\commerce_product\Form;
 
+use Drupal\Core\Config\TypedConfigManagerInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\commerce\InlineFormManager;
 use Drupal\config_translation\ConfigMapperManagerInterface;
 use Drupal\config_translation\Form\ConfigTranslationEditForm;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\language\ConfigurableLanguageManagerInterface;
-use Drupal\Core\Config\TypedConfigManagerInterface;
-use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Routing\RouteMatchInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -56,7 +56,7 @@ class ProductAttributeTranslationEditForm extends ConfigTranslationEditForm {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, RouteMatchInterface $route_match = NULL, $plugin_id = NULL, $langcode = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?RouteMatchInterface $route_match = NULL, $plugin_id = NULL, $langcode = NULL) {
     $form = parent::buildForm($form, $form_state, $route_match, $plugin_id, $langcode);
     $form = $this->buildValuesForm($form, $form_state, $this->mapper->getEntity());
 

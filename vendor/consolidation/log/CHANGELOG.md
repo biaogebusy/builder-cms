@@ -1,5 +1,18 @@
 # Change Log
 
+### 3.1.1: 2025-11-14:
+
+- PHP 8.5 support
+
+### 3.1.0: 2024-04-04:
+
+- Symfony 7 support
+
+### 3.0.0: 2022-04-05:
+
+- psr/log ^3
+- Drop support for PHP versions prior to 8.0
+
 ### 2.1.1: 2022-02-23:
 
 - psr/log ^2

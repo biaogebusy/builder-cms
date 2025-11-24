@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\menu_link_content\Kernel\Migrate\d7;
 
 use Drupal\Tests\menu_link_content\Kernel\Migrate\MigrateMenuLinkTestTrait;
@@ -44,7 +46,7 @@ class MigrateMenuLinkTranslationTest extends MigrateDrupal7TestBase {
   /**
    * Tests migration of menu link translations.
    */
-  public function testMenuLinkTranslation() {
+  public function testMenuLinkTranslation(): void {
     $this->assertEntity(467, 'fr', 'fr - Google', 'menu-test-menu', 'fr - Google description', TRUE, FALSE, ['attributes' => ['title' => 'Google']], 'http://google.com', 0);
   }
 

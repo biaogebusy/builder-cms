@@ -31,7 +31,7 @@ abstract class SkinPluginBase extends PluginBase implements SkinPluginInterface 
     ContainerInterface $container,
     array $configuration,
     $plugin_id,
-    $plugin_definition
+    $plugin_definition,
   ) {
     $instance = new static($configuration, $plugin_id, $plugin_definition);
     // @todo at 3.x: $instance->manager = $container->get('blazy');

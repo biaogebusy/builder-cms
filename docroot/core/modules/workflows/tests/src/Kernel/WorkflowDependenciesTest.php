@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\workflows\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
@@ -27,9 +29,13 @@ class WorkflowDependenciesTest extends KernelTestBase {
   /**
    * Tests \Drupal\workflows\Entity\Workflow::onDependencyRemoval().
    */
-  public function testOnDependencyRemoval() {
+  public function testOnDependencyRemoval(): void {
     // Create a workflow that has a dependency on a third party setting.
-    $workflow = Workflow::create(['id' => 'test3', 'type' => 'workflow_type_complex_test']);
+    $workflow = Workflow::create([
+      'id' => 'test3',
+      'label' => 'Test workflow',
+      'type' => 'workflow_type_complex_test',
+    ]);
     $workflow->setThirdPartySetting('workflow_third_party_settings_test', 'key', 'value');
     $workflow->save();
     $this->assertSame(['workflow_third_party_settings_test', 'workflow_type_test'], $workflow->getDependencies()['module']);

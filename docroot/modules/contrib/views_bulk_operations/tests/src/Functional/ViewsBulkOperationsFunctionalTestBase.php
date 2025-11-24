@@ -3,26 +3,32 @@
 namespace Drupal\Tests\views_bulk_operations\Functional;
 
 use Drupal\Tests\BrowserTestBase;
-use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Base class for VBO browser tests.
  */
 abstract class ViewsBulkOperationsFunctionalTestBase extends BrowserTestBase {
 
-  const TEST_NODE_COUNT = 15;
+  private const TEST_NODE_COUNT = 15;
 
   /**
    * {@inheritdoc}
    */
-  protected $defaultTheme = 'stable';
+  protected $defaultTheme = 'stable9';
+
+  /**
+   * Array of node objects used for testing.
+   *
+   * @var \Drupal\node\NodeInterface[]
+   */
+  protected array $testNodes = [];
 
   /**
    * Modules to install.
    *
    * @var array
    */
-  public static $modules = [
+  protected static $modules = [
     'node',
     'views',
     'views_bulk_operations',
@@ -32,7 +38,7 @@ abstract class ViewsBulkOperationsFunctionalTestBase extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Create some nodes for testing.
@@ -40,7 +46,7 @@ abstract class ViewsBulkOperationsFunctionalTestBase extends BrowserTestBase {
 
     $this->testNodes = [];
     $time = $this->container->get('datetime.time')->getRequestTime();
-    for ($i = 0; $i < static::TEST_NODE_COUNT; $i++) {
+    for ($i = 0; $i < self::TEST_NODE_COUNT; $i++) {
       // Ensure nodes are sorted in the same order they are inserted in the
       // array.
       $time -= $i;
@@ -56,22 +62,25 @@ abstract class ViewsBulkOperationsFunctionalTestBase extends BrowserTestBase {
   }
 
   /**
-   * Helper function that gets configuration for a selected view.
+   * Helper function that executes en operation.
    *
    * @param string|null $path
    *   The path of the View page that includes VBO.
-   * @param \Drupal\Core\StringTranslation\TranslatableMarkup $button_text
+   * @param string $button_text
    *   The form submit button text.
    * @param int[] $selection
    *   The selected items' indexes.
    * @param array $data
    *   Additional parameters for the submitted form.
    */
-  protected function executeAction($path, TranslatableMarkup $button_text, array $selection = [], array $data = []) {
+  protected function executeAction($path, string $button_text, array $selection = [], array $data = []): void {
     foreach ($selection as $index) {
       $data["views_bulk_operations_bulk_form[$index]"] = TRUE;
     }
-    $this->drupalPostForm($path, $data, $button_text);
+    if ($path !== NULL) {
+      $this->drupalGet($path);
+    }
+    $this->submitForm($data, $button_text);
   }
 
 }

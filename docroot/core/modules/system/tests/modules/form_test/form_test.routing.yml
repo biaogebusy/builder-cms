@@ -15,7 +15,7 @@ form_test.route2:
 form_test.route3:
   path: '/form-test/object-service-builder'
   defaults:
-    _form: 'form_test.form.serviceform'
+    _form: 'form_test.form.service_form'
   requirements:
     _access: 'TRUE'
 
@@ -57,14 +57,14 @@ form_test.route8:
 form_test.autocomplete_1:
   path: '/form-test/autocomplete-1'
   defaults:
-    controller: '\Drupal\form_test\AutocompleteController::autocomplete1'
+    _controller: '\Drupal\form_test\AutocompleteController::delayed_autocomplete'
   requirements:
     _permission: 'access autocomplete test'
 
 form_test.autocomplete_2:
   path: '/form-test/autocomplete-2/{param}'
   defaults:
-    controller: '\Drupal\form_test\AutocompleteController::autocomplete1'
+    _controller: '\Drupal\form_test\AutocompleteController::delayed_autocomplete'
   requirements:
     _permission: 'access autocomplete test'
 
@@ -425,11 +425,29 @@ form_test.button_class:
   requirements:
     _access: 'TRUE'
 
+form_test.submit_button_attribute:
+  path: '/form-test/submit-button-attribute/{customize}'
+  defaults:
+    _form: '\Drupal\form_test\Form\FormTestSubmitButtonAttributeForm'
+    _title: 'Submit button attribute testing'
+    customize: FALSE
+  requirements:
+    _access: 'TRUE'
+
 form_test.details_form:
   path: '/form_test/details-form'
   defaults:
     _form: '\Drupal\form_test\Form\FormTestDetailsForm'
     _title: 'Form details form test'
+  requirements:
+    _access: 'TRUE'
+
+form_test.details_contains_required_textfield:
+  path: '/form_test/details-contains-required-textfield/{use_ajax}'
+  defaults:
+    _form: '\Drupal\form_test\Form\FormTestDetailsContainsRequiredTextfieldForm'
+    _title: 'Form details contains required textfield test'
+    use_ajax: FALSE
   requirements:
     _access: 'TRUE'
 
@@ -526,5 +544,32 @@ form_test.javascript_states_form:
   path: '/form-test/javascript-states-form'
   defaults:
     _form: '\Drupal\form_test\Form\JavascriptStatesForm'
+  requirements:
+    _access: 'TRUE'
+
+form_test.nested_config_target:
+  path: '/form-test/nested-config-target'
+  defaults:
+    _form: '\Drupal\form_test\Form\NestedConfigTargetForm'
+  options:
+    _admin_route: TRUE
+  requirements:
+    _access: 'TRUE'
+
+form_test.tree_config_target:
+  path: '/form-test/tree-config-target'
+  defaults:
+    _form: '\Drupal\form_test\Form\TreeConfigTargetForm'
+  options:
+    _admin_route: TRUE
+  requirements:
+    _access: 'TRUE'
+
+form_test.incorrect_config_target:
+  path: '/form-test/incorrect-config-target'
+  defaults:
+    _form: '\Drupal\form_test\Form\IncorrectConfigTargetForm'
+  options:
+    _admin_route: TRUE
   requirements:
     _access: 'TRUE'

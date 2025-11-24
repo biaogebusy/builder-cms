@@ -18,5 +18,5 @@ content:
       placeholder: ''
     weight: -3
     region: content
-    third_party_settings: {  }
-hidden: {  }
+    third_party_settings: {}
+hidden: {}

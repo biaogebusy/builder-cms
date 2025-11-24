@@ -5,10 +5,11 @@
 // Legacy Check: Transform old localStorage items to newer ones.
 function checkLegacy() {
   if (localStorage.getItem('GinDarkMode')) {
-    localStorage.setItem('Drupal.gin.darkmode', localStorage.getItem('GinDarkMode'));
     localStorage.removeItem('GinDarkMode');
   }
-
+  if (localStorage.getItem('Drupal.gin.darkmode')) {
+    localStorage.removeItem('Drupal.gin.darkmode');
+  }
   if (localStorage.getItem('GinSidebarOpen')) {
     localStorage.setItem('Drupal.gin.toolbarExpanded', localStorage.getItem('GinSidebarOpen'));
     localStorage.removeItem('GinSidebarOpen');
@@ -20,9 +21,14 @@ checkLegacy();
 // Darkmode Check.
 function ginInitDarkmode() {
   const darkModeClass = 'gin--dark-mode';
+
+  const darkmodeSetting = document.getElementById('gin-setting-darkmode')?.textContent;
+  // Set window variable.
+  window.ginDarkmode = darkmodeSetting ? JSON.parse(darkmodeSetting)?.ginDarkmode : 'auto';
+
   if (
-    localStorage.getItem('Drupal.gin.darkmode') == 1 ||
-    (localStorage.getItem('Drupal.gin.darkmode') === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+    window.ginDarkmode == 1 ||
+    window.ginDarkmode === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches
   ) {
     document.documentElement.classList.add(darkModeClass);
   } else {
@@ -31,14 +37,6 @@ function ginInitDarkmode() {
 }
 
 ginInitDarkmode();
-
-// GinDarkMode is not set yet.
-window.addEventListener('DOMContentLoaded', () => {
-  if (!localStorage.getItem('Drupal.gin.darkmode')) {
-    localStorage.setItem('Drupal.gin.darkmode', drupalSettings.gin.darkmode);
-    ginInitDarkmode();
-  }
-});
 
 // Toolbar Check.
 if (localStorage.getItem('Drupal.gin.toolbarExpanded')) {
@@ -74,7 +72,12 @@ if (localStorage.getItem('Drupal.gin.toolbarExpanded')) {
   }
 }
 
-// Sidebar check.
+// Sidebar checks.
+if (localStorage.getItem('Drupal.gin.sidebarWidth')) {
+  const sidebarWidth = localStorage.getItem('Drupal.gin.sidebarWidth');
+  document.documentElement.style.setProperty('--gin-sidebar-width', sidebarWidth);
+}
+
 if (localStorage.getItem('Drupal.gin.sidebarExpanded.desktop')) {
   const style = document.createElement('style');
   const className = 'gin-sidebar-inline-styles';

@@ -4,24 +4,25 @@ namespace Drupal\Core\Field\Plugin\Field\FieldFormatter;
 
 use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Plugin implementation of the 'entity reference rendered entity' formatter.
- *
- * @FieldFormatter(
- *   id = "entity_reference_entity_view",
- *   label = @Translation("Rendered entity"),
- *   description = @Translation("Display the referenced entities rendered by entity_view()."),
- *   field_types = {
- *     "entity_reference"
- *   }
- * )
  */
+#[FieldFormatter(
+  id: 'entity_reference_entity_view',
+  label: new TranslatableMarkup('Rendered entity'),
+  description: new TranslatableMarkup('Render the referenced entity.'),
+  field_types: [
+    'entity_reference',
+  ],
+)]
 class EntityReferenceEntityFormatter extends EntityReferenceFormatterBase {
 
   /**
@@ -68,7 +69,7 @@ class EntityReferenceEntityFormatter extends EntityReferenceFormatterBase {
    * Constructs an EntityReferenceEntityFormatter instance.
    *
    * @param string $plugin_id
-   *   The plugin_id for the formatter.
+   *   The plugin ID for the formatter.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Field\FieldDefinitionInterface $field_definition
@@ -197,8 +198,8 @@ class EntityReferenceEntityFormatter extends EntityReferenceFormatterBase {
       $elements[$delta] = $view_builder->view($entity, $view_mode, $entity->language()->getId());
 
       // Add a resource attribute to set the mapping property's value to the
-      // entity's url. Since we don't know what the markup of the entity will
-      // be, we shouldn't rely on it for structured data such as RDFa.
+      // entity's URL. Since we don't know what the markup of the entity will
+      // be, we shouldn't rely on it for structured data.
       if (!empty($items[$delta]->_attributes) && !$entity->isNew() && $entity->hasLinkTemplate('canonical')) {
         $items[$delta]->_attributes += ['resource' => $entity->toUrl()->toString()];
       }

@@ -2,6 +2,7 @@
 
 namespace Drupal\update;
 
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\KeyValueStore\KeyValueFactoryInterface;
@@ -81,7 +82,7 @@ class UpdateProcessor implements UpdateProcessorInterface {
   /**
    * The queue for fetching release history data.
    */
-  protected $fetchTasks;
+  protected array $fetchTasks;
 
   /**
    * Constructs an UpdateProcessor.
@@ -100,8 +101,19 @@ class UpdateProcessor implements UpdateProcessorInterface {
    *   The key/value factory.
    * @param \Drupal\Core\KeyValueStore\KeyValueExpirableFactoryInterface $key_value_expirable_factory
    *   The expirable key/value factory.
+   * @param \Drupal\Component\Datetime\TimeInterface|null $time
+   *   The time service.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, QueueFactory $queue_factory, UpdateFetcherInterface $update_fetcher, StateInterface $state_store, PrivateKey $private_key, KeyValueFactoryInterface $key_value_factory, KeyValueExpirableFactoryInterface $key_value_expirable_factory) {
+  public function __construct(
+    ConfigFactoryInterface $config_factory,
+    QueueFactory $queue_factory,
+    UpdateFetcherInterface $update_fetcher,
+    StateInterface $state_store,
+    PrivateKey $private_key,
+    KeyValueFactoryInterface $key_value_factory,
+    KeyValueExpirableFactoryInterface $key_value_expirable_factory,
+    protected ?TimeInterface $time = NULL,
+  ) {
     $this->updateFetcher = $update_fetcher;
     $this->updateSettings = $config_factory->get('update.settings');
     $this->fetchQueue = $queue_factory->get('update_fetch_tasks');
@@ -110,6 +122,10 @@ class UpdateProcessor implements UpdateProcessorInterface {
     $this->availableReleasesTempStore = $key_value_expirable_factory->get('update_available_releases');
     $this->stateStore = $state_store;
     $this->privateKey = $private_key;
+    if (!$time) {
+      @trigger_error('Calling ' . __METHOD__ . '() without the $time argument is deprecated in drupal:10.3.0 and it will be required in drupal:11.0.0. See https://www.drupal.org/node/3387233', E_USER_DEPRECATED);
+      $this->time = \Drupal::service(TimeInterface::class);
+    }
     $this->fetchTasks = [];
     $this->failed = [];
   }
@@ -124,7 +140,7 @@ class UpdateProcessor implements UpdateProcessorInterface {
     if (empty($this->fetchTasks[$project['name']])) {
       $this->fetchQueue->createItem($project);
       $this->fetchTaskStore->set($project['name'], $project);
-      $this->fetchTasks[$project['name']] = REQUEST_TIME;
+      $this->fetchTasks[$project['name']] = $this->time->getRequestTime();
     }
   }
 
@@ -150,9 +166,8 @@ class UpdateProcessor implements UpdateProcessorInterface {
   public function processFetchTask($project) {
     global $base_url;
 
-    // This can be in the middle of a long-running batch, so REQUEST_TIME won't
-    // necessarily be valid.
-    $request_time_difference = time() - REQUEST_TIME;
+    // This can be in the middle of a long-running batch.
+    $request_time_difference = $this->time->getCurrentTime() - $this->time->getRequestTime();
     if (empty($this->failed)) {
       // If we have valid data about release history XML servers that we have
       // failed to fetch from on previous attempts, load that.
@@ -190,14 +205,14 @@ class UpdateProcessor implements UpdateProcessorInterface {
     }
 
     $frequency = $this->updateSettings->get('check.interval_days');
-    $available['last_fetch'] = REQUEST_TIME + $request_time_difference;
+    $available['last_fetch'] = $this->time->getRequestTime() + $request_time_difference;
     $this->availableReleasesTempStore->setWithExpire($project_name, $available, $request_time_difference + (60 * 60 * 24 * $frequency));
 
     // Stash the $this->failed data back in the DB for the next 5 minutes.
     $this->tempStore->setWithExpire('fetch_failures', $this->failed, $request_time_difference + (60 * 5));
 
     // Whether this worked or not, we did just (try to) check for updates.
-    $this->stateStore->set('update.last_check', REQUEST_TIME + $request_time_difference);
+    $this->stateStore->set('update.last_check', $this->time->getRequestTime() + $request_time_difference);
 
     // Now that we processed the fetch task for this project, clear out the
     // record for this task so we're willing to fetch again.

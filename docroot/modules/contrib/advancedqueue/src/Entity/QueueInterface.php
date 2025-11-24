@@ -60,6 +60,10 @@ interface QueueInterface extends ConfigEntityInterface, EntityWithPluginCollecti
    * @param int $delay
    *   The time, in seconds, after which the job will become available to
    *   consumers. Defaults to 0, indicating no delay.
+   *
+   * @throws \Drupal\advancedqueue\Exception\DuplicateJobException
+   *   Thrown if the job should not be enqueued because it duplicates an
+   *   existing job.
    */
   public function enqueueJob(Job $job, $delay = 0);
 
@@ -74,6 +78,10 @@ interface QueueInterface extends ConfigEntityInterface, EntityWithPluginCollecti
    * @param int $delay
    *   The time, in seconds, after which the jobs will become available to
    *   consumers. Defaults to 0, indicating no delay.
+   *
+   * @throws \Drupal\advancedqueue\Exception\DuplicateJobException
+   *   Thrown if a job should not be enqueued because it duplicates an existing
+   *   job.
    */
   public function enqueueJobs(array $jobs, $delay = 0);
 
@@ -191,5 +199,23 @@ interface QueueInterface extends ConfigEntityInterface, EntityWithPluginCollecti
    *   TRUE if the queue is locked, FALSE otherwise.
    */
   public function isLocked();
+
+  /**
+   * Gets if the processor should stop when the queue is empty.
+   *
+   * @return bool
+   *   TRUE if the processor should stop, FALSE if not.
+   */
+  public function getStopWhenEmpty();
+
+  /**
+   * Sets if the processor should stop when the queue is empty.
+   *
+   * @param bool $stop_when_empty
+   *   TRUE if the processor should stop, FALSE if not.
+   *
+   * @return $this
+   */
+  public function setStopWhenEmpty(bool $stop_when_empty);
 
 }

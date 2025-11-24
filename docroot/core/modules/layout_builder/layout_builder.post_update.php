@@ -7,6 +7,7 @@
 
 use Drupal\Core\Config\Entity\ConfigEntityUpdater;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Field\Plugin\Field\FieldFormatter\TimestampFormatter;
 use Drupal\layout_builder\Entity\LayoutEntityDisplayInterface;
 
 /**
@@ -29,47 +30,49 @@ function layout_builder_removed_post_updates() {
     'layout_builder_post_update_layout_builder_dependency_change' => '9.0.0',
     'layout_builder_post_update_update_permissions' => '9.0.0',
     'layout_builder_post_update_make_layout_untranslatable' => '9.0.0',
+    'layout_builder_post_update_override_entity_form_controller' => '10.0.0',
+    'layout_builder_post_update_section_storage_context_mapping' => '10.0.0',
+    'layout_builder_post_update_tempstore_route_enhancer' => '10.0.0',
   ];
 }
 
 /**
- * Clear caches due to addition of service decorator for entity form controller.
+ * Update timestamp formatter settings for Layout Builder fields.
  */
-function layout_builder_post_update_override_entity_form_controller() {
-  // Empty post-update hook.
-}
+function layout_builder_post_update_timestamp_formatter(?array &$sandbox = NULL): void {
+  /** @var \Drupal\Core\Field\FormatterPluginManager $field_formatter_manager */
+  $field_formatter_manager = \Drupal::service('plugin.manager.field.formatter');
 
-/**
- * Update view displays that use Layout Builder to add empty context mappings.
- */
-function layout_builder_post_update_section_storage_context_mapping(&$sandbox = []) {
-  $config_entity_updater = \Drupal::classResolver(ConfigEntityUpdater::class);
-
-  $callback = function (EntityViewDisplayInterface $display) {
-    $needs_update = FALSE;
-
-    // Only update entity view displays where Layout Builder is enabled.
-    if ($display instanceof LayoutEntityDisplayInterface && $display->isLayoutBuilderEnabled()) {
-      foreach ($display->getSections() as $section) {
-        // Add an empty context mapping to each section where one doesn't exist.
-        $section->setLayoutSettings($section->getLayoutSettings() + [
-          'context_mapping' => [],
-        ]);
-
-        // Flag this display as needing to be updated.
-        $needs_update = TRUE;
+  \Drupal::classResolver(ConfigEntityUpdater::class)->update($sandbox, 'entity_view_display', function (EntityViewDisplayInterface $entity_view_display) use ($field_formatter_manager): bool {
+    $update = FALSE;
+    if ($entity_view_display instanceof LayoutEntityDisplayInterface && $entity_view_display->isLayoutBuilderEnabled()) {
+      foreach ($entity_view_display->getSections() as $section) {
+        foreach ($section->getComponents() as $component) {
+          if (str_starts_with($component->getPluginId(), 'field_block:')) {
+            $configuration = $component->get('configuration');
+            $formatter =& $configuration['formatter'];
+            if ($formatter && isset($formatter['type'])) {
+              $plugin_definition = $field_formatter_manager->getDefinition($formatter['type'], FALSE);
+              // Check also potential plugins extending TimestampFormatter.
+              if ($plugin_definition && is_a($plugin_definition['class'], TimestampFormatter::class, TRUE)) {
+                if (!isset($formatter['settings']['tooltip']) || !isset($formatter['settings']['time_diff'])) {
+                  $update = TRUE;
+                  // No need to check the rest of components.
+                  break 2;
+                }
+              }
+            }
+          }
+        }
       }
     }
-
-    return $needs_update;
-  };
-
-  $config_entity_updater->update($sandbox, 'entity_view_display', $callback);
+    return $update;
+  });
 }
 
 /**
- * Clear caches due to adding a new route enhancer.
+ * Enable the expose all fields feature flag module.
  */
-function layout_builder_post_update_tempstore_route_enhancer() {
-  // Empty post-update hook.
+function layout_builder_post_update_enable_expose_field_block_feature_flag(): void {
+  \Drupal::service('module_installer')->install(['layout_builder_expose_all_field_blocks']);
 }

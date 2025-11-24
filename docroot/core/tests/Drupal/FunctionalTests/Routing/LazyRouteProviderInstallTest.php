@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalTests\Routing;
 
 use Drupal\Tests\BrowserTestBase;
@@ -22,7 +24,7 @@ class LazyRouteProviderInstallTest extends BrowserTestBase {
   /**
    * Tests that the lazy route provider is used during a module install.
    */
-  public function testInstallation() {
+  public function testInstallation(): void {
     $this->container->get('module_installer')->install(['router_test']);
     // Note that on DrupalCI the test site is installed in a sub directory so
     // we cannot use ::assertEquals().

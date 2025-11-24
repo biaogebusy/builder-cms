@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Kernel\Migrate\d6;
 
 use Drupal\file\Entity\File;
@@ -29,7 +31,7 @@ class MigrateUserPictureD6FileTest extends MigrateDrupal6TestBase {
   /**
    * Tests the Drupal 6 user pictures to Drupal 8 migration.
    */
-  public function testUserPictures() {
+  public function testUserPictures(): void {
     $file_ids = [];
     foreach ($this->migration->getIdMap() as $destination_ids) {
       $file_ids[] = reset($destination_ids);
@@ -40,7 +42,7 @@ class MigrateUserPictureD6FileTest extends MigrateDrupal6TestBase {
     $this->assertSame('image-test.jpg', $file->getFilename());
     $this->assertSame('public://image-test.jpg', $file->getFileUri());
     $this->assertSame('2', $file->getOwnerId());
-    $this->assertSame('1901', $file->getSize());
+    $this->assertSame(1901, $file->getSize());
     $this->assertSame('image/jpeg', $file->getMimeType());
 
     $file = array_shift($files);
@@ -56,7 +58,7 @@ class MigrateUserPictureD6FileTest extends MigrateDrupal6TestBase {
     $this->assertEntity(3, 'Image1.png', 39325, 'public://image-1.png', 'image/png', 1);
     $this->assertEntity(4, 'Image2.jpg', 1831, 'public://image-2.jpg', 'image/jpeg', 1);
     $this->assertEntity(5, 'Image-test.gif', 183, 'public://image-test.gif', 'image/jpeg', 1);
-    $this->assertEntity(6, 'html-1.txt', 24, 'public://html-1.txt', 'text/plain', 1);
+    $this->assertEntity(6, 'html-1.txt', 19, 'public://html-1.txt', 'text/plain', 1);
   }
 
   /**

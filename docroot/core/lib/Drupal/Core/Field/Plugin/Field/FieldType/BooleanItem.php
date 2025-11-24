@@ -2,26 +2,26 @@
 
 namespace Drupal\Core\Field\Plugin\Field\FieldType;
 
+use Drupal\Core\Field\Attribute\FieldType;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\Core\TypedData\OptionsProviderInterface;
 use Drupal\Core\TypedData\DataDefinition;
+use Drupal\Core\TypedData\OptionsProviderInterface;
 
 /**
  * Defines the 'boolean' entity field type.
- *
- * @FieldType(
- *   id = "boolean",
- *   label = @Translation("Boolean"),
- *   description = @Translation("An entity field containing a boolean value."),
- *   default_widget = "boolean_checkbox",
- *   default_formatter = "boolean",
- * )
  */
+#[FieldType(
+  id: "boolean",
+  label: new TranslatableMarkup("Boolean"),
+  description: new TranslatableMarkup("Field to store a true or false value."),
+  default_widget: "boolean_checkbox",
+  default_formatter: "boolean",
+)]
 class BooleanItem extends FieldItemBase implements OptionsProviderInterface {
 
   /**
@@ -84,14 +84,14 @@ class BooleanItem extends FieldItemBase implements OptionsProviderInterface {
   /**
    * {@inheritdoc}
    */
-  public function getPossibleValues(AccountInterface $account = NULL) {
+  public function getPossibleValues(?AccountInterface $account = NULL) {
     return [0, 1];
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getPossibleOptions(AccountInterface $account = NULL) {
+  public function getPossibleOptions(?AccountInterface $account = NULL) {
     return [
       0 => $this->getSetting('off_label'),
       1 => $this->getSetting('on_label'),
@@ -101,14 +101,14 @@ class BooleanItem extends FieldItemBase implements OptionsProviderInterface {
   /**
    * {@inheritdoc}
    */
-  public function getSettableValues(AccountInterface $account = NULL) {
+  public function getSettableValues(?AccountInterface $account = NULL) {
     return [0, 1];
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getSettableOptions(AccountInterface $account = NULL) {
+  public function getSettableOptions(?AccountInterface $account = NULL) {
     return $this->getPossibleOptions($account);
   }
 

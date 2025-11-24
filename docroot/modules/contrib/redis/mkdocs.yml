@@ -1,0 +1,8 @@
+site_name: Drupal Redis documentation
+site_url: https://drupal.org/project/redis
+nav:
+  - Overview: README.md
+  - PhpRedis: README.PhpRedis.md
+  - Predis: README.Predis.md
+  - Relay: README.Relay.md
+theme: material

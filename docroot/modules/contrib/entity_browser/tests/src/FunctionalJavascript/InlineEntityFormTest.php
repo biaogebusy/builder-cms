@@ -76,11 +76,9 @@ class InlineEntityFormTest extends EntityBrowserWebDriverTestBase {
     $page->checkField('entity_browser_select[file:2]');
 
     $page->pressButton('Select entities');
-    $this->assertSession()->assertWaitOnAjaxRequest();
 
     $page->pressButton('Use selected');
     $this->getSession()->switchToIFrame();
-    $this->assertSession()->assertWaitOnAjaxRequest();
 
     $page->pressButton('Create Test File Media');
     $this->assertSession()->assertWaitOnAjaxRequest();
@@ -97,7 +95,6 @@ class InlineEntityFormTest extends EntityBrowserWebDriverTestBase {
     $list_selector = '[data-drupal-selector="edit-ief-media-field-form-inline-entity-form-entities-0-form-ief-media-type-file-field-current"]';
     $item_selector = "$list_selector .item-container";
     $this->sortableAfter("$item_selector:first-child", "$item_selector:last-child", $list_selector);
-    $this->assertSession()->assertWaitOnAjaxRequest();
 
     $page->pressButton('Update Test File Media');
     $this->assertSession()->assertWaitOnAjaxRequest();
@@ -134,11 +131,9 @@ class InlineEntityFormTest extends EntityBrowserWebDriverTestBase {
     $page->checkField('entity_browser_select[file:3]');
 
     $page->pressButton('Select entities');
-    $this->assertSession()->assertWaitOnAjaxRequest();
-
     $page->pressButton('Use selected');
-    $this->getSession()->switchToIFrame();
     $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->getSession()->switchToIFrame();
 
     $page->pressButton('Update Test File Media');
     $this->assertSession()->assertWaitOnAjaxRequest();
@@ -162,11 +157,10 @@ class InlineEntityFormTest extends EntityBrowserWebDriverTestBase {
     $list_selector = '[data-drupal-selector="edit-selected"]';
     $item_selector = "$list_selector .item-container";
     $this->sortableAfter("$item_selector:first-child", "$item_selector:last-child", $list_selector);
-    $this->assertSession()->assertWaitOnAjaxRequest();
 
     $page->pressButton('Use selected');
-    $this->getSession()->switchToIFrame();
     $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->getSession()->switchToIFrame();
 
     $page->pressButton('Update Test File Media');
     $this->assertSession()->assertWaitOnAjaxRequest();
@@ -186,14 +180,12 @@ class InlineEntityFormTest extends EntityBrowserWebDriverTestBase {
 
     $this->getSession()
       ->switchToIFrame('entity_browser_iframe_ief_entity_browser_file');
-    $this->assertSession()->assertWaitOnAjaxRequest();
 
     $page->pressButton('remove_3_0');
-    $this->assertSession()->assertWaitOnAjaxRequest();
 
     $page->pressButton('Use selected');
-    $this->getSession()->switchToIFrame();
     $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->getSession()->switchToIFrame();
 
     $page->pressButton('Update Test File Media');
     $this->assertSession()->assertWaitOnAjaxRequest();
@@ -387,10 +379,13 @@ class InlineEntityFormTest extends EntityBrowserWebDriverTestBase {
       $this->getSession()->switchToIFrame('entity_browser_iframe_widget_context_default_value');
       $this->assertSession()->fieldExists('entity_browser_select[node:' . $boxer->id() . ']')->check();
       $this->assertSession()->buttonExists('Select entities')->press();
-      $this->assertSession()->assertWaitOnAjaxRequest();
       $this->assertSession()->buttonExists('Use selected')->press();
-      $this->getSession()->switchToIFrame();
       $this->assertSession()->assertWaitOnAjaxRequest();
+      $this->getSession()->switchToIFrame();
+
+      if (!$this->coreVersion('10.2')) {
+        $this->assertSession()->assertWaitOnAjaxRequest();
+      }
     }
 
     $this->assertSession()->pageTextContains('The selected node has already been added.');
@@ -399,10 +394,13 @@ class InlineEntityFormTest extends EntityBrowserWebDriverTestBase {
     $this->getSession()->switchToIFrame('entity_browser_iframe_widget_context_default_value');
     $this->assertSession()->fieldExists('entity_browser_select[node:' . $napoleon->id() . ']')->check();
     $this->assertSession()->buttonExists('Select entities')->press();
-    $this->assertSession()->assertWaitOnAjaxRequest();
     $this->assertSession()->buttonExists('Use selected')->press();
-    $this->getSession()->switchToIFrame();
     $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->getSession()->switchToIFrame();
+
+    if (!$this->coreVersion('10.2')) {
+      $this->assertSession()->assertWaitOnAjaxRequest();
+    }
 
     $this->assertSession()->pageTextNotContains('The selected node has already been added.');
 
@@ -416,7 +414,7 @@ class InlineEntityFormTest extends EntityBrowserWebDriverTestBase {
    * {@inheritdoc}
    */
   protected function sortableUpdate($item, $from, $to = NULL) {
-    list ($container) = explode(' ', $item, 2);
+    [$container] = explode(' ', $item, 2);
 
     $js = <<<END
 (Drupal.entityBrowserEntityReference || Drupal.entityBrowserMultiStepDisplay).entitiesReordered(document.querySelector("$container"));

@@ -1,0 +1,23 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"GX",
+		"Beihai Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Haicheng Qu": {
+			"local_name": "海城区"
+		},
+		"Hepu Xian": {
+			"local_name": "合浦县"
+		},
+		"Tieshangang Qu": {
+			"local_name": "铁山港区"
+		},
+		"Yinhai Qu": {
+			"local_name": "银海区"
+		}
+	}
+}

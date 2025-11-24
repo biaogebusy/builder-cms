@@ -25,20 +25,14 @@ use Drupal\sms\Event\SmsEvents;
 class DefaultSmsProvider implements SmsProviderInterface {
 
   /**
-   * The event dispatcher.
-   *
-   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
-   */
-  protected $eventDispatcher;
-
-  /**
    * Creates a new instance of the default SMS provider.
    *
-   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
+   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $eventDispatcher
    *   The event dispatcher.
    */
-  public function __construct(EventDispatcherInterface $event_dispatcher) {
-    $this->eventDispatcher = $event_dispatcher;
+  public function __construct(
+    protected EventDispatcherInterface $eventDispatcher,
+  ) {
   }
 
   /**

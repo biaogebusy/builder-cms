@@ -37,7 +37,6 @@ class LayoutLibraryTest extends BrowserTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
-
     $this->drupalPlaceBlock('local_actions_block');
     // @todo The Layout Builder UI relies on local tasks; fix in
     //   https://www.drupal.org/project/drupal/issues/2917777.
@@ -52,6 +51,13 @@ class LayoutLibraryTest extends BrowserTestBase {
       'edit own dogs content',
       'administer node display',
     ]));
+    // Enabling layout_builder_expose_all_field_blocks from 10.3.0
+    // as this has been introduced in drupal core as new module
+    // https://www.drupal.org/node/3416592.
+    if (version_compare(\Drupal::VERSION, '10.3.0', '>=')) {
+      $this->container->get('module_installer')->install(['layout_builder_expose_all_field_blocks']);
+    }
+
   }
 
   /**

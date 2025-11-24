@@ -1,0 +1,38 @@
+ckeditor_templates.selector:
+  path: '/admin/config/content/ckeditor-templates/template-selector/{editor}'
+  defaults:
+    _form: '\Drupal\ckeditor_templates\Form\CKEditorTemplatesDialogForm'
+  requirements:
+    _permission: 'insert ckeditor templates'
+
+entity.ckeditor_templates.collection:
+  path: '/admin/config/content/ckeditor-templates'
+  defaults:
+    _entity_list: 'ckeditor_templates'
+    _title: 'CKEditor Template Configuration'
+  requirements:
+    _permission: 'administer ckeditor templates'
+
+entity.ckeditor_templates.add_form:
+  path: '/admin/config/content/ckeditor-templates/add'
+  defaults:
+    _entity_form: 'ckeditor_templates.add'
+    _title: 'Add a CKEditor Template'
+  requirements:
+    _permission: 'administer ckeditor templates'
+
+entity.ckeditor_templates.edit_form:
+  path: '/admin/config/content/ckeditor-templates/{ckeditor_templates}'
+  defaults:
+    _entity_form: 'ckeditor_templates.edit'
+    _title: 'Edit a CKEditor Template'
+  requirements:
+    _permission: 'administer ckeditor templates'
+
+entity.ckeditor_templates.delete_form:
+  path: '/admin/config/content/ckeditor-templates/{ckeditor_templates}/delete'
+  defaults:
+    _entity_form: 'ckeditor_templates.delete'
+    _title: 'Delete a CKEditor Template'
+  requirements:
+    _permission: 'administer ckeditor templates'

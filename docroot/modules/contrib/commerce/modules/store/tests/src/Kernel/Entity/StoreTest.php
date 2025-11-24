@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\commerce_store\Kernel\Entity;
 
+use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
 use Drupal\commerce_price\Entity\Currency;
 use Drupal\commerce_store\Entity\Store;
-use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
 use Drupal\user\UserInterface;
 
 /**

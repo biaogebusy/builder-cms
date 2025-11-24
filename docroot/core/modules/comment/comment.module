@@ -6,8 +6,7 @@
  *
  * When installed, the Comment module creates a field that facilitates a
  * discussion board for each Drupal entity to which a comment field is attached.
- * Users can post comments to discuss a forum topic, story, collaborative
- * book page, user etc.
+ * Users can post comments to discuss a story, user etc.
  */
 
 use Drupal\comment\CommentInterface;
@@ -16,6 +15,7 @@ use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\comment\Plugin\Field\FieldType\CommentItemInterface;
 use Drupal\Core\Entity\Entity\EntityViewMode;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Field\FieldTypeCategoryManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
@@ -45,14 +45,14 @@ define('COMMENT_NEW_LIMIT', ((int) $_SERVER['REQUEST_TIME']) - 30 * 24 * 60 * 60
 function comment_help($route_name, RouteMatchInterface $route_match) {
   switch ($route_name) {
     case 'help.page.comment':
-      $output = '<h3>' . t('About') . '</h3>';
+      $output = '<h2>' . t('About') . '</h2>';
       $output .= '<p>' . t('The Comment module allows users to comment on site content, set commenting defaults and permissions, and moderate comments. For more information, see the <a href=":comment">online documentation for the Comment module</a>.', [':comment' => 'https://www.drupal.org/documentation/modules/comment']) . '</p>';
-      $output .= '<h3>' . t('Uses') . '</h3>';
+      $output .= '<h2>' . t('Uses') . '</h2>';
       $output .= '<dl>';
       $output .= '<dt>' . t('Enabling commenting') . '</dt>';
-      $output .= '<dd>' . t('Comment functionality can be enabled for any entity sub-type (for example, a <a href=":content-type">content type</a>) by adding a <em>Comments</em> field on its <em>Manage fields page</em>. Adding or removing commenting for an entity through the user interface requires the <a href=":field_ui">Field UI</a> module to be enabled, even though the commenting functionality works without it. For more information on fields and entities, see the <a href=":field">Field module help page</a>.', [':content-type' => (\Drupal::moduleHandler()->moduleExists('node')) ? Url::fromRoute('entity.node_type.collection')->toString() : '#', ':field' => Url::fromRoute('help.page', ['name' => 'field'])->toString(), ':field_ui' => (\Drupal::moduleHandler()->moduleExists('field_ui')) ? Url::fromRoute('help.page', ['name' => 'field_ui'])->toString() : '#']) . '</dd>';
+      $output .= '<dd>' . t('Comment functionality can be enabled for any entity sub-type (for example, a <a href=":content-type">content type</a>) by adding a <em>Comments</em> field on its <em>Manage fields page</em>. Adding or removing commenting for an entity through the user interface requires the <a href=":field_ui">Field UI</a> module to be installed, even though the commenting functionality works without it. For more information on fields and entities, see the <a href=":field">Field module help page</a>.', [':content-type' => (\Drupal::moduleHandler()->moduleExists('node')) ? Url::fromRoute('entity.node_type.collection')->toString() : '#', ':field' => Url::fromRoute('help.page', ['name' => 'field'])->toString(), ':field_ui' => (\Drupal::moduleHandler()->moduleExists('field_ui')) ? Url::fromRoute('help.page', ['name' => 'field_ui'])->toString() : '#']) . '</dd>';
       $output .= '<dt>' . t('Configuring commenting settings') . '</dt>';
-      $output .= '<dd>' . t('Commenting settings can be configured by editing the <em>Comments</em> field on the <em>Manage fields page</em> of an entity type if the <em>Field UI module</em> is enabled. Configuration includes the label of the comments field, the number of comments to be displayed, and whether they are shown in threaded list. Commenting can be configured as: <em>Open</em> to allow new comments, <em>Closed</em> to view existing comments, but prevent new comments, or <em>Hidden</em> to hide existing comments and prevent new comments. Changing this configuration for an entity type will not change existing entity items.') . '</dd>';
+      $output .= '<dd>' . t('Commenting settings can be configured by editing the <em>Comments</em> field on the <em>Manage fields page</em> of an entity type if the <em>Field UI module</em> is installed. Configuration includes the label of the comments field, the number of comments to be displayed, and whether they are shown in threaded list. Commenting can be configured as: <em>Open</em> to allow new comments, <em>Closed</em> to view existing comments, but prevent new comments, or <em>Hidden</em> to hide existing comments and prevent new comments. Changing this configuration for an entity type will not change existing entity items.') . '</dd>';
       $output .= '<dt>' . t('Overriding default settings') . '</dt>';
       $output .= '<dd>' . t('Users with the appropriate permissions can override the default commenting settings of an entity type when they create an item of that type.') . '</dd>';
       $output .= '<dt>' . t('Adding comment types') . '</dt>';
@@ -237,10 +237,14 @@ function comment_form_field_ui_field_storage_add_form_alter(&$form, FormStateInt
   if ($form_state->get('entity_type_id') == 'comment' && $route_match->getParameter('commented_entity_type')) {
     $form['#title'] = \Drupal::service('comment.manager')->getFieldUIPageTitle($route_match->getParameter('commented_entity_type'), $route_match->getParameter('field_name'));
   }
-  if (!_comment_entity_uses_integer_id($form_state->get('entity_type_id'))) {
-    $optgroup = (string) t('General');
-    // You cannot use comment fields on entity types with non-integer IDs.
-    unset($form['add']['new_storage_type']['#options'][$optgroup]['comment']);
+}
+
+/**
+ * Implements hook_field_info_entity_type_ui_definitions_alter().
+ */
+function comment_field_info_entity_type_ui_definitions_alter(array &$ui_definitions, string $entity_type_id) {
+  if (!_comment_entity_uses_integer_id($entity_type_id)) {
+    unset($ui_definitions['comment']);
   }
 }
 
@@ -399,7 +403,7 @@ function comment_node_update_index(EntityInterface $node) {
       }
     }
   }
-  return \Drupal::service('renderer')->renderPlain($build);
+  return \Drupal::service('renderer')->renderInIsolation($build);
 }
 
 /**
@@ -525,8 +529,8 @@ function comment_preview(CommentInterface $comment, FormStateInterface $form_sta
     // parent entity output rendering the comment form and the comment form
     // rendering the parent entity. To prevent this infinite loop we temporarily
     // set the value of the comment field on a clone of the entity to hidden
-    // before calling entity_view(). That way when the output of the commented
-    // entity is rendered, it excludes the comment field output.
+    // before calling the entity view builder. That way when the output of
+    // the commented entity is rendered, it excludes the comment field output.
     $field_name = $comment->getFieldName();
     $entity = clone $entity;
     $entity->$field_name->status = CommentItemInterface::HIDDEN;
@@ -716,7 +720,7 @@ function comment_preprocess_field(&$variables) {
     $variables['comment_display_mode'] = $element[0]['#comment_display_mode'];
     $variables['comment_type'] = $element[0]['#comment_type'];
 
-    // Append additional attributes (eg. RDFa) from the first field item.
+    // Append additional attributes from the first field item.
     $variables['attributes'] += $variables['items'][0]['attributes']->storage();
 
     // Create separate variables for the comments and comment form.
@@ -770,4 +774,13 @@ function comment_entity_view_display_presave(EntityViewDisplayInterface $display
       $view_display->save();
     }
   }
+}
+
+/**
+ * Implements hook_field_type_category_info_alter().
+ */
+function comment_field_type_category_info_alter(&$definitions) {
+  // The `comment` field type belongs in the `general` category, so the
+  // libraries need to be attached using an alter hook.
+  $definitions[FieldTypeCategoryManagerInterface::FALLBACK_CATEGORY]['libraries'][] = 'comment/drupal.comment-icon';
 }

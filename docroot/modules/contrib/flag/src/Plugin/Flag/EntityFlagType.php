@@ -3,15 +3,16 @@
 namespace Drupal\flag\Plugin\Flag;
 
 use Drupal\Core\Access\AccessResult;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
-use Drupal\flag\FlagType\FlagTypeBase;
 use Drupal\flag\FlagInterface;
+use Drupal\flag\FlagType\FlagTypeBase;
 use Drupal\user\EntityOwnerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -45,12 +46,28 @@ class EntityFlagType extends FlagTypeBase {
   protected $entityType = '';
 
   /**
+   * The entity display repository.
+   *
+   * @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface
+   */
+  protected $entityDisplayRepository;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, ModuleHandlerInterface $module_handler, EntityTypeManagerInterface $entity_type_manager, TranslationInterface $string_translation) {
+  public function __construct(
+    array $configuration,
+    $plugin_id,
+    array $plugin_definition,
+    ModuleHandlerInterface $module_handler,
+    EntityTypeManagerInterface $entity_type_manager,
+    TranslationInterface $string_translation,
+    EntityDisplayRepositoryInterface $entity_display_repository,
+  ) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $module_handler, $string_translation);
     $this->entityType = $plugin_definition['entity_type'];
     $this->entityTypeManager = $entity_type_manager;
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $module_handler, $string_translation);
+    $this->entityDisplayRepository = $entity_display_repository;
   }
 
   /**
@@ -63,7 +80,8 @@ class EntityFlagType extends FlagTypeBase {
       $plugin_definition,
       $container->get('module_handler'),
       $container->get('entity_type.manager'),
-      $container->get('string_translation')
+      $container->get('string_translation'),
+      $container->get('entity_display.repository'),
     );
   }
 
@@ -101,12 +119,7 @@ class EntityFlagType extends FlagTypeBase {
       '#description' => $this->t('Show the flag link as a field, which can be ordered among other entity elements in the "Manage display" settings for the entity type.'),
       '#default_value' => $this->showAsField(),
     ];
-    /*
-    if (empty($entity_info['fieldable'])) {
-      $form['display']['show_as_field']['#disabled'] = TRUE;
-      $form['display']['show_as_field']['#description'] = $this->t("This entity type is not fieldable.");
-    }
-    */
+
     $form['display']['show_on_form'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Display checkbox on entity edit form'),
@@ -115,15 +128,9 @@ class EntityFlagType extends FlagTypeBase {
     ];
 
     // We use FieldAPI to put the flag checkbox on the entity form, so therefore
-    // require the entity to be fielable. Since this is a potential DX
-    // headscratcher for a developer wondering where this option has gone,
+    // require the entity to be fieldable. Since this is a potential DX
+    // head scratcher for a developer wondering where this option has gone,
     // we disable it and explain why.
-    /*
-    if (empty($entity_info['fieldable'])) {
-      $form['display']['show_on_form']['#disabled'] = TRUE;
-      $form['display']['show_on_form']['#description'] = $this->t('This is only possible on entities which are fieldable.');
-    }
-    */
     $form['display']['show_contextual_link'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Display in contextual links'),
@@ -143,9 +150,7 @@ class EntityFlagType extends FlagTypeBase {
     $options = [];
     $defaults = [];
 
-    /* @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface $entity_display_service */
-    $entity_display_service = \Drupal::service('entity_display.repository');
-    $view_modes = $entity_display_service->getViewModes($this->entityType);
+    $view_modes = $this->entityDisplayRepository->getViewModes($this->entityType);
 
     foreach ($view_modes as $name => $view_mode) {
       $options[$name] = $this->t('Display on @name view mode', ['@name' => $view_mode['label']]);
@@ -207,7 +212,7 @@ class EntityFlagType extends FlagTypeBase {
    * Returns the show as field setting.
    *
    * @return bool
-   *   TRUE if the flag should appear as a psudofield, FALSE otherwise.
+   *   TRUE if the flag should appear as a pseudofield, FALSE otherwise.
    */
   public function showAsField() {
     return $this->configuration['show_as_field'];
@@ -311,7 +316,7 @@ class EntityFlagType extends FlagTypeBase {
   /**
    * {@inheritdoc}
    */
-  public function actionAccess($action, FlagInterface $flag, AccountInterface $account, EntityInterface $flaggable = NULL) {
+  public function actionAccess($action, FlagInterface $flag, AccountInterface $account, ?EntityInterface $flaggable = NULL) {
     $access = parent::actionAccess($action, $flag, $account, $flaggable);
 
     if (($flaggable instanceof EntityOwnerInterface) && ($this->hasExtraPermission('owner'))) {
@@ -338,7 +343,7 @@ class EntityFlagType extends FlagTypeBase {
   /**
    * Determines if the flaggable associated with the flag supports ownership.
    *
-   * @return boolean
+   * @return bool
    *   TRUE if the flaggable supports ownership.
    */
   protected function isFlaggableOwnable() {

@@ -140,12 +140,19 @@ abstract class FieldPermissionsTestBase extends BrowserTestBase {
     $custom_perm = [];
     $permission_list = $this->container->get('field_permissions.permissions_service')->getAllPermissions();
     $permission_list = array_keys($permission_list);
-    $permission_role = array_keys(user_roles());
+    $prefix = 'user.role';
+    $permission_role = ['anonymous', 'authenticated'];
+    foreach ($this->container->get('config.factory')->listAll($prefix) as $config_name) {
+      $role_name = substr($config_name, strlen($prefix) + 1);
+      if (!in_array($role_name, $permission_role)) {
+        $permission_role[] = $role_name;
+      }
+    }
 
     // Set all check to false.
-    foreach ($permission_role as $rname) {
+    foreach ($permission_role as $role_name) {
       foreach ($permission_list as $perm) {
-        $key = 'permissions[' . $perm . '][' . $rname . ']';
+        $key = 'permissions[' . $perm . '][' . $role_name . ']';
         $custom_perm[$key] = FALSE;
       }
     }

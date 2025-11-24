@@ -5,10 +5,10 @@
  * This module don't show menu links that you don't have access permission for.
  */
 
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\user\Entity\Role;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
-use Drupal\Core\Routing\RouteMatchInterface;
 
 /**
  * Implements hook_help().
@@ -58,47 +58,74 @@ function admin_toolbar_links_access_filter_preprocess_menu(&$variables) {
  * Hides links from admin menu, if user doesn't have access rights.
  */
 function admin_toolbar_links_access_filter_filter_non_accessible_links(array &$items) {
-  foreach ($items as $route => &$item) {
-    $route_name = $route;
-    $route_params = [];
-    if (!empty($item['original_link'])) {
-      /** @var \Drupal\Core\Menu\MenuLinkBase $original_link */
-      $original_link = $item['original_link'];
-      if ($original_link->getUrlObject()->isExternal()) {
-        // Do not filter external URL at all.
-        continue;
-      }
-      $route_name = $original_link->getRouteName();
-      $route_params = $original_link->getRouteParameters();
-    }
+  if (Drupal::currentUser()->id() == 1) {
+    // Admin can access everything.
+    return;
+  }
 
-    // Check, if user has access rights to the route.
-    if (!\Drupal::accessManager()
-      ->checkNamedRoute($route_name, $route_params)) {
-      unset($items[$route]);
-    }
-    else {
-      if (!empty($items[$route]['below'])) {
-        // Recursively call this function for the child items.
-        admin_toolbar_links_access_filter_filter_non_accessible_links($items[$route]['below']);
+  $access_manager = \Drupal::accessManager();
+  foreach ($items as $menu_id => &$item) {
+    try {
+      $route_name = NULL;
+      $route_params = [];
+      if (!empty($item['original_link'])) {
+        /** @var \Drupal\Core\Menu\MenuLinkBase $original_link */
+        $original_link = $item['original_link'];
+        if ($original_link->getUrlObject()->isExternal() || !$original_link->getUrlObject()->isRouted()) {
+          // Do not filter external URL at all.
+          continue;
+        }
+        $route_name = $original_link->getRouteName() ?: $original_link->getUrlObject()->getRouteName();
+        $route_params = $original_link->getRouteParameters() ?: $original_link->getUrlObject()->getRouteParameters();
       }
-      if (empty($items[$route]['below']) && \Drupal::moduleHandler()
-        ->moduleExists('admin_toolbar')) {
+      elseif (!empty($item['url'])) {
+        /** @var \Drupal\Core\Url $url */
+        $url = $item['url'];
+        // @phpstan-ignore variable.undefined
+        if ($url->isExternal() || !$original_link->getUrlObject()->isRouted()) {
+          // Do not filter external URL at all.
+          continue;
+        }
+        $route_name = $url->getRouteName();
+        $route_params = $url->getRouteParameters();
+      }
 
-        // Every child item has been cleared out.
-        // Now check, if the given route represents an overview page only,
-        // without having functionality on its own. In this case, we can safely
-        // unset this item, as there aren't any children left.
-        // This assumption is only valid, when the admin_toolbar module is
-        // installed because otherwise we won't have child items at all.
-        if (admin_toolbar_links_access_filter_is_overview_page($route)) {
-          unset($items[$route]);
+      // Check, if user has access rights to the route.
+      if ($route_name === NULL || !$access_manager->checkNamedRoute($route_name, $route_params)) {
+        unset($items[$menu_id]);
+      }
+      else {
+        if (!empty($items[$menu_id]['below'])) {
+          // Recursively call this function for the child items.
+          admin_toolbar_links_access_filter_filter_non_accessible_links($items[$menu_id]['below']);
         }
-        else {
-          // Let's remove the expanded flag.
-          $items[$route]['is_expanded'] = FALSE;
+        if (empty($items[$menu_id]['below'])) {
+
+          // Every child item has been cleared out.
+          // Now check, if the given route represents an overview page only,
+          // without having functionality on its own. In this case, we can
+          // safely unset this item, as there aren't any children left.
+          // This assumption is only valid, when the admin_toolbar module is
+          // installed because otherwise we won't have child items at all.
+          if (admin_toolbar_links_access_filter_is_overview_page($route_name)) {
+            unset($items[$menu_id]);
+          }
+          // If there are no sub-items and the parent does not have a link, then
+          // it is safe to remove it.
+          elseif ($route_name === '<nolink>') {
+            unset($items[$menu_id]);
+          }
+          else {
+            // Let's remove the expanded flag.
+            $items[$menu_id]['is_expanded'] = FALSE;
+          }
         }
       }
+    }
+    catch (\UnexpectedValueException $e) {
+      // Skip on errors like "base:block has no corresponding route":
+      \Drupal::logger('admin_toolbar')->error($e->getMessage());
+      continue;
     }
   }
 }
@@ -119,7 +146,7 @@ function admin_toolbar_links_access_filter_filter_non_accessible_links(array &$i
  *   FALSE otherwise.
  */
 function admin_toolbar_links_access_filter_is_overview_page($route_name) {
-  // @var \Drupal\Core\Routing\RouteProviderInterface $route_provider.
+  /** @var \Drupal\Core\Routing\RouteProviderInterface $route_provider. */
   $route_provider = \Drupal::service('router.route_provider');
   $overview_page_controllers = [
     '\Drupal\system\Controller\AdminController::index',
@@ -151,13 +178,16 @@ function admin_toolbar_links_access_filter_user_has_admin_role(AccountInterface 
   static $user_has_admin_role = [];
   $uid = $account->id();
   if (!isset($user_has_admin_role[$uid])) {
+    $user_has_admin_role[$uid] = FALSE;
     $roles = Role::loadMultiple($account->getRoles());
-    foreach ($roles as $role) {
-      if ($role->isAdmin()) {
-        $user_has_admin_role[$uid] = TRUE;
-        break;
+    // It is possible for a user account to have no roles assigned.
+    if (!empty($roles)) {
+      foreach ($roles as $role) {
+        if ($role->isAdmin()) {
+          $user_has_admin_role[$uid] = TRUE;
+          break;
+        }
       }
-      $user_has_admin_role[$uid] = FALSE;
     }
   }
   return $user_has_admin_role[$uid];

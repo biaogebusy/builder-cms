@@ -151,7 +151,8 @@ class EntityReferenceRevisionsAutocompleteTest extends BrowserTestBase {
       'id' => $machine_name,
       'revision' => TRUE,
     );
-    $this->drupalGet('admin/structure/block/block-content/types/add');
+    $block_link = version_compare(\Drupal::VERSION, "10", ">=") ? 'admin/structure/block-content/add': 'admin/structure/block/block-content/types/add';
+    $this->drupalGet($block_link);
     $this->submitForm($edit, 'Save');
     $this->assertSession()->pageTextContains($label);
   }

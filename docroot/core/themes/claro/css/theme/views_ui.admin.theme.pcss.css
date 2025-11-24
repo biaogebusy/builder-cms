@@ -5,8 +5,6 @@
  * Replaces the styles provided by the views_ui module.
  */
 
-@import "../base/variables.pcss.css";
-
 .views-admin .links {
   margin: 0;
   list-style: none outside none;
@@ -32,7 +30,9 @@
 .views-admin a.icon {
   border: 1px solid #ddd;
   border-radius: 4px;
-  background: linear-gradient(-90deg, #fff 0, #e8e8e8 100%) no-repeat, repeat-y;
+  background:
+    linear-gradient(-90deg, #fff 0, #e8e8e8 100%) no-repeat,
+    repeat-y;
   box-shadow: 0 0 0 rgba(0, 0, 0, 0.3333) inset;
 }
 .views-admin a.icon:hover {
@@ -74,19 +74,27 @@
   background-position: center -52px;
 }
 .views-admin a.icon.delete {
-  background-position: center -52px, left top; /* LTR */
+  background-position:
+    center -52px,
+    left top; /* LTR */
 }
 [dir="rtl"] .views-admin a.icon.delete {
-  background-position: center -52px, right top;
+  background-position:
+    center -52px,
+    right top;
 }
 .views-admin .icon.rearrange {
   background-position: center -111px;
 }
 .views-admin a.icon.rearrange {
-  background-position: center -111px, left top; /* LTR */
+  background-position:
+    center -111px,
+    left top; /* LTR */
 }
 [dir="rtl"] .views-admin a.icon.rearrange {
-  background-position: center -111px, right top;
+  background-position:
+    center -111px,
+    right top;
 }
 details.box-padding {
   border: none;
@@ -265,7 +273,8 @@ td.group-title {
   border-bottom: 1px solid var(--color-gray-200-o-80);
   background-color: var(--color-gray-050);
 }
-.form-edit .form-actions {
+.form-edit .form-actions,
+.form-edit .field-actions {
   margin-top: 0;
   padding: var(--space-s) var(--space-m);
   border-right: 1px solid var(--color-gray-200-o-80);
@@ -298,8 +307,12 @@ td.group-title {
   margin-top: 0;
 }
 .view-preview-form .form-item--view-args,
-.view-preview-form .form-actions {
+.view-preview-form .form-actions,
+.view-preview-form .field-actions {
   margin-top: 5px;
+}
+.view-preview-form .views-bulk-actions__item {
+  margin-block-start: 0;
 }
 .view-preview-form .arguments-preview {
   font-size: 1em;
@@ -316,11 +329,13 @@ td.group-title {
   display: inline-block;
 }
 .form-item--live-preview,
-.view-preview-form .form-actions {
+.view-preview-form .form-actions,
+.view-preview-form .field-actions {
   vertical-align: top;
 }
 
-@media screen and (min-width: 45em) { /* 720px */
+@media screen and (min-width: 45em) {
+  /* 720px */
   .view-preview-form .form-type-textfield .description {
     white-space: nowrap;
   }
@@ -408,7 +423,12 @@ td.group-title {
 .views-edit-view {
   margin-bottom: 15px;
 }
-
+.views-edit-view.disabled .views-displays {
+  background-color: var(--color-red-020);
+}
+.views-edit-view.disabled .views-display-column {
+  background: var(--color-white);
+}
 /* The contents of the popup dialog on the views edit form. */
 .views-filterable-options .form-type-checkbox {
   padding: 5px 8px;
@@ -471,7 +491,7 @@ td.group-title {
   padding: var(--space-s) var(--space-m) var(--space-xs);
   background-color: var(--color-gray-050);
 }
-.views-ui-dialog .views-offset-top:not(:empty):after {
+.views-ui-dialog .views-offset-top:not(:empty)::after {
   position: absolute;
   bottom: 0;
   left: 0;

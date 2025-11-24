@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\search_api_db\Kernel;
 
@@ -9,6 +9,7 @@ use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api_db\DatabaseCompatibility\LocationAwareDatabaseInterface;
 use Drupal\Tests\search_api\Kernel\BackendTestBase;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests location searches using the Database Search API backend.
@@ -17,6 +18,7 @@ use Drupal\Tests\search_api\Kernel\BackendTestBase;
  *
  * @group search_api
  */
+#[RunTestsInSeparateProcesses]
 class LocationTest extends BackendTestBase {
 
   /**
@@ -131,6 +133,15 @@ class LocationTest extends BackendTestBase {
     $query = $this->buildSearch(place_id_sort: FALSE)->sort('location__distance');
     $query->setOption('search_api_location', $location_options);
     $query->setOption('search_api_retrieved_field_values', ['location__distance' => 'location__distance']);
+    // Also add a facet, since that used to lead to a PDO exception.
+    $facets['category'] = [
+      'field' => 'category',
+      'limit' => 0,
+      'min_count' => 1,
+      'missing' => TRUE,
+      'operator' => 'and',
+    ];
+    $query->setOption('search_api_facets', $facets);
     $result = $query->execute();
 
     $this->assertResults([3, 1], $result, 'Search for 500km from Antwerp ordered by distance');
@@ -152,6 +163,8 @@ class LocationTest extends BackendTestBase {
       ->sort('location__distance', 'DESC');
 
     $query->setOption('search_api_location', $location_options);
+    // Also add a facet, since that used to lead to a PDO exception.
+    $query->setOption('search_api_facets', $facets);
     $result = $query->execute();
     $this->assertResults([2, 1], $result, 'Search between 100 and 6000km from Antwerp ordered by distance descending');
   }

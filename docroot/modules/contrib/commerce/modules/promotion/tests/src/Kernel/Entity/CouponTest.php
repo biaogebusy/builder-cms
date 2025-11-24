@@ -2,14 +2,14 @@
 
 namespace Drupal\Tests\commerce_promotion\Kernel\Entity;
 
+use Drupal\Core\Datetime\DrupalDateTime;
+use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 use Drupal\commerce_order\Entity\Order;
 use Drupal\commerce_order\Entity\OrderItem;
 use Drupal\commerce_price\Price;
 use Drupal\commerce_promotion\Entity\Coupon;
 use Drupal\commerce_promotion\Entity\Promotion;
-use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
-use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 
 /**
  * Tests the Coupon entity.
@@ -291,6 +291,49 @@ class CouponTest extends OrderKernelTestBase {
     $date = new DrupalDateTime('2019-11-20 10:14:00');
     $coupon->setEndDate($date);
     $this->assertTrue($coupon->available($this->order));
+  }
+
+  /**
+   * @covers ::available
+   */
+  public function testAvailableIfMultipleCoupons() {
+    $promotion = Promotion::create([
+      'order_types' => ['default'],
+      'stores' => [$this->store->id()],
+      'usage_limit' => 1,
+      'usage_limit_customer' => 1,
+      'start_date' => '2017-01-01',
+      'allow_multiple_coupons' => TRUE,
+      'status' => TRUE,
+    ]);
+    $promotion->save();
+
+    /** @var \Drupal\commerce_promotion\Entity\CouponInterface $coupon */
+    $coupon1 = Coupon::create([
+      'promotion_id' => $promotion->id(),
+      'code' => 'coupon_code1',
+      'status' => TRUE,
+    ]);
+
+    $coupon1->setStartDate(DrupalDateTime::createFromTimestamp($this->order->getPlacedTime()));
+    $coupon1->save();
+    $this->assertTrue($coupon1->available($this->order));
+
+    /** @var \Drupal\commerce_promotion\Entity\CouponInterface $coupon */
+    $coupon2 = Coupon::create([
+      'promotion_id' => $promotion->id(),
+      'code' => 'coupon_code2',
+      'status' => TRUE,
+    ]);
+    $coupon2->setStartDate(DrupalDateTime::createFromTimestamp($this->order->getPlacedTime()));
+    $coupon2->save();
+    $this->order->get('coupons')->appendItem($coupon1);
+    $this->assertTrue($coupon2->available($this->order));
+
+    $promotion->set('allow_multiple_coupons', FALSE);
+    $promotion->save();
+    $this->reloadEntity($promotion);
+    $this->assertFalse($coupon2->available($this->order));
   }
 
 }

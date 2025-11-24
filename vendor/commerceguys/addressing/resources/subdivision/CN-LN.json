@@ -1,0 +1,66 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"LN"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Anshan Shi": {
+			"local_name": "鞍山市",
+			"has_children": true
+		},
+		"Benxi Shi": {
+			"local_name": "本溪市",
+			"has_children": true
+		},
+		"Chaoyang Shi": {
+			"local_name": "朝阳市",
+			"has_children": true
+		},
+		"Dalian Shi": {
+			"local_name": "大连市",
+			"has_children": true
+		},
+		"Dandong Shi": {
+			"local_name": "丹东市",
+			"has_children": true
+		},
+		"Fushun Shi": {
+			"local_name": "抚顺市",
+			"has_children": true
+		},
+		"Fuxin Shi": {
+			"local_name": "阜新市",
+			"has_children": true
+		},
+		"Huludao Shi": {
+			"local_name": "葫芦岛市",
+			"has_children": true
+		},
+		"Jinzhou Shi": {
+			"local_name": "锦州市",
+			"has_children": true
+		},
+		"Liaoyang Shi": {
+			"local_name": "辽阳市",
+			"has_children": true
+		},
+		"Panjin Shi": {
+			"local_name": "盘锦市",
+			"has_children": true
+		},
+		"Shenyang Shi": {
+			"local_name": "沈阳市",
+			"has_children": true
+		},
+		"Tieling Shi": {
+			"local_name": "铁岭市",
+			"has_children": true
+		},
+		"Yingkou Shi": {
+			"local_name": "营口市",
+			"has_children": true
+		}
+	}
+}

@@ -2,12 +2,12 @@
 
 namespace Drupal\commerce_order_test\Form;
 
-use Drupal\commerce\InlineFormManager;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\commerce\InlineFormManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**

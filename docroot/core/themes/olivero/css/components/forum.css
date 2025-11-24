@@ -17,6 +17,6 @@
 .forum__name--link,
 .forum__last-reply a,
 .forum__title a {
-  color: #0d77b5;
+  color: var(--color-text-primary-medium);
   font-weight: bold;
 }

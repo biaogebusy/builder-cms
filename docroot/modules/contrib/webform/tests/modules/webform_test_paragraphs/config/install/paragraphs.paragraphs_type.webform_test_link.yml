@@ -1,7 +1,7 @@
 langcode: en
 status: true
 dependencies:
-  enfourced:
+  enforced:
     module:
       - webform_test_paragraphs
 id: webform_test_link

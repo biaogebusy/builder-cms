@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Functional;
 
 use Drupal\Core\Language\LanguageInterface;
@@ -12,9 +14,7 @@ use Drupal\Core\Language\LanguageInterface;
 class NodeTypeInitialLanguageTest extends NodeTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['language', 'field_ui'];
 
@@ -46,7 +46,7 @@ class NodeTypeInitialLanguageTest extends NodeTestBase {
    * The default initial language must be the site's default, and the language
    * locked option must be on.
    */
-  public function testNodeTypeInitialLanguageDefaults() {
+  public function testNodeTypeInitialLanguageDefaults(): void {
     $this->drupalGet('admin/structure/types/manage/article');
     $this->assertTrue($this->assertSession()->optionExists('edit-language-configuration-langcode', LanguageInterface::LANGCODE_SITE_DEFAULT)->isSelected());
     $this->assertSession()->checkboxNotChecked('edit-language-configuration-language-alterable');
@@ -77,7 +77,7 @@ class NodeTypeInitialLanguageTest extends NodeTestBase {
       'language_configuration[language_alterable]' => TRUE,
     ];
     $this->drupalGet('admin/structure/types/manage/article');
-    $this->submitForm($edit, 'Save content type');
+    $this->submitForm($edit, 'Save');
     $this->drupalGet('node/add/article');
     // Ensure that the language is selectable on node add page when language
     // not hidden.
@@ -101,7 +101,7 @@ class NodeTypeInitialLanguageTest extends NodeTestBase {
       'language_configuration[langcode]' => 'en',
     ];
     $this->drupalGet('admin/structure/types/manage/article');
-    $this->submitForm($edit, 'Save content type');
+    $this->submitForm($edit, 'Save');
     $this->drupalGet('node/add/article');
     $this->assertTrue($this->assertSession()->optionExists('edit-langcode-0-value', 'en')->isSelected());
   }
@@ -109,7 +109,7 @@ class NodeTypeInitialLanguageTest extends NodeTestBase {
   /**
    * Tests language field visibility features.
    */
-  public function testLanguageFieldVisibility() {
+  public function testLanguageFieldVisibility(): void {
     // Creates a node to test Language field visibility feature.
     $edit = [
       'title[0][value]' => $this->randomMachineName(8),

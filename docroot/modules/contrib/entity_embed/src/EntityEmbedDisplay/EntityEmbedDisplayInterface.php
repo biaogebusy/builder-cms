@@ -57,7 +57,7 @@ interface EntityEmbedDisplayInterface extends ConfigurableInterface, DependentPl
    * @return \Drupal\Core\Access\AccessResultInterface
    *   The access result.
    */
-  public function access(AccountInterface $account = NULL);
+  public function access(?AccountInterface $account = NULL);
 
   /**
    * Builds the renderable array for this Entity Embed display plugin.

@@ -2,7 +2,6 @@
 
 namespace Drupal\commerce_log;
 
-use Drupal\commerce_log\Plugin\LogTemplate\LogTemplate;
 use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\Xss;
@@ -11,6 +10,7 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
 use Drupal\Core\Plugin\Discovery\ContainerDerivativeDiscoveryDecorator;
 use Drupal\Core\Plugin\Discovery\YamlDiscovery;
+use Drupal\commerce_log\Plugin\LogTemplate\LogTemplate;
 
 /**
  * Manages discovery and instantiation of commerce_log_template plugins.

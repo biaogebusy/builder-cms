@@ -5,12 +5,30 @@
  * Provides a new Views Field plugin for all entity fields.
  */
 
-use Drupal\Core\Extension\MissingDependencyException;
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function rest_views_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.rest_views':
+      // Return module description, features, and usage instructions.
+      $output = '';
+      $output .= '<p>' . t('This module enhances the REST export functionality in Views.') . '</p>';
+      $output .= '<p>' . t('Note that these will only work in combination with the (serializable) field handlers.') . '</p>';
+      $output .= '<p>' . t('Check the readme for more information.') . '</p>';
+      return $output;
+
+    default:
+      return '';
+  }
+}
 
 /**
  * Implements hook_views_data_alter().
  */
-function rest_views_views_data_alter(array &$data) {
+function rest_views_views_data_alter(array &$data): void {
   foreach ($data as $table_alias => $fields) {
     /** @var array[] $fields */
     foreach ($fields as $field_alias => $field) {
@@ -25,71 +43,6 @@ function rest_views_views_data_alter(array &$data) {
         // Only expose the field handler as the others are redundant.
         unset($field['argument'], $field['filter'], $field['sort']);
         $data[$table_alias]["{$field_alias}_export"] = $field;
-      }
-    }
-  }
-}
-
-/**
- * Implements hook_modules_installed().
- */
-function rest_views_modules_installed($modules) {
-  /** @var \Drupal\Core\Extension\ModuleExtensionList $availableModules */
-  $availableModules = Drupal::service('extension.list.module');
-  /** @var \Drupal\Core\Extension\ModuleHandlerInterface $installedModules */
-  $installedModules = Drupal::service('module_handler');
-  /** @var \Drupal\Core\Extension\ModuleInstallerInterface $moduleInstaller */
-  $moduleInstaller = Drupal::service('module_installer');
-
-  $to_install = [];
-  $reasons = [];
-
-  // Check all modules in the REST Views package.
-  foreach ($availableModules->getAllAvailableInfo() as $name => $info) {
-    if ($info['package'] === 'REST Views' && $name !== 'rest_views') {
-      $install = FALSE;
-      $dependency_names = [];
-
-      // Check if all dependencies are installed, and one of them just now.
-      foreach ($info['dependencies'] as $dependency) {
-        $dependency = explode(' ', $dependency)[0];
-        if (!$installedModules->moduleExists($dependency)) {
-          $install = FALSE;
-          break;
-        }
-        if (in_array($dependency, $modules, TRUE)) {
-          $install = TRUE;
-        }
-        if ($dependency !== 'rest_views') {
-          $dependency_names[] = $installedModules->getName($dependency);
-        }
-      }
-
-      if ($install) {
-        $to_install[$name] = $availableModules->getName($name);
-        $reasons[] = implode(', ', $dependency_names);
-      }
-    }
-
-    if ($to_install) {
-      try {
-        $moduleInstaller->install(array_keys($to_install));
-        Drupal::messenger()->addStatus(
-          t(
-            'REST Views automatically installed @modules to support @dependencies.',
-            [
-              '@modules'       => implode(', ', $to_install),
-              '@dependencies' => implode(', ', $reasons),
-            ]
-          )
-        );
-      }
-      catch (MissingDependencyException $e) {
-        // Don't do anything on failure.
-        watchdog_exception($e);
-      }
-      catch (ExtensionNameLengthException $e) {
-        watchdog_exception($e);
       }
     }
   }

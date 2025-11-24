@@ -8,13 +8,13 @@
   --gin-color-focus-border: rgba(0, 0, 0, .2); //rgb(0, 125, 250);
   --gin-color-focus-neutral-rgb: rgba(0, 0, 0, .4);
 
-  --gin-color-disabled: #8d8d8d;
+  --gin-color-disabled: #767676;
   --gin-color-disabled-bg: #eaeaea;
   --gin-color-disabled-border: #c2c2c2;
 
   --gin-color-warning: #d8b234;
   --gin-color-warning-light: #efcf64;
-  --gin-bg-warning: #{mix(black, #efcf64, 60%)};
+  --gin-bg-warning: #{mix(black, #efcf64, 70%)};
   --gin-bg-warning-light: rgba(226, 151, 0, .08);
   --gin-color-danger: #cc3d3d;
   --gin-color-danger-lightest: #fdd9d9;
@@ -29,6 +29,16 @@
   --gin-color-info: #082538;
   --gin-color-info-light: #589ac5;
   --gin-bg-info: #{mix(black, #2d6c96, 60%)};
+
+  // Status
+  --gin-status-text: #626262;
+  --gin-status-bg: #eee;
+  --gin-status-success-text: #1d6844;
+  --gin-status-success-bg: #26a76930;
+  --gin-status-warning-text: #{mix(black, #d8b234, 40%)};
+  --gin-status-warning-bg: rgba(226, 151, 0, .15);
+  --gin-status-danger-text: #cc3d3d;
+  --gin-status-danger-bg: rgba(222, 117, 96, .15);
 
   --gin-color-contextual: var(--gin-color-text);
   --gin-color-contextual-text: #eee;
@@ -116,7 +126,7 @@
   --gin-border-color-layer: rgba(0, 0, 0, .08);
   --gin-border-color-layer2: #d4d4d8;
   --gin-border-color-table: rgba(0, 0, 0, .1);
-  --gin-border-color-table-header: rgba(0, 0, 0, .2);
+  --gin-border-color-table-header: rgba(0, 0, 0, .3);
   --gin-border-color-form-element: #8E929C;
 
   --size-summary-border-radius: calc(var(--gin-border-m) - 1px);
@@ -157,8 +167,12 @@
   }
 
   // Sidebar
+  --gin-sidebar-small-width: 320px;
+  --gin-sidebar-min-width: 240px;
   --gin-sidebar-width: 320px;
+  --gin-sidebar-max-width: 560px;
   --gin-sidebar-offset: var(--gin-sidebar-width);
+
   @include mq(wide) {
     --gin-sidebar-width: 360px;
   }
@@ -184,6 +198,9 @@
   --input-line-height: var(--gin-spacing-l);
   --input-padding-horizontal: var(--gin-spacing-s);
   --input-padding-vertical: var(--gin-spacing-xs);
+
+  // Tooltips
+  --gin-tooltip-bg: #232429;
 
   // Claro
   --jui-dialog-z-index: 1260;
@@ -222,7 +239,7 @@
   --gin-color-focus-neutral-rgb: rgba(255, 255, 255, .8);
 
   // Disabled
-  --gin-color-disabled: #646464;
+  --gin-color-disabled: #919191;
   --gin-color-disabled-border: #646464;
   --gin-color-disabled-bg: #47474c;
 
@@ -259,7 +276,7 @@
   --gin-border-color-table: #43454a;
 
   // Tabs
-  --gin-border-color-table-header: rgba(255, 255, 255, .12);
+  --gin-border-color-table-header: rgba(255, 255, 255, .4);
 
   // Form element
   --gin-border-color-form-element: var(--gin-border-color-layer2);
@@ -269,6 +286,16 @@
 
   // Toggle
   --gin-switch: var(--gin-color-primary);
+
+  // Tag
+  --gin-status-text: #c3cbd0;
+  --gin-status-bg: rgba(255, 255, 255, 0.12);
+  --gin-status-success-text: #8bd3b1;
+  --gin-status-success-bg: #26a76940;
+  --gin-status-warning-text: #{mix(white, #d8b234, 40%)};
+  --gin-status-warning-bg: rgba(226, 151, 0, .15);
+  --gin-status-danger-text: #{mix(white, #cc3d3d, 50%)};
+  --gin-status-danger-bg: rgba(222, 117, 96, .15);
 
   // Shadows
   --gin-shadow-l1: 0 1px 2px rgb(0 0 0 / 2%),
@@ -285,4 +312,23 @@
   // Color pattern
   --gin-pattern-fallback: var(--gin-bg-layer2);
   --gin-pattern: var(--gin-border-color);
+
+  // Tooltips
+  --gin-tooltip-bg: var(--gin-bg-layer3);
+}
+
+@media (forced-colors: active) {
+  :root {
+    --gin-icon-color: CanvasText;
+  }
+}
+
+.entity-meta {
+  --entity-meta-color-bg: transparent;
+  --entity-meta-border-color: var(--gin-border-color);
+}
+
+.accordion {
+  --accordion-bg-color: transparent;
+  --accordion-border-color: var(--gin-border-color);
 }

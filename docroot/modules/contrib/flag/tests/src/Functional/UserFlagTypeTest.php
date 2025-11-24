@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\flag\Functional;
 
 /**
@@ -26,11 +28,11 @@ class UserFlagTypeTest extends FlagTestBase {
     $this->drupalGet('admin/structure/flags/add');
     $this->submitForm([
       'flag_entity_type' => 'entity:user',
-    ], $this->t('Continue'));
+    ], 'Continue');
 
-    $this->assertSession()->responseContains($this->t('Permissions for users to flag themselves.'));
+    $this->assertSession()->responseContains('Permissions for users to flag themselves.');
 
-    $this->assertSession()->responseContains($this->t('Display link on user profile page'));
+    $this->assertSession()->responseContains('Display link on user profile page');
   }
 
   /**
@@ -63,7 +65,7 @@ class UserFlagTypeTest extends FlagTestBase {
 
     $this->drupalLogin($user);
 
-    // Check the state of the extra permssions checkbox.
+    // Check the state of the extra permissions checkbox.
     $this->drupalGet('admin/structure/flags/manage/' . $flag->id());
     $this->assertSession()->checkboxChecked('edit-extra-permissions-owner');
 
@@ -71,7 +73,7 @@ class UserFlagTypeTest extends FlagTestBase {
     $this->drupalGet('user/' . $user->id());
     $this->assertSession()->linkExists($flag->getShortText('flag'));
 
-    // Uncheck extra permssions.
+    // Uncheck extra permissions.
     $edit = [
       'extra_permissions[owner]' => FALSE,
     ];
@@ -82,7 +84,7 @@ class UserFlagTypeTest extends FlagTestBase {
     $this->drupalGet('admin/structure/flags/manage/' . $flag->id());
     $this->assertSession()->checkboxNotChecked('edit-extra-permissions-owner');
 
-    // Assert the flag disapears from the profile page.
+    // Assert the flag disappears from the profile page.
     $this->drupalGet('user/' . $user->id());
     $this->assertSession()->linkNotExists($flag->getShortText('flag'));
   }

@@ -1,0 +1,6 @@
+charts.settings.library_plugin.c3:
+  type: charts_settings_library_plugin
+  mapping:
+    legend:
+      label: 'Monochrome Pie/Donut Charts'
+      type: boolean

@@ -13,28 +13,18 @@ class EventInfoController extends ControllerBase {
 
   /**
    * Event dispatcher service.
-   *
-   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
    */
-  protected $eventDispatcher;
-
-  /**
-   * EventInfoController constructor.
-   *
-   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
-   *   Event dispatcher service.
-   */
-  public function __construct(EventDispatcherInterface $event_dispatcher) {
-    $this->eventDispatcher = $event_dispatcher;
-  }
+  protected EventDispatcherInterface $eventDispatcher;
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('event_dispatcher')
-    );
+  public static function create(ContainerInterface $container): static {
+    $instance = parent::create($container);
+    $instance->eventDispatcher = $container->get('event_dispatcher');
+    $instance->stringTranslation = $container->get('string_translation');
+
+    return $instance;
   }
 
   /**
@@ -43,7 +33,7 @@ class EventInfoController extends ControllerBase {
    * @return array
    *   A render array as expected by the renderer.
    */
-  public function eventList() {
+  public function eventList(): array {
     $headers = [
       'name' => [
         'data' => $this->t('Event Name'),
@@ -111,10 +101,11 @@ class EventInfoController extends ControllerBase {
    * @return string
    *   The resolved callable name or an empty string.
    */
-  protected function resolveCallableName($callable) {
+  protected function resolveCallableName(mixed $callable) {
     if (is_callable($callable, TRUE, $callable_name)) {
       return $callable_name;
     }
+
     return '';
   }
 

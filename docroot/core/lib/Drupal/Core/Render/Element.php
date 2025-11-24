@@ -2,7 +2,6 @@
 
 namespace Drupal\Core\Render;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Access\AccessResultInterface;
 
 /**
@@ -37,7 +36,7 @@ class Element {
    *   An array of property keys for the element.
    */
   public static function properties(array $element) {
-    return array_filter(array_keys($element), 'static::property');
+    return array_filter(array_keys($element), [static::class, 'property']);
   }
 
   /**
@@ -92,10 +91,10 @@ class Element {
           // the insertion order.
           $child_weights[$key] = floor($weight * 1000) + $i / $count;
         }
-        // Only trigger an error if the value is not null.
+        // Only trigger an exception if the value is not null.
         // @see https://www.drupal.org/node/1283892
-        elseif (isset($value) && (!empty($key) && $key != 0 && !is_int($key))) {
-          trigger_error(new FormattableMarkup('"@key" is an invalid render array key', ['@key' => $key]), E_USER_ERROR);
+        elseif (isset($value)) {
+          throw new \InvalidArgumentException(sprintf('"%s" is an invalid render array key. Value should be an array but got a %s.', $key, gettype($value)));
         }
       }
       $i++;
@@ -198,6 +197,36 @@ class Element {
    */
   public static function isEmpty(array $elements) {
     return \array_diff(\array_keys($elements), ['#cache', '#weight']) === [];
+  }
+
+  /**
+   * Checks if a candidate is a render array.
+   *
+   * @param mixed $candidate
+   *   The candidate.
+   *
+   * @return bool
+   *   TRUE if it's a render array. FALSE otherwise.
+   */
+  public static function isRenderArray($candidate): bool {
+    if (!is_array($candidate)) {
+      return FALSE;
+    }
+    if (empty($candidate)) {
+      return FALSE;
+    }
+    foreach ($candidate as $key => $value) {
+      if (!is_int($key) && $key !== '' && $key[0] === '#') {
+        continue;
+      }
+      if (!is_array($value)) {
+        return FALSE;
+      }
+      if (!static::isRenderArray($value)) {
+        return FALSE;
+      }
+    }
+    return TRUE;
   }
 
 }

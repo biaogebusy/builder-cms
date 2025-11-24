@@ -1,0 +1,33 @@
+# This is a follow-up migration so that all the ECK entity types exist when
+# the deriver is executed. For custom migration, it's not necessary if
+# destination entity type already exists.
+# @see \Drupal\eck\Plugin\migrate\D7EckType::generateFollowUpMigrations().
+id: d7_eck
+label: ECK Entities
+migration_tags:
+  - Drupal 7
+  - Content
+  - Follow-up migration
+deriver: Drupal\eck\Plugin\migrate\D7EckDeriver
+source:
+  plugin: d7_eck_entity
+process:
+  # If you are using this file to build a custom migration consider removing
+  # id field to allow incremental migrations.
+  id: id
+  title: title
+  langcode:
+    plugin: default_value
+    source: language
+    default_value: "und"
+# The destination plugin is provided via D7EckDeriver.
+# If you are using this file to build a custom migration you
+# should configure the destination plugin. If the destination
+# entity type id is foo, then the destination plugin
+# should be eck:foo.
+migration_dependencies:
+  required:
+    - d7_eck_type
+    - d7_eck_bundle
+  optional:
+    - d7_field_instance

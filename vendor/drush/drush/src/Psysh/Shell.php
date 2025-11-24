@@ -1,35 +1,29 @@
 <?php
 
-/**
- * @file
- * Contains \Drush\Psysh\Shell.
- */
+declare(strict_types=1);
 
 namespace Drush\Psysh;
 
 use Psy\Shell as BaseShell;
+use Symfony\Component\Console\Command\Command as BaseCommand;
 use Symfony\Component\Console\Input\StringInput;
 
 class Shell extends BaseShell
 {
     /**
      * Get a command (if one exists) for the current input string.
-     *
-     * @param string $input
-     *
-     * @return null|string
      */
-    protected function getCommand(string $input)
+    protected function getCommand(string $input): ?BaseCommand
     {
         if ($name = $this->getCommandFromInput($input)) {
             return $this->get($name);
         }
+        return null;
     }
 
     /**
      * Check whether a command is set for the current input string.
      *
-     * @param string $input
      *
      * @return bool True if the shell has a command for the given input.
      */

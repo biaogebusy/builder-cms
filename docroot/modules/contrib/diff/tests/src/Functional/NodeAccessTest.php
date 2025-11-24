@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\diff\Functional;
 
 use Drupal\Tests\BrowserTestBase;
@@ -33,7 +35,7 @@ class NodeAccessTest extends BrowserTestBase {
     $this->createUser();
 
     // Rebuild access.
-    node_access_rebuild();
+    \node_access_rebuild();
   }
 
   /**

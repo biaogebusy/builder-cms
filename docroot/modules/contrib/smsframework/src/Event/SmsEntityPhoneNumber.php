@@ -15,27 +15,11 @@ use Symfony\Contracts\EventDispatcher\Event;
 class SmsEntityPhoneNumber extends Event {
 
   /**
-   * The entity to find phone numbers.
-   *
-   * @var \Drupal\Core\Entity\EntityInterface
-   */
-  protected $entity;
-
-  /**
-   * Whether the returned phone numbers must be verified.
-   *
-   * Use NULL to get all phone numbers regardless of status.
-   *
-   * @var bool|null
-   */
-  protected $verified;
-
-  /**
    * An array of phone numbers.
    *
    * @var string[]
    */
-  protected $phoneNumbers = [];
+  protected array $phoneNumbers = [];
 
   /**
    * Constructs the object.
@@ -46,9 +30,10 @@ class SmsEntityPhoneNumber extends Event {
    *   Whether the returned phone numbers must be verified, or NULL to get all
    *   phone numbers regardless of status.
    */
-  public function __construct(EntityInterface $entity, $verified = TRUE) {
-    $this->entity = $entity;
-    $this->verified = $verified;
+  public function __construct(
+    protected EntityInterface $entity,
+    protected ?bool $verified = TRUE,
+  ) {
   }
 
   /**

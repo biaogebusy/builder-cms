@@ -2,14 +2,16 @@
 
 namespace Drupal\commerce;
 
-use Drupal\commerce\Event\CommerceEvents;
-use Drupal\commerce\Event\FilterConditionsEvent;
 use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\CategorizingPluginManagerTrait;
 use Drupal\Core\Plugin\DefaultPluginManager;
+use Drupal\commerce\Attribute\CommerceCondition;
+use Drupal\commerce\Event\CommerceEvents;
+use Drupal\commerce\Event\FilterConditionsEvent;
+use Drupal\commerce\Plugin\Commerce\Condition\ConditionInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
@@ -52,7 +54,14 @@ class ConditionManager extends DefaultPluginManager implements ConditionManagerI
    *   The event dispatcher.
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler, EntityTypeManagerInterface $entity_type_manager, EventDispatcherInterface $event_dispatcher) {
-    parent::__construct('Plugin/Commerce/Condition', $namespaces, $module_handler, 'Drupal\commerce\Plugin\Commerce\Condition\ConditionInterface', 'Drupal\commerce\Annotation\CommerceCondition');
+    parent::__construct(
+      'Plugin/Commerce/Condition',
+      $namespaces,
+      $module_handler,
+      ConditionInterface::class,
+      CommerceCondition::class,
+      'Drupal\commerce\Annotation\CommerceCondition',
+    );
 
     $this->alterInfo('commerce_condition_info');
     $this->setCacheBackend($cache_backend, 'commerce_condition_plugins');

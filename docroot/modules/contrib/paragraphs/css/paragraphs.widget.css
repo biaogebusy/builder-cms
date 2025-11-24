@@ -168,18 +168,21 @@
   margin-right: -11px;
 }
 
-.js .field--widget-paragraphs .form-actions {
+.js .field--widget-paragraphs .form-actions,
+.js .field--widget-paragraphs .field-actions {
   -webkit-box-align: center;
   -webkit-align-items: center;
       -ms-flex-align: center;
           align-items: center;
 }
 
-.js .field--widget-paragraphs .form-actions .dropbutton-multiple {
+.js .field--widget-paragraphs .form-actions .dropbutton-multiple,
+.js .field--widget-paragraphs .field-actions .dropbutton-multiple {
   margin-right: .5rem;
 }
 
-.js .field--widget-paragraphs .form-actions .placeholder {
+.js .field--widget-paragraphs .form-actions .placeholder,
+.js .field--widget-paragraphs .field-actions .placeholder {
   margin-left: .25em;
 }
 
@@ -193,7 +196,7 @@
 }
 
 .js .field--widget-paragraphs .paragraphs-dropbutton-wrapper .dropbutton-multiple {
-  margin: 0;
+  margin: 0 .5rem 0 0;
 }
 
 .js .field--widget-paragraphs .dropbutton-wrapper {
@@ -220,6 +223,7 @@
   margin-top: 3px;
   padding-right: .25em;
   width: 23px;
+  vertical-align: baseline;
 }
 
 .js .field--widget-paragraphs .draggable .tabledrag-handle:focus::before {
@@ -230,6 +234,7 @@
 .js .field--widget-paragraphs .draggable .tabledrag-handle::after {
   margin-left: 0;
   padding: .5rem;
+  margin-top: 0.9375rem;
 }
 
 .js .field--widget-paragraphs .draggable .tabledrag-handle:hover .handle {
@@ -394,13 +399,13 @@ tr:hover .paragraphs-description::after {
   background: #057ec7 none;
 }
 
+.js .paragraphs-convert-button {
+  margin-left: 0;
+}
+
 .paragraphs-dragdrop__item .paragraphs-summary-wrapper .paragraphs-description .paragraphs-content-wrapper,
 .paragraphs-dragdrop__item .paragraphs-summary-wrapper .paragraphs-description .paragraphs-plugin-wrapper {
   font-size: 81.3%;
-}
-
-.js .paragraphs-convert-button {
-  margin-left: 0;
 }
 
 .paragraph--view-mode--preview {

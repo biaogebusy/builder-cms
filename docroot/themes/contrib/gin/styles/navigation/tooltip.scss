@@ -6,9 +6,9 @@
  .tooltip,
  .cloned-tooltip {
    position: absolute;
-   top: var(--space-xs);
-   left: 100%;
-   background-color: var(--color-gray-950);
+   inset-block-start: var(--space-xs);
+   inset-inline-start: 100%;
+   background-color: var(--gin-tooltip-bg);
    color: white;
    padding: 0.25rem var(--space-xs);
    border-radius: var(--space-xs);

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Extension;
 
 use Drupal\Core\Extension\ModuleExtensionList;
@@ -47,7 +49,7 @@ class ModuleRequiredByThemesUninstallValidatorTest extends UnitTestCase {
   /**
    * @covers ::validate
    */
-  public function testValidateNoThemeDependency() {
+  public function testValidateNoThemeDependency(): void {
     $this->themeExtensionList->getAllInstalledInfo()->willReturn([
       'stable9' => [
         'name' => 'Stable 9',
@@ -68,7 +70,7 @@ class ModuleRequiredByThemesUninstallValidatorTest extends UnitTestCase {
   /**
    * @covers ::validate
    */
-  public function testValidateOneThemeDependency() {
+  public function testValidateOneThemeDependency(): void {
     $module = 'single_module';
     $module_name = 'Single Module';
     $theme = 'one_theme';
@@ -107,7 +109,7 @@ class ModuleRequiredByThemesUninstallValidatorTest extends UnitTestCase {
   /**
    * @covers ::validate
    */
-  public function testValidateTwoThemeDependencies() {
+  public function testValidateTwoThemeDependencies(): void {
     $module = 'popular_module';
     $module_name = 'Popular Module';
     $theme1 = 'first_theme';

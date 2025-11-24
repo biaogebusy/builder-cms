@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\toolbar\Unit\PageCache;
 
 use Drupal\toolbar\PageCache\AllowToolbarPath;
@@ -24,6 +26,8 @@ class AllowToolbarPathTest extends UnitTestCase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    parent::setUp();
+
     $this->policy = new AllowToolbarPath();
   }
 
@@ -33,7 +37,7 @@ class AllowToolbarPathTest extends UnitTestCase {
    * @dataProvider providerTestAllowToolbarPath
    * @covers ::check
    */
-  public function testAllowToolbarPath($expected_result, $path) {
+  public function testAllowToolbarPath($expected_result, $path): void {
     $request = Request::create($path);
     $result = $this->policy->check($request);
     $this->assertSame($expected_result, $result);
@@ -45,7 +49,7 @@ class AllowToolbarPathTest extends UnitTestCase {
    * @return array
    *   Data and expected results.
    */
-  public function providerTestAllowToolbarPath() {
+  public static function providerTestAllowToolbarPath() {
     return [
       [NULL, '/'],
       [NULL, '/other-path?q=/toolbar/subtrees/'],

@@ -2,30 +2,29 @@
 
 namespace Drupal\commerce_tax\Plugin\Field\FieldWidget;
 
-use Drupal\address\Element\Address;
-use Drupal\address\Element\Country;
-use Drupal\commerce_tax\TaxNumberTypeManagerInterface;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Field\Attribute\FieldWidget;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\address\Element\Address;
+use Drupal\address\Element\Country;
+use Drupal\commerce_tax\TaxNumberTypeManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Plugin implementation of the 'commerce_tax_number_default' widget.
- *
- * @FieldWidget(
- *   id = "commerce_tax_number_default",
- *   label = @Translation("Tax number"),
- *   field_types = {
- *     "commerce_tax_number"
- *   }
- * )
  */
+#[FieldWidget(
+  id: "commerce_tax_number_default",
+  label: new TranslatableMarkup("Tax number"),
+  field_types: ["commerce_tax_number"],
+)]
 class TaxNumberDefaultWidget extends WidgetBase implements ContainerFactoryPluginInterface {
 
   /**

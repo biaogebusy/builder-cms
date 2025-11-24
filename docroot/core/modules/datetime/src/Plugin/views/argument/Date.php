@@ -2,9 +2,11 @@
 
 namespace Drupal\datetime\Plugin\views\argument;
 
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItem;
+use Drupal\views\Attribute\ViewsArgument;
 use Drupal\views\FieldAPIHandlerTrait;
 use Drupal\views\Plugin\views\argument\Date as NumericDate;
 
@@ -21,9 +23,10 @@ use Drupal\views\Plugin\views\argument\Date as NumericDate;
  * @see \Drupal\views\ManyToOneHelper
  *
  * @ingroup views_argument_handlers
- *
- * @ViewsArgument("datetime")
  */
+#[ViewsArgument(
+  id: 'datetime',
+)]
 class Date extends NumericDate {
 
   use FieldAPIHandlerTrait;
@@ -38,8 +41,19 @@ class Date extends NumericDate {
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, RouteMatchInterface $route_match, DateFormatterInterface $date_formatter) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $route_match, $date_formatter);
+  public function __construct(
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+    RouteMatchInterface $route_match,
+    DateFormatterInterface $date_formatter,
+    ?TimeInterface $time = NULL,
+  ) {
+    if (!$time) {
+      @trigger_error('Calling ' . __METHOD__ . ' without the $time argument is deprecated in drupal:10.3.0 and it will be required in drupal:11.0.0. See https://www.drupal.org/node/3395991', E_USER_DEPRECATED);
+      $time = \Drupal::service('datetime.time');
+    }
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $route_match, $date_formatter, $time);
 
     $definition = $this->getFieldStorageDefinition();
     if ($definition->getSetting('datetime_type') === DateTimeItem::DATETIME_TYPE_DATE) {

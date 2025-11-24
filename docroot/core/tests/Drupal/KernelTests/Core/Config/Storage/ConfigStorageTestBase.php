@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Config\Storage;
 
 use Drupal\KernelTests\KernelTestBase;
@@ -33,11 +35,17 @@ abstract class ConfigStorageTestBase extends KernelTestBase {
    *
    * @todo Coverage: Trigger PDOExceptions / Database exceptions.
    */
-  public function testCRUD() {
+  public function testCRUD(): void {
     $name = 'config_test.storage';
 
     // Checking whether a non-existing name exists returns FALSE.
     $this->assertFalse($this->storage->exists($name));
+
+    // Checking whether readMultiple() works with empty storage.
+    $this->assertEmpty($this->storage->readMultiple([$name]));
+
+    // readMultiple() accepts an empty array.
+    $this->assertSame([], $this->storage->readMultiple([]), 'Empty query should return empty array');
 
     // Reading a non-existing name returns FALSE.
     $data = $this->storage->read($name);
@@ -59,6 +67,7 @@ abstract class ConfigStorageTestBase extends KernelTestBase {
     $this->assertTrue($result);
 
     // Listing all names returns all.
+    $this->storage->write('system.performance', []);
     $names = $this->storage->listAll();
     $this->assertContains('system.performance', $names);
     $this->assertContains($name, $names);
@@ -116,7 +125,7 @@ abstract class ConfigStorageTestBase extends KernelTestBase {
   /**
    * Tests an invalid storage.
    */
-  public function testInvalidStorage() {
+  public function testInvalidStorage(): void {
     $name = 'config_test.storage';
 
     // Write something to the valid storage to prove that the storages do not
@@ -158,7 +167,7 @@ abstract class ConfigStorageTestBase extends KernelTestBase {
   /**
    * Tests storage writing and reading data preserving data type.
    */
-  public function testDataTypes() {
+  public function testDataTypes(): void {
     $name = 'config_test.types';
     $data = [
       'array' => [],
@@ -182,7 +191,7 @@ abstract class ConfigStorageTestBase extends KernelTestBase {
   /**
    * Tests that the storage supports collections.
    */
-  public function testCollection() {
+  public function testCollection(): void {
     $name = 'config_test.storage';
     $data = ['foo' => 'bar'];
     $result = $this->storage->write($name, $data);

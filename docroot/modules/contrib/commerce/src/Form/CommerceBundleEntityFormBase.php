@@ -2,9 +2,9 @@
 
 namespace Drupal\commerce\Form;
 
-use Drupal\commerce\EntityTraitManagerInterface;
 use Drupal\Core\Entity\BundleEntityFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\commerce\EntityTraitManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class CommerceBundleEntityFormBase extends BundleEntityFormBase {

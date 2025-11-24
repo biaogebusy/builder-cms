@@ -53,7 +53,7 @@ class JsonapiResourceConfigListBuilder extends ConfigEntityListBuilder {
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface|null $entityTypeManager
    *   Entity type manager.
    */
-  public function __construct(EntityTypeInterface $entity_type, EntityStorageInterface $storage, ResourceTypeRepositoryInterface $resource_type_repository, ImmutableConfig $config, EntityTypeManagerInterface $entityTypeManager = NULL) {
+  public function __construct(EntityTypeInterface $entity_type, EntityStorageInterface $storage, ResourceTypeRepositoryInterface $resource_type_repository, ImmutableConfig $config, ?EntityTypeManagerInterface $entityTypeManager = NULL) {
     parent::__construct($entity_type, $storage);
     $this->resourceTypeRepository = $resource_type_repository;
     $this->config = $config;

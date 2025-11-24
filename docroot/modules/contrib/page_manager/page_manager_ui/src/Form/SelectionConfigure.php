@@ -5,6 +5,9 @@ namespace Drupal\page_manager_ui\Form;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ctools\Form\ConditionConfigure;
 
+/**
+ * Configure page variant selection.
+ */
 class SelectionConfigure extends ConditionConfigure {
 
   /**
@@ -21,13 +24,14 @@ class SelectionConfigure extends ConditionConfigure {
    *   The cached values from the wizard.
    *
    * @return \Drupal\page_manager\PageVariantInterface
+   *   The Page Variant.
    */
   protected function getPageVariant($cached_values) {
     if (isset($cached_values['page_variant'])) {
       return $cached_values['page_variant'];
     }
 
-    /** @var $page \Drupal\page_manager\PageInterface */
+    /** @var \Drupal\page_manager\PageInterface $page */
     $page = $cached_values['page'];
     return $page->getVariant($this->variantMachineName);
   }
@@ -36,14 +40,14 @@ class SelectionConfigure extends ConditionConfigure {
    * {@inheritdoc}
    */
   protected function getParentRouteInfo($cached_values) {
-    /** @var $page \Drupal\page_manager\PageInterface */
+    /** @var \Drupal\page_manager\PageInterface $page */
     $page = $cached_values['page'];
 
     if ($page->isNew()) {
       return ['entity.page.add_step_form',
         [
-        'machine_name' => $this->machine_name,
-        'step' => 'selection',
+          'machine_name' => $this->machine_name,
+          'step' => 'selection',
         ],
       ];
     }
@@ -51,15 +55,15 @@ class SelectionConfigure extends ConditionConfigure {
       $page_variant = $this->getPageVariant($cached_values);
       return ['entity.page.edit_form',
         [
-        'machine_name' => $this->machine_name,
-        'step' => 'page_variant__' . $page_variant->id() . '__selection',
+          'machine_name' => $this->machine_name,
+          'step' => 'page_variant__' . $page_variant->id() . '__selection',
         ],
       ];
     }
   }
 
   /**
-   * @inheritDoc
+   * {@inheritDoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $condition = NULL, $tempstore_id = NULL, $machine_name = NULL, $variant_machine_name = NULL) {
     $this->variantMachineName = $variant_machine_name;
@@ -87,7 +91,7 @@ class SelectionConfigure extends ConditionConfigure {
    * {@inheritdoc}
    */
   protected function getContexts($cached_values) {
-    /** @var $page \Drupal\page_manager\Entity\PageVariant */
+    /** @var \Drupal\page_manager\Entity\PageVariant $page */
     $page_variant = $this->getPageVariant($cached_values);
     return $page_variant->getContexts();
   }

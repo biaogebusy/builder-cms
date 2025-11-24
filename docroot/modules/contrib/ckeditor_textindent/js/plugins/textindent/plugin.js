@@ -1,32 +1,34 @@
 CKEDITOR.plugins.add( 'textindent', {
-	icons: 'textindent',
-    availableLangs: {'en':1, 'zh-cn':1, 'pt-br':1},
-    lang: 'en,zh-cn,pt-br',
+    icons: 'textindent',
+    availableLangs: {'pt-br':1, 'en':1, 'zh-hans':1},
+    lang: 'zh-hans, en, pt-br',
 	init: function( editor ) {
 
         var indentation = editor.config.indentation;
+        var indentationKey = editor.config.indentationKey;
 
         if(typeof(indentation) == 'undefined')
-            indentation = '2em';
-        else if(indentation.match(/^\d+$/)) {
-            indentation = indentation + 'px';
-        }
+            indentation = '50px';
+        if(typeof(indentationKey) == 'undefined')
+            indentationKey = 'tab';
 
         if(editor.ui.addButton){
 
             editor.ui.addButton( 'textindent', {
                 label: editor.lang.textindent.labelName,
-                command: 'insert',
-                toolbar: 'insert'
+                command: 'ident-paragraph',
             });
         }
 
-        // XSS filter support
-        editor.on('instanceReady', function() {
-            jQuery(editor.document.$).find('p[data-text-indent]').each(function() {
-                this.setAttribute('style', 'text-indent:'+jQuery(this).data('text-indent'));
+        if( indentationKey !== false){
+
+            editor.on('key', function(ev) {
+                if(ev.data.domEvent.$.key.toLowerCase() === indentationKey.toLowerCase().trim() || ev.data.keyCode === indentationKey){
+                    editor.execCommand('ident-paragraph');
+                    ev.cancel();
+                }
             });
-        });
+        }
 
         editor.on( 'selectionChange', function()
             {
@@ -39,43 +41,56 @@ CKEDITOR.plugins.add( 'textindent', {
                     });
 
                 if( style_textindente.checkActive(editor.elementPath(), editor) )
-                   editor.getCommand('insert').setState(CKEDITOR.TRISTATE_ON);
+                   editor.getCommand('ident-paragraph').setState(CKEDITOR.TRISTATE_ON);
                 else
-                   editor.getCommand('insert').setState(CKEDITOR.TRISTATE_OFF);
+                   editor.getCommand('ident-paragraph').setState(CKEDITOR.TRISTATE_OFF);
 
-        })
+        });
 
-        editor.addCommand("insert", {
+        editor.addCommand("ident-paragraph", {
             allowedContent: 'p{text-indent}',
             requiredContent: 'p',
-            exec: function() {
+            exec: function(evt) {
 
-                var style_textindente = new CKEDITOR.style({
-                        element: 'p',
-                        styles: { 'text-indent': indentation },
-                        attributes:{ 'data-text-indent': indentation },
-                        overrides: [{
-                            element: 'text-indent', attributes: { 'size': '0'}
-                        }]
-                    });
+                var range = editor.getSelection().getRanges()[0];
 
-                var style_no_textindente = new CKEDITOR.style({
-                        element: 'p',
-                        styles: { 'text-indent': '0' },
-                        attributes:{ 'data-text-indent': 0 },
-                        overrides: [{
-                            element: 'text-indent', attributes: { 'size': indentation }
-                        }]
-                    });
+                var walker = new CKEDITOR.dom.walker( range ),
+                node;
 
-                if( style_textindente.checkActive(editor.elementPath(), editor) ){
-                    editor.fire('saveSnapshot');
-                    editor.applyStyle(style_no_textindente);
+                var state = editor.getCommand('ident-paragraph').state;
+
+                while ( ( node = walker.next() ) ) {
+                    if ( node.type == CKEDITOR.NODE_ELEMENT ) {
+                        if(node.getName() === "p"){
+                                editor.fire('saveSnapshot');
+                                if( state == CKEDITOR.TRISTATE_ON){
+                                    node.removeStyle("text-indent");
+                                    editor.getCommand('ident-paragraph').setState(CKEDITOR.TRISTATE_OFF);
+                                }
+                                else{
+                                    node.setStyle( "text-indent", indentation );
+                                    editor.getCommand('ident-paragraph').setState(CKEDITOR.TRISTATE_ON);
+                                }
+                        }
+                    }
                 }
-                else{
+
+                if(node === null){
+
+                    node = editor.getSelection().getStartElement().getAscendant('p', true);
+
                     editor.fire('saveSnapshot');
-                    editor.applyStyle(style_textindente);
+
+                    if( state == CKEDITOR.TRISTATE_ON){
+                        node.removeStyle("text-indent");
+                        editor.getCommand('ident-paragraph').setState(CKEDITOR.TRISTATE_OFF);
+                    }
+                    else{
+                        node.setStyle( "text-indent", indentation );
+                        editor.getCommand('ident-paragraph').setState(CKEDITOR.TRISTATE_ON);
+                    }
                 }
+
 
             }
         });

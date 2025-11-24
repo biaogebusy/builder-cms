@@ -3,11 +3,11 @@
 namespace Drupal\Tests\page_manager\Kernel;
 
 use Drupal\Component\Utility\UrlHelper;
+use Drupal\Core\Routing\RouteObjectInterface;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
 use Drupal\page_manager\Entity\Page;
 use Drupal\page_manager\Entity\PageVariant;
-use Drupal\Core\Routing\RouteObjectInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -125,7 +125,7 @@ class PageManagerRoutingTest extends EntityKernelTestBase {
     }
 
     if ($expected) {
-      $this->assertArrayHasKey( RouteObjectInterface::ROUTE_NAME, $parameters);
+      $this->assertArrayHasKey(RouteObjectInterface::ROUTE_NAME, $parameters);
       $this->assertSame($expected, $parameters[RouteObjectInterface::ROUTE_NAME]);
     }
     else {
@@ -133,7 +133,10 @@ class PageManagerRoutingTest extends EntityKernelTestBase {
     }
   }
 
-  public function providerTestRouteFilter() {
+  /**
+   * Data provider for testRouteFilter.
+   */
+  public static function providerTestRouteFilter() {
     $data = [];
     $data['custom'] = [
       '/custom/entity_test/1',

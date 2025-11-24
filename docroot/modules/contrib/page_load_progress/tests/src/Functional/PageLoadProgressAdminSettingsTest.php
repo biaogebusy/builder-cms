@@ -23,7 +23,7 @@ class PageLoadProgressAdminSettingsTest extends BrowserTestBase {
    *
    * @var array
    */
-  public static $modules = ['page_load_progress'];
+  protected static $modules = ['page_load_progress'];
 
   /**
    * The installation profile to use with this test.
@@ -46,7 +46,7 @@ class PageLoadProgressAdminSettingsTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
     // Admin user account only needs a subset of admin permissions.
     $this->adminUser = $this->drupalCreateUser([

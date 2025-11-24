@@ -12,40 +12,13 @@ use Drupal\user\Entity\User;
  * Implements hook_token_info().
  */
 function message_token_info() {
-  $type = [
-    'name' => t('messages'),
-    'description' => t('Tokens related to individual content items, or "messages".'),
-    'needs-data' => 'message',
-  ];
-
-  // Core tokens for messages.
-  $message['mid'] = [
-    'name' => t("Message ID"),
-    'description' => t('The unique ID of the message.'),
-  ];
-  $message['template'] = [
-    'name' => t("Message template"),
-  ];
-  $message['template-name'] = [
-    'name' => t("message template name"),
-    'description' => t("The human-readable name of the message template."),
-  ];
-  $message['uuid'] = [
-    'name' => t("Message UID"),
-    'description' => t("The message UUID."),
-  ];
-
-  $message['created'] = [
-    'name' => t("Date created"),
-    'type' => 'date',
-  ];
+  // @todo Remove this token in Message 2.0.
   $message['author'] = [
-    'name' => t("Author"),
+    'name' => t("Author (deprecated)"),
     'type' => 'user',
   ];
 
   return [
-    'types' => ['message' => $type],
     'tokens' => ['message' => $message],
   ];
 }
@@ -64,41 +37,17 @@ function message_tokens($type, $tokens, array $data, array $options, BubbleableM
 
     foreach ($tokens as $name => $original) {
       switch ($name) {
-        // Simple key values on the message.
-        case 'mid':
-          $replacements[$original] = $message->id();
-          break;
-
-        case 'template':
-          $replacements[$original] = $message->getTemplate()->id();
-          break;
-
-        case 'template-name':
-          $replacements[$original] = $message->getTemplate()->label();
-          break;
-
-        case 'uuid':
-          $replacements[$original] = $message->getUuid();
-          break;
-
-        // Default values for the chained tokens handled below.
+        // @todo BC token. Remove in Message 2.0.
         case 'author':
           $account = $message->getOwner() ? $message->getOwner() : User::load(0);
           $replacements[$original] = $account->label();
-          break;
-
-        case 'created':
-          $replacements[$original] = \Drupal::service('date.formatter')->format($message->getCreatedTime(), 'medium', '', NULL);
+          @trigger_error('The "message:author" token is deprecated. Please use "message:uid:entity" offered by Token module in its place.');
           break;
       }
     }
 
     if ($author_tokens = $token_service->findWithPrefix($tokens, 'author')) {
       $replacements += $token_service->generate('user', $author_tokens, ['user' => $message->getOwner()], $options, $bubbleable_metadata);
-    }
-
-    if ($created_tokens = $token_service->findWithPrefix($tokens, 'created')) {
-      $replacements += $token_service->generate('date', $created_tokens, ['date' => $message->getCreatedTime()], $options, $bubbleable_metadata);
     }
   }
 

@@ -1,14 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media\FunctionalJavascript;
 
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Database\Database;
+use Drupal\dblog\Controller\DbLogController;
 use Drupal\media\Entity\Media;
 use Drupal\media\Entity\MediaType;
 use Drupal\media_test_oembed\Controller\ResourceController;
 use Drupal\Tests\media\Traits\OEmbedTestTrait;
 use Drupal\user\Entity\Role;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+
+// cspell:ignore dailymotion Schipulcon
 
 /**
  * Tests the oembed:video media source.
@@ -20,7 +26,7 @@ class MediaSourceOEmbedVideoTest extends MediaSourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['media_test_oembed'];
+  protected static $modules = ['media_test_oembed', 'dblog'];
 
   /**
    * {@inheritdoc}
@@ -52,7 +58,7 @@ class MediaSourceOEmbedVideoTest extends MediaSourceTestBase {
   /**
    * Tests the oembed media source.
    */
-  public function testMediaOEmbedVideoSource() {
+  public function testMediaOEmbedVideoSource(): void {
     $media_type_id = 'test_media_oembed_type';
     $provided_fields = [
       'type',
@@ -139,7 +145,7 @@ class MediaSourceOEmbedVideoTest extends MediaSourceTestBase {
     $this->assertSame($video_url, $query['url']);
     $this->assertNotEmpty($query['hash']);
     // Ensure that the outer iframe's width respects the formatter settings.
-    $this->assertSame('240', $iframe->getAttribute('width'));
+    $this->assertSame('480', $iframe->getAttribute('width'));
     // Check the inner iframe to make sure that CSS has been applied to scale it
     // correctly, regardless of whatever its width attribute may be (the fixture
     // hard-codes it to 480).
@@ -160,22 +166,22 @@ class MediaSourceOEmbedVideoTest extends MediaSourceTestBase {
 
     // Try to create a media asset from a disallowed provider.
     $this->drupalGet("media/add/$media_type_id");
-    $assert_session->fieldExists('Remote video URL')->setValue('http://www.collegehumor.com/video/40003213/grant-and-katie-are-starting-their-own-company');
+    $assert_session->fieldExists('Remote video URL')->setValue('https://www.dailymotion.com/video/x2vzluh');
     $page->pressButton('Save');
 
-    $assert_session->pageTextContains('The CollegeHumor provider is not allowed.');
+    $assert_session->pageTextContains('The Dailymotion provider is not allowed.');
 
-    // Register a CollegeHumor video as a second oEmbed resource. Note that its
+    // Register a Dailymotion video as a second oEmbed resource. Note that its
     // thumbnail URL does not have a file extension.
     $media_type = MediaType::load($media_type_id);
     $source_configuration = $media_type->getSource()->getConfiguration();
-    $source_configuration['providers'][] = 'CollegeHumor';
+    $source_configuration['providers'][] = 'Dailymotion';
     $media_type->getSource()->setConfiguration($source_configuration);
     $media_type->save();
-    $video_url = 'http://www.collegehumor.com/video/40003213/let-not-get-a-drink-sometime';
-    ResourceController::setResourceUrl($video_url, $this->getFixturesDirectory() . '/video_collegehumor.xml');
+    $video_url = 'https://www.dailymotion.com/video/x2vzluh';
+    ResourceController::setResourceUrl($video_url, $this->getFixturesDirectory() . '/video_dailymotion.xml');
 
-    // Create a new media item using a CollegeHumor video.
+    // Create a new media item using a Dailymotion video.
     $this->drupalGet("media/add/$media_type_id");
     $assert_session->fieldExists('Remote video URL')->setValue($video_url);
     $assert_session->buttonExists('Save')->press();
@@ -188,33 +194,51 @@ class MediaSourceOEmbedVideoTest extends MediaSourceTestBase {
     // should have deduced the correct one.
     $this->assertStringEndsWith('.png', $thumbnail);
 
+    // Test ResourceException logging.
+    $video_url = 'https://vimeo.com/1111';
+    ResourceController::setResourceUrl($video_url, $this->getFixturesDirectory() . '/video_vimeo.json');
+    $this->drupalGet("media/add/$media_type_id");
+    $assert_session->fieldExists('Remote video URL')->setValue($video_url);
+    $assert_session->buttonExists('Save')->press();
+    $assert_session->addressEquals('admin/content/media');
+    ResourceController::setResource404($video_url);
+    $this->drupalGet($this->assertLinkToCreatedMedia());
+    $row = Database::getConnection()->select('watchdog')
+      ->fields('watchdog', ['message', 'variables'])
+      ->orderBy('wid', 'DESC')
+      ->range(0, 1)
+      ->execute()
+      ->fetchObject();
+    $message = (string) DbLogController::create($this->container)->formatMessage($row);
+    $this->assertStringContainsString('resulted in a `404 Not Found` response', $message);
+
     // Test anonymous access to media via iframe.
     $this->drupalLogout();
 
     // Without a hash should be denied.
     $no_hash_query = array_diff_key($query, ['hash' => '']);
     $this->drupalGet('media/oembed', ['query' => $no_hash_query]);
-    $assert_session->pageTextNotContains('By the power of Grayskull, Vimeo works!');
-    $assert_session->pageTextContains('Client error');
+    $assert_session->pageTextNotContains('Vimeo works!');
+    $assert_session->pageTextContains('This resource is not available');
 
     // A correct query should be allowed because the anonymous role has the
     // 'view media' permission.
     $this->drupalGet('media/oembed', ['query' => $query]);
-    $assert_session->pageTextContains('By the power of Grayskull, Vimeo works!');
+    $assert_session->pageTextContains('Vimeo works!');
 
     // Remove the 'view media' permission to test that this restricts access.
     $role = Role::load(AccountInterface::ANONYMOUS_ROLE);
     $role->revokePermission('view media');
     $role->save();
     $this->drupalGet('media/oembed', ['query' => $query]);
-    $assert_session->pageTextNotContains('By the power of Grayskull, Vimeo works!');
+    $assert_session->pageTextNotContains('Vimeo works!');
     $assert_session->pageTextContains('Access denied');
   }
 
   /**
    * Tests that a security warning appears if iFrame domain is not set.
    */
-  public function testOEmbedSecurityWarning() {
+  public function testOEmbedSecurityWarning(): void {
     $media_type_id = 'test_media_oembed_type';
     $source_id = 'oembed:video';
 

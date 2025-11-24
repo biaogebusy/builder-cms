@@ -4,84 +4,18 @@ acquia_connector.settings:
   type: config_object
   label: 'Acquia connector settings'
   mapping:
-    subscription_name:
-      type: string
-      label: 'Acquia subscription name'
     debug:
       type: boolean
       label: 'Is debug mode active'
+    cron_interval:
+      type: integer
+      label: 'Interval for sending site profile, minutes'
+    cron_interval_override:
+      type: integer
+      label: 'Override for cron_interval, minutes'
     hide_signup_messages:
       type: integer
       label: 'Hide signup messages'
-    spi:
-      type: mapping
-      label: 'SPI'
-      mapping:
-        server:
-          type: string
-          label: 'Acquia SPI server'
-        ssl_override:
-          type: boolean
-          label: 'Do not require secure connection'
-        ssl_verify:
-          type: boolean
-          label: 'Verify SSL'
-        admin_priv:
-          type: integer
-          label: 'Allow collection of Admin privileges'
-        send_node_user:
-          type: integer
-          label: 'Allow collection of Nodes and users'
-        send_watchdog:
-          type: integer
-          label: 'Allow collection of Watchdog logs'
-        dynamic_banner:
-          type: integer
-          label: 'Receive updates from Acquia Subscription'
-        set_variables_override:
-          type: integer
-          label: 'Allow Insight to update list of approved variables'
-        set_variables_automatic:
-          type: ignore
-        ignored_set_variables:
-          type: sequence
-          label: 'List of ignored variables'
-        saved_variables:
-          type: mapping
-          label: 'Saved variables'
-          mapping:
-            variables:
-              type: sequence
-              label: 'Saved variables from the Acquia Subscription'
-              sequence:
-                - type: string
-                  label: 'Variable'
-            time:
-              type: integer
-              label: 'Last update of variables'
-        cron_interval:
-          type: integer
-          label: 'Cron interval for failed logins data, sec'
-        site_environment:
-          type: string
-          label: 'Site environment'
-        site_machine_name:
-          type: string
-          label: 'Site machine name'
-        site_name:
-          type: string
-          label: 'Site name'
-        site_uuid:
-          type: string
-          label: 'Site UUID'
-        env_detection_enabled:
-          type: boolean
-          label: 'Is environment detection enabled?'
-        environment_changes:
-          type: ignore
-        environment_changed_action:
-          type: ignore
-        blocked:
-          type: ignore
-    mapping:
+    third_party_settings:
       type: ignore
+      label: 'Product specific settings'

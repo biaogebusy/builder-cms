@@ -7,8 +7,7 @@
  * @see phpunit.xml.dist
  */
 
-use Drupal\Component\Assertion\Handle;
-use Drupal\TestTools\PhpUnitCompatibility\PhpUnit8\ClassWriter;
+use Drupal\TestTools\PhpUnitCompatibility\ClassWriter;
 
 /**
  * Finds all valid extension directories recursively within a given directory.
@@ -24,7 +23,7 @@ function drupal_phpunit_find_extension_directories($scan_directory) {
   $extensions = [];
   $dirs = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($scan_directory, \RecursiveDirectoryIterator::FOLLOW_SYMLINKS));
   foreach ($dirs as $dir) {
-    if (strpos($dir->getPathname(), '.info.yml') !== FALSE) {
+    if (str_contains($dir->getPathname(), '.info.yml')) {
       // Cut off ".info.yml" from the filename for use as the extension name. We
       // use getRealPath() so that we can scan extensions represented by
       // directory aliases.
@@ -80,28 +79,15 @@ function drupal_phpunit_contrib_extension_directory_roots($root = NULL) {
  *   An associative array of extension directories, keyed by their namespace.
  */
 function drupal_phpunit_get_extension_namespaces($dirs) {
-  $suite_names = ['Unit', 'Kernel', 'Functional', 'Build', 'FunctionalJavascript'];
   $namespaces = [];
   foreach ($dirs as $extension => $dir) {
     if (is_dir($dir . '/src')) {
       // Register the PSR-4 directory for module-provided classes.
       $namespaces['Drupal\\' . $extension . '\\'][] = $dir . '/src';
     }
-    $test_dir = $dir . '/tests/src';
-    if (is_dir($test_dir)) {
-      foreach ($suite_names as $suite_name) {
-        $suite_dir = $test_dir . '/' . $suite_name;
-        if (is_dir($suite_dir)) {
-          // Register the PSR-4 directory for PHPUnit-based suites.
-          $namespaces['Drupal\\Tests\\' . $extension . '\\' . $suite_name . '\\'][] = $suite_dir;
-        }
-      }
-      // Extensions can have a \Drupal\Tests\extension\Traits namespace for
-      // cross-suite trait code.
-      $trait_dir = $test_dir . '/Traits';
-      if (is_dir($trait_dir)) {
-        $namespaces['Drupal\\Tests\\' . $extension . '\\Traits\\'][] = $trait_dir;
-      }
+    if (is_dir($dir . '/tests/src')) {
+      // Register the PSR-4 directory for PHPUnit-based suites.
+      $namespaces['Drupal\\Tests\\' . $extension . '\\'][] = $dir . '/tests/src';
     }
   }
   return $namespaces;
@@ -119,8 +105,8 @@ if (!defined('PHPUNIT_COMPOSER_INSTALL')) {
  * Populate class loader with additional namespaces for tests.
  *
  * We run this in a function to avoid setting the class loader to a global
- * that can change. This change can cause unpredictable false positives for
- * phpunit's global state change watcher. The class loader can be retrieved from
+ * that can change. This change can cause unpredictable false positives for the
+ * PHPUnit global state change watcher. The class loader can be retrieved from
  * composer at any time by requiring autoload.php.
  */
 function drupal_phpunit_populate_class_loader() {
@@ -161,7 +147,7 @@ ClassWriter::mutateTestBase($loader);
 // Set sane locale settings, to ensure consistent string, dates, times and
 // numbers handling.
 // @see \Drupal\Core\DrupalKernel::bootEnvironment()
-setlocale(LC_ALL, 'C');
+setlocale(LC_ALL, 'C.UTF-8', 'C');
 
 // Set appropriate configuration for multi-byte strings.
 mb_internal_encoding('utf-8');
@@ -174,47 +160,13 @@ mb_language('uni');
 // reduce the fragility of the testing system in general.
 date_default_timezone_set('Australia/Sydney');
 
-// Runtime assertions. PHPUnit follows the php.ini assert.active setting for
-// runtime assertions. By default this setting is on. Ensure exceptions are
-// thrown if an assert fails, but this call does not turn runtime assertions on
-// if they weren't on already.
-Handle::register();
-
-// Drupal 9 uses PHP syntax that's deprecated in PHP 8.2. Therefore, for
-// PHP 8.2, the error handler registered in
-// \Drupal\Tests\Listeners\DeprecationListenerTrait::registerErrorHandler()
-// ignores E_DEPRECATED errors. However, that error handler is not used
-// during:
-// - The execution of data providers.
-// - The child process of tests that are executed in a separate (isolated)
-//   process, such as kernel tests.
-//
-// To silence E_DEPRECATED errors during the above, re-register the error
-// handler that has already been set by symfony/phpunit-bridge/bootstrap.php,
-// but constrain it to not get called for E_DEPRECATED errors. It is still
-// useful for E_USER_DEPRECATED and other error types.
-if (PHP_VERSION_ID >= 80200) {
-  // Get the current error handler without changing it.
-  $error_handler = set_error_handler(NULL);
-  restore_error_handler();
-
-  if ($error_handler) {
-    // Replace the current error handler with the same one, but filter out
-    // E_DEPRECATED errors.
-    restore_error_handler();
-    set_error_handler($error_handler, E_ALL & ~E_DEPRECATED);
-
-    // The above results in PHP's built-in error handler getting called for
-    // E_DEPRECATED errors. Silence those errors too. Note that
-    // \PHPUnit\TextUI\TestRunner::handleConfiguration() can get called twice
-    // (once before running data providers, then again before running tests),
-    // whereas tests/bootstrap.php is included via include_once(), so the 2nd
-    // handleConfiguration() call can reset error_reporting to the value in
-    // phpunit.xml. However, that's okay, because for those cases, the error
-    // handler registered in
-    // \Drupal\Tests\Listeners\DeprecationListenerTrait::registerErrorHandler()
-    // is in use, and it ignores E_DEPRECATED errors for PHP 8.2 regardless of
-    // the error_reporting value.
-    error_reporting(error_reporting() & ~E_DEPRECATED);
-  }
+// Ensure ignored deprecation patterns listed in .deprecation-ignore.txt are
+// considered in testing.
+if (getenv('SYMFONY_DEPRECATIONS_HELPER') === FALSE) {
+  $deprecation_ignore_filename = realpath(__DIR__ . "/../.deprecation-ignore.txt");
+  putenv("SYMFONY_DEPRECATIONS_HELPER=ignoreFile=$deprecation_ignore_filename");
 }
+
+// Drupal expects to be run from its root directory. This ensures all test types
+// are consistent.
+chdir(dirname(__DIR__, 2));

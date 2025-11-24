@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\diff\Plugin\views\field;
 
 /**
@@ -14,8 +16,7 @@ class DiffTo extends DiffPluginBase {
    */
   protected function defineOptions() {
     $options = parent::defineOptions();
-
-    $options['label']['default'] = t('To');
+    $options['label']['default'] = $this->t('To');
     return $options;
   }
 

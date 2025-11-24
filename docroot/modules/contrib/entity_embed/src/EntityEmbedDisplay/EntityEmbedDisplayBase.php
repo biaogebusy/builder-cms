@@ -90,7 +90,7 @@ abstract class EntityEmbedDisplayBase extends PluginBase implements ContainerFac
   /**
    * {@inheritdoc}
    */
-  public function access(AccountInterface $account = NULL) {
+  public function access(?AccountInterface $account = NULL) {
     // @todo Add a hook_entity_embed_display_access()?
     // Check that the plugin's registered entity types matches the current
     // entity type.
@@ -278,7 +278,7 @@ abstract class EntityEmbedDisplayBase extends PluginBase implements ContainerFac
    * on this, plus any of its subclasses. Right now, this is effectively a
    * global that breaks cacheability metadata.
    *
-   * @return \Drupal\Core\Entity\EntityInterface
+   * @return \Drupal\Core\Entity\EntityInterface|null
    *   The entity from the current context.
    */
   public function getEntityFromContext() {

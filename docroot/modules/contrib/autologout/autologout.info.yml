@@ -1,10 +1,12 @@
 name: Automated Logout
 type: module
 description: 'Adds automated timed logout.'
-core_version_requirement: ^9.2 || ^10
+core_version_requirement: ^9.2 || ^10 || ^11
 configure: autologout.set_admin
+dependencies:
+  - js_cookie:js_cookie
 
-# Information added by Drupal.org packaging script on 2022-07-18
-version: '8.x-1.4'
+# Information added by Drupal.org packaging script on 2024-11-22
+version: '2.0.1'
 project: 'autologout'
-datestamp: 1658168201
+datestamp: 1732235108

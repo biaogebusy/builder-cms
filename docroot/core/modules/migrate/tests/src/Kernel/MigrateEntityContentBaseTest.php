@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Kernel;
 
 use Drupal\Core\Entity\EntityFieldManager;
@@ -24,9 +26,7 @@ class MigrateEntityContentBaseTest extends KernelTestBase {
   use StubTestTrait;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['migrate', 'user', 'language', 'entity_test'];
 
@@ -107,7 +107,7 @@ class MigrateEntityContentBaseTest extends KernelTestBase {
   /**
    * Tests importing and rolling back translated entities.
    */
-  public function testTranslated() {
+  public function testTranslated(): void {
     // Create a destination.
     $this->createDestination(['translations' => TRUE]);
 
@@ -174,7 +174,7 @@ class MigrateEntityContentBaseTest extends KernelTestBase {
   /**
    * Tests creation of ID columns table with definitions taken from entity type.
    */
-  public function testEntityWithStringId() {
+  public function testEntityWithStringId(): void {
     $this->enableModules(['migrate_entity_test']);
     $this->installEntitySchema('migrate_string_id_entity_test');
 
@@ -220,7 +220,7 @@ class MigrateEntityContentBaseTest extends KernelTestBase {
   /**
    * Tests empty destinations.
    */
-  public function testEmptyDestinations() {
+  public function testEmptyDestinations(): void {
     $this->enableModules(['migrate_entity_test']);
     $this->installEntitySchema('migrate_string_id_entity_test');
 
@@ -281,7 +281,7 @@ class MigrateEntityContentBaseTest extends KernelTestBase {
   /**
    * Tests stub rows.
    */
-  public function testStubRows() {
+  public function testStubRows(): void {
     // Create a destination.
     $this->createDestination([]);
 
@@ -306,26 +306,6 @@ class MigrateEntityContentBaseTest extends KernelTestBase {
     for ($i = 0; $i < $count; ++$i) {
       $this->assertSame($multi_default_value[$i], $entity->get($multi_field_name)->get($i)->getValue());
     }
-  }
-
-  /**
-   * Test BC injection of account switcher service.
-   *
-   * @group legacy
-   */
-  public function testAccountSwitcherBackwardsCompatibility() {
-    $this->expectDeprecation('Calling Drupal\migrate\Plugin\migrate\destination\EntityContentBase::__construct() without the $account_switcher argument is deprecated in drupal:9.3.0 and will be required in drupal:10.0.0. See https://www.drupal.org/node/3142975');
-    $destination = new EntityContentBase(
-      [],
-      'fake_plugin_id',
-      [],
-      $this->createMock(MigrationInterface::class),
-      $this->storage,
-      [],
-      $this->container->get('entity_field.manager'),
-      $this->container->get('plugin.manager.field.field_type')
-    );
-    $this->assertInstanceOf(EntityContentBase::class, $destination);
   }
 
   /**

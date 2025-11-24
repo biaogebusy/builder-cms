@@ -5,8 +5,10 @@
  * Contains install and update functions for commerce_store module.
  */
 
-use Drupal\commerce_store\Entity\Store;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce_store\Entity\Store;
+use Drupal\commerce_store\Form\StoreStatusForm;
 
 /**
  * Add the URL alias path field to stores.
@@ -165,4 +167,45 @@ function commerce_store_update_8207() {
       $definition_update_manager->uninstallFieldStorageDefinition($field_storage_definition);
     }
   }
+}
+
+/**
+ * Add a status field to stores.
+ */
+function commerce_store_update_8208() {
+  $storage_definition = BaseFieldDefinition::create('boolean')
+    ->setTranslatable(TRUE)
+    ->setInitialValue(TRUE)
+    ->setRevisionable(TRUE)
+    ->setLabel(new TranslatableMarkup('Enabled'))
+    ->setDisplayOptions('form', [
+      'type' => 'boolean_checkbox',
+      'settings' => [
+        'display_label' => TRUE,
+      ],
+    ])
+    ->setDisplayConfigurable('form', TRUE);
+
+  $entity_definition_update = \Drupal::entityDefinitionUpdateManager();
+  $entity_definition_update->installFieldStorageDefinition('status', 'commerce_store', 'commerce_store', $storage_definition);
+}
+
+/**
+ * Update the store entity type definition.
+ */
+function commerce_store_update_8209() {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $entity_type = $definition_update_manager->getEntityType('commerce_store');
+  $keys = $entity_type->getKeys();
+  $keys['published'] = 'status';
+  $entity_type->set('entity_keys', $keys);
+  $links = $entity_type->get('links');
+  $links['enable-form'] = '/store/{commerce_store}/enable';
+  $links['disable-form'] = '/store/{commerce_store}/disable';
+  $entity_type->set('links', $links);
+  $handlers = $entity_type->get('handlers');
+  $handlers['form']['enable'] = StoreStatusForm::class;
+  $handlers['form']['disable'] = StoreStatusForm::class;
+  $entity_type->set('handlers', $handlers);
+  $definition_update_manager->updateEntityType($entity_type);
 }

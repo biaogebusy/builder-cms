@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\help\Functional;
 
 use Drupal\Tests\BrowserTestBase;
@@ -44,7 +46,7 @@ class HelpBlockTest extends BrowserTestBase {
   /**
    * Logs in users, tests help pages.
    */
-  public function testHelp() {
+  public function testHelp(): void {
     $this->drupalGet('help_page_test/has_help');
     $this->assertSession()->pageTextContains('I have help!');
     $this->assertSession()->pageTextContains($this->helpBlock->label());

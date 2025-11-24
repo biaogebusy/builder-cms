@@ -13,10 +13,10 @@
 .node__meta {
   display: flex;
   align-items: center;
-  margin-bottom: 1.125rem;
-  color: #6e7172;
+  margin-block-end: var(--sp1);
+  color: var(--color-text-neutral-soft);
   font-size: 0.875rem;
-  line-height: 1.125rem;
+  line-height: var(--sp);
 }
 
 .node__meta a {
@@ -24,34 +24,29 @@
 }
 
 @media (min-width: 31.25rem) {
-
   .node__meta {
-    margin-bottom: 2.25rem;
+    margin-block-end: var(--sp2);
   }
 }
 
-[dir="ltr"] .node__author-image img {
-  margin-right: 0.5625rem;
-}
-
-[dir="rtl"] .node__author-image img {
-  margin-left: 0.5625rem;
-}
-
 .node__author-image img {
-  width: 2.8125rem;
-  height: 2.8125rem;
+  width: var(--sp2-5);
+  height: var(--sp2-5);
+  margin-inline-end: var(--sp0-5);
   object-fit: cover;
   border-radius: 50%;
 }
 
 .node__title a {
-  padding-bottom: 0.1875rem;
-  transition: background-size 0.2s, color 0.2s;
+  padding-block-end: 0.1875rem;
+  transition:
+    background-size 0.2s,
+    color 0.2s;
+  -webkit-text-decoration: none;
   text-decoration: none;
-  color: #0d1214;
+  color: var(--color-text-neutral-loud);
   background-color: transparent;
-  background-image: linear-gradient(#2494db, #2494db); /* Two values are needed for IE11 support. */
+  background-image: linear-gradient(var(--color--primary-50), var(--color--primary-50)); /* Two values are needed for IE11 support. */
   background-repeat: no-repeat;
   background-position: bottom left; /* LTR */
   background-size: 0 0.1875rem;
@@ -59,7 +54,7 @@
 
 .node__title a:hover,
 .node__title a:focus {
-  color: #0d77b5;
+  color: var(--color-text-primary-medium);
 }
 
 [dir="rtl"] .node__title {
@@ -67,13 +62,12 @@
 }
 
 .node__content {
-  padding-bottom: 1.6875rem;
+  padding-block-end: var(--sp1-5);
 }
 
 @media (min-width: 62.5rem) {
-
   .node__content {
-    padding-bottom: 3.375rem;
+    padding-block-end: var(--sp3);
   }
 }
 

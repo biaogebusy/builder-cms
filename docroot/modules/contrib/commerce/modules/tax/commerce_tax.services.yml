@@ -1,20 +1,25 @@
 services:
+  _defaults:
+    autowire: true
   plugin.manager.commerce_tax_number_type:
     class: Drupal\commerce_tax\TaxNumberTypeManager
     parent: default_plugin_manager
+  Drupal\commerce_tax\TaxNumberTypeManagerInterface: '@plugin.manager.commerce_tax_number_type'
 
   plugin.manager.commerce_tax_type:
     class: Drupal\commerce_tax\TaxTypeManager
     parent: default_plugin_manager
+  Drupal\commerce_tax\TaxTypeManager: '@plugin.manager.commerce_tax_type'
 
   commerce_tax.store_tax:
     class: Drupal\commerce_tax\StoreTax
-    arguments: ['@entity_type.manager', '@commerce_tax.chain_tax_rate_resolver']
+  Drupal\commerce_tax\StoreTaxInterface: '@commerce_tax.store_tax'
 
   commerce_tax.chain_tax_rate_resolver:
     class: Drupal\commerce_tax\Resolver\ChainTaxRateResolver
     tags:
       - { name: service_collector, call: addResolver, tag: commerce_tax.tax_rate_resolver }
+  Drupal\commerce_tax\Resolver\ChainTaxRateResolverInterface: '@commerce_tax.chain_tax_rate_resolver'
 
   commerce_tax.default_tax_rate_resolver:
     class: Drupal\commerce_tax\Resolver\DefaultTaxRateResolver
@@ -26,3 +31,8 @@ services:
     arguments: ['@entity_type.manager', '@commerce_price.rounder', '@commerce_tax.store_tax']
     tags:
       - { name: commerce_order.order_processor, priority: 50, adjustment_type: tax }
+
+  commerce_tax.order_total_summary_subscriber:
+    class: Drupal\commerce_tax\EventSubscriber\OrderTotalSummarySubscriber
+    tags:
+      - { name: 'event_subscriber' }

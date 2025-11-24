@@ -1,11 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\TestSite;
+
+// cspell:ignore enregistrer
 
 /**
  * Setup file used by TestSiteApplicationTest.
  *
- * @see \Drupal\Tests\Scripts\TestSiteApplicationTest
+ * @see \Drupal\KernelTests\Scripts\TestSiteApplicationTest
  */
 class TestSiteMultilingualInstallTestScript implements TestSetupInterface, TestPreinstallInterface {
 

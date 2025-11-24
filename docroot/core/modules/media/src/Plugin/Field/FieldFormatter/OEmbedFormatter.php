@@ -4,12 +4,14 @@ namespace Drupal\media\Plugin\Field\FieldFormatter;
 
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\media\Entity\MediaType;
 use Drupal\media\IFrameUrlHelper;
@@ -20,24 +22,22 @@ use Drupal\media\OEmbed\UrlResolverInterface;
 use Drupal\media\Plugin\media\Source\OEmbedInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
-// cspell:ignore allowtransparency
 /**
  * Plugin implementation of the 'oembed' formatter.
  *
  * @internal
  *   This is an internal part of the oEmbed system and should only be used by
  *   oEmbed-related code in Drupal core.
- *
- * @FieldFormatter(
- *   id = "oembed",
- *   label = @Translation("oEmbed content"),
- *   field_types = {
- *     "link",
- *     "string",
- *     "string_long",
- *   },
- * )
  */
+#[FieldFormatter(
+  id: 'oembed',
+  label: new TranslatableMarkup('oEmbed content'),
+  field_types: [
+    'link',
+    'string',
+    'string_long',
+  ],
+)]
 class OEmbedFormatter extends FormatterBase {
 
   /**
@@ -150,6 +150,9 @@ class OEmbedFormatter extends FormatterBase {
     return [
       'max_width' => 0,
       'max_height' => 0,
+      'loading' => [
+        'attribute' => 'lazy',
+      ],
     ] + parent::defaultSettings();
   }
 
@@ -174,7 +177,11 @@ class OEmbedFormatter extends FormatterBase {
         $resource = $this->resourceFetcher->fetchResource($resource_url);
       }
       catch (ResourceException $exception) {
-        $this->logger->error("Could not retrieve the remote URL (@url).", ['@url' => $value]);
+        $this->logger->error("Could not retrieve the remote URL (@url): %error", [
+          '@url' => $value,
+          '%error' => $exception->getPrevious() ? $exception->getPrevious()->getMessage() : $exception->getMessage(),
+          'exception' => $exception,
+        ]);
         continue;
       }
 
@@ -189,12 +196,16 @@ class OEmbedFormatter extends FormatterBase {
         $element[$delta] = [
           '#theme' => 'image',
           '#uri' => $resource->getUrl()->toString(),
-          '#width' => $max_width ?: $resource->getWidth(),
-          '#height' => $max_height ?: $resource->getHeight(),
+          '#width' => $resource->getWidth(),
+          '#height' => $resource->getHeight(),
+          '#attributes' => [
+            'loading' => $this->getSetting('loading')['attribute'],
+          ],
         ];
       }
       else {
         $url = Url::fromRoute('media.oembed_iframe', [], [
+          'absolute' => TRUE,
           'query' => [
             'url' => $value,
             'max_width' => $max_width,
@@ -215,12 +226,13 @@ class OEmbedFormatter extends FormatterBase {
           '#tag' => 'iframe',
           '#attributes' => [
             'src' => $url->toString(),
-            'frameborder' => 0,
             'scrolling' => FALSE,
-            'allowtransparency' => TRUE,
-            'width' => $max_width ?: $resource->getWidth(),
-            'height' => $max_height ?: $resource->getHeight(),
+            // External service is not supposed to send something larger
+            // than the max width or max height, so those values should be used.
+            'width' => $resource->getWidth() ?: $max_width,
+            'height' => $resource->getHeight() ?: $max_height,
             'class' => ['media-oembed-content'],
+            'loading' => $this->getSetting('loading')['attribute'],
           ],
           '#attached' => [
             'library' => [
@@ -248,7 +260,7 @@ class OEmbedFormatter extends FormatterBase {
    * {@inheritdoc}
    */
   public function settingsForm(array $form, FormStateInterface $form_state) {
-    return parent::settingsForm($form, $form_state) + [
+    $form = parent::settingsForm($form, $form_state) + [
       'max_width' => [
         '#type' => 'number',
         '#title' => $this->t('Maximum width'),
@@ -267,7 +279,28 @@ class OEmbedFormatter extends FormatterBase {
         '#field_suffix' => $this->t('pixels'),
         '#min' => 0,
       ],
+      'loading' => [
+        '#type' => 'details',
+        '#title' => $this->t('oEmbed loading'),
+        '#description' => $this->t('Lazy render oEmbed with native loading attribute (<em>loading="lazy"</em>). This improves performance by allowing browsers to lazily load assets.'),
+        'attribute' => [
+          '#title' => $this->t('oEmbed loading attribute'),
+          '#type' => 'radios',
+          '#default_value' => $this->getSetting('loading')['attribute'],
+          '#options' => [
+            'lazy' => $this->t('Lazy (<em>loading="lazy"</em>)'),
+            'eager' => $this->t('Eager (<em>loading="eager"</em>)'),
+          ],
+          '#description' => $this->t('Select the loading attribute for oEmbed. <a href=":link">Learn more about the loading attribute for oEmbed.</a>', [
+            ':link' => 'https://html.spec.whatwg.org/multipage/urls-and-fetching.html#lazy-loading-attributes',
+          ]),
+        ],
+      ],
     ];
+    $form['loading']['attribute']['lazy']['#description'] = $this->t('Delays loading the resource until that section of the page is visible in the browser. When in doubt, lazy loading is recommended.');
+    $form['loading']['attribute']['eager']['#description'] = $this->t('Force browsers to download a resource as soon as possible. This is the browser default for legacy reasons. Only use this option when the resource is always expected to render.');
+
+    return $form;
   }
 
   /**
@@ -291,6 +324,10 @@ class OEmbedFormatter extends FormatterBase {
         '%max_height' => $this->getSetting('max_height'),
       ]);
     }
+    $summary[] = $this->t('Loading attribute: @attribute', [
+      '@attribute' => $this->getSetting('loading')['attribute'],
+    ]);
+
     return $summary;
   }
 

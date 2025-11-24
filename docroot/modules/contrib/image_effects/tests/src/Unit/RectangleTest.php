@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image_effects\Unit;
 
 use Drupal\image_effects\Component\Rectangle;
@@ -90,8 +92,6 @@ class RectangleTest extends TestCase {
     $rotated_image = imagerotate($image, $angle, 0);
     $this->assertSame($exp_width, imagesx($rotated_image));
     $this->assertSame($exp_height, imagesy($rotated_image));
-    imagedestroy($rotated_image);
-    imagedestroy($image);
   }
 
   /**
@@ -117,8 +117,6 @@ class RectangleTest extends TestCase {
    *     $rotated_image = imagerotate($image, $angle, 0);
    *     $new_width = imagesx($rotated_image);
    *     $new_height = imagesy($rotated_image);
-   *     imagedestroy($rotated_image);
-   *     imagedestroy($image);
    *   }
    * @endcode
    *
@@ -130,7 +128,7 @@ class RectangleTest extends TestCase {
    *   - expected image width after rotation
    *   - expected image height after rotation
    */
-  public function providerGd222RotateDimensions(): array {
+  public static function providerGd222RotateDimensions(): array {
     // The dataset is stored in a .json file because it is very large and causes
     // problems for PHPCS.
     return json_decode(file_get_contents(__DIR__ . '/../../fixtures/RectangleTest.json'));

@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Database;
 
 use Drupal\Core\Database\Database;
+use Drupal\Core\Extension\Exception\UnknownExtensionException;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -21,31 +24,11 @@ use Drupal\Tests\UnitTestCase;
 class UrlConversionTest extends UnitTestCase {
 
   /**
-   * {@inheritdoc}
-   */
-  protected function setUp(): void {
-    parent::setUp();
-    $this->root = dirname(__FILE__, 7);
-    // Mock the container so we don't need to mock drupal_valid_test_ua().
-    // @see \Drupal\Core\Extension\ExtensionDiscovery::scan()
-    $container = $this->createMock('Symfony\Component\DependencyInjection\ContainerInterface');
-    $container->expects($this->any())
-      ->method('has')
-      ->with('kernel')
-      ->willReturn(TRUE);
-    $container->expects($this->any())
-      ->method('getParameter')
-      ->with('site.path')
-      ->willReturn('');
-    \Drupal::setContainer($container);
-  }
-
-  /**
    * @covers ::convertDbUrlToConnectionInfo
    *
    * @dataProvider providerConvertDbUrlToConnectionInfo
    */
-  public function testDbUrlToConnectionConversion($url, $database_array, $include_test_drivers) {
+  public function testDbUrlToConnectionConversion($url, $database_array, $include_test_drivers): void {
     $result = Database::convertDbUrlToConnectionInfo($url, $this->root, $include_test_drivers);
     $this->assertEquals($database_array, $result);
   }
@@ -58,7 +41,7 @@ class UrlConversionTest extends UnitTestCase {
    *   - url: The full URL string to be tested.
    *   - database_array: An array containing the expected results.
    */
-  public function providerConvertDbUrlToConnectionInfo() {
+  public static function providerConvertDbUrlToConnectionInfo() {
     $root = dirname(__FILE__, 7);
     return [
       'MySql without prefix' => [
@@ -135,6 +118,16 @@ class UrlConversionTest extends UnitTestCase {
           'port' => 3306,
           'namespace' => 'Drupal\driver_test\Driver\Database\DrivertestMysql',
           'autoload' => 'core/modules/system/tests/modules/driver_test/src/Driver/Database/DrivertestMysql/',
+          'dependencies' => [
+            'mysql' => [
+              'namespace' => 'Drupal\mysql',
+              'autoload' => 'core/modules/mysql/src/',
+            ],
+            'pgsql' => [
+              'namespace' => 'Drupal\pgsql',
+              'autoload' => 'core/modules/pgsql/src/',
+            ],
+          ],
         ],
         TRUE,
       ],
@@ -150,6 +143,16 @@ class UrlConversionTest extends UnitTestCase {
           'port' => 3306,
           'namespace' => 'Drupal\driver_test\Driver\Database\DrivertestMysql',
           'autoload' => 'core/modules/system/tests/modules/driver_test/src/Driver/Database/DrivertestMysql/',
+          'dependencies' => [
+            'mysql' => [
+              'namespace' => 'Drupal\mysql',
+              'autoload' => 'core/modules/mysql/src/',
+            ],
+            'pgsql' => [
+              'namespace' => 'Drupal\pgsql',
+              'autoload' => 'core/modules/pgsql/src/',
+            ],
+          ],
         ],
         TRUE,
       ],
@@ -164,6 +167,16 @@ class UrlConversionTest extends UnitTestCase {
           'port' => 5432,
           'namespace' => 'Drupal\driver_test\Driver\Database\DrivertestPgsql',
           'autoload' => 'core/modules/system/tests/modules/driver_test/src/Driver/Database/DrivertestPgsql/',
+          'dependencies' => [
+            'mysql' => [
+              'namespace' => 'Drupal\mysql',
+              'autoload' => 'core/modules/mysql/src/',
+            ],
+            'pgsql' => [
+              'namespace' => 'Drupal\pgsql',
+              'autoload' => 'core/modules/pgsql/src/',
+            ],
+          ],
         ],
         TRUE,
       ],
@@ -179,6 +192,16 @@ class UrlConversionTest extends UnitTestCase {
           'port' => 5432,
           'namespace' => 'Drupal\driver_test\Driver\Database\DrivertestPgsql',
           'autoload' => 'core/modules/system/tests/modules/driver_test/src/Driver/Database/DrivertestPgsql/',
+          'dependencies' => [
+            'mysql' => [
+              'namespace' => 'Drupal\mysql',
+              'autoload' => 'core/modules/mysql/src/',
+            ],
+            'pgsql' => [
+              'namespace' => 'Drupal\pgsql',
+              'autoload' => 'core/modules/pgsql/src/',
+            ],
+          ],
         ],
         TRUE,
       ],
@@ -255,7 +278,7 @@ class UrlConversionTest extends UnitTestCase {
    *
    * @dataProvider providerInvalidArgumentsUrlConversion
    */
-  public function testGetInvalidArgumentExceptionInUrlConversion($url, $root, $expected_exception_message) {
+  public function testGetInvalidArgumentExceptionInUrlConversion($url, $root, $expected_exception_message): void {
     $this->expectException(\InvalidArgumentException::class);
     $this->expectExceptionMessage($expected_exception_message);
     Database::convertDbUrlToConnectionInfo($url, $root);
@@ -270,15 +293,15 @@ class UrlConversionTest extends UnitTestCase {
    *   - Drupal root string.
    *   - The expected exception message.
    */
-  public function providerInvalidArgumentsUrlConversion() {
+  public static function providerInvalidArgumentsUrlConversion() {
     return [
       ['foo', '', "Missing scheme in URL 'foo'"],
       ['foo', 'bar', "Missing scheme in URL 'foo'"],
-      ['foo://', 'bar', "Can not convert 'foo://' to a database connection, class 'Drupal\\Driver\\Database\\foo\\Connection' does not exist"],
-      ['foo://bar', 'baz', "Can not convert 'foo://bar' to a database connection, class 'Drupal\\Driver\\Database\\foo\\Connection' does not exist"],
-      ['foo://bar:port', 'baz', "Can not convert 'foo://bar:port' to a database connection, class 'Drupal\\Driver\\Database\\foo\\Connection' does not exist"],
+      ['foo://', 'bar', "Can not convert 'foo://' to a database connection, the module providing the driver 'foo' is not specified"],
+      ['foo://bar', 'baz', "Can not convert 'foo://bar' to a database connection, the module providing the driver 'foo' is not specified"],
+      ['foo://bar:port', 'baz', "Can not convert 'foo://bar:port' to a database connection, the module providing the driver 'foo' is not specified"],
       ['foo/bar/baz', 'bar2', "Missing scheme in URL 'foo/bar/baz'"],
-      ['foo://bar:baz@test1', 'test2', "Can not convert 'foo://bar:baz@test1' to a database connection, class 'Drupal\\Driver\\Database\\foo\\Connection' does not exist"],
+      ['foo://bar:baz@test1', 'test2', "Can not convert 'foo://bar:baz@test1' to a database connection, the module providing the driver 'foo' is not specified"],
     ];
   }
 
@@ -287,7 +310,7 @@ class UrlConversionTest extends UnitTestCase {
    *
    * @dataProvider providerGetConnectionInfoAsUrl
    */
-  public function testGetConnectionInfoAsUrl(array $info, $expected_url) {
+  public function testGetConnectionInfoAsUrl(array $info, $expected_url): void {
     Database::addConnectionInfo('default', 'default', $info);
     $url = Database::getConnectionInfoAsUrl();
     $this->assertEquals($expected_url, $url);
@@ -302,7 +325,7 @@ class UrlConversionTest extends UnitTestCase {
    *     database, username, password, prefix, host, port, namespace and driver.
    *   - The expected URL after conversion.
    */
-  public function providerGetConnectionInfoAsUrl() {
+  public static function providerGetConnectionInfoAsUrl() {
     $info1 = [
       'database' => 'test_database',
       'username' => 'test_user',
@@ -373,7 +396,7 @@ class UrlConversionTest extends UnitTestCase {
       'port' => '5432',
       'driver' => 'DrivertestPgsql',
       'namespace' => 'Drupal\\driver_test\\Driver\\Database\\DrivertestPgsql',
-      'autoload' => 'core/modules/system/tests/modules/driver_test/src/Driver/Database/drivertestpqsql/',
+      'autoload' => 'core/modules/system/tests/modules/driver_test/src/Driver/Database/DrivertestPgsql/',
     ];
     $expected_url7 = 'DrivertestPgsql://test_user:test_pass@test_host:5432/test_database?module=driver_test';
 
@@ -386,9 +409,32 @@ class UrlConversionTest extends UnitTestCase {
       'port' => '5432',
       'driver' => 'DrivertestPgsql',
       'namespace' => 'Drupal\\driver_test\\Driver\\Database\\DrivertestPgsql',
-      'autoload' => 'core/modules/system/tests/modules/driver_test/src/Driver/Database/drivertestpqsql/',
+      'autoload' => 'core/modules/system/tests/modules/driver_test/src/Driver/Database/DrivertestPgsql/',
     ];
     $expected_url8 = 'DrivertestPgsql://test_user:test_pass@test_host:5432/test_database?module=driver_test#pre';
+
+    $info9 = [
+      'database' => 'test_database',
+      'username' => 'test_user',
+      'password' => 'test_pass',
+      'prefix' => '',
+      'host' => 'test_host',
+      'port' => '3306',
+      'driver' => 'DrivertestMysql',
+      'namespace' => 'Drupal\\driver_test\\Driver\\Database\\DrivertestMysql',
+      'autoload' => 'core/modules/system/tests/modules/driver_test/src/Driver/Database/DrivertestMysql/',
+      'dependencies' => [
+        'mysql' => [
+          'namespace' => 'Drupal\mysql',
+          'autoload' => 'core/modules/mysql/src/',
+        ],
+        'pgsql' => [
+          'namespace' => 'Drupal\pgsql',
+          'autoload' => 'core/modules/pgsql/src/',
+        ],
+      ],
+    ];
+    $expected_url9 = 'DrivertestMysql://test_user:test_pass@test_host:3306/test_database?module=driver_test';
 
     return [
       [$info1, $expected_url1],
@@ -399,6 +445,7 @@ class UrlConversionTest extends UnitTestCase {
       [$info6, $expected_url6],
       [$info7, $expected_url7],
       [$info8, $expected_url8],
+      [$info9, $expected_url9],
     ];
   }
 
@@ -414,7 +461,7 @@ class UrlConversionTest extends UnitTestCase {
    *
    * @dataProvider providerInvalidArgumentGetConnectionInfoAsUrl
    */
-  public function testGetInvalidArgumentGetConnectionInfoAsUrl(array $connection_options, $expected_exception_message) {
+  public function testGetInvalidArgumentGetConnectionInfoAsUrl(array $connection_options, $expected_exception_message): void {
     Database::addConnectionInfo('default', 'default', $connection_options);
     $this->expectException(\InvalidArgumentException::class);
     $this->expectExceptionMessage($expected_exception_message);
@@ -430,7 +477,7 @@ class UrlConversionTest extends UnitTestCase {
    *     database, username, password, prefix, host, port, namespace and driver.
    *   - The expected exception message.
    */
-  public function providerInvalidArgumentGetConnectionInfoAsUrl() {
+  public static function providerInvalidArgumentGetConnectionInfoAsUrl() {
     return [
       'Missing database key' => [
         [
@@ -446,20 +493,20 @@ class UrlConversionTest extends UnitTestCase {
   /**
    * @covers ::convertDbUrlToConnectionInfo
    */
-  public function testDriverModuleDoesNotExist() {
-    $url = 'mysql://test_user:test_pass@test_host:3306/test_database?module=does_not_exist';
-    $this->expectException(\RuntimeException::class);
-    $this->expectExceptionMessage("Cannot find the module 'does_not_exist' for the database driver namespace 'Drupal\does_not_exist\Driver\Database\mysql'");
+  public function testDriverModuleDoesNotExist(): void {
+    $url = 'foo_bar_mysql://test_user:test_pass@test_host:3306/test_database?module=foo_bar';
+    $this->expectException(UnknownExtensionException::class);
+    $this->expectExceptionMessage("The database_driver Drupal\\foo_bar\\Driver\\Database\\foo_bar_mysql does not exist.");
     Database::convertDbUrlToConnectionInfo($url, $this->root, TRUE);
   }
 
   /**
    * @covers ::convertDbUrlToConnectionInfo
    */
-  public function testModuleDriverDoesNotExist() {
-    $url = 'mysql://test_user:test_pass@test_host:3306/test_database?module=driver_test';
-    $this->expectException(\RuntimeException::class);
-    $this->expectExceptionMessage("Cannot find the database driver namespace 'Drupal\driver_test\Driver\Database\mysql' in module 'driver_test'");
+  public function testModuleDriverDoesNotExist(): void {
+    $url = 'driver_test_mysql://test_user:test_pass@test_host:3306/test_database?module=driver_test';
+    $this->expectException(UnknownExtensionException::class);
+    $this->expectExceptionMessage("The database_driver Drupal\\driver_test\\Driver\\Database\\driver_test_mysql does not exist.");
     Database::convertDbUrlToConnectionInfo($url, $this->root, TRUE);
   }
 

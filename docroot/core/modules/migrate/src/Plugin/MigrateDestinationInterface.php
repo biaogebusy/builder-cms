@@ -13,7 +13,7 @@ use Drupal\migrate\Row;
  *
  * @see \Drupal\migrate\Plugin\migrate\destination\DestinationBase
  * @see \Drupal\migrate\Plugin\MigrateDestinationPluginManager
- * @see \Drupal\migrate\Annotation\MigrateDestination
+ * @see \Drupal\migrate\Attribute\MigrateDestination
  * @see plugin_api
  *
  * @ingroup migration
@@ -98,7 +98,9 @@ interface MigrateDestinationInterface extends PluginInspectionInterface {
    * @param \Drupal\migrate\Row $row
    *   The row object.
    * @param array $old_destination_id_values
-   *   (optional) The old destination IDs. Defaults to an empty array.
+   *   (optional) The destination IDs from the previous import of this source
+   *   row. This is empty the first time a source row is migrated. Defaults to
+   *   an empty array.
    *
    * @return array|bool
    *   An indexed array of destination IDs in the same order as defined in the
@@ -120,7 +122,10 @@ interface MigrateDestinationInterface extends PluginInspectionInterface {
    * Delete the specified destination object from the target Drupal.
    *
    * @param array $destination_identifier
-   *   The ID of the destination object to delete.
+   *   An associative array of destination IDs for the object to delete. The
+   *   array keys are defined by the
+   *   \Drupal\migrate\Plugin\MigrateDestinationInterface::getIds() method used
+   *   by the destination object.
    */
   public function rollback(array $destination_identifier);
 

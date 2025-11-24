@@ -93,6 +93,7 @@ class SmsBlastForm extends FormBase {
     $sms_message->setMessage($form_state->getValue('message'));
 
     $ids = $this->phoneNumberVerificationStorage->getQuery()
+      ->accessCheck(FALSE)
       ->condition('status', 1)
       ->condition('entity__target_type', 'user')
       ->execute();

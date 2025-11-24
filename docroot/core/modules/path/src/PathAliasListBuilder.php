@@ -2,7 +2,6 @@
 
 namespace Drupal\path;
 
-use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityListBuilder;
 use Drupal\Core\Entity\EntityStorageInterface;
@@ -168,13 +167,16 @@ class PathAliasListBuilder extends EntityListBuilder {
 
     $row['data']['alias']['data'] = [
       '#type' => 'link',
-      '#title' => Unicode::truncate($alias, 50, FALSE, TRUE),
-      '#url' => $url->setOption('attributes', ['title' => $alias]),
+      '#title' => $alias,
+      '#url' => $url,
     ];
+
+    // Create a new URL for linking to the un-aliased system path.
+    $system_url = Url::fromUri("base:{$path}");
     $row['data']['path']['data'] = [
       '#type' => 'link',
-      '#title' => Unicode::truncate($path, 50, FALSE, TRUE),
-      '#url' => $url->setOption('attributes', ['title' => $path]),
+      '#title' => $path,
+      '#url' => $system_url,
     ];
 
     if ($this->languageManager->isMultilingual()) {

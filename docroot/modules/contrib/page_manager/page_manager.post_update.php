@@ -6,6 +6,7 @@
  */
 
 use Drupal\Core\Config\Entity\ConfigEntityUpdater;
+use Drupal\page_manager\PageInterface;
 use Drupal\page_manager\PageVariantInterface;
 
 /**
@@ -40,4 +41,59 @@ function page_manager_post_update_replace_current_user_context(&$sandbox = NULL)
 
       $pageVariant->save();
     });
+}
+
+/**
+ * Update node type selection criteria from node_type to entity_bundle:node.
+ */
+function page_manager_post_update_selection_criteria_node_type(&$sandbox = NULL) {
+  \Drupal::classResolver(ConfigEntityUpdater::class)
+    ->update($sandbox, 'page_variant', function (PageVariantInterface $pageVariant) {
+      $conditions = $pageVariant->get('selection_criteria');
+      if (isset($conditions)) {
+        $changed = FALSE;
+        foreach ($conditions as &$condition) {
+          if ($condition['id'] === 'node_type') {
+            $condition['id'] = 'entity_bundle:node';
+            $changed = TRUE;
+          }
+        }
+        if ($changed) {
+          $pageVariant
+            ->set('selection_criteria', $conditions)
+            ->save();
+        }
+      }
+    });
+}
+
+/**
+ * Update node type access conditions from node_type to entity_bundle:node.
+ */
+function page_manager_post_update_access_conditions_node_type(&$sandbox = NULL) {
+  \Drupal::classResolver(ConfigEntityUpdater::class)
+    ->update($sandbox, 'page', function (PageInterface $page) {
+      $conditions = $page->get('access_conditions');
+      if (isset($conditions)) {
+        $changed = FALSE;
+        foreach ($conditions as &$condition) {
+          if ($condition['id'] === 'node_type') {
+            $condition['id'] = 'entity_bundle:node';
+            $changed = TRUE;
+          }
+        }
+        if ($changed) {
+          $page
+            ->set('access_conditions', $conditions)
+            ->save();
+        }
+      }
+    });
+}
+
+/**
+ * Update container for page_manager.page_access_check arguments.
+ */
+function page_manager_post_update_page_access_check_service_refactor() {
+  // Intentionally empty to trigger a service container rebuild.
 }

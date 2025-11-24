@@ -6,8 +6,7 @@ use Drupal\Core\Access\CsrfTokenGenerator;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\user\Entity\User;
-use Drupal\user\UserInterface;
+use Drupal\user\UserStorageInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -17,41 +16,37 @@ class SwitchUserForm extends FormBase {
 
   /**
    * The csrf token generator.
-   *
-   * @var \Drupal\Core\Access\CsrfTokenGenerator
    */
-  protected $csrfToken;
+  protected CsrfTokenGenerator $csrfToken;
 
   /**
-   * Constructs a new SwitchUserForm object.
-   *
-   * @param \Drupal\Core\Access\CsrfTokenGenerator $csrf_token_generator
-   *   The CSRF token generator.
+   * The user storage.
    */
-  public function __construct(CsrfTokenGenerator $csrf_token_generator) {
-    $this->csrfToken = $csrf_token_generator;
+  protected UserStorageInterface $userStorage;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container): static {
+    $instance = parent::create($container);
+    $instance->csrfToken = $container->get('csrf_token');
+    $instance->userStorage = $container->get('entity_type.manager')->getStorage('user');
+    $instance->stringTranslation = $container->get('string_translation');
+
+    return $instance;
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('csrf_token')
-    );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'devel_switchuser_form';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state): array {
     $form['autocomplete'] = [
       '#type' => 'container',
       '#attributes' => [
@@ -67,7 +62,6 @@ class SwitchUserForm extends FormBase {
         'include_anonymous' => FALSE,
       ],
       '#process_default_value' => FALSE,
-      '#maxlength' => UserInterface::USERNAME_MAX_LENGTH,
       '#title_display' => 'invisible',
       '#required' => TRUE,
       '#size' => '28',
@@ -85,8 +79,16 @@ class SwitchUserForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
-    if (!$account = User::load($form_state->getValue('userid'))) {
+  public function validateForm(array &$form, FormStateInterface $form_state): void {
+    $userId = $form_state->getValue('userid');
+    if ($userId === NULL) {
+      $form_state->setErrorByName('userid', $this->t('Username not found'));
+      return;
+    }
+
+    /** @var \Drupal\user\UserInterface|null $account */
+    $account = $this->userStorage->load($userId);
+    if ($account === NULL) {
       $form_state->setErrorByName('userid', $this->t('Username not found'));
     }
     else {
@@ -97,7 +99,7 @@ class SwitchUserForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     // We cannot rely on automatic token creation, since the csrf seed changes
     // after the redirect and the generated token is not more valid.
     // @todo find another way to do this.

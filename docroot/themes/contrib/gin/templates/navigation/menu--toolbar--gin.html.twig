@@ -48,7 +48,7 @@
       %}
 
       {# Add Home if it doesn't exist #}
-      {% if menu_level == 0 and loop.index == 1 and item.gin_id != 'admin_toolbar_tools-help' %}
+      {% if menu_level == 0 and loop.index == 1 and item.gin_id is not empty and item.gin_id != 'admin_toolbar_tools-help' %}
         <li class="menu-item menu-item--expanded menu-item__tools">
           {% if icon_default == false and icon_path != '' %}
             <a href="{{ path('<front>') }}" class="toolbar-logo" data-drupal-link-system-path="<front>">

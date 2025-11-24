@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Functional\Views;
 
 use Drupal\views\Views;
@@ -14,9 +16,7 @@ use Drupal\Tests\views\Functional\ViewTestBase;
 class HandlerFilterUserNameTest extends ViewTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['views_ui', 'user_test_views'];
 
@@ -74,7 +74,7 @@ class HandlerFilterUserNameTest extends ViewTestBase {
   /**
    * Tests just using the filter.
    */
-  public function testUserNameApi() {
+  public function testUserNameApi(): void {
     $view = Views::getView('test_user_name');
 
     $view->initHandlers();
@@ -89,7 +89,7 @@ class HandlerFilterUserNameTest extends ViewTestBase {
   /**
    * Tests using the user interface.
    */
-  public function testAdminUserInterface() {
+  public function testAdminUserInterface(): void {
     $admin_user = $this->drupalCreateUser([
       'administer views',
       'administer site configuration',
@@ -135,7 +135,7 @@ class HandlerFilterUserNameTest extends ViewTestBase {
   /**
    * Tests exposed filters.
    */
-  public function testExposedFilter() {
+  public function testExposedFilter(): void {
     $path = 'test_user_name';
 
     $options = [];

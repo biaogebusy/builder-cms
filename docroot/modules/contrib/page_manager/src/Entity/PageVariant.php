@@ -457,7 +457,7 @@ class PageVariant extends ConfigEntityBase implements PageVariantInterface {
   /**
    * {@inheritdoc}
    */
-  public function __sleep() {
+  public function __sleep(): array {
     $vars = parent::__sleep();
 
     // Gathered contexts objects should not be serialized.

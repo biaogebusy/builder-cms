@@ -19,8 +19,6 @@ use Drupal\jsonapi\ResourceType\ResourceTypeRepositoryInterface;
 
 /**
  * Entity parser.
- *
- * @package Drupal\entity_share_diff\Service
  */
 class EntityParser implements EntityParserInterface {
 
@@ -158,7 +156,7 @@ class EntityParser implements EntityParserInterface {
    */
   public function validateNeedToProcess(string $uuid, bool $remote) {
     $main_key = $remote ? 'remote' : 'local';
-    if (!in_array($uuid, $this->processedEntities[$main_key])) {
+    if (!\in_array($uuid, $this->processedEntities[$main_key], TRUE)) {
       $this->processedEntities[$main_key][] = $uuid;
       return TRUE;
     }
@@ -180,7 +178,7 @@ class EntityParser implements EntityParserInterface {
     if (empty($entity_json_data['type'])) {
       return '';
     }
-    $parsed_type = explode('--', $entity_json_data['type']);
+    $parsed_type = \explode('--', $entity_json_data['type']);
     $entity_type_id = $parsed_type[0];
     $bundle = $parsed_type[1];
 
@@ -219,7 +217,7 @@ class EntityParser implements EntityParserInterface {
    *   Associative array, keyed by labels.
    *   Values are strings, numbers or arrays.
    */
-  protected function parseEntity(ContentEntityInterface $entity, array $remote_data = NULL) {
+  protected function parseEntity(ContentEntityInterface $entity, array $remote_data = []) {
     $result = [];
     $langcode = $this->languageManager->getCurrentLanguage(LanguageInterface::TYPE_CONTENT)->getId();
     // Load entity of current language, otherwise fields are always compared by
@@ -259,7 +257,7 @@ class EntityParser implements EntityParserInterface {
           break;
 
         case EntityReferenceHelper::RELATIONSHIP_NOT_ENTITY_REFERENCE:
-          $should_parse = !in_array($item_key, $irrelevant_fields);
+          $should_parse = !\in_array($item_key, $irrelevant_fields, TRUE);
           break;
       }
       if (!$should_parse) {
@@ -302,8 +300,8 @@ class EntityParser implements EntityParserInterface {
       if (!empty($build)) {
         // In case of a single field, flatten the array.
         $cardinality = $field_items->getFieldDefinition()->getFieldStorageDefinition()->getCardinality();
-        if ($cardinality == 1 && is_array($build)) {
-          $build = current($build);
+        if ($cardinality == 1 && \is_array($build)) {
+          $build = \current($build);
         }
       }
     }
@@ -324,7 +322,7 @@ class EntityParser implements EntityParserInterface {
       'paragraph',
       'media',
     ];
-    return in_array($entity_type_id, $embeddable_types);
+    return \in_array($entity_type_id, $embeddable_types, TRUE);
   }
 
   /**
@@ -340,12 +338,12 @@ class EntityParser implements EntityParserInterface {
     // Entity keys.
     $entity_keys = $entity->getEntityType()->getKeys();
     // Label and language code should be displayed in the Diff.
-    unset($entity_keys['label']);
-    unset($entity_keys['langcode']);
-    $field_names = array_values($entity_keys);
+    unset($entity_keys['label'], $entity_keys['langcode']);
+
+    $field_names = \array_values($entity_keys);
     // Revision keys.
-    $revision_keys = array_keys($entity->getEntityType()->getRevisionMetadataKeys());
-    $field_names = array_merge($field_names, $revision_keys);
+    $revision_keys = \array_keys($entity->getEntityType()->getRevisionMetadataKeys());
+    $field_names = \array_merge($field_names, $revision_keys);
     // Other keys.
     $other_keys = [
       'changed',
@@ -363,8 +361,7 @@ class EntityParser implements EntityParserInterface {
       'revision_timestamp',
       'revision_log',
     ];
-    $field_names = array_merge($field_names, $other_keys);
-    return $field_names;
+    return \array_merge($field_names, $other_keys);
   }
 
 }

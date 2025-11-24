@@ -9,7 +9,7 @@ use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\paragraphs\Entity\Paragraph;
 use Drupal\paragraphs\Entity\ParagraphsType;
 use Drupal\KernelTests\KernelTestBase;
-use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\Tests\user\Traits\UserCreationTrait;
 
 /**
@@ -19,7 +19,7 @@ use Drupal\Tests\user\Traits\UserCreationTrait;
  */
 class ParagraphsCollapsedSummaryTest extends KernelTestBase {
 
-  use EntityReferenceTestTrait;
+  use EntityReferenceFieldCreationTrait;
   use UserCreationTrait;
 
   /**
@@ -101,7 +101,7 @@ class ParagraphsCollapsedSummaryTest extends KernelTestBase {
     // Load the paragraph and assert its stored feature settings.
     $paragraph = Paragraph::load($paragraph->id());
     $this->assertEquals($paragraph->getAllBehaviorSettings(), $feature_settings);
-    $this->assertEquals($paragraph->getSummary(), '<div class="paragraphs-description paragraphs-collapsed-description"><div class="paragraphs-content-wrapper"><span class="summary-content">Example text for a text paragraph</span></div><div class="paragraphs-plugin-wrapper"><span class="summary-plugin"><span class="summary-plugin-label">Text color</span>red</span></div></div>');
+    $this->assertEquals((string) $paragraph->getSummary(), '<div class="paragraphs-description paragraphs-collapsed-description"><div class="paragraphs-content-wrapper"><span class="summary-content">Example text for a text paragraph</span></div><div class="paragraphs-plugin-wrapper"><span class="summary-plugin"><span class="summary-plugin-label">Text color</span>red</span></div></div>');
 
     // Check the summary and the additional options.
     $paragraph_1 = Paragraph::create([
@@ -111,12 +111,12 @@ class ParagraphsCollapsedSummaryTest extends KernelTestBase {
     $paragraph_1->save();
     // We do not include behavior summaries of nested children in the parent
     // summary.
-    $this->assertEquals($paragraph_1->getSummary(), '<div class="paragraphs-description paragraphs-collapsed-description"><div class="paragraphs-content-wrapper"><span class="summary-content">Example text for a text paragraph</span></div></div>');
+    $this->assertEquals((string) $paragraph_1->getSummary(), '<div class="paragraphs-description paragraphs-collapsed-description"><div class="paragraphs-content-wrapper"><span class="summary-content">Example text for a text paragraph</span></div></div>');
     $info = $paragraph_1->getIcons();
     $this->assertEquals($info['count']['#prefix'], '<span class="paragraphs-badge" title="1 child">');
     $this->assertEquals($info['count']['#suffix'], '</span>');
 
-    $this->assertEquals($paragraph_1->getSummary(['depth_limit' => 0]), '');
+    $this->assertEquals((string) $paragraph_1->getSummary(['depth_limit' => 0]), '');
   }
 
   /**
@@ -150,8 +150,8 @@ class ParagraphsCollapsedSummaryTest extends KernelTestBase {
       'nested_paragraph_field' => [$paragraph_text_2, $paragraph_nested_1],
     ]);
     $paragraph_nested_2->save();
-    $this->assertEquals($paragraph_nested_2->getSummary(['show_behavior_summary' => FALSE]), '<div class="paragraphs-description paragraphs-collapsed-description"><div class="paragraphs-content-wrapper"><span class="summary-content">Text paragraph on top level</span></div></div>');
-    $this->assertEquals($paragraph_nested_2->getSummary(['show_behavior_summary' => FALSE, 'depth_limit' => 2]), '<div class="paragraphs-description paragraphs-collapsed-description"><div class="paragraphs-content-wrapper"><span class="summary-content">Text paragraph on top level</span>, <span class="summary-content">Text paragraph on nested level</span></div></div>');
+    $this->assertEquals((string) $paragraph_nested_2->getSummary(['show_behavior_summary' => FALSE]), '<div class="paragraphs-description paragraphs-collapsed-description"><div class="paragraphs-content-wrapper"><span class="summary-content">Text paragraph on top level</span></div></div>');
+    $this->assertEquals((string) $paragraph_nested_2->getSummary(['show_behavior_summary' => FALSE, 'depth_limit' => 2]), '<div class="paragraphs-description paragraphs-collapsed-description"><div class="paragraphs-content-wrapper"><span class="summary-content">Text paragraph on top level</span>, <span class="summary-content">Text paragraph on nested level</span></div></div>');
     $info = $paragraph_nested_2->getIcons();
     $this->assertEquals($info['count']['#prefix'], '<span class="paragraphs-badge" title="2 children">');
     $this->assertEquals($info['count']['#suffix'], '</span>');
@@ -181,7 +181,7 @@ class ParagraphsCollapsedSummaryTest extends KernelTestBase {
     $paragraph_with_multiple_entity_references->get('field_user_references')->appendItem($user1->id());
     $paragraph_with_multiple_entity_references->get('field_user_references')->appendItem($user2->id());
     $paragraph_with_multiple_entity_references->save();
-    $this->assertEquals('<div class="paragraphs-description paragraphs-collapsed-description"><div class="paragraphs-content-wrapper"><span class="summary-content">bob</span>, <span class="summary-content">pete</span></div></div>', $paragraph_with_multiple_entity_references->getSummary());
+    $this->assertEquals('<div class="paragraphs-description paragraphs-collapsed-description"><div class="paragraphs-content-wrapper"><span class="summary-content">bob</span>, <span class="summary-content">pete</span></div></div>', (string) $paragraph_with_multiple_entity_references->getSummary());
   }
 
   /**

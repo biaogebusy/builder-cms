@@ -87,7 +87,7 @@ abstract class RendererBase implements RendererInterface, EntityHandlerInterface
     });
 
     $html = (string) $this->renderer->executeInRenderContext(new RenderContext(), function () use (&$render) {
-      return $this->renderer->render($render, TRUE);
+      return $this->renderer->renderRoot($render);
     });
 
     // Allow other modules to alter the generated HTML.

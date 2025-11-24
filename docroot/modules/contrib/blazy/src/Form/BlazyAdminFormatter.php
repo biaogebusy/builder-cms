@@ -43,7 +43,7 @@ class BlazyAdminFormatter extends BlazyAdminFormatterBase {
     parent::openingForm($form, $definition);
 
     $scopes = $this->toScopes($definition);
-    $namespace = $scopes->get('namespace', 'blazy');
+    $namespace = static::$namespace;
     $descriptions = $this->formatterDescriptions($scopes);
 
     if ($scopes->is('vanilla')) {

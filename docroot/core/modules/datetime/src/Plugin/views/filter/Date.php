@@ -4,9 +4,12 @@ namespace Drupal\datetime\Plugin\views\filter;
 
 use Drupal\Component\Datetime\DateTimePlus;
 use Drupal\Core\Datetime\DateFormatterInterface;
+use Drupal\Core\Datetime\DrupalDateTime;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItem;
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
+use Drupal\views\Attribute\ViewsFilter;
 use Drupal\views\FieldAPIHandlerTrait;
 use Drupal\views\Plugin\views\filter\Date as NumericDate;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -19,9 +22,8 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * because it provides more sensible operators.
  *
  * @ingroup views_filter_handlers
- *
- * @ViewsFilter("datetime")
  */
+#[ViewsFilter("datetime")]
 class Date extends NumericDate implements ContainerFactoryPluginInterface {
 
   use FieldAPIHandlerTrait;
@@ -96,6 +98,55 @@ class Date extends NumericDate implements ContainerFactoryPluginInterface {
       $container->get('date.formatter'),
       $container->get('request_stack')
     );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateExposed(&$form, FormStateInterface $form_state): void {
+    // Do not validate value if filter is not exposed or grouped.
+    if (empty($this->options['exposed']) || $this->options['is_grouped']) {
+      return;
+    }
+
+    $identifier = $this->options['expose']['identifier'];
+    $input = $form_state->getValue($identifier);
+
+    $values = [];
+    if (is_array($input)) {
+      if (!empty($input['value'])) {
+        $values[] = $input['value'];
+      }
+      else {
+        if (!empty($input['min'])) {
+          $values[] = $input['min'];
+        }
+        if (!empty($input['max'])) {
+          $values[] = $input['max'];
+        }
+      }
+    }
+    elseif (!empty($input)) {
+      $values[] = $input;
+    }
+
+    foreach ($values as $value) {
+      try {
+        (new DrupalDateTime($value))->getTimestamp();
+      }
+      catch (\Throwable) {
+        if (isset($form[$identifier])) {
+          $field = &$form[$identifier];
+        }
+        elseif (isset($form[$identifier . '_wrapper'])) {
+          $field = &$form[$identifier . '_wrapper'];
+        }
+        if (isset($field)) {
+          // Set the form error message.
+          $form_state->setError($field, $this->t('Invalid date format.'));
+        }
+      }
+    }
   }
 
   /**

@@ -48,6 +48,12 @@ better_exposed_filters.general:
     autosubmit_textfield_delay:
       type: integer
       label: 'Delay for textfield autosubmit'
+    autosubmit_textfield_minimum_length:
+      type: integer
+      label: 'Textfield autosubmit minimum length'
+      constraints:
+        Range:
+          min: 1
     autosubmit_hide:
       type: boolean
       label: 'Hide submit button'

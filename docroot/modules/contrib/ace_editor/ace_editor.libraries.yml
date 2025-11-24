@@ -4,7 +4,6 @@ primary:
   version: VERSION
   js:
     js/editor.js: {}
-
   css:
     component:
       styles/editor.css: {}
@@ -12,12 +11,12 @@ primary:
     - core/jquery
     - core/drupal
     - core/drupalSettings
+    - editor/drupal.editor
 
 formatter:
   version: VERSION
   js:
     js/formatter.js: {}
-
   css:
     component:
       styles/editor.css: {}
@@ -30,7 +29,6 @@ filter:
   version: VERSION
   js:
     js/filter.js: {}
-
   css:
     component:
       styles/editor.css: {}

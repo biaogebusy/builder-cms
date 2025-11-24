@@ -6,6 +6,9 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\Context\ContextInterface;
 use Drupal\ctools\Form\ContextConfigure;
 
+/**
+ * Configure static contexts.
+ */
 class StaticContextConfigure extends ContextConfigure {
 
   /**
@@ -22,13 +25,14 @@ class StaticContextConfigure extends ContextConfigure {
    *   The cached values from the wizard.
    *
    * @return \Drupal\page_manager\PageVariantInterface
+   *   The Page Variant.
    */
   protected function getPageVariant($cached_values) {
     if (isset($cached_values['page_variant'])) {
       return $cached_values['page_variant'];
     }
 
-    /** @var $page \Drupal\page_manager\PageInterface */
+    /** @var \Drupal\page_manager\PageInterface $page */
     $page = $cached_values['page'];
     return $page->getVariant($this->variantMachineName);
   }
@@ -37,7 +41,7 @@ class StaticContextConfigure extends ContextConfigure {
    * {@inheritdoc}
    */
   protected function getParentRouteInfo($cached_values) {
-    /** @var $page \Drupal\page_manager\PageInterface */
+    /** @var \Drupal\page_manager\PageInterface $page */
     $page = $cached_values['page'];
 
     if ($page->isNew()) {
@@ -71,7 +75,7 @@ class StaticContextConfigure extends ContextConfigure {
    * {@inheritdoc}
    */
   protected function getContexts($cached_values) {
-    /** @var $page_variant \Drupal\page_manager\PageVariantInterface */
+    /** @var \Drupal\page_manager\PageVariantInterface $page_variant */
     $page_variant = !empty($cached_values['page_variant']) ? $cached_values['page_variant'] : NULL;
     if (is_null($page_variant)) {
       $page_variant = $this->getPageVariant($cached_values);
@@ -83,7 +87,7 @@ class StaticContextConfigure extends ContextConfigure {
    * {@inheritdoc}
    */
   protected function addContext($cached_values, $context_id, ContextInterface $context) {
-    /** @var $page_variant \Drupal\page_manager\PageVariantInterface */
+    /** @var \Drupal\page_manager\PageVariantInterface $page_variant */
     $page_variant = $this->getPageVariant($cached_values);
     $context_config = [
       'label' => $context->getContextDefinition()->getLabel(),

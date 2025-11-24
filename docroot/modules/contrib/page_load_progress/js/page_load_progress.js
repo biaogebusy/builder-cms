@@ -32,8 +32,29 @@
       // Add the throbber for internal links only if requested in the UI.
       if (internal_links) {
         $("a[href]").on("click", function(evnt) {
+          var element = $(this);
           // Do not lock the screen if the link is external.
-          if ($(this).attr('href').slice(0,1) != '/') {
+          if (element.attr('href').slice(0,1) != '/') {
+            return;
+          }
+
+          // Do not lock the screen if the link has toolbar-item class.
+          if (element.hasClass('toolbar-item')) {
+            return;
+          }
+
+          // Do not lock the screen if the link has use-ajax class.
+          if (element.hasClass('use-ajax')) {
+            return;
+          }
+
+          // Do not lock the screen if the link has webform-ajax-link class.
+          if (element.hasClass('webform-ajax-link')) {
+            return;
+          }
+
+          // Do not lock the screen if the link has target attribute.
+          if ($(this).attr('target')) {
             return;
           }
 
@@ -44,7 +65,7 @@
           }
 
           // Do not lock the screen if the link is within a modal.
-          if ($(this).parents('.modal').length > 0) {
+          if (element.parents('.modal').length > 0) {
             return;
           }
 
@@ -68,6 +89,7 @@
           }
           if (isEscape) {
             $('.page-load-progress-lock-screen').remove();
+            $('body').css('overflow', '');
           }
         };
       }

@@ -39,8 +39,30 @@ commerce_tax_type_configuration:
       type: boolean
       label: 'Display taxes of this type inclusive in product prices'
 
-commerce_tax.commerce_tax_type.plugin.custom:
+commerce_tax_type_local_configuration:
   type: commerce_tax_type_configuration
+  mapping:
+    display_tax_rate_in_label:
+      type: boolean
+      label: 'Display tax rate in the adjustment label'
+
+commerce_tax.commerce_tax_type.plugin.canadian_sales_tax:
+  type: commerce_tax_type_local_configuration
+
+commerce_tax.commerce_tax_type.plugin.european_union_vat:
+  type: commerce_tax_type_local_configuration
+
+commerce_tax.commerce_tax_type.plugin.norwegian_vat:
+  type: commerce_tax_type_local_configuration
+
+commerce_tax.commerce_tax_type.plugin.swiss_vat:
+  type: commerce_tax_type_local_configuration
+
+commerce_tax.commerce_tax_type.plugin.united_kingdom_vat:
+  type: commerce_tax_type_local_configuration
+
+commerce_tax.commerce_tax_type.plugin.custom:
+  type: commerce_tax_type_local_configuration
   mapping:
     display_label:
       type: string
@@ -88,7 +110,7 @@ field.field_settings.commerce_tax_number:
       type: sequence
       label: 'Collect tax numbers for the following countries'
       sequence:
-        - type: string
+        type: string
     verify:
       type: boolean
       label: 'Verify the tax number via external web services'

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Form;
 
 use Drupal\Core\Database\Database;
@@ -20,9 +22,7 @@ use Drupal\Tests\BrowserTestBase;
 class StorageTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['form_test', 'dblog'];
 
@@ -43,7 +43,7 @@ class StorageTest extends BrowserTestBase {
   /**
    * Tests using the form in a usual way.
    */
-  public function testForm() {
+  public function testForm(): void {
     $this->drupalGet('form_test/form-storage');
 
     $assert_session = $this->assertSession();
@@ -72,7 +72,7 @@ class StorageTest extends BrowserTestBase {
   /**
    * Tests using the form after calling $form_state->setCached().
    */
-  public function testFormCached() {
+  public function testFormCached(): void {
     $this->drupalGet('form_test/form-storage', ['query' => ['cache' => 1]]);
     $this->assertSession()->pageTextContains('Form constructions: 1');
 
@@ -100,7 +100,7 @@ class StorageTest extends BrowserTestBase {
   /**
    * Tests validation when form storage is used.
    */
-  public function testValidation() {
+  public function testValidation(): void {
     $this->drupalGet('form_test/form-storage');
     $this->submitForm([
       'title' => '',
@@ -120,7 +120,7 @@ class StorageTest extends BrowserTestBase {
    * during form validation, while another, required element in the form
    * triggers a form validation error.
    */
-  public function testCachedFormStorageValidation() {
+  public function testCachedFormStorageValidation(): void {
     // Request the form with 'cache' query parameter to enable form caching.
     $this->drupalGet('form_test/form-storage', ['query' => ['cache' => 1]]);
 
@@ -148,7 +148,7 @@ class StorageTest extends BrowserTestBase {
   /**
    * Tests form build ID regeneration when loading a cached immutable form.
    */
-  public function testImmutableForm() {
+  public function testImmutableForm(): void {
     // Request the form with 'cache' query parameter to enable form caching.
     $this->drupalGet('form_test/form-storage', ['query' => ['cache' => 1, 'immutable' => 1]]);
 
@@ -181,14 +181,14 @@ class StorageTest extends BrowserTestBase {
   /**
    * Verify that existing contrib code cannot overwrite immutable form state.
    */
-  public function testImmutableFormLegacyProtection() {
+  public function testImmutableFormLegacyProtection(): void {
     $this->drupalGet('form_test/form-storage', ['query' => ['cache' => 1, 'immutable' => 1]]);
     // Ensure the hidden 'form_build_id' field is unique.
     $this->assertSession()->elementsCount('xpath', '//input[@name="form_build_id"]', 1);
     $build_id = $this->assertSession()->hiddenFieldExists('form_build_id')->getValue();
 
     // Try to poison the form cache.
-    $response = $this->drupalGet('form-test/form-storage-legacy/' . $build_id, ['query' => [MainContentViewSubscriber::WRAPPER_FORMAT => 'drupal_ajax']], ['X-Requested-With: XMLHttpRequest']);
+    $response = $this->drupalGet('form-test/form-storage-legacy/' . $build_id, ['query' => [MainContentViewSubscriber::WRAPPER_FORMAT => 'drupal_ajax']], ['X-Requested-With' => 'XMLHttpRequest']);
     $original = json_decode($response, TRUE);
 
     $this->assertEquals($original['form']['#build_id_old'], $build_id, 'Original build_id was recorded');
@@ -205,7 +205,7 @@ class StorageTest extends BrowserTestBase {
     $this->assertTrue($status, 'A watchdog message was logged by \Drupal::formBuilder()->setCache');
 
     // Ensure that the form state was not poisoned by the preceding call.
-    $response = $this->drupalGet('form-test/form-storage-legacy/' . $build_id, ['query' => [MainContentViewSubscriber::WRAPPER_FORMAT => 'drupal_ajax']], ['X-Requested-With: XMLHttpRequest']);
+    $response = $this->drupalGet('form-test/form-storage-legacy/' . $build_id, ['query' => [MainContentViewSubscriber::WRAPPER_FORMAT => 'drupal_ajax']], ['X-Requested-With' => 'XMLHttpRequest']);
     $original = json_decode($response, TRUE);
     $this->assertEquals($original['form']['#build_id_old'], $build_id, 'Original build_id was recorded');
     $this->assertNotEquals($original['form']['#build_id'], $build_id, 'New build_id was generated');

@@ -1,20 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Element;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Element\FormElement;
+use Drupal\Core\Render\Attribute\FormElement;
+use Drupal\Core\Render\Element\FormElementBase;
 use Drupal\image_effects\Component\ColorUtility;
+use Drupal\image_effects\Plugin\ColorSelectorPluginManager;
 
 /**
  * Implements a form element to enable capturing color information.
  *
  * Enable capturing color information. Plugins allow to define alternative
  * color selectors.
- *
- * @FormElement("image_effects_color")
  */
-class ImageEffectsColor extends FormElement {
+#[FormElement('image_effects_color')]
+class ImageEffectsColor extends FormElementBase {
 
   /**
    * {@inheritdoc}
@@ -38,8 +41,8 @@ class ImageEffectsColor extends FormElement {
   public static function valueCallback(&$element, $input, FormStateInterface $form_state) {
     if ($input !== FALSE && $input !== NULL) {
       // Make sure element properties are set.
-      $element['#allow_null'] = isset($element['#allow_null']) ? $element['#allow_null'] : FALSE;
-      $element['#allow_opacity'] = isset($element['#allow_opacity']) ? $element['#allow_opacity'] : FALSE;
+      $element['#allow_null'] ??= FALSE;
+      $element['#allow_opacity'] ??= FALSE;
 
       // Normalize returned element values to a RGBA hex value.
       $val = '';
@@ -56,7 +59,7 @@ class ImageEffectsColor extends FormElement {
         $val = '#' . $val;
       }
       if ($element['#allow_opacity']) {
-        $val .= ColorUtility::opacityToAlpha($input['container']['opacity']);
+        $val .= ColorUtility::opacityToAlpha((int) $input['container']['opacity']);
       }
       return $val;
     }
@@ -81,7 +84,7 @@ class ImageEffectsColor extends FormElement {
    * @return array
    *   The processed element.
    */
-  public static function processImageEffectsColor(array &$element, FormStateInterface $form_state, array &$complete_form) {
+  public static function processImageEffectsColor(array &$element, FormStateInterface $form_state, array &$complete_form): array {
     // Make sure element properties are set.
     $element += [
       '#allow_null' => FALSE,
@@ -99,7 +102,7 @@ class ImageEffectsColor extends FormElement {
     $hex = $transparent ? '#FFFFFF' : mb_substr($element['#default_value'], 0, 7);
     $opacity = $transparent ? 100 : ColorUtility::rgbaToOpacity($element['#default_value']);
 
-    $colorPlugin = \Drupal::service('plugin.manager.image_effects.color_selector')->getPlugin();
+    $colorPlugin = \Drupal::service(ColorSelectorPluginManager::class)->getPlugin();
 
     if ($element['#allow_null'] || $element['#allow_opacity']) {
       // More sub-fields are needed to define the color, wrap them in a
@@ -163,7 +166,7 @@ class ImageEffectsColor extends FormElement {
   /**
    * Form element validation handler.
    */
-  public static function validateImageEffectsColor(&$element, FormStateInterface $form_state, &$complete_form) {
+  public static function validateImageEffectsColor(array &$element, FormStateInterface $form_state, array &$complete_form): void {
     $form_state->setValueForElement($element, $element['#value']);
   }
 

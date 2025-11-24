@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.data.iotdata.business.point.create request
  *
  * @author auto create
- * @since 1.0, 2023-05-31 20:32:30
+ * @since 1.0, 2025-08-13 14:52:43
  */
 class AlipayDataIotdataBusinessPointCreateRequest
 {

@@ -1,0 +1,44 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"SN",
+		"Hanzhong Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Chenggu Xian": {
+			"local_name": "城固县"
+		},
+		"Foping Xian": {
+			"local_name": "佛坪县"
+		},
+		"Hantai Qu": {
+			"local_name": "汉台区"
+		},
+		"Liuba Xian": {
+			"local_name": "留坝县"
+		},
+		"Lüeyang Xian": {
+			"local_name": "略阳县"
+		},
+		"Mian Xian": {
+			"local_name": "勉县"
+		},
+		"Nanzheng Xian": {
+			"local_name": "南郑县"
+		},
+		"Ningqiang Xian": {
+			"local_name": "宁强县"
+		},
+		"Xixiang Xian": {
+			"local_name": "西乡县"
+		},
+		"Yang Xian": {
+			"local_name": "洋县"
+		},
+		"Zhenba Xian": {
+			"local_name": "镇巴县"
+		}
+	}
+}

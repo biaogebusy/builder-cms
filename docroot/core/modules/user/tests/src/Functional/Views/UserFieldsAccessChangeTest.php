@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Functional\Views;
 
 /**
@@ -10,9 +12,7 @@ namespace Drupal\Tests\user\Functional\Views;
 class UserFieldsAccessChangeTest extends UserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['user_access_test'];
 
@@ -31,7 +31,7 @@ class UserFieldsAccessChangeTest extends UserTestBase {
   /**
    * Tests if another module can change field access.
    */
-  public function testUserFieldAccess() {
+  public function testUserFieldAccess(): void {
     $this->drupalGet('test_user_fields_access');
 
     // User has access to name and created date by default.
@@ -60,7 +60,7 @@ class UserFieldsAccessChangeTest extends UserTestBase {
    * Tests that the user name formatter shows a link to the user when there is
    * access but not otherwise.
    */
-  public function testUserNameLink() {
+  public function testUserNameLink(): void {
     $test_user = $this->drupalCreateUser();
     $xpath = "//td/a[.='" . $test_user->getAccountName() . "']/@href[.='" . $test_user->toUrl()->toString() . "']";
 

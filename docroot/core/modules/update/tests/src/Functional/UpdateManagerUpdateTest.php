@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\update\Functional;
 
 /**
@@ -10,15 +12,12 @@ namespace Drupal\Tests\update\Functional;
  * @group update
  */
 class UpdateManagerUpdateTest extends UpdateTestBase {
+  use UpdateTestTrait;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
-    'update',
-    'update_test',
     'aaa_update_test',
     'bbb_update_test',
   ];
@@ -42,10 +41,7 @@ class UpdateManagerUpdateTest extends UpdateTestBase {
     // The installed state of the system is the same for all test cases. What
     // varies for each test scenario is which release history fixture we fetch,
     // which in turn changes the expected state of the UpdateManagerUpdateForm.
-    $system_info = [
-      '#all' => [
-        'version' => '8.0.0',
-      ],
+    $this->mockInstalledExtensionsInfo([
       'aaa_update_test' => [
         'project' => 'aaa_update_test',
         'version' => '8.x-1.0',
@@ -56,8 +52,13 @@ class UpdateManagerUpdateTest extends UpdateTestBase {
         'version' => '8.x-1.0',
         'hidden' => FALSE,
       ],
-    ];
-    $this->config('update_test.settings')->set('system_info', $system_info)->save();
+      'ccc_update_test' => [
+        'project' => 'ccc_update_test',
+        'version' => '8.x-1.0',
+        'hidden' => FALSE,
+      ],
+    ]);
+    $this->mockDefaultExtensionsInfo(['version' => '8.0.0']);
   }
 
   /**
@@ -79,21 +80,13 @@ class UpdateManagerUpdateTest extends UpdateTestBase {
    *     <core_compatibility> at all).
    *   - 8.x-1.2 is available and requires Drupal 8.1.0 and above.
    *
-   * @todo In https://www.drupal.org/project/drupal/issues/3112962:
-   *   Change the 'core_fixture' values here to use:
-   *   - '1.1' instead of '1.1-core_compatibility'.
-   *   - '1.1-alpha1' instead of '1.1-alpha1-core_compatibility'.
-   *   Delete the files:
-   *   - core/modules/update/tests/modules/update_test/drupal.1.1-alpha1-core_compatibility.xml
-   *   - core/modules/update/tests/modules/update_test/drupal.1.1-core_compatibility.xml
-   *
    * @return array[]
    *   Test data.
    */
-  public function incompatibleUpdatesTableProvider() {
+  public static function incompatibleUpdatesTableProvider() {
     return [
       'only one compatible' => [
-        'core_fixture' => '1.1-core_compatibility',
+        'core_fixture' => '8.1.1',
         // aaa_update_test.8.x-1.2.xml has core compatibility set and will test
         // the case where $recommended_release['core_compatible'] === TRUE in
         // \Drupal\update\Form\UpdateManagerUpdate.
@@ -106,7 +99,7 @@ class UpdateManagerUpdateTest extends UpdateTestBase {
         'incompatible' => [],
       ],
       'only one incompatible' => [
-        'core_fixture' => '1.1-core_compatibility',
+        'core_fixture' => '8.1.1',
         'a_fixture' => 'core_compatibility.8.x-1.2_8.x-2.2',
         // Use a fixture with only a 8.x-1.0 release so BBB is up to date.
         'b_fixture' => '1_0',
@@ -119,7 +112,7 @@ class UpdateManagerUpdateTest extends UpdateTestBase {
         ],
       ],
       'two compatible, no incompatible' => [
-        'core_fixture' => '1.1-core_compatibility',
+        'core_fixture' => '8.1.1',
         'a_fixture' => '8.x-1.2',
         // bbb_update_test.1_1.xml does not have core compatibility set and will
         // test the case where $recommended_release['core_compatible'] === NULL
@@ -132,7 +125,7 @@ class UpdateManagerUpdateTest extends UpdateTestBase {
         'incompatible' => [],
       ],
       'two incompatible, no compatible' => [
-        'core_fixture' => '1.1-core_compatibility',
+        'core_fixture' => '8.1.1',
         'a_fixture' => 'core_compatibility.8.x-1.2_8.x-2.2',
         // bbb_update_test.1_2.xml has core compatibility set and will test the
         // case where $recommended_release['core_compatible'] === FALSE in
@@ -151,7 +144,7 @@ class UpdateManagerUpdateTest extends UpdateTestBase {
         ],
       ],
       'one compatible, one incompatible' => [
-        'core_fixture' => '1.1-core_compatibility',
+        'core_fixture' => '8.1.1',
         'a_fixture' => 'core_compatibility.8.x-1.2_8.x-2.2',
         'b_fixture' => '1_1',
         'compatible' => [
@@ -187,7 +180,7 @@ class UpdateManagerUpdateTest extends UpdateTestBase {
    *   - 'recommended': The recommended version.
    *   - 'range': The versions of Drupal core required for that version.
    */
-  public function testIncompatibleUpdatesTable($core_fixture, $a_fixture, $b_fixture, array $compatible, array $incompatible) {
+  public function testIncompatibleUpdatesTable($core_fixture, $a_fixture, $b_fixture, array $compatible, array $incompatible): void {
 
     $assert_session = $this->assertSession();
     $compatible_table_locator = '[data-drupal-selector="edit-projects"]';
@@ -231,6 +224,105 @@ class UpdateManagerUpdateTest extends UpdateTestBase {
       // Verify there is no incompatible updates table.
       $assert_session->elementNotExists('css', $incompatible_table_locator);
     }
+  }
+
+  /**
+   * Tests the Update form with an uninstalled module in the system.
+   */
+  public function testUninstalledUpdatesTable(): void {
+    $assert_session = $this->assertSession();
+    $compatible_table_locator = '[data-drupal-selector="edit-projects"]';
+    $uninstalled_table_locator = '[data-drupal-selector="edit-uninstalled-projects"]';
+
+    $fixtures = [
+      'drupal' => '8.1.1',
+      'aaa_update_test' => '8.x-1.2',
+      // Use a fixture with only a 8.x-1.0 release so BBB is up to date.
+      'bbb_update_test' => '1_0',
+      // CCC is not installed and is missing an update, 8.x-1.1.
+      'ccc_update_test' => '1_1',
+    ];
+    $this->refreshUpdateStatus($fixtures);
+    $this->drupalGet('admin/reports/updates/update');
+
+    // Confirm there is no table for uninstalled extensions.
+    $assert_session->pageTextNotContains('CCC Update test');
+    $assert_session->responseNotContains('<h2>Uninstalled</h2>');
+
+    // Confirm the table for installed modules exists without a header.
+    $assert_session->responseNotContains('<h2>Installed</h2>');
+    $assert_session->elementNotExists('css', $uninstalled_table_locator);
+    $assert_session->elementsCount('css', "$compatible_table_locator tbody tr", 1);
+    $compatible_headers = [
+      // First column has no header, it's the select-all checkbox.
+      'th:nth-of-type(2)' => 'Name',
+      'th:nth-of-type(3)' => 'Site version',
+      'th:nth-of-type(4)' => 'Recommended version',
+    ];
+    $this->checkTableHeaders($compatible_table_locator, $compatible_headers);
+
+    $installed_row = "$compatible_table_locator tbody tr";
+    $assert_session->elementsCount('css', $installed_row, 1);
+    $assert_session->elementTextContains('css', "$compatible_table_locator td:nth-of-type(2)", "AAA Update test");
+    $assert_session->elementTextContains('css', "$compatible_table_locator td:nth-of-type(3)", '8.x-1.0');
+    $assert_session->elementTextContains('css', "$compatible_table_locator td:nth-of-type(4)", '8.x-1.2');
+
+    // Change the setting so we check for uninstalled modules, too.
+    $this->config('update.settings')
+      ->set('check.disabled_extensions', TRUE)
+      ->save();
+
+    // Reload the page so the new setting goes into effect.
+    $this->drupalGet('admin/reports/updates/update');
+
+    // Confirm the table for installed modules exists with a header.
+    $assert_session->responseContains('<h2>Installed</h2>');
+    $assert_session->elementsCount('css', "$compatible_table_locator tbody tr", 1);
+    $this->checkTableHeaders($compatible_table_locator, $compatible_headers);
+
+    // Confirm the table for uninstalled extensions exists.
+    $assert_session->responseContains('<h2>Uninstalled</h2>');
+    $uninstalled_headers = [
+      // First column has no header, it's the select-all checkbox.
+      'th:nth-of-type(2)' => 'Name',
+      'th:nth-of-type(3)' => 'Site version',
+      'th:nth-of-type(4)' => 'Recommended version',
+    ];
+    $this->checkTableHeaders($uninstalled_table_locator, $uninstalled_headers);
+
+    $uninstalled_row = "$uninstalled_table_locator tbody tr";
+    $assert_session->elementsCount('css', $uninstalled_row, 1);
+    $assert_session->elementTextContains('css', "$uninstalled_row td:nth-of-type(2)", "CCC Update test");
+    $assert_session->elementTextContains('css', "$uninstalled_row td:nth-of-type(3)", '8.x-1.0');
+    $assert_session->elementTextContains('css', "$uninstalled_row td:nth-of-type(4)", '8.x-1.1');
+  }
+
+  /**
+   * Checks headers for a given table on the Update form.
+   *
+   * @param string $table_locator
+   *   CSS locator to find the table to check the headers on.
+   * @param string[] $expected_headers
+   *   Array of expected header texts, keyed by CSS selectors relative to the
+   *   thead tr (for example, "th:nth-of-type(3)").
+   */
+  private function checkTableHeaders($table_locator, array $expected_headers) {
+    $assert_session = $this->assertSession();
+    $assert_session->elementExists('css', $table_locator);
+    foreach ($expected_headers as $locator => $header) {
+      $assert_session->elementTextContains('css', "$table_locator thead tr $locator", $header);
+    }
+  }
+
+  /**
+   * Tests the deprecation warnings.
+   *
+   * @group legacy
+   */
+  public function testDeprecationWarning(): void {
+    $this->drupalGet('admin/theme/update');
+    $this->expectDeprecation('The path /admin/theme/update is deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. Use /admin/appearance/update. See https://www.drupal.org/node/3382805');
+    $this->assertSession()->statusMessageContains("You have been redirected from admin/theme/update. Update links, shortcuts, and bookmarks to use admin/appearance/update.", 'warning');
   }
 
 }

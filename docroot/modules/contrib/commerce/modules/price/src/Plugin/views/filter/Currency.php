@@ -3,14 +3,14 @@
 namespace Drupal\commerce_price\Plugin\views\filter;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\views\Attribute\ViewsFilter;
 use Drupal\views\Plugin\views\filter\InOperator;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Filter by currency.
- *
- * @ViewsFilter("commerce_currency")
  */
+#[ViewsFilter("commerce_currency")]
 class Currency extends InOperator {
 
   /**

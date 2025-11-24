@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\commerce\Unit\Resolver;
 
-use Drupal\commerce\Resolver\ChainCountryResolver;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Tests\UnitTestCase;
+use Drupal\commerce\Resolver\ChainCountryResolver;
 
 /**
  * @coversDefaultClass  Drupal\commerce\Resolver\ChainCountryResolver

@@ -2,12 +2,12 @@
 
 namespace Drupal\commerce_checkout\EventSubscriber;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Password\PasswordGeneratorInterface;
 use Drupal\commerce_checkout\Entity\CheckoutFlowInterface;
 use Drupal\commerce_checkout\Event\CheckoutEvents;
 use Drupal\commerce_order\Event\OrderEvent;
 use Drupal\commerce_order\OrderAssignmentInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Password\PasswordGeneratorInterface;
 use Drupal\user\UserInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
@@ -28,7 +28,7 @@ class GuestCheckoutCompletionSubscriber implements EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     return [
       CheckoutEvents::COMPLETION => ['onCompletion'],
     ];

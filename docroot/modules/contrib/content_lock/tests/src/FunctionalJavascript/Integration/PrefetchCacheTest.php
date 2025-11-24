@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_lock\FunctionalJavascript\Integration;
 
 use Drupal\Tests\block\Traits\BlockCreationTrait;
@@ -66,7 +68,7 @@ class PrefetchCacheTest extends ContentLockJavascriptTestBase {
     $this->assertNotFalse($lockService->fetchLock($this->entity->id(), $this->entity->language()->getId(), NULL, 'entity_test_mul_changed'));
 
     // After saving, the lock should be gone.
-    $page->pressButton(t('Save'));
+    $page->pressButton('Save');
     $this->assertFalse($lockService->fetchLock($this->entity->id(), $this->entity->language()->getId(), NULL, 'entity_test_mul_changed'));
   }
 

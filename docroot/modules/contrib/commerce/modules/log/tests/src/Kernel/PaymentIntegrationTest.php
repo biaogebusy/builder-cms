@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\commerce_log\Kernel;
 
+use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 use Drupal\commerce_log\LogStorageInterface;
 use Drupal\commerce_log\LogViewBuilder;
 use Drupal\commerce_order\Entity\Order;
@@ -13,7 +14,6 @@ use Drupal\commerce_price\Price;
 use Drupal\commerce_product\Entity\Product;
 use Drupal\commerce_product\Entity\ProductVariation;
 use Drupal\profile\Entity\Profile;
-use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 
 /**
  * Tests integration with payment events.
@@ -73,7 +73,7 @@ class PaymentIntegrationTest extends OrderKernelTestBase {
     ]);
     $payment_gateway->save();
 
-    $user = $this->createUser(['mail' => $this->randomString() . '@example.com']);
+    $user = $this->createUser();
 
     $profile = Profile::create([
       'type' => 'customer',

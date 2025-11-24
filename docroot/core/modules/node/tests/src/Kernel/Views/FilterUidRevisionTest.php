@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Kernel\Views;
 
 use Drupal\KernelTests\KernelTestBase;
@@ -42,11 +44,9 @@ class FilterUidRevisionTest extends KernelTestBase {
   /**
    * Tests the node_uid_revision filter.
    */
-  public function testFilter() {
+  public function testFilter(): void {
     $this->installEntitySchema('user');
     $this->installEntitySchema('node');
-    $this->installEntitySchema('view');
-    $this->installSchema('system', ['sequences']);
     $this->installSchema('node', ['node_access']);
     $this->installConfig(['filter']);
     ViewTestData::createTestViews(static::class, ['node_test_views']);

@@ -63,9 +63,6 @@ commerce_product.commerce_product_type.*:
     description:
       type: text
       label: 'Description'
-    variationType:
-      type: string
-      label: 'Legacy Variation type will be removed in 3.x'
     variationTypes:
       type: sequence
       label: 'Variation types'
@@ -160,3 +157,14 @@ views.field.commerce_product_variation_view_link:
 views.filter.commerce_product_attribute_value:
   type: views.filter.in_operator
   label: 'Product attribute filter'
+
+field.widget.settings.commerce_product_single_variation:
+  type: mapping
+  label: 'Single product variation display format settings'
+  mapping:
+    form_mode:
+      type: string
+      label: 'Form mode'
+    field_title_text:
+      type: label
+      label: 'Field title text'

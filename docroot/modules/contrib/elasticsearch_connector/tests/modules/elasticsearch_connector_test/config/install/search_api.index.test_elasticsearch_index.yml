@@ -1,0 +1,125 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.entity_test_mulrev_changed.body
+    - field.storage.entity_test_mulrev_changed.category
+    - field.storage.entity_test_mulrev_changed.keywords
+    - field.storage.entity_test_mulrev_changed.width
+    - search_api.server.elasticsearch_server
+  module:
+    - entity_test
+    - search_api
+id: test_elasticsearch_index
+name: 'Test Index'
+description: ''
+read_only: false
+field_settings:
+  body:
+    label: Body
+    datasource_id: 'entity:entity_test_mulrev_changed'
+    property_path: body
+    type: text
+    dependencies:
+      config:
+        - field.storage.entity_test_mulrev_changed.body
+  category:
+    label: Category
+    datasource_id: 'entity:entity_test_mulrev_changed'
+    property_path: category
+    type: string
+    dependencies:
+      config:
+        - field.storage.entity_test_mulrev_changed.category
+  changed:
+    label: Changed
+    datasource_id: 'entity:entity_test_mulrev_changed'
+    property_path: changed
+    type: date
+    dependencies:
+      module:
+        - entity_test
+  created:
+    label: 'Authored on'
+    datasource_id: 'entity:entity_test_mulrev_changed'
+    property_path: created
+    type: date
+    dependencies:
+      module:
+        - entity_test
+  id:
+    label: ID
+    datasource_id: 'entity:entity_test_mulrev_changed'
+    property_path: id
+    type: integer
+    dependencies:
+      module:
+        - entity_test
+  keywords:
+    label: Keywords
+    datasource_id: 'entity:entity_test_mulrev_changed'
+    property_path: keywords
+    type: string
+    dependencies:
+      config:
+        - field.storage.entity_test_mulrev_changed.keywords
+  name:
+    label: Name
+    datasource_id: 'entity:entity_test_mulrev_changed'
+    property_path: name
+    type: text
+    boost: 5.0
+    dependencies:
+      module:
+        - entity_test
+  type:
+    label: 'Test entity - revisions and data table bundle'
+    datasource_id: 'entity:entity_test_mulrev_changed'
+    property_path: type
+    type: string
+    dependencies:
+      module:
+        - entity_test
+  width:
+    label: Width
+    datasource_id: 'entity:entity_test_mulrev_changed'
+    property_path: width
+    type: decimal
+    dependencies:
+      config:
+        - field.storage.entity_test_mulrev_changed.width
+datasource_settings:
+  'entity:entity_test_mulrev_changed':
+    bundles:
+      default: true
+      selected: {  }
+    languages:
+      default: true
+      selected: {  }
+processor_settings:
+  add_url: {  }
+  aggregated_field: {  }
+  custom_value: {  }
+  entity_type: {  }
+  highlight:
+    weights:
+      postprocess_query: 0
+    prefix: '<strong>'
+    suffix: '</strong>'
+    excerpt: true
+    excerpt_always: false
+    excerpt_length: 256
+    exclude_fields: {  }
+    highlight: always
+    highlight_partial: false
+  language_with_fallback: {  }
+  rendered_item: {  }
+tracker_settings:
+  default:
+    indexing_order: fifo
+options:
+  cron_limit: -1
+  delete_on_fail: true
+  index_directly: true
+  track_changes_in_references: true
+server: elasticsearch_server

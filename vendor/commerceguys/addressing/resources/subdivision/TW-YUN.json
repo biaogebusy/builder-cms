@@ -1,0 +1,70 @@
+{
+	"country_code": "TW",
+	"parents": [
+		"TW",
+		"YUN"
+	],
+	"locale": "zh-Hant",
+	"subdivisions": {
+		"Erlun Township": {
+			"local_name": "二崙鄉"
+		},
+		"Kouhu Township": {
+			"local_name": "口湖鄉"
+		},
+		"Tuku Township": {
+			"local_name": "土庫鎮"
+		},
+		"Dapi Township": {
+			"local_name": "大埤鄉"
+		},
+		"Yuanchang Township": {
+			"local_name": "元長鄉"
+		},
+		"Douliu City": {
+			"local_name": "斗六市"
+		},
+		"Dounan Township": {
+			"local_name": "斗南鎮"
+		},
+		"Shuilin Township": {
+			"local_name": "水林鄉"
+		},
+		"Beigang Township": {
+			"local_name": "北港鎮"
+		},
+		"Gukeng Township": {
+			"local_name": "古坑鄉"
+		},
+		"Taixi Township": {
+			"local_name": "台西鄉"
+		},
+		"Sihu Township": {
+			"local_name": "四湖鄉"
+		},
+		"Xiluo Township": {
+			"local_name": "西螺鎮"
+		},
+		"Dongshi Township": {
+			"local_name": "東勢鄉"
+		},
+		"Linnei Township": {
+			"local_name": "林內鄉"
+		},
+		"Huwei Township": {
+			"local_name": "虎尾鎮"
+		},
+		"Lunbei Township": {
+			"local_name": "崙背鄉"
+		},
+		"Mailiao Township": {
+			"local_name": "麥寮鄉"
+		},
+		"Citong Township": {
+			"local_name": "莿桐鄉"
+		},
+		"Baozhong Township": {
+			"local_name": "褒忠鄉"
+		}
+	}
+}

@@ -39,9 +39,53 @@
  * @see template_preprocess_table()
  */
 #}
+
+{% import _self as macros %}
+
+{% macro table_header(header) %}
+  <thead>
+    <tr>
+      {% for cell in header %}
+        {% if '<a' in cell.content|render|render %}
+          {%
+            set cell_classes = [
+              'th__item',
+              cell.active_table_sort ? 'is-active',
+              'select-all' in cell.attributes ? 'gin--sticky-bulk-select',
+            ]
+          %}
+        {% else %}
+          {%
+            set cell_classes = [
+              cell.content|render|clean_class ? 'th__' ~ cell.content|render|clean_class,
+              cell.active_table_sort ? 'is-active',
+              'select-all' in cell.attributes ? 'gin--sticky-bulk-select',
+            ]
+          %}
+        {% endif %}
+        <{{ cell.tag }}{{ cell.attributes.addClass(cell_classes) }}>
+          {{- cell.content -}}
+          {% if 'gin--sticky-bulk-select' in cell_classes %}
+            <input
+              type="checkbox"
+              class="form-checkbox form-boolean form-boolean--type-checkbox"
+              title="{{ 'Select all rows in this table'|t }}"
+            />
+          {% endif %}
+        </{{ cell.tag }}>
+      {% endfor %}
+    </tr>
+  </thead>
+{% endmacro %}
+
 <div class="layer-wrapper gin-layer-wrapper">
   {% if header %}
-  <div class="gin-table-scroll-wrapper">
+    {% if sticky %}
+      <table class="gin--sticky-table-header syncscroll" name="gin-sticky-header" hidden>
+        {{ macros.table_header(header) }}
+      </table>
+    {% endif %}
+  <div class="gin-table-scroll-wrapper gin-horizontal-scroll-shadow syncscroll" name="gin-sticky-header">
   {% endif %}
     <table{{ attributes }}>
       {% if caption %}
@@ -61,30 +105,7 @@
       {% endfor %}
 
       {% if header %}
-        <thead>
-          <tr>
-            {% for cell in header %}
-              {% if '<a' in cell.content|render|render %}
-                {%
-                  set cell_classes = [
-                    'th__item',
-                    cell.active_table_sort ? 'is-active',
-                  ]
-                %}
-              {% else %}
-                {%
-                  set cell_classes = [
-                    'th__' ~ cell.content|render|clean_class,
-                    cell.active_table_sort ? 'is-active',
-                  ]
-                %}
-              {% endif %}
-              <{{ cell.tag }}{{ cell.attributes.addClass(cell_classes) }}>
-                {{- cell.content -}}
-              </{{ cell.tag }}>
-            {% endfor %}
-          </tr>
-        </thead>
+        {{ macros.table_header(header) }}
       {% endif %}
 
       {% if rows %}

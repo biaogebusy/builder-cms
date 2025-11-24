@@ -1,20 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageEffect;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Image\ImageInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\image\Attribute\ImageEffect;
 use Drupal\image\ConfigurableImageEffectBase;
 
 /**
  * Pixelate the image.
- *
- * @ImageEffect(
- *   id = "image_effects_pixelate",
- *   label = @Translation("Pixelate"),
- *   description = @Translation("Pixelate the image.")
- * )
  */
+#[ImageEffect(
+  id: 'image_effects_pixelate',
+  label: new TranslatableMarkup('Pixelate'),
+  description: new TranslatableMarkup('Pixelate the image.'),
+)]
 class PixelateImageEffect extends ConfigurableImageEffectBase {
 
   /**

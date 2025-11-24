@@ -2,12 +2,12 @@
 
 namespace Drupal\Tests\commerce_price\Unit;
 
-use Drupal\commerce_price\Entity\CurrencyInterface;
-use Drupal\commerce_price\Price;
-use Drupal\commerce_price\Rounder;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Tests\UnitTestCase;
+use Drupal\commerce_price\Entity\CurrencyInterface;
+use Drupal\commerce_price\Price;
+use Drupal\commerce_price\Rounder;
 
 /**
  * Tests the Rounder class.

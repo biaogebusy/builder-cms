@@ -31,6 +31,12 @@ views.style.excel_export:
         xls_format:
           type: string
           label: 'Format'
+        strip_tags:
+          type: boolean
+          label: 'Strip HTML'
+        trim:
+          type: boolean
+          label: 'Trim whitespace'
         metadata:
           type: mapping
           label: 'Document metadata'

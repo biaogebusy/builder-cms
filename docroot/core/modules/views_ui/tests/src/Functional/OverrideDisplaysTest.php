@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views_ui\Functional;
 
 /**
@@ -26,11 +28,11 @@ class OverrideDisplaysTest extends UITestBase {
   /**
    * Tests that displays can be overridden via the UI.
    */
-  public function testOverrideDisplays() {
+  public function testOverrideDisplays(): void {
     // Create a basic view that shows all content, with a page and a block
     // display.
     $view['label'] = $this->randomMachineName(16);
-    $view['id'] = strtolower($this->randomMachineName(16));
+    $view['id'] = $this->randomMachineName(16);
     $view['page[create]'] = 1;
     $view['page[path]'] = $this->randomMachineName(16);
     $view['block[create]'] = 1;
@@ -66,6 +68,7 @@ class OverrideDisplaysTest extends UITestBase {
     $this->assertSession()->pageTextContains($view['label']);
 
     // Place the block.
+    $this->container->get('plugin.manager.block')->clearCachedDefinitions();
     $this->drupalPlaceBlock("views_block:{$view['id']}-block_1");
 
     // Make sure the title appears in the block.
@@ -90,13 +93,13 @@ class OverrideDisplaysTest extends UITestBase {
   /**
    * Tests that the wizard correctly sets up default and overridden displays.
    */
-  public function testWizardMixedDefaultOverriddenDisplays() {
+  public function testWizardMixedDefaultOverriddenDisplays(): void {
     // Create a basic view with a page, block, and feed. Give the page and feed
     // identical titles, but give the block a different one, so we expect the
     // page and feed to inherit their titles from the default display, but the
     // block to override it.
     $view['label'] = $this->randomMachineName(16);
-    $view['id'] = strtolower($this->randomMachineName(16));
+    $view['id'] = $this->randomMachineName(16);
     $view['page[create]'] = 1;
     $view['page[title]'] = $this->randomMachineName(16);
     $view['page[path]'] = $this->randomMachineName(16);
@@ -131,6 +134,7 @@ class OverrideDisplaysTest extends UITestBase {
     // Put the block into the first sidebar region, and make sure it will not
     // display on the view's page display (since we will be searching for the
     // presence/absence of the view's title in both the page and the block).
+    $this->container->get('plugin.manager.block')->clearCachedDefinitions();
     $this->drupalPlaceBlock("views_block:{$view['id']}-block_1", [
       'visibility' => [
         'request_path' => [
@@ -190,12 +194,12 @@ class OverrideDisplaysTest extends UITestBase {
   /**
    * Tests that the revert to all displays select-option works as expected.
    */
-  public function testRevertAllDisplays() {
+  public function testRevertAllDisplays(): void {
     // Create a basic view with a page, block.
     // Because there is both a title on page and block we expect the title on
     // the block be overridden.
     $view['label'] = $this->randomMachineName(16);
-    $view['id'] = strtolower($this->randomMachineName(16));
+    $view['id'] = $this->randomMachineName(16);
     $view['page[create]'] = 1;
     $view['page[title]'] = $this->randomMachineName(16);
     $view['page[path]'] = $this->randomMachineName(16);

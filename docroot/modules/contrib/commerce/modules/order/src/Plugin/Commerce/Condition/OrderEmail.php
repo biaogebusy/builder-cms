@@ -2,20 +2,21 @@
 
 namespace Drupal\commerce_order\Plugin\Commerce\Condition;
 
-use Drupal\commerce\Plugin\Commerce\Condition\ConditionBase;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce\Attribute\CommerceCondition;
+use Drupal\commerce\Plugin\Commerce\Condition\ConditionBase;
 
 /**
  * Provides the Email address condition for orders.
- *
- * @CommerceCondition(
- *   id = "order_email",
- *   label = @Translation("Customer email"),
- *   category = @Translation("Customer"),
- *   entity_type = "commerce_order",
- * )
  */
+#[CommerceCondition(
+  id: "order_email",
+  label: new TranslatableMarkup("Customer email"),
+  entity_type: "commerce_order",
+  category: new TranslatableMarkup("Customer"),
+)]
 class OrderEmail extends ConditionBase {
 
   /**

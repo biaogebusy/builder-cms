@@ -1,0 +1,51 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Missing cache backend declaration for performance\\.$#"
+			count: 1
+			path: src/Plugin/ImageEffectsPluginManagerBase.php
+
+		-
+			message: "#^Plugin definitions cannot be altered\\.$#"
+			count: 1
+			path: src/Plugin/ImageEffectsPluginManagerBase.php
+
+		-
+			message: "#^Call to method get\\(\\) on an unknown class Drupal\\\\textimage\\\\TextimageFactory\\.$#"
+			count: 1
+			path: src/Plugin/ImageEffect/TextOverlayImageEffect.php
+
+		-
+			message: "#^Call to method getState\\(\\) on an unknown class Drupal\\\\textimage\\\\TextimageFactory\\.$#"
+			count: 1
+			path: src/Plugin/ImageEffect/TextOverlayImageEffect.php
+
+		-
+			message: "#^Method Drupal\\\\image_effects\\\\Plugin\\\\ImageEffect\\\\TextOverlayImageEffect\\:\\:getTextimageFactory\\(\\) has invalid return type Drupal\\\\textimage\\\\TextimageFactory\\.$#"
+			count: 1
+			path: src/Plugin/ImageEffect/TextOverlayImageEffect.php
+
+		-
+			message: "#^Strict comparison using \\!\\=\\= between string and false will always evaluate to true\\.$#"
+			count: 1
+			path: src/Plugin/ImageToolkit/Operation/gd/TextOverlay.php
+
+		-
+			message: "#^Unreachable statement \\- code above always terminates\\.$#"
+			count: 1
+			path: src/Plugin/ImageToolkit/Operation/gd/TextOverlay.php
+
+		-
+			message: "#^Strict comparison using \\!\\=\\= between string and false will always evaluate to true\\.$#"
+			count: 1
+			path: src/Plugin/ImageToolkit/Operation/gd/TextToWrapper.php
+
+		-
+			message: "#^Unreachable statement \\- code above always terminates\\.$#"
+			count: 1
+			path: src/Plugin/ImageToolkit/Operation/gd/TextToWrapper.php
+
+		-
+			message: "#^Property Drupal\\\\image_effects\\\\ProxyClass\\\\ImageEffectsUninstallValidator\\:\\:\\$service \\(Drupal\\\\image_effects\\\\ImageEffectsUninstallValidator\\) in isset\\(\\) is not nullable\\.$#"
+			count: 1
+			path: src/ProxyClass/ImageEffectsUninstallValidator.php

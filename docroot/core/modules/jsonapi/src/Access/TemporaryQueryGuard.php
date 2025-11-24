@@ -119,7 +119,7 @@ class TemporaryQueryGuard {
    * @see \Drupal\Core\Database\Query\AlterableInterface::addMetaData()
    * @see \Drupal\Core\Database\Query\ConditionInterface
    */
-  protected static function secureQuery(QueryInterface $query, $entity_type_id, array $tree, CacheableMetadata $cacheability, $field_prefix = NULL, FieldStorageDefinitionInterface $field_storage_definition = NULL) {
+  protected static function secureQuery(QueryInterface $query, $entity_type_id, array $tree, CacheableMetadata $cacheability, $field_prefix = NULL, ?FieldStorageDefinitionInterface $field_storage_definition = NULL) {
     $entity_type = \Drupal::entityTypeManager()->getDefinition($entity_type_id);
     // Config entity types are not fieldable, therefore they do not have field
     // access restrictions, nor entity references to other entity types.
@@ -294,7 +294,8 @@ class TemporaryQueryGuard {
         // user's currently displayed shortcut set.
         // @see \Drupal\shortcut\ShortcutAccessControlHandler::checkAccess()
         if (!$current_user->hasPermission('administer shortcuts')) {
-          $specific_condition = new EntityCondition('shortcut_set', shortcut_current_displayed_set()->id());
+          $shortcut_set_storage = \Drupal::entityTypeManager()->getStorage('shortcut_set');
+          $specific_condition = new EntityCondition('shortcut_set', $shortcut_set_storage->getDisplayedToUser($current_user)->id());
           $cacheability->addCacheContexts(['user']);
           $cacheability->addCacheTags($entity_type->getListCacheTags());
         }

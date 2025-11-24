@@ -14,14 +14,14 @@ class SmsDeliveryReport implements SmsDeliveryReportInterface {
    *
    * @var string
    */
-  protected $messageId = '';
+  protected string $messageId = '';
 
   /**
    * The recipient of the message.
    *
    * @var string
    */
-  protected $recipient = '';
+  protected string $recipient = '';
 
   /**
    * Status code for the message.
@@ -31,35 +31,35 @@ class SmsDeliveryReport implements SmsDeliveryReportInterface {
    *
    * @var string|null
    */
-  protected $status = NULL;
+  protected ?string $status = NULL;
 
   /**
    * The status message as provided by the gateway API.
    *
    * @var string
    */
-  protected $statusMessage = '';
+  protected string $statusMessage = '';
 
   /**
    * The timestamp when the delivery report status was updated.
    *
    * @var int
    */
-  protected $statusTime = NULL;
+  protected ?int $statusTime = NULL;
 
   /**
    * The timestamp when the message was queued, or NULL if unknown.
    *
-   * @var string|null
+   * @var int|null
    */
-  protected $timeQueued = NULL;
+  protected ?int $timeQueued = NULL;
 
   /**
    * The timestamp when the message was delivered, or NULL if unknown.
    *
-   * @var string|null
+   * @var int|null
    */
-  protected $timeDelivered = NULL;
+  protected ?int $timeDelivered = NULL;
 
   /**
    * {@inheritdoc}

@@ -50,4 +50,13 @@ function jquery_ui_library_info_alter(array &$libraries, string $module): void {
     }
     $libraries = array_merge($libraries, $module_libraries);
   }
+
+  if ($module === 'jquery_ui_datepicker' && isset($libraries['datepicker']) && \Drupal::moduleHandler()->moduleExists('locale')) {
+    $libraries['datepicker']['dependencies'][] = 'jquery_ui/locale';
+    $libraries['datepicker']['drupalSettings']['jquery']['ui']['datepicker'] = [
+      'isRTL' => NULL,
+      'firstDay' => NULL,
+      'langCode' => 'drupal-locale',
+    ];
+  }
 }

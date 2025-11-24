@@ -2,18 +2,16 @@
 
 namespace Drupal\charts\Plugin\views\field;
 
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\charts\Element\BaseSettings;
 use Drupal\charts\Plugin\views\style\ChartsPluginStyleChart;
-use Drupal\Core\Form\FormStateInterface;
+use Drupal\views\Attribute\ViewsField;
 use Drupal\views\Plugin\views\field\FieldPluginBase;
 
 /**
- * Provides a Views handler that exposes a Chart Type field.
- *
- * @ingroup views_field_handlers
- *
- * @ViewsField("field_exposed_chart_type")
+* Defines a Views field for exposing the chart type selection.
  */
+#[ViewsField("field_exposed_chart_type")]
 class ExposedChartType extends FieldPluginBase {
 
   /**

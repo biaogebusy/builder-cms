@@ -1,5 +1,5 @@
 .webform-filter-form {
-  margin-bottom: var(--gin-spacing-xl);
+  margin-block-end: var(--gin-spacing-xl);
 }
 
 .webform-filter-form > .container-inline {
@@ -7,12 +7,12 @@
 }
 
 .webform-filter-form .details-wrapper {
-  margin-top: 0;
-  margin-bottom: var(--gin-spacing-xs);
+  margin-block-start: 0;
+  margin-block-end: var(--gin-spacing-xs);
 }
 
 .webform-filter-form + div:not(.gin-layer-wrapper) {
-  margin-bottom: var(--gin-spacing-s);
+  margin-block-end: var(--gin-spacing-s);
 }
 
 .webform-ui-element-type-change-form .gin-layer-wrapper {
@@ -57,17 +57,47 @@
 }
 
 .webform-ui-elements-table tr.webform-ui-element-type-webform_actions td {
-  border-top: none;
-  border-bottom: none;
+  border-block: none;
   background: none;
 }
 
 .webform-tabs.ui-tabs .ui-tabs-nav {
-  border-bottom: 0 none;
+  border-block-end: 0 none;
 }
 
 .webform-tabs.ui-tabs .ui-tabs-nav .ui-tabs-active.ui-state-active a {
   border: 2px solid var(--gin-color-primary);
   border-radius: var(--gin-border-m);
+}
+
+.webform-bulk-form[data-drupal-selector*=-bulk-form] > .container-inline {
+  margin-block-start: calc(var(--gin-spacing-xxs) * -1);
+  margin-block-end: var(--gin-spacing-l);
+}
+
+.webform-bulk-form[data-drupal-selector*=-bulk-form] td:first-child > .form-type-checkbox {
+  margin-block: 0;
+}
+
+.webform-ajax-messages {
+  inset-inline-start: var(--gin-offset-x);
+  inset-block-end: var(--gin-spacing-s);
+  margin-inline-start: var(--gin-spacing-m);
+}
+
+.webform-ajax-messages .messages--info,
+.webform-ajax-messages .messages--status,
+.webform-ajax-messages .messages--warning,
+.webform-ajax-messages .messages--error {
+  display: inline-block;
+}
+
+.webform-edit-form .tabledrag-toggle-weight-wrapper {
+  float: end;
+  margin-block-start: calc(var(--gin-spacing-s) * -1);
+}
+
+.webform-edit-form .tabledrag-toggle-weight-wrapper button {
+  position: static;
 }
 

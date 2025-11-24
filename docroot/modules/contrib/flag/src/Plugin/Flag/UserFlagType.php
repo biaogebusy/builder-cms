@@ -3,10 +3,10 @@
 namespace Drupal\flag\Plugin\Flag;
 
 use Drupal\Core\Access\AccessResult;
-use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\flag\FlagInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\flag\FlagInterface;
 
 /**
  * Provides a flag type for user entities.
@@ -41,7 +41,7 @@ class UserFlagType extends EntityFlagType {
 
     $form['access']['bundles'] = [
       // A user flag doesn't support node types.
-      // TODO: Maybe support roles instead of node types.
+      // @todo Maybe support roles instead of node types.
       '#type' => 'value',
       '#value' => [0 => 0],
     ];
@@ -141,7 +141,7 @@ class UserFlagType extends EntityFlagType {
   /**
    * {@inheritdoc}
    */
-  public function actionAccess($action, FlagInterface $flag, AccountInterface $account, EntityInterface $flaggable = NULL) {
+  public function actionAccess($action, FlagInterface $flag, AccountInterface $account, ?EntityInterface $flaggable = NULL) {
     $access = parent::actionAccess($action, $flag, $account, $flaggable);
 
     if ($flaggable && $this->hasExtraPermission('owner')) {

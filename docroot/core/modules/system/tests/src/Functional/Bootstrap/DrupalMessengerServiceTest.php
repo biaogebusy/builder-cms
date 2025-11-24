@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Bootstrap;
 
 use Drupal\Core\Url;
@@ -14,9 +16,7 @@ use PHPUnit\Framework\AssertionFailedError;
 class DrupalMessengerServiceTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['system_test'];
 
@@ -28,7 +28,7 @@ class DrupalMessengerServiceTest extends BrowserTestBase {
   /**
    * Tests Messenger service.
    */
-  public function testDrupalMessengerService() {
+  public function testDrupalMessengerService(): void {
     // The page at system_test.messenger_service route sets two messages and
     // then removes the first before it is displayed.
     $this->drupalGet(Url::fromRoute('system_test.messenger_service'));
@@ -53,12 +53,13 @@ class DrupalMessengerServiceTest extends BrowserTestBase {
 
     // Ensure messages survive a container rebuild.
     $assert = $this->assertSession();
-    $this->drupalLogin($this->rootUser);
+    $this->drupalLogin($this->drupalCreateUser(['administer modules']));
+
     $edit = [];
     $edit["modules[help][enable]"] = TRUE;
     $this->drupalGet('admin/modules');
     $this->submitForm($edit, 'Install');
-    $assert->pageTextContains('Help has been enabled');
+    $assert->pageTextContains('Help has been installed');
     $assert->pageTextContains('system_test_preinstall_module called');
   }
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Theme;
 
 use Drupal\Tests\BrowserTestBase;
@@ -13,9 +15,7 @@ use Drupal\twig_extension_test\TwigExtension\TestExtension;
 class TwigExtensionTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['theme_test', 'twig_extension_test', 'twig_theme_test'];
 
@@ -35,7 +35,7 @@ class TwigExtensionTest extends BrowserTestBase {
   /**
    * Tests that the provided Twig extension loads the service appropriately.
    */
-  public function testTwigExtensionLoaded() {
+  public function testTwigExtensionLoaded(): void {
     $twigService = \Drupal::service('twig');
     $ext = $twigService->getExtension(TestExtension::class);
     $this->assertInstanceOf(TestExtension::class, $ext);
@@ -44,7 +44,7 @@ class TwigExtensionTest extends BrowserTestBase {
   /**
    * Tests that the Twig extension's filter produces expected output.
    */
-  public function testTwigExtensionFilter() {
+  public function testTwigExtensionFilter(): void {
     $this->config('system.theme')
       ->set('default', 'test_theme')
       ->save();
@@ -58,7 +58,7 @@ class TwigExtensionTest extends BrowserTestBase {
   /**
    * Tests that the Twig extension's function produces expected output.
    */
-  public function testTwigExtensionFunction() {
+  public function testTwigExtensionFunction(): void {
     $this->config('system.theme')
       ->set('default', 'test_theme')
       ->save();
@@ -74,7 +74,7 @@ class TwigExtensionTest extends BrowserTestBase {
    *
    * @see https://www.drupal.org/node/2417733
    */
-  public function testsRenderEscapedZeroValue() {
+  public function testsRenderEscapedZeroValue(): void {
     /** @var \Drupal\Core\Template\TwigExtension $extension */
     $extension = \Drupal::service('twig.extension');
     /** @var \Drupal\Core\Template\TwigEnvironment $twig */
@@ -88,7 +88,7 @@ class TwigExtensionTest extends BrowserTestBase {
    *
    * @see https://www.drupal.org/node/2417733
    */
-  public function testsRenderZeroValue() {
+  public function testsRenderZeroValue(): void {
     /** @var \Drupal\Core\Template\TwigExtension $extension */
     $extension = \Drupal::service('twig.extension');
     $this->assertSame(0, $extension->renderVar(0), 'TwigExtension::renderVar() renders zero correctly when provided as an integer.');
@@ -98,7 +98,7 @@ class TwigExtensionTest extends BrowserTestBase {
   /**
    * Tests the dump function.
    */
-  public function testDump() {
+  public function testDump(): void {
     // Test Twig Debug disabled.
     $this->drupalGet('/twig-theme-test/dump');
     $this->assertSession()->elementsCount('css', '.sf-dump', 0);
@@ -124,6 +124,19 @@ class TwigExtensionTest extends BrowserTestBase {
     $this->assertStringContainsString('💩', $dumps[2]->getText());
     $this->assertStringContainsString('☄️', $dumps[3]->getText());
 
+  }
+
+  /**
+   * Test if Drupal html strategy is done and the fallback to Twig itself works.
+   */
+  public function testRenderStrategies(): void {
+    /** @var \Drupal\Core\Template\TwigExtension $extension */
+    $extension = \Drupal::service('twig.extension');
+    /** @var \Drupal\Core\Template\TwigEnvironment $twig */
+    $twig = \Drupal::service('twig');
+
+    $this->assertSame('test&amp;', $extension->escapeFilter($twig, 'test&'), 'TwigExtension::escapeFilter() renders escaped & when strategy is html (default).');
+    $this->assertSame('test\u0026', $extension->escapeFilter($twig, 'test&', 'js'), 'TwigExtension::escapeFilter() renders escaped & when strategy is js.');
   }
 
 }

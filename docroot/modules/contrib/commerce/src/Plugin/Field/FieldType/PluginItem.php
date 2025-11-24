@@ -2,24 +2,28 @@
 
 namespace Drupal\commerce\Plugin\Field\FieldType;
 
+use Drupal\Core\Field\Attribute\FieldType;
 use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\DataDefinition;
 use Drupal\Core\TypedData\MapDataDefinition;
 
 /**
  * Plugin implementation of the 'commerce_plugin_item' field type.
  *
- * @FieldType(
- *   id = "commerce_plugin_item",
- *   label = @Translation("Plugin"),
- *   description = @Translation("Stores configuration for a plugin."),
- *   category = @Translation("Commerce"),
- *   default_widget = "commerce_plugin_select",
- *   default_formatter = "commerce_plugin_item_default",
- *   deriver = "\Drupal\commerce\Plugin\Field\FieldType\PluginItemDeriver"
- * )
+ * @property string $target_plugin_id
+ * @property array $target_plugin_configuration
  */
+#[FieldType(
+  id: "commerce_plugin_item",
+  label: new TranslatableMarkup("Plugin"),
+  description: new TranslatableMarkup("Stores configuration for a plugin."),
+  category: "commerce",
+  default_widget: "commerce_plugin_select",
+  default_formatter: "commerce_plugin_item_default",
+  deriver: PluginItemDeriver::class,
+)]
 class PluginItem extends FieldItemBase implements PluginItemInterface {
 
   /**

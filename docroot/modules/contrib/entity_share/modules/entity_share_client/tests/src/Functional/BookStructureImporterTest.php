@@ -158,7 +158,7 @@ class BookStructureImporterTest extends EntityShareClientFunctionalTestBase {
       'access' => TRUE,
       'title' => $book_root->label(),
       'options' => [],
-    ], $this->bookManager->loadBookLink($book_root->id()));
+    ], $this->bookManager->loadBookLink((int) $book_root->id()));
 
     $book_child_1 = $this->loadEntity('node', 'book_child_1');
     $this->assertNotNull($book_child_1);
@@ -181,7 +181,7 @@ class BookStructureImporterTest extends EntityShareClientFunctionalTestBase {
       'access' => TRUE,
       'title' => $book_child_1->label(),
       'options' => [],
-    ], $this->bookManager->loadBookLink($book_child_1->id()));
+    ], $this->bookManager->loadBookLink((int) $book_child_1->id()));
 
     $book_child_2 = $this->loadEntity('node', 'book_child_2');
     $this->assertNotNull($book_child_2);
@@ -204,7 +204,7 @@ class BookStructureImporterTest extends EntityShareClientFunctionalTestBase {
       'access' => TRUE,
       'title' => $book_child_2->label(),
       'options' => [],
-    ], $this->bookManager->loadBookLink($book_child_2->id()));
+    ], $this->bookManager->loadBookLink((int) $book_child_2->id()));
   }
 
   /**
@@ -225,7 +225,7 @@ class BookStructureImporterTest extends EntityShareClientFunctionalTestBase {
       'book_root',
       'book_child_1',
     ];
-    $route_name = sprintf('jsonapi.%s--%s.individual', 'node', 'es_test');
+    $route_name = \sprintf('jsonapi.%s--%s.individual', 'node', 'es_test');
     foreach ($uuids as $uuid) {
       $url = Url::fromRoute($route_name, [
         'entity' => $uuid,

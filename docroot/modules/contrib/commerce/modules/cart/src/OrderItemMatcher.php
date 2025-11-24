@@ -2,11 +2,11 @@
 
 namespace Drupal\commerce_cart;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\commerce_cart\Event\CartEvents;
 use Drupal\commerce_cart\Event\OrderItemComparisonFieldsEvent;
 use Drupal\commerce_order\Entity\OrderItemInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Default implementation of the order item matcher.
@@ -14,31 +14,14 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 class OrderItemMatcher implements OrderItemMatcherInterface {
 
   /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
-   * The event dispatcher.
-   *
-   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
-   */
-  protected $eventDispatcher;
-
-  /**
    * Constructs a new OrderItemMatcher object.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
-   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
+   * @param \Symfony\Contracts\EventDispatcher\EventDispatcherInterface $eventDispatcher
    *   The event dispatcher.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, EventDispatcherInterface $event_dispatcher) {
-    $this->entityTypeManager = $entity_type_manager;
-    $this->eventDispatcher = $event_dispatcher;
-  }
+  public function __construct(protected EntityTypeManagerInterface $entityTypeManager, protected EventDispatcherInterface $eventDispatcher) {}
 
   /**
    * {@inheritdoc}
@@ -68,6 +51,12 @@ class OrderItemMatcher implements OrderItemMatcherInterface {
     $matched_order_items = [];
     /** @var \Drupal\commerce_order\Entity\OrderItemInterface $existing_order_item */
     foreach ($order_items as $existing_order_item) {
+      if ($existing_order_item->getData('owned_by_promotion')) {
+        // We should not attempt to match order items owned by a promotion,
+        // as they may be removed by the promotion.
+        continue;
+      }
+
       foreach ($comparison_fields as $field_name) {
         if (!$existing_order_item->hasField($field_name) || !$order_item->hasField($field_name)) {
           // The field is missing on one of the order items.
@@ -105,7 +94,7 @@ class OrderItemMatcher implements OrderItemMatcherInterface {
     $field_names = [];
     $storage = $this->entityTypeManager->getStorage('entity_form_display');
     /** @var \Drupal\Core\Entity\Display\EntityFormDisplayInterface $form_display */
-    $form_display = $storage->load('commerce_order_item.' . $order_item->bundle() . '.' . 'add_to_cart');
+    $form_display = $storage->load("commerce_order_item.{$order_item->bundle()}.add_to_cart");
     if ($form_display) {
       $field_names = array_keys($form_display->getComponents());
       // Remove base fields.

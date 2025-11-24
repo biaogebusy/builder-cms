@@ -21,6 +21,12 @@
  */
 #}
 
+{# JS fix #}
+{% include '@gin/navigation/fix-toolbar-js-error.html.twig' ignore missing with {
+  toolbar_variant,
+  core_navigation,
+} %}
+
 {# Prevent duplicate ids by using secondary tabs and trays when provided. #}
 {% if _context['#secondary']['tabs'] %}
   {% set tabs = _context['#secondary']['tabs'] %}

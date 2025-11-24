@@ -140,7 +140,7 @@ class DynamicEntityReferenceWidget extends EntityReferenceAutocompleteWidget {
       // via the 'ValidDynamicReference' constraint.
       '#validate_reference' => FALSE,
       '#maxlength' => 1024,
-      '#default_value' => isset($referenced_entities[$delta]) ? $referenced_entities[$delta] : NULL,
+      '#default_value' => $referenced_entities[$delta] ?? NULL,
       '#size' => $this->getSetting('size'),
       '#placeholder' => $this->getSetting('placeholder'),
       '#element_validate' => array_merge(
@@ -285,7 +285,7 @@ class DynamicEntityReferenceWidget extends EntityReferenceAutocompleteWidget {
       return parent::getSelectionHandlerSetting($setting_name);
     }
     $settings = $this->getFieldSettings();
-    return isset($settings[$target_type]['handler_settings'][$setting_name]) ? $settings[$target_type]['handler_settings'][$setting_name] : NULL;
+    return $settings[$target_type]['handler_settings'][$setting_name] ?? NULL;
   }
 
   /**

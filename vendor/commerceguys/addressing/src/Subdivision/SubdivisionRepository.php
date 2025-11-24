@@ -8,26 +8,17 @@ use CommerceGuys\Addressing\Locale;
 
 class SubdivisionRepository implements SubdivisionRepositoryInterface
 {
-    /**
-     * The address format repository.
-     *
-     * @var AddressFormatRepository
-     */
-    protected $addressFormatRepository;
+    protected AddressFormatRepositoryInterface $addressFormatRepository;
 
     /**
      * The path where subdivision definitions are stored.
-     *
-     * @var string
      */
-    protected $definitionPath;
+    protected string $definitionPath;
 
     /**
      * Subdivision definitions.
-     *
-     * @var array
      */
-    protected $definitions = [];
+    protected array $definitions = [];
 
     /**
      * Parent subdivisions.
@@ -36,10 +27,8 @@ class SubdivisionRepository implements SubdivisionRepositoryInterface
      * parent. Contains only parents instead of all instantiated subdivisions
      * to minimize duplicating the data in $this->definitions, thus reducing
      * memory usage.
-     *
-     * @var array
      */
-    protected $parents = [];
+    protected array $parents = [];
 
     /**
      * Creates a SubdivisionRepository instance.
@@ -47,7 +36,7 @@ class SubdivisionRepository implements SubdivisionRepositoryInterface
      * @param AddressFormatRepositoryInterface|null $addressFormatRepository The address format repository.
      * @param null $definitionPath Path to the subdivision definitions.
      */
-    public function __construct(AddressFormatRepositoryInterface $addressFormatRepository = null, $definitionPath = null)
+    public function __construct(?AddressFormatRepositoryInterface $addressFormatRepository = null, $definitionPath = null)
     {
         $this->addressFormatRepository = $addressFormatRepository ?: new AddressFormatRepository();
         $this->definitionPath = $definitionPath ?: __DIR__ . '/../../resources/subdivision/';
@@ -56,10 +45,10 @@ class SubdivisionRepository implements SubdivisionRepositoryInterface
     /**
      * {@inheritdoc}
      */
-    public function get($code, array $parents): ?Subdivision
+    public function get(string $id, array $parents): ?Subdivision
     {
         $definitions = $this->loadDefinitions($parents);
-        return $this->createSubdivisionFromDefinitions($code, $definitions);
+        return $this->createSubdivisionFromDefinitions($id, $definitions);
     }
 
     /**
@@ -73,8 +62,8 @@ class SubdivisionRepository implements SubdivisionRepositoryInterface
         }
 
         $subdivisions = [];
-        foreach (array_keys($definitions['subdivisions']) as $code) {
-            $subdivisions[$code] = $this->createSubdivisionFromDefinitions($code, $definitions);
+        foreach (array_keys($definitions['subdivisions']) as $id) {
+            $subdivisions[$id] = $this->createSubdivisionFromDefinitions($id, $definitions);
         }
 
         return $subdivisions;
@@ -83,7 +72,7 @@ class SubdivisionRepository implements SubdivisionRepositoryInterface
     /**
      * {@inheritdoc}
      */
-    public function getList(array $parents, $locale = null): array
+    public function getList(array $parents, ?string $locale = null): array
     {
         $definitions = $this->loadDefinitions($parents);
         if (empty($definitions)) {
@@ -93,8 +82,8 @@ class SubdivisionRepository implements SubdivisionRepositoryInterface
         $definitionLocale = $definitions['locale'] ?? '';
         $useLocalName = Locale::matchCandidates($locale, $definitionLocale);
         $list = [];
-        foreach ($definitions['subdivisions'] as $code => $definition) {
-            $list[$code] = $useLocalName ? $definition['local_name'] : $definition['name'];
+        foreach ($definitions['subdivisions'] as $id => $definition) {
+            $list[$id] = $useLocalName ? $definition['local_name'] : $definition['name'];
         }
 
         return $list;
@@ -113,7 +102,7 @@ class SubdivisionRepository implements SubdivisionRepositoryInterface
         $countryCode = $parents[0];
         $addressFormat = $this->addressFormatRepository->get($countryCode);
         $depth = $addressFormat->getSubdivisionDepth();
-        if ($depth == 0) {
+        if ($depth === 0) {
             return false;
         }
         // At least the first level has data.
@@ -176,19 +165,23 @@ class SubdivisionRepository implements SubdivisionRepositoryInterface
      */
     protected function processDefinitions(array $definitions): array
     {
-        foreach ($definitions['subdivisions'] as $code => &$definition) {
+        foreach ($definitions['subdivisions'] as $id => &$definition) {
             // Add common keys from the root level.
             $definition['country_code'] = $definitions['country_code'];
+            $definition['id'] = $id;
             if (isset($definitions['locale'])) {
                 $definition['locale'] = $definitions['locale'];
             }
-            // Ensure the presence of code and name.
-            $definition['code'] = $code;
             if (!isset($definition['name'])) {
-                $definition['name'] = $code;
+                $definition['name'] = $id;
             }
-            if (isset($definition['local_code']) && !isset($definition['local_name'])) {
-                $definition['local_name'] = $definition['local_code'];
+            // The code and local_code values are only specified if they
+            // don't match the name and local_name ones.
+            if (!isset($definition['code']) && isset($definition['name'])) {
+                $definition['code'] = $definition['name'];
+            }
+            if (!isset($definition['local_code']) && isset($definition['local_name'])) {
+                $definition['local_code'] = $definition['local_name'];
             }
         }
 
@@ -209,9 +202,15 @@ class SubdivisionRepository implements SubdivisionRepositoryInterface
         if (empty($parents)) {
             throw new \InvalidArgumentException('The $parents argument must not be empty.');
         }
-        $countryCode = array_shift($parents);
-        $group = strtoupper($countryCode);
-        if ($parents) {
+
+        if (count($parents) == 1) {
+            $group = $parents[0];
+        } elseif (count($parents) == 2 && strlen($parents[1]) <= 3) {
+            // The second parent is an ISO code, it can be used as-is.
+            $group = implode("-", $parents);
+        } else {
+            $countryCode = array_shift($parents);
+            $group = $countryCode;
             // A dash per key allows the depth to be guessed later.
             $group .= str_repeat('-', count($parents));
             // Hash the remaining keys to ensure that the group is ASCII safe.
@@ -227,17 +226,17 @@ class SubdivisionRepository implements SubdivisionRepositoryInterface
     /**
      * Creates a subdivision object from the provided definitions.
      *
-     * @param string $code        The subdivision code.
+     * @param string $id          The subdivision id.
      * @param array  $definitions The subdivision definitions.
      */
-    protected function createSubdivisionFromDefinitions(string $code, array $definitions): ?Subdivision
+    protected function createSubdivisionFromDefinitions(string $id, array $definitions): ?Subdivision
     {
-        if (!isset($definitions['subdivisions'][$code])) {
+        if (!isset($definitions['subdivisions'][$id])) {
             // No matching definition found.
             return null;
         }
 
-        $definition = $definitions['subdivisions'][$code];
+        $definition = $definitions['subdivisions'][$id];
         // The 'parents' key is omitted when it contains just the country code.
         $definitions += [
             'parents' => [$definitions['country_code']],
@@ -256,7 +255,7 @@ class SubdivisionRepository implements SubdivisionRepositoryInterface
         }
         // Prepare children.
         if (!empty($definition['has_children'])) {
-            $childrenParents = array_merge($parents, [$code]);
+            $childrenParents = array_merge($parents, [$id]);
             $children = new LazySubdivisionCollection($childrenParents);
             $children->setRepository($this);
             $definition['children'] = $children;

@@ -88,5 +88,4 @@ class EntityPrintTest extends BrowserTestBase {
     $this->assertSession()->statusCodeEquals(404);
   }
 
-
 }

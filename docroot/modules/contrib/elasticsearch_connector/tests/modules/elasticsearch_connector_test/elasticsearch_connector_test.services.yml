@@ -1,0 +1,5 @@
+services:
+  elasticsearch_connector_test.event_subscriber:
+    class: Drupal\elasticsearch_connector_test\EventSubscriber\ElasticSearchEventSubscribers
+    tags:
+      - { name: event_subscriber }

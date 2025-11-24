@@ -10,8 +10,8 @@ CONTENTS OF THIS FILE
 
 INTRODUCTION
 ------------
- 
- Provides common and resuable token UI elements and missing core tokens.
+
+ Provides common and reusable token UI elements and missing core tokens.
 
  * For a full description of the module, visit the project page:
    https://drupal.org/project/token
@@ -41,12 +41,3 @@ TROUBLESHOOTING
 
  * Token module doesn't provide any visible functions to the user on its own, it
    just provides token handling services for other modules.
-
-
-MAINTAINERS
------------
-
-Current maintainers:
-
- * Dave Reid (https://drupal.org/user/53892)
- * Sascha Grossenbacher (Berdir) (https://www.drupal.org/user/214652)

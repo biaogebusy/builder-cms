@@ -32,6 +32,9 @@ eck.eck_entity_type.*:
     title:
       type: boolean
       label: 'Title'
+    status:
+      type: boolean
+      label: 'Status'
 
 eck.eck_type.*:
   type: config_entity

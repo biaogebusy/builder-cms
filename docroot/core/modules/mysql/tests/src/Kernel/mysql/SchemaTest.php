@@ -1,11 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\mysql\Kernel\mysql;
 
-use Drupal\KernelTests\Core\Database\DriverSpecificSchemaTestBase;
+use Drupal\Component\Utility\Unicode;
+use Drupal\Core\Database\DatabaseExceptionWrapper;
+use Drupal\Core\Database\Exception\SchemaTableColumnSizeTooLargeException;
+use Drupal\Core\Database\Exception\SchemaTableKeyTooLargeException;
 use Drupal\Core\Database\SchemaException;
 use Drupal\Core\Database\SchemaObjectDoesNotExistException;
 use Drupal\Core\Database\SchemaObjectExistsException;
+use Drupal\KernelTests\Core\Database\DriverSpecificSchemaTestBase;
 
 /**
  * Tests schema API for the MySQL driver.
@@ -13,6 +19,52 @@ use Drupal\Core\Database\SchemaObjectExistsException;
  * @group Database
  */
 class SchemaTest extends DriverSpecificSchemaTestBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  public function checkSchemaComment(string $description, string $table, ?string $column = NULL): void {
+    $comment = $this->schema->getComment($table, $column);
+    $max_length = $column ? 255 : 60;
+    $description = Unicode::truncate($description, $max_length, TRUE, TRUE);
+    $this->assertSame($description, $comment, 'The comment matches the schema description.');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function assertCollation(): void {
+    // Make sure that varchar fields have the correct collations.
+    $columns = $this->connection->query('SHOW FULL COLUMNS FROM {test_table}');
+    foreach ($columns as $column) {
+      if ($column->Field == 'test_field_string') {
+        $string_check = $column->Collation;
+      }
+      if ($column->Field == 'test_field_string_ascii') {
+        $string_ascii_check = $column->Collation;
+      }
+    }
+    $this->assertMatchesRegularExpression('#^(utf8mb4_general_ci|utf8mb4_0900_ai_ci)$#', $string_check, 'test_field_string should have a utf8mb4_general_ci or a utf8mb4_0900_ai_ci collation, but it has not.');
+    $this->assertSame('ascii_general_ci', $string_ascii_check, 'test_field_string_ascii should have a ascii_general_ci collation, but it has not.');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function testTableWithSpecificDataType(): void {
+    $table_specification = [
+      'description' => 'Schema table description.',
+      'fields' => [
+        'timestamp'  => [
+          'mysql_type' => 'timestamp',
+          'not null' => FALSE,
+          'default' => NULL,
+        ],
+      ],
+    ];
+    $this->schema->createTable('test_timestamp', $table_specification);
+    $this->assertTrue($this->schema->tableExists('test_timestamp'));
+  }
 
   /**
    * Tests that indexes on string fields are limited to 191 characters on MySQL.
@@ -141,6 +193,154 @@ class SchemaTest extends DriverSpecificSchemaTestBase {
       $test_count++;
     }
     $this->assertEquals($column_count, $test_count, 'Number of tests matches expected value.');
+  }
+
+  /**
+   * @covers \Drupal\mysql\Driver\Database\mysql\Schema::introspectIndexSchema
+   */
+  public function testIntrospectIndexSchema(): void {
+    $table_specification = [
+      'fields' => [
+        'id'  => [
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ],
+        'test_field_1'  => [
+          'type' => 'int',
+          'not null' => TRUE,
+          'default' => 0,
+        ],
+        'test_field_2'  => [
+          'type' => 'int',
+          'default' => 0,
+        ],
+        'test_field_3'  => [
+          'type' => 'int',
+          'default' => 0,
+        ],
+        'test_field_4'  => [
+          'type' => 'int',
+          'default' => 0,
+        ],
+        'test_field_5'  => [
+          'type' => 'int',
+          'default' => 0,
+        ],
+      ],
+      'primary key' => ['id', 'test_field_1'],
+      'unique keys' => [
+        'test_field_2' => ['test_field_2'],
+        'test_field_3_test_field_4' => ['test_field_3', 'test_field_4'],
+      ],
+      'indexes' => [
+        'test_field_4' => ['test_field_4'],
+        'test_field_4_test_field_5' => ['test_field_4', 'test_field_5'],
+      ],
+    ];
+
+    $table_name = strtolower($this->getRandomGenerator()->name());
+    $this->schema->createTable($table_name, $table_specification);
+
+    unset($table_specification['fields']);
+
+    $introspect_index_schema = new \ReflectionMethod(get_class($this->schema), 'introspectIndexSchema');
+    $index_schema = $introspect_index_schema->invoke($this->schema, $table_name);
+
+    $this->assertEquals($table_specification, $index_schema);
+  }
+
+  /**
+   * Tests SchemaTableKeyTooLargeException.
+   */
+  public function testSchemaTableKeyTooLargeException(): void {
+    $this->expectException(SchemaTableKeyTooLargeException::class);
+    $this->schema->createTable('test_schema', [
+      'description' => 'Tests SchemaTableKeyTooLargeException.',
+      'fields' => [
+        'id'  => [
+          'type' => 'varchar',
+          'length' => 64,
+          'not null' => TRUE,
+        ],
+        'id1'  => [
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+        ],
+        'id2'  => [
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+        ],
+        'id3'  => [
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+        ],
+        'id4'  => [
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+        ],
+        'id5'  => [
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+        ],
+      ],
+      'primary key' => ['id'],
+      'indexes' => [
+        'key1' => ['id1', 'id2', 'id3', 'id4', 'id5'],
+      ],
+    ]);
+  }
+
+  /**
+   * Tests SchemaTableColumnSizeTooLargeException.
+   */
+  public function testSchemaTableColumnSizeTooLargeException(): void {
+    $this->expectException(SchemaTableColumnSizeTooLargeException::class);
+    $this->expectExceptionMessage("Column length too big for column 'too_large' (max = 16383); use BLOB or TEXT instead");
+    $this->schema->createTable('test_schema', [
+      'description' => 'Tests SchemaTableColumnSizeTooLargeException.',
+      'fields' => [
+        'too_large'  => [
+          'type' => 'varchar',
+          'length' => 65536,
+          'not null' => TRUE,
+        ],
+      ],
+    ]);
+  }
+
+  /**
+   * Tests adding a primary key when sql_generate_invisible_primary_key is on.
+   */
+  public function testGeneratedInvisiblePrimaryKey(): void {
+    $is_maria = method_exists($this->connection, 'isMariaDb') && $this->connection->isMariaDb();
+    if ($this->connection->databaseType() !== 'mysql' || $is_maria || version_compare($this->connection->version(), '8.0.30', '<')) {
+      $this->markTestSkipped('This test only runs on MySQL 8.0.30 and above');
+    }
+    try {
+      $this->connection->query("SET sql_generate_invisible_primary_key = 1;")->execute();
+    }
+    catch (DatabaseExceptionWrapper $e) {
+      $this->markTestSkipped('This test requires the SESSION_VARIABLES_ADMIN privilege.');
+    }
+    $this->schema->createTable('test_primary_key', [
+      'fields' => [
+        'foo'  => [
+          'type' => 'varchar',
+          'length' => 1,
+        ],
+      ],
+    ]);
+    $this->schema->addField('test_primary_key', 'id', [
+      'type' => 'serial',
+      'not null' => TRUE,
+    ], ['primary key' => ['id']]);
+    $this->assertTrue($this->schema->fieldExists('test_primary_key', 'id'));
   }
 
 }

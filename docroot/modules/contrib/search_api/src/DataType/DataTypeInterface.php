@@ -10,7 +10,7 @@ use Drupal\search_api\Plugin\HideablePluginInterface;
 /**
  * Defines an interface for data type plugins.
  *
- * @see \Drupal\search_api\Annotation\SearchApiDataType
+ * @see \Drupal\search_api\Attribute\SearchApiDataType
  * @see \Drupal\search_api\DataType\DataTypePluginManager
  * @see \Drupal\search_api\DataType\DataTypePluginBase
  * @see plugin_api

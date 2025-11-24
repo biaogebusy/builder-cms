@@ -2,9 +2,12 @@
 
 namespace Drupal\Core\Security;
 
+use Drupal\Core\Security\Attribute\TrustedCallback;
+
 /**
- * Ensures that TrustedCallbackInterface can be enforced for callback methods.
+ * Ensures that only predefined methods can be used as callback methods.
  *
+ * @see \Drupal\Core\Security\Attribute\TrustedCallback
  * @see \Drupal\Core\Security\TrustedCallbackInterface
  */
 trait DoTrustedCallbackTrait {
@@ -13,8 +16,10 @@ trait DoTrustedCallbackTrait {
    * Performs a callback.
    *
    * If the callback is trusted the callback will occur. Trusted callbacks must
-   * be methods of a class that implements
-   * \Drupal\Core\Security\TrustedCallbackInterface or $extra_trusted_interface
+   * be methods that are tagged with the
+   * \Drupal\Core\Security\Attribute\TrustedCallback attribute, or be methods of
+   * a class that implements
+   * \Drupal\Core\Security\TrustedCallbackInterface or $extra_trusted_interface,
    * or be an anonymous function. If the callback is not trusted then whether or
    * not the callback is called and what type of error is thrown depends on
    * $error_type. To provide time for dependent code to use trusted callbacks
@@ -32,7 +37,7 @@ trait DoTrustedCallbackTrait {
    * @param string $error_type
    *   (optional) The type of error to trigger. One of:
    *   - TrustedCallbackInterface::THROW_EXCEPTION
-   *   - TrustedCallbackInterface::TRIGGER_WARNING
+   *   - (deprecated) TrustedCallbackInterface::TRIGGER_WARNING
    *   - TrustedCallbackInterface::TRIGGER_SILENCED_DEPRECATION
    *   Defaults to TrustedCallbackInterface::THROW_EXCEPTION.
    * @param string $extra_trusted_interface
@@ -46,6 +51,7 @@ trait DoTrustedCallbackTrait {
    *   Exception thrown if the callback is not trusted and $error_type equals
    *   TrustedCallbackInterface::THROW_EXCEPTION.
    *
+   * @see \Drupal\Core\Security\Attribute\TrustedCallback
    * @see \Drupal\Core\Security\TrustedCallbackInterface
    */
   public function doTrustedCallback(callable $callback, array $args, $message, $error_type = TrustedCallbackInterface::THROW_EXCEPTION, $extra_trusted_interface = NULL) {
@@ -55,7 +61,7 @@ trait DoTrustedCallbackTrait {
     if (is_array($callback)) {
       [$object_or_classname, $method_name] = $callback;
     }
-    elseif (is_string($callback) && strpos($callback, '::') !== FALSE) {
+    elseif (is_string($callback) && str_contains($callback, '::')) {
       [$object_or_classname, $method_name] = explode('::', $callback, 2);
     }
 
@@ -71,6 +77,10 @@ trait DoTrustedCallbackTrait {
           $methods = call_user_func($object_or_classname . '::trustedCallbacks');
         }
         $safe_callback = in_array($method_name, $methods, TRUE);
+      }
+      if (!$safe_callback) {
+        $method = new \ReflectionMethod($object_or_classname, $method_name);
+        $safe_callback = (bool) $method->getAttributes(TrustedCallback::class);
       }
     }
     elseif ($callback instanceof \Closure) {
@@ -89,7 +99,9 @@ trait DoTrustedCallbackTrait {
       if ($error_type === TrustedCallbackInterface::TRIGGER_SILENCED_DEPRECATION) {
         @trigger_error($message, E_USER_DEPRECATED);
       }
+      // @phpstan-ignore-next-line
       elseif ($error_type === TrustedCallbackInterface::TRIGGER_WARNING) {
+        @trigger_error('Passing E_USER_WARNING for $error_type in ' . __METHOD__ . '() is deprecated in drupal:10.3.0 and will be removed from drupal:11.0.0. Use TrustedCallbackInterface::THROW_EXCEPTION or TrustedCallbackInterface::TRIGGER_SILENCED_DEPRECATION instead. See https://www.drupal.org/node/3427367', E_USER_DEPRECATED);
         trigger_error($message, E_USER_WARNING);
       }
       else {
@@ -97,7 +109,7 @@ trait DoTrustedCallbackTrait {
       }
     }
 
-    // @TODO Allow named arguments in https://www.drupal.org/node/3174150
+    // @todo Allow named arguments in https://www.drupal.org/node/3174150
     return call_user_func_array($callback, array_values($args));
   }
 

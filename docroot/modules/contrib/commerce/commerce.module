@@ -5,9 +5,53 @@
  * Defines common functionality for all Commerce modules.
  */
 
+use Drupal\Component\Serialization\Json;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Site\Settings;
+use Drupal\Core\Url;
+use Drupal\commerce\InboxMessage;
+use Drupal\commerce\RenderCallbacks;
+
+/**
+ * Implements hook_theme().
+ */
+function commerce_theme($existing, $type, $theme, $path) {
+  return [
+    'commerce_dashboard_inbox' => [
+      'variables' => [
+        'unread_text' => '',
+        'messages' => [],
+      ],
+    ],
+    'commerce_dashboard_management_links' => [
+      'variables' => [
+        'links' => [],
+      ],
+    ],
+    'commerce_dashboard_metrics_item' => [
+      'variables' => [
+        'attributes' => [],
+        'title' => '',
+        'values' => [],
+        'metric_value_attributes' => [],
+      ],
+    ],
+    'commerce_dashboard_video_youtube' => [
+      'variables' => [
+        'youtube_id' => NULL,
+        'autoplay' => TRUE,
+      ],
+    ],
+    'commerce_copy_link' => [
+      'variables' => [
+        'link' => NULL,
+        'title' => NULL,
+      ],
+    ],
+  ];
+}
 
 /**
  * Implements hook_mail().
@@ -25,7 +69,53 @@ function commerce_mail($key, &$message, $params) {
     $message['from'] = $params['from'];
   }
   $message['subject'] = $params['subject'];
-  $message['body'][] = $renderer->renderPlain($params['body']);
+
+  $message['body'][] = $renderer->renderInIsolation($params['body']);
+}
+
+/**
+ * Implements hook_toolbar().
+ */
+function commerce_toolbar() {
+  if (!Settings::get('commerce_dashboard_show_toolbar_link', TRUE)) {
+    return;
+  }
+
+  if (!\Drupal::currentUser()->hasPermission('access commerce administration pages')) {
+    return [
+      '#cache' => ['contexts' => ['user.permissions']],
+    ];
+  }
+
+  $items['commerce_inbox'] = [
+    '#type' => 'toolbar_item',
+    'tab' => [
+      '#lazy_builder' => [
+        'commerce.lazy_builders:renderCommerceInbox',
+        [],
+      ],
+      '#create_placeholder' => TRUE,
+    ],
+    '#wrapper_attributes' => [
+      'class' => ['commerce-inbox-toolbar-tab'],
+    ],
+    '#cache' => [
+      'contexts' => ['user.permissions'],
+      'tags' => [
+        'commerce_inbox_message',
+      ],
+    ],
+    '#weight' => 3399,
+  ];
+
+  // \Drupal\toolbar\Element\ToolbarItem::preRenderToolbarItem adds an
+  // #attributes property to each toolbar item's tab child automatically.
+  // Lazy builders don't support an #attributes property so we need to
+  // add another render callback to remove the #attributes property. We start by
+  // adding the defaults, and then we append our own pre render callback.
+  $items['commerce_inbox'] += \Drupal::service('plugin.manager.element_info')->getInfo('toolbar_item');
+  $items['commerce_inbox']['#pre_render'][] = [RenderCallbacks::class, 'removeTabAttributes'];
+  return $items;
 }
 
 /**
@@ -33,6 +123,16 @@ function commerce_mail($key, &$message, $params) {
  */
 function commerce_toolbar_alter(&$items) {
   $items['administration']['#attached']['library'][] = 'commerce/toolbar';
+}
+
+/**
+ * Implements hook_preprocess_HOOK().
+ */
+function commerce_preprocess_menu_local_action(array &$variables) {
+  if (in_array('commerce-inbox', $variables['link']['#options']['attributes']['class'])) {
+    $variables['attributes']['class'][] = 'commerce-inbox-action-link-wrapper';
+    $variables['#attached']['library'][] = 'commerce/local-actions';
+  }
 }
 
 /**
@@ -215,7 +315,97 @@ function commerce_page_attachments_alter(array &$attachments) {
       if (!isset($parts[1]) || $parts[1] !== 'system_meta_generator') {
         continue;
       }
-      $parts[0]['#attributes']['content'] .= '; Commerce 2';
+      $parts[0]['#attributes']['content'] .= '; Commerce 3';
+    }
+  }
+}
+
+/**
+ * Implements hook_cron().
+ */
+function commerce_cron() {
+  /** @var \Drupal\commerce\InboxMessageFetcherInterface $inbox_message_fetcher */
+  $inbox_message_fetcher = \Drupal::service('commerce.inbox_message_fetcher');
+  $inbox_message_fetcher->fetch();
+}
+
+/**
+ * Prepares variables for the dashboard inbox.
+ */
+function template_preprocess_commerce_dashboard_inbox(&$variables) {
+  $request_time = \Drupal::time()->getRequestTime();
+
+  foreach ($variables['messages'] as &$message) {
+    if (!$message instanceof InboxMessage) {
+      continue;
+    }
+    // We cast the object to an stdClass() so we can dynamically assign
+    // properties to it without triggering deprecations.
+    $message = (object) (array) $message;
+    // Set the time ago string shown in the inbox based on the send date.
+    $send_date = $message->send_date;
+    if ($send_date > ($request_time - 120)) {
+      $time_ago = t('just now');
+    }
+    elseif ($send_date > ($request_time - 3600)) {
+      $minutes = round(($request_time - $send_date) / 60);
+      $time_ago = t('@minutes minutes ago', ['@minutes' => $minutes]);
+    }
+    elseif ($send_date > ($request_time - 86400)) {
+      $hours = round(($request_time - $send_date) / 3600);
+      $time_ago = \Drupal::translation()->formatPlural($hours, '1 hour ago', '@count hours ago');
+    }
+    elseif ($send_date > ($request_time - (86400 * 7))) {
+      $days = round(($request_time - $send_date) / 86400);
+      $time_ago = \Drupal::translation()->formatPlural($days, '1 day ago', '@count days ago');
+    }
+    $message->time_ago = $time_ago ?? \Drupal::service('date.formatter')->format($send_date, 'custom', 'l, F j, Y');
+
+    if (empty($message->cta_link)) {
+      continue;
+    }
+    $message->link = [
+      '#type' => 'link',
+      '#title' => $message->cta_text,
+      '#attributes' => [
+        'class' => [
+          'button',
+          'button--small',
+          'button--primary',
+        ],
+      ],
+    ];
+    // Identify whether a CTA is external or internal.
+    if (str_starts_with($message->cta_link, 'http')) {
+      $message->link['#url'] = Url::fromUri($message->cta_link);
+      $message->link['#attributes']['class'][] = 'ext-link';
+      $message->link['#attributes']['target'] = '_blank';
+    }
+    else {
+      try {
+        $message->link['#url'] = Url::fromUserInput($message->cta_link);
+        if (str_contains($message->cta_link, 'admin/commerce/modal')) {
+          $query = parse_url($message->cta_link, \PHP_URL_QUERY);
+          parse_str($query, $query_params);
+          if (isset($query_params['content'])) {
+            $message->link['#url'] = Url::fromUserInput($query_params['content']);
+          }
+          $message->link += [
+            '#attached' => [
+              'library' => ['core/drupal.dialog.ajax'],
+            ],
+          ];
+          $message->link['#attributes']['class'][] = 'use-ajax';
+          $message->link['#attributes']['data-dialog-type'] = 'modal';
+          $message->link['#attributes']['data-dialog-options'] = Json::encode([
+            'width' => 880,
+            'title' => $message->subject,
+          ]);
+        }
+      }
+      catch (\Exception $exception) {
+        continue;
+      }
     }
   }
 }

@@ -2,7 +2,9 @@
 
 namespace Drupal\migrate\Plugin\migrate\process;
 
+use Drupal\migrate\Attribute\MigrateProcess;
 use Drupal\migrate\MigrateException;
+use Drupal\migrate\MigrateSkipRowException;
 use Drupal\migrate\ProcessPluginBase;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\Row;
@@ -165,12 +167,11 @@ use Drupal\migrate\Row;
  * @see \Drupal\migrate\Plugin\migrate\process\MigrationLookup
  * @see \Drupal\migrate\Plugin\migrate\process\StaticMap
  * @see \Drupal\migrate\Plugin\MigrateProcessInterface
- *
- * @MigrateProcessPlugin(
- *   id = "sub_process",
- *   handle_multiples = TRUE
- * )
  */
+#[MigrateProcess(
+  id: "sub_process",
+  handle_multiples: TRUE,
+)]
 class SubProcess extends ProcessPluginBase {
 
   /**
@@ -179,7 +180,7 @@ class SubProcess extends ProcessPluginBase {
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    */
@@ -202,21 +203,25 @@ class SubProcess extends ProcessPluginBase {
       $source[$key] = $row->getSource();
     }
 
-    if (is_array($value) || $value instanceof \Traversable) {
+    if (is_iterable($value)) {
       foreach ($value as $key => $new_value) {
         if (!is_array($new_value)) {
           throw new MigrateException(sprintf("Input array should hold elements of type array, instead element was of type '%s'", gettype($new_value)));
         }
         $new_row = new Row($new_value + $source);
-        $migrate_executable->processRow($new_row, $this->configuration['process']);
+        try {
+          $migrate_executable->processRow($new_row, $this->configuration['process']);
+        }
+        catch (MigrateSkipRowException $e) {
+          continue;
+        }
         $destination = $new_row->getDestination();
         if (array_key_exists('key', $this->configuration)) {
           $key = $this->transformKey($key, $migrate_executable, $new_row);
         }
         // Do not save the result if the key is NULL. The configured process
-        // pipeline used in transformKey() will return NULL if a
-        // MigrateSkipProcessException is thrown.
-        // @see \Drupal\filter\Plugin\migrate\process\FilterID
+        // pipeline used in transformKey() will return NULL if the key can not
+        // be transformed.
         if ($key !== NULL) {
           $return[$key] = $destination;
         }

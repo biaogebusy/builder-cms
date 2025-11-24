@@ -3,11 +3,8 @@
 namespace Drupal\jsonapi_extras\Form;
 
 use Drupal\Core\Cache\Cache;
-use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\ProxyClass\Routing\RouteBuilder;
-use Drupal\jsonapi\ResourceType\ResourceTypeRepositoryInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -35,38 +32,16 @@ class JsonapiExtrasSettingsForm extends ConfigFormBase {
   protected $container;
 
   /**
-   * Constructs a \Drupal\system\ConfigFormBase object.
-   *
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   The factory for configuration objects.
-   * @param \Drupal\Core\ProxyClass\Routing\RouteBuilder $router_builder
-   *   The router builder to rebuild menus after saving config entity.
-   * @param \Drupal\jsonapi\ResourceType\ResourceTypeRepositoryInterface $jsonApiResourceRepository
-   *   Resource type repository.
-   * @param \Drupal\Component\DependencyInjection\ContainerInterface|null $container
-   *   The dependency injection container.
-   */
-  public function __construct(ConfigFactoryInterface $config_factory, RouteBuilder $router_builder, ResourceTypeRepositoryInterface $jsonApiResourceRepository, ContainerInterface $container = NULL) {
-    parent::__construct($config_factory);
-    $this->routerBuilder = $router_builder;
-    $this->jsonApiResourceRepository = $jsonApiResourceRepository;
-    if ($container === NULL) {
-      $container = \Drupal::getContainer();
-      @trigger_error('Calling ' . __METHOD__ . ' without the $container argument is deprecated in jsonapi_extras:8.x-3.24 and will be required in jsonapi_extras:8.x-4.0. See https://www.drupal.org/node/3384627', E_USER_DEPRECATED);
-    }
-    $this->container = $container;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('config.factory'),
-      $container->get('router.builder'),
-      $container->get('jsonapi.resource_type.repository'),
-      $container
-    );
+    $instance = parent::create($container);
+
+    $instance->routerBuilder = $container->get('router.builder');
+    $instance->jsonApiResourceRepository = $container->get('jsonapi.resource_type.repository');
+    $instance->container = $container;
+
+    return $instance;
   }
 
   /**
@@ -121,6 +96,13 @@ class JsonapiExtrasSettingsForm extends ConfigFormBase {
       '#default_value' => $config->get('default_disabled'),
     ];
 
+    $form['validate_configuration_integrity'] = [
+      '#title' => $this->t('Validate config integrity'),
+      '#type' => 'checkbox',
+      '#description' => $this->t("Enable a configuration validation step for the fields in your resources. This will ensure that new (and updated) fields also contain configuration for the corresponding resources.<br /><strong>IMPORTANT:</strong> disable this <em>temporarily</em> to allow importing incomplete configuration, so you can fix it locally and export complete configuration. Remember to re-enable this after the configuration has been fixed."),
+      '#default_value' => $config->get('validate_configuration_integrity'),
+    ];
+
     return parent::buildForm($form, $form_state);
   }
 
@@ -137,6 +119,7 @@ class JsonapiExtrasSettingsForm extends ConfigFormBase {
     $this->config('jsonapi_extras.settings')
       ->set('include_count', $form_state->getValue('include_count'))
       ->set('default_disabled', $form_state->getValue('default_disabled'))
+      ->set('validate_configuration_integrity', $form_state->getValue('validate_configuration_integrity'))
       ->save();
 
     // Rebuild the router.

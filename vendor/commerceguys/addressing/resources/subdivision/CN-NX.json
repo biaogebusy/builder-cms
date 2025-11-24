@@ -1,0 +1,30 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"NX"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Guyuan Shi": {
+			"local_name": "固原市",
+			"has_children": true
+		},
+		"Shizuishan Shi": {
+			"local_name": "石嘴山市",
+			"has_children": true
+		},
+		"Wuzhong Shi": {
+			"local_name": "吴忠市",
+			"has_children": true
+		},
+		"Yinchuan Shi": {
+			"local_name": "银川市",
+			"has_children": true
+		},
+		"Zhongwei Shi": {
+			"local_name": "中卫市",
+			"has_children": true
+		}
+	}
+}

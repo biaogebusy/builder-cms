@@ -238,13 +238,17 @@ abstract class TextBase extends WebformElementBase {
     }
 
     // Validate character/word count.
-    if ($max && $length > $max) {
+    if ($max && $min && $max === $min && $length !== $max) {
+      $t_args['%max'] = $max;
+      $form_state->setError($element, t('@name must be %max @type but is currently %length @type long.', $t_args));
+    }
+    elseif ($max && $length > $max) {
       $t_args['%max'] = $max;
       $form_state->setError($element, t('@name cannot be longer than %max @type but is currently %length @type long.', $t_args));
     }
     elseif ($min && $length < $min) {
       $t_args['%min'] = $min;
-      $form_state->setError($element, t('@name must be longer than %min @type but is currently %length @type long.', $t_args));
+      $form_state->setError($element, t('@name must be at least %min @type but is currently %length @type long.', $t_args));
     }
   }
 
@@ -285,6 +289,9 @@ abstract class TextBase extends WebformElementBase {
       "'alias': 'currency'" => '$ 0.00',
       "'alias': 'currency_negative'" => '-$ 0.00',
       "'alias': 'currency_positive_negative'" => '$ 0.00',
+      "'alias': 'decimal'" => '0.0',
+      "'alias': 'decimal_negative'" => '-0.0',
+      "'alias': 'decimal_positive_negative'" => '0.0',
     ];
     return (isset($input_masks[$input_mask]) && $input_masks[$input_mask] === $value) ? TRUE : FALSE;
   }
@@ -380,6 +387,16 @@ abstract class TextBase extends WebformElementBase {
         'title' => $this->t('Decimal'),
         'example' => '1.234',
         'pattern' => '^\d+(\.\d+)?$',
+      ],
+      "'alias': 'decimal_negative'" => [
+        'title' => $this->t('Decimal (-)'),
+        'example' => '-1.234',
+        'pattern' => '^(-\d+(\.\d+)?)$',
+      ],
+      "'alias': 'decimal_positive_negative'" => [
+        'title' => $this->t('Decimal (+/-)'),
+        'example' => '1.234',
+        'pattern' => '^-?\d+(.\d+)?$',
       ],
       "'alias': 'email'" => [
         'title' => $this->t('Email'),

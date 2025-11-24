@@ -1,0 +1,43 @@
+{
+  "name": "drupal/media_entity_instagram",
+  "description": "Media Entity Instagram provider.",
+  "type": "drupal-module",
+  "keywords": [
+    "Drupal",
+    "Instagram",
+    "Media"
+  ],
+  "homepage": "http://drupal.org/project/media_entity_instagram",
+  "license": "GPL-2.0-or-later",
+  "authors": [
+    {
+      "name": "Janez Urevc (slashrsm)",
+      "homepage": "https://www.drupal.org/u/slashrsm",
+      "role": "Maintainer"
+    },
+    {
+      "name": "Christian Fritsch (chr.fritsch)",
+      "homepage": "https://www.drupal.org/u/chrfritsch",
+      "role": "Maintainer"
+    },
+    {
+      "name": "Malina Randrianavony (designesse)",
+      "homepage": "https://www.drupal.org/u/designesse",
+      "role": "Maintainer"
+    },
+    {
+      "name": "Drupal Media Team",
+      "homepage": "https://www.drupal.org/u/drupal-media-team",
+      "role": "Maintainer"
+    },
+    {
+      "name": "Primoz Hmeljak (primsi)",
+      "homepage": "https://www.drupal.org/u/primsi",
+      "role": "Maintainer"
+    }
+  ],
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/media_entity_instagram",
+    "source": "https://git.drupalcode.org/project/media_entity_instagram"
+  }
+}

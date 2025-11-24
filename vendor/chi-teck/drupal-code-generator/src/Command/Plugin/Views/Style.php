@@ -1,43 +1,51 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace DrupalCodeGenerator\Command\Plugin\Views;
 
 use DrupalCodeGenerator\Application;
-use DrupalCodeGenerator\Command\Plugin\PluginGenerator;
+use DrupalCodeGenerator\Asset\AssetCollection;
+use DrupalCodeGenerator\Attribute\Generator;
+use DrupalCodeGenerator\Command\BaseGenerator;
+use DrupalCodeGenerator\GeneratorType;
 
-/**
- * Implements plugin:views:style command.
- */
-final class Style extends PluginGenerator {
-
-  protected string $name = 'plugin:views:style';
-  protected string $description = 'Generates views style plugin';
-  protected string $alias = 'views-style';
-  protected string $templatePath = Application::TEMPLATE_PATH . '/plugin/views/style';
+#[Generator(
+  name: 'plugin:views:style',
+  description: 'Generates views style plugin',
+  aliases: ['views-style'],
+  templatePath: Application::TEMPLATE_PATH . '/Plugin/Views/_style',
+  type: GeneratorType::MODULE_COMPONENT,
+)]
+final class Style extends BaseGenerator {
 
   /**
    * {@inheritdoc}
    */
-  protected function generate(array &$vars): void {
-    $this->collectDefault($vars);
-    $vars['configurable'] = $this->confirm('Make the plugin configurable?');
+  protected function generate(array &$vars, AssetCollection $assets): void {
+    $ir = $this->createInterviewer($vars);
+    $vars['machine_name'] = $ir->askMachineName();
+    $vars['name'] = $ir->askName();
 
-    $this->addFile('src/Plugin/views/style/{class}.php')
-      ->template('style');
+    $vars['plugin_label'] = $ir->askPluginLabel();
+    $vars['plugin_id'] = $ir->askPluginId();
+    $vars['class'] = $ir->askPluginClass();
 
-    $this->addFile('templates/views-style-{plugin_id|u2h}.html.twig')
-      ->template('template');
+    $vars['configurable'] = $ir->confirm('Make the plugin configurable?');
 
-    $this->addFile('{machine_name}.module')
-      ->headerTemplate('_lib/file-docs/module')
-      ->template('preprocess')
-      ->appendIfExists()
-      ->headerSize(7);
+    $assets->addFile('src/Plugin/views/style/{class}.php')
+      ->template('style.twig');
+
+    $assets->addFile('templates/views-style-{plugin_id|u2h}.html.twig')
+      ->template('template.twig');
+
+    $assets->addFile('{machine_name}.module')
+      ->template('preprocess.twig')
+      ->appendIfExists(9);
 
     if ($vars['configurable']) {
-      $this->addSchemaFile()->template('schema');
+      $assets->addSchemaFile()->template('schema.twig');
     }
-
   }
 
 }

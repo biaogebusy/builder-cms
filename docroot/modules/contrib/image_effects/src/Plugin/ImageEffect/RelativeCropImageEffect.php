@@ -1,21 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageEffect;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Image\ImageInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\image\Attribute\ImageEffect;
 use Drupal\image\Plugin\ImageEffect\CropImageEffect;
 use Drupal\image_effects\Component\ImageUtility;
 
 /**
  * Provides an image effect that crops images to a ratio.
- *
- * @ImageEffect(
- *   id = "image_effects_relative_crop",
- *   label = @Translation("Relative crop"),
- *   description = @Translation("Resizing will make images match a ratio, for example 4:3 or 16:9. Images that are wider than the ratio will be cropped in width, images that are higher than the ratio will be cropped in height."),
- * )
  */
+#[ImageEffect(
+  id: 'image_effects_relative_crop',
+  label: new TranslatableMarkup('Relative crop'),
+  description: new TranslatableMarkup('Resizing will make images match a ratio, for example 4:3 or 16:9. Images that are wider than the ratio will be cropped in width, images that are higher than the ratio will be cropped in height.'),
+)]
 class RelativeCropImageEffect extends CropImageEffect {
 
   /**
@@ -66,6 +69,14 @@ class RelativeCropImageEffect extends CropImageEffect {
    * {@inheritdoc}
    */
   public function transformDimensions(array &$dimensions, $uri) {
+    $dimensions['width'] = $dimensions['width'] ? (int) $dimensions['width'] : NULL;
+    $dimensions['height'] = $dimensions['height'] ? (int) $dimensions['height'] : NULL;
+
+    if ($dimensions['width'] === NULL || $dimensions['height'] === NULL) {
+      $dimensions['width'] = $dimensions['height'] = NULL;
+      return;
+    }
+
     if (!$this->configuration['width'] || !$this->configuration['height']) {
       // If the effect has not been configured, there is nothing we can do.
       return;

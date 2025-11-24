@@ -6,25 +6,26 @@ use Drupal\Component\Render\PlainTextOutput;
 use Drupal\Component\Utility\EmailValidatorInterface;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Action\ConfigurableActionBase;
+use Drupal\Core\Action\Attribute\Action;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Mail\MailManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Utility\Token;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Sends an email message.
- *
- * @Action(
- *   id = "action_send_email_action",
- *   label = @Translation("Send email"),
- *   type = "system"
- * )
  */
+#[Action(
+  id: 'action_send_email_action',
+  label: new TranslatableMarkup('Send email'),
+  type: 'system'
+)]
 class EmailAction extends ConfigurableActionBase implements ContainerFactoryPluginInterface {
 
   /**
@@ -142,7 +143,7 @@ class EmailAction extends ConfigurableActionBase implements ContainerFactoryPlug
     $message = $this->mailManager->mail('system', 'action_send_email', $recipient, $langcode, $params);
     // Error logging is handled by \Drupal\Core\Mail\MailManager::mail().
     if ($message['result']) {
-      $this->logger->notice('Sent email to %recipient', ['%recipient' => $recipient]);
+      $this->logger->info('Sent email to %recipient', ['%recipient' => $recipient]);
     }
   }
 
@@ -190,7 +191,7 @@ class EmailAction extends ConfigurableActionBase implements ContainerFactoryPlug
    * {@inheritdoc}
    */
   public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
-    if (!$this->emailValidator->isValid($form_state->getValue('recipient')) && strpos($form_state->getValue('recipient'), ':mail') === FALSE) {
+    if (!$this->emailValidator->isValid($form_state->getValue('recipient')) && !str_contains($form_state->getValue('recipient'), ':mail')) {
       // We want the literal %author placeholder to be emphasized in the error message.
       $form_state->setErrorByName('recipient', $this->t('Enter a valid email address or use a token email address such as %author.', ['%author' => '[node:author:mail]']));
     }
@@ -208,7 +209,7 @@ class EmailAction extends ConfigurableActionBase implements ContainerFactoryPlug
   /**
    * {@inheritdoc}
    */
-  public function access($object, AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
     $result = AccessResult::allowed();
     return $return_as_object ? $result : $result->isAllowed();
   }

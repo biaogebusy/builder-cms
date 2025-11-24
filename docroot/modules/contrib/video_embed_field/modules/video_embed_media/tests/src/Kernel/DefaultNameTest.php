@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\video_embed_media\Kernel;
 
-use Drupal\media\Entity\Media;
 use Drupal\Tests\media\Kernel\MediaKernelTestBase;
+use Drupal\media\Entity\Media;
 
 /**
  * Test the media bundle default names.
@@ -22,7 +22,7 @@ class DefaultNameTest extends MediaKernelTestBase {
   /**
    * The created media type.
    *
-   * @var \Drupal\media\Entity\MediaType;
+   * @var \Drupal\media\Entity\MediaType
    */
   protected $entityType;
 
@@ -42,15 +42,23 @@ class DefaultNameTest extends MediaKernelTestBase {
   /**
    * Test cases for ::testDefaultName().
    */
-  public function defaultNameTestCases() {
+  public static function defaultNameTestCases() {
     return [
       'YouTube' => [
         'https://www.youtube.com/watch?v=gnERPdAiuSo',
-        'YouTube Video (gnERPdAiuSo)',
+        'YouTube | DrupalCon Austin 2014: Keynote: Dries Buytaert',
+      ],
+      'YouTube - youtu.be' => [
+        'https://www.youtu.be/gnERPdAiuSo',
+        'YouTube | DrupalCon Austin 2014: Keynote: Dries Buytaert',
+      ],
+      'Youtube Playlist' => [
+        'https://www.youtube.com/watch?v=bbOCX3vlMyE&list=PLpeDXSh4nHjS7I_OIrHrZXb00xSDZ7zBz',
+        'YouTube Playlist | DrupalCon',
       ],
       'Vimeo' => [
         'https://vimeo.com/21681203',
-        'Drupal Commerce at DrupalCon Chicago',
+        'Vimeo | Drupal Commerce at DrupalCon Chicago',
       ],
     ];
   }

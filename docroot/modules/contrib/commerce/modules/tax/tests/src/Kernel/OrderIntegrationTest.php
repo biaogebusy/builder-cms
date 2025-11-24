@@ -2,12 +2,12 @@
 
 namespace Drupal\Tests\commerce_tax\Kernel;
 
+use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 use Drupal\commerce_order\Entity\Order;
 use Drupal\commerce_order\Entity\OrderItem;
 use Drupal\commerce_price\Price;
 use Drupal\commerce_tax\Entity\TaxType;
 use Drupal\profile\Entity\Profile;
-use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 
 /**
  * Tests integration with orders.
@@ -47,7 +47,7 @@ class OrderIntegrationTest extends OrderKernelTestBase {
     parent::setUp();
 
     $this->installConfig(['commerce_tax']);
-    $user = $this->createUser(['mail' => $this->randomString() . '@example.com']);
+    $user = $this->createUser();
 
     $this->store->set('prices_include_tax', TRUE);
     $this->store->set('tax_registrations', ['US']);

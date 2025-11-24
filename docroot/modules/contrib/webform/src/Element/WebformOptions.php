@@ -215,7 +215,7 @@ class WebformOptions extends FormElement {
   /* ************************************************************************ */
 
   /**
-   * Convert values from yamform_multiple element to options.
+   * Convert values from webform_multiple element to options.
    *
    * @param array $values
    *   An array of values.

@@ -130,7 +130,7 @@ abstract class AuthenticationTestBase extends EntityShareClientFunctionalTestBas
    * @param string|null $channel_id
    *   The ID of channel.
    */
-  protected function reimportChannel(array $channel_infos, string $channel_id = NULL) {
+  protected function reimportChannel(array $channel_infos, ?string $channel_id = NULL) {
     // Re-import data from JSON:API.
     // Get JSON data from the remote channel.
     if (empty($channel_id)) {

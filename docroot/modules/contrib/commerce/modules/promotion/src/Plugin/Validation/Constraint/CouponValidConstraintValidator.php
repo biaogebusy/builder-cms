@@ -2,9 +2,9 @@
 
 namespace Drupal\commerce_promotion\Plugin\Validation\Constraint;
 
+use Drupal\Core\Field\EntityReferenceFieldItemListInterface;
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_promotion\Entity\CouponInterface;
-use Drupal\Core\Field\EntityReferenceFieldItemListInterface;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 

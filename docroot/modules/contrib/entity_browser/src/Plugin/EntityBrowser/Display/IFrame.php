@@ -11,6 +11,7 @@ use Drupal\entity_browser\Events\AlterEntityBrowserDisplayData;
 use Drupal\entity_browser\Events\Events;
 use Drupal\entity_browser\Events\RegisterJSCallbacks;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 
 /**
@@ -95,6 +96,14 @@ class IFrame extends DisplayBase implements DisplayRouterInterface {
     $js_event_object->registerCallback('Drupal.entityBrowser.selectionCompleted');
     $callback_event = $this->eventDispatcher->dispatch($js_event_object, Events::REGISTER_JS_CALLBACKS);
     $original_path = $this->currentPath->getPath();
+
+    if (!empty($original_path) && strpos($original_path, '/entity-embed/dialog') === 0) {
+      $referer = $_SERVER['HTTP_REFERER'];
+      if (!empty($referer)) {
+        $request = Request::create($referer);
+        $original_path = $request->getPathInfo();
+      }
+    }
 
     $data = [
       'query_parameters' => [

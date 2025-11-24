@@ -1,0 +1,13 @@
+ckeditor5.plugin.ckeditor5_template_template:
+  type: mapping
+  label: Template
+  mapping:
+    file_path:
+      type: string
+      label: 'Template file location'
+    custom_toolbar_text:
+      type: string
+      label: 'Button text'
+    show_toolbar_text: 
+      type: integer
+      label: 'Show label next to the button?'

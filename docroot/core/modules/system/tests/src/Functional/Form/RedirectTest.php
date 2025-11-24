@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Form;
 
 use Drupal\Core\Url;
@@ -13,9 +15,7 @@ use Drupal\Tests\BrowserTestBase;
 class RedirectTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['form_test', 'block'];
 
@@ -27,7 +27,7 @@ class RedirectTest extends BrowserTestBase {
   /**
    * Tests form redirection.
    */
-  public function testRedirect() {
+  public function testRedirect(): void {
     $path = 'form-test/redirect';
     $options = ['query' => ['foo' => 'bar']];
     $options['absolute'] = TRUE;
@@ -78,21 +78,40 @@ class RedirectTest extends BrowserTestBase {
     $this->assertSession()->addressEquals($path);
 
     // Test redirection back to the original path with query parameters.
-    $edit = [
-      'redirection' => TRUE,
-      'destination' => '',
-    ];
     $this->drupalGet($path, $options);
     $this->submitForm($edit, 'Submit');
     // When using an empty redirection string, there should be no redirection,
     // and the query parameters should be passed along.
     $this->assertSession()->addressEquals($path . '?foo=bar');
+
+    // Test basic redirection, ignoring the 'destination' query parameter.
+    $options['query']['destination'] = $this->randomMachineName();
+    $edit = [
+      'redirection' => TRUE,
+      'destination' => $this->randomMachineName(),
+      'ignore_destination' => TRUE,
+    ];
+    $this->drupalGet($path, $options);
+    $this->submitForm($edit, 'Submit');
+    $this->assertSession()->addressEquals($edit['destination']);
+
+    // Test redirection with query param, ignoring the 'destination' query
+    // parameter.
+    $options['query']['destination'] = $this->randomMachineName();
+    $edit = [
+      'redirection' => TRUE,
+      'destination' => $this->randomMachineName() . '?foo=bar',
+      'ignore_destination' => TRUE,
+    ];
+    $this->drupalGet($path, $options);
+    $this->submitForm($edit, 'Submit');
+    $this->assertSession()->addressEquals($edit['destination']);
   }
 
   /**
    * Tests form redirection from 404/403 pages with the Block form.
    */
-  public function testRedirectFromErrorPages() {
+  public function testRedirectFromErrorPages(): void {
     // Make sure the block containing the redirect form is placed.
     $this->drupalPlaceBlock('redirect_form_block');
 

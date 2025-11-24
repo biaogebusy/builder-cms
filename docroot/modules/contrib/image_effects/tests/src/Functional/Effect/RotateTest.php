@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image_effects\Functional\Effect;
 
 use Drupal\Component\Utility\Color;
@@ -64,41 +66,77 @@ class RotateTest extends ImageEffectsTestBase {
     $test_data = [
       'rotate_5' => [
         // Fuchsia background.
-        'arguments' => ['degrees' => 5, 'transparent' => FALSE, 'hex' => '#FF00FF', 'opacity' => 100, 'fallback' => '#FFFFFF'],
+        'arguments' => [
+          'degrees' => 5,
+          'transparent' => FALSE,
+          'hex' => '#FF00FF',
+          'opacity' => 100,
+          'fallback' => '#FFFFFF',
+        ],
         'expected_width' => 43,
         'expected_height' => 25,
-        'corners_transform' => 'setFuchsia',
+        'corners_transform' => [$this, 'setFuchsia'],
       ],
       'rotate_minus_10' => [
-        'arguments' => ['degrees' => -10, 'transparent' => FALSE, 'hex' => '#FF00FF', 'opacity' => 100, 'fallback' => '#FFFFFF'],
+        'arguments' => [
+          'degrees' => -10,
+          'transparent' => FALSE,
+          'hex' => '#FF00FF',
+          'opacity' => 100,
+          'fallback' => '#FFFFFF',
+        ],
         'expected_width' => 44,
         'expected_height' => 28,
-        'corners_transform' => 'setFuchsia',
+        'corners_transform' => [$this, 'setFuchsia'],
       ],
       'rotate_90' => [
         // Fuchsia background.
-        'arguments' => ['degrees' => 90, 'transparent' => FALSE, 'hex' => '#FF00FF', 'opacity' => 100, 'fallback' => '#FFFFFF'],
+        'arguments' => [
+          'degrees' => 90,
+          'transparent' => FALSE,
+          'hex' => '#FF00FF',
+          'opacity' => 100,
+          'fallback' => '#FFFFFF',
+        ],
         'expected_width' => 20,
         'expected_height' => 40,
-        'corners_transform' => 'shift90',
+        'corners_transform' => [$this, 'shift90'],
       ],
       'rotate_transparent_5' => [
-        'arguments' => ['degrees' => 5, 'transparent' => TRUE, 'hex' => '#FFFFFF', 'opacity' => 100, 'fallback' => '#FFFFFF'],
+        'arguments' => [
+          'degrees' => 5,
+          'transparent' => TRUE,
+          'hex' => '#FFFFFF',
+          'opacity' => 100,
+          'fallback' => '#FFFFFF',
+        ],
         'expected_width' => 43,
         'expected_height' => 25,
-        'corners_transform' => 'setTransparent',
+        'corners_transform' => [$this, 'setTransparent'],
       ],
       'rotate_transparent_5_cyan_fallback' => [
-        'arguments' => ['degrees' => 5, 'transparent' => TRUE, 'hex' => '#FFFFFF', 'opacity' => 100, 'fallback' => '#00FFFF'],
+        'arguments' => [
+          'degrees' => 5,
+          'transparent' => TRUE,
+          'hex' => '#FFFFFF',
+          'opacity' => 100,
+          'fallback' => '#00FFFF',
+        ],
         'expected_width' => 43,
         'expected_height' => 25,
-        'corners_transform' => 'setTransparent',
+        'corners_transform' => [$this, 'setTransparent'],
       ],
       'rotate_transparent_90' => [
-        'arguments' => ['degrees' => 90, 'transparent' => TRUE, 'hex' => '#FFFFFF', 'opacity' => 100, 'fallback' => '#FFFFFF'],
+        'arguments' => [
+          'degrees' => 90,
+          'transparent' => TRUE,
+          'hex' => '#FFFFFF',
+          'opacity' => 100,
+          'fallback' => '#FFFFFF',
+        ],
         'expected_width' => 20,
         'expected_height' => 40,
-        'corners_transform' => 'shift90',
+        'corners_transform' => [$this, 'shift90'],
       ],
     ];
 
@@ -155,7 +193,7 @@ class RotateTest extends ImageEffectsTestBase {
         $this->assertSame($test['expected_width'], $image->getWidth(), $test_message);
         $this->assertSame($test['expected_height'], $image->getHeight(), $test_message);
 
-        $expected_corners = $this->{$test['corners_transform']}($file_info['corners'], $file_info['transparency_supported'], $test['arguments']['fallback']);
+        $expected_corners = call_user_func($test['corners_transform'], $file_info['corners'], $file_info['transparency_supported'], $test['arguments']['fallback']);
 
         // *** GraphicsMagick-specific **** tweaks.
         if ($this->imageFactory->getToolkitId() === 'imagemagick' && \Drupal::configFactory()->get('imagemagick.settings')->get('binaries') === 'graphicsmagick') {

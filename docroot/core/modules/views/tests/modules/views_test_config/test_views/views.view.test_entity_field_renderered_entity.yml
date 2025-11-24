@@ -14,44 +14,11 @@ base_table: node_field_data
 base_field: nid
 display:
   default:
-    display_plugin: default
     id: default
     display_title: Default
+    display_plugin: default
     position: 0
     display_options:
-      defaults:
-        fields: false
-        pager: false
-        sorts: false
-      pager:
-        options:
-          offset: 0
-        type: none
-      row:
-        type: fields
-      sorts:
-        nid:
-          id: nid
-          table: node_field_data
-          field: nid
-          relationship: none
-          group_type: group
-          admin_label: ''
-          order: ASC
-          exposed: false
-          expose:
-            label: ''
-          entity_type: node
-          entity_field: nid
-          plugin_id: standard
-        title:
-          id: title
-          table: node_field_data
-          field: title
-          plugin_id: standard
-          entity_type: node
-          entity_field: title
-      rendering_language: '***LANGUAGE_entity_translation***'
       fields:
         rendered_entity:
           id: rendered_entity
@@ -60,6 +27,8 @@ display:
           relationship: none
           group_type: group
           admin_label: ''
+          entity_type: node
+          plugin_id: rendered_entity
           label: ''
           exclude: false
           alter:
@@ -102,109 +71,133 @@ display:
           empty_zero: false
           hide_alter_empty: true
           view_mode: default
+      pager:
+        type: none
+        options:
+          offset: 0
+      sorts:
+        nid:
+          id: nid
+          table: node_field_data
+          field: nid
+          relationship: none
+          group_type: group
+          admin_label: ''
           entity_type: node
-          plugin_id: rendered_entity
+          entity_field: nid
+          plugin_id: standard
+          order: ASC
+          expose:
+            label: ''
+          exposed: false
+        title:
+          id: title
+          table: node_field_data
+          field: title
+          entity_type: node
+          entity_field: title
+          plugin_id: standard
+      row:
+        type: fields
+      defaults:
+        pager: false
+        fields: false
+        sorts: false
+      rendering_language: '***LANGUAGE_entity_translation***'
       display_extenders: {  }
     cache_metadata:
       max-age: -1
       contexts:
         - 'languages:language_interface'
         - 'user.node_grants:view'
-      tags:
-        - 'config:core.entity_view_display.node.article.default'
+      tags: {  }
   page_1:
-    display_plugin: page
     id: page_1
     display_title: Page
+    display_plugin: page
     position: 1
     display_options:
       rendering_language: '***LANGUAGE_entity_translation***'
-      path: test_entity_field_renderered_entity/entity_translation
       display_extenders: {  }
+      path: test_entity_field_renderered_entity/entity_translation
     cache_metadata:
       max-age: -1
       contexts:
         - 'languages:language_interface'
         - 'user.node_grants:view'
-      tags:
-        - 'config:core.entity_view_display.node.article.default'
+      tags: {  }
   page_2:
-    display_plugin: page
     id: page_2
     display_title: Page
+    display_plugin: page
     position: 2
     display_options:
       rendering_language: '***LANGUAGE_entity_default***'
-      path: test_entity_field_renderered_entity/entity_default
       display_extenders: {  }
+      path: test_entity_field_renderered_entity/entity_default
     cache_metadata:
       max-age: -1
       contexts:
         - 'languages:language_interface'
         - 'user.node_grants:view'
-      tags:
-        - 'config:core.entity_view_display.node.article.default'
+      tags: {  }
   page_3:
-    display_plugin: page
     id: page_3
     display_title: Page
+    display_plugin: page
     position: 3
     display_options:
       rendering_language: '***LANGUAGE_site_default***'
-      path: test_entity_field_renderered_entity/site_default
       display_extenders: {  }
+      path: test_entity_field_renderered_entity/site_default
     cache_metadata:
       max-age: -1
       contexts:
         - 'languages:language_interface'
         - 'user.node_grants:view'
-      tags:
-        - 'config:core.entity_view_display.node.article.default'
+      tags: {  }
   page_4:
-    display_plugin: page
     id: page_4
     display_title: Page
+    display_plugin: page
     position: 4
     display_options:
       rendering_language: '***LANGUAGE_language_interface***'
-      path: test_entity_field_renderered_entity/language_interface
       display_extenders: {  }
+      path: test_entity_field_renderered_entity/language_interface
     cache_metadata:
       max-age: -1
       contexts:
         - 'languages:language_interface'
         - 'user.node_grants:view'
-      tags:
-        - 'config:core.entity_view_display.node.article.default'
+      tags: {  }
   page_5:
-    display_plugin: page
     id: page_5
     display_title: Page
+    display_plugin: page
     position: 5
     display_options:
       rendering_language: en
-      path: test_entity_field_renderered_entity/en
       display_extenders: {  }
+      path: test_entity_field_renderered_entity/en
     cache_metadata:
       max-age: -1
       contexts:
         - 'languages:language_interface'
         - 'user.node_grants:view'
-      tags:
-        - 'config:core.entity_view_display.node.article.default'
+      tags: {  }
   page_6:
-    display_plugin: page
     id: page_6
     display_title: Page
+    display_plugin: page
     position: 6
     display_options:
       rendering_language: es
-      path: test_entity_field_renderered_entity/es
       display_extenders: {  }
+      path: test_entity_field_renderered_entity/es
     cache_metadata:
       max-age: -1
       contexts:
         - 'languages:language_interface'
         - 'user.node_grants:view'
-      tags:
-        - 'config:core.entity_view_display.node.article.default'
+      tags: {  }

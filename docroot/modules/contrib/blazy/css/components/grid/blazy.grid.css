@@ -34,6 +34,8 @@
   margin: 0;
   padding: 0 0.625rem 1.25rem;
   list-style: none;
+  /* At most grids, transition is causing issues than helpful. */
+  transition: none;
 }
 
 .b-grid.b-grid--centered,
@@ -47,11 +49,6 @@
   float: none;
   text-align: left;
   vertical-align: top;
-}
-
-.b-grid .grid__content {
-  position: relative;
-  max-width: 100%;
 }
 
 @media only screen {

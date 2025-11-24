@@ -17,7 +17,7 @@
         ModuleFilter.input.bind('winnow:start', function () {
           // Note that we first open all <details> to be able to use ':visible'.
           // Mark the <details> elements that were closed before filtering, so
-          // they can be reclosed when filtering is removed.
+          // they can be re-closed when filtering is removed.
           $details
             .show()
             .not('[open]')

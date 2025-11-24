@@ -1,5 +1,0 @@
-{
-    "name": "drupal/lightning_contact_form",
-    "type": "drupal-module",
-    "description": "Provides a site-wide contact form with basic default configuration."
-}

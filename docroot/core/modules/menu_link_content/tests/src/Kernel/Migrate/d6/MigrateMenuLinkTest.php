@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\menu_link_content\Kernel\Migrate\d6;
 
 use Drupal\menu_link_content\Entity\MenuLinkContent;
@@ -85,7 +87,7 @@ class MigrateMenuLinkTest extends MigrateNodeTestBase {
   /**
    * Tests migration of menu links.
    */
-  public function testMenuLinks() {
+  public function testMenuLinks(): void {
     $this->assertEntity('138', 'Test 1', 'secondary-links', 'Test menu link 1', TRUE, FALSE, ['attributes' => ['title' => 'Test menu link 1'], 'langcode' => 'en'], 'internal:/user/login', -50);
     $this->assertEntity('139', 'Test 2', 'secondary-links', 'Test menu link 2', TRUE, TRUE, ['query' => ['foo' => 'bar'], 'attributes' => ['title' => 'Test menu link 2']], 'internal:/admin', -49);
     $this->assertEntity('140', 'Drupal.org', 'secondary-links', NULL, TRUE, FALSE, ['attributes' => ['title' => '']], 'https://www.drupal.org', -50);

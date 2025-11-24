@@ -83,7 +83,7 @@ class ParagraphsTabWidgetVerticalTabs extends InlineParagraphsWidget {
     // (which doesn't work).
     $field_name = $this->fieldDefinition->getName();
     $path = array_merge($form['#parents'], [$field_name]);
-    $path[] = $field_name . '__active_tab';
+    $path[] = implode('__', $path) . '__active_tab';
     $form_state->unsetValue($path);
 
     return parent::extractFormValues($items, $form, $form_state);
@@ -97,7 +97,8 @@ class ParagraphsTabWidgetVerticalTabs extends InlineParagraphsWidget {
     // normally does get the field name, which will eventually become the
     // #group for all tabs in the widget.
     $widget = parent::formMultipleElements($items, $form, $form_state);
-    $group = $widget['#field_name'];
+    $groupPrefix = !empty($form['#parents']) ? implode('][', $form["#parents"]) . '][' : '';
+    $group = $groupPrefix . $widget['#field_name'];
 
     // Attach our library and the data it needs to complete its operation.
     $widget['#attached']['library'][] = 'paragraphs_tabs_widget/vertical_tabs';

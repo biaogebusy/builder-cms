@@ -4,7 +4,8 @@ namespace Drupal\menu_breadcrumb\Form;
 
 use Drupal\Component\Utility\SortArray;
 use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Config\TypedConfigManagerInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -15,26 +16,29 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class SettingsForm extends ConfigFormBase {
 
   /**
-   * Services used by the form generator.
+   * The entity type manager.
    *
-   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected $moduleHandler;
+  protected $entityTypeManager;
 
   /**
    * SettingsForm constructor.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   Used to obtain configuration information.
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $moduleHandler
-   *   Used to determined whether the Menu UI module is installed.
+   * @param \Drupal\Core\Config\TypedConfigManagerInterface $typedConfigManager
+   *   The typed config manager.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
    */
   public function __construct(
     ConfigFactoryInterface $config_factory,
-    ModuleHandlerInterface $moduleHandler
+    TypedConfigManagerInterface $typedConfigManager,
+    EntityTypeManagerInterface $entity_type_manager,
   ) {
-    parent::__construct($config_factory);
-    $this->moduleHandler = $moduleHandler;
+    parent::__construct($config_factory, $typedConfigManager);
+    $this->entityTypeManager = $entity_type_manager;
   }
 
   /**
@@ -43,7 +47,8 @@ class SettingsForm extends ConfigFormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('config.factory'),
-      $container->get('module_handler')
+      $container->get('config.typed'),
+      $container->get('entity_type.manager')
     );
   }
 
@@ -265,36 +270,37 @@ class SettingsForm extends ConfigFormBase {
    * weight, label) sorted by weight, initializing those properties if needed.
    */
   protected function getSortedMenus() {
-    $menu_enabled = $this->moduleHandler->moduleExists('menu_ui');
-    $menus = $menu_enabled ? menu_ui_get_menus() : menu_list_system_menus();
+    $menu_results = [];
+    $menus = $this->entityTypeManager->getStorage('menu')->loadMultiple();
     $menu_breadcrumb_menus = $this->config('menu_breadcrumb.settings')->get('menu_breadcrumb_menus');
 
-    foreach ($menus as $menu_name => &$menu) {
+    /** @var \Drupal\system\Entity\Menu $menu */
+    foreach ($menus as $menu_name => $menu) {
       if (!empty($menu_breadcrumb_menus[$menu_name])) {
-        $menu = $menu_breadcrumb_menus[$menu_name] + ['label' => $menu];
+        $menu_results[$menu_name] = $menu_breadcrumb_menus[$menu_name] + ['label' => $menu->label()];
         // Earlier versions of the module might not have these array keys set.
-        // TODO Maybe set these for existing menu definitions in upgrade script?
-        if (!isset($menu['taxattach'])) {
-          $menu['taxattach'] = 0;
+        // @todo Maybe set these for existing menu definitions in upgrade script?
+        if (!isset($menu_results[$menu_name]['taxattach'])) {
+          $menu_results[$menu_name]['taxattach'] = 0;
         }
-        if (!isset($menu['langhandle'])) {
-          $menu['langhandle'] = 0;
+        if (!isset($menu_results[$menu_name]['langhandle'])) {
+          $menu_results[$menu_name]['langhandle'] = 0;
         }
       }
       else {
-        $menu = [
+        $menu_results[$menu_name] = [
           'weight' => 0,
           'enabled' => 0,
           'taxattach' => 0,
           'langhandle' => 0,
-          'label' => $menu,
+          'label' => $menu->label(),
         ];
       }
     }
-    uasort($menus, function ($a, $b) {
+    uasort($menu_results, function ($a, $b) {
       return SortArray::sortByWeightElement($a, $b);
     });
-    return $menus;
+    return $menu_results;
   }
 
 }

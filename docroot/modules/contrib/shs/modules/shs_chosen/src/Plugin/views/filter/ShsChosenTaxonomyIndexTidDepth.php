@@ -2,9 +2,9 @@
 
 namespace Drupal\shs_chosen\Plugin\views\filter;
 
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Query\Condition;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\taxonomy\TermStorageInterface;
 use Drupal\taxonomy\VocabularyStorageInterface;
@@ -129,7 +129,7 @@ class ShsChosenTaxonomyIndexTidDepth extends ShsChosenTaxonomyIndexTid {
       $this->tableAlias = $this->relationship;
     }
     // If no relationship, then use the alias of the base table.
-    else if (method_exists($this->query, 'ensureTable')) {
+    elseif (method_exists($this->query, 'ensureTable')) {
       $this->tableAlias = $this->query->ensureTable($this->view->storage->get('base_table'));
     }
     else {

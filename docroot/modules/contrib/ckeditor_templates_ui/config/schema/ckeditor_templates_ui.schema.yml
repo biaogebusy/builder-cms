@@ -8,9 +8,9 @@ ckeditor_templates_ui.ckeditor_template.*:
     label:
       type: label
       label: 'Title'
-    image:
+    icon:
       type: label
-      label: 'Image'
+      label: 'Icon'
     description:
       type: label
       label: 'Description'

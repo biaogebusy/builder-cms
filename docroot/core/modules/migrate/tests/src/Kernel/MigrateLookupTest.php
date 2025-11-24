@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Kernel;
 
 use Drupal\migrate\MigrateException;
@@ -36,7 +38,7 @@ class MigrateLookupTest extends MigrateTestBase {
   /**
    * {@inheritdoc}
    */
-  public function setUp(): void {
+  protected function setUp(): void {
     parent::setUp();
     $this->setTestLogger();
     $this->migrateLookup = $this->container->get('migrate.lookup');
@@ -49,7 +51,7 @@ class MigrateLookupTest extends MigrateTestBase {
   /**
    * Tests scenarios around single id lookups.
    */
-  public function testSingleLookup() {
+  public function testSingleLookup(): void {
     $this->executeMigration('sample_lookup_migration');
 
     // Test numerically indexed source id.
@@ -68,7 +70,7 @@ class MigrateLookupTest extends MigrateTestBase {
   /**
    * Tests an invalid lookup.
    */
-  public function testInvalidIdLookup() {
+  public function testInvalidIdLookup(): void {
     $this->executeMigration('sample_lookup_migration');
     $this->expectException(MigrateException::class);
     $this->expectExceptionMessage("Extra unknown items for map migrate_map_sample_lookup_migration in source IDs: array (\n  'invalid_id' => 25,\n)");
@@ -80,7 +82,7 @@ class MigrateLookupTest extends MigrateTestBase {
   /**
    * Tests lookups with multiple source ids.
    */
-  public function testMultipleSourceIds() {
+  public function testMultipleSourceIds(): void {
     $this->executeMigration('sample_lookup_migration_multiple_source_ids');
 
     // Test with full set of numerically indexed source ids.
@@ -126,7 +128,7 @@ class MigrateLookupTest extends MigrateTestBase {
    * @throws \Drupal\Component\Plugin\Exception\PluginException
    * @throws \Drupal\migrate\MigrateException
    */
-  public function testMultipleMigrationLookup() {
+  public function testMultipleMigrationLookup(): void {
     $migrations = [
       'sample_lookup_migration',
       'sample_lookup_migration_2',
@@ -151,7 +153,7 @@ class MigrateLookupTest extends MigrateTestBase {
   /**
    * Tests a lookup with string source ids.
    */
-  public function testLookupWithStringIds() {
+  public function testLookupWithStringIds(): void {
     $this->executeMigration('sample_lookup_migration_string_ids');
 
     // Test numerically indexed source id.

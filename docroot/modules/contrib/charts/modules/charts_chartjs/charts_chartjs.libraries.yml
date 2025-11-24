@@ -9,16 +9,18 @@ charts_chartjs:
   cdn:
     /libraries/chart.js/: https://unpkg.com/chart.js@4.4.0/
     /libraries/chartjs-adapter-date-fns/: https://unpkg.com/chartjs-adapter-date-fns@3.0.0/
+    /libraries/chartjs-plugin-datalabels/: https://unpkg.com/chartjs-plugin-datalabels@2.0.0/
   js:
     /libraries/chart.js/dist/chart.umd.js: { }
     /libraries/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.js: { }
+    /libraries/chartjs-plugin-datalabels/dist/chartjs-plugin-datalabels.js: { }
   dependencies:
     - core/drupal
     - core/once
 chartjs:
   version: 1.x
   js:
-    js/charts_chartjs.js: { weight: -1 }
+    js/charts_chartjs.js: { weight: -1, attributes: { defer: true } }
   dependencies:
     - charts/global
     - charts_chartjs/charts_chartjs

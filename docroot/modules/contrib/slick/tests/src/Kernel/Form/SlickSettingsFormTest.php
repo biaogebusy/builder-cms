@@ -5,8 +5,8 @@ namespace Drupal\Tests\slick\Kernel\Form;
 use Drupal\Core\Form\FormInterface;
 use Drupal\Core\Form\FormState;
 use Drupal\KernelTests\KernelTestBase;
-use Drupal\slick_ui\Form\SlickSettingsForm;
 use Drupal\Tests\slick\Traits\SlickKernelTrait;
+use Drupal\slick_ui\Form\SlickSettingsForm;
 
 /**
  * Tests the Slick UI settings form.

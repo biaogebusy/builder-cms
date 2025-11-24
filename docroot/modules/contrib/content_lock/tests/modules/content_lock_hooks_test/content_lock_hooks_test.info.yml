@@ -1,0 +1,11 @@
+name: 'Content lock hooks tests'
+type: module
+description: 'Provides test support for content_lock hooks.'
+package: Testing
+dependencies:
+  - content_lock:content_lock
+
+# Information added by Drupal.org packaging script on 2024-05-15
+version: '8.x-2.4'
+project: 'content_lock'
+datestamp: 1715783061

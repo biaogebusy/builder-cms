@@ -10,7 +10,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormState;
 use Drupal\entity_browser\Ajax\ValueUpdatedCommand;
-use Symfony\Component\HttpFoundation\ParameterBag;
+use Symfony\Component\HttpFoundation\InputBag;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -39,7 +39,7 @@ class EntityBrowserController extends ControllerBase {
       // Remove posted values from original form to prevent
       // data leakage into this form when the form is of the same bundle.
       $original_request = $request->request;
-      $request->request = new ParameterBag();
+      $request->request = new InputBag();
     }
 
     // Use edit form class if it exists, otherwise use default form class.

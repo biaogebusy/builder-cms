@@ -2,6 +2,7 @@
 
 namespace Drupal\metatag\Plugin\migrate\process\d6;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\migrate\MigrateException;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\ProcessPluginBase;
@@ -38,7 +39,10 @@ class NodewordsEntities extends ProcessPluginBase {
 
     // Re-shape D6 entries into for D8 entries.
     $old_tags = array_map(static function ($value) {
-      return unserialize($value, ['allowed_classes' => FALSE]);
+      // Shouldn't need to hide the errors, but this started to fail despite
+      // no relevant code changes.
+      // @todo Is there a better way of handling this?
+      return @unserialize($value, ['allowed_classes' => FALSE]);
     }, $value);
 
     foreach ($old_tags as $d6_metatag_name => $metatag_value) {
@@ -82,7 +86,7 @@ class NodewordsEntities extends ProcessPluginBase {
     // Sort the meta tags alphabetically to make testing easier.
     ksort($metatags);
 
-    return serialize($metatags);
+    return Json::encode($metatags);
   }
 
   /**
@@ -91,13 +95,12 @@ class NodewordsEntities extends ProcessPluginBase {
    * @return array
    *   An array of D6 tags to their D8 counterparts.
    */
-  public function tagsMap() {
+  public function tagsMap(): array {
     $map = [
       // From the main Metatag module.
       'abstract' => 'abstract',
       'cache-control' => 'cache_control',
       'canonical' => 'canonical_url',
-      'content-language' => 'content_language',
       'description' => 'description',
       'expires' => 'expires',
       'generator' => 'generator',
@@ -107,7 +110,6 @@ class NodewordsEntities extends ProcessPluginBase {
       'icbm' => 'icbm',
       'image_src' => 'image_src',
       'keywords' => 'keywords',
-      'news_keywords' => 'news_keywords',
       'next' => 'next',
       'original-source' => 'original_source',
       'page_title' => 'title',
@@ -121,7 +123,6 @@ class NodewordsEntities extends ProcessPluginBase {
       'robots' => 'robots',
       'set_cookie' => 'set_cookie',
       'shortlink' => 'shortlink',
-      'standout' => 'standout',
       'syndication-source' => 'original_source',
       'title' => 'title',
 
@@ -247,14 +248,6 @@ class NodewordsEntities extends ProcessPluginBase {
       'google_rating' => 'google_rating',
       'thumbnail' => 'thumbnail',
 
-      // From metatag_google_plus.metatag.inc; not doing these, Google+ closed.
-      'itemtype' => '',
-      'itemprop:name' => '',
-      'itemprop:description' => '',
-      'itemprop:image' => '',
-      'author' => '',
-      'publisher' => '',
-
       // From metatag_hreflang.metatag.inc:
       'hreflang_xdefault' => 'hreflang_xdefault',
       // @todo https://www.drupal.org/project/metatag/issues/3077778
@@ -357,7 +350,6 @@ class NodewordsEntities extends ProcessPluginBase {
       // @todo 'video:series' => '',
       // @todo 'video:tag' => '',
       // @todo 'video:writer' => '',
-
       // From metatag_opengraph_products.metatag.inc:
       // https://www.drupal.org/project/metatag/issues/2835925
       'product:price:amount' => 'product_price_amount',
@@ -386,7 +378,6 @@ class NodewordsEntities extends ProcessPluginBase {
       // @todo 'product:shipping_weight:units' => '',
       // @todo 'product:expiration_time' => '',
       // @todo 'product:condition' => '',
-
       // Pinterest.
       // @todo '' => 'pinterest_id',
       // @todo '' => 'pinterest_description',
@@ -395,7 +386,6 @@ class NodewordsEntities extends ProcessPluginBase {
       // @todo '' => 'pinterest_media',
       // @todo '' => 'pinterest_nopin',
       // @todo '' => 'pinterest_nosearch',
-
       // From metatag_twitter_cards.metatag.inc:
       'twitter:app:country' => 'twitter_cards_app_store_country',
       'twitter:app:id:googleplay' => 'twitter_cards_app_id_googleplay',

@@ -102,7 +102,7 @@ abstract class EntityShareServerFunctionalTestBase extends BrowserTestBase {
   protected function getAuthenticationRequestOptions(AccountInterface $account) {
     return [
       RequestOptions::HEADERS => [
-        'Authorization' => 'Basic ' . base64_encode($account->getAccountName() . ':' . $account->passRaw),
+        'Authorization' => 'Basic ' . \base64_encode($account->getAccountName() . ':' . $account->passRaw),
       ],
     ];
   }

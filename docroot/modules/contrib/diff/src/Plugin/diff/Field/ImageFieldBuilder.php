@@ -1,48 +1,51 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\diff\Plugin\diff\Field;
 
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\diff\Attribute\FieldDiffBuilder;
 use Drupal\diff\FieldDiffBuilderBase;
+use Drupal\file\FileInterface;
 
 /**
  * Plugin to diff image fields.
- *
- * @FieldDiffBuilder(
- *   id = "image_field_diff_builder",
- *   label = @Translation("Image Field Diff"),
- *   field_types = {
- *     "image"
- *   },
- * )
  */
+#[FieldDiffBuilder(
+  id: 'image_field_diff_builder',
+  label: new TranslatableMarkup('Image Field Diff'),
+  field_types: ['image'],
+)]
 class ImageFieldBuilder extends FieldDiffBuilderBase {
 
   /**
    * {@inheritdoc}
    */
-  public function build(FieldItemListInterface $field_items) {
+  public function build(FieldItemListInterface $field_items): array {
     $result = [];
     $fileManager = $this->entityTypeManager->getStorage('file');
     // Every item from $field_items is of type FieldItemInterface.
     foreach ($field_items as $field_key => $field_item) {
       if (!$field_item->isEmpty()) {
+        $item_data = [];
         $values = $field_item->getValue();
 
         // Compare file names.
         if (isset($values['target_id'])) {
-          /** @var \Drupal\file\Entity\File $image */
+          /** @var \Drupal\file\Entity\File|null $image */
           $image = $fileManager->load($values['target_id']);
-          $result[$field_key][] = $this->t('Image: @image', [
-            '@image' => $image->getFilename(),
+          $item_data[] = (string) $this->t('Image: @image', [
+            '@image' => $image?->getFilename() ?? 'deleted',
           ]);
         }
 
         // Compare Alt fields.
         if ($this->configuration['compare_alt_field']) {
           if (isset($values['alt'])) {
-            $result[$field_key][] = $this->t('Alt: @alt', [
+            $item_data[] = (string) $this->t('Alt: @alt', [
               '@alt' => $values['alt'],
             ]);
           }
@@ -51,7 +54,7 @@ class ImageFieldBuilder extends FieldDiffBuilderBase {
         // Compare Title fields.
         if ($this->configuration['compare_title_field']) {
           if (!empty($values['title'])) {
-            $result[$field_key][] = $this->t('Title: @title', [
+            $item_data[] = (string) $this->t('Title: @title', [
               '@title' => $values['title'],
             ]);
           }
@@ -60,14 +63,11 @@ class ImageFieldBuilder extends FieldDiffBuilderBase {
         // Compare file id.
         if ($this->configuration['show_id']) {
           if (isset($values['target_id'])) {
-            $result[$field_key][] = $this->t('File ID: @fid', [
+            $item_data[] = (string) $this->t('File ID: @fid', [
               '@fid' => $values['target_id'],
             ]);
           }
         }
-
-        $separator = $this->configuration['property_separator'] == 'nl' ? "\n" : $this->configuration['property_separator'];
-        $result[$field_key] = implode($separator, $result[$field_key]);
 
         // EXPERIMENTAL: Attach thumbnail image data.
         if ($this->configuration['show_thumbnail']) {
@@ -76,15 +76,25 @@ class ImageFieldBuilder extends FieldDiffBuilderBase {
             $display = $storage->load($field_items->getFieldDefinition()->getTargetEntityTypeId() . '.' . $field_items->getEntity()->bundle() . '.default');
             if ($image_field = $display->getComponent($field_item->getFieldDefinition()->getName())) {
               $image = $fileManager->load($values['target_id']);
-
-              $image_style[$field_key]['#thumbnail'] = [
-                '#theme' => 'image_style',
-                '#uri' => $image->getFileUri(),
-                '#style_name' => $image_field['settings']['preview_image_style'],
-              ];
-              $result = array_merge($result, $image_style);
+              if ($image instanceof FileInterface) {
+                $thumbnail = [
+                  '#theme' => 'image_style',
+                  '#uri' => $image->getFileUri(),
+                  '#style_name' => $image_field['settings']['preview_image_style'],
+                ];
+              }
             }
           }
+        }
+
+        $separator = $this->configuration['property_separator'] == 'nl' ? "\n" : $this->configuration['property_separator'];
+        $properties = \implode($separator, $item_data);
+        if (isset($thumbnail)) {
+          $result[$field_key]['#thumbnail'] = $thumbnail;
+          $result[$field_key]['data'] = $properties;
+        }
+        else {
+          $result[$field_key] = $properties;
         }
       }
     }
@@ -95,7 +105,7 @@ class ImageFieldBuilder extends FieldDiffBuilderBase {
   /**
    * {@inheritdoc}
    */
-  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
     $form['show_id'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Show image ID'),
@@ -138,7 +148,7 @@ class ImageFieldBuilder extends FieldDiffBuilderBase {
   /**
    * {@inheritdoc}
    */
-  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
+  public function submitConfigurationForm(array &$form, FormStateInterface $form_state): void {
     $this->configuration['show_id'] = $form_state->getValue('show_id');
     $this->configuration['compare_alt_field'] = $form_state->getValue('compare_alt_field');
     $this->configuration['compare_title_field'] = $form_state->getValue('compare_title_field');
@@ -151,7 +161,7 @@ class ImageFieldBuilder extends FieldDiffBuilderBase {
   /**
    * {@inheritdoc}
    */
-  public function defaultConfiguration() {
+  public function defaultConfiguration(): array {
     $default_configuration = [
       'show_id' => 0,
       'compare_alt_field' => 1,

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\options\Kernel;
 
 use Drupal\Core\Entity\Exception\FieldStorageDefinitionUpdateForbiddenException;
@@ -15,16 +17,14 @@ use Drupal\field\Entity\FieldStorageConfig;
 class OptionsFieldTest extends OptionsFieldUnitTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['options'];
 
   /**
    * Tests that allowed values can be updated.
    */
-  public function testUpdateAllowedValues() {
+  public function testUpdateAllowedValues(): void {
     // All three options appear.
     $entity = EntityTest::create();
     $form = \Drupal::service('entity.form_builder')->getForm($entity);
@@ -101,7 +101,7 @@ class OptionsFieldTest extends OptionsFieldUnitTestBase {
   /**
    * Tests that ::generateSampleItems does not fail with empty allowed values.
    */
-  public function testGenerateSampleItemsWithNoAllowedValues() {
+  public function testGenerateSampleItemsWithNoAllowedValues(): void {
     $this->fieldStorage->setSetting('allowed_values', [])->save();
     $entity = EntityTest::create();
     $value = $entity->{$this->fieldName}->generateSampleItems();

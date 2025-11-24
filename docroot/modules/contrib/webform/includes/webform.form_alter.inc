@@ -32,7 +32,8 @@ function webform_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   }
 
   // Display editing original language warning.
-  if (\Drupal::moduleHandler()->moduleExists('config_translation') && preg_match('/^entity.webform.(?:edit|settings|assets|access|handlers|third_party_settings)_form$/', \Drupal::routeMatch()->getRouteName())) {
+  if (\Drupal::moduleHandler()->moduleExists('config_translation')
+    && preg_match('/^entity.webform.(?:edit|settings|assets|access|handlers|third_party_settings)_form$/', \Drupal::routeMatch()->getRouteName() ?? '')) {
     /** @var \Drupal\webform\WebformInterface $webform */
     $webform = \Drupal::routeMatch()->getParameter('webform');
     /** @var \Drupal\Core\Language\LanguageManagerInterface $language_manager */

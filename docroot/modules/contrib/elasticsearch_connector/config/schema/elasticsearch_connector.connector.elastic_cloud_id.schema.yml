@@ -1,0 +1,13 @@
+plugin.plugin_configuration.elasticsearch_connector.elastic_cloud_id:
+  type: config_object
+  label: 'Elasticsearch Elastic Cloud connector settings'
+  mapping:
+    api_key_id:
+      type: string
+      label: 'Elastic Cloud API key ID'
+    elastic_cloud_id:
+      type: string
+      label: 'Elastic Cloud ID'
+    enable_debug_logging:
+      type: boolean
+      label: 'Enable debugging mode: log ElasticSearch network traffic'

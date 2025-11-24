@@ -11,8 +11,13 @@ use Drupal\Core\Form\FormStateInterface;
  * @FieldType(
  *   id = "range_float",
  *   label = @Translation("Range (float)"),
- *   description = @Translation("This field stores a float range in the database."),
- *   category = @Translation("Numeric range"),
+ *   description = {
+ *     @Translation("In most instances, it is best to use Range (decimal) instead, as decimal numbers stored as floats may contain errors in precision"),
+ *     @Translation("This type of field offers faster processing and more compact storage, but the differences are typically negligible on modern sites"),
+ *     @Translation("For example, 123.4-128.9 (should be used in imprecise contexts such as a walking trail distance)"),
+ *   },
+ *   category = "range",
+ *   weight = -10,
  *   default_widget = "range",
  *   default_formatter = "range_decimal",
  *   constraints = {"RangeBothValuesRequired" = {}, "RangeFromGreaterTo" = {}}

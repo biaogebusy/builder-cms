@@ -5,13 +5,13 @@ jsonapi.settings:
   title: 'Settings'
   parent: system.admin_config_services
 
-# Define a "JSON:API Extras tab" to contain all of its subtabs.
+# Define a "JSON:API Extras tab" to contain all of its sub tabs.
 jsonapi.settings.extras:
   route_name: jsonapi_extras.settings
   base_route: jsonapi.settings
   title: 'JSON:API Extras'
 
-# The two subtabs.
+# The two sub tabs.
 jsonapi.settings.extras.settings:
   route_name: jsonapi_extras.settings
   base_route: jsonapi_extras.settings

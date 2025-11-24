@@ -1,0 +1,9 @@
+status: true
+id: commerce_order_unlock
+dependencies:
+  module:
+    - commerce_order
+label: 'Unlock order'
+type: commerce_order
+plugin: commerce_order_unlock
+configuration: {  }

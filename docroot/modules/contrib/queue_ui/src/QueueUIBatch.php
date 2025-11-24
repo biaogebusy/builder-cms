@@ -5,14 +5,17 @@ namespace Drupal\queue_ui;
 use Drupal\Core\Batch\BatchBuilder;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Queue\DelayableQueueInterface;
 use Drupal\Core\Queue\DelayedRequeueException;
+use Drupal\Core\Queue\QueueGarbageCollectionInterface;
 use Drupal\Core\Queue\QueueWorkerManagerInterface;
 use Drupal\Core\Queue\RequeueException;
 use Drupal\Core\Queue\SuspendQueueException;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\Utility\Error;
 
 /**
  * Batch controller to process a queue.
@@ -27,59 +30,42 @@ class QueueUIBatch implements QueueUIBatchInterface {
   use DependencySerializationTrait;
 
   /**
-   * Module handler.
-   *
-   * @var \Drupal\Core\Extension\ModuleHandlerInterface
-   */
-  protected $moduleHandler;
-
-  /**
-   * Queue Manager.
-   *
-   * @var \Drupal\Core\Queue\QueueWorkerManagerInterface
-   */
-  protected $queueManager;
-
-  /**
-   * Messenger.
-   *
-   * @var \Drupal\Core\Messenger\MessengerInterface
-   */
-  protected $messenger;
-
-  /**
-   * Queue factory.
-   *
-   * @var \Drupal\Core\Queue\QueueFactory
-   */
-  private $queueFactory;
-
-  /**
    * Constructor of the Queue UI Batch service.
    *
-   * @param \Drupal\Core\Queue\QueueWorkerManagerInterface $queue_manager
+   * @param \Drupal\Core\Queue\QueueWorkerManagerInterface $queueManager
    *   Queue manager.
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $moduleHandler
    *   Module handler.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   Messenger.
-   * @param mixed|\Drupal\Core\Queue\QueueFactory $queue_factory
+   * @param mixed|\Drupal\Core\Queue\QueueFactory $queueFactory
    *   Queue factory.
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger
+   *   The logger channel factory.
    */
-  public function __construct(QueueWorkerManagerInterface $queue_manager, ModuleHandlerInterface $module_handler, MessengerInterface $messenger, $queue_factory) {
-    $this->queueManager = $queue_manager;
-    $this->moduleHandler = $module_handler;
-    $this->messenger = $messenger;
-    $this->queueFactory = $queue_factory;
+  public function __construct(
+    protected QueueWorkerManagerInterface $queueManager,
+    protected ModuleHandlerInterface $moduleHandler,
+    protected MessengerInterface $messenger,
+    protected mixed $queueFactory,
+    protected ?LoggerChannelFactoryInterface $logger = NULL,
+  ) {
+    if (is_null($logger)) {
+      @trigger_error('Calling ' . __METHOD__ . '() without the $logger argument is deprecated in queue_ui:3.2.0 and will be required in queue_ui:4.0.0. See https://www.drupal.org/node/3482168', E_USER_DEPRECATED);
+
+      // @phpstan-ignore-next-line
+      $this->logger = \Drupal::service('logger.factory');
+    }
   }
 
   /**
    * {@inheritdoc}
    */
-  public function batch(array $queues) {
+  public function batch(array $queues): void {
     $batch = (new BatchBuilder())
       ->setTitle($this->t('Processing queues'))
-      ->setFinishCallback([$this, 'finish']);
+      ->setFinishCallback([$this, 'finish'])
+      ->setProgressMessage('Elapsed time: @elapsed. Estimated time to complete: @estimate.');
     foreach ($queues as $queue_name) {
       $batch->addOperation([$this, 'step'], [$queue_name]);
     }
@@ -89,13 +75,21 @@ class QueueUIBatch implements QueueUIBatchInterface {
   /**
    * {@inheritdoc}
    */
-  public function step(string $queueName, &$context) {
+  public function step(string $queue_name, array &$context): void {
     // Make sure every queue exists. There is no harm in trying to recreate
     // an existing queue.
-    $info = $this->queueManager->getDefinition($queueName);
-    $this->queueFactory->get($queueName)->createQueue();
-    $queue_worker = $this->queueManager->createInstance($queueName);
-    $queue = $this->queueFactory->get($queueName);
+    $info = $this->queueManager->getDefinition($queue_name);
+    $this->queueFactory->get($queue_name)->createQueue();
+    $queue_worker = $this->queueManager->createInstance($queue_name);
+    $queue = $this->queueFactory->get($queue_name);
+
+    // Run garbage collection only on the first step.
+    if (!isset($context['sandbox']['queue_ui_gc_done'])) {
+      if ($queue instanceof QueueGarbageCollectionInterface) {
+        $queue->garbageCollection();
+      }
+      $context['sandbox']['queue_ui_gc_done'] = TRUE;
+    }
 
     $num_of_items = $queue->numberOfItems();
     if (!array_key_exists('num_of_total_items', $context['sandbox'])
@@ -155,7 +149,7 @@ class QueueUIBatch implements QueueUIBatchInterface {
         $queue->releaseItem($item);
       }
 
-      watchdog_exception('queue_ui', $e);
+      Error::logException($this->logger->get('queue_ui'), $e);
       $context['results']['errors'][] = $e->getMessage();
 
       // Marking the batch job as finished will stop further processing.
@@ -164,7 +158,7 @@ class QueueUIBatch implements QueueUIBatchInterface {
     catch (\Exception $e) {
       // In case of any other kind of exception, log it and leave the item
       // in the queue to be processed again later.
-      watchdog_exception('queue_ui', $e);
+      Error::logException($this->logger->get('queue_ui'), $e);
       $context['results']['errors'][] = $e->getMessage();
     }
   }
@@ -172,7 +166,7 @@ class QueueUIBatch implements QueueUIBatchInterface {
   /**
    * {@inheritdoc}
    */
-  public function finish(bool $success, array $results, array $operations) {
+  public function finish(bool $success, array $results, array $operations): void {
     // Display success of no results.
     if (!empty($results['processed'])) {
       $this->messenger->addMessage(

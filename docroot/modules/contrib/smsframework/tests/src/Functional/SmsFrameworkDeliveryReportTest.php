@@ -30,15 +30,15 @@ final class SmsFrameworkDeliveryReportTest extends SmsFrameworkBrowserTestBase {
     $sms_messages = $this->defaultSmsProvider->send($sms_message);
 
     $result = $sms_messages[0]->getResult();
-    $this->assertTrue($result instanceof SmsMessageResultInterface);
-    $this->assertCount(count($sms_message->getRecipients()), $result->getReports());
+    static::assertTrue($result instanceof SmsMessageResultInterface);
+    static::assertCount(count($sms_message->getRecipients()), $result->getReports());
     $reports = $result->getReports();
 
     /** @var \Drupal\sms\Message\SmsDeliveryReportInterface $first_report */
     $first_report = reset($reports);
     $message_id = $first_report->getMessageId();
-    $this->assertTrue($first_report instanceof SmsDeliveryReportInterface);
-    $this->assertEquals($first_report->getStatus(), SmsMessageReportStatus::QUEUED);
+    static::assertTrue($first_report instanceof SmsDeliveryReportInterface);
+    static::assertEquals($first_report->getStatus(), SmsMessageReportStatus::QUEUED);
 
     // Get the delivery reports url and simulate push delivery report.
     $url = $test_gateway->getPushReportUrl()->setAbsolute()->toString();
@@ -64,10 +64,10 @@ EOF;
 
     // Get the stored report and verify that it was properly parsed.
     $second_report = $this->getTestMessageReport($message_id, $test_gateway);
-    $this->assertTrue($second_report instanceof SmsDeliveryReportInterface);
-    $this->assertEquals("status message", $second_report->getStatusMessage());
-    $this->assertEquals($delivered_time, $second_report->getTimeDelivered());
-    $this->assertEquals($message_id, $second_report->getMessageId());
+    static::assertTrue($second_report instanceof SmsDeliveryReportInterface);
+    static::assertEquals("status message", $second_report->getStatusMessage());
+    static::assertEquals($delivered_time, $second_report->getTimeDelivered());
+    static::assertEquals($message_id, $second_report->getMessageId());
   }
 
 }

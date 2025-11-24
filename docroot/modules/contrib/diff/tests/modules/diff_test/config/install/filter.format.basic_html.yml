@@ -1,5 +1,5 @@
 format: basic_html
-name: 'Basic HTML'
+name: "Basic HTML"
 status: true
 weight: 0
 roles:
@@ -11,7 +11,7 @@ filters:
     status: true
     weight: -10
     settings:
-      allowed_html: '<a> <em> <strong> <cite> <blockquote> <code> <ul> <ol> <li> <dl> <dt> <dd> <h4> <h5> <h6> <p> <br> <span> <img>'
+      allowed_html: "<a> <em> <strong> <cite> <blockquote> <code> <ul> <ol> <li> <dl> <dt> <dd> <h4> <h5> <h6> <p> <br> <span> <img>"
       filter_html_help: false
       filter_html_nofollow: false
   filter_align:
@@ -19,31 +19,31 @@ filters:
     provider: filter
     status: true
     weight: 7
-    settings: {  }
+    settings: {}
   filter_caption:
     id: filter_caption
     provider: filter
     status: true
     weight: 8
-    settings: {  }
+    settings: {}
   filter_html_image_secure:
     id: filter_html_image_secure
     provider: filter
     status: true
     weight: 9
-    settings: {  }
+    settings: {}
   filter_htmlcorrector:
     id: filter_htmlcorrector
     provider: filter
     status: true
     weight: 10
-    settings: {  }
+    settings: {}
   editor_file_reference:
     id: editor_file_reference
     provider: editor
     status: true
     weight: 11
-    settings: {  }
+    settings: {}
 langcode: en
 dependencies:
   module:

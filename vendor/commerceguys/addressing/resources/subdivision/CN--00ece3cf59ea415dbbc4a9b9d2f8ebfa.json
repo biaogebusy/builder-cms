@@ -1,0 +1,71 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"TW",
+		"Yunlin County"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Baozhong Township": {
+			"local_name": "褒忠鄉"
+		},
+		"Beigang Township": {
+			"local_name": "北港鎮"
+		},
+		"Citong Township": {
+			"local_name": "莿桐鄉"
+		},
+		"Dapi Township": {
+			"local_name": "大埤鄉"
+		},
+		"Dongshi Township": {
+			"local_name": "東勢鄉"
+		},
+		"Douliu City": {
+			"local_name": "斗六市"
+		},
+		"Dounan Township": {
+			"local_name": "斗南鎮"
+		},
+		"Erlun Township": {
+			"local_name": "二崙鄉"
+		},
+		"Gukeng Township": {
+			"local_name": "古坑鄉"
+		},
+		"Huwei Township": {
+			"local_name": "虎尾鎮"
+		},
+		"Kouhu Township": {
+			"local_name": "口湖鄉"
+		},
+		"Linnei Township": {
+			"local_name": "林內鄉"
+		},
+		"Lunbei Township": {
+			"local_name": "崙背鄉"
+		},
+		"Mailiao Township": {
+			"local_name": "麥寮鄉"
+		},
+		"Shuilin Township": {
+			"local_name": "水林鄉"
+		},
+		"Sihu Township": {
+			"local_name": "四湖鄉"
+		},
+		"Taixi Township": {
+			"local_name": "台西鄉"
+		},
+		"Tuku Township": {
+			"local_name": "土庫鎮"
+		},
+		"Xiluo Township": {
+			"local_name": "西螺鎮"
+		},
+		"Yuanchang Township": {
+			"local_name": "元長鄉"
+		}
+	}
+}

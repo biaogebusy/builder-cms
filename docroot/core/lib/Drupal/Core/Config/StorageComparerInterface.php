@@ -32,6 +32,17 @@ interface StorageComparerInterface {
   public function getTargetStorage($collection = StorageInterface::DEFAULT_COLLECTION);
 
   /**
+   * Changes the StorageComparer to write mode.
+   *
+   * Tells the StorageComparer that the target storage is going to be used for
+   * writing. This information allows implementations to optimize caching
+   * strategies for reading from or writing to the target storage.
+   *
+   * @return $this
+   */
+  public function writeMode(): static;
+
+  /**
    * Gets an empty changelist.
    *
    * @return array
@@ -53,6 +64,14 @@ interface StorageComparerInterface {
    *   An array of config changes that are yet to be imported.
    */
   public function getChangelist($op = NULL, $collection = StorageInterface::DEFAULT_COLLECTION);
+
+  /**
+   * Calculates the differences.
+   *
+   * @return $this
+   *   An object which implements the StorageComparerInterface.
+   */
+  public function createChangelist();
 
   /**
    * Recalculates the differences.

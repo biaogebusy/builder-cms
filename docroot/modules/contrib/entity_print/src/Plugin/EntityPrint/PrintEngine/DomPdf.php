@@ -5,6 +5,7 @@ namespace Drupal\entity_print\Plugin\EntityPrint\PrintEngine;
 use Dompdf\Dompdf as DompdfLib;
 use Dompdf\Exception as DompdfLibException;
 use Dompdf\Options as DompdfLibOptions;
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\entity_print\Plugin\ExportTypeInterface;
@@ -12,6 +13,7 @@ use Drupal\entity_print\PrintEngineException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Dompdf\Adapter\CPDF;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 /**
  * A Entity Print plugin for the DomPdf library.
@@ -69,20 +71,26 @@ class DomPdf extends PdfEngineBase implements ContainerFactoryPluginInterface {
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, ExportTypeInterface $export_type, Request $request) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, ExportTypeInterface $export_type, Request $request, FileSystemInterface $file_system, SessionInterface $session) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $export_type);
 
+    // Ensure request includes the session (eg running in CLI).
+    if (!$request->hasSession()) {
+      $request->setSession($session);
+    }
     $this->request = $request;
 
     $this->dompdfOptions = new DompdfLibOptions($this->configuration);
 
-    $this->dompdfOptions->setTempDir(\Drupal::service('file_system')->getTempDirectory());
-    $this->dompdfOptions->setFontCache(\Drupal::service('file_system')->getTempDirectory());
-    $this->dompdfOptions->setFontDir(\Drupal::service('file_system')->getTempDirectory());
-    $this->dompdfOptions->setLogOutputFile(\Drupal::service('file_system')->getTempDirectory() . DIRECTORY_SEPARATOR . self::LOG_FILE_NAME);
+    $temp_dir = $file_system->getTempDirectory();
+    $this->dompdfOptions->setTempDir($temp_dir);
+    $this->dompdfOptions->setFontCache($temp_dir);
+    $this->dompdfOptions->setFontDir($temp_dir);
+    $this->dompdfOptions->setLogOutputFile($temp_dir . DIRECTORY_SEPARATOR . self::LOG_FILE_NAME);
     $this->dompdfOptions->setIsRemoteEnabled($this->configuration['enable_remote']);
     $this->dompdfOptions->setIsFontSubsettingEnabled($this->configuration['font_subsetting']);
     $this->dompdfOptions->setIsPhpEnabled($this->configuration['embedded_php']);
+    $this->dompdfOptions->setDpi($this->configuration['dpi']);
 
     $this->dompdf = new DompdfLib($this->dompdfOptions);
     if ($this->configuration['disable_log']) {
@@ -103,7 +111,9 @@ class DomPdf extends PdfEngineBase implements ContainerFactoryPluginInterface {
       $plugin_id,
       $plugin_definition,
       $container->get('plugin.manager.entity_print.export_type')->createInstance($plugin_definition['export_type']),
-      $container->get('request_stack')->getCurrentRequest()
+      $container->get('request_stack')->getCurrentRequest(),
+      $container->get('file_system'),
+      $container->get('session'),
     );
   }
 
@@ -204,6 +214,8 @@ class DomPdf extends PdfEngineBase implements ContainerFactoryPluginInterface {
     // entire document.
     $this->html .= (string) $content;
     $this->dompdf->loadHtml($this->html);
+
+    return $this;
   }
 
   /**
@@ -282,8 +294,8 @@ class DomPdf extends PdfEngineBase implements ContainerFactoryPluginInterface {
     // Without the cookie header, the request will be redirect to
     // the site's login page.
     // See \DomPdf\Image\Cache::resolve_url for details.
-    $session = $this->request->getSession();
-    if ($session) {
+    if ($this->request->hasSession()) {
+      $session = $this->request->getSession();
       $cookie = 'Cookie: ' . $session->getName() . '=' . $session->getId();
       $context_options['http']['header'][] = $cookie;
     }

@@ -2,11 +2,10 @@
 
 namespace Drupal\Tests\eck\Functional;
 
+use Behat\Mink\Element\NodeElement;
 use Drupal\Core\Url;
-use Drupal\eck\Entity\EckEntityType;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\Tests\BrowserTestBase;
 
 /**
  * Test Entity Construction Kit's navigational structure.
@@ -15,12 +14,12 @@ use Drupal\Tests\BrowserTestBase;
  *
  * @group eck
  */
-class NavigationalStructureTest extends BrowserTestBase {
+class NavigationalStructureTest extends FunctionalTestBase {
 
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['eck', 'block', 'field'];
+  protected static $modules = ['system', 'node', 'block', 'field'];
 
   /**
    * The base breadcrumb labels.
@@ -60,7 +59,12 @@ class NavigationalStructureTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected $defaultTheme = 'classy';
+  protected function getAdministratorPermissions() {
+    return array_merge([
+      'access administration pages',
+      'access content overview',
+    ], parent::getAdministratorPermissions());
+  }
 
   /**
    * {@inheritdoc}
@@ -69,69 +73,19 @@ class NavigationalStructureTest extends BrowserTestBase {
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function setUp() {
+  public function setUp(): void {
     parent::setUp();
-    $user = $this->drupalCreateUser([
-      'administer eck entities',
-      'administer eck entity bundles',
-      'administer eck entity types',
-      'bypass eck entity access',
-      'access administration pages',
-    ]);
-    $this->drupalLogin($user);
 
-    $this->entityTypeMachineName = strtolower($this->randomMachineName());
-    $this->entityTypeLabel = strtolower($this->randomMachineName());
-    $this->createEntityType($this->entityTypeMachineName, $this->entityTypeLabel);
+    $entity_type = $this->createEntityType();
+    $this->entityTypeMachineName = $entity_type['id'];
+    $this->entityTypeLabel = $entity_type['label'];
 
-    $this->entityBundleMachineName = strtolower($this->randomMachineName());
-    $this->entityBundleLabel = strtolower($this->entityBundleMachineName);
-    $this->createEntityBundle($this->entityTypeMachineName, $this->entityBundleMachineName, $this->entityBundleLabel);
+    $bundle = $this->createEntityBundle($this->entityTypeMachineName);
+    $this->entityBundleMachineName = $bundle['type'];
+    $this->entityBundleLabel = $bundle['name'];
 
     $this->placeBlock('system_breadcrumb_block');
     $this->placeBlock('page_title_block');
-  }
-
-  /**
-   * Creates an entity type.
-   *
-   * @param string $entityTypeId
-   *   The entity type id.
-   * @param string $entityTypeLabel
-   *   The entity type label.
-   *
-   * @throws \Drupal\Core\Entity\EntityStorageException
-   */
-  protected function createEntityType($entityTypeId, $entityTypeLabel) {
-    $entityType = EckEntityType::create([
-      'id' => $entityTypeId,
-      'label' => $entityTypeLabel,
-    ]);
-    $entityType->save();
-  }
-
-  /**
-   * Creates a bundle on an entity type.
-   *
-   * @param string $entityTypeId
-   *   The id of the entity type to add the bundle to.
-   * @param string $entityBundleMachineName
-   *   The machine name of the bundle to create.
-   * @param string $entityBundleName
-   *   The label of the bundle to create.
-   *
-   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
-   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
-   * @throws \Drupal\Core\Entity\EntityStorageException
-   */
-  protected function createEntityBundle($entityTypeId, $entityBundleMachineName, $entityBundleName) {
-    $entityBundle = \Drupal::entityTypeManager()
-      ->getStorage($entityTypeId . '_type')
-      ->create([
-        'type' => $entityBundleMachineName,
-        'name' => $entityBundleName,
-      ]);
-    $entityBundle->save();
   }
 
   /**
@@ -181,7 +135,8 @@ class NavigationalStructureTest extends BrowserTestBase {
     $titleElement = $this->getSession()
       ->getPage()
       ->find('css', '.page-title');
-    $this->assertEquals($expectedTitle, $titleElement->getText());
+    $actualTitle = $titleElement instanceof NodeElement ? $titleElement->getText() : '';
+    $this->assertEquals($expectedTitle, $actualTitle);
   }
 
   /**
@@ -284,10 +239,9 @@ class NavigationalStructureTest extends BrowserTestBase {
    * @throws \Behat\Mink\Exception\ResponseTextException
    */
   public function entityTypeDeleteWithMultipleBundles() {
-    $additional_bundle_name = strtolower($this->randomMachineName());
-    $additional_bundle_label = strtolower($this->randomMachineName());
     // Create a randomly named bundle.
-    $this->createEntityBundle($this->entityTypeMachineName, $additional_bundle_name, $additional_bundle_label);
+    $extra_bundle = $this->createEntityBundle($this->entityTypeMachineName);
+    $extra_bundle_label = $extra_bundle['name'];
 
     $route = 'entity.eck_entity_type.delete_form';
     $routeArguments = ['eck_entity_type' => $this->entityTypeMachineName];
@@ -302,7 +256,7 @@ class NavigationalStructureTest extends BrowserTestBase {
     $this->assertCorrectPageOnRoute($route, $routeArguments, $expectedUrl, $expectedTitle, $crumbs);
 
     $this->assertSession()->pageTextContains("Configuration deletions The listed configuration will be deleted.{$this->entityTypeLabel} type");
-    $this->assertSession()->pageTextContains($additional_bundle_label);
+    $this->assertSession()->pageTextContains($extra_bundle_label);
     $this->assertSession()->pageTextContains($this->entityBundleLabel);
   }
 
@@ -318,15 +272,14 @@ class NavigationalStructureTest extends BrowserTestBase {
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function entityTypeDeleteWithMatchingBundle() {
-    $this->createEntityBundle($this->entityTypeMachineName, $this->entityTypeMachineName, $this->entityTypeLabel);
+    $this->createEntityBundle($this->entityTypeMachineName, $this->entityTypeLabel);
+    $this->entityBundleMachineName = $this->entityTypeMachineName;
+    $this->entityBundleLabel = $this->entityTypeLabel;
 
     \Drupal::entityTypeManager()
       ->getStorage($this->entityTypeMachineName . '_type')
       ->load($this->entityBundleMachineName)
       ->delete();
-
-    $this->entityBundleMachineName = $this->entityTypeMachineName;
-    $this->entityBundleLabel = $this->entityTypeLabel;
 
     $route = 'entity.eck_entity_type.delete_form';
     $routeArguments = ['eck_entity_type' => $this->entityTypeMachineName];
@@ -378,7 +331,7 @@ class NavigationalStructureTest extends BrowserTestBase {
     // Create a bundle with matching name.
     $this->entityBundleMachineName = $this->entityTypeMachineName;
     $this->entityBundleLabel = $this->entityTypeLabel;
-    $this->createEntityBundle($this->entityTypeMachineName, $this->entityBundleMachineName, $this->entityBundleLabel);
+    $this->createEntityBundle($this->entityTypeMachineName, $this->entityBundleLabel);
 
     FieldStorageConfig::create([
       'entity_type' => $this->entityTypeMachineName,
@@ -407,15 +360,13 @@ class NavigationalStructureTest extends BrowserTestBase {
 
     // Delete the entity.
     $this->submitForm([], 'Delete entity type');
+    $this->assertSession()->responseContains('The eck entity type <em class="placeholder">' . $this->entityTypeLabel . '</em> has been deleted.');
 
-    $this->assertSession()->statusCodeEquals(200);
+    // Try to load the deleted entity type definition.
+    $entity_type = \Drupal::entityTypeManager()->clearCachedDefinitions();
+    \Drupal::entityTypeManager()->getDefinition($this->entityTypeMachineName, FALSE);
 
-    // Try to load the deleted entity.
-    $entity_type = \Drupal::entityTypeManager()
-      ->getStorage($this->entityTypeMachineName)
-      ->load($this->entityTypeMachineName);
-
-    // Make sure the entity is deleted.
+    // Make sure the entity type is deleted.
     $this->assertNull($entity_type);
 
     $this->entityTypeList();
@@ -510,7 +461,7 @@ class NavigationalStructureTest extends BrowserTestBase {
     $route = 'eck.entity.add_page';
     $routeArguments = ['eck_entity_type' => $this->entityTypeMachineName];
     $expectedUrl = "admin/content/{$this->entityTypeMachineName}/add";
-    $expectedTitle = "Add " . $this->entityTypeLabel . " content";
+    $expectedTitle = "Add {$this->entityTypeLabel} content";
     $crumbs = [
       'Content',
       ucfirst("{$this->entityTypeLabel} content"),
@@ -531,7 +482,7 @@ class NavigationalStructureTest extends BrowserTestBase {
       'eck_entity_bundle' => $this->entityBundleMachineName,
     ];
     $expectedUrl = "admin/content/{$this->entityTypeMachineName}/add/{$this->entityBundleMachineName}";
-    $expectedTitle = "Add {$this->entityBundleMachineName} content";
+    $expectedTitle = "Add {$this->entityBundleLabel} content";
     $crumbs = [
       'Content',
       ucfirst("{$this->entityTypeLabel} content"),
@@ -549,14 +500,18 @@ class NavigationalStructureTest extends BrowserTestBase {
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function entityView() {
+    $entityTitle = $this->randomString();
     $entity = $this->getEntityStorageHandler()
-      ->create(['type' => $this->entityBundleMachineName]);
+      ->create([
+        'type' => $this->entityBundleMachineName,
+        'title' => $entityTitle,
+      ]);
     $entity->save();
 
     $route = "entity.{$this->entityTypeMachineName}.canonical";
     $routeArguments = [$this->entityTypeMachineName => $entity->id()];
     $expectedUrl = "{$this->entityTypeMachineName}/{$entity->id()}";
-    $expectedTitle = "$this->entityTypeLabel";
+    $expectedTitle = $entityTitle;
     $this->baseCrumbs = ["Home"];
 
     $this->assertCorrectPageOnRoute($route, $routeArguments, $expectedUrl, $expectedTitle);
@@ -570,17 +525,21 @@ class NavigationalStructureTest extends BrowserTestBase {
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function entityEdit() {
+    $entityTitle = $this->randomString();
     $entity = $this->getEntityStorageHandler()
-      ->create(['type' => $this->entityBundleMachineName]);
+      ->create([
+        'type' => $this->entityBundleMachineName,
+        'title' => $entityTitle,
+      ]);
     $entity->save();
 
     $route = "entity.{$this->entityTypeMachineName}.edit_form";
     $routeArguments = [$this->entityTypeMachineName => $entity->id()];
     $expectedUrl = "{$this->entityTypeMachineName}/{$entity->id()}/edit";
-    $expectedTitle = "Edit {$this->entityTypeLabel}";
+    $expectedTitle = "Edit {$this->entityBundleLabel} {$entityTitle}";
     $this->baseCrumbs = ['Home'];
     $crumbs = [
-      $this->entityTypeLabel,
+      $entityTitle,
     ];
 
     $this->assertCorrectPageOnRoute($route, $routeArguments, $expectedUrl, $expectedTitle, $crumbs);
@@ -594,17 +553,22 @@ class NavigationalStructureTest extends BrowserTestBase {
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function entityDelete() {
+    $entityTitle = $this->randomString();
+    $entity_type_label = strtolower($this->entityTypeLabel);
     $entity = $this->getEntityStorageHandler()
-      ->create(['type' => $this->entityBundleMachineName]);
+      ->create([
+        'type' => $this->entityBundleMachineName,
+        'title' => $entityTitle,
+      ]);
     $entity->save();
 
     $route = "entity.{$this->entityTypeMachineName}.delete_form";
     $routeArguments = [$this->entityTypeMachineName => $entity->id()];
     $expectedUrl = "{$this->entityTypeMachineName}/{$entity->id()}/delete";
-    $expectedTitle = "Are you sure you want to delete entity ?";
+    $expectedTitle = "Are you sure you want to delete the {$entity_type_label} {$entityTitle}?";
     $this->baseCrumbs = ['Home'];
     $crumbs = [
-      $this->entityTypeLabel,
+      $entityTitle,
     ];
 
     $this->assertCorrectPageOnRoute($route, $routeArguments, $expectedUrl, $expectedTitle, $crumbs);

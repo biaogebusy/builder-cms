@@ -19,6 +19,13 @@ class StateTransitionForm extends FormBase implements StateTransitionFormInterfa
   protected $redirectDestination;
 
   /**
+   * The entity repository.
+   *
+   * @var \Drupal\Core\Entity\EntityRepositoryInterface
+   */
+  protected $entityRepository;
+
+  /**
    * The entity.
    *
    * @var \Drupal\Core\Entity\ContentEntityInterface
@@ -38,6 +45,7 @@ class StateTransitionForm extends FormBase implements StateTransitionFormInterfa
   public static function create(ContainerInterface $container) {
     $instance = parent::create($container);
     $instance->redirectDestination = $container->get('redirect.destination');
+    $instance->entityRepository = $container->get('entity.repository');
     return $instance;
   }
 
@@ -52,7 +60,7 @@ class StateTransitionForm extends FormBase implements StateTransitionFormInterfa
    * {@inheritdoc}
    */
   public function setEntity(ContentEntityInterface $entity) {
-    $this->entity = $entity;
+    $this->entity = $this->entityRepository->getTranslationFromContext($entity);
     return $this;
   }
 

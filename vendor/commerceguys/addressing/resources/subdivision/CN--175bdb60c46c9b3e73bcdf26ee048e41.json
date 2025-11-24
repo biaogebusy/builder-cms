@@ -1,0 +1,24 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"GS",
+		"Wuwei Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Gulang Xian": {
+			"local_name": "古浪县"
+		},
+		"Liangzhou Qu": {
+			"local_name": "凉州区"
+		},
+		"Minqin Xian": {
+			"local_name": "民勤县"
+		},
+		"Tianzhu Xian": {
+			"local_code": "天祝藏族自治县",
+			"local_name": "天祝县"
+		}
+	}
+}

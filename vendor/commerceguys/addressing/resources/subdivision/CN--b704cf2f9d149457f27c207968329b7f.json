@@ -1,0 +1,47 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"JX",
+		"Shangrao Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Dexing Shi": {
+			"local_name": "德兴市"
+		},
+		"Guangfeng Xian": {
+			"local_name": "广丰县"
+		},
+		"Hengfeng Xian": {
+			"local_name": "横峰县"
+		},
+		"Poyang Xian": {
+			"local_name": "鄱阳县"
+		},
+		"Yanshan Xian": {
+			"local_name": "铅山县"
+		},
+		"Shangrao Xian": {
+			"local_name": "上饶县"
+		},
+		"Wannian Xian": {
+			"local_name": "万年县"
+		},
+		"Wuyuan Xian": {
+			"local_name": "婺源县"
+		},
+		"Xinzhou Qu": {
+			"local_name": "信州区"
+		},
+		"Yiyang Xian": {
+			"local_name": "弋阳县"
+		},
+		"Yugan Xian": {
+			"local_name": "余干县"
+		},
+		"Yushan Xian": {
+			"local_name": "玉山县"
+		}
+	}
+}

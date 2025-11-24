@@ -17,6 +17,8 @@ on the Render API:
  - Boolean and numeric fields can only be exported as strings, rather than
    the appropriate JSON primitives.
 
+  - Contributed module exports (Such as paragraphs, geo field, and search api) require their respective sub modules to be enabled as well.
+
 The Views and Field plugins in this module add all of these features.
 
 ## Usage
@@ -37,7 +39,13 @@ to export non-string values:
  - [Entity Reference Revisions](https://drupal.org/project/entity_reference_revisions)
  - Image
 
-(Note that these will only work in combination with the *Serializable* handler.)
+(Note that these will *only work* in combination with the *Serializable* handler.)
+
+Nested entity references:
+  In general these require a custom display mode where the fields are formatted with export formats unless you want rendered html.
+  See the links below for specific discussions.
+  - Nested paragraphs with display modes: https://www.drupal.org/project/rest_views/issues/3166257#comment-13794642
+  - Nested Views: https://www.drupal.org/project/rest_views/issues/2910697#comment-12386785
 
 ## Extending
 

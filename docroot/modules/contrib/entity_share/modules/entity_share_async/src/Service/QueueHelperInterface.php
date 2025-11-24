@@ -12,12 +12,12 @@ interface QueueHelperInterface {
   /**
    * The queue ID.
    */
-  const QUEUE_NAME = 'entity_share_async_import';
+  public const QUEUE_NAME = 'entity_share_async_import';
 
   /**
    * The state ID.
    */
-  const STATE_ID = 'entity_share_async.states';
+  public const STATE_ID = 'entity_share_async.states';
 
   /**
    * Enqueue entity to be synced later.

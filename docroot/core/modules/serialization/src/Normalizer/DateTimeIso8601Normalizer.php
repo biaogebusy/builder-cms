@@ -32,12 +32,7 @@ class DateTimeIso8601Normalizer extends DateTimeNormalizer {
   /**
    * {@inheritdoc}
    */
-  protected $supportedInterfaceOrClass = DateTimeIso8601::class;
-
-  /**
-   * {@inheritdoc}
-   */
-  public function normalize($datetime, $format = NULL, array $context = []) {
+  public function normalize($datetime, $format = NULL, array $context = []): array|string|int|float|bool|\ArrayObject|NULL {
     assert($datetime instanceof DateTimeIso8601);
     $field_item = $datetime->getParent();
     // @todo Remove this in https://www.drupal.org/project/drupal/issues/2958416.
@@ -54,7 +49,7 @@ class DateTimeIso8601Normalizer extends DateTimeNormalizer {
   /**
    * {@inheritdoc}
    */
-  public function denormalize($data, $class, $format = NULL, array $context = []) {
+  public function denormalize($data, $class, $format = NULL, array $context = []): mixed {
     // @todo Move the date-only handling out of here in https://www.drupal.org/project/drupal/issues/2958416.
     if (isset($context['target_instance'])) {
       $field_definition = $context['target_instance']->getFieldDefinition();
@@ -85,6 +80,15 @@ class DateTimeIso8601Normalizer extends DateTimeNormalizer {
     }
     $datetime->setTimezone(new \DateTimeZone(DateTimeItemInterface::STORAGE_TIMEZONE));
     return $datetime->format(DateTimeItemInterface::DATETIME_STORAGE_FORMAT);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSupportedTypes(?string $format): array {
+    return [
+      DateTimeIso8601::class => TRUE,
+    ];
   }
 
 }

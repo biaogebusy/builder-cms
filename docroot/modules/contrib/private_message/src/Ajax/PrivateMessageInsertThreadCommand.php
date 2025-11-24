@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\private_message\Ajax;
 
 use Drupal\Core\Ajax\CommandInterface;
@@ -9,30 +11,15 @@ use Drupal\Core\Ajax\CommandInterface;
  */
 class PrivateMessageInsertThreadCommand implements CommandInterface {
 
-  /**
-   * The HTML of the thread to be inserted.
-   *
-   * @var string
-   */
-  protected $thread;
-
-  /**
-   * Constructs a PrivateMessageInsertThreadCommand object.
-   *
-   * @param string $thread
-   *   The HTML of the thread to be inserted.
-   */
-  public function __construct($thread) {
-    $this->thread = $thread;
-  }
+  public function __construct(protected readonly string $threadHtml) {}
 
   /**
    * {@inheritdoc}
    */
-  public function render() {
+  public function render(): array {
     return [
       'command' => 'privateMessageInsertThread',
-      'thread' => $this->thread,
+      'thread' => $this->threadHtml,
     ];
   }
 

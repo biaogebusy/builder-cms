@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\file\Functional;
 
 use Drupal\node\Entity\Node;
 use Drupal\file\Entity\File;
 use Drupal\entity_test\Entity\EntityTestConstraints;
+use Drupal\user\Entity\Role;
 
 /**
  * Tests file listing page functionality.
@@ -14,9 +17,7 @@ use Drupal\entity_test\Entity\EntityTestConstraints;
 class FileListingTest extends FileFieldTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['views', 'file', 'image', 'entity_test'];
 
@@ -46,6 +47,7 @@ class FileListingTest extends FileFieldTestBase {
     $this->adminUser = $this->drupalCreateUser([
       'access files overview',
       'bypass node access',
+      'delete any file',
     ]);
     $this->baseUser = $this->drupalCreateUser();
     $this->createFileField('file', 'node', 'article', [], ['file_extensions' => 'txt png']);
@@ -54,7 +56,7 @@ class FileListingTest extends FileFieldTestBase {
   /**
    * Calculates total count of usages for a file.
    *
-   * @param $usage array
+   * @param array $usage
    *   Array of file usage information as returned from file_usage subsystem.
    *
    * @return int
@@ -76,7 +78,7 @@ class FileListingTest extends FileFieldTestBase {
   /**
    * Tests file overview with different user permissions.
    */
-  public function testFileListingPages() {
+  public function testFileListingPages(): void {
     $file_usage = $this->container->get('file.usage');
     // Users without sufficient permissions should not see file listing.
     $this->drupalLogin($this->baseUser);
@@ -121,6 +123,7 @@ class FileListingTest extends FileFieldTestBase {
       $this->assertSession()->pageTextContains($file->getFilename());
       $this->assertSession()->linkByHrefExists($file->createFileUrl());
       $this->assertSession()->linkByHrefExists('admin/content/files/usage/' . $file->id());
+      $this->assertSession()->linkByHrefExists($file->toUrl('delete-form')->toString());
     }
     $this->assertSession()->elementTextNotContains('css', '.views-element-container table', 'Temporary');
     $this->assertSession()->elementTextContains('css', '.views-element-container table', 'Permanent');
@@ -163,12 +166,49 @@ class FileListingTest extends FileFieldTestBase {
       }
       $this->assertSession()->linkByHrefExists('node/' . $node->id(), 0, 'Link to registering entity found on usage page.');
     }
+
+    // Log in as another user that has access to the file list but cannot delete
+    // files.
+    $role_id = $this->drupalCreateRole([
+      'access files overview',
+      'bypass node access',
+    ]);
+    $this->drupalLogin($this->drupalCreateUser(values: ['roles' => [$role_id]]));
+
+    $this->drupalGet('admin/content/files');
+    foreach ($nodes as $node) {
+      $file = File::load($node->file->target_id);
+      $this->assertSession()->pageTextContains($file->getFilename());
+      $this->assertSession()->linkByHrefExists($file->createFileUrl());
+      $this->assertSession()->linkByHrefExists('admin/content/files/usage/' . $file->id());
+      $this->assertSession()->linkByHrefNotExists($file->toUrl('delete-form')->toString());
+    }
+    // Give the user's role permission to delete files.
+    Role::load($role_id)->grantPermission('delete any file')->save();
+    $this->drupalGet('admin/content/files');
+    foreach ($nodes as $node) {
+      $file = File::load($node->file->target_id);
+      $this->assertSession()->pageTextContains($file->getFilename());
+      $this->assertSession()->linkByHrefExists($file->createFileUrl());
+      $this->assertSession()->linkByHrefExists('admin/content/files/usage/' . $file->id());
+      $this->assertSession()->linkByHrefExists($file->toUrl('delete-form')->toString());
+    }
+    // Load the page in a definite order.
+    $this->drupalGet('admin/content/files', ['query' => ['order' => 'filename', 'sort' => 'asc']]);
+    $this->clickLink('Delete');
+    $file_uri = File::load(1)->getFileUri();
+    $this->assertSession()->addressMatches('#file/1/delete$#');
+    $this->assertSession()->pageTextContains('Are you sure you want to delete the file druplicon.txt?');
+    $this->assertFileExists($file_uri);
+    $this->assertSession()->buttonExists('Delete')->press();
+    $this->assertSession()->pageTextContains('The file druplicon.txt has been deleted.');
+    $this->assertFileDoesNotExist($file_uri);
   }
 
   /**
    * Tests file listing usage page for entities with no canonical link template.
    */
-  public function testFileListingUsageNoLink() {
+  public function testFileListingUsageNoLink(): void {
     // Login with user with right permissions and test listing.
     $this->drupalLogin($this->adminUser);
 

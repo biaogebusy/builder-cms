@@ -3,4 +3,5 @@ multiple_select_states_hack:
     js/MultipleSelectStatesHack.js: {}
   dependencies:
     - core/drupal
+    - core/once
     - core/jquery

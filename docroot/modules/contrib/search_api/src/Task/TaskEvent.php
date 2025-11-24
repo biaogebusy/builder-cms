@@ -69,7 +69,7 @@ class TaskEvent extends Event {
    *
    * @return $this
    */
-  public function setException(SearchApiException $exception = NULL) {
+  public function setException(?SearchApiException $exception = NULL) {
     $this->exception = $exception;
     return $this;
   }

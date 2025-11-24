@@ -6,7 +6,6 @@ use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
-use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\KeyValueStore\KeyValueFactoryInterface;
@@ -108,7 +107,7 @@ class AutocompleteDeluxeWidget extends WidgetBase implements ContainerFactoryPlu
       'autocomplete_route_name' => 'autocomplete_deluxe.autocomplete',
       'size' => 60,
       'selection_handler' => 'default',
-      'limit' => 10,
+      'match_limit' => 10,
       'min_length' => 0,
       'delimiter' => '',
       'not_found_message_allow' => FALSE,
@@ -129,11 +128,11 @@ class AutocompleteDeluxeWidget extends WidgetBase implements ContainerFactoryPlu
       '#default_value' => $this->getSetting('match_operator'),
       '#options' => $this->getMatchOperatorOptions(),
     ];
-    $element['limit'] = [
+    $element['match_limit'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Limit of the output.'),
       '#description' => $this->t('If set to zero no limit will be used'),
-      '#default_value' => $this->getSetting('limit'),
+      '#default_value' => $this->getSetting('match_limit'),
       '#element_validate' => [[get_class($this), 'validateInteger']],
     ];
     $element['min_length'] = [
@@ -185,7 +184,7 @@ class AutocompleteDeluxeWidget extends WidgetBase implements ContainerFactoryPlu
     $summary = [];
 
     $summary[] = $this->t('Match operator: @match_operator', ['@match_operator' => $this->getSetting('match_operator')]);
-    $summary[] = $this->t('Limit: @limit', ['@limit' => $this->getSetting('limit')]);
+    $summary[] = $this->t('Limit: @match_limit', ['@match_limit' => $this->getSetting('match_limit')]);
     $summary[] = $this->t('Min length: @min_length', ['@min_length' => $this->getSetting('min_length')]);
     $summary[] = $this->t('Delimiter: @delimiter', ['@delimiter' => $this->getSetting('delimiter')]);
     $summary[] = $this->t('Allow Not Found message: @not_found_message_allow', ['@not_found_message_allow' => $this->getSetting('not_found_message_allow') ? 'Yes' : 'No']);
@@ -211,6 +210,7 @@ class AutocompleteDeluxeWidget extends WidgetBase implements ContainerFactoryPlu
 
     $allow_message = $settings['not_found_message_allow'] ?? FALSE;
     $not_found_message = $settings['not_found_message'] ?? "";
+    $selection_settings['match_limit'] = isset($settings['match_limit']) ? $settings['match_limit'] : 10;
 
     $element += [
       '#type' => 'autocomplete_deluxe',
@@ -219,16 +219,15 @@ class AutocompleteDeluxeWidget extends WidgetBase implements ContainerFactoryPlu
       '#selection_handler' => $this->getFieldSetting('handler'),
       '#selection_settings' => $selection_settings,
       '#size' => 60,
-      '#limit' => $settings['limit'] ?? 10,
+      '#match_limit' => $settings['match_limit'] ?? 10,
       '#min_length' => $settings['min_length'] ?? 0,
       '#delimiter' => $settings['delimiter'] ?? '',
       '#not_found_message_allow' => $allow_message,
       '#not_found_message' => $this->t('@not_found_message', ['@not_found_message' => $not_found_message]),
       '#new_terms' => $settings['new_terms'] ?? FALSE,
       '#no_empty_message' => isset($settings['no_empty_message']) ? $this->t('@no_empty_message', ['@no_empty_message' => $settings['no_empty_message']]) : '',
+      '#cardinality' => $cardinality,
     ];
-
-    $multiple = $cardinality > 1 || $cardinality == FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED;
 
     // If new terms are allowed to be created, set the bundle and the uid of the
     // term.
@@ -260,7 +259,6 @@ class AutocompleteDeluxeWidget extends WidgetBase implements ContainerFactoryPlu
     ];
 
     $element += [
-      '#multiple' => $multiple,
       '#autocomplete_deluxe_path' => Url::fromRoute('autocomplete_deluxe.autocomplete', $route_parameters, ['absolute' => TRUE])->getInternalPath(),
       '#default_value' => self::implodeEntities($entities),
     ];
@@ -282,7 +280,7 @@ class AutocompleteDeluxeWidget extends WidgetBase implements ContainerFactoryPlu
   public static function implodeEntities(array $entities, $bundle = NULL) {
     $typed_entities = [];
     foreach ($entities as $entity) {
-      $label = $entity->label();
+      $label = "{$entity->label()} ({$entity->id()})";
 
       // Extract entities belonging to the bundle in question.
       if (!isset($bundle) || $entity->bundle() == $bundle) {

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image_effects\Unit;
 
 use Drupal\image_effects\Component\GdImageAnalysis;
@@ -14,10 +16,8 @@ class GdImageAnalysisTest extends TestCase {
 
   /**
    * Test image.
-   *
-   * @var resource
    */
-  protected $testImage;
+  protected \GDImage $testImage;
 
   /**
    * {@inheritdoc}
@@ -35,14 +35,14 @@ class GdImageAnalysisTest extends TestCase {
   /**
    * Verify the mean calculation with a known image.
    */
-  public function testMean() {
+  public function testMean(): void {
     $this->assertEquals(85, GdImageAnalysis::mean($this->testImage));
   }
 
   /**
    * Verify the difference calculation.
    */
-  public function testDifference() {
+  public function testDifference(): void {
     $image1 = imagecreatefrompng(__DIR__ . '/../../images/left.png');
     $image2 = imagecreatefrompng(__DIR__ . '/../../images/left.png');
     $diff = GdImageAnalysis::difference($image1, $image2);
@@ -58,7 +58,7 @@ class GdImageAnalysisTest extends TestCase {
   /**
    * Verify the histogram calculation with a known image.
    */
-  public function testHistogram() {
+  public function testHistogram(): void {
     $expected_histogram = [
       0 => 6,
       255 => 3,
@@ -73,7 +73,7 @@ class GdImageAnalysisTest extends TestCase {
   /**
    * Verify the entropy calculation with a known image.
    */
-  public function testEntropy() {
+  public function testEntropy(): void {
     // Calculate the expected values.
     // There are 9 bins in the histogram, 3 colors * 3 channels.
     $expected_entroy = (1 / 3 * log(1 / 9, 2) + 2 / 3 * log(2 / 9, 2)) * -1;

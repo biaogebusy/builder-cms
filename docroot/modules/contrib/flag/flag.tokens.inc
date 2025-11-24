@@ -5,8 +5,6 @@
  * Flag module tokens support.
  */
 
-use Drupal\Core\Render\BubbleableMetadata;
-
 /**
  * Implements hook_token_info().
  */
@@ -77,7 +75,7 @@ function flag_token_info() {
   ];
 
   // Add tokens for the flag count available at the node/comment/user level.
-  /** \Drupal\flag\FlagInterface[] $flags */
+  /** @var \Drupal\flag\FlagInterface[] $flags */
   $flags = \Drupal::service('flag')->getAllFlags();
   foreach ($flags as $id => $flag) {
     $flag_entity_type_id = $flag->getFlaggableEntityTypeId();
@@ -98,93 +96,6 @@ function flag_token_info() {
 }
 
 /**
- * Implements hook_tokens().
- */
-function flag_tokens($type, $tokens, array $data, array $options, BubbleableMetadata $bubbleable_metadata) {
-  /*
-  $replacements = array();
-  $sanitize = !empty($options['sanitize']);
-  $langcode = isset($options['language']) ? $options['language']->language : NULL;
-
-  if ($type == 'flag' && !empty($data['flag'])) {
-    $flag = $data['flag'];
-    foreach ($tokens as $name => $original) {
-      switch ($name) {
-        case 'name':
-          $replacements[$original] = $sanitize ? check_plain($flag->name) : $flag->name;
-          break;
-
-        case 'title':
-          $replacements[$original] = $sanitize ? check_plain($flag->get_title()) : $flag->get_title();
-          break;
-      }
-    }
-  }
-  elseif ($type == 'flagging' && !empty($data['flagging'])) {
-    $flagging = $data['flagging'];
-    foreach ($tokens as $name => $original) {
-      switch ($name) {
-        case 'date':
-          $replacements[$original] = format_date($flagging->timestamp, 'medium', '', NULL, $langcode);
-          break;
-      }
-    }
-    if ($date_tokens = token_find_with_prefix($tokens, 'date')) {
-      $replacements += token_generate('date', $date_tokens, array('date' => $flagging->timestamp), $options);
-    }
-  }
-  elseif ($type == 'flag-action' && !empty($data['flag-action'])) {
-    $action = $data['flag-action'];
-    foreach ($tokens as $name => $original) {
-      switch ($name) {
-        case 'action':
-          $replacements[$original] = $action->action;
-          break;
-
-        case 'entity-url':
-          $replacements[$original] = $sanitize ? check_url($action->entity_url) : $action->entity_url;
-          break;
-
-        case 'entity-title':
-          $replacements[$original] = $sanitize ? check_plain($action->entity_title) : $action->entity_title;
-          break;
-
-        case 'entity-type':
-          $replacements[$original] = $action->entity_type;
-          break;
-
-        case 'entity-id':
-          $replacements[$original] = $action->entity_id;
-          break;
-
-        case 'count':
-          $replacements[$original] = $action->count;
-          break;
-      }
-    }
-  }
-
-  if (isset($data[$type]) && in_array($type, \Drupal::service('flag')->fetchDefinition())) {
-    $flags = \Drupal::service('flag')->getAllFlags($type);
-    $object = $data[$type];
-    foreach ($flags as $flag) {
-      foreach ($tokens as $name => $original) {
-        $flag_count_token = 'flag-' . str_replace('_', '-', $flag->name) . '-count';
-        $flag_link_token = 'flag-' . str_replace('_', '-', $flag->name) . '-link';
-        if ($name == $flag_count_token) {
-          $replacements[$original] = $flag->get_count($flag->get_entity_id($object));
-        }
-        elseif ($name == $flag_link_token) {
-          $replacements[$original] = flag_create_link($flag->name, $flag->get_entity_id($object));
-        }
-      }
-    }
-  }
-  return $replacements;
-  */
-}
-
-/**
  * Returns HTML for a tokens browser.
  *
  * @param array $variables
@@ -197,6 +108,8 @@ function theme_flag_tokens_browser(array $variables) {
   $global_types = $variables['global_types'];
 
   if (\Drupal::moduleHandler()->moduleExists('token')) {
+    // @todo fix theme function not found
+    // @phpstan-ignore function.notFound
     return theme('token_tree', ['token_types' => $types, 'global_types' => $global_types]);
   }
   else {

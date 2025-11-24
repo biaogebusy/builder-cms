@@ -1,0 +1,41 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"HL",
+		"Jiamusi Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Dongfeng Qu": {
+			"local_name": "东风区"
+		},
+		"Fuyuan Xian": {
+			"local_name": "抚远县"
+		},
+		"Fujin Shi": {
+			"local_name": "富锦市"
+		},
+		"Huachuan Xian": {
+			"local_name": "桦川县"
+		},
+		"Huanan Xian": {
+			"local_name": "桦南县"
+		},
+		"Jiao Qu": {
+			"local_name": "郊区"
+		},
+		"Qianjin Qu": {
+			"local_name": "前进区"
+		},
+		"Tangyuan Xian": {
+			"local_name": "汤原县"
+		},
+		"Tongjiang Shi": {
+			"local_name": "同江市"
+		},
+		"Xiangyang Qu": {
+			"local_name": "向阳区"
+		}
+	}
+}

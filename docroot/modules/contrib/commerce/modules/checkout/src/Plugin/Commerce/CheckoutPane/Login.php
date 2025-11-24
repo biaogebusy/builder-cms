@@ -2,30 +2,28 @@
 
 namespace Drupal\commerce_checkout\Plugin\Commerce\CheckoutPane;
 
-use Drupal\commerce\CredentialsCheckFloodInterface;
-use Drupal\commerce_checkout\Plugin\Commerce\CheckoutFlow\CheckoutFlowInterface;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
-use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
-use Drupal\user\UserAuthInterface;
+use Drupal\commerce_checkout\Attribute\CommerceCheckoutPane;
+use Drupal\commerce_checkout\Event\CheckoutEvents;
+use Drupal\commerce_checkout\Event\CheckoutRegisterEvent;
+use Drupal\commerce_checkout\Plugin\Commerce\CheckoutFlow\CheckoutFlowInterface;
 use Drupal\user\UserInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Provides the login pane.
- *
- * @CommerceCheckoutPane(
- *   id = "login",
- *   label = @Translation("Login or continue as guest"),
- *   default_step = "login",
- * )
  */
+#[CommerceCheckoutPane(
+  id: "login",
+  label: new TranslatableMarkup('Log in or continue as guest'),
+  admin_description: new TranslatableMarkup("Presents customers with the choice to log in or proceed as a guest during checkout."),
+  default_step: "login",
+  wrapper_element: "container",
+)]
 class Login extends CheckoutPaneBase implements CheckoutPaneInterface, ContainerFactoryPluginInterface {
 
   /**
@@ -45,16 +43,9 @@ class Login extends CheckoutPaneBase implements CheckoutPaneInterface, Container
   /**
    * The user authentication object.
    *
-   * @var \Drupal\user\UserAuthInterface
+   * @var \Drupal\user\UserAuthenticationInterface
    */
   protected $userAuth;
-
-  /**
-   * The client IP address.
-   *
-   * @var string
-   */
-  protected $clientIp;
 
   /**
    * The language manager.
@@ -71,67 +62,32 @@ class Login extends CheckoutPaneBase implements CheckoutPaneInterface, Container
   protected $entityDisplayRepository;
 
   /**
-   * Constructs a new Login object.
+   * The event dispatcher.
    *
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
-   * @param mixed $plugin_definition
-   *   The plugin implementation definition.
-   * @param \Drupal\commerce_checkout\Plugin\Commerce\CheckoutFlow\CheckoutFlowInterface $checkout_flow
-   *   The parent checkout flow.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
-   * @param \Drupal\commerce\CredentialsCheckFloodInterface $credentials_check_flood
-   *   The credentials check flood controller.
-   * @param \Drupal\Core\Session\AccountInterface $current_user
-   *   The current user.
-   * @param \Drupal\user\UserAuthInterface $user_auth
-   *   The user authentication object.
-   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
-   *   The request stack.
-   * @param \Drupal\Core\Language\LanguageManagerInterface|null $language_manager
-   *   The language manager.
-   * @param \Drupal\Core\Entity\EntityDisplayRepositoryInterface|null $entity_display_repository
-   *   The entity display repository.
+   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, CheckoutFlowInterface $checkout_flow, EntityTypeManagerInterface $entity_type_manager, CredentialsCheckFloodInterface $credentials_check_flood, AccountInterface $current_user, UserAuthInterface $user_auth, RequestStack $request_stack, LanguageManagerInterface $language_manager = NULL, EntityDisplayRepositoryInterface $entity_display_repository = NULL) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $checkout_flow, $entity_type_manager);
+  protected $eventDispatcher;
 
-    $this->credentialsCheckFlood = $credentials_check_flood;
-    $this->currentUser = $current_user;
-    $this->userAuth = $user_auth;
-    $this->clientIp = $request_stack->getCurrentRequest()->getClientIp();
-    if (!$language_manager) {
-      @trigger_error('Calling ' . __METHOD__ . '() without the $language_manager argument is deprecated in commerce:8.x-2.25 and is removed from commerce:3.x.');
-      $language_manager = \Drupal::languageManager();
-    }
-    if (!$entity_display_repository) {
-      @trigger_error('Calling ' . __METHOD__ . '() without the $entity_display_repository argument is deprecated in commerce:8.x-2.33 and is removed from commerce:3.x.');
-      $entity_display_repository = \Drupal::service('entity_display.repository');
-    }
-    $this->languageManager = $language_manager;
-    $this->entityDisplayRepository = $entity_display_repository;
-  }
+  /**
+   * The request stack.
+   *
+   * @var \Symfony\Component\HttpFoundation\RequestStack
+   */
+  protected $requestStack;
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, CheckoutFlowInterface $checkout_flow = NULL) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $checkout_flow,
-      $container->get('entity_type.manager'),
-      $container->get('commerce.credentials_check_flood'),
-      $container->get('current_user'),
-      $container->get('user.auth'),
-      $container->get('request_stack'),
-      $container->get('language_manager'),
-      $container->get('entity_display.repository')
-    );
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, ?CheckoutFlowInterface $checkout_flow = NULL) {
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition, $checkout_flow);
+    $instance->credentialsCheckFlood = $container->get('commerce.credentials_check_flood');
+    $instance->currentUser = $container->get('current_user');
+    $instance->eventDispatcher = $container->get('event_dispatcher');
+    $instance->userAuth = $container->get('user.auth');
+    $instance->languageManager = $container->get('language_manager');
+    $instance->entityDisplayRepository = $container->get('entity_display.repository');
+    $instance->requestStack = $container->get('request_stack');
+    return $instance;
   }
 
   /**
@@ -149,6 +105,7 @@ class Login extends CheckoutPaneBase implements CheckoutPaneInterface, Container
    * {@inheritdoc}
    */
   public function buildConfigurationSummary() {
+    $parent_summary = parent::buildConfigurationSummary();
     if (!empty($this->configuration['allow_guest_checkout'])) {
       $summary = $this->t('Guest checkout: Allowed') . '<br>';
     }
@@ -164,7 +121,7 @@ class Login extends CheckoutPaneBase implements CheckoutPaneInterface, Container
       $summary .= $this->t('Registration: Not allowed');
     }
 
-    return $summary;
+    return $parent_summary ? implode('<br>', [$parent_summary, $summary]) : $summary;
   }
 
   /**
@@ -312,6 +269,7 @@ class Login extends CheckoutPaneBase implements CheckoutPaneInterface, Container
     $pane_form['register']['mail'] = [
       '#type' => 'email',
       '#title' => $this->t('Email address'),
+      '#description' => $this->t('The email address is not made public. It will only be used if you need to be contacted about your account or for opted-in notifications.'),
       '#required' => FALSE,
     ];
     $pane_form['register']['name'] = [
@@ -331,12 +289,11 @@ class Login extends CheckoutPaneBase implements CheckoutPaneInterface, Container
     $pane_form['register']['password'] = [
       '#type' => 'password_confirm',
       '#size' => 60,
-      '#description' => $this->t('Provide a password for the new account in both fields.'),
       '#required' => FALSE,
     ];
     $pane_form['register']['register'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Create account and continue'),
+      '#value' => $this->t('Create new account and continue'),
       '#op' => 'register',
       '#weight' => 50,
     ];
@@ -372,27 +329,29 @@ class Login extends CheckoutPaneBase implements CheckoutPaneInterface, Container
           $form_state->setError($pane_form['returning_customer'], $this->t('Unrecognized username or password. <a href=":url">Have you forgotten your password?</a>', [':url' => $password_url]));
           return;
         }
-        if (user_is_blocked($username)) {
+        $user = $this->userAuth->lookupAccount($username);
+        if ($user && $user->isBlocked()) {
           $form_state->setError($name_element, $this->t('The username %name has not been activated or is blocked.', ['%name' => $username]));
           return;
         }
-        if (!$this->credentialsCheckFlood->isAllowedHost($this->clientIp)) {
+        $client_ip = $this->requestStack->getCurrentRequest()->getClientIp();
+        if (!$this->credentialsCheckFlood->isAllowedHost($client_ip)) {
           $form_state->setError($name_element, $this->t('Too many failed login attempts from your IP address. This IP address is temporarily blocked. Try again later or <a href=":url">request a new password</a>.', [':url' => $password_url]));
-          $this->credentialsCheckFlood->register($this->clientIp, $username);
+          $this->credentialsCheckFlood->register($client_ip, $username);
           return;
         }
-        elseif (!$this->credentialsCheckFlood->isAllowedAccount($this->clientIp, $username)) {
+        elseif (!$this->credentialsCheckFlood->isAllowedAccount($client_ip, $username)) {
           $form_state->setError($name_element, $this->t('Too many failed login attempts for this account. It is temporarily blocked. Try again later or <a href=":url">request a new password</a>.', [':url' => $password_url]));
-          $this->credentialsCheckFlood->register($this->clientIp, $username);
+          $this->credentialsCheckFlood->register($client_ip, $username);
           return;
         }
 
-        $uid = $this->userAuth->authenticate($username, $password);
-        if (!$uid) {
-          $this->credentialsCheckFlood->register($this->clientIp, $username);
+        if (!$user || !$this->userAuth->authenticateAccount($user, $password)) {
+          $this->credentialsCheckFlood->register($client_ip, $username);
           $form_state->setError($name_element, $this->t('Unrecognized username or password. <a href=":url">Have you forgotten your password?</a>', [':url' => $password_url]));
+          return;
         }
-        $form_state->set('logged_in_uid', $uid);
+        $form_state->set('logged_in_uid', $user->id());
         break;
 
       case 'register':
@@ -462,7 +421,13 @@ class Login extends CheckoutPaneBase implements CheckoutPaneInterface, Container
         $account = $storage->load($form_state->get('logged_in_uid'));
         user_login_finalize($account);
         $this->order->setCustomer($account);
-        $this->credentialsCheckFlood->clearAccount($this->clientIp, $account->getAccountName());
+        $client_ip = $this->requestStack->getCurrentRequest()->getClientIp();
+        $this->credentialsCheckFlood->clearAccount($client_ip, $account->getAccountName());
+        if ($trigger === 'register') {
+          // Notify other modules.
+          $event = new CheckoutRegisterEvent($account, $this->order);
+          $this->eventDispatcher->dispatch($event, CheckoutEvents::CHECKOUT_REGISTER);
+        }
         break;
     }
 

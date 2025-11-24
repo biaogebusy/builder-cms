@@ -2,7 +2,6 @@
 
 namespace Drupal\Tests\page_manager\Unit;
 
-use Prophecy\PhpUnit\ProphecyTrait;
 use Drupal\Core\Cache\Context\CacheContextsManager;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Entity\EntityTypeInterface;
@@ -14,6 +13,7 @@ use Drupal\page_manager\Entity\PageAccess;
 use Drupal\page_manager\PageInterface;
 use Drupal\Tests\UnitTestCase;
 use Prophecy\Argument;
+use Prophecy\PhpUnit\ProphecyTrait;
 
 /**
  * Tests access for Page entities.
@@ -33,16 +33,22 @@ class PageAccessTest extends UnitTestCase {
   protected $contextHandler;
 
   /**
+   * The Entity Type.
+   *
    * @var \Drupal\Core\Entity\EntityTypeInterface|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $entityType;
 
   /**
+   * Cache Contexts Manager.
+   *
    * @var \Drupal\Core\Cache\Context\CacheContextsManager|\Prophecy\Prophecy\ProphecyInterface
    */
   protected $cacheContextsManager;
 
   /**
+   * Page Access Service.
+   *
    * @var \Drupal\Core\Entity\EntityAccessControlHandlerInterface
    */
   protected $pageAccess;
@@ -141,7 +147,7 @@ class PageAccessTest extends UnitTestCase {
   /**
    * Provides data for testAccessDelete().
    */
-  public function providerTestAccessDelete() {
+  public static function providerTestAccessDelete() {
     $data = [];
     $data[] = [TRUE, FALSE];
     $data[] = [FALSE, TRUE];

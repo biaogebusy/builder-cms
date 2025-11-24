@@ -1,0 +1,15 @@
+type: module
+name: 'ElasticSearch Connector Test'
+description: 'ElasticSearch Connector test module'
+package: 'Search'
+dependencies:
+  - elasticsearch_connector:elasticsearch_connector
+  - search_api:search_api_test
+  - search_api:search_api_test_example_content
+core_version_requirement: ^10.2 || ^11
+hidden: true
+
+# Information added by Drupal.org packaging script on 2025-09-29
+version: '8.0.0-alpha5'
+project: 'elasticsearch_connector'
+datestamp: 1759189829

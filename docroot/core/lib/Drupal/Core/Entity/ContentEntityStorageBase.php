@@ -597,7 +597,7 @@ abstract class ContentEntityStorageBase extends EntityStorageBase implements Con
   /**
    * {@inheritdoc}
    */
-  protected function preLoad(array &$ids = NULL) {
+  protected function preLoad(?array &$ids = NULL) {
     $entities = [];
 
     // Call hook_entity_preload().
@@ -831,7 +831,7 @@ abstract class ContentEntityStorageBase extends EntityStorageBase implements Con
   abstract protected function doDeleteRevisionFieldItems(ContentEntityInterface $revision);
 
   /**
-   * Checks translation statuses and invoke the related hooks if needed.
+   * Checks translation statuses and invokes the related hooks if needed.
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity being saved.
@@ -944,7 +944,21 @@ abstract class ContentEntityStorageBase extends EntityStorageBase implements Con
     if ($method == 'postSave' && !empty($entity->original)) {
       $original_langcodes = array_keys($entity->original->getTranslationLanguages());
       foreach (array_diff($original_langcodes, $langcodes) as $removed_langcode) {
+        /** @var \Drupal\Core\Entity\ContentEntityInterface $translation */
         $translation = $entity->original->getTranslation($removed_langcode);
+
+        // Fields may rely on the isDefaultTranslation() method to determine
+        // what is going to be deleted - the whole entity or a particular
+        // translation.
+        if ($translation->isDefaultTranslation()) {
+          if (method_exists($translation, 'setDefaultTranslationEnforced')) {
+            $translation->setDefaultTranslationEnforced(FALSE);
+          }
+          else {
+            @trigger_error('Not providing a setDefaultTranslationEnforced() method when implementing \Drupal\Core\TypedData\TranslatableInterface is deprecated in drupal:10.2.0 and is required from drupal:11.0.0. See https://www.drupal.org/node/3376146', E_USER_DEPRECATED);
+          }
+        }
+
         $fields = $translation->getTranslatableFields();
         foreach ($fields as $name => $items) {
           $items->delete();
@@ -1071,7 +1085,7 @@ abstract class ContentEntityStorageBase extends EntityStorageBase implements Con
    * @return \Drupal\Core\Entity\ContentEntityInterface[]
    *   Array of entities from the persistent cache.
    */
-  protected function getFromPersistentCache(array &$ids = NULL) {
+  protected function getFromPersistentCache(?array &$ids = NULL) {
     if (!$this->entityType->isPersistentlyCacheable() || empty($ids)) {
       return [];
     }
@@ -1178,7 +1192,7 @@ abstract class ContentEntityStorageBase extends EntityStorageBase implements Con
    *   (optional) If specified, the cache is reset for the entities with the
    *   given ids only.
    */
-  public function resetCache(array $ids = NULL) {
+  public function resetCache(?array $ids = NULL) {
     if ($ids) {
       parent::resetCache($ids);
       if ($this->entityType->isPersistentlyCacheable()) {

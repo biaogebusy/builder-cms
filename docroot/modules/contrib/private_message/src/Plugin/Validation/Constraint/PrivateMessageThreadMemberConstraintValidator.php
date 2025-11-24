@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\private_message\Plugin\Validation\Constraint;
 
 use Symfony\Component\Validator\Constraint;
@@ -16,8 +18,8 @@ class PrivateMessageThreadMemberConstraintValidator extends ConstraintValidator 
   /**
    * {@inheritdoc}
    */
-  public function validate($items, Constraint $constraint) {
-    $users = $items->referencedEntities();
+  public function validate($value, Constraint $constraint): void {
+    $users = $value->referencedEntities();
     foreach ($users as $user) {
       if (!$user->hasPermission('use private messaging system')) {
         $this->context->addViolation($constraint->userPrivateMessagePermissionError, ['%user' => $user->getDisplayName()]);

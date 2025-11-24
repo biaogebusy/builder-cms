@@ -1,0 +1,61 @@
+# Usernames, project names.
+makinacorpus
+~lucene
+phayes
+geophp
+geofield
+matthiasnoback
+Makina
+Opensearch
+NTLM
+Ignatov
+Nikolay
+skek
+Utilis
+commandfile
+~typehint
+
+# Non-US-English spellings.
+~analyser
+~analysers
+
+# Test words in tests.
+foobaz
+fooblob
+foobuz
+Suspendisse
+~arcu
+Eget
+efficitur
+Vestibulum
+~consectetur
+convallis
+Vivamus
+Cras
+volutpat
+Nulla
+imperdiet
+Adipiscing
+elit
+Amet
+bazz
+bizz
+bozz
+örange
+fqn
+webtest
+
+# ARIA tags.
+brailleroledescription
+
+# Words from ElasticSearch.
+basicauth
+querytime
+asciifolding
+~datasource
+~datasources
+aggs
+~fragmenter
+~fuzzyness
+~fuzziness
+testbuild

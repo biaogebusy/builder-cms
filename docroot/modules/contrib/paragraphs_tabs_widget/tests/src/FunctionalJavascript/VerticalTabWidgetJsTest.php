@@ -339,8 +339,8 @@ class VerticalTabWidgetJsTest extends WebDriverTestBase {
     // two random strings.
     $vtMenuItemSummariesBefore = $page->findAll('xpath', $xpathQueryMenuItemSummary);
     $this->assertCount(2, $vtMenuItemSummariesBefore, 'There is initially two menu item summaries on the node/edit page.');
-    $this->assertEquals($vtMenuItemSummariesBefore[0]->getText(), $this->sutParagraph1RandomValue, 'The first menu item summary on the node/edit page is the value of the first paragraph field.');
-    $this->assertEquals($vtMenuItemSummariesBefore[1]->getText(), $this->sutParagraph2RandomValue, 'The second menu item summary on the node/edit page is the value of the second paragraph field.');
+    $this->assertEquals($this->sutParagraph1RandomValue, \trim($vtMenuItemSummariesBefore[0]->getText()), 'The first menu item summary on the node/edit page is the value of the first paragraph field.');
+    $this->assertEquals($this->sutParagraph2RandomValue, \trim($vtMenuItemSummariesBefore[1]->getText()), 'The second menu item summary on the node/edit page is the value of the second paragraph field.');
 
     // Node/edit: Generate a random string. Click the second tab summary to
     // make the contents of that tab visible. Find the summary-controlling field
@@ -362,8 +362,8 @@ class VerticalTabWidgetJsTest extends WebDriverTestBase {
     });
     $vtMenuItemSummariesAfter = $page->findAll('xpath', $xpathQueryMenuItemSummary);
     $this->assertCount(2, $vtMenuItemSummariesAfter, 'There are still two menu item summaries on the node/edit page.');
-    $this->assertEquals($vtMenuItemSummariesBefore[0]->getText(), $this->sutParagraph1RandomValue, 'The first menu item summary on the node/edit page is still the value of the first paragraph field.');
-    $this->assertEquals($vtMenuItemSummariesBefore[1]->getText(), $newParagraph2RandomValue, 'The second menu item summary on the node/edit page now matches the random value we set.');
+    $this->assertEquals($vtMenuItemSummariesBefore[0]->getText(), \trim($this->sutParagraph1RandomValue), 'The first menu item summary on the node/edit page is still the value of the first paragraph field.');
+    $this->assertEquals($vtMenuItemSummariesBefore[1]->getText(), \trim($newParagraph2RandomValue), 'The second menu item summary on the node/edit page now matches the random value we set.');
   }
 
   /**

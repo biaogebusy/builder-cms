@@ -10,6 +10,7 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Utility\Error;
 use Drupal\embed\EmbedType\EmbedTypeManager;
 use Drupal\embed\Entity\EmbedButton;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -114,7 +115,7 @@ class EmbedButtonForm extends EntityForm {
     }
     catch (PluginNotFoundException $exception) {
       $this->messenger()->addError($exception->getMessage());
-      watchdog_exception('embed', $exception);
+      Error::logException($this->logger('embed'), $exception);
       $form['type_id']['#disabled'] = FALSE;
     }
 
@@ -239,6 +240,7 @@ class EmbedButtonForm extends EntityForm {
     }
 
     $form_state->setRedirectUrl($button->toUrl());
+    return $status;
   }
 
   /**

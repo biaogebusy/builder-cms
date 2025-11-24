@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views_ui\Functional;
 
 /**
@@ -24,7 +26,7 @@ class CachedDataUITest extends UITestBase {
   /**
    * Tests the shared tempstore views data in the UI.
    */
-  public function testCacheData() {
+  public function testCacheData(): void {
     $views_admin_user_uid = $this->fullAdminUser->id();
 
     $temp_store = $this->container->get('tempstore.shared')->get('views');

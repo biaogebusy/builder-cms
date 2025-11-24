@@ -2,32 +2,27 @@
 
 namespace Drupal\commerce_checkout\Plugin\Commerce\CheckoutPane;
 
-use Drupal\commerce\CredentialsCheckFloodInterface;
-use Drupal\commerce_checkout\Plugin\Commerce\CheckoutFlow\CheckoutFlowInterface;
-use Drupal\commerce_checkout\Event\CheckoutCompletionRegisterEvent;
-use Drupal\commerce_checkout\Event\CheckoutEvents;
-use Drupal\commerce_order\OrderAssignmentInterface;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Drupal\Core\Session\AccountInterface;
-use Drupal\user\UserAuthInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce_checkout\Attribute\CommerceCheckoutPane;
+use Drupal\commerce_checkout\Event\CheckoutCompletionRegisterEvent;
+use Drupal\commerce_checkout\Event\CheckoutEvents;
+use Drupal\commerce_checkout\Plugin\Commerce\CheckoutFlow\CheckoutFlowInterface;
 use Drupal\user\UserInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Provides the registration after checkout pane.
- *
- * @CommerceCheckoutPane(
- *   id = "completion_register",
- *   label = @Translation("Guest registration after checkout"),
- *   display_label = @Translation("Account information"),
- *   default_step = "complete",
- * )
  */
+#[CommerceCheckoutPane(
+  id: "completion_register",
+  label: new TranslatableMarkup("Guest registration after checkout"),
+  admin_description: new TranslatableMarkup("Allows guests to register after checkout completion."),
+  display_label: new TranslatableMarkup("Account information"),
+  default_step: "complete",
+)]
 class CompletionRegister extends CheckoutPaneBase implements CheckoutPaneInterface, ContainerFactoryPluginInterface {
 
   /**
@@ -47,16 +42,9 @@ class CompletionRegister extends CheckoutPaneBase implements CheckoutPaneInterfa
   /**
    * The user authentication object.
    *
-   * @var \Drupal\user\UserAuthInterface
+   * @var \Drupal\user\UserAuthenticationInterface
    */
   protected $userAuth;
-
-  /**
-   * The client IP address.
-   *
-   * @var string
-   */
-  protected $clientIp;
 
   /**
    * The event dispatcher.
@@ -73,67 +61,32 @@ class CompletionRegister extends CheckoutPaneBase implements CheckoutPaneInterfa
   protected $orderAssignment;
 
   /**
-   * The user storage.
+   * The language manager.
    *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
+   * @var \Drupal\Core\Language\LanguageManagerInterface
    */
-  protected $userStorage;
+  protected $languageManager;
 
   /**
-   * Constructs a new CompletionRegister object.
+   * The request stack.
    *
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
-   * @param mixed $plugin_definition
-   *   The plugin implementation definition.
-   * @param \Drupal\commerce_checkout\Plugin\Commerce\CheckoutFlow\CheckoutFlowInterface $checkout_flow
-   *   The parent checkout flow.
-   * @param \Drupal\commerce\CredentialsCheckFloodInterface $credentials_check_flood
-   *   The credentials check flood controller.
-   * @param \Drupal\Core\Session\AccountInterface $current_user
-   *   The current user.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
-   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
-   *   The event dispatcher.
-   * @param \Drupal\commerce_order\OrderAssignmentInterface $order_assignment
-   *   The order assignment.
-   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
-   *   The request stack.
-   * @param \Drupal\user\UserAuthInterface $user_auth
-   *   The user authentication object.
+   * @var \Symfony\Component\HttpFoundation\RequestStack
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, CheckoutFlowInterface $checkout_flow, CredentialsCheckFloodInterface $credentials_check_flood, AccountInterface $current_user, EntityTypeManagerInterface $entity_type_manager, EventDispatcherInterface $event_dispatcher, OrderAssignmentInterface $order_assignment, RequestStack $request_stack, UserAuthInterface $user_auth) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $checkout_flow, $entity_type_manager);
-
-    $this->credentialsCheckFlood = $credentials_check_flood;
-    $this->currentUser = $current_user;
-    $this->clientIp = $request_stack->getCurrentRequest()->getClientIp();
-    $this->eventDispatcher = $event_dispatcher;
-    $this->orderAssignment = $order_assignment;
-    $this->userAuth = $user_auth;
-    $this->userStorage = $entity_type_manager->getStorage('user');
-  }
+  protected $requestStack;
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, CheckoutFlowInterface $checkout_flow = NULL) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $checkout_flow,
-      $container->get('commerce.credentials_check_flood'),
-      $container->get('current_user'),
-      $container->get('entity_type.manager'),
-      $container->get('event_dispatcher'),
-      $container->get('commerce_order.order_assignment'),
-      $container->get('request_stack'),
-      $container->get('user.auth')
-    );
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, ?CheckoutFlowInterface $checkout_flow = NULL) {
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition, $checkout_flow);
+    $instance->credentialsCheckFlood = $container->get('commerce.credentials_check_flood');
+    $instance->currentUser = $container->get('current_user');
+    $instance->eventDispatcher = $container->get('event_dispatcher');
+    $instance->orderAssignment = $container->get('commerce_order.order_assignment');
+    $instance->userAuth = $container->get('user.auth');
+    $instance->languageManager = $container->get('language_manager');
+    $instance->requestStack = $container->get('request_stack');
+    return $instance;
   }
 
   /**
@@ -161,7 +114,8 @@ class CompletionRegister extends CheckoutPaneBase implements CheckoutPaneInterfa
       // An email is required, but wasn't collected.
       return FALSE;
     }
-    $existing_user = $this->userStorage->loadByProperties([
+    $user_storage = $this->entityTypeManager->getStorage('user');
+    $existing_user = $user_storage->loadByProperties([
       'mail' => $mail,
     ]);
     if ($existing_user) {
@@ -221,11 +175,15 @@ class CompletionRegister extends CheckoutPaneBase implements CheckoutPaneInterfa
     // Validate the entity. This will ensure that the username and email are in
     // the right format and not already taken.
     $values = $form_state->getValue($pane_form['#parents']);
-    $account = $this->userStorage->create([
+    $user_storage = $this->entityTypeManager->getStorage('user');
+    $account = $user_storage->create([
       'mail' => $this->order->getEmail(),
       'name' => $values['name'],
       'pass' => $values['pass'],
       'status' => TRUE,
+      'langcode' => $this->languageManager->getCurrentLanguage()->getId(),
+      'preferred_langcode' => $this->languageManager->getCurrentLanguage()->getId(),
+      'preferred_admin_langcode' => $this->languageManager->getCurrentLanguage()->getId(),
     ]);
 
     /** @var \Drupal\user\UserInterface $account */
@@ -249,18 +207,25 @@ class CompletionRegister extends CheckoutPaneBase implements CheckoutPaneInterfa
    */
   public function submitPaneForm(array &$pane_form, FormStateInterface $form_state, array &$complete_form) {
     $values = $form_state->getValue($pane_form['#parents']);
-    $account = $this->userStorage->create([
+    $user_storage = $this->entityTypeManager->getStorage('user');
+    $account = $user_storage->create([
       'pass' => $values['pass'],
       'mail' => $this->order->getEmail(),
       'name' => $values['name'],
       'status' => TRUE,
+      'langcode' => $this->languageManager->getCurrentLanguage()->getId(),
+      'preferred_langcode' => $this->languageManager->getCurrentLanguage()->getId(),
+      'preferred_admin_langcode' => $this->languageManager->getCurrentLanguage()->getId(),
     ]);
     /** @var \Drupal\user\UserInterface $account */
     $form_display = EntityFormDisplay::collectRenderDisplay($account, 'register');
     $form_display->extractFormValues($account, $pane_form, $form_state);
     $account->save();
     user_login_finalize($account);
-    $this->credentialsCheckFlood->clearAccount($this->clientIp, $account->getAccountName());
+    $client_ip = $this->requestStack->getCurrentRequest()?->getClientIp();
+    if ($client_ip) {
+      $this->credentialsCheckFlood->clearAccount($client_ip, $account->getAccountName());
+    }
 
     $this->orderAssignment->assign($this->order, $account);
     // Notify other modules.

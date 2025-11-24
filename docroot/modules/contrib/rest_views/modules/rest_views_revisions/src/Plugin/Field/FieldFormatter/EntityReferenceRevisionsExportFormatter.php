@@ -29,7 +29,7 @@ class EntityReferenceRevisionsExportFormatter extends EntityReferenceExportForma
    *
    * @var \Drupal\entity_reference_revisions\Plugin\Field\FieldFormatter\EntityReferenceRevisionsEntityFormatter
    */
-  protected $entityFormatter;
+  protected ERFEntityFormatter $entityFormatter;
 
   /**
    * EntityReferenceRevisionsExportFormatter constructor.
@@ -57,28 +57,29 @@ class EntityReferenceRevisionsExportFormatter extends EntityReferenceExportForma
    * @param \Drupal\entity_reference_revisions\Plugin\Field\FieldFormatter\EntityReferenceRevisionsEntityFormatter $entityFormatter
    *   The entity_reference_revisions formatter.
    */
-  public function __construct($plugin_id,
-                              $plugin_definition,
-                              FieldDefinitionInterface $field_definition,
-                              array $settings,
-                              $label,
-                              $view_mode,
-                              array $third_party_settings,
-                              LoggerChannelFactoryInterface $logger_factory,
-                              EntityTypeManagerInterface $entity_type_manager,
-                              EntityDisplayRepositoryInterface $entity_display_repository,
-                              ERFEntityFormatter $entityFormatter
+  public function __construct(
+    $plugin_id,
+    $plugin_definition,
+    FieldDefinitionInterface $field_definition,
+    array $settings,
+    $label,
+    $view_mode,
+    array $third_party_settings,
+    LoggerChannelFactoryInterface $logger_factory,
+    EntityTypeManagerInterface $entity_type_manager,
+    EntityDisplayRepositoryInterface $entity_display_repository,
+    ERFEntityFormatter $entityFormatter,
   ) {
     parent::__construct($plugin_id,
-                        $plugin_definition,
-                        $field_definition,
-                        $settings,
-                        $label,
-                        $view_mode,
-                        $third_party_settings,
-                        $logger_factory,
-                        $entity_type_manager,
-                        $entity_display_repository);
+      $plugin_definition,
+      $field_definition,
+      $settings,
+      $label,
+      $view_mode,
+      $third_party_settings,
+      $logger_factory,
+      $entity_type_manager,
+      $entity_display_repository);
     $this->entityFormatter = $entityFormatter;
   }
 
@@ -88,10 +89,12 @@ class EntityReferenceRevisionsExportFormatter extends EntityReferenceExportForma
    * @throws \Symfony\Component\DependencyInjection\Exception\ServiceCircularReferenceException
    * @throws \Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException
    */
-  public static function create(ContainerInterface $container,
-                                array $configuration,
-                                $plugin_id,
-                                $plugin_definition) {
+  public static function create(
+    ContainerInterface $container,
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+  ): static {
 
     // Instantiate the entity_reference_revisions formatter.
     $entityFormatter = ERFEntityFormatter::create($container,

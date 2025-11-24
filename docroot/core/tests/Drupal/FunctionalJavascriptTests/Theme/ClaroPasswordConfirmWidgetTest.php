@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalJavascriptTests\Theme;
 
 use Drupal\Tests\user\FunctionalJavascript\PasswordConfirmWidgetTest;
@@ -19,7 +21,7 @@ class ClaroPasswordConfirmWidgetTest extends PasswordConfirmWidgetTest {
   /**
    * Tests that password match message is invisible when widget is initialized.
    */
-  public function testPasswordConfirmMessage() {
+  public function testPasswordConfirmMessage(): void {
     $this->drupalGet($this->testUser->toUrl('edit-form'));
     $password_confirm_widget_selector = '.js-form-type-password-confirm.js-form-item-pass';
     $password_confirm_selector = '.js-form-item-pass-pass2';
@@ -34,7 +36,7 @@ class ClaroPasswordConfirmWidgetTest extends PasswordConfirmWidgetTest {
   /**
    * {@inheritdoc}
    */
-  public function testFillConfirmOnly() {
+  public function testFillConfirmOnly(): void {
     // This test is not applicable to Claro because confirm field is hidden
     // until the password has been filled in the main field.
   }

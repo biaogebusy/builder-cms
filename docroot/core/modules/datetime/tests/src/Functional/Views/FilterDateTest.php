@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\datetime\Functional\Views;
 
 use Drupal\Core\Datetime\DrupalDateTime;
@@ -121,13 +123,13 @@ class FilterDateTest extends ViewTestBase {
   /**
    * Tests exposed grouped filters.
    */
-  public function testExposedGroupedFilters() {
-    // Expose the empty and not empty operators in a grouped filter.
-    $this->drupalGet('admin/structure/views/nojs/handler/test_filter_datetime/default/filter/' . $this->fieldName . '_value');
+  public function testExposedGroupedFilters(): void {
+    $filter_identifier = $this->fieldName . '_value';
+    $this->drupalGet('admin/structure/views/nojs/handler/test_filter_datetime/default/filter/' . $filter_identifier);
     $this->submitForm([], 'Expose filter');
     $this->submitForm([], 'Grouped filters');
 
-    // Test operators with different amount of expected values.
+    // Create groups with different amount of expected values.
     $edit = [];
     // No values are required.
     $edit['options[group_info][group_items][1][title]'] = 'empty';
@@ -160,24 +162,37 @@ class FilterDateTest extends ViewTestBase {
     $this->drupalGet($path);
 
     // Filter the Preview by 'empty'.
-    $this->getSession()->getPage()->findField($this->fieldName . '_value')->selectOption(1);
+    $this->getSession()->getPage()->findField($filter_identifier)->selectOption('1');
     $this->getSession()->getPage()->pressButton('Apply');
     $this->assertIds([4]);
 
     // Filter the Preview by 'not empty'.
-    $this->getSession()->getPage()->findField($this->fieldName . '_value')->selectOption(2);
+    $this->getSession()->getPage()->findField($filter_identifier)->selectOption('2');
     $this->getSession()->getPage()->pressButton('Apply');
     $this->assertIds([1, 2, 3]);
 
     // Filter the Preview by 'less than'.
-    $this->getSession()->getPage()->findField($this->fieldName . '_value')->selectOption(3);
+    $this->getSession()->getPage()->findField($filter_identifier)->selectOption('3');
     $this->getSession()->getPage()->pressButton('Apply');
     $this->assertIds([2, 3]);
 
     // Filter the Preview by 'between'.
-    $this->getSession()->getPage()->findField($this->fieldName . '_value')->selectOption(4);
+    $this->getSession()->getPage()->findField($filter_identifier)->selectOption('4');
     $this->getSession()->getPage()->pressButton('Apply');
     $this->assertIds([2]);
+
+    // Change the identifier for grouped exposed filter.
+    $this->drupalGet('admin/structure/views/nojs/handler/test_filter_datetime/default/filter/' . $filter_identifier);
+    $filter_identifier = 'date';
+    $edit['options[group_info][identifier]'] = $filter_identifier;
+    $this->submitForm($edit, 'Apply');
+    $this->submitForm([], 'Save');
+
+    // Filter results again using a new filter identifier.
+    $this->drupalGet($path);
+    $this->getSession()->getPage()->findField($filter_identifier)->selectOption('2');
+    $this->getSession()->getPage()->pressButton('Apply');
+    $this->assertIds([1, 2, 3]);
   }
 
   /**
@@ -201,7 +216,7 @@ class FilterDateTest extends ViewTestBase {
   /**
    * Tests exposed date filters with a pager.
    */
-  public function testExposedFilterWithPager() {
+  public function testExposedFilterWithPager(): void {
     // Expose the empty and not empty operators in a grouped filter.
     $this->drupalGet('admin/structure/views/nojs/handler/test_filter_datetime/default/filter/' . $this->fieldName . '_value');
     $this->submitForm([], t('Expose filter'));

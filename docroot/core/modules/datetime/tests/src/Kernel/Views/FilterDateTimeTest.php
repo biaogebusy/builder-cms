@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\datetime\Kernel\Views;
 
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
@@ -38,7 +40,7 @@ class FilterDateTimeTest extends DateTimeHandlerTestBase {
   protected function setUp($import_test_views = TRUE): void {
     parent::setUp($import_test_views);
 
-    static::$date = REQUEST_TIME + 86400;
+    static::$date = \Drupal::time()->getRequestTime() + 86400;
 
     // Set the timezone.
     date_default_timezone_set(static::$timezone);
@@ -71,7 +73,7 @@ class FilterDateTimeTest extends DateTimeHandlerTestBase {
   /**
    * Tests filter operations.
    */
-  public function testDatetimeFilter() {
+  public function testDatetimeFilter(): void {
     $this->_testOffset();
     $this->_testBetween();
     $this->_testExact();
@@ -82,7 +84,7 @@ class FilterDateTimeTest extends DateTimeHandlerTestBase {
    */
   protected function _testOffset() {
     $view = Views::getView('test_filter_datetime');
-    $field = static::$field_name . '_value';
+    $field = static::$fieldName . '_value';
 
     // Test simple operations.
     $view->initHandlers();
@@ -117,7 +119,7 @@ class FilterDateTimeTest extends DateTimeHandlerTestBase {
    */
   protected function _testBetween() {
     $view = Views::getView('test_filter_datetime');
-    $field = static::$field_name . '_value';
+    $field = static::$fieldName . '_value';
 
     // Test between with min and max.
     $view->initHandlers();
@@ -180,7 +182,7 @@ class FilterDateTimeTest extends DateTimeHandlerTestBase {
    */
   protected function _testExact() {
     $view = Views::getView('test_filter_datetime');
-    $field = static::$field_name . '_value';
+    $field = static::$fieldName . '_value';
 
     // Test between with min and max.
     $view->initHandlers();

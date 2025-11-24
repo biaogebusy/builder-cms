@@ -14,6 +14,7 @@ interface PageVariantInterface extends ConfigEntityInterface, EntityWithPluginCo
    * Gets the variant plugin.
    *
    * @return \Drupal\Core\Display\VariantInterface
+   *   The variant plugin object.
    */
   public function getVariantPlugin();
 
@@ -21,12 +22,12 @@ interface PageVariantInterface extends ConfigEntityInterface, EntityWithPluginCo
    * Gets the plugin ID of the variant plugin.
    *
    * @return string
+   *   The variant plugin id.
    */
   public function getVariantPluginId();
 
   /**
-   * Sets the plugin ID of the variant plugin without loading the Plugin
-   *   collections.
+   * Sets plugin ID of variant plugin without loading the plugin collections.
    *
    * @param string $variant
    *   The plugin ID of the variant plugin.
@@ -41,6 +42,7 @@ interface PageVariantInterface extends ConfigEntityInterface, EntityWithPluginCo
    * Gets the page this variant is on.
    *
    * @return \Drupal\page_manager\PageInterface
+   *   The parent page container.
    */
   public function getPage();
 
@@ -76,6 +78,7 @@ interface PageVariantInterface extends ConfigEntityInterface, EntityWithPluginCo
    * Gets the weight of this variant (compared to other variants on the page).
    *
    * @return int
+   *   The weight of the current variant.
    */
   public function getWeight();
 
@@ -93,6 +96,7 @@ interface PageVariantInterface extends ConfigEntityInterface, EntityWithPluginCo
    * Gets the selection condition collection.
    *
    * @return \Drupal\Core\Condition\ConditionInterface[]|\Drupal\Core\Condition\ConditionPluginCollection
+   *   The Selection conditions.
    */
   public function getSelectionConditions();
 
@@ -114,6 +118,7 @@ interface PageVariantInterface extends ConfigEntityInterface, EntityWithPluginCo
    *   The ID of the condition.
    *
    * @return \Drupal\Core\Condition\ConditionInterface
+   *   The selection condition.
    */
   public function getSelectionCondition($condition_id);
 

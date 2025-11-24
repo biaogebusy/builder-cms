@@ -115,8 +115,3 @@ a .media--switch img.media__element {
 .media--box > .twitter-tweet-rendered {
   max-width: 100% !important; /* csslint allow: known-properties, important */
 }
-
-/* @todo remove photobox at 3.x, good lightbox, but offers less flexibility. */
-.pbWrapper img {
-  margin: auto;
-}

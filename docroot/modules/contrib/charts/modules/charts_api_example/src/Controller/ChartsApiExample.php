@@ -294,6 +294,315 @@ class ChartsApiExample extends ControllerBase {
       ];
     }
 
+    // Boxplot chart. Supported by Apache ECharts, Apexcharts, Google Charts,
+    // and Highcharts.
+    if (in_array($library, [
+      'apexcharts',
+      'echarts',
+      'google',
+      'highcharts',
+      'kendo_ui',
+    ])) {
+      $boxplot_data = [
+        '#type' => 'chart_data',
+        '#title' => $this->t('Boxplot'),
+        '#data' => [
+          [1, 2, 3, 4, 5],
+          [2, 3, 4, 5, 6],
+          [3, 4, 5, 6, 7],
+          [4, 5, 6, 7, 8],
+        ],
+      ];
+      $charts_container['content']['boxplot'] = [
+        '#type' => 'chart',
+        '#tooltips' => $charts_settings->get('charts_default_settings.display.tooltips'),
+        '#title' => $this->t('@library Boxplot Chart', ['@library' => ucfirst($library)]),
+        '#chart_type' => 'boxplot',
+        'series' => $boxplot_data,
+        'x_axis' => $xaxis,
+        'y_axis' => $yaxis,
+        '#raw_options' => [],
+      ];
+      if ($library === 'google') {
+        $charts_container['content']['boxplot']['#raw_options']['options']['lineWidth'] = 0;
+        $charts_container['content']['boxplot']['#raw_options']['options']['legend'] = [
+          'position' => 'none',
+        ];
+        $charts_container['content']['boxplot']['#raw_options']['options']['series'][0] = [
+          'color' => '#1A8763',
+          'visibleInLegend' => FALSE,
+        ];
+        $charts_container['content']['boxplot']['#raw_options']['options']['intervals'] = [
+          'style' => 'boxes',
+          'barWidth' => 1,
+          'boxWidth' => 1,
+          'lineWidth' => 2,
+          'color' => '#76A7FA',
+        ];
+        $charts_container['content']['boxplot']['#raw_options']['options']['interval'] = [
+          'max' => [
+            'style' => 'bars',
+            'fillOpacity' => 1,
+            'color' => '#777',
+          ],
+          'min' => [
+            'style' => 'bars',
+            'fillOpacity' => 1,
+            'color' => '#777',
+          ],
+        ];
+      }
+    }
+
+    // Candlestick chart. Supported by Apexcharts, Apache Echarts, Billboard.js,
+    // Google Charts, and Highcharts Stock.
+    if (in_array($library, [
+      'apexcharts',
+      'billboard',
+      'echarts',
+      'google',
+      'highstock',
+      'kendo_ui',
+    ])) {
+      // Default format is: Open, High, Low, Close.
+      $candlestick_data = [
+        '#type' => 'chart_data',
+        '#title' => $this->t('Candlestick'),
+        '#data' => [
+          [20, 38, 10, 34],
+          [40, 50, 30, 35],
+          [31, 44, 33, 38],
+          [38, 42, 5, 15],
+        ],
+      ];
+
+      switch ($library) {
+        case 'google':
+          // Format expected [low, open, close, high].
+          $candlestick_data['#data'] = [
+            [10, 20, 34, 38],
+            [30, 40, 35, 50],
+            [33, 31, 38, 44],
+            [5, 38, 15, 42],
+          ];
+          break;
+
+        case 'billboard':
+          // Format expected [open, high, low, close].
+          $candlestick_data['#data'] = [
+            [20, 38, 10, 34],
+            [40, 50, 30, 35],
+            [31, 44, 33, 38],
+            [38, 42, 5, 15],
+          ];
+          break;
+
+        case 'echarts':
+          // Format expected [open, close, low, high].
+          $candlestick_data['#data'] = [
+            [20, 34, 10, 38],
+            [40, 35, 30, 50],
+            [31, 38, 33, 44],
+            [38, 15, 5, 42],
+          ];
+          break;
+      }
+      $charts_container['content']['candlestick'] = [
+        '#type' => 'chart',
+        '#tooltips' => $charts_settings->get('charts_default_settings.display.tooltips'),
+        '#title' => $this->t('@library Candlestick Chart', ['@library' => ucfirst($library)]),
+        '#chart_type' => 'candlestick',
+        'series' => $candlestick_data,
+        'x_axis' => $xaxis,
+        'y_axis' => $yaxis,
+        '#raw_options' => [],
+      ];
+    }
+
+    // Heatmap chart. Supported by Apexcharts, Apache Echarts, and Highcharts.
+    if (in_array($library, [
+      'apexcharts',
+      'echarts',
+      'highcharts',
+      'kendo_ui',
+    ])) {
+      $charts_container['content']['heatmap'] = [
+        '#type' => 'chart',
+        '#tooltips' => $charts_settings->get('charts_default_settings.display.tooltips'),
+        '#title' => $this->t('@library Heatmap Chart', ['@library' => ucfirst($library)]),
+        '#chart_type' => 'heatmap',
+        'y_axis' => $yaxis,
+        '#raw_options' => [],
+      ];
+      if ($library === 'highcharts') {
+        // Check if the 'charts_highcharts/heatmap' library is available.
+        $libraries = $this->moduleList->getList();
+        $highcharts_heatmap = array_filter($libraries, function ($library) {
+          return str_contains($library->getName(), 'charts_highcharts_heatmap');
+        });
+        if (empty($highcharts_heatmap)) {
+          // Attach the charts_highcharts/heatmap library.
+          $charts_container['content']['heatmap']['#attached']['library'][] = 'charts_highcharts/heatmap';
+        }
+        $charts_container['content']['heatmap']['series'] = [
+          '#type' => 'chart_data',
+          '#title' => $this->t('Heatmap'),
+          '#data' => [
+            [0, 0, 23],
+            [0, 1, 45],
+            [0, 2, 17],
+            [0, 3, 56],
+            [0, 4, 39],
+            [1, 0, 61],
+            [1, 1, 87],
+            [1, 2, 42],
+            [1, 3, 76],
+            [1, 4, 105],
+            [2, 0, 94],
+            [2, 1, 37],
+            [2, 2, 68],
+            [2, 3, 112],
+            [2, 4, 29],
+            [3, 0, 41],
+            [3, 1, 83],
+            [3, 2, 69],
+            [3, 3, 54],
+            [3, 4, 97],
+            [4, 0, 76],
+            [4, 1, 22],
+            [4, 2, 51],
+            [4, 3, 79],
+            [4, 4, 63],
+            [5, 0, 43],
+            [5, 1, 91],
+            [5, 2, 67],
+            [5, 3, 33],
+            [5, 4, 72],
+            [6, 0, 58],
+            [6, 1, 101],
+            [6, 2, 45],
+            [6, 3, 27],
+            [6, 4, 53],
+            [7, 0, 84],
+            [7, 1, 32],
+            [7, 2, 46],
+            [7, 3, 79],
+            [7, 4, 88],
+            [8, 0, 37],
+            [8, 1, 62],
+            [8, 2, 71],
+            [8, 3, 113],
+            [8, 4, 49],
+            [9, 0, 92],
+            [9, 1, 58],
+            [9, 2, 84],
+            [9, 3, 29],
+            [9, 4, 66],
+          ],
+        ];
+        $charts_container['content']['heatmap']['x_axis'] = [
+          '#type' => 'chart_xaxis',
+          '#title' => $this->t('X-Axis'),
+          '#labels' => [
+            $this->t('January 2021'),
+            $this->t('February 2021'),
+            $this->t('March 2021'),
+            $this->t('April 2021'),
+            $this->t('May 2021'),
+            $this->t('June 2021'),
+            $this->t('July 2021'),
+            $this->t('August 2021'),
+            $this->t('September 2021'),
+            $this->t('October 2021'),
+          ],
+        ];
+        $charts_container['content']['heatmap']['#raw_options']['colorAxis'] = [
+          'minColor' => '#FFFFFF',
+          'min' => 0,
+        ];
+        $charts_container['content']['heatmap']['#raw_options']['plotOptions']['series']['dataLabels']['enabled'] = TRUE;
+        $charts_container['content']['heatmap']['#raw_options']['plotOptions']['series']['marker']['enabled'] = TRUE;
+      }
+      if (in_array($library, ['apexcharts', 'echarts', 'kendo_ui'])) {
+        $charts_container['content']['heatmap']['series_one'] = [
+          '#type' => 'chart_data',
+          '#title' => $this->t('Heatmap'),
+          '#data' => [
+            [0, 1, 2],
+            [1, 2, 3],
+            [2, 3, 4],
+            [3, 4, 5],
+          ],
+        ];
+        $charts_container['content']['heatmap']['series_two'] = [
+          '#type' => 'chart_data',
+          '#title' => $this->t('Heatmap'),
+          '#data' => [
+            [0, 4, 2],
+            [1, 5, 3],
+            [2, 3, 4],
+            [3, 6, 5],
+          ],
+        ];
+        $charts_container['content']['heatmap']['x_axis'] = [
+          '#type' => 'chart_xaxis',
+          '#title' => $this->t('X-Axis'),
+          '#labels' => [
+            $this->t('January 2021'),
+            $this->t('February 2021'),
+            $this->t('March 2021'),
+            $this->t('April 2021'),
+          ],
+        ];
+        if ($library === 'echarts') {
+          $charts_container['content']['heatmap']['#raw_options']['options'] = [
+            'visualMap' => [
+              'min' => 0,
+              'max' => 6,
+            ],
+          ];
+        }
+      }
+    }
+
+    // Range Area chart. Supported by Apexcharts, Billboard.js, and Highcharts.
+    if (in_array($library, [
+      'apexcharts',
+      'billboard',
+      'highcharts',
+      'kendo_ui',
+    ])) {
+      $area_range_data = [
+        [6, 10],
+        [5, 7],
+        [3, 7],
+        [4, 9],
+      ];
+      if ($library === 'billboard') {
+        $area_range_data = [
+          [6, 8, 10],
+          [5, 6, 7],
+          [3, 5, 7],
+          [4, 6, 9],
+        ];
+      }
+      $range_area_data_series = [
+        '#type' => 'chart_data',
+        '#title' => $this->t('Range Area'),
+        '#data' => $area_range_data,
+      ];
+      $charts_container['content']['range_area'] = [
+        '#type' => 'chart',
+        '#tooltips' => $charts_settings->get('charts_default_settings.display.tooltips'),
+        '#title' => $this->t('@library Range Area Chart', ['@library' => ucfirst($library)]),
+        '#chart_type' => 'arearange',
+        'series' => $range_area_data_series,
+        'x_axis' => $xaxis,
+        'y_axis' => $yaxis,
+        '#raw_options' => [],
+      ];
+    }
+
     // Gauge chart. Not yet supported by Chart.js (as of 3.5.1).
     if ($library !== 'chartjs') {
       $charts_container['content']['gauge'] = [
@@ -330,6 +639,31 @@ class ChartsApiExample extends ControllerBase {
         '#type' => 'chart_data',
         '#title' => $this->t('Group 1'),
         '#data' => [[162.2, 51.8], [164.5, 58.0], [160.5, 49.6], [154.0, 65.0]],
+      ],
+      'x_axis' => [
+        '#type' => 'chart_xaxis',
+        '#title' => $this->t('Height'),
+        '#labels' => [],
+      ],
+      'y_axis' => [
+        '#type' => 'chart_yaxis',
+        '#title' => $this->t('Weight'),
+      ],
+      '#stacking' => TRUE,
+      '#raw_options' => [],
+    ];
+
+    // Bubble chart.
+    $charts_container['content']['bubble'] = [
+      '#type' => 'chart',
+      '#tooltips' => $charts_settings->get('charts_default_settings.display.tooltips'),
+      '#title' => $this->t('@library Bubble Chart', ['@library' => ucfirst($library)]),
+      '#data_markers' => TRUE,
+      '#chart_type' => 'bubble',
+      'series' => [
+        '#type' => 'chart_data',
+        '#title' => $this->t('Group 1'),
+        '#data' => [[162.2, 51.8, 10], [164.5, 58.0, 20], [160.5, 49.6, 30], [154.0, 65.0, 40]],
       ],
       'x_axis' => [
         '#type' => 'chart_xaxis',

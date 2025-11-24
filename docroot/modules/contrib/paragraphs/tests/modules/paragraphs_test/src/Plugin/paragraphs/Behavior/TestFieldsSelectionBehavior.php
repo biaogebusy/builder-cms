@@ -3,19 +3,20 @@
 namespace Drupal\paragraphs_test\Plugin\paragraphs\Behavior;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\paragraphs\Attribute\ParagraphsBehavior;
 use Drupal\paragraphs\Entity\Paragraph;
 use Drupal\paragraphs\ParagraphsBehaviorBase;
 
 /**
  * Test plugin with field selection.
- *
- * @ParagraphsBehavior(
- *   id = "test_field_selection",
- *   label = @Translation("Test field selection for behavior plugin"),
- *   description = @Translation("Test field selection for behavior plugin"),
- *   weight = 0
- * )
  */
+#[ParagraphsBehavior(
+  id: 'test_field_selection',
+  label: new TranslatableMarkup('Test field selection for behavior plugin'),
+  description: new TranslatableMarkup('Test field selection for behavior plugin'),
+  weight: 0,
+)]
 class TestFieldsSelectionBehavior extends ParagraphsBehaviorBase {
 
   /**

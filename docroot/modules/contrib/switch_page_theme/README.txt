@@ -13,6 +13,7 @@ FEATURES
   - Theme can be set for single page or list of pages.
   - Theme can be assigned to specific roles.
   - Wildcard '*' character can be used in drupal paths.
+  - Supports query value for theme_key.
   - Supports Multi domain sites.
   - Supports Multilingual sites.
 

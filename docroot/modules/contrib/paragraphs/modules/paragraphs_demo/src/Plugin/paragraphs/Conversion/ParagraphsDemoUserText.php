@@ -3,26 +3,27 @@
 namespace Drupal\paragraphs_demo\Plugin\paragraphs\Conversion;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\paragraphs\Attribute\ParagraphsConversion;
 use Drupal\paragraphs\ParagraphInterface;
 use Drupal\paragraphs\ParagraphsConversionBase;
 
 /**
  * Provides a Paragraphs conversion plugin.
- *
- * @ParagraphsConversion(
- *   id = "paragraphs_demo_user_to_text",
- *   label = @Translation("Convert to Text"),
- *   source_type = "user",
- *   target_types = {"text"},
- *   weight = 0
- * )
  */
+#[ParagraphsConversion(
+  id: "paragraphs_demo_user_to_text",
+  label: new TranslatableMarkup("Convert to Text"),
+  source_type: "user",
+  target_types: ["text"],
+  weight: 0
+)]
 class ParagraphsDemoUserText extends ParagraphsConversionBase {
 
   /**
    * {@inheritdoc}
    */
-  public function convert(array $settings, ParagraphInterface $original_paragraph, array $converted_paragraphs = NULL) {
+  public function convert(array $settings, ParagraphInterface $original_paragraph, ?array $converted_paragraphs = NULL) {
     $username = "Empty user field";
     if ($original_paragraph->get('field_user_demo')->entity) {
       $username = $original_paragraph->get('field_user_demo')->entity->label();

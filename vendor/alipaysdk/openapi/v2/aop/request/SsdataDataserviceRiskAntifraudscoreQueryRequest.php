@@ -3,7 +3,7 @@
  * ALIPAY API: ssdata.dataservice.risk.antifraudscore.query request
  *
  * @author auto create
- * @since 1.0, 2024-03-01 16:27:44
+ * @since 1.0, 2025-06-05 15:50:04
  */
 class SsdataDataserviceRiskAntifraudscoreQueryRequest
 {

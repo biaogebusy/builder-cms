@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\commerce_promotion\Kernel;
 
+use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 use Drupal\commerce_promotion\Entity\Promotion;
 use Drupal\language\Entity\ConfigurableLanguage;
-use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 
 /**
  * Tests promotions in a multilingual context.

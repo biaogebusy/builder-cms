@@ -2,34 +2,35 @@
 
 namespace Drupal\charts_chartjs\Plugin\chart\Library;
 
-use Drupal\charts\Plugin\chart\Library\ChartBase;
+use Drupal\charts\Attribute\Chart;
 use Drupal\Component\Utility\Color;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Drupal\charts\Plugin\chart\Library\ChartBase;
 
 /**
- * Define a concrete class for a Chart.
- *
- * @Chart(
- *   id = "chartjs",
- *   name = @Translation("Chart.js"),
- *   types = {
- *     "area",
- *     "bar",
- *     "bubble",
- *     "column",
- *     "donut",
- *     "line",
- *     "pie",
- *     "polarArea",
- *     "scatter",
- *     "spline",
- *   },
- * )
+ * The 'Chartjs' chart type attribute.
  */
+#[Chart(
+  id: "chartjs",
+  name: new TranslatableMarkup("Chart.js"),
+  types: [
+    "area",
+    "bar",
+    "bubble",
+    "column",
+    "donut",
+    "line",
+    "pie",
+    "polarArea",
+    "scatter",
+    "spline",
+  ]
+)]
 class Chartjs extends ChartBase {
 
   /**
@@ -78,7 +79,7 @@ class Chartjs extends ChartBase {
         'center' => $this->t('Center'),
         'end' => $this->t('End'),
       ],
-      '#default_value' => $xaxis_configuration['horizontal_axis_title_align'] ?? '',
+      '#default_value' => $xaxis_configuration['horizontal_axis_title_align'] ?? 'center',
     ];
     $form['yaxis'] = [
       '#title' => $this->t('Y-Axis Settings'),
@@ -93,7 +94,7 @@ class Chartjs extends ChartBase {
         'center' => $this->t('Center'),
         'end' => $this->t('End'),
       ],
-      '#default_value' => $this->configuration['yaxis']['vertical_axis_title_align'] ?? '',
+      '#default_value' => $this->configuration['yaxis']['vertical_axis_title_align'] ?? 'center',
     ];
 
     return $form;
@@ -177,13 +178,12 @@ class Chartjs extends ChartBase {
      * Setting defaults based on what Views uses. However, API users may
      * have different keys for their X and Y axes.
      */
-    $x_axis_key = 'xaxis';
-    $y_axis_key = 'yaxis';
+    $axes_info = [];
     foreach ($children as $child) {
       $type = $element[$child]['#type'];
       if ($type === 'chart_xaxis') {
         $x_axis_key = $child;
-        $xaxis_configuration = $this->configuration[$x_axis_key] ?? [];
+        $xaxis_configuration = $this->configuration['xaxis'] ?? [];
         if (!in_array($chart_type, $this->getPieStyleTypes())) {
           if ($chart_type !== 'radar') {
             $chart_definition['options']['scales']['x'] = [
@@ -201,23 +201,20 @@ class Chartjs extends ChartBase {
             }
           }
         }
+        $axes_info['x'] = [
+          'element' => $element[$x_axis_key] ?? [],
+          'config' => $this->configuration['xaxis'] ?? [],
+        ];
       }
-      if ($type === 'chart_yaxis') {
-        $y_axis_key = $child;
+      elseif ($type === 'chart_yaxis') {
+        $target_axes = array_column($chart_definition['data']['datasets'], 'yAxisID');
+        $y_axis_key = in_array($child, $target_axes) ? $child : 'y';
+        $axes_info[$y_axis_key] = [
+          'element' => $element[$child] ?? [],
+          'config' => $this->configuration['yaxis'] ?? [],
+        ];
       }
     }
-
-    // Build array of axes info.
-    $axes_info = [
-      'x' => [
-        'element' => $element[$x_axis_key] ?? [],
-        'config' => $this->configuration[$x_axis_key] ?? [],
-      ],
-      'y' => [
-        'element' => $element[$y_axis_key] ?? [],
-        'config' => $this->configuration[$y_axis_key] ?? [],
-      ],
-    ];
 
     // Build axes options in chart_definition.
     if (!in_array($chart_type, $this->getPieStyleTypes())) {
@@ -236,24 +233,27 @@ class Chartjs extends ChartBase {
             'minRotation' => $axes_info['x']['element']['#labels_rotation'] ?? 0,
           ],
         ];
-        $chart_definition['options']['scales']['y'] = [
-          'ticks' => [
-            'beginAtZero' => NULL,
-            'maxRotation' => $axes_info['y']['element']['#labels_rotation'] ?? 0,
-            'minRotation' => $axes_info['y']['element']['#labels_rotation'] ?? 0,
-          ],
-          'maxTicksLimit' => 11,
-          'precision' => NULL,
-          'stepSize' => NULL,
-          'suggestedMax' => NULL,
-          'suggestedMin' => NULL,
-          'stacked' => $stacking,
-        ];
 
         // Set configured values for each axis.
         foreach ($axes_info as $axis_id => $axis_info) {
           $axis_element = $axis_info['element'];
           $axis_config = $axis_info['config'];
+
+          if ($axis_element['#type'] == 'chart_yaxis') {
+            $chart_definition['options']['scales'][$axis_id] = [
+              'ticks' => [
+                'beginAtZero' => NULL,
+                'maxRotation' => $axes_info[$axis_id]['element']['#labels_rotation'] ?? 0,
+                'minRotation' => $axes_info[$axis_id]['element']['#labels_rotation'] ?? 0,
+              ],
+              'maxTicksLimit' => 11,
+              'precision' => NULL,
+              'stepSize' => NULL,
+              'suggestedMax' => NULL,
+              'suggestedMin' => NULL,
+              'stacked' => $stacking,
+            ];
+          }
 
           // Set the axis type.
           if (!empty($axis_element['#axis_type'])) {
@@ -353,7 +353,14 @@ class Chartjs extends ChartBase {
       ];
     }
     $chart_definition['options']['plugins']['tooltip']['enabled'] = $element['#tooltips'];
+    if (!empty($element['#data_labels'])) {
+      $chart_definition['options']['plugins']['datalabels'] = [];
+    }
     $chart_definition['options']['plugins']['legend'] = $this->buildLegend($element);
+
+    if (!empty($element['#connect_nulls'])) {
+      $chart_definition['options']['spanGaps'] = TRUE;
+    }
 
     return $chart_definition;
   }
@@ -375,6 +382,10 @@ class Chartjs extends ChartBase {
     foreach ($children as $child) {
       $type = $element[$child]['#type'];
       if ($type === 'chart_xaxis' && isset($element[$child]['#labels'])) {
+        if (in_array($element['#chart_type'], $this->getPieStyleTypes())) {
+          $categories = $element[$child]['#labels'];
+          break;
+        }
         $categories = is_array($element[$child]['#labels']) ? array_map('strip_tags', $element[$child]['#labels']) : [];
       }
       if (in_array($element['#chart_type'], $this->getPieStyleTypes())
@@ -418,7 +429,7 @@ class Chartjs extends ChartBase {
     foreach (Element::children($element) as $key) {
       if ($element[$key]['#type'] === 'chart_data') {
         $series_data = [];
-        $dataset = new \stdClass();
+        $dataset = [];
         // Populate the data.
         foreach ($element[$key]['#data'] as $data_index => $data) {
           if (isset($series_data[$data_index])) {
@@ -454,34 +465,34 @@ class Chartjs extends ChartBase {
           }
         }
         if (!empty($element[$key]['#target_axis'])) {
-          $dataset->yAxisID = $element[$key]['#target_axis'];
+          $dataset['yAxisID'] = $element[$key]['#target_axis'];
         }
-        $dataset->label = $element[$key]['#title'];
-        $dataset->data = $series_data;
+        $dataset['label'] = $element[$key]['#title'];
+        $dataset['data'] = $series_data;
 
         // Set the background and border color.
         if (!empty($element[$key]['#color'])) {
           if (!in_array($chart_type, $this->getPieStyleTypes())) {
-            $dataset->borderColor = $element[$key]['#color'];
+            $dataset['borderColor'] = $element[$key]['#color'];
           }
-          $dataset->backgroundColor = $element[$key]['#color'];
+          $dataset['backgroundColor'] = $element[$key]['#color'];
         }
         if (in_array($chart_type, $this->getPieStyleTypes()) && !empty($element['#colors'])) {
-          $dataset->backgroundColor = $element['#colors'];
+          $dataset['backgroundColor'] = $element['#colors'];
         }
 
         $series_type = isset($element[$key]['#chart_type']) ? $this->populateChartType($element[$key]) : $chart_type;
-        $dataset->type = $series_type;
+        $dataset['type'] = $series_type;
         if (!empty($element[$key]['#chart_type']) && $element[$key]['#chart_type'] === 'area') {
-          $dataset->fill = 'origin';
-          $dataset->backgroundColor = $this->getTranslucentColor($element[$key]['#color']);
+          $dataset['fill'] = 'origin';
+          $dataset['backgroundColor'] = $this->getTranslucentColor($element[$key]['#color']);
         }
         elseif ($element['#chart_type'] === 'area') {
-          $dataset->fill = 'origin';
-          $dataset->backgroundColor = $this->getTranslucentColor($element[$key]['#color']);
+          $dataset['fill'] = 'origin';
+          $dataset['backgroundColor'] = $this->getTranslucentColor($element[$key]['#color']);
         }
         else {
-          $dataset->fill = FALSE;
+          $dataset['fill'] = FALSE;
         }
 
         // Merge in dataset raw options.
@@ -650,6 +661,7 @@ class Chartjs extends ChartBase {
     return [
       'pie',
       'doughnut',
+      'donut',
       'polarArea',
     ];
   }

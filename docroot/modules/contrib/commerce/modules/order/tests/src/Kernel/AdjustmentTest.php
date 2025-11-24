@@ -37,7 +37,7 @@ class AdjustmentTest extends OrderKernelTestBase {
    * @return array
    *   The definitions.
    */
-  public function invalidDefinitionProvider() {
+  public static function invalidDefinitionProvider() {
     return [
       [[], 'Missing required property type'],
       [['type' => 'custom'], 'Missing required property label'],

@@ -5,22 +5,19 @@ namespace Drupal\file\Plugin\migrate\process\d6;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\migrate\MigrateLookupInterface;
 use Drupal\migrate\Plugin\MigrationInterface;
+use Drupal\migrate\Attribute\MigrateProcess;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\ProcessPluginBase;
 use Drupal\migrate\Row;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
-/**
- * @MigrateProcessPlugin(
- *   id = "d6_field_file"
- * )
- */
+#[MigrateProcess('d6_field_file')]
 class FieldFile extends ProcessPluginBase implements ContainerFactoryPluginInterface {
 
   /**
    * The current migration.
    */
-  protected $migration;
+  protected MigrationInterface $migration;
 
   /**
    * The migrate lookup service.
@@ -53,7 +50,7 @@ class FieldFile extends ProcessPluginBase implements ContainerFactoryPluginInter
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration = NULL) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, ?MigrationInterface $migration = NULL) {
     return new static(
       $configuration,
       $plugin_id,
@@ -73,7 +70,7 @@ class FieldFile extends ProcessPluginBase implements ContainerFactoryPluginInter
     // means the file referenced by the current field item did not migrate for
     // some reason -- file migration is notoriously brittle -- and we do NOT
     // want to send invalid file references into the field system (it causes
-    // fatals), so return an empty item instead.
+    // fatal errors), so return an empty item instead.
     $lookup_result = $this->migrateLookup->lookup('d6_file', [$value['fid']]);
     if ($lookup_result) {
       return [

@@ -38,6 +38,14 @@ views.row.search_api_data:
   type: views.row.data_field
   label: 'Entity (Search API)'
 
+views.cache.search_api_none:
+  type: views_cache
+  label: 'No caching (Search API)'
+  mapping:
+    options:
+      type: mapping
+      label: 'Cache options'
+
 views.cache.search_api_time:
   type: views_cache
   label: 'Time-based caching (Search API)'
@@ -67,6 +75,9 @@ views.cache.search_api_tag:
       type: mapping
       label: 'Cache options'
 
+views.cache.search_api_time_tag:
+  type: views.cache.search_api_time
+  label: 'Time and tag-based caching (Search API)'
 
 views.argument.search_api:
   type: views.argument.numeric
@@ -245,6 +256,14 @@ views.field.search_api_rendered_item:
           type: string
           label: 'View mode for the specific bundle'
 
+views.field.search_api_text:
+  type: views.field.search_api
+  label: 'Search API text'
+  mapping:
+    filter_type:
+      type: string
+      label: 'Output filter/sanitization to apply'
+
 views.filter.search_api_boolean:
   type: views.filter.boolean
   label: 'Search API boolean'
@@ -287,6 +306,12 @@ views.filter.search_api_fulltext:
         searched_fields_id:
           type: string
           label: 'Searched fields identifier'
+        value_maxlength:
+          type: integer
+          label: 'Search field character limit'
+        value_max_words:
+          type: integer
+          label: 'Maximum number of words'
 
 views.filter.search_api_language:
   type: views.filter.language

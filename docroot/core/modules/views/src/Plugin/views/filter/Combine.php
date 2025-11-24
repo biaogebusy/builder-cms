@@ -3,14 +3,14 @@
 namespace Drupal\views\Plugin\views\filter;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\views\Attribute\ViewsFilter;
 
 /**
  * Filter handler which allows to search on multiple fields.
  *
  * @ingroup views_field_handlers
- *
- * @ViewsFilter("combine")
  */
+#[ViewsFilter("combine")]
 class Combine extends StringFilter {
 
   /**
@@ -210,7 +210,8 @@ class Combine extends StringFilter {
 
   protected function opRegex($expression) {
     $placeholder = $this->placeholder();
-    $this->query->addWhereExpression($this->options['group'], "$expression REGEXP $placeholder", [$placeholder => $this->value]);
+    $operator = $this->getConditionOperator('REGEXP');
+    $this->query->addWhereExpression($this->options['group'], "$expression $operator $placeholder", [$placeholder => $this->value]);
   }
 
   protected function opEmpty($expression) {

@@ -1,57 +1,42 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\migrate_tools\Controller;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Database\Connection;
-use Drupal\migrate\Plugin\MigrateIdMapInterface;
+use Drupal\Core\Database\Query\PagerSelectExtender;
+use Drupal\Core\Database\Query\TableSortExtender;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\Plugin\MigrationPluginManagerInterface;
 use Drupal\migrate_plus\Entity\MigrationGroupInterface;
 use Drupal\migrate_plus\Entity\MigrationInterface as MigratePlusMigrationInterface;
+use Drupal\migrate_tools\MigrateTools;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Returns responses for migrate_tools message routes.
+ *
+ * @phpstan-consistent-constructor
  */
 class MessageController extends ControllerBase {
 
-  /**
-   * The database service.
-   *
-   * @var \Drupal\Core\Database\Connection
-   */
-  protected $database;
-
-  /**
-   * Plugin manager for migration plugins.
-   *
-   * @var \Drupal\migrate\Plugin\MigrationPluginManagerInterface
-   */
-  protected $migrationPluginManager;
+  public function __construct(
+    protected Connection $database,
+    protected MigrationPluginManagerInterface $migrationPluginManager,
+  ) {}
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): static {
     return new static(
       $container->get('database'),
       $container->get('plugin.manager.migration')
     );
-  }
-
-  /**
-   * Constructs a MessageController object.
-   *
-   * @param \Drupal\Core\Database\Connection $database
-   *   A database connection.
-   * @param \Drupal\migrate\Plugin\MigrationPluginManagerInterface $migration_plugin_manager
-   *   The migration plugin manager.
-   */
-  public function __construct(Connection $database, MigrationPluginManagerInterface $migration_plugin_manager) {
-    $this->database = $database;
-    $this->migrationPluginManager = $migration_plugin_manager;
   }
 
   /**
@@ -60,7 +45,7 @@ class MessageController extends ControllerBase {
    * @return array
    *   An array of log level classes.
    */
-  public static function getLogLevelClassMap() {
+  public static function getLogLevelClassMap(): array {
     return [
       MigrationInterface::MESSAGE_INFORMATIONAL => 'migrate-message-4',
       MigrationInterface::MESSAGE_NOTICE => 'migrate-message-3',
@@ -82,16 +67,19 @@ class MessageController extends ControllerBase {
    * @return array
    *   A render array as expected by drupal_render().
    */
-  public function overview(MigrationGroupInterface $migration_group, MigratePlusMigrationInterface $migration) {
+  public function overview(MigrationGroupInterface $migration_group, MigratePlusMigrationInterface $migration): array {
+    $header = [];
+    $build = [];
     $rows = [];
     $classes = static::getLogLevelClassMap();
-    $migration_plugin = $this->migrationPluginManager->createInstance($migration->id(), $migration->toArray());
+    /** @var \Drupal\migrate\Plugin\MigrationInterface $migration_plugin */
+    $migration_plugin = $this->migrationPluginManager->createInstance($migration->id());
     $source_id_field_names = array_keys($migration_plugin->getSourcePlugin()->getIds());
     $column_number = 1;
     foreach ($source_id_field_names as $source_id_field_name) {
       $header[] = [
         'data' => $source_id_field_name,
-        'field' => 'sourceid' . $column_number++,
+        'field' => 'sourceId' . $column_number++,
         'class' => [RESPONSIVE_PRIORITY_MEDIUM],
       ];
     }
@@ -105,6 +93,10 @@ class MessageController extends ControllerBase {
       'field' => 'message',
     ];
     $header[] = [
+      'data' => $this->t('Destination ID'),
+      'field' => 'destId',
+    ];
+    $header[] = [
       'data' => $this->t('Status'),
       'field' => 'source_row_status',
     ];
@@ -114,8 +106,8 @@ class MessageController extends ControllerBase {
     if ($this->database->schema()->tableExists($message_table)) {
       $map_table = $migration_plugin->getIdMap()->mapTableName();
       $query = $this->database->select($message_table, 'msg')
-        ->extend('\Drupal\Core\Database\Query\PagerSelectExtender')
-        ->extend('\Drupal\Core\Database\Query\TableSortExtender');
+        ->extend(PagerSelectExtender::class)
+        ->extend(TableSortExtender::class);
       $query->innerJoin($map_table, 'map', 'msg.source_ids_hash=map.source_ids_hash');
       $query->fields('msg');
       $query->fields('map');
@@ -125,27 +117,38 @@ class MessageController extends ControllerBase {
         ->execute();
     }
 
-    $status_strings = [
-      MigrateIdMapInterface::STATUS_IMPORTED => $this->t('Imported'),
-      MigrateIdMapInterface::STATUS_NEEDS_UPDATE => $this->t('Pending'),
-      MigrateIdMapInterface::STATUS_IGNORED => $this->t('Ignored'),
-      MigrateIdMapInterface::STATUS_FAILED => $this->t('Failed'),
-    ];
+    $level_mapping = MigrateTools::getLogLevelLabelMapping();
+    $status_mapping = MigrateTools::getStatusLevelLabelMapping();
 
     foreach ($result as $message_row) {
       $column_number = 1;
+      $data = [];
       foreach ($source_id_field_names as $source_id_field_name) {
-        $column_name = 'sourceid' . $column_number++;
-        $row[$column_name] = $message_row->$column_name;
+        $column_name = 'sourceId' . $column_number++;
+        $data[$column_name] = $message_row->$column_name;
       }
-      $row['level'] = $message_row->level;
-      $row['message'] = $message_row->message;
-      $row['status'] = $status_strings[$message_row->source_row_status];
-      $row['class'] = [
-        Html::getClass('migrate-message-' . $message_row->level),
-        $classes[$message_row->level],
+      $data['level'] = $level_mapping[$message_row->level] ?: $message_row->level;
+      $data['message'] = $message_row->message;
+      $column_number = 1;
+      foreach ($migration_plugin->getDestinationPlugin()->getIds() as $dest_id_field_name => $dest_id_schema) {
+        $column_name = 'destId' . $column_number++;
+        $data['destId']['data'][] = $message_row->$column_name;
+        $data['destId']['#destination_fields'][$dest_id_field_name] =
+        $data['destId']['#destination_fields'][$column_name] = $message_row->$column_name;
+      }
+      $destid = array_filter($data['destId']['data']);
+      $data['destId']['data'] = [
+        '#markup' => $destid ? implode(MigrateTools::DEFAULT_ID_LIST_DELIMITER, $data['destId']['data']) : '',
       ];
-      $rows[] = $row;
+
+      $data['status'] = $status_mapping[$message_row->source_row_status];
+      $rows[] = [
+        'class' => [
+          Html::getClass('migrate-message-' . $message_row->level),
+          $classes[$message_row->level],
+        ],
+        'data' => $data,
+      ];
     }
 
     $build['message_table'] = [
@@ -171,7 +174,7 @@ class MessageController extends ControllerBase {
    * @return \Drupal\Core\StringTranslation\TranslatableMarkup
    *   The translated title.
    */
-  public function title(MigrationGroupInterface $migration_group, MigratePlusMigrationInterface $migration) {
+  public function title(MigrationGroupInterface $migration_group, MigratePlusMigrationInterface $migration): TranslatableMarkup {
     return $this->t(
       'Messages of %migration',
       ['%migration' => $migration->label()]

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\FunctionalJavascript;
 
 use Drupal\file\Entity\File;
@@ -40,7 +42,7 @@ class ThemeSettingsFormTest extends WebDriverTestBase {
    *
    * @dataProvider providerTestFormSettingsSubmissionHandler
    */
-  public function testFormSettingsSubmissionHandler($theme) {
+  public function testFormSettingsSubmissionHandler($theme): void {
 
     \Drupal::service('theme_installer')->install([$theme]);
 
@@ -73,7 +75,7 @@ class ThemeSettingsFormTest extends WebDriverTestBase {
   /**
    * Provides test data for ::testFormSettingsSubmissionHandler().
    */
-  public function providerTestFormSettingsSubmissionHandler() {
+  public static function providerTestFormSettingsSubmissionHandler() {
     return [
       'test theme.theme' => ['test_theme_theme'],
       'test theme-settings.php' => ['test_theme_settings'],

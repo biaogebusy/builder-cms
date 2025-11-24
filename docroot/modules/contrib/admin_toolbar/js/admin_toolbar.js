@@ -4,19 +4,6 @@
 
       $('a.toolbar-icon', context).removeAttr('title');
 
-      $('.toolbar-tray li.menu-item--expanded, .toolbar-tray ul li.menu-item--expanded .menu-item', context).hoverIntent({
-        over: function () {
-          // At the current depth, we should delete all "hover-intent" classes.
-          // Other wise we get unwanted behaviour where menu items are expanded while already in hovering other ones.
-          $(this).parent().find('li').removeClass('hover-intent');
-          $(this).addClass('hover-intent');
-        },
-        out: function () {
-          $(this).removeClass('hover-intent');
-        },
-        timeout: 250
-      });
-
       // Make the toolbar menu navigable with keyboard.
       $('ul.toolbar-menu li.menu-item--expanded a', context).on('focusin', function () {
         $('li.menu-item--expanded', context).removeClass('hover-intent');
@@ -47,12 +34,6 @@
           $('li.menu-item--expanded').removeClass('hover-intent');
         }
       });
-
-      // Always hide the dropdown menu on mobile.
-      if ($('body:not(.toolbar-fixed) #toolbar-item-administration-tray').hasClass('toolbar-tray-vertical')) {
-        $('#toolbar-item-administration').removeClass('is-active');
-        $('#toolbar-item-administration-tray').removeClass('is-active');
-      };
 
     }
   };

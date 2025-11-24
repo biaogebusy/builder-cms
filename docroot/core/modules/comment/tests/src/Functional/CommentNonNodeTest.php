@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Functional;
 
 use Drupal\comment\CommentInterface;
@@ -25,6 +27,9 @@ class CommentNonNodeTest extends BrowserTestBase {
   use FieldUiTestTrait;
   use CommentTestTrait;
 
+  /**
+   * {@inheritdoc}
+   */
   protected static $modules = [
     'comment',
     'user',
@@ -193,7 +198,7 @@ class CommentNonNodeTest extends BrowserTestBase {
    * @return bool
    *   Boolean indicating whether the comment was found.
    */
-  public function commentExists(CommentInterface $comment = NULL, $reply = FALSE) {
+  public function commentExists(?CommentInterface $comment = NULL, $reply = FALSE) {
     if ($comment) {
       $regex = '/' . ($reply ? '<div class="indented">(.*?)' : '');
       $regex .= '<article(.*?)id="comment-' . $comment->id() . '"(.*?)';
@@ -201,7 +206,7 @@ class CommentNonNodeTest extends BrowserTestBase {
       $regex .= $comment->comment_body->value . '(.*?)';
       $regex .= '/s';
 
-      return (boolean) preg_match($regex, $this->getSession()->getPage()->getContent());
+      return (bool) preg_match($regex, $this->getSession()->getPage()->getContent());
     }
     else {
       return FALSE;
@@ -263,7 +268,7 @@ class CommentNonNodeTest extends BrowserTestBase {
   /**
    * Tests anonymous comment functionality.
    */
-  public function testCommentFunctionality() {
+  public function testCommentFunctionality(): void {
     $limited_user = $this->drupalCreateUser([
       'administer entity_test fields',
     ]);
@@ -277,8 +282,6 @@ class CommentNonNodeTest extends BrowserTestBase {
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->fieldNotExists('edit-default-value-input-comment-und-0-status-0');
     // Test that field to change cardinality is not available.
-    $this->drupalGet('entity_test/structure/entity_test/fields/entity_test.entity_test.comment/storage');
-    $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->fieldNotExists('cardinality_number');
     $this->assertSession()->fieldNotExists('cardinality');
 
@@ -444,10 +447,10 @@ class CommentNonNodeTest extends BrowserTestBase {
     $this->fieldUIAddNewField('entity_test/structure/entity_test', 'foobar', 'Foobar', 'comment', $storage_edit);
 
     // Add a third comment field.
-    $this->fieldUIAddNewField('entity_test/structure/entity_test', 'barfoo', 'BarFoo', 'comment', $storage_edit);
+    $this->fieldUIAddNewField('entity_test/structure/entity_test', 'bar_foo', 'Bar_Foo', 'comment', $storage_edit);
 
     // Check the field contains the correct comment type.
-    $field_storage = FieldStorageConfig::load('entity_test.field_barfoo');
+    $field_storage = FieldStorageConfig::load('entity_test.field_bar_foo');
     $this->assertInstanceOf(FieldStorageConfig::class, $field_storage);
     $this->assertEquals('foobar', $field_storage->getSetting('comment_type'));
     $this->assertEquals(1, $field_storage->getCardinality());
@@ -458,9 +461,9 @@ class CommentNonNodeTest extends BrowserTestBase {
     $new_entity = EntityTest::create($data);
     $new_entity->save();
     $this->drupalGet('entity_test/manage/' . $new_entity->id() . '/edit');
-    $this->assertSession()->checkboxNotChecked('edit-field-foobar-0-status-1');
     $this->assertSession()->checkboxChecked('edit-field-foobar-0-status-2');
-    $this->assertSession()->fieldNotExists('edit-field-foobar-0-status-0');
+    $this->assertSession()->checkboxNotChecked('edit-field-foobar-0-status-0');
+    $this->assertSession()->fieldNotExists('edit-field-foobar-0-status-1');
 
     // @todo Check proper URL and form https://www.drupal.org/node/2458323
     $this->drupalGet('comment/reply/entity_test/comment/' . $new_entity->id());
@@ -479,7 +482,7 @@ class CommentNonNodeTest extends BrowserTestBase {
 
     $this->drupalGet('comment/reply/entity_test/' . $this->entity->id() . '/comment');
     $this->assertSession()->fieldValueEquals('comment_body[0][value]', '');
-    $this->fieldUIDeleteField('admin/structure/comment/manage/comment', 'comment.comment.comment_body', 'Comment', 'Comment settings');
+    $this->fieldUIDeleteField('admin/structure/comment/manage/comment', 'comment.comment.comment_body', 'Comment', 'Comment settings', 'comment type');
     $this->drupalGet('comment/reply/entity_test/' . $this->entity->id() . '/comment');
     $this->assertSession()->fieldNotExists('comment_body[0][value]');
     // Set subject field to autogenerate it.
@@ -490,7 +493,7 @@ class CommentNonNodeTest extends BrowserTestBase {
   /**
    * Tests comment fields cannot be added to entity types without integer IDs.
    */
-  public function testsNonIntegerIdEntities() {
+  public function testsNonIntegerIdEntities(): void {
     // Create a bundle for entity_test_string_id.
     entity_test_create_bundle('entity_test', 'Entity Test', 'entity_test_string_id');
     $limited_user = $this->drupalCreateUser([
@@ -501,9 +504,9 @@ class CommentNonNodeTest extends BrowserTestBase {
     // Visit the Field UI field add page.
     $this->drupalGet('entity_test_string_id/structure/entity_test/fields/add-field');
     // Ensure field isn't shown for string IDs.
-    $this->assertSession()->optionNotExists('edit-new-storage-type', 'comment');
+    $this->assertSession()->elementNotExists('css', "[name='new_storage_type'][value='comment']");
     // Ensure a core field type shown.
-    $this->assertSession()->optionExists('edit-new-storage-type', 'boolean');
+    $this->assertSession()->elementExists('css', "[name='new_storage_type'][value='boolean']");
 
     // Attempt to add a comment-type referencing this entity-type.
     $this->drupalGet('admin/structure/comment/types/add');
@@ -518,9 +521,38 @@ class CommentNonNodeTest extends BrowserTestBase {
     // Visit the Field UI field add page.
     $this->drupalGet('entity_test_no_id/structure/entity_test/fields/add-field');
     // Ensure field isn't shown for empty IDs.
-    $this->assertSession()->optionNotExists('edit-new-storage-type', 'comment');
+    $this->assertSession()->elementNotExists('css', "[name='new_storage_type'][value='comment']");
     // Ensure a core field type shown.
-    $this->assertSession()->optionExists('edit-new-storage-type', 'boolean');
+    $this->assertSession()->elementExists('css', "[name='new_storage_type'][value='boolean']");
+  }
+
+  /**
+   * Ensures that comment settings are not required.
+   */
+  public function testCommentSettingsNotRequired(): void {
+    $limited_user = $this->drupalCreateUser([
+      'administer entity_test fields',
+    ]);
+    $this->drupalLogin($limited_user);
+    $this->drupalGet('entity_test/structure/entity_test/fields/entity_test.entity_test.comment');
+
+    // Change the comments to be displayed as hidden by default.
+    $edit = [
+      'default_value_input[comment][0][status]' => CommentItemInterface::HIDDEN,
+      'settings[anonymous]' => CommentInterface::ANONYMOUS_MAY_CONTACT,
+    ];
+    $this->submitForm($edit, 'Save settings');
+
+    // Ensure that the comment settings field is not required and can be saved
+    // with the default value.
+    $this->drupalLogin($this->adminUser);
+    $this->drupalGet('/entity_test/add');
+    $this->assertSession()->checkboxChecked('edit-comment-0-status-0');
+    $edit = [
+      "name[0][value]" => 'Comment test',
+    ];
+    $this->submitForm($edit, 'Save');
+    $this->assertSession()->pageTextContains('entity_test 2 has been created.');
   }
 
 }

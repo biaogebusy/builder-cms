@@ -37,7 +37,6 @@ use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
  *   static_cache = TRUE,
  *   entity_keys = {
  *     "id" = "id",
- *     "label" = "label",
  *     "uuid" = "uuid"
  *   },
  *   config_export = {
@@ -89,6 +88,8 @@ class JsonapiResourceConfig extends ConfigEntityBase {
     $typeManager = $this->entityTypeManager();
     $dependency = $typeManager->getDefinition($id[0])->getBundleConfigDependency($id[1]);
     $this->addDependency($dependency['type'], $dependency['name']);
+
+    return $this;
   }
 
   /**

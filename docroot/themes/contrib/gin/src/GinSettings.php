@@ -7,6 +7,7 @@ use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\user\UserDataInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -17,40 +18,20 @@ class GinSettings implements ContainerInjectionInterface {
   use StringTranslationTrait;
 
   /**
-   * The config factory.
-   *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface
-   */
-  protected $configFactory;
-
-  /**
-   * The user data service.
-   *
-   * @var \Drupal\user\UserDataInterface|null
-   */
-  protected $userData;
-
-  /**
-   * The current user.
-   *
-   * @var \Drupal\Core\Session\AccountInterface
-   */
-  protected $currentUser;
-
-  /**
    * Settings constructor.
    *
    * @param \Drupal\Core\Session\AccountInterface $currentUser
    *   The current user.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
    *   The config factory.
+   * @param \Drupal\user\UserDataInterface|null $userData
+   *   The user data service.
    */
-  public function __construct(AccountInterface $currentUser, ConfigFactoryInterface $configFactory) {
-    if (\Drupal::hasService('user.data')) {
-      $this->userData = \Drupal::service('user.data');
-    }
-    $this->currentUser = $currentUser;
-    $this->configFactory = $configFactory;
+  public function __construct(
+    protected AccountInterface $currentUser,
+    protected ConfigFactoryInterface $configFactory,
+    protected ?UserDataInterface $userData,
+  ) {
   }
 
   /**
@@ -59,7 +40,8 @@ class GinSettings implements ContainerInjectionInterface {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('current_user'),
-      $container->get('config.factory')
+      $container->get('config.factory'),
+      $container->get('user.data', ContainerInterface::NULL_ON_INVALID_REFERENCE)
     );
   }
 
@@ -74,7 +56,7 @@ class GinSettings implements ContainerInjectionInterface {
    * @return array|bool|mixed|null
    *   The current value.
    */
-  public function get($name, AccountInterface $account = NULL) {
+  public function get($name, ?AccountInterface $account = NULL) {
     $value = NULL;
     if (!$account) {
       $account = $this->currentUser;
@@ -93,7 +75,7 @@ class GinSettings implements ContainerInjectionInterface {
       $admin_theme = $this->getAdminTheme();
       $value = theme_get_setting($name, $admin_theme);
     }
-    return $this->handleLegacySettings($name, $value);
+    return $value;
   }
 
   /**
@@ -107,7 +89,7 @@ class GinSettings implements ContainerInjectionInterface {
    */
   public function getDefault($name) {
     $admin_theme = $this->getAdminTheme();
-    return $this->handleLegacySettings($name, theme_get_setting($name, $admin_theme));
+    return theme_get_setting($name, $admin_theme);
   }
 
   /**
@@ -118,7 +100,7 @@ class GinSettings implements ContainerInjectionInterface {
    * @param \Drupal\Core\Session\AccountInterface|null $account
    *   The account object. Current user if NULL.
    */
-  public function setAll(array $settings, AccountInterface $account = NULL) {
+  public function setAll(array $settings, ?AccountInterface $account = NULL) {
     if (!$account || !$this->userData) {
       $account = $this->currentUser;
     }
@@ -134,7 +116,7 @@ class GinSettings implements ContainerInjectionInterface {
    * @param \Drupal\Core\Session\AccountInterface|null $account
    *   The account object. Current user if NULL.
    */
-  public function clear(AccountInterface $account = NULL) {
+  public function clear(?AccountInterface $account = NULL) {
     if (!$account || !$this->userData) {
       $account = $this->currentUser;
     }
@@ -161,11 +143,19 @@ class GinSettings implements ContainerInjectionInterface {
    * @return bool
    *   TRUE or FALSE.
    */
-  public function userOverrideEnabled(AccountInterface $account = NULL) {
+  public function userOverrideEnabled(?AccountInterface $account = NULL) {
+    $overrides = &drupal_static(__CLASS__ . '_' . __METHOD__, []);
+
     if (!$account || !$this->userData) {
       $account = $this->currentUser;
     }
-    return $this->allowUserOverrides() && (bool) $this->userData->get('gin', $account->id(), 'enable_user_settings');
+
+    if (!isset($overrides[$account->id()])) {
+      $overrides[$account->id()] = $this->allowUserOverrides()
+        && (bool) $this->userData->get('gin', $account->id(), 'enable_user_settings');
+    }
+
+    return $overrides[$account->id()];
   }
 
   /**
@@ -179,74 +169,12 @@ class GinSettings implements ContainerInjectionInterface {
    * @return bool
    *   TRUE or FALSE.
    */
-  public function overridden($name, AccountInterface $account = NULL) {
+  public function overridden($name, ?AccountInterface $account = NULL) {
     if (!$account) {
       $account = $this->currentUser;
     }
     $admin_theme = $this->getAdminTheme();
-    return $this->handleLegacySettings($name, theme_get_setting($name, $admin_theme)) !== $this->get($name, $account);
-  }
-
-  /**
-   * Return a massaged value from deprecated theme settings.
-   *
-   * @param string $name
-   *   Name of the setting to check.
-   * @param array|bool|mixed|null $value
-   *   The value of the currently used setting.
-   *
-   * @return array|bool|mixed|null
-   *   The value determined by a legacy setting.
-   */
-  private function handleLegacySettings($name, $value) {
-    $admin_theme = $this->getAdminTheme();
-
-    // Darkmode legacy setting.
-    if ($name === 'enable_darkmode') {
-      $value = (string) $value;
-    }
-
-    // High contrast mode legacy setting.
-    if ($name === 'high_contrast_mode') {
-      $value = (bool) $value;
-    }
-
-    // Accent color legacy setting check.
-    if ($name === 'preset_accent_color') {
-      $value = $value === 'claro_blue' ? 'blue' : $value;
-    }
-
-    // Toolbar legacy setting check.
-    if ($name === 'classic_toolbar') {
-      $value = $value === TRUE || $value === 'true' ||  $value === '1' || $value === 1 ? 'classic' : $value;
-    }
-
-    // Layout density check.
-    if ($name === 'layout_density') {
-      $value = $value === '0' ? 'default' : $value;
-    }
-
-    // Logo legacy settings check.
-    if ($name === 'icon_default' && is_null($value)) {
-      $value = $this->get('logo.use_default');
-    }
-    if ($name === 'icon_path' && is_null($value)) {
-      $value = $this->get('logo.path');
-    }
-
-    // Handles switching new version code with old config present.
-    if ($name === 'logo.use_default') {
-      if (theme_get_setting('icon_default', $admin_theme) === FALSE) {
-        return FALSE;
-      }
-    }
-    if ($name === 'logo.path') {
-      if (theme_get_setting('icon_default', $admin_theme) === FALSE && !is_null($this->get('icon_path'))) {
-        return $this->get('icon_path');
-      }
-    }
-
-    return $value;
+    return theme_get_setting($name, $admin_theme) !== $this->get($name, $account);
   }
 
   /**
@@ -272,7 +200,7 @@ class GinSettings implements ContainerInjectionInterface {
    * @return array
    *   The theme setting form elements.
    */
-  public function getSettingsForm(AccountInterface $account = NULL): array {
+  public function getSettingsForm(?AccountInterface $account = NULL): array {
     $experimental_label = ' <span class="gin-experimental-flag">Experimental</span>';
     $beta_label = ' <span class="gin-beta-flag">Beta</span>';
     $new_label = ' <span class="gin-new-flag">New</span>';
@@ -414,19 +342,32 @@ class GinSettings implements ContainerInjectionInterface {
     ];
 
     // Toolbar setting.
+    $is_navigation_active = _gin_module_is_active('navigation');
+
     $form['classic_toolbar'] = [
+      '#disabled' => $is_navigation_active,
       '#type' => 'radios',
       '#title' => $this->t('Navigation (Drupal Toolbar)'),
       '#default_value' => $account ? $this->get('classic_toolbar', $account) : $this->getDefault('classic_toolbar'),
       '#options' => [
+        'new' => $this->t('New Drupal Navigation, Test integration') . $new_label . $experimental_label,
         'vertical' => $this->t('Sidebar, Vertical Toolbar (Default)'),
         'horizontal' => $this->t('Horizontal, Modern Toolbar'),
         'classic' => $this->t('Legacy, Classic Drupal Toolbar'),
-        'new' => $this->t('New Drupal Navigation, Test integration') . $new_label . $experimental_label,
       ],
+      '#attributes' => $is_navigation_active ? ['class' => ['gin-core-navigation--is-active']] : [],
+      '#description' => $is_navigation_active ? $this->t('This setting is currently deactivated as it is overwritten by the navigation module.') : '',
       '#after_build' => [
         '_gin_toolbar_radios',
       ],
+    ];
+
+    // Sticky action toggle.
+    $form['sticky_action_buttons'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enable sticky action buttons') . $beta_label . $new_label,
+      '#description' => $this->t('Displays all actions of the form in the sticky header.'),
+      '#default_value' => $account ? $this->get('sticky_action_buttons', $account) : $this->getDefault('sticky_action_buttons'),
     ];
 
     // Show secondary toolbar in Frontend.
@@ -442,7 +383,7 @@ class GinSettings implements ContainerInjectionInterface {
     // Layout density setting.
     $form['layout_density'] = [
       '#type' => 'radios',
-      '#title' => $this->t('Layout density') . $beta_label,
+      '#title' => $this->t('Layout density'),
       '#description' => $this->t('Changes the layout density for tables in the admin interface.'),
       '#default_value' => (string) ($account ? $this->get('layout_density', $account) : $this->getDefault('layout_density')),
       '#options' => [

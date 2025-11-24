@@ -2,9 +2,9 @@
 
 namespace Drupal\commerce_order;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\commerce\Context;
 use Drupal\commerce_order\Entity\OrderInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 
 /**
  * Provides an order processor that removes entities that are no longer available.
@@ -14,7 +14,7 @@ class AvailabilityOrderProcessor implements OrderProcessorInterface {
   /**
    * The availability manager.
    *
-   * @var \Drupal\commerce\AvailabilityManagerInterface
+   * @var \Drupal\commerce_order\AvailabilityManagerInterface
    */
   protected $availabilityManager;
 

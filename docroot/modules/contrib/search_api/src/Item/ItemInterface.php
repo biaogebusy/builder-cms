@@ -2,6 +2,7 @@
 
 namespace Drupal\search_api\Item;
 
+use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\TypedData\ComplexDataInterface;
 
@@ -134,7 +135,7 @@ interface ItemInterface extends \Traversable {
    *   Thrown if a $field is passed but has another field identifier than given
    *   as $field_id.
    */
-  public function setField($field_id, FieldInterface $field = NULL);
+  public function setField($field_id, ?FieldInterface $field = NULL);
 
   /**
    * Sets the item's fields.
@@ -177,7 +178,7 @@ interface ItemInterface extends \Traversable {
    * Defaults to 1 if not previously set.
    *
    * @return float
-   *   The score of the item.
+   *   The score of the item, represented as a non-negative number.
    */
   public function getScore();
 
@@ -185,7 +186,7 @@ interface ItemInterface extends \Traversable {
    * Sets the score of the item.
    *
    * @param float $score
-   *   The score of the item.
+   *   A non-negative number to set as the score of the item.
    *
    * @return $this
    */
@@ -197,7 +198,7 @@ interface ItemInterface extends \Traversable {
    * Defaults to 1 if not previously set.
    *
    * @return float
-   *   The boost value.
+   *   The item's boost value, represented as a non-negative number.
    */
   public function getBoost();
 
@@ -205,7 +206,7 @@ interface ItemInterface extends \Traversable {
    * Sets the boost value of this item.
    *
    * @param float $boost
-   *   The boost value to set.
+   *   A non-negative number to set as the item's boost value.
    *
    * @return $this
    */
@@ -287,6 +288,40 @@ interface ItemInterface extends \Traversable {
   public function setExtraData($key, $data = NULL);
 
   /**
+   * Determines during indexing whether this item was indexed with warnings.
+   *
+   * This would mean that, while the item was sent to the server, some of its
+   * field values might be incorrect or missing so it should be reindexed at a
+   * later time.
+   *
+   * There is currently no defined meaning for this property at search time,
+   * which could change without notice.
+   *
+   * @return bool
+   *   TRUE if any warnings were added to this item during the indexing
+   *   operation.
+   */
+  public function hasWarnings(): bool;
+
+  /**
+   * Retrieves all warnings added to this item.
+   *
+   * @return string[]|\Drupal\Component\Render\MarkupInterface[]
+   *   All warnings added to this item.
+   */
+  public function getWarnings(): array;
+
+  /**
+   * Adds a warning to this item.
+   *
+   * @param string|\Drupal\Component\Render\MarkupInterface $warning
+   *   The human-readable warning message.
+   *
+   * @return $this
+   */
+  public function addWarning(string|MarkupInterface $warning): static;
+
+  /**
    * Checks whether a user has permission to view this item.
    *
    * @param \Drupal\Core\Session\AccountInterface|null $account
@@ -301,7 +336,7 @@ interface ItemInterface extends \Traversable {
    *
    * @see https://www.drupal.org/node/3051902
    */
-  public function checkAccess(AccountInterface $account = NULL);
+  public function checkAccess(?AccountInterface $account = NULL);
 
   /**
    * Checks whether a user has permission to view this item.
@@ -313,6 +348,6 @@ interface ItemInterface extends \Traversable {
    * @return \Drupal\Core\Access\AccessResultInterface
    *   The access result.
    */
-  public function getAccessResult(AccountInterface $account = NULL);
+  public function getAccessResult(?AccountInterface $account = NULL);
 
 }

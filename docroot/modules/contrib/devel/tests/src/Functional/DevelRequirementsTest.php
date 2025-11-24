@@ -12,7 +12,7 @@ class DevelRequirementsTest extends DevelBrowserTestBase {
   /**
    * Tests that the status page shows a warning when evel is enabled.
    */
-  public function testStatusPage() {
+  public function testStatusPage(): void {
     $this->drupalLogin($this->adminUser);
 
     $this->drupalGet('admin/reports/status');

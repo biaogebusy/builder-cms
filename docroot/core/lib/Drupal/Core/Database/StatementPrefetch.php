@@ -2,12 +2,23 @@
 
 namespace Drupal\Core\Database;
 
+@trigger_error('\Drupal\Core\Database\StatementPrefetch is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use \Drupal\Core\Database\StatementPrefetchIterator instead. See https://www.drupal.org/node/3265938', E_USER_DEPRECATED);
+
+use Drupal\Core\Database\Event\StatementExecutionEndEvent;
+use Drupal\Core\Database\Event\StatementExecutionStartEvent;
+use Drupal\Core\Site\Settings;
+
 /**
- * An implementation of StatementInterface that prefetches all data.
+ * An implementation of StatementInterface that pre-fetches all data.
  *
  * This class behaves very similar to a StatementWrapper of a \PDOStatement
  * but as it always fetches every row it is possible to manipulate those
  * results.
+ *
+ * @deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use
+ *   \Drupal\Core\Database\StatementPrefetchIterator instead.
+ *
+ * @see https://www.drupal.org/node/3265938
  */
 class StatementPrefetch implements \Iterator, StatementInterface {
 
@@ -150,36 +161,6 @@ class StatementPrefetch implements \Iterator, StatementInterface {
   }
 
   /**
-   * Implements the magic __get() method.
-   *
-   * @todo Remove the method before Drupal 10.
-   * @see https://www.drupal.org/i/3210310
-   */
-  public function __get($name) {
-    if ($name === 'dbh') {
-      @trigger_error(__CLASS__ . '::$dbh should not be accessed in drupal:9.3.0 and will error in drupal:10.0.0. Use $this->connection instead. See https://www.drupal.org/node/3186368', E_USER_DEPRECATED);
-      return $this->connection;
-    }
-    if ($name === 'allowRowCount') {
-      @trigger_error(__CLASS__ . '::$allowRowCount should not be accessed in drupal:9.3.0 and will error in drupal:10.0.0. Use $this->rowCountEnabled instead. See https://www.drupal.org/node/3186368', E_USER_DEPRECATED);
-      return $this->rowCountEnabled;
-    }
-  }
-
-  /**
-   * Implements the magic __set() method.
-   *
-   * @todo Remove the method before Drupal 10.
-   * @see https://www.drupal.org/i/3210310
-   */
-  public function __set($name, $value) {
-    if ($name === 'allowRowCount') {
-      @trigger_error(__CLASS__ . '::$allowRowCount should not be written in drupal:9.3.0 and will error in drupal:10.0.0. Enable row counting by passing the appropriate argument to the constructor instead. See https://www.drupal.org/node/3186368', E_USER_DEPRECATED);
-      $this->rowCountEnabled = $value;
-    }
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function getConnectionTarget(): string {
@@ -202,9 +183,16 @@ class StatementPrefetch implements \Iterator, StatementInterface {
       }
     }
 
-    $logger = $this->connection->getLogger();
-    if (!empty($logger)) {
-      $query_start = microtime(TRUE);
+    if ($this->connection->isEventEnabled(StatementExecutionStartEvent::class)) {
+      $startEvent = new StatementExecutionStartEvent(
+        spl_object_id($this),
+        $this->connection->getKey(),
+        $this->connection->getTarget(),
+        $this->getQueryString(),
+        $args ?? [],
+        $this->connection->findCallerFromDebugBacktrace()
+      );
+      $this->connection->dispatchEvent($startEvent);
     }
 
     // Prepare the query.
@@ -237,9 +225,16 @@ class StatementPrefetch implements \Iterator, StatementInterface {
       $this->columnNames = [];
     }
 
-    if (!empty($logger)) {
-      $query_end = microtime(TRUE);
-      $logger->log($this, $args, $query_end - $query_start, $query_start);
+    if (isset($startEvent) && $this->connection->isEventEnabled(StatementExecutionEndEvent::class)) {
+      $this->connection->dispatchEvent(new StatementExecutionEndEvent(
+        $startEvent->statementObjectId,
+        $startEvent->key,
+        $startEvent->target,
+        $startEvent->queryString,
+        $startEvent->args,
+        $startEvent->caller,
+        $startEvent->time
+      ));
     }
 
     // Initialize the first row in $this->currentRow.
@@ -350,6 +345,15 @@ class StatementPrefetch implements \Iterator, StatementInterface {
             $class_name = $this->fetchOptions['class'];
           }
           if (count($this->fetchOptions['constructor_args'])) {
+            // Verify the current db connection to avoid this code being called
+            // in an inappropriate context.
+            $defaults = ['sqlite', 'oracle'];
+            $extras = Settings::get('database_statement_prefetch_valid_db_drivers', []);
+            $valid_db_drivers = array_merge($defaults, $extras);
+            $db_connection_options = Database::getConnection()->getConnectionOptions();
+            if (!in_array($db_connection_options['driver'], $valid_db_drivers)) {
+              throw new \BadMethodCallException();
+            }
             $reflector = new \ReflectionClass($class_name);
             $result = $reflector->newInstanceArgs($this->fetchOptions['constructor_args']);
           }
@@ -476,7 +480,7 @@ class StatementPrefetch implements \Iterator, StatementInterface {
   /**
    * {@inheritdoc}
    */
-  public function fetchObject(string $class_name = NULL, array $constructor_arguments = NULL) {
+  public function fetchObject(?string $class_name = NULL, array $constructor_arguments = []) {
     if (isset($this->currentRow)) {
       if (!isset($class_name)) {
         // Directly cast to an object to avoid a function call.

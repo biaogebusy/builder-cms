@@ -2,14 +2,14 @@
 
 namespace Drupal\colorbox\Commands;
 
-use Drupal\Core\Asset\libraryDiscovery;
+use Drupal\Core\Asset\LibraryDiscoveryInterface;
 use Drush\Commands\DrushCommands;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Symfony\Component\Filesystem\Filesystem;
 
 /**
- * A Drush commandfile.
+ * A Drush command file.
  *
  * In addition to this file, you need a drush.services.yml
  * in root of your module, and a composer.json file that provides the name
@@ -24,14 +24,14 @@ class ColorboxCommands extends DrushCommands {
   /**
    * Library discovery service.
    *
-   * @var Drupal\Core\Asset\libraryDiscovery
+   * @var Drupal\Core\Asset\LibraryDiscoveryInterface
    */
   protected $libraryDiscovery;
 
   /**
    * {@inheritdoc}
    */
-  public function __construct(libraryDiscovery $library_discovery) {
+  public function __construct(LibraryDiscoveryInterface $library_discovery) {
     $this->libraryDiscovery = $library_discovery;
   }
 
@@ -46,7 +46,6 @@ class ColorboxCommands extends DrushCommands {
    * @aliases colorboxplugin,colorbox-plugin
    */
   public function download($path = '') {
-
     $fs = new Filesystem();
 
     if (empty($path)) {
@@ -69,7 +68,7 @@ class ColorboxCommands extends DrushCommands {
       $client = new Client();
       $destination = tempnam(sys_get_temp_dir(), 'colorbox-tmp');
       try {
-        $client->get($colorbox_library['remote'] . '/archive/master.zip', ['save_to' => $destination]);
+        $client->get($colorbox_library['remote'] . '/archive/master.zip', ['sink' => $destination]);
       }
       catch (RequestException $e) {
         // Remove the directory.
@@ -77,7 +76,7 @@ class ColorboxCommands extends DrushCommands {
         $this->logger()->error(dt('Drush was unable to download the colorbox library from @remote. @exception', [
           '@remote' => $colorbox_library['remote'] . '/archive/master.zip',
           '@exception' => $e->getMessage(),
-        ], 'error'));
+        ]));
         return;
       }
 
@@ -94,7 +93,7 @@ class ColorboxCommands extends DrushCommands {
       else {
         // Remove the directory if unzip fails and exit.
         $fs->remove($path);
-        $this->logger()->error(dt('Error: unable to unzip colorbox file.', [], 'error'));
+        $this->logger()->error(dt('Error: unable to unzip colorbox file.', []));
         return;
       }
 
@@ -106,9 +105,9 @@ class ColorboxCommands extends DrushCommands {
       $fs->remove($path . '/colorbox-master');
 
       // Success.
-      $this->logger()->notice(dt('The colorbox library has been successfully downloaded to @path.', [
+      $this->logger()->success(dt('The colorbox library has been successfully downloaded to @path.', [
         '@path' => $path,
-      ], 'success'));
+      ]));
     }
     else {
       $this->logger()->error(dt('Drush was unable to load the colorbox library'));
@@ -130,7 +129,7 @@ class ColorboxCommands extends DrushCommands {
     $fs = new Filesystem();
 
     if (empty($path)) {
-      $path = DRUPAL_ROOT . '/libraries/DOMPurify';
+      $path = DRUPAL_ROOT . '/libraries/dompurify';
     }
 
     // Create path if it doesn't exist
@@ -149,7 +148,7 @@ class ColorboxCommands extends DrushCommands {
       $client = new Client();
       $destination = tempnam(sys_get_temp_dir(), 'DOMPurify-tmp');
       try {
-        $client->get($dompurify_library['remote'] . '/archive/main.zip', ['save_to' => $destination]);
+        $client->get($dompurify_library['remote'] . '/archive/main.zip', ['sink' => $destination]);
       }
       catch (RequestException $e) {
         // Remove the directory.
@@ -157,7 +156,7 @@ class ColorboxCommands extends DrushCommands {
         $this->logger()->error(dt('Drush was unable to download the DOMPurify library from @remote. @exception', [
           '@remote' => $dompurify_library['remote'] . '/archive/main.zip',
           '@exception' => $e->getMessage(),
-        ], 'error'));
+        ]));
         return;
       }
 
@@ -174,7 +173,7 @@ class ColorboxCommands extends DrushCommands {
       else {
         // Remove the directory if unzip fails and exit.
         $fs->remove($path);
-        $this->logger()->error(dt('Error: unable to unzip DOMPurify file.', [], 'error'));
+        $this->logger()->error(dt('Error: unable to unzip DOMPurify file.', []));
         return;
       }
 
@@ -186,14 +185,13 @@ class ColorboxCommands extends DrushCommands {
       $fs->remove($path . '/DOMPurify-main');
 
       // Success.
-      $this->logger()->notice(dt('The DOMPurify library has been successfully downloaded to @path.', [
+      $this->logger()->success(dt('The DOMPurify library has been successfully downloaded to @path.', [
         '@path' => $path,
-      ], 'success'));
+      ]));
     }
     else {
       $this->logger()->error(dt('Drush was unable to load the DOMPurify library'));
     }
   }
-
 
 }

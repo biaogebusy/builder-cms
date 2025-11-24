@@ -24,7 +24,8 @@ class LayoutAlterHookTest extends KernelTestBase {
     $layout = $this->container->get('plugin.manager.core.layout')
       ->getDefinition('layout_onecol');
 
-    $this->assertEmpty($layout->getIconPath());
+    $layout_path = substr($layout->getIconPath(), strpos($layout->getIconPath(), 'panels'));
+    $this->assertEquals('panels/layouts/layout_onecol/layout_onecol.png', $layout_path);
   }
 
 }

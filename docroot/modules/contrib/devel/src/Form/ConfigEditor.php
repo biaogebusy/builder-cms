@@ -8,6 +8,9 @@ use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Drupal\devel\DevelDumperManagerInterface;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Edit config variable form.
@@ -15,36 +18,63 @@ use Drupal\Core\Url;
 class ConfigEditor extends FormBase {
 
   /**
+   * Logger service.
+   */
+  protected LoggerInterface $logger;
+
+  /**
+   * The dumper service.
+   */
+  protected DevelDumperManagerInterface $dumper;
+
+  /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public static function create(ContainerInterface $container): static {
+    $instance = parent::create($container);
+    $instance->messenger = $container->get('messenger');
+    $instance->logger = $container->get('logger.channel.devel');
+    $instance->configFactory = $container->get('config.factory');
+    $instance->requestStack = $container->get('request_stack');
+    $instance->stringTranslation = $container->get('string_translation');
+    $instance->dumper = $container->get('devel.dumper');
+
+    return $instance;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFormId(): string {
     return 'devel_config_system_edit_form';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $config_name = '') {
-    $config = $this->config($config_name);
-
-    if ($config === FALSE || $config->isNew()) {
-      $this->messenger()->addError($this->t('Config @name does not exist in the system.', ['@name' => $config_name]));
-      return;
+  public function buildForm(array $form, FormStateInterface $form_state, $config_name = ''): array {
+    $config = $this->configFactory->get($config_name);
+    if ($config->isNew()) {
+      $this->messenger->addError($this->t('Config @name does not exist in the system.', ['@name' => $config_name]));
+      return $form;
     }
 
     $data = $config->getOriginal();
 
     if (empty($data)) {
-      $this->messenger()->addWarning($this->t('Config @name exists but has no data.', ['@name' => $config_name]));
-      return;
+      $this->messenger->addWarning($this->t('Config @name exists but has no data.', ['@name' => $config_name]));
+      return $form;
     }
 
     try {
       $output = Yaml::encode($data);
     }
     catch (InvalidDataTypeException $e) {
-      $this->messenger()->addError($this->t('Invalid data detected for @name : %error', ['@name' => $config_name, '%error' => $e->getMessage()]));
-      return;
+      $this->messenger->addError($this->t('Invalid data detected for @name : %error', [
+        '@name' => $config_name,
+        '%error' => $e->getMessage(),
+      ]));
+      return $form;
     }
 
     $form['current'] = [
@@ -54,8 +84,7 @@ class ConfigEditor extends FormBase {
     ];
     $form['current']['value'] = [
       '#type' => 'item',
-      // phpcs:ignore Drupal.Functions.DiscouragedFunctions
-      '#markup' => dpr($output, TRUE),
+      '#markup' => $this->dumper->dumpOrExport(input: $output, plugin_id: 'default'),
     ];
 
     $form['name'] = [
@@ -95,7 +124,7 @@ class ConfigEditor extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
+  public function validateForm(array &$form, FormStateInterface $form_state): void {
     $value = $form_state->getValue('new');
     // Try to parse the new provided value.
     try {
@@ -117,18 +146,23 @@ class ConfigEditor extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     $values = $form_state->getValues();
     try {
-      $this->configFactory()->getEditable($values['name'])->setData($values['parsed_value'])->save();
-      $this->messenger()->addMessage($this->t('Configuration variable %variable was successfully saved.', ['%variable' => $values['name']]));
-      $this->logger('devel')->info('Configuration variable %variable was successfully saved.', ['%variable' => $values['name']]);
+      $this->configFactory->getEditable($values['name'])
+        ->setData($values['parsed_value'])
+        ->save();
+      $this->messenger->addMessage($this->t('Configuration variable %variable was successfully saved.', ['%variable' => $values['name']]));
+      $this->logger->info('Configuration variable %variable was successfully saved.', ['%variable' => $values['name']]);
 
       $form_state->setRedirectUrl(Url::fromRoute('devel.configs_list'));
     }
     catch (\Exception $e) {
-      $this->messenger()->addError($e->getMessage());
-      $this->logger('devel')->error('Error saving configuration variable %variable : %error.', ['%variable' => $values['name'], '%error' => $e->getMessage()]);
+      $this->messenger->addError($e->getMessage());
+      $this->logger->error('Error saving configuration variable %variable : %error.', [
+        '%variable' => $values['name'],
+        '%error' => $e->getMessage(),
+      ]);
     }
   }
 
@@ -138,18 +172,16 @@ class ConfigEditor extends FormBase {
    * @return \Drupal\Core\Url
    *   Cancel url
    */
-  private function buildCancelLinkUrl() {
-    $query = $this->getRequest()->query;
+  private function buildCancelLinkUrl(): Url {
+    $query = $this->requestStack->getCurrentRequest()->query;
 
     if ($query->has('destination')) {
       $options = UrlHelper::parse($query->get('destination'));
-      $url = Url::fromUserInput('/' . ltrim($options['path'], '/'), $options);
-    }
-    else {
-      $url = Url::fromRoute('devel.configs_list');
+
+      return Url::fromUserInput('/' . ltrim($options['path'], '/'), $options);
     }
 
-    return $url;
+    return Url::fromRoute('devel.configs_list');
   }
 
 }

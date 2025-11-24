@@ -237,6 +237,8 @@ class RangeFieldUiTest extends RangeBrowserTestBase {
           'settings[scale]' => $test_settings['scale'],
         ];
     }
+
+    return [];
   }
 
   /**
@@ -268,6 +270,8 @@ class RangeFieldUiTest extends RangeBrowserTestBase {
           'settings[combined][suffix]' => $test_settings['combined']['suffix'],
         ];
     }
+
+    return [];
   }
 
   /**

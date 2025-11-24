@@ -64,201 +64,639 @@ field_validation.rule.*:
   type: mapping
   label: 'Field validation rule'
 
-field_validation.rule.blocklist_field_validation_rule:
+field_validation.rule.length_constraint_rule:
   type: mapping
-  label: 'Words blocklist validation rule'
+  label: 'Length constraint validation rule'
   mapping:
-    setting:
+    validate_mode:
       type: string
-      label: 'Blocklisted words'
-
-field_validation.rule.date_range_field_validation_rule:
-  type: mapping
-  label: 'Date range validation rule'
-  mapping:
+      label: 'Validate mode'
     min:
       type: string
-      label: 'Minimum date'
+      label: 'Min'
     max:
       type: string
-      label: 'Maximum date'
-    cycle:
+      label: 'Max'
+    maxMessage:
       type: string
-      label: 'Cycle of date'
+      label: 'Max message'
+    minMessage:
+      type: string
+      label: 'Min message'
+    exactMessage:
+      type: string
+      label: 'Exact message'
 
-field_validation.rule.email_field_validation_rule:
+field_validation.rule.regex_constraint_rule:
   type: mapping
-  label: 'Email validation rule'
-
-field_validation.rule.integer_field_validation_rule:
-  type: mapping
-  label: 'Integer field validation rule'
+  label: 'Regex constraint validation rule'
   mapping:
-    min:
+    validate_mode:
       type: string
-      label: 'Minimum value'
-    max:
-      type: string
-      label: 'Maximum value'
-
-field_validation.rule.ip_field_validation_rule:
-  type: mapping
-  label: 'IP address validation rule'
-  mapping:
-    version:
-      type: string
-      label: 'IP Version'
-
-field_validation.rule.length_field_validation_rule:
-  type: mapping
-  label: 'Length field validation rule'
-  mapping:
-    min:
-      type: string
-      label: 'Minimum value'
-    max:
-      type: string
-      label: 'Maximum value'
-    strip_tags:
-      type: boolean
-      label: 'Strip tags'
-    trim:
-      type: boolean
-      label: 'Trim'
-
-field_validation.rule.must_be_empty_field_validation_rule:
-  type: mapping
-  label: 'Must be empty field validation rule'
-
-field_validation.rule.numeric_field_validation_rule:
-  type: mapping
-  label: 'Numeric field validation rule'
-  mapping:
-    min:
-      type: string
-      label: 'Minimum value'
-    max:
-      type: string
-      label: 'Maximum value'
-    step:
-      type: string
-      label: 'Step'
-
-field_validation.rule.phone_field_validation_rule:
-  type: mapping
-  label: 'Phone field validation rule'
-  mapping:
-    country:
-      type: string
-      label: 'Country'
-
-field_validation.rule.plain_text_field_validation_rule:
-  type: mapping
-  label: 'Plain text field validation rule'
-
-field_validation.rule.regex_field_validation_rule:
-  type: mapping
-  label: 'Regular expression field validation rule'
-  mapping:
-    setting:
-      type: string
-      label: 'Pattern'
-
-field_validation.rule.unique_field_validation_rule:
-  type: mapping
-  label: 'Unique field validation rule'
-  mapping:
-    scope:
-      type: string
-      label: 'Scope of unique'
-    published:
-      type: boolean
-      label: 'Published entities'
-    per_user:
-      type: boolean
-      label: 'Per user'
-
-field_validation.rule.words_field_validation_rule:
-  type: mapping
-  label: 'Number of words field validation rule'
-  mapping:
-    min:
-      type: string
-      label: 'Minimum number of words'
-    max:
-      type: string
-      label: 'Maximum number of words'
-
-field_validation.rule.item_count_field_validation_rule:
-  type: mapping
-  label: 'Min/max item count field validation rule'
-  mapping:
-    min:
-      type: integer
-      label: 'Minimum field values'
-    max:
-      type: integer
-      label: 'Maximum field values'
-
-field_validation.rule.url_field_validation_rule:
-  type: mapping
-  label: 'Url field validation rule'
-  mapping:
-    external:
-      type: boolean
-      label: 'External'
-    internal:
-      type: boolean
-      label: 'Internal'
-
-field_validation.rule.specific_value_field_validation_rule:
-  type: mapping
-  label: 'Specific value(s) field validation rule'
-  mapping:
-    setting:
-      type: string
-      label: '(Key) values'
-
-field_validation.rule.pattern_field_validation_rule:
-  type: mapping
-  label: 'Pattern field validation rule'
-  mapping:
+      label: 'Validate mode'
     pattern:
       type: string
       label: 'Pattern'
+    message:
+      type: string
+      label: 'Message'
 
-field_validation.rule.match_field_field_validation_rule:
+field_validation.rule.email_constraint_rule:
   type: mapping
-  label: 'Match against a field validation rule'
+  label: 'Email constraint validation rule'
   mapping:
-    entity_type:
+    validate_mode:
       type: string
-      label: 'Entity type'
-    bundle:
+      label: 'Validate mode'
+    message:
       type: string
-      label: 'Bundle'
-    field_name:
+      label: 'Message'
+
+field_validation.rule.null_constraint_rule:
+  type: mapping
+  label: 'Null constraint validation rule'
+  mapping:
+    validate_mode:
       type: string
-      label: 'Field name'
-    column:
+      label: 'Validate mode'
+    message:
       type: string
-      label: 'Column'
-    reverse:
+      label: 'Message'
+
+field_validation.rule.not_null_constraint_rule:
+  type: mapping
+  label: 'NotNull constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    message:
+      type: string
+      label: 'Message'
+
+field_validation.rule.unique_field_constraint_rule:
+  type: mapping
+  label: 'Unique field constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    message:
+      type: string
+      label: 'Message'
+
+field_validation.rule.range_constraint_rule:
+  type: mapping
+  label: 'Range constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    min:
+      type: string
+      label: 'Min'
+    max:
+      type: string
+      label: 'Max'
+    maxMessage:
+      type: string
+      label: 'Max message'
+    minMessage:
+      type: string
+      label: 'Min message'
+    invalidMessage:
+      type: string
+      label: 'Invalid message'
+    notInRangeMessage:
+      type: string
+      label: 'Not in range message'
+
+field_validation.rule.count_constraint_rule:
+  type: mapping
+  label: 'Count constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    min:
+      type: string
+      label: 'Min'
+    max:
+      type: string
+      label: 'Max'
+    maxMessage:
+      type: string
+      label: 'Max message'
+    minMessage:
+      type: string
+      label: 'Min message'
+    exactMessage:
+      type: string
+      label: 'Exact message'
+
+field_validation.rule.blank_constraint_rule:
+  type: mapping
+  label: 'Blank constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    message:
+      type: string
+      label: 'Message'
+
+field_validation.rule.not_blank_constraint_rule:
+  type: mapping
+  label: 'NotBlank constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    message:
+      type: string
+      label: 'Message'
+
+field_validation.rule.uuid_constraint_rule:
+  type: mapping
+  label: 'Uuid constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    message:
+      type: string
+      label: 'Message'
+
+field_validation.rule.true_constraint_rule:
+  type: mapping
+  label: 'True constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    message:
+      type: string
+      label: 'Message'
+
+field_validation.rule.false_constraint_rule:
+  type: mapping
+  label: 'False constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    message:
+      type: string
+      label: 'Message'
+
+field_validation.rule.expression_constraint_rule:
+  type: mapping
+  label: 'Expression constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    expression:
+      type: string
+      label: 'Expression'
+    message:
+      type: string
+      label: 'Message'
+
+field_validation.rule.css_color_constraint_rule:
+  type: mapping
+  label: 'CssColor constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    formats:
+      type: sequence
+      label: 'Formats'
+      sequence:
+        type: string
+    message:
+      type: string
+      label: 'Message'
+
+field_validation.rule.hostname_constraint_rule:
+  type: mapping
+  label: 'Hostname constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    message:
+      type: string
+      label: 'Message'
+
+field_validation.rule.json_constraint_rule:
+  type: mapping
+  label: 'Json constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    message:
+      type: string
+      label: 'Message'
+
+field_validation.rule.ip_constraint_rule:
+  type: mapping
+  label: 'Ip constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    version:
+      type: string
+      label: 'Version'
+    message:
+      type: string
+      label: 'Message'
+
+field_validation.rule.cidr_constraint_rule:
+  type: mapping
+  label: 'Cidr constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    version:
+      type: string
+      label: 'Version'
+    message:
+      type: string
+      label: 'Message'
+    netmaskRangeViolationMessage:
+      type: string
+      label: 'Netmask range violation message'
+
+field_validation.rule.ulid_constraint_rule:
+  type: mapping
+  label: 'Ulid constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    message:
+      type: string
+      label: 'Message'
+
+field_validation.rule.not_equal_to_constraint_rule:
+  type: mapping
+  label: 'NotEqualTo constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    value:
+      type: string
+      label: 'Value'
+    message:
+      type: string
+      label: 'Message'
+
+field_validation.rule.equal_to_constraint_rule:
+  type: mapping
+  label: 'EqualTo constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    value:
+      type: string
+      label: 'Value'
+    message:
+      type: string
+      label: 'Message'
+
+field_validation.rule.callback_constraint_rule:
+  type: mapping
+  label: 'Callback constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    value:
+      type: string
+      label: 'Callback'
+
+field_validation.rule.identical_to_constraint_rule:
+  type: mapping
+  label: 'IdenticalTo constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    value:
+      type: string
+      label: 'Value'
+    message:
+      type: string
+      label: 'Message'
+
+field_validation.rule.not_identical_to_constraint_rule:
+  type: mapping
+  label: 'NotIdenticalTo constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    value:
+      type: string
+      label: 'Value'
+    message:
+      type: string
+      label: 'Message'
+
+field_validation.rule.less_than_constraint_rule:
+  type: mapping
+  label: 'LessThan constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    value:
+      type: string
+      label: 'Value'
+    message:
+      type: string
+      label: 'Message'
+
+field_validation.rule.less_than_or_equal_constraint_rule:
+  type: mapping
+  label: 'LessThanOrEqual constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    value:
+      type: string
+      label: 'Value'
+    message:
+      type: string
+      label: 'Message'
+
+field_validation.rule.greater_than_constraint_rule:
+  type: mapping
+  label: 'GreaterThan constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    value:
+      type: string
+      label: 'Value'
+    message:
+      type: string
+      label: 'Message'
+
+field_validation.rule.greater_than_or_equal_constraint_rule:
+  type: mapping
+  label: 'GreaterThanOrEqual constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    value:
+      type: string
+      label: 'Value'
+    message:
+      type: string
+      label: 'Message'
+
+field_validation.rule.divisible_by_constraint_rule:
+  type: mapping
+  label: 'DivisibleBy constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    value:
+      type: string
+      label: 'Value'
+    message:
+      type: string
+      label: 'Message'
+
+field_validation.rule.positive_constraint_rule:
+  type: mapping
+  label: 'Positive constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    message:
+      type: string
+      label: 'Message'
+
+field_validation.rule.positive_or_zero_constraint_rule:
+  type: mapping
+  label: 'PositiveOrZero constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    message:
+      type: string
+      label: 'Message'
+
+field_validation.rule.negative_constraint_rule:
+  type: mapping
+  label: 'Negative constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    message:
+      type: string
+      label: 'Message'
+
+field_validation.rule.negative_or_zero_constraint_rule:
+  type: mapping
+  label: 'NegativeOrZero constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    message:
+      type: string
+      label: 'Message'
+
+field_validation.rule.date_constraint_rule:
+  type: mapping
+  label: 'Date constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    message:
+      type: string
+      label: 'Message'
+
+field_validation.rule.date_time_constraint_rule:
+  type: mapping
+  label: 'DateTime constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    format:
+      type: string
+      label: 'Format'
+    message:
+      type: string
+      label: 'Message'
+
+field_validation.rule.time_constraint_rule:
+  type: mapping
+  label: 'Time constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    message:
+      type: string
+      label: 'Message'
+
+field_validation.rule.language_constraint_rule:
+  type: mapping
+  label: 'Language constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    alpha3:
       type: boolean
-      label: 'Reverse'
-
-field_validation.rule.one_of_several_validation_rule:
-  type: mapping
-  label: 'Require at least one of several fields validation rule'
-  mapping:
-    data:
+      label: 'Alpha3'
+    message:
       type: string
-      label: 'Group name'
+      label: 'Message'
 
-field_validation.rule.equal_values_field_validation_rule:
+field_validation.rule.country_constraint_rule:
   type: mapping
-  label: 'Equal values on multiple fields validation rule'
+  label: 'Country constraint validation rule'
   mapping:
-    data:
+    validate_mode:
       type: string
-      label: 'Group name'
+      label: 'Validate mode'
+    alpha3:
+      type: boolean
+      label: 'Alpha3'
+    message:
+      type: string
+      label: 'Message'
+
+field_validation.rule.locale_constraint_rule:
+  type: mapping
+  label: 'Locale constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    message:
+      type: string
+      label: 'Message'
+
+field_validation.rule.bic_constraint_rule:
+  type: mapping
+  label: 'Bic constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    message:
+      type: string
+      label: 'Message'
+
+field_validation.rule.card_scheme_constraint_rule:
+  type: mapping
+  label: 'CardScheme constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    schemes:
+      type: sequence
+      label: 'Schemes'
+      sequence:
+        type: string
+    message:
+      type: string
+      label: 'Message'
+
+field_validation.rule.currency_constraint_rule:
+  type: mapping
+  label: 'Currency constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    message:
+      type: string
+      label: 'Message'
+
+field_validation.rule.luhn_constraint_rule:
+  type: mapping
+  label: 'Luhn constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    message:
+      type: string
+      label: 'Message'
+
+field_validation.rule.iban_constraint_rule:
+  type: mapping
+  label: 'Iban constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    message:
+      type: string
+      label: 'Message'
+
+field_validation.rule.isbn_constraint_rule:
+  type: mapping
+  label: 'Isbn constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    type:
+      type: string
+      label: 'Type'
+    message:
+      type: string
+      label: 'Message'
+
+field_validation.rule.issn_constraint_rule:
+  type: mapping
+  label: 'Issn constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    caseSensitive:
+      type: boolean
+      label: 'Case Sensitive'
+    requireHyphen:
+      type: boolean
+      label: 'Require Hyphen'
+    message:
+      type: string
+      label: 'Message'
+
+field_validation.rule.isin_constraint_rule:
+  type: mapping
+  label: 'Isin constraint validation rule'
+  mapping:
+    validate_mode:
+      type: string
+      label: 'Validate mode'
+    message:
+      type: string
+      label: 'Message'

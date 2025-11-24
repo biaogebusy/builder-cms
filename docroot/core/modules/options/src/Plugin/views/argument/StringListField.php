@@ -4,6 +4,7 @@ namespace Drupal\options\Plugin\views\argument;
 
 use Drupal\Core\Field\FieldFilteredMarkup;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\views\Attribute\ViewsArgument;
 use Drupal\views\FieldAPIHandlerTrait;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
@@ -13,9 +14,10 @@ use Drupal\views\Plugin\views\argument\StringArgument;
  * Argument handler for list field to show the human readable name in summary.
  *
  * @ingroup views_argument_handlers
- *
- * @ViewsArgument("string_list_field")
  */
+#[ViewsArgument(
+  id: 'string_list_field',
+)]
 class StringListField extends StringArgument {
 
   use FieldAPIHandlerTrait;
@@ -30,7 +32,7 @@ class StringListField extends StringArgument {
   /**
    * {@inheritdoc}
    */
-  public function init(ViewExecutable $view, DisplayPluginBase $display, array &$options = NULL) {
+  public function init(ViewExecutable $view, DisplayPluginBase $display, ?array &$options = NULL) {
     parent::init($view, $display, $options);
 
     $field_storage = $this->getFieldStorageDefinition();

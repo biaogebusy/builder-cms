@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.commerce.yuntask.hunter.query request
  *
  * @author auto create
- * @since 1.0, 2023-08-21 05:46:39
+ * @since 1.0, 2024-10-30 16:27:22
  */
 class AlipayCommerceYuntaskHunterQueryRequest
 {

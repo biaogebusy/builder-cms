@@ -2,17 +2,18 @@
 
 namespace Drupal\commerce_number_pattern\Plugin\Commerce\NumberPattern;
 
-use Drupal\commerce_number_pattern\Sequence;
 use Drupal\Core\Datetime\DrupalDateTime;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce_number_pattern\Attribute\CommerceNumberPattern;
+use Drupal\commerce_number_pattern\Sequence;
 
 /**
  * Provides the monthly number pattern.
- *
- * @CommerceNumberPattern(
- *   id = "monthly",
- *   label = @Translation("Monthly (Reset every month)"),
- * )
  */
+#[CommerceNumberPattern(
+  id: "monthly",
+  label: new TranslatableMarkup("Monthly (Reset every month)"),
+)]
 class Monthly extends SequentialNumberPatternBase {
 
   /**

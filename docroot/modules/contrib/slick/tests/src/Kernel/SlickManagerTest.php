@@ -2,12 +2,12 @@
 
 namespace Drupal\Tests\slick\Kernel;
 
-use Drupal\slick\Entity\Slick;
-use Drupal\slick\SlickDefault;
-use Drupal\slick_ui\Form\SlickForm;
 use Drupal\Tests\blazy\Kernel\BlazyKernelTestBase;
 use Drupal\Tests\slick\Traits\SlickKernelTrait;
 use Drupal\Tests\slick\Traits\SlickUnitTestTrait;
+use Drupal\slick\Entity\Slick;
+use Drupal\slick\SlickDefault;
+use Drupal\slick_ui\Form\SlickForm;
 
 /**
  * Tests the Slick manager methods.
@@ -177,7 +177,7 @@ class SlickManagerTest extends BlazyKernelTestBase {
    * @return array
    *   An array of tested data.
    */
-  public function providerTestSlickBuild() {
+  public static function providerTestSlickBuild() {
     $data[] = [
       TRUE,
       [

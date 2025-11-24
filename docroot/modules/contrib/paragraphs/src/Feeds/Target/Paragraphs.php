@@ -8,6 +8,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\feeds\Feeds\Target\Text;
 use Drupal\feeds\Plugin\Type\Target\ConfigurableTargetInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Feeds target plugin for Paragraphs fields.
@@ -15,7 +16,6 @@ use Drupal\feeds\Plugin\Type\Target\ConfigurableTargetInterface;
  * @FeedsTarget(
  *   id = "paragraphs",
  *   field_types = {"entity_reference_revisions"},
- *   arguments = {"@entity_type.manager", "@current_user"}
  * )
  */
 class Paragraphs extends Text implements ConfigurableTargetInterface {
@@ -49,6 +49,19 @@ class Paragraphs extends Text implements ConfigurableTargetInterface {
     $this->paragraphStorage = $entity_type_manager->getStorage('paragraph');
     $this->paragraphsTypeStorage = $entity_type_manager->getStorage('paragraphs_type');
     $this->fieldConfigStorage = $entity_type_manager->getStorage('field_config');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('entity_type.manager'),
+      $container->get('current_user'),
+    );
   }
 
   /**
@@ -104,18 +117,23 @@ class Paragraphs extends Text implements ConfigurableTargetInterface {
    * {@inheritdoc}
    */
   public function getSummary() {
-    $summary = $this->t('Not yet configured.');
+    $summary = parent::getSummary();
+
     $paragraphs_type_id = $this->configuration['paragraphs_type'];
     $paragraph_field_name = $this->configuration['paragraph_field'];
     if ($paragraphs_type_id && $paragraphs_type = $this->paragraphsTypeStorage->load($paragraphs_type_id)) {
       if ($paragraph_field_name && $paragraph_field = $this->fieldConfigStorage->load('paragraph.' . $paragraphs_type_id . '.' . $paragraph_field_name)) {
-        $summary = $this->t('Using the %field field on a %type paragraph.', [
+        $summary[] = $this->t('Using the %field field on a %type paragraph.', [
           '%field' => $paragraph_field->label(),
           '%type' => $paragraphs_type->label(),
         ]);
       }
     }
-    return $summary . '<br>' . parent::getSummary();
+    else {
+      $summary[] = $this->t('Not yet configured.');
+    }
+
+    return $summary;
   }
 
   /**

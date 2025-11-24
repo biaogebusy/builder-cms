@@ -4,3 +4,7 @@ charts.settings.library_plugin.charts_test_library:
     foo:
       label: Foo
       type: string
+
+charts.library_plugin.charts_test_library.options.column:
+  label: 'Charts Test Library library Column type options'
+  type: mapping

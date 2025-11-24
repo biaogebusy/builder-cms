@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media\Functional;
 
 use Drupal\media\Entity\Media;
@@ -12,9 +14,7 @@ use Drupal\media\Entity\Media;
 class MediaTemplateSuggestionsTest extends MediaFunctionalTestBase {
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['media'];
 
@@ -26,7 +26,7 @@ class MediaTemplateSuggestionsTest extends MediaFunctionalTestBase {
   /**
    * Tests template suggestions from media_theme_suggestions_media().
    */
-  public function testMediaThemeHookSuggestions() {
+  public function testMediaThemeHookSuggestions(): void {
     $media_type = $this->createMediaType('test', [
       'queue_thumbnail_downloads' => FALSE,
     ]);

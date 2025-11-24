@@ -2,6 +2,7 @@ global-styling:
   version: VERSION
   css:
     base:
+      css/base/variables.css: {}
       css/base/elements.css: {}
       css/base/typography.css: {}
       css/base/print.css: {}
@@ -22,6 +23,7 @@ global-styling:
       css/components/accordion.css: {}
       css/components/action-link.css: {}
       css/components/content-header.css: {}
+      css/components/ckeditor5.css: {}
       css/components/container-inline.css: {}
       css/components/container-inline.module.css: {}
       css/components/breadcrumb.css: {}
@@ -33,7 +35,6 @@ global-styling:
       css/components/fieldset.css: {}
       css/components/form.css: {}
       css/components/form--checkbox-radio.css: {}
-      css/components/form--checkbox-radio--ie.css: {}
       css/components/form--field-multiple.css: {}
       css/components/form--managed-file.css: {}
       css/components/form--text.css: {}
@@ -56,7 +57,6 @@ global-styling:
       css/components/system-status-counter.css: {}
       css/components/tableselect.css: {}
       css/components/tabs.css: {}
-      css/components/views-ui.css: {}
     theme:
       css/theme/colors.css: {}
     layout:
@@ -71,21 +71,17 @@ global-styling:
     # such as inputs, action links, buttons, dropbuttons. For usability and
     # accessibility reasons, we keep target sizes big enough on touch screen
     # devices (by not making these elements smaller than their default size).
-    # Modernizr was used for recognizing whether user is using a touch device or
-    # not. This allows conditionally rendering small variation of the control
-    # elements on non-touch devices. Modernizr's touch detection has since been
-    # replaced by core/drupal.touchevents-test.
-    # In some cases, such as when rendering links, it is hard recognize when
-    # this detection should be attached, therefore it is always attached.
+    # This library allows conditionally rendering small variations of the
+    # control elements on non-touch devices. In some cases, such as when
+    # rendering links, it is hard to recognize when this detection should be
+    # attached, therefore it is always attached.
     - core/drupal.touchevents-test
 
-node-form:
+form-two-columns:
   version: VERSION
   css:
     layout:
-      css/layout/node-add.css: {}
-  dependencies:
-    - node/form
+      css/layout/form-two-columns.css: {}
 
 maintenance-page:
   version: VERSION
@@ -117,16 +113,6 @@ drupal.nav-tabs:
     - core/drupal
     - core/once
     - core/drupal.debounce
-    - core/collapse
-
-drupal.responsive-detail:
-  version: VERSION
-  js:
-    js/responsive-details.js: {}
-  dependencies:
-    - core/jquery
-    - core/once
-    - core/collapse
 
 claro.jquery.ui:
   version: VERSION
@@ -139,29 +125,19 @@ claro.drupal.dialog:
   css:
     theme:
       css/components/dialog.css: {}
+  dependencies:
+    - claro/claro.jquery.ui
 
 claro.tabledrag:
   version: VERSION
   js:
     js/tabledrag.js: {}
 
-ckeditor-admin:
+drupal.node.preview:
   version: VERSION
   css:
     theme:
-      css/theme/ckeditor.admin.css: {}
-
-ckeditor-dialog:
-  version: VERSION
-  css:
-    theme:
-      css/theme/ckeditor-dialog.css: {}
-
-ckeditor-editor:
-  version: VERSION
-  css:
-    theme:
-      css/theme/ckeditor-editor.css: {}
+      css/components/node-preview.css: {}
 
 tour-styling:
   version: VERSION
@@ -177,6 +153,12 @@ media-form:
   dependencies:
     - media/form
 
+image.admin:
+  version: VERSION
+  css:
+    component:
+      css/components/image.admin.css: {}
+
 system.admin:
   version: VERSION
   css:
@@ -185,7 +167,6 @@ system.admin:
       css/components/system-admin--links.css: { weight: -10 }
       css/components/system-admin--modules.css: { weight: -10 }
       css/components/system-admin--panel.css: { weight: -10 }
-      css/components/system-admin--status-report.css: { weight: -10 }
     layout:
       css/layout/system-admin--layout.css: { weight: -10 }
   dependencies:
@@ -217,6 +198,7 @@ autocomplete:
     js/autocomplete.js: {}
   dependencies:
     - core/once
+    - claro/claro.jquery.ui
 
 drupal.shortcut:
   version: VERSION
@@ -241,7 +223,6 @@ form.password-confirm:
   js:
     js/user.theme.js: {}
   dependencies:
-    - core/drupal.object.assign
     - core/drupal
     - claro/global-styling
 
@@ -249,6 +230,20 @@ views:
   css:
     component:
       css/components/views-exposed-form.css: {}
+
+views_ui:
+  css:
+    component:
+      css/components/views-ui.css: {}
+  moved_files:
+    claro/global-styling:
+      deprecation_version: 10.3.0
+      removed_version: 11.0.0
+      deprecation_link: https://www.drupal.org/node/3432346
+      css:
+        component:
+          css/components/views-ui.css:
+            component: css/components/views-ui.css
 
 messages:
   js:
@@ -300,11 +295,28 @@ progress:
     component:
       css/components/progress.css: {}
 
+tabbingmanager:
+  version: VERSION
+  dependencies:
+    - claro/claro.jquery.ui
+
 filter:
   version: VERSION
   css:
     component:
       css/theme/filter.theme.css: {}
+
+tableselect:
+  version: VERSION
+  js:
+    js/tableselect.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/drupal.announce
+    - core/drupal.debounce
+    - core/tabbable
+    - core/once
 
 classy.book-navigation:
   version: VERSION

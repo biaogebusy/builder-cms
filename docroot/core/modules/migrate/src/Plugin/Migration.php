@@ -113,13 +113,6 @@ class Migration extends PluginBase implements MigrationInterface, RequirementsIn
   protected $label;
 
   /**
-   * The plugin ID for the row.
-   *
-   * @var string
-   */
-  protected $row;
-
-  /**
    * The source configuration, with at least a 'plugin' key.
    *
    * Used to initialize the $sourcePlugin.
@@ -185,16 +178,6 @@ class Migration extends PluginBase implements MigrationInterface, RequirementsIn
   protected $idMapPlugin;
 
   /**
-   * The source identifiers.
-   *
-   * An array of source identifiers: the keys are the name of the properties,
-   * the values are dependent on the ID map plugin.
-   *
-   * @var array
-   */
-  protected $sourceIds = [];
-
-  /**
    * The destination identifiers.
    *
    * An array of destination identifiers: the keys are the name of the
@@ -215,6 +198,11 @@ class Migration extends PluginBase implements MigrationInterface, RequirementsIn
    * Track time of last import if TRUE.
    *
    * @var bool
+   *
+   * @deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. There is no
+   * replacement.
+   *
+   * @see https://www.drupal.org/node/3282894
    */
   protected $trackLastImported = FALSE;
 
@@ -230,6 +218,7 @@ class Migration extends PluginBase implements MigrationInterface, RequirementsIn
    *
    * @var array
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $migration_tags = [];
 
   /**
@@ -251,33 +240,21 @@ class Migration extends PluginBase implements MigrationInterface, RequirementsIn
    *
    * The migration_dependencies value is structured like this:
    * @code
-   * array(
-   *   'required' => array(
+   * [
+   *   'required' => [
    *     // An array of migration IDs that must be run before this migration.
-   *   ),
-   *   'optional' => array(
+   *   ],
+   *   'optional' => [
    *     // An array of migration IDs that, if they exist, must be run before
    *     // this migration.
-   *   ),
-   * );
+   *   ],
+   * ];
    * @endcode
    *
    * @var array
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $migration_dependencies = [];
-
-  /**
-   * The migration's configuration dependencies.
-   *
-   * These store any dependencies on modules or other configuration (including
-   * other migrations) that must be available before the migration can be
-   * created.
-   *
-   * @see \Drupal\Core\Config\Entity\ConfigDependencyManager
-   *
-   * @var array
-   */
-  protected $dependencies = [];
 
   /**
    * The migration plugin manager for loading other migration plugins.
@@ -358,6 +335,15 @@ class Migration extends PluginBase implements MigrationInterface, RequirementsIn
     foreach (NestedArray::mergeDeepArray([$plugin_definition, $configuration], TRUE) as $key => $value) {
       $this->$key = $value;
     }
+
+    if (isset($plugin_definition['trackLastImported'])) {
+      @trigger_error("The key 'trackLastImported' is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. There is no replacement. See https://www.drupal.org/node/3282894", E_USER_DEPRECATED);
+    }
+
+    $this->migration_dependencies = ($this->migration_dependencies ?: []) + ['required' => [], 'optional' => []];
+    if (count($this->migration_dependencies) !== 2 || !is_array($this->migration_dependencies['required']) || !is_array($this->migration_dependencies['optional'])) {
+      @trigger_error("Invalid migration dependencies for {$this->id()} is deprecated in drupal:10.1.0 and will cause an error in drupal:11.0.0. See https://www.drupal.org/node/3266691", E_USER_DEPRECATED);
+    }
   }
 
   /**
@@ -413,14 +399,13 @@ class Migration extends PluginBase implements MigrationInterface, RequirementsIn
   /**
    * {@inheritdoc}
    */
-  public function getProcessPlugins(array $process = NULL) {
-    if (!isset($process)) {
-      $process = $this->getProcess();
-    }
+  public function getProcessPlugins(?array $process = NULL) {
+    $process = isset($process) ? $this->getProcessNormalized($process) : $this->getProcess();
     $index = serialize($process);
     if (!isset($this->processPlugins[$index])) {
       $this->processPlugins[$index] = [];
-      foreach ($this->getProcessNormalized($process) as $property => $configurations) {
+
+      foreach ($process as $property => $configurations) {
         $this->processPlugins[$index][$property] = [];
         foreach ($configurations as $configuration) {
           if (isset($configuration['source'])) {
@@ -621,6 +606,12 @@ class Migration extends PluginBase implements MigrationInterface, RequirementsIn
       // Invalidate the destination plugin.
       unset($this->destinationPlugin);
     }
+    elseif ($property_name === 'migration_dependencies') {
+      $value = ($value ?: []) + ['required' => [], 'optional' => []];
+      if (count($value) !== 2 || !is_array($value['required']) || !is_array($value['optional'])) {
+        @trigger_error("Invalid migration dependencies for {$this->id()} is deprecated in drupal:10.1.0 and will cause an error in drupal:11.0.0. See https://www.drupal.org/node/3266691", E_USER_DEPRECATED);
+      }
+    }
     $this->{$property_name} = $value;
     return $this;
   }
@@ -669,6 +660,7 @@ class Migration extends PluginBase implements MigrationInterface, RequirementsIn
    * {@inheritdoc}
    */
   public function isTrackLastImported() {
+    @trigger_error(__METHOD__ . '() is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. There is no replacement. See https://www.drupal.org/node/3282894', E_USER_DEPRECATED);
     return $this->trackLastImported;
   }
 
@@ -676,20 +668,39 @@ class Migration extends PluginBase implements MigrationInterface, RequirementsIn
    * {@inheritdoc}
    */
   public function setTrackLastImported($track_last_imported) {
+    @trigger_error(__METHOD__ . '() is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. There is no replacement. See https://www.drupal.org/node/3282894', E_USER_DEPRECATED);
     $this->trackLastImported = (bool) $track_last_imported;
     return $this;
   }
 
   /**
-   * {@inheritdoc}
+   * Get the dependencies for this migration.
+   *
+   * @param bool $expand
+   *   Will issue a deprecation in Drupal 10 if set to FALSE. See
+   *   https://www.drupal.org/node/3266691.
+   *
+   * @return array
+   *   The dependencies for this migrations.
    */
-  public function getMigrationDependencies() {
+  public function getMigrationDependencies(bool $expand = FALSE) {
+    if (!$expand) {
+      @trigger_error('Calling Migration::getMigrationDependencies() without expanding the plugin IDs is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. In most cases, use getMigrationDependencies(TRUE). See https://www.drupal.org/node/3266691', E_USER_DEPRECATED);
+    }
+    // @todo Before Drupal 11.0.0, remove ::set() and these checks.
+    // @see https://www.drupal.org/project/drupal/issues/3262395
     $this->migration_dependencies = ($this->migration_dependencies ?: []) + ['required' => [], 'optional' => []];
     if (count($this->migration_dependencies) !== 2 || !is_array($this->migration_dependencies['required']) || !is_array($this->migration_dependencies['optional'])) {
       throw new InvalidPluginDefinitionException($this->id(), "Invalid migration dependencies configuration for migration {$this->id()}");
     }
     $this->migration_dependencies['optional'] = array_unique(array_merge($this->migration_dependencies['optional'], $this->findMigrationDependencies($this->process)));
-    return $this->migration_dependencies;
+    if (!$expand) {
+      return $this->migration_dependencies;
+    }
+    return array_map(
+      [$this->migrationPluginManager, 'expandPluginIds'],
+      $this->migration_dependencies
+    );
   }
 
   /**
@@ -756,6 +767,7 @@ class Migration extends PluginBase implements MigrationInterface, RequirementsIn
    * {@inheritdoc}
    */
   public function getTrackLastImported() {
+    @trigger_error(__METHOD__ . '() is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. There is no replacement. See https://www.drupal.org/node/3282894', E_USER_DEPRECATED);
     return $this->trackLastImported;
   }
 

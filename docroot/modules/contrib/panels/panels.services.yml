@@ -16,3 +16,8 @@ services:
     arguments: ['@panels.storage_manager']
     tags:
       - { name: access_check, applies_to: _panels_storage_access }
+  panels.tempstore_access:
+    class: Drupal\panels\Access\TempstoreAccess
+    arguments: ['@tempstore.shared']
+    tags:
+      - { name: access_check, applies_to: _panels_tempstore_access }

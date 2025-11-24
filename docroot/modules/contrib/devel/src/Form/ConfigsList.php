@@ -6,6 +6,7 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Form that displays all the config variables to edit them.
@@ -15,19 +16,31 @@ class ConfigsList extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public static function create(ContainerInterface $container): static {
+    $instance = parent::create($container);
+    $instance->configFactory = $container->get('config.factory');
+    $instance->redirectDestination = $container->get('redirect.destination');
+    $instance->stringTranslation = $container->get('string_translation');
+
+    return $instance;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFormId(): string {
     return 'devel_config_system_form';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $filter = '') {
+  public function buildForm(array $form, FormStateInterface $form_state, $filter = ''): array {
     $form['filter'] = [
       '#type' => 'details',
       '#title' => $this->t('Filter variables'),
       '#attributes' => ['class' => ['container-inline']],
-      '#open' => isset($filter) && trim($filter) != '',
+      '#open' => isset($filter) && trim($filter) !== '',
     ];
     $form['filter']['name'] = [
       '#type' => 'textfield',
@@ -47,11 +60,10 @@ class ConfigsList extends FormBase {
     ];
 
     $rows = [];
-
-    $destination = $this->getDestinationArray();
+    $destination = $this->redirectDestination->getAsArray();
 
     // List all the variables filtered if any filter was provided.
-    $names = $this->configFactory()->listAll($filter);
+    $names = $this->configFactory->listAll($filter);
 
     foreach ($names as $config_name) {
       $operations['edit'] = [
@@ -61,7 +73,12 @@ class ConfigsList extends FormBase {
       ];
       $rows[] = [
         'name' => $config_name,
-        'operation' => ['data' => ['#type' => 'operations', '#links' => $operations]],
+        'operation' => [
+          'data' => [
+            '#type' => 'operations',
+            '#links' => $operations,
+          ],
+        ],
       ];
     }
 
@@ -78,7 +95,7 @@ class ConfigsList extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     $filter = $form_state->getValue('name');
     $form_state->setRedirectUrl(Url::FromRoute('devel.configs_list', ['filter' => Html::escape($filter)]));
   }

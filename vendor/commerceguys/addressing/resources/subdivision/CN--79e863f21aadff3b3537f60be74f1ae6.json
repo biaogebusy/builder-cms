@@ -1,0 +1,29 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"JS",
+		"Zhenjiang Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Dantu Qu": {
+			"local_name": "丹徒区"
+		},
+		"Danyang Shi": {
+			"local_name": "丹阳市"
+		},
+		"Jingkou Qu": {
+			"local_name": "京口区"
+		},
+		"Jurong Shi": {
+			"local_name": "句容市"
+		},
+		"Runzhou Qu": {
+			"local_name": "润州区"
+		},
+		"Yangzhong Shi": {
+			"local_name": "扬中市"
+		}
+	}
+}

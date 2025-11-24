@@ -54,7 +54,7 @@ class FieldGroup extends DrupalSqlBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration = NULL) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, ?MigrationInterface $migration = NULL) {
     return new static(
       $configuration,
       $plugin_id,
@@ -89,7 +89,7 @@ class FieldGroup extends DrupalSqlBase {
    * {@inheritdoc}
    */
   public function prepareRow(Row $row) {
-    $data = unserialize($row->getSourceProperty('data'));
+    $data = unserialize($row->getSourceProperty('data'), ['allowed_classes' => FALSE]);
     $format_settings = $data['format_settings'] + $data['format_settings']['instance_settings'];
     unset($format_settings['instance_settings']);
     $settings = [

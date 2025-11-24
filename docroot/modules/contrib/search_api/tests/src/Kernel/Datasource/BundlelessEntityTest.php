@@ -4,6 +4,7 @@ namespace Drupal\Tests\search_api\Kernel\Datasource;
 
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\search_api\Entity\Index;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests indexing entities that use string IDs.
@@ -13,6 +14,7 @@ use Drupal\search_api\Entity\Index;
  *
  * @group search_api
  */
+#[RunTestsInSeparateProcesses]
 class BundlelessEntityTest extends KernelTestBase {
 
   /**

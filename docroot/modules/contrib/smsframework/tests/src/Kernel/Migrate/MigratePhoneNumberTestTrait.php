@@ -27,33 +27,33 @@ trait MigratePhoneNumberTestTrait {
    */
   public function testPhoneSettingsMigration(): void {
     $settings = PhoneNumberSettings::loadMultiple();
-    $this->assertEquals([], $settings);
+    static::assertEquals([], $settings);
 
     // Execute the phone number settings migration and confirm.
     $this->executeMigration('phone_number_settings');
 
     // Confirm new phone number settings is created.
     $settings = PhoneNumberSettings::loadMultiple();
-    $this->assertCount(1, $settings);
+    static::assertCount(1, $settings);
     /** @var \Drupal\sms\Entity\PhoneNumberSettingsInterface $setting */
     $setting = reset($settings);
-    $this->assertEquals(PhoneNumberSettingsPlugin::DEFAULT_VERIFICATION_MESSAGE, $setting->getVerificationMessage());
-    $this->assertEquals('phone_number', $setting->getFieldName('phone_number'));
-    $this->assertEquals(TRUE, $setting->getPurgeVerificationPhoneNumber());
-    $this->assertEquals('user', $setting->getPhoneNumberBundle());
-    $this->assertEquals('user', $setting->getPhoneNumberEntityTypeId());
-    $this->assertEquals(600, $setting->getVerificationCodeLifetime());
+    static::assertEquals(PhoneNumberSettingsPlugin::DEFAULT_VERIFICATION_MESSAGE, $setting->getVerificationMessage());
+    static::assertEquals('phone_number', $setting->getFieldName('phone_number'));
+    static::assertEquals(TRUE, $setting->getPurgeVerificationPhoneNumber());
+    static::assertEquals('user', $setting->getPhoneNumberBundle());
+    static::assertEquals('user', $setting->getPhoneNumberEntityTypeId());
+    static::assertEquals(600, $setting->getVerificationCodeLifetime());
 
     // Confirm that a new phone number field is created.
     $field_storage = FieldStorageConfig::load('user.phone_number');
-    $this->assertEquals('user.phone_number', $field_storage->id());
-    $this->assertEquals('phone_number', $field_storage->getName());
-    $this->assertEquals('user', $field_storage->getTargetEntityTypeId());
-    $this->assertEquals('telephone', $field_storage->getType());
+    static::assertEquals('user.phone_number', $field_storage->id());
+    static::assertEquals('phone_number', $field_storage->getName());
+    static::assertEquals('user', $field_storage->getTargetEntityTypeId());
+    static::assertEquals('telephone', $field_storage->getType());
 
     $field_config = FieldConfig::load('user.user.phone_number');
-    $this->assertEquals('user', $field_config->getTargetEntityTypeId());
-    $this->assertEquals('user', $field_config->getTargetBundle());
+    static::assertEquals('user', $field_config->getTargetEntityTypeId());
+    static::assertEquals('user', $field_config->getTargetBundle());
   }
 
   /**
@@ -66,12 +66,12 @@ trait MigratePhoneNumberTestTrait {
     $this->executeMigration('phone_number_settings');
 
     $settings = PhoneNumberSettings::loadMultiple();
-    $this->assertCount(1, $settings);
+    static::assertCount(1, $settings);
     /** @var \Drupal\sms\Entity\PhoneNumberSettingsInterface $setting */
     $setting = reset($settings);
     $expected_message = 'This is a custom confirmation message from [site:name]. Confirmation code: [sms-message:verification-code]';
 
-    $this->assertEquals($expected_message, $setting->getVerificationMessage());
+    static::assertEquals($expected_message, $setting->getVerificationMessage());
   }
 
   /**
@@ -87,17 +87,17 @@ trait MigratePhoneNumberTestTrait {
     $this->executeMigrations($this->getMigrationsToTest());
 
     $user = User::load(40);
-    $this->assertEquals('1234567890', $user->get('phone_number')->value);
+    static::assertEquals('1234567890', $user->get('phone_number')->value);
     $this->assertVerifiedPhoneNumber($user, '1234567890');
 
     $user = User::load(41);
-    $this->assertEquals('87654321190', $user->get('phone_number')->value);
+    static::assertEquals('87654321190', $user->get('phone_number')->value);
     $this->assertUnVerifiedPhoneNumber($user, '87654321190');
     $this->assertVerificationCode('87654321190', '8002');
 
     // No phone number for user 15.
     $user = User::load(42);
-    $this->assertEquals('', $user->get('phone_number')->value);
+    static::assertEquals('', $user->get('phone_number')->value);
     $this->assertNoVerifiedPhoneNumber($user);
   }
 
@@ -121,7 +121,7 @@ trait MigratePhoneNumberTestTrait {
     $this->assertVerifiedPhoneNumber(User::load(40), '1234567890');
     // Test that the default entity form display has the field added.
     $entity_form_display = EntityFormDisplay::load('user.user.default');
-    $this->assertNotNull($entity_form_display->getComponent('phone_number'));
+    static::assertNotNull($entity_form_display->getComponent('phone_number'));
 
     // Rollback migration and check that verifications, phone number settings
     // and phone number fields are removed.
@@ -129,14 +129,14 @@ trait MigratePhoneNumberTestTrait {
 
     // Assert no phone number verifications, phone number settings or phone
     // number fields exist.
-    $this->assertEquals([], PhoneNumberVerification::loadMultiple());
-    $this->assertEquals([], PhoneNumberSettings::loadMultiple());
-    $this->assertNull(FieldConfig::loadByName('user', 'user', 'phone_number'));
-    $this->assertNull(FieldStorageConfig::loadByName('user', 'phone_number'));
+    static::assertEquals([], PhoneNumberVerification::loadMultiple());
+    static::assertEquals([], PhoneNumberSettings::loadMultiple());
+    static::assertNull(FieldConfig::loadByName('user', 'user', 'phone_number'));
+    static::assertNull(FieldStorageConfig::loadByName('user', 'phone_number'));
 
     // Test that the display field is removed.
     $entity_form_display = EntityFormDisplay::load('user.user.default');
-    $this->assertNull($entity_form_display->getComponent('phone_number'));
+    static::assertNull($entity_form_display->getComponent('phone_number'));
   }
 
   /**
@@ -145,7 +145,7 @@ trait MigratePhoneNumberTestTrait {
   protected function assertVerifiedPhoneNumber(UserInterface $user, $number) {
     $phone_numbers = $this->container->get('sms.phone_number')->getPhoneNumbers($user, TRUE);
     $phone_number = reset($phone_numbers);
-    return $this->assertEquals($number, $phone_number, "Phone number '$number' is verified.");
+    static::assertEquals($number, $phone_number, "Phone number '$number' is verified.");
   }
 
   /**
@@ -154,7 +154,7 @@ trait MigratePhoneNumberTestTrait {
   protected function assertUnVerifiedPhoneNumber(UserInterface $user, $number) {
     $phone_numbers = $this->container->get('sms.phone_number')->getPhoneNumbers($user, FALSE);
     $phone_number = reset($phone_numbers);
-    return $this->assertEquals($number, $phone_number, "Phone number '$number' is unverified.");
+    static::assertEquals($number, $phone_number, "Phone number '$number' is unverified.");
   }
 
   /**
@@ -162,7 +162,7 @@ trait MigratePhoneNumberTestTrait {
    */
   protected function assertNoVerifiedPhoneNumber(UserInterface $user) {
     $phone_numbers = $this->container->get('sms.phone_number')->getPhoneNumbers($user);
-    return $this->assertEquals([], $phone_numbers, "No phone numbers for user {$user->id()}.");
+    static::assertEquals([], $phone_numbers, "No phone numbers for user {$user->id()}.");
   }
 
   /**
@@ -171,7 +171,7 @@ trait MigratePhoneNumberTestTrait {
   protected function assertVerificationCode($number, $code) {
     $verification = $this->container->get('sms.phone_number.verification')->getPhoneVerificationByPhoneNumber($number, FALSE);
     $verification = reset($verification);
-    return $this->assertEquals($code, $verification->getCode());
+    return static::assertEquals($code, $verification->getCode());
   }
 
   /**

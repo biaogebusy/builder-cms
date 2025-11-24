@@ -1,0 +1,10 @@
+finished:
+  6:
+    diff: diff
+  # Note migrations are finished for 7.x-1.x, 7.x-2.x, and the migrations are
+  # complete for global configuration for 7.x-3.x; however, it intentionally
+  # does not include migrations for 7.x-3.x field configurations (as decided by
+  # the maintainers). See https://www.drupal.org/node/3199333 for more
+  # information.
+  7:
+    diff: diff

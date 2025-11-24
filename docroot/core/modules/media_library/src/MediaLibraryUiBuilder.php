@@ -89,7 +89,9 @@ class MediaLibraryUiBuilder {
    */
   public static function dialogOptions() {
     return [
-      'dialogClass' => 'media-library-widget-modal',
+      'classes' => [
+        'ui-dialog' => 'media-library-widget-modal',
+      ],
       'title' => t('Add or select media'),
       'height' => '75%',
       'width' => '75%',
@@ -106,7 +108,7 @@ class MediaLibraryUiBuilder {
    * @return array
    *   The render array for the media library.
    */
-  public function buildUi(MediaLibraryState $state = NULL) {
+  public function buildUi(?MediaLibraryState $state = NULL) {
     if (!$state) {
       $state = MediaLibraryState::fromRequest($this->request);
     }
@@ -174,7 +176,7 @@ class MediaLibraryUiBuilder {
    * @return \Drupal\Core\Access\AccessResult
    *   The access result.
    */
-  public function checkAccess(AccountInterface $account, MediaLibraryState $state = NULL) {
+  public function checkAccess(AccountInterface $account, ?MediaLibraryState $state = NULL) {
     if (!$state) {
       try {
         $state = MediaLibraryState::fromRequest($this->request);
@@ -336,12 +338,6 @@ class MediaLibraryUiBuilder {
     $view_executable->setRequest($view_request);
 
     $args = [$state->getSelectedTypeId()];
-
-    // Make sure the state parameters are set in the request so the view can
-    // pass the parameters along in the pager, filters etc.
-    $request = $view_executable->getRequest();
-    $request->query->add($state->all());
-    $view_executable->setRequest($request);
 
     $view_executable->setDisplay($display_id);
     $view_executable->preExecute($args);

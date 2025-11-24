@@ -1,0 +1,6 @@
+# Add Admin Toolbar Tools settings as a local task displayed as a tab.
+admin_toolbar_tools.settings:
+  title: 'Tools settings'
+  route_name: admin_toolbar_tools.settings
+  base_route: admin_toolbar.settings
+  weight: 10

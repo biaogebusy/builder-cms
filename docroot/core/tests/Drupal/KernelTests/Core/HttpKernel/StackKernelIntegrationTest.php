@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\HttpKernel;
 
 use Drupal\Core\Url;
@@ -15,20 +17,18 @@ use Symfony\Component\HttpKernel\HttpKernelInterface;
 class StackKernelIntegrationTest extends KernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
-  protected static $modules = ['httpkernel_test', 'system'];
+  protected static $modules = ['http_kernel_test', 'system'];
 
   /**
    * Tests a request.
    */
-  public function testRequest() {
-    $request = Request::create((new Url('httpkernel_test.empty'))->toString());
+  public function testRequest(): void {
+    $request = Request::create((new Url('http_kernel_test.empty'))->toString());
     /** @var \Symfony\Component\HttpKernel\HttpKernelInterface $http_kernel */
     $http_kernel = \Drupal::service('http_kernel');
-    $http_kernel->handle($request, HttpKernelInterface::MASTER_REQUEST, FALSE);
+    $http_kernel->handle($request, HttpKernelInterface::MAIN_REQUEST, FALSE);
 
     $this->assertEquals('world', $request->attributes->get('_hello'));
     $this->assertEquals('test_argument', $request->attributes->get('_previous_optional_argument'));
@@ -37,7 +37,7 @@ class StackKernelIntegrationTest extends KernelTestBase {
   /**
    * Tests that late middlewares are automatically flagged lazy.
    */
-  public function testLazyLateMiddlewares() {
+  public function testLazyLateMiddlewares(): void {
     $this->assertFalse($this->container->getDefinition('http_middleware.reverse_proxy')->isLazy(), 'lazy flag on http_middleware.reverse_proxy definition is not set');
     $this->assertFalse($this->container->getDefinition('http_middleware.kernel_pre_handle')->isLazy(), 'lazy flag on http_middleware.kernel_pre_handle definition is not set');
     $this->assertFalse($this->container->getDefinition('http_middleware.session')->isLazy(), 'lazy flag on http_middleware.session definition is not set');

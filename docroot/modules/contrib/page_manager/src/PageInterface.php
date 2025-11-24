@@ -156,6 +156,7 @@ interface PageInterface extends ConfigEntityInterface, EntityWithPluginCollectio
    *   The parameter context's unique name.
    *
    * @return bool
+   *   If the page has a certain parameter.
    */
   public function hasParameter($name);
 
@@ -189,6 +190,7 @@ interface PageInterface extends ConfigEntityInterface, EntityWithPluginCollectio
    * Gets the names of all parameters for this page.
    *
    * @return string[]
+   *   List of parameters for the page.
    */
   public function getParameterNames();
 

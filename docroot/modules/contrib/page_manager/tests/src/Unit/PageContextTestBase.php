@@ -2,12 +2,12 @@
 
 namespace Drupal\Tests\page_manager\Unit;
 
-use Prophecy\PhpUnit\ProphecyTrait;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\TypedData\TypedDataManager;
 use Drupal\page_manager\Event\PageManagerContextEvent;
 use Drupal\page_manager\PageInterface;
 use Drupal\Tests\UnitTestCase;
+use Prophecy\PhpUnit\ProphecyTrait;
 
 /**
  * Provides a base class for testing page context classes.

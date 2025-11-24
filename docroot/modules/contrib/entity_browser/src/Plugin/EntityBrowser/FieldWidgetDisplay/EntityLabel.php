@@ -50,7 +50,7 @@ class EntityLabel extends FieldWidgetDisplayBase implements ContainerFactoryPlug
       return ['#markup' => $restricted_access_label];
     }
 
-    return $translation->label();
+    return ['#markup' => $translation->label()];
   }
 
   /**

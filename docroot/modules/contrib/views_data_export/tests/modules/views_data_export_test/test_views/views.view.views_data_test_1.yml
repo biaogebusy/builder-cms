@@ -100,7 +100,7 @@ display:
           hide_empty: false
           empty_zero: false
           settings:
-            link_to_entity: true
+            link_to_entity: false
           plugin_id: field
           relationship: none
           group_type: group
@@ -171,9 +171,9 @@ display:
         - 'user.node_grants:view'
         - user.permissions
       tags: {  }
-  data_export_1:
+  csv:
     display_plugin: data_export
-    id: data_export_1
+    id: csv
     display_title: 'Data export'
     position: 1
     display_options:
@@ -194,30 +194,9 @@ display:
             strip_tags: true
             trim: true
             encoding: utf8
-          xls_settings:
-            xls_format: Excel2007
-            metadata:
-              creator: ''
-              last_modified_by: ''
-              title: ''
-              description: ''
-              subject: ''
-              keywords: ''
-              category: ''
-              manager: ''
-              company: ''
       export_method: batch
       export_batch_size: 4
       store_in_public_file_directory: true
       redirect_to_display: none
       custom_redirect_path: false
       include_query_params: false
-    cache_metadata:
-      max-age: -1
-      contexts:
-        - 'languages:language_content'
-        - 'languages:language_interface'
-        - request_format
-        - 'user.node_grants:view'
-        - user.permissions
-      tags: {  }

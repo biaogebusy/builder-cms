@@ -40,7 +40,7 @@ class XmlSitemapStorage extends ConfigEntityStorage {
    * @param \Drupal\Core\Cache\MemoryCache\MemoryCacheInterface|null $memory_cache
    *   The memory cache backend.
    */
-  public function __construct(EntityTypeInterface $entity_type, ConfigFactoryInterface $config_factory, UuidInterface $uuid_service, LanguageManagerInterface $language_manager, StateInterface $state, MemoryCacheInterface $memory_cache = NULL) {
+  public function __construct(EntityTypeInterface $entity_type, ConfigFactoryInterface $config_factory, UuidInterface $uuid_service, LanguageManagerInterface $language_manager, StateInterface $state, ?MemoryCacheInterface $memory_cache = NULL) {
     parent::__construct($entity_type, $config_factory, $uuid_service, $language_manager, $memory_cache);
     $this->state = $state;
   }
@@ -75,7 +75,7 @@ class XmlSitemapStorage extends ConfigEntityStorage {
   /**
    * {@inheritdoc}
    */
-  protected function doLoadMultiple(array $ids = NULL) {
+  protected function doLoadMultiple(?array $ids = NULL) {
     $entities = parent::doLoadMultiple($ids);
 
     // Load the auxiliar xmlsitemap data and attach it to the entity.

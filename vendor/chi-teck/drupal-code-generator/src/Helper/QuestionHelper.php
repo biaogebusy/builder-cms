@@ -1,8 +1,12 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
+
+// phpcs:disable SlevomatCodingStandard.Classes.RequireAbstractOrFinal.ClassNeitherAbstractNorFinal
 
 namespace DrupalCodeGenerator\Helper;
 
-use DrupalCodeGenerator\Compatibility\AskTrait;
+use DrupalCodeGenerator\Exception\SilentException;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Helper\QuestionHelper as BaseQuestionHelper;
 use Symfony\Component\Console\Input\InputInterface;
@@ -14,90 +18,69 @@ use Symfony\Component\Console\Question\Question;
 
 /**
  * The QuestionHelper class provides helpers to interact with the user.
+ *
+ * @todo Move answers queue in a separate helper.
  */
 class QuestionHelper extends BaseQuestionHelper {
-  use AskTrait;
 
   /**
    * Counter to match questions and answers.
+   *
+   * @psalm-var int<0, max>
    */
   private int $counter = 0;
 
   /**
    * {@inheritdoc}
    */
-  protected function compatAsk(InputInterface $input, OutputInterface $output, Question $question) {
+  public function ask(InputInterface $input, OutputInterface $output, Question $question): mixed {
+    // When the generator is started from the Navigation command the input is
+    // not supplied with 'answer' option.
+    $answers = $input->hasOption('answer') ? $input->getOption('answer') : [];
 
-    // Input is not supplied with 'answer' option when the generator was started
-    // from the Navigation command.
-    $answers = $input->hasOption('answer') ? $input->getOption('answer') : NULL;
-
-    if ($answers && \array_key_exists($this->counter, $answers)) {
-      $answer = $this->doAsk($output, $question, $answers);
-    }
-    else {
-      $answer = parent::ask($input, $output, $question);
+    if (!\array_key_exists($this->counter, $answers)) {
+      return parent::ask($input, $output, $question);
     }
 
-    $this->counter++;
-    return $answer;
-  }
-
-  /**
-   * Asks a question to the user and returns the answer.
-   *
-   * @return mixed
-   *   The user answer.
-   */
-  protected function doAsk(OutputInterface $output, Question $question, array $answers) {
+    // -- Simulate interaction.
+    $answer = $answers[$this->counter++];
 
     if ($output instanceof ConsoleOutputInterface) {
       $output = $output->getErrorOutput();
     }
-
-    $answer = $answers[$this->counter];
-
     $this->writePrompt($output, $question);
-
     $output->write("$answer\n");
 
-    if ($answer === NULL) {
-      $answer = $question->getDefault();
-    }
-    elseif ($question instanceof ConfirmationQuestion) {
-      $answer = (bool) \preg_match('/^Ye?s?$/i', $answer);
-    }
+    $answer ??= $question->getDefault();
 
     if ($validator = $question->getValidator()) {
       try {
         $answer = $validator($answer);
       }
       catch (\UnexpectedValueException $exception) {
-        // UnexpectedValueException can be a result of wrong user input. So
-        // no need to render the exception in details as
-        // Application::renderException() does.
+        // The exception is a result of wrong user input. So no need to render
+        // it in details as Application::renderException() does.
         $this->writeError($output, $exception);
-        exit(1);
+        throw new SilentException($exception->getMessage(), previous: $exception);
       }
     }
-    elseif ($question instanceof ChoiceQuestion) {
 
-      $choices = $question->getChoices();
-      if ($question->isMultiselect()) {
-        // @todo Support multiselect.
-      }
-      else {
-        $answer = $choices[$answer] ?? NULL;
-      }
+    if ($question->isTrimmable() && \is_string($answer)) {
+      $answer = \trim($answer);
     }
+
+    if ($normalizer = $question->getNormalizer()) {
+      $answer = $normalizer($answer);
+    }
+
     return $answer;
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function writePrompt(OutputInterface $output, Question $question): void {
-    // @todo Remove this once Symfony fixes the following bug.
+  final protected function writePrompt(OutputInterface $output, Question $question): void {
+    // @todo Remove this once the following issue is resolved.
     // @see https://github.com/symfony/symfony/issues/39946
     $style = new OutputFormatterStyle('white', 'blue', ['bold']);
     $output->getFormatter()->setStyle('title', $style);
@@ -105,48 +88,47 @@ class QuestionHelper extends BaseQuestionHelper {
     $question_text = $question->getQuestion();
     $default_value = $question->getDefault();
 
-    // Do not change formatted title.
+    // Navigation command formats questions itself.
+    // @todo Check if the question is already formatted in a more generic way.
     if (!\str_starts_with($question_text, '<title>')) {
       $question_text = "\n <info>$question_text</info>";
 
-      if ($question instanceof ConfirmationQuestion && \is_bool($default_value)) {
-        $default_value = $default_value ? 'Yes' : 'No';
+      if ($default_value !== NULL && $default_value !== '') {
+        if ($question instanceof ConfirmationQuestion) {
+          // Confirmation question always has boolean default value.
+          // @see \Symfony\Component\Console\Question\ConfirmationQuestion::__construct()
+          $default_value = $default_value ? 'Yes' : 'No';
+        }
+        $question_text .= " [<comment>$default_value</comment>]:";
       }
-      if ($default_value !== NULL && $default_value) {
-        $question_text .= " [<comment>$default_value</comment>]";
-      }
-
-      // No need to append colon if the text ends with a question mark.
-      if ($default_value !== NULL || $question->getQuestion()[-1] != '?') {
+      // Colon and question mark should not show up together.
+      elseif (!\str_ends_with($question->getQuestion(), '?')) {
         $question_text .= ':';
       }
     }
 
-    $output->write($question_text);
+    $output->writeln($question_text);
 
     if ($question instanceof ChoiceQuestion) {
-      $func_name = \method_exists($this, 'width') ? 'width' : 'strlen';
-      $max_width = \max(\array_map([$this, $func_name], \array_keys($question->getChoices())));
-
-      $output->writeln('');
-      $messages = [];
       $choices = $question->getChoices();
+      \assert(\count($choices) > 0);
+      $max_width = \max(\array_map([self::class, 'width'], \array_keys($choices)));
+      $messages = [];
       foreach ($choices as $key => $value) {
-        $width = $max_width - static::$func_name((string) $key);
-        $messages[] = '  [<info>' . \str_repeat(' ', $width) . $key . '</info>] ' . $value;
+        // For numeric keys left padding makes more sense.
+        $key = \str_pad((string) $key, $max_width, pad_type: \STR_PAD_LEFT);
+        $messages[] = '  [<info>' . $key . '</info>] ' . $value;
       }
       $output->writeln($messages);
-      $output->write(' ➤ ');
     }
-    else {
-      $output->write("\n ➤ ");
-    }
+
+    $output->write(' ➤ ');
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function writeError(OutputInterface $output, \Exception $error): void {
+  final protected function writeError(OutputInterface $output, \Throwable $error): void {
     // Add one-space indentation to comply with DCG output style.
     $output->writeln(' <error>' . $error->getMessage() . '</error>');
   }

@@ -2,9 +2,12 @@
 
 namespace Drupal\field_group_migrate\Plugin\migrate\destination\d7;
 
+use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\migrate\Plugin\migrate\destination\DestinationBase;
 use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\Row;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * This class imports one field_group of an entity form display.
@@ -13,7 +16,41 @@ use Drupal\migrate\Row;
  *   id = "d7_field_group"
  * )
  */
-class FieldGroup extends DestinationBase {
+class FieldGroup extends DestinationBase implements ContainerFactoryPluginInterface {
+
+  /**
+   * The entity views displays repository service.
+   *
+   * @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface
+   */
+  protected $entityDisplayRepository;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+    MigrationInterface $migration,
+    EntityDisplayRepositoryInterface $entity_display_repository,
+  ) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $migration);
+    $this->entityDisplayRepository = $entity_display_repository;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, ?MigrationInterface $migration = NULL) {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $migration,
+      $container->get('entity_display.repository')
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -66,8 +103,9 @@ class FieldGroup extends DestinationBase {
   /**
    * {@inheritdoc}
    */
-  public function fields(MigrationInterface $migration = NULL) {
+  public function fields(?MigrationInterface $migration = NULL) {
     // This is intentionally left empty.
+    return $migration;
   }
 
   /**
@@ -87,7 +125,7 @@ class FieldGroup extends DestinationBase {
    */
   protected function getEntity($entity_type, $bundle, $mode, $type) {
     $function = $type == 'entity_form_display' ? 'getFormDisplay' : 'getViewDisplay';
-    return \Drupal::service('entity_display.repository')->$function($entity_type, $bundle, $mode);
+    return $this->entityDisplayRepository->$function($entity_type, $bundle, $mode);
   }
 
 }

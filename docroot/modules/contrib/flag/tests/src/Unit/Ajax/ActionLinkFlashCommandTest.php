@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\flag\Unit\Ajax;
 
-use Drupal\flag\Ajax\ActionLinkFlashCommand;
 use Drupal\Tests\UnitTestCase;
+use Drupal\flag\Ajax\ActionLinkFlashCommand;
 
 /**
  * @coversDefaultClass \Drupal\flag\Ajax\ActionLinkFlashCommand
@@ -32,7 +34,7 @@ class ActionLinkFlashCommandTest extends UnitTestCase {
   public function testRender() {
 
     // The first two characters of the CSS selector must be of the form
-    //  '\.[a-z A-Z]'.
+    // '\.[a-z A-Z]'.
     $selector = '.' . $this->random->name(10, TRUE);
 
     $message = $this->random->string(100, TRUE);

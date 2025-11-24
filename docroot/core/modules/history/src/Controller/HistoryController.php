@@ -20,7 +20,7 @@ class HistoryController extends ControllerBase {
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The request of the page.
    *
-   * @return Symfony\Component\HttpFoundation\JsonResponse
+   * @return \Symfony\Component\HttpFoundation\JsonResponse
    *   The JSON response.
    */
   public function getNodeReadTimestamps(Request $request) {
@@ -28,10 +28,10 @@ class HistoryController extends ControllerBase {
       throw new AccessDeniedHttpException();
     }
 
-    $nids = $request->request->get('node_ids');
-    if (!isset($nids)) {
+    if (!$request->request->has('node_ids')) {
       throw new NotFoundHttpException();
     }
+    $nids = $request->request->all('node_ids');
     return new JsonResponse(history_read_multiple($nids));
   }
 

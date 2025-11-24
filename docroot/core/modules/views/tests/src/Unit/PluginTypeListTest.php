@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Unit;
 
 use Drupal\views\ViewExecutable;
@@ -15,7 +17,7 @@ class PluginTypeListTest extends UnitTestCase {
   /**
    * Tests the plugins list is correct.
    */
-  public function testPluginList() {
+  public function testPluginList(): void {
     $plugin_list = [
       'access',
       'area',

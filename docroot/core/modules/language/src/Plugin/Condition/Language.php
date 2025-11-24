@@ -2,24 +2,29 @@
 
 namespace Drupal\language\Plugin\Condition;
 
+use Drupal\Core\Condition\Attribute\Condition;
 use Drupal\Core\Condition\ConditionPluginBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Plugin\Context\ContextDefinition;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'Language' condition.
- *
- * @Condition(
- *   id = "language",
- *   label = @Translation("Language"),
- *   context_definitions = {
- *     "language" = @ContextDefinition("language", label = @Translation("Language"))
- *   }
- * )
  */
+#[Condition(
+  id: "language",
+  label: new TranslatableMarkup("Language"),
+  context_definitions: [
+    "language" => new ContextDefinition(
+      data_type: "language",
+      label: new TranslatableMarkup("Language"),
+    ),
+  ]
+)]
 class Language extends ConditionPluginBase implements ContainerFactoryPluginInterface {
 
   /**
@@ -40,7 +45,7 @@ class Language extends ConditionPluginBase implements ContainerFactoryPluginInte
    *   initialize the defined contexts by setting it to an array of context
    *   values keyed by context names.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    */

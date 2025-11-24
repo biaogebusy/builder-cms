@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\jsonapi\Kernel\Normalizer;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
@@ -11,6 +13,7 @@ use Drupal\jsonapi\JsonApiResource\Relationship;
 use Drupal\jsonapi\JsonApiResource\ResourceObject;
 use Drupal\jsonapi\Normalizer\RelationshipNormalizer;
 use Drupal\jsonapi\Normalizer\Value\CacheableNormalization;
+use Drupal\jsonapi\ResourceType\ResourceType;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
 use Drupal\Tests\jsonapi\Kernel\JsonapiKernelTestBase;
@@ -92,49 +95,49 @@ class RelationshipNormalizerTest extends JsonapiKernelTestBase {
    *
    * @var \Drupal\user\Entity\User
    */
-  protected $user1;
+  protected User $user1;
 
   /**
    * A user.
    *
    * @var \Drupal\user\Entity\User
    */
-  protected $user2;
+  protected User $user2;
 
   /**
    * An image.
    *
    * @var \Drupal\file\Entity\File
    */
-  protected $image1;
+  protected File $image1;
 
   /**
    * An image.
    *
    * @var \Drupal\file\Entity\File
    */
-  protected $image2;
+  protected File $image2;
 
   /**
    * A referencer node.
    *
    * @var \Drupal\node\Entity\Node
    */
-  protected $referencer;
+  protected Node $referencer;
 
   /**
    * The node type.
    *
    * @var \Drupal\jsonapi\ResourceType\ResourceType
    */
-  protected $referencingResourceType;
+  protected ResourceType $referencingResourceType;
 
   /**
    * The normalizer.
    *
    * @var \Drupal\jsonapi\Normalizer\RelationshipNormalizer
    */
-  protected $normalizer;
+  protected RelationshipNormalizer $normalizer;
 
   /**
    * {@inheritdoc}
@@ -149,11 +152,11 @@ class RelationshipNormalizerTest extends JsonapiKernelTestBase {
     $this->installEntitySchema('file');
 
     // Add the additional table schemas.
-    $this->installSchema('system', ['sequences']);
     $this->installSchema('node', ['node_access']);
     $this->installSchema('file', ['file_usage']);
     NodeType::create([
       'type' => 'referencer',
+      'name' => 'Referencer',
     ])->save();
     $this->createEntityReferenceField('node', 'referencer', 'field_user', 'User', 'user', 'default', ['target_bundles' => NULL], 1);
     $this->createEntityReferenceField('node', 'referencer', 'field_users', 'Users', 'user', 'default', ['target_bundles' => NULL], FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
@@ -220,7 +223,7 @@ class RelationshipNormalizerTest extends JsonapiKernelTestBase {
    * @covers ::normalize
    * @dataProvider normalizeProvider
    */
-  public function testNormalize($entity_property_names, $field_name, $expected) {
+  public function testNormalize($entity_property_names, $field_name, $expected): void {
     // Links cannot be generated in the test provider because the container
     // has not yet been set.
     $expected['links'] = [
@@ -260,7 +263,7 @@ class RelationshipNormalizerTest extends JsonapiKernelTestBase {
   /**
    * Data provider for testNormalize.
    */
-  public function normalizeProvider() {
+  public static function normalizeProvider() {
     return [
       'single cardinality' => [
         ['user1'],

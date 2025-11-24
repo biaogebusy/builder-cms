@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Kernel\Plugin\source;
 
 use Drupal\migrate\Plugin\migrate\source\SourcePluginBase;
@@ -33,9 +35,9 @@ class MigrationSourceCacheTest extends MigrateTestBase {
   }
 
   /**
-   * Tests that counts for the same plugin_id are not crossed.
+   * Tests that counts for the same plugin ID are not crossed.
    */
-  public function testCacheCountsNotContaminated() {
+  public function testCacheCountsNotContaminated(): void {
     $migration_1_definition = [
       'source' => [
         'plugin' => 'cacheable_embedded_data',
@@ -78,19 +80,18 @@ class MigrationSourceCacheTest extends MigrateTestBase {
     $this->assertSame(2, $migration_2_source->count(TRUE));
 
     // Verify correct counts are cached.
-    $this->assertSame(1, $migration_1_source->count());
-    $this->assertSame(2, $migration_2_source->count());
+    $this->assertCount(1, $migration_1_source);
+    $this->assertCount(2, $migration_2_source);
 
     // Verify the cache keys are different.
     $cache_key_property = new \ReflectionProperty(SourcePluginBase::class, 'cacheKey');
-    $cache_key_property->setAccessible(TRUE);
     $this->assertNotEquals($cache_key_property->getValue($migration_1_source), $cache_key_property->getValue($migration_2_source));
   }
 
   /**
    * Test that values are pulled from the cache when appropriate.
    */
-  public function testCacheCountsUsed() {
+  public function testCacheCountsUsed(): void {
     $migration_definition = [
       'source' => [
         'plugin' => 'cacheable_embedded_data',
@@ -108,14 +109,13 @@ class MigrationSourceCacheTest extends MigrateTestBase {
     ];
     $migration = $this->migrationPluginManager->createStubMigration($migration_definition);
     $migration_source = $migration->getSourcePlugin();
-    $this->assertSame(2, $migration_source->count());
+    $this->assertCount(2, $migration_source);
 
     // Pollute the cache.
     $cache_key_property = new \ReflectionProperty($migration_source, 'cacheKey');
-    $cache_key_property->setAccessible(TRUE);
     $cache_key = $cache_key_property->getValue($migration_source);
     \Drupal::cache('migrate')->set($cache_key, 7);
-    $this->assertSame(7, $migration_source->count());
+    $this->assertCount(7, $migration_source);
     $this->assertSame(2, $migration_source->count(TRUE));
   }
 

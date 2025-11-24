@@ -23,9 +23,7 @@ abstract class ProcessTestCase extends MigrateProcessTestCase {
   protected function setUp(): void {
     parent::setUp();
 
-    $this->entityTypeBundleInfo = $this->getMockBuilder(EntityTypeBundleInfo::class)
-      ->disableOriginalConstructor()
-      ->getMock();
+    $this->entityTypeBundleInfo = $this->createMock(EntityTypeBundleInfo::class);
     $bundles = [
       'paragraph_bundle_one' => [],
       'paragraph_bundle_two' => [],

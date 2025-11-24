@@ -2,14 +2,7 @@
   const toolbarVariant = drupalSettings.gin.toolbar_variant;
   Drupal.behaviors.ginToolbar = {
     attach: context => {
-      Drupal.ginToolbar.init(context);
-    }
-  }, Drupal.behaviors.ginEscapeAdmin = {
-    attach: context => {
-      once("ginEscapeAdmin", "[data-gin-toolbar-escape-admin]", context).forEach((el => {
-        const escapeAdminPath = sessionStorage.getItem("escapeAdminPath");
-        drupalSettings.path.currentPathIsAdmin && null !== escapeAdminPath && el.setAttribute("href", escapeAdminPath);
-      }));
+      Drupal.ginToolbar.init(context), Drupal.ginToolbar.initKeyboardShortcut(context);
     }
   }, Drupal.ginToolbar = {
     init: function(context) {
@@ -18,12 +11,17 @@
         "classic" != toolbarVariant && localStorage.getItem("Drupal.toolbar.trayVerticalLocked") && localStorage.removeItem("Drupal.toolbar.trayVerticalLocked"), 
         "true" === localStorage.getItem("Drupal.gin.toolbarExpanded") ? (document.body.setAttribute("data-toolbar-menu", "open"), 
         toolbarTrigger.classList.add("is-active")) : (document.body.setAttribute("data-toolbar-menu", ""), 
-        toolbarTrigger.classList.remove("is-active")), document.addEventListener("keydown", (e => {
-          !0 === e.altKey && "KeyT" === e.code && this.toggleToolbar();
-        })), this.initDisplace();
+        toolbarTrigger.classList.remove("is-active")), this.initDisplace();
       })), once("ginToolbarToggle", ".toolbar-menu__trigger", context).forEach((el => el.addEventListener("click", (e => {
         e.preventDefault(), this.toggleToolbar();
       }))));
+    },
+    initKeyboardShortcut: function(context) {
+      once("ginToolbarKeyboardShortcutInit", ".toolbar-menu__trigger, .admin-toolbar__expand-button", context).forEach((() => {
+        document.addEventListener("keydown", (e => {
+          !0 === e.altKey && "KeyT" === e.code && this.toggleToolbar();
+        }));
+      }));
     },
     initDisplace: () => {
       const toolbar = document.querySelector("#gin-toolbar-bar .toolbar-menu-administration");

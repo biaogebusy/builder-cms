@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\search_api\Utility;
 
@@ -15,46 +15,11 @@ use Drupal\Core\Theme\ThemeManagerInterface;
  */
 class ThemeSwitcher implements ThemeSwitcherInterface {
 
-  /**
-   * The theme manager service.
-   *
-   * @var \Drupal\Core\Theme\ThemeManagerInterface
-   */
-  protected $themeManager;
-
-  /**
-   * The theme initializer service.
-   *
-   * @var \Drupal\Core\Theme\ThemeInitializationInterface
-   */
-  protected $themeInitializer;
-
-  /**
-   * The config factory service.
-   *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface
-   */
-  protected $configFactory;
-
-  /**
-   * Constructs a new class instance.
-   *
-   * @param \Drupal\Core\Theme\ThemeManagerInterface $themeManager
-   *   The theme manager service.
-   * @param \Drupal\Core\Theme\ThemeInitializationInterface $themeInitializer
-   *   The theme initializer service.
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
-   *   The config factory service.
-   */
   public function __construct(
-    ThemeManagerInterface $themeManager,
-    ThemeInitializationInterface $themeInitializer,
-    ConfigFactoryInterface $configFactory
-  ) {
-    $this->themeManager = $themeManager;
-    $this->themeInitializer = $themeInitializer;
-    $this->configFactory = $configFactory;
-  }
+    protected ThemeManagerInterface $themeManager,
+    protected ThemeInitializationInterface $themeInitializer,
+    protected ConfigFactoryInterface $configFactory
+  ) {}
 
   /**
    * {@inheritdoc}
@@ -70,7 +35,7 @@ class ThemeSwitcher implements ThemeSwitcherInterface {
       $defaultTheme = $this->themeInitializer
         ->getActiveThemeByName($defaultTheme);
     }
-    catch (MissingThemeDependencyException $e) {
+    catch (MissingThemeDependencyException) {
       // It is highly unlikely that the default theme cannot be initialized, but
       // in this case the site will have far larger problems than incorrect
       // indexing. Just act like all is fine.

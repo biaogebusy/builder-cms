@@ -1,21 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageEffect;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Image\ImageInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\image\Attribute\ImageEffect;
 use Drupal\image\ConfigurableImageEffectBase;
 use Drupal\image\Entity\ImageStyle;
 
 /**
  * Choose image styles to apply based on source image orientation.
- *
- * @ImageEffect(
- *   id = "image_effects_aspect_switcher",
- *   label = @Translation("Aspect switcher"),
- *   description = @Translation("Choose image styles to use depending on the orientation of the source image (landscape/protrait).")
- * )
  */
+#[ImageEffect(
+  id: 'image_effects_aspect_switcher',
+  label: new TranslatableMarkup('Aspect switcher'),
+  description: new TranslatableMarkup('Choose image styles to use depending on the orientation of the source image (landscape/protrait).'),
+)]
 class AspectSwitcherImageEffect extends ConfigurableImageEffectBase {
 
   /**
@@ -166,6 +169,14 @@ class AspectSwitcherImageEffect extends ConfigurableImageEffectBase {
    * {@inheritdoc}
    */
   public function transformDimensions(array &$dimensions, $uri) {
+    $dimensions['width'] = $dimensions['width'] ? (int) $dimensions['width'] : NULL;
+    $dimensions['height'] = $dimensions['height'] ? (int) $dimensions['height'] : NULL;
+
+    if ($dimensions['width'] === NULL || $dimensions['height'] === NULL) {
+      $dimensions['width'] = $dimensions['height'] = NULL;
+      return;
+    }
+
     $style_name = $this->getChildImageStyleToExecute($dimensions['width'], $dimensions['height']);
     $style = $this->failSafeGetImageStyle($style_name);
 
@@ -187,10 +198,10 @@ class AspectSwitcherImageEffect extends ConfigurableImageEffectBase {
    * @param int $height
    *   The height of the image.
    *
-   * @return string
+   * @return string|null
    *   The name of the image style to process.
    */
-  protected function getChildImageStyleToExecute($width, $height) {
+  protected function getChildImageStyleToExecute(int $width, int $height): ?string {
     $ratio_adjustment = isset($this->configuration['ratio_adjustment']) ? floatval($this->configuration['ratio_adjustment']) : 1;
     // Width / height * adjustment. If > 1, it's wide.
     return (($width / $height * $ratio_adjustment) > 1) ? $this->configuration['landscape_image_style'] : $this->configuration['portrait_image_style'];
@@ -199,14 +210,14 @@ class AspectSwitcherImageEffect extends ConfigurableImageEffectBase {
   /**
    * Gets an image style object.
    *
-   * @param string $image_style_name
+   * @param string|null $image_style_name
    *   The name of the image style to get.
    *
    * @return \Drupal\image\Entity\ImageStyle|null|false
    *   The image style object, or NULL if the name is NULL, or FALSE if the
    *   image style went missing from the db.
    */
-  protected function failSafeGetImageStyle($image_style_name) {
+  protected function failSafeGetImageStyle(?string $image_style_name): ImageStyle|NULL|FALSE {
     if ($image_style_name === NULL) {
       return NULL;
     }

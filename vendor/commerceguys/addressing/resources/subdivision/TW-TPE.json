@@ -1,0 +1,46 @@
+{
+	"country_code": "TW",
+	"parents": [
+		"TW",
+		"TPE"
+	],
+	"locale": "zh-Hant",
+	"subdivisions": {
+		"Shilin District": {
+			"local_name": "士林區"
+		},
+		"Datong District": {
+			"local_name": "大同區"
+		},
+		"Da'an District": {
+			"local_name": "大安區"
+		},
+		"Zhongshan District": {
+			"local_name": "中山區"
+		},
+		"Zhongzheng District": {
+			"local_name": "中正區"
+		},
+		"Neihu District": {
+			"local_name": "內湖區"
+		},
+		"Wenshan District": {
+			"local_name": "文山區"
+		},
+		"Beitou District": {
+			"local_name": "北投區"
+		},
+		"Songshan District": {
+			"local_name": "松山區"
+		},
+		"Xinyi District": {
+			"local_name": "信義區"
+		},
+		"Nangang District": {
+			"local_name": "南港區"
+		},
+		"Wanhua District": {
+			"local_name": "萬華區"
+		}
+	}
+}

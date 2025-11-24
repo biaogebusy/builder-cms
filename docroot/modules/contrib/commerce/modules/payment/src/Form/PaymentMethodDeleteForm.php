@@ -2,9 +2,9 @@
 
 namespace Drupal\commerce_payment\Form;
 
-use Drupal\commerce_payment\Exception\PaymentGatewayException;
 use Drupal\Core\Entity\ContentEntityDeleteForm;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\commerce_payment\Exception\PaymentGatewayException;
 
 /**
  * Provides the payment method delete form.

@@ -1,4 +1,4 @@
-#Installation Using Composer (recommended)
+# Installation Using Composer (recommended)
 
 If you use Composer to manage dependencies, edit your site's "composer.json"
 file as follows.
@@ -11,8 +11,8 @@ This allows installing packages (like Chart.js) that are published on NPM.
             "url": "https://asset-packagist.org"
         },
 
-You may need to add it in your composer.json file like this (second item in
-the array):
+    You may need to add it in your composer.json file like this (second item in
+    the array):
 
         "repositories": [
             {
@@ -37,30 +37,35 @@ by adding the following "installer-types" and "installer-paths" to the "extra"
 section of "composer.json". If you are not using the "web" directory, then
 remove "web/" from the lines below:
 
-"extra": {
-    "installer-types": ["npm-asset"],
-    "installer-paths": {
-        "web/libraries/chart.js": ["npm-asset/chart.js"],
-        "web/libraries/chartjs-adapter-date-fns": [
-          "npm-asset/chartjs-adapter-date-fns"
-          ],
-    },
-}
+        "extra": {
+            "installer-types": ["npm-asset"],
+            "installer-paths": {
+                "web/libraries/chart.js": ["npm-asset/chart.js"],
+                "web/libraries/chartjs-adapter-date-fns": [
+                  "npm-asset/chartjs-adapter-date-fns"
+                ],
+                "web/libraries/chartjs-plugin-datalabels": [
+                  "npm-asset/chartjs-plugin-datalabels"
+                ],
+            },
+        }
 
-NOTE: If this isn't working, try instead adding:
-"extra": {
-    "installer-types": ["npm-asset"],
-    "installer-paths": {
-        ...
-        "web/libraries/{$name}": ["type:drupal-library", "vendor:npm-asset"]
-    },
-}
+    NOTE: If this isn't working, try instead adding:
+
+        "extra": {
+            "installer-types": ["npm-asset"],
+            "installer-paths": {
+                ...
+                "web/libraries/{$name}": ["type:drupal-library", "vendor:npm-asset"]
+            },
+        }
 
 4. This and the following step is optional but recommended. The reason for
 them is that when installing the Chart.js package with Composer,
 additional files are added into the library directory. These files are not
 necessary and can be potentially harmful to your site, so it's best to remove
 them. So: create a new directory in your project root called "scripts".
+
 
 5. Inside that directory, create a new file called "clean-chartjs.sh" and
    paste the following into it:
@@ -81,6 +86,7 @@ them. So: create a new directory in your project root called "scripts".
           "web/libraries/chart.js/dist/plugins"
           "web/libraries/chart.js/dist/scales"
           "web/libraries/chart.js/dist/types"
+          "web/libraries/chartjs-plugin-datalabels/types"
         )
         counter=0
         echo "Deleting unneeded directories inside web/libraries/chartjs"
@@ -114,6 +120,10 @@ them. So: create a new directory in your project root called "scripts".
           "web/libraries/chartjs-adapter-date-fns/LICENSE.md"
           "web/libraries/chartjs-adapter-date-fns/package.json"
           "web/libraries/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.esm.js"
+          "web/libraries/chartjs-plugin-datalabels/README.md"
+          "web/libraries/chartjs-plugin-datalabels/LICENSE.md"
+          "web/libraries/chartjs-plugin-datalabels/package.json"
+          "web/libraries/chartjs-plugin-datalabels/bower.json"
         )
         counter=0
         echo "Deleting unneeded files inside web/libraries/chartjs"
@@ -131,19 +141,20 @@ them. So: create a new directory in your project root called "scripts".
    "scripts" already exists, you will need to do a little more to incorporate
    the code below.
 
-  "scripts": {
-      "clean-chartjs": "chmod +x scripts/clean-chartjs.sh &&
-      ./scripts/clean-chartjs.sh",
-      "post-install-cmd": [
-        "@clean-chartjs"
-      ],
-      "post-update-cmd": [
-        "@clean-chartjs"
-      ]
-  }
+          "scripts": {
+              "clean-chartjs": "chmod +x scripts/clean-chartjs.sh &&
+              ./scripts/clean-chartjs.sh",
+              "post-install-cmd": [
+                "@clean-chartjs"
+              ],
+              "post-update-cmd": [
+                "@clean-chartjs"
+              ]
+          }
 
 7. Run the following command; you should find that new directories have been
    created under "/libraries".
 
-    composer require --prefer-dist npm-asset/chart.js:^4.4
-    npm-asset/chartjs-adapter-date-fns:^3.0
+        composer require --prefer-dist npm-asset/chart.js:^4.4
+        npm-asset/chartjs-adapter-date-fns:^3.0
+        npm-asset/chartjs-plugin-datalabels:^2.0

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\mysql\Kernel\mysql;
 
 use Drupal\Core\Database\Database;
@@ -21,7 +23,7 @@ class PrefixInfoTest extends DriverSpecificKernelTestBase {
    * The other two by Drupal core supported databases do not have this variable
    * set in the return array.
    */
-  public function testGetPrefixInfo() {
+  public function testGetPrefixInfo(): void {
     $connection_info = Database::getConnectionInfo('default');
 
     // Copy the default connection info to the 'extra' key.
@@ -33,21 +35,18 @@ class PrefixInfoTest extends DriverSpecificKernelTestBase {
 
     // Get the prefix info for the first database.
     $method = new \ReflectionMethod($db1_schema, 'getPrefixInfo');
-    $method->setAccessible(TRUE);
     $db1_info = $method->invoke($db1_schema);
 
     // We change the database after opening the connection, so as to prevent
     // connecting to a non-existent database.
     $reflection = new \ReflectionObject($db2_connection);
     $property = $reflection->getProperty('connectionOptions');
-    $property->setAccessible(TRUE);
     $connection_info['default']['database'] = 'foobar';
     $property->setValue($db2_connection, $connection_info['default']);
 
     // For testing purposes, we also change the database info.
     $reflection_class = new \ReflectionClass(Database::class);
     $property = $reflection_class->getProperty('databaseInfo');
-    $property->setAccessible(TRUE);
     $info = $property->getValue();
     $info['extra']['default']['database'] = 'foobar';
     $property->setValue(NULL, $info);

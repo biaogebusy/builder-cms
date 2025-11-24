@@ -18,6 +18,7 @@ class LinkAccessConstraintValidator extends ConstraintValidator implements Conta
    *
    * @var \Drupal\Core\Session\AccountProxyInterface
    */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   protected $current_user;
 
   /**
@@ -41,6 +42,9 @@ class LinkAccessConstraintValidator extends ConstraintValidator implements Conta
 
   /**
    * {@inheritdoc}
+   *
+   * phpcs:ignore Drupal.Commenting.FunctionComment.VoidReturn
+   * @return void
    */
   public function validate($value, Constraint $constraint) {
     if (isset($value)) {

@@ -161,7 +161,9 @@ class CommentLazyBuilders implements TrustedCallbackInterface {
    *   The entity to which the comment is attached.
    *
    * @return array
-   *   An array that can be processed by drupal_pre_render_links().
+   *   An array that can be processed by Link::preRenderLinks().
+   *
+   * @see \Drupal\Core\Render\Element\Link::preRenderLinks()
    */
   protected function buildLinks(CommentInterface $entity, EntityInterface $commented_entity) {
     $links = [];
@@ -182,7 +184,8 @@ class CommentLazyBuilders implements TrustedCallbackInterface {
         ];
       }
       $field_definition = $commented_entity->getFieldDefinition($entity->getFieldName());
-      if ($entity->access('create')
+      if ($entity->isPublished()
+        && $entity->access('create')
         && $field_definition->getSetting('default_mode') === CommentManagerInterface::COMMENT_MODE_THREADED) {
         $links['comment-reply'] = [
           'title' => t('Reply'),

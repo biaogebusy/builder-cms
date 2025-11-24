@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\commerce_product\Kernel;
 
+use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
 use Drupal\commerce_product\Entity\ProductAttribute;
 use Drupal\commerce_product\Entity\ProductAttributeValue;
-use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
 
 /**
  * Tests the product attribute value storage.

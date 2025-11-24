@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\menu_ui\Functional;
 
 use Drupal\Core\Url;
@@ -30,7 +32,7 @@ class MenuCacheTagsTest extends PageCacheTagsTestBase {
    * Tests the following cache tags:
    * - "menu:<menu ID>"
    */
-  public function testMenuBlock() {
+  public function testMenuBlock(): void {
     $url = Url::fromRoute('test_page_test.test_page');
 
     // Create a Llama menu, add a link to it and place the corresponding block.

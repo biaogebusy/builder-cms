@@ -5,9 +5,9 @@
  * Post update functions for Promotion.
  */
 
+use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\commerce_promotion\Entity\PromotionInterface;
 use Drupal\commerce_promotion\Plugin\Commerce\PromotionOffer\OrderItemPromotionOfferInterface;
-use Drupal\Core\Field\BaseFieldDefinition;
 
 /**
  * Add the coupons field to orders.
@@ -93,7 +93,7 @@ function commerce_promotion_post_update_6(&$sandbox = NULL) {
   $promotion_storage = \Drupal::entityTypeManager()->getStorage('commerce_promotion');
   if (!isset($sandbox['current_count'])) {
     $query = $promotion_storage->getQuery();
-    $sandbox['total_count'] = $query->count()->execute();
+    $sandbox['total_count'] = $query->accessCheck(FALSE)->count()->execute();
     $sandbox['current_count'] = 0;
 
     if (empty($sandbox['total_count'])) {
@@ -103,7 +103,9 @@ function commerce_promotion_post_update_6(&$sandbox = NULL) {
   }
 
   $query = $promotion_storage->getQuery();
-  $query->range($sandbox['current_count'], 25);
+  $query->accessCheck(FALSE);
+  $query
+    ->range($sandbox['current_count'], 25);
   $result = $query->execute();
   if (empty($result)) {
     $sandbox['#finished'] = 1;
@@ -202,7 +204,7 @@ function commerce_promotion_post_update_8(&$sandbox = NULL) {
   $promotion_storage = \Drupal::entityTypeManager()->getStorage('commerce_promotion');
   if (!isset($sandbox['current_count'])) {
     $query = $promotion_storage->getQuery();
-    $sandbox['total_count'] = $query->count()->execute();
+    $sandbox['total_count'] = $query->count()->accessCheck(FALSE)->execute();
     $sandbox['current_count'] = 0;
 
     if (empty($sandbox['total_count'])) {
@@ -212,7 +214,9 @@ function commerce_promotion_post_update_8(&$sandbox = NULL) {
   }
 
   $query = $promotion_storage->getQuery();
-  $query->range($sandbox['current_count'], 25);
+  $query->accessCheck(FALSE);
+  $query
+    ->range($sandbox['current_count'], 25);
   $result = $query->execute();
   if (empty($result)) {
     $sandbox['#finished'] = 1;
@@ -242,7 +246,7 @@ function commerce_promotion_post_update_9(&$sandbox = NULL) {
   $promotion_storage = \Drupal::entityTypeManager()->getStorage('commerce_promotion');
   if (!isset($sandbox['current_count'])) {
     $query = $promotion_storage->getQuery();
-    $sandbox['total_count'] = $query->count()->execute();
+    $sandbox['total_count'] = $query->accessCheck(FALSE)->count()->execute();
     $sandbox['current_count'] = 0;
     $sandbox['disabled_offers'] = [];
     $sandbox['disabled_conditions'] = [];
@@ -254,7 +258,9 @@ function commerce_promotion_post_update_9(&$sandbox = NULL) {
   }
 
   $query = $promotion_storage->getQuery();
-  $query->range($sandbox['current_count'], 25);
+  $query->accessCheck(FALSE);
+  $query
+    ->range($sandbox['current_count'], 25);
   $result = $query->execute();
   if (empty($result)) {
     $sandbox['#finished'] = 1;
@@ -396,6 +402,7 @@ function commerce_promotion_post_update_10(&$sandbox = NULL) {
   $promotion_storage = \Drupal::entityTypeManager()->getStorage('commerce_promotion');
   if (!isset($sandbox['current_count'])) {
     $query = $promotion_storage->getQuery();
+    $query->accessCheck(FALSE);
     $query->condition('offer.target_plugin_id', $offer_ids, 'IN');
     $sandbox['total_count'] = $query->count()->execute();
     $sandbox['current_count'] = 0;
@@ -407,8 +414,10 @@ function commerce_promotion_post_update_10(&$sandbox = NULL) {
   }
 
   $query = $promotion_storage->getQuery();
-  $query->condition('offer.target_plugin_id', $offer_ids, 'IN');
-  $query->range($sandbox['current_count'], 25);
+  $query->accessCheck(FALSE);
+  $query
+    ->condition('offer.target_plugin_id', $offer_ids, 'IN')
+    ->range($sandbox['current_count'], 25);
   $result = $query->execute();
   if (empty($result)) {
     $sandbox['#finished'] = 1;
@@ -440,11 +449,11 @@ function commerce_promotion_post_update_10(&$sandbox = NULL) {
 /**
  * Allows promotion start and end dates to have a time component.
  */
-function commerce_promotion_post_update_11(array &$sandbox = NULL) {
+function commerce_promotion_post_update_11(?array &$sandbox = NULL) {
   $promotion_storage = \Drupal::entityTypeManager()->getStorage('commerce_promotion');
   if (!isset($sandbox['current_count'])) {
     $query = $promotion_storage->getQuery();
-    $sandbox['total_count'] = $query->count()->execute();
+    $sandbox['total_count'] = $query->accessCheck(FALSE)->count()->execute();
     $sandbox['current_count'] = 0;
 
     if (empty($sandbox['total_count'])) {
@@ -454,6 +463,7 @@ function commerce_promotion_post_update_11(array &$sandbox = NULL) {
   }
 
   $query = $promotion_storage->getQuery();
+  $query->accessCheck(FALSE);
   $query->range($sandbox['current_count'], 50);
   $result = $query->execute();
   if (empty($result)) {

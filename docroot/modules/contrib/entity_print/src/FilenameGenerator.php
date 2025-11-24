@@ -42,7 +42,7 @@ class FilenameGenerator implements FilenameGeneratorInterface {
   /**
    * {@inheritdoc}
    */
-  public function generateFilename(array $entities, callable $entity_label_callback = NULL) {
+  public function generateFilename(array $entities, ?callable $entity_label_callback = NULL) {
     $filenames = [];
     /** @var \Drupal\Core\Entity\EntityInterface $entity */
     foreach ($entities as $entity) {
@@ -69,9 +69,8 @@ class FilenameGenerator implements FilenameGeneratorInterface {
    *   The filename stripped to only safe characters.
    */
   protected function sanitizeFilename($filename, $langcode) {
-    //$transformed = $this->transliteration->transliterate($filename, $langcode);
-    //return preg_replace("/[^A-Za-z0-9 ]/", '', $transformed);
-    return $filename;
+    $transformed = $this->transliteration->transliterate((string) $filename, $langcode);
+    return preg_replace("/[^A-Za-z0-9 ]/", '', $transformed);
   }
 
 }

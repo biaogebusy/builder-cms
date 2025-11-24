@@ -2,9 +2,11 @@
 
 namespace Drupal\commerce_store\Plugin\views\argument_default;
 
-use Drupal\commerce_store\CurrentStoreInterface;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableDependencyInterface;
+use Drupal\commerce_store\CurrentStoreInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\views\Attribute\ViewsArgumentDefault;
 use Drupal\views\Plugin\views\argument_default\ArgumentDefaultPluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -13,12 +15,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *
  * Note: The plugin ID is 'active_store' instead of 'current_store' for
  *       backwards-compatibility reasons.
- *
- * @ViewsArgumentDefault(
- *   id = "active_store",
- *   title = @Translation("Store ID from the current store")
- * )
  */
+#[ViewsArgumentDefault(
+  id: "active_store",
+  title: new TranslatableMarkup("Store ID from the current store")
+)]
 class CurrentStore extends ArgumentDefaultPluginBase implements CacheableDependencyInterface {
 
   /**

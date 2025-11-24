@@ -51,7 +51,6 @@ class Logger extends AbstractLogger implements StylableLoggerInterface, Settable
         LogLevel::NOTICE => 'note',
         LogLevel::INFO => 'note',
         LogLevel::DEBUG => 'note',
-        ConsoleLogLevel::SUCCESS => 'success',
     ];
 
     /**
@@ -144,7 +143,7 @@ class Logger extends AbstractLogger implements StylableLoggerInterface, Settable
     /**
      * {@inheritdoc}
      */
-    public function log($level, $message, array $context = array())
+    public function log($level, string|\Stringable $message, array $context = []): void
     {
         // We use the '_level' context variable to allow log messages
         // to be logged at one level (e.g. NOTICE) and formatted at another
@@ -152,6 +151,7 @@ class Logger extends AbstractLogger implements StylableLoggerInterface, Settable
         // to style log messages at a custom log level that might not
         // be available in all loggers. If the logger does not recognize
         // the log level, then it is treated like the original log level.
+        // SUCCESS is no longer a supported log level
         if (array_key_exists('_level', $context) && array_key_exists($context['_level'], $this->verbosityLevelMap)) {
             $level = $context['_level'];
         }
@@ -193,11 +193,6 @@ class Logger extends AbstractLogger implements StylableLoggerInterface, Settable
         );
     }
 
-    public function success($message, array $context = array())
-    {
-        $this->log(ConsoleLogLevel::SUCCESS, $message, $context);
-    }
-
     // The functions below could be eliminated if made `protected` intead
     // of `private` in ConsoleLogger
 
@@ -220,7 +215,6 @@ class Logger extends AbstractLogger implements StylableLoggerInterface, Settable
         LogLevel::NOTICE => OutputInterface::VERBOSITY_VERBOSE,
         LogLevel::INFO => OutputInterface::VERBOSITY_VERY_VERBOSE,
         LogLevel::DEBUG => OutputInterface::VERBOSITY_DEBUG,
-        ConsoleLogLevel::SUCCESS => OutputInterface::VERBOSITY_NORMAL,
     ];
 
     /**
@@ -239,7 +233,6 @@ class Logger extends AbstractLogger implements StylableLoggerInterface, Settable
         LogLevel::NOTICE => self::ERROR,
         LogLevel::INFO => self::ERROR,
         LogLevel::DEBUG => self::ERROR,
-        ConsoleLogLevel::SUCCESS => self::ERROR,
     ];
 
     /**

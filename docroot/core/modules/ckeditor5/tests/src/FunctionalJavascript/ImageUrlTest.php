@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\ckeditor5\FunctionalJavascript;
 
 use Drupal\ckeditor5\Plugin\Editor\CKEditor5;
@@ -12,6 +14,7 @@ use Symfony\Component\Validator\ConstraintViolation;
 /**
  * @coversDefaultClass \Drupal\ckeditor5\Plugin\CKEditor5Plugin\Image
  * @group ckeditor5
+ * @group #slow
  * @internal
  */
 class ImageUrlTest extends ImageTestBase {
@@ -102,19 +105,19 @@ class ImageUrlTest extends ImageTestBase {
     $this->drupalGet($this->host->toUrl('edit-form'));
     $this->waitForEditor();
 
-    $this->pressEditorButton('Insert image');
-    $panel = $page->find('css', '.ck-dropdown__panel.ck-image-insert__panel');
-    $src_input = $panel->find('css', 'input[type=text]');
+    $this->pressEditorButton('Insert image via URL');
+    $dialog = $page->find('css', '.ck-dialog');
+    $src_input = $dialog->find('css', '.ck-image-insert-url input[type=text]');
     $src_input->setValue($src);
-    $panel->find('xpath', "//button[span[text()='Insert']]")->click();
+    $dialog->find('xpath', "//button[span[text()='Insert']]")->click();
 
     $this->assertNotEmpty($assert_session->waitForElementVisible('css', $image_selector));
     $this->click($image_selector);
     $this->assertVisibleBalloon('[aria-label="Image toolbar"]');
 
-    $this->pressEditorButton('Insert image');
-    $panel = $page->find('css', '.ck-dropdown__panel.ck-image-insert__panel');
-    $src_input = $panel->find('css', 'input[type=text]');
+    $this->pressEditorButton('Update image URL');
+    $dialog = $page->find('css', '.ck-dialog');
+    $src_input = $dialog->find('css', '.ck-image-insert-url input[type=text]');
     $this->assertEquals($src, $src_input->getValue());
   }
 

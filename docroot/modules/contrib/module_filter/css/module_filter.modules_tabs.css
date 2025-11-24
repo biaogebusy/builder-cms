@@ -17,7 +17,7 @@
   border-bottom: 1px solid #ccc;
   line-height: 1;
 }
-[dir="rtl"] .modules-tabs__menu {
+[dir='rtl'] .modules-tabs__menu {
   float: right;
   margin: 0 0 -1px -100%;
 }
@@ -96,7 +96,7 @@
   border-left: 1px solid #a6a5a1; /* LTR */
   background: #fcfcfa;
 }
-[dir="rtl"] .modules-tabs__pane {
+[dir='rtl'] .modules-tabs__pane {
   margin: 0 240px 0 0;
   border-right: 1px solid #a6a5a1;
   border-left: none;

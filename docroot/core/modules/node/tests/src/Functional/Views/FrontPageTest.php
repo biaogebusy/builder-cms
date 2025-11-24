@@ -1,11 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Functional\Views;
 
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Url;
 use Drupal\node\Entity\Node;
+use Drupal\Tests\system\Functional\Cache\AssertPageCacheContextsAndTagsTrait;
 use Drupal\Tests\views\Functional\ViewTestBase;
 use Drupal\views\Tests\AssertViewsCacheTagsTrait;
 use Drupal\views\ViewExecutable;
@@ -18,6 +21,7 @@ use Drupal\views\Views;
  */
 class FrontPageTest extends ViewTestBase {
 
+  use AssertPageCacheContextsAndTagsTrait;
   use AssertViewsCacheTagsTrait;
 
   /**
@@ -33,9 +37,7 @@ class FrontPageTest extends ViewTestBase {
   protected $nodeStorage;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['node', 'contextual'];
 
@@ -52,7 +54,7 @@ class FrontPageTest extends ViewTestBase {
   /**
    * Tests the frontpage.
    */
-  public function testFrontPage() {
+  public function testFrontPage(): void {
     $site_name = $this->randomMachineName();
     $this->config('system.site')
       ->set('name', $site_name)
@@ -90,7 +92,7 @@ class FrontPageTest extends ViewTestBase {
       $values['promote'] = TRUE;
       $values['status'] = TRUE;
       // Test descending sort order.
-      $values['created'] = REQUEST_TIME - $i;
+      $values['created'] = \Drupal::time()->getRequestTime() - $i;
       // Test the sticky order.
       if ($i == 5) {
         $values['sticky'] = TRUE;
@@ -173,7 +175,7 @@ class FrontPageTest extends ViewTestBase {
   /**
    * Tests the cache tags when using the "none" cache plugin.
    */
-  public function testCacheTagsWithCachePluginNone() {
+  public function testCacheTagsWithCachePluginNone(): void {
     $this->enablePageCaching();
     $this->doTestFrontPageViewCacheTags(FALSE);
   }
@@ -181,7 +183,7 @@ class FrontPageTest extends ViewTestBase {
   /**
    * Tests the cache tags when using the "tag" cache plugin.
    */
-  public function testCacheTagsWithCachePluginTag() {
+  public function testCacheTagsWithCachePluginTag(): void {
     $this->enablePageCaching();
 
     $view = Views::getView('frontpage');
@@ -197,7 +199,7 @@ class FrontPageTest extends ViewTestBase {
   /**
    * Tests the cache tags when using the "time" cache plugin.
    */
-  public function testCacheTagsWithCachePluginTime() {
+  public function testCacheTagsWithCachePluginTime(): void {
     $this->enablePageCaching();
 
     $view = Views::getView('frontpage');

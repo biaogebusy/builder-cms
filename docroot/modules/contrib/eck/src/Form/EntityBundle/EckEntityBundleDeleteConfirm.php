@@ -69,6 +69,7 @@ class EckEntityBundleDeleteConfirm extends EntityDeleteForm {
     // Check if any entity of this type already exists.
     $content_number = $this->entityTypeManager->getStorage($this->entity->getEntityType()
       ->getBundleOf())->getQuery()
+      ->accessCheck(FALSE)
       ->condition('type', $this->entity->id())
       ->count()
       ->execute();

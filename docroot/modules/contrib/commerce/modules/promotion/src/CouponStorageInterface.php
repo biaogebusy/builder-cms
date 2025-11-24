@@ -2,8 +2,8 @@
 
 namespace Drupal\commerce_promotion;
 
-use Drupal\commerce_promotion\Entity\PromotionInterface;
 use Drupal\Core\Entity\ContentEntityStorageInterface;
+use Drupal\commerce_promotion\Entity\PromotionInterface;
 
 /**
  * Defines the interface for coupon storage.
@@ -16,8 +16,8 @@ interface CouponStorageInterface extends ContentEntityStorageInterface {
    * @param string $code
    *   The coupon code.
    *
-   * @return \Drupal\commerce_promotion\Entity\CouponInterface
-   *   The coupon.
+   * @return \Drupal\commerce_promotion\Entity\CouponInterface|bool
+   *   The coupon, FALSE if it does not exist.
    */
   public function loadEnabledByCode($code);
 

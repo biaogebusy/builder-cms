@@ -39,7 +39,7 @@ entity.flag.delete_form:
     _entity_access: 'flag.update'
 
 flag.action_link_flag:
-  path: '/flag/flag/{flag}/{entity_id}'
+  path: '/flag/flag/{flag}/{entity_id}/{view_mode}'
   defaults:
     _controller: '\Drupal\flag\Controller\ActionLinkController::flag'
   methods: [POST]
@@ -49,7 +49,7 @@ flag.action_link_flag:
     _csrf_token: 'TRUE'
 
 flag.action_link_flag_nojs:
-  path: '/flag/flag/{flag}/{entity_id}'
+  path: '/flag/flag/{flag}/{entity_id}/{view_mode}'
   defaults:
     _controller: '\Drupal\flag\Controller\ActionLinkNoJsController::flag'
   methods: [GET]
@@ -59,7 +59,7 @@ flag.action_link_flag_nojs:
     _csrf_token: 'TRUE'
 
 flag.action_link_unflag:
-  path: '/flag/unflag/{flag}/{entity_id}'
+  path: '/flag/unflag/{flag}/{entity_id}/{view_mode}'
   defaults:
     _controller: '\Drupal\flag\Controller\ActionLinkController::unflag'
   methods: [POST]
@@ -69,7 +69,7 @@ flag.action_link_unflag:
     _csrf_token: 'TRUE'
 
 flag.action_link_unflag_nojs:
-  path: '/flag/unflag/{flag}/{entity_id}'
+  path: '/flag/unflag/{flag}/{entity_id}/{view_mode}'
   defaults:
     _controller: '\Drupal\flag\Controller\ActionLinkNoJsController::unflag'
   methods: [GET]

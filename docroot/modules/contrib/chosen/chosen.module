@@ -3,8 +3,6 @@
 /**
  * @file
  * General functions and hook implementations.
- *
- * @see https://harvesthq.github.com/chosen/
  */
 
 use Drupal\Component\Plugin\Exception\PluginException;
@@ -18,7 +16,7 @@ use Drupal\migrate_drupal\Plugin\migrate\source\DrupalSqlBase;
 /**
  * Define chosen library url.
  */
-define('CHOSEN_WEBSITE_URL', 'https://harvesthq.github.io/chosen');
+define('CHOSEN_WEBSITE_URL', 'https://github.com/noli42/chosen');
 define('CHOSEN_INCLUDE_ADMIN', 0);
 define('CHOSEN_INCLUDE_NO_ADMIN', 1);
 define('CHOSEN_INCLUDE_EVERYWHERE', 2);
@@ -91,6 +89,8 @@ function chosen_attach_library(array &$element) {
     'disable_search' => (bool) $chosen_conf->get('disable_search'),
     'disable_search_threshold' => (int) $chosen_conf->get('disable_search_threshold'),
     'allow_single_deselect' => (bool) $chosen_conf->get('allow_single_deselect'),
+    'allow_mobile' => (bool) $chosen_conf->get('allow_mobile'),
+    'add_helper_buttons' => (bool) $chosen_conf->get('add_helper_buttons'),
     'search_contains' => (bool) $chosen_conf->get('search_contains'),
     'placeholder_text_multiple' => $chosen_conf->get('placeholder_text_multiple'),
     'placeholder_text_single' => $chosen_conf->get('placeholder_text_single'),
@@ -107,6 +107,11 @@ function chosen_attach_library(array &$element) {
     'use_relative_width' => (bool) $chosen_conf->get('use_relative_width'),
     'options' => $options,
   ];
+
+  // Add support for Better Exposed Filters integration.
+  if (\Drupal::moduleHandler()->moduleExists('better_exposed_filters')) {
+    $element['#attached']['library'][] = 'chosen/chosen.bef';
+  }
 }
 
 /**
@@ -146,7 +151,7 @@ function chosen_help($route_name, RouteMatchInterface $route_match) {
     case 'help.page.chosen':
       $output = '';
       $output = '<h3>' . t('About') . '</h3>';
-      $output .= '<p>' . t('Chosen uses the Chosen jQuery plugin to make your < select > elements more user-friendly.') . '</p>';
+      $output .= '<p>' . t('Chosen uses the Chosen js plugin to make your < select > elements more user-friendly.') . '</p>';
       $output .= '<h3>' . t('Usage') . '</h3>';
       $output .= '<p>' . t('Configure at: <a href=":structure_types">admin/config/user-interface/chosen</a>', [':structure_types' => Url::fromRoute('chosen.admin')->toString()]) . '</p>';
       return $output;

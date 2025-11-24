@@ -126,7 +126,7 @@ class Subscriptions extends BlockBase implements FormInterface, ContainerFactory
    * {@inheritdoc}
    */
   public function build() {
-    if ((!$entity = $this->getCurrentEntity()) || !$this->hasSubscribableEntites($entity)) {
+    if ((!$entity = $this->getCurrentEntity()) || !$this->hasSubscribableEntities($entity)) {
       // Not on an entity page. Ensure the block is only cached for this route.
       return [
         '#cache' => [
@@ -216,9 +216,9 @@ class Subscriptions extends BlockBase implements FormInterface, ContainerFactory
    *   The entity to check for subscribable entities.
    *
    * @return bool
-   *   Returns TRUE if there are subscribable entites found.
+   *   Returns TRUE if there are subscribable entities found.
    */
-  protected function hasSubscribableEntites(EntityInterface $entity) {
+  protected function hasSubscribableEntities(EntityInterface $entity) {
     $entities = [$entity];
     $entities += $entity->referencedEntities();
     foreach ($entities as $referenced_entity) {

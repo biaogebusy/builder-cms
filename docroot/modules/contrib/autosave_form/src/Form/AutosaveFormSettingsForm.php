@@ -181,6 +181,11 @@ class AutosaveFormSettingsForm extends ConfigFormBase {
           '#suffix' => '</div>',
         ];
       }
+      $form['allowed_new'] = [
+        '#type' => 'checkbox',
+        '#title' => $this->t('Allowed for new entities'),
+        '#default_value' => $config->get('allowed_new'),
+      ];
     }
 
     return parent::buildForm($form, $form_state);
@@ -205,6 +210,7 @@ class AutosaveFormSettingsForm extends ConfigFormBase {
       ->set('active_on', $form_state->getValue('active_on'))
       ->set('notification', $form_state->getValue('notification'))
       ->set('allowed_content_entity_types', $allowed_content_entity_types)
+      ->set('allowed_new', $form_state->getValue('allowed_new'))
       ->save();
 
     parent::submitForm($form, $form_state);

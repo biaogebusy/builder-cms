@@ -5,6 +5,15 @@ namespace Drupal\commerce_payment\Event;
 final class PaymentEvents {
 
   /**
+   * Name of the event fired when payment information pane is rendered.
+   *
+   * @Event
+   *
+   * @see \Drupal\commerce_payment\Event\RequirePaymentMethodEvent
+   */
+  const REQUIRE_PAYMENT_METHOD = 'commerce_payment.require_payment_method';
+
+  /**
    * Name of the event fired when payment gateways are loaded for an order.
    *
    * @Event
@@ -12,6 +21,15 @@ final class PaymentEvents {
    * @see \Drupal\commerce_payment\Event\FilterPaymentGatewaysEvent
    */
   const FILTER_PAYMENT_GATEWAYS = 'commerce_payment.filter_payment_gateways';
+
+  /**
+   * Name of the event fired when payment options are built for an order.
+   *
+   * @Event
+   *
+   * @see \Drupal\commerce_payment\Event\FilterPaymentOptionsEvent
+   */
+  const FILTER_PAYMENT_OPTIONS = 'commerce_payment.filter_payment_options';
 
   /**
    * Name of the event fired after loading a payment.
@@ -77,5 +95,14 @@ final class PaymentEvents {
    * @see \Drupal\commerce_payment\Event\PaymentEvent
    */
   const PAYMENT_DELETE = 'commerce_payment.commerce_payment.delete';
+
+  /**
+   * Name of the event fired when payment is failed.
+   *
+   * @Event
+   *
+   * @see \Drupal\commerce_payment\Event\FailedPaymentEvent
+   */
+  const PAYMENT_FAILURE = 'commerce_payment.commerce_payment.failure';
 
 }

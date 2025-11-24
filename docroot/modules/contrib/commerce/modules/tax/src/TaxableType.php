@@ -11,6 +11,7 @@ final class TaxableType {
   const DIGITAL_GOODS = 'digital_goods';
   const SERVICES = 'services';
   const EVENTS = 'events';
+  const NON_TAXABLE = 'non_taxable';
 
   /**
    * Gets the labels.
@@ -24,6 +25,7 @@ final class TaxableType {
       self::DIGITAL_GOODS => t('Digital goods'),
       self::SERVICES => t('Services'),
       self::EVENTS => t('Events'),
+      self::NON_TAXABLE => t('Non-taxable'),
     ];
   }
 

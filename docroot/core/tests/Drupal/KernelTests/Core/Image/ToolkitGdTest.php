@@ -1,10 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Image;
 
 use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\Image\ImageFactory;
 use Drupal\Core\Image\ImageInterface;
 use Drupal\KernelTests\KernelTestBase;
+
+// cspell:ignore imagecreatefrom
 
 /**
  * Tests for the GD image toolkit.
@@ -33,14 +38,14 @@ class ToolkitGdTest extends KernelTestBase {
    *
    * @var \Drupal\Core\Image\ImageFactory
    */
-  protected $imageFactory;
+  protected ImageFactory $imageFactory;
 
   /**
    * A directory where test image files can be saved to.
    *
    * @var string
    */
-  protected $directory;
+  protected string $directory;
 
   /**
    * {@inheritdoc}
@@ -60,7 +65,7 @@ class ToolkitGdTest extends KernelTestBase {
     $this->assertEquals('gd', $this->imageFactory->getToolkitId(), 'The image factory is set to use the \'gd\' image toolkit.');
 
     // Prepare a directory for test file results.
-    $this->directory = 'public://imagetest';
+    $this->directory = 'public://image_test';
     \Drupal::service('file_system')->prepareDirectory($this->directory, FileSystemInterface::CREATE_DIRECTORY);
   }
 
@@ -90,20 +95,20 @@ class ToolkitGdTest extends KernelTestBase {
    */
   public function getPixelColor(ImageInterface $image, int $x, int $y): array {
     $toolkit = $image->getToolkit();
-    $color_index = imagecolorat($toolkit->getResource(), $x, $y);
+    $color_index = imagecolorat($toolkit->getImage(), $x, $y);
 
-    $transparent_index = imagecolortransparent($toolkit->getResource());
+    $transparent_index = imagecolortransparent($toolkit->getImage());
     if ($color_index == $transparent_index) {
       return [0, 0, 0, 127];
     }
 
-    return array_values(imagecolorsforindex($toolkit->getResource(), $color_index));
+    return array_values(imagecolorsforindex($toolkit->getImage(), $color_index));
   }
 
   /**
    * Data provider for ::testManipulations().
    */
-  public function providerTestImageFiles(): array {
+  public static function providerTestImageFiles(): array {
     // Typically the corner colors will be unchanged. These colors are in the
     // order of top-left, top-right, bottom-right, bottom-left.
     $default_corners = [static::RED, static::GREEN, static::BLUE, static::TRANSPARENT];
@@ -285,7 +290,7 @@ class ToolkitGdTest extends KernelTestBase {
     $this->assertTrue($image->isValid());
     $image_original_type = $image->getToolkit()->getType();
 
-    $this->assertTrue(imageistruecolor($toolkit->getResource()), "Image '$file_name' after load should be a truecolor image, but it is not.");
+    $this->assertTrue(imageistruecolor($toolkit->getImage()), "Image '$file_name' after load should be a truecolor image, but it is not.");
 
     // Perform our operation.
     $image->apply($operation, $arguments);
@@ -297,8 +302,8 @@ class ToolkitGdTest extends KernelTestBase {
     // Check that the both the GD object and the Image object have an accurate
     // record of the dimensions.
     if (isset($expected['height']) && isset($expected['width'])) {
-      $this->assertSame($expected['height'], imagesy($toolkit->getResource()), "Image '$file_name' after '$test_case' should have a proper height.");
-      $this->assertSame($expected['width'], imagesx($toolkit->getResource()), "Image '$file_name' after '$test_case' should have a proper width.");
+      $this->assertSame($expected['height'], imagesy($toolkit->getImage()), "Image '$file_name' after '$test_case' should have a proper height.");
+      $this->assertSame($expected['width'], imagesx($toolkit->getImage()), "Image '$file_name' after '$test_case' should have a proper width.");
       $this->assertSame($expected['height'], $image->getHeight(), "Image '$file_name' after '$test_case' should have a proper height.");
       $this->assertSame($expected['width'], $image->getWidth(), "Image '$file_name' after '$test_case' should have a proper width.");
     }
@@ -321,27 +326,13 @@ class ToolkitGdTest extends KernelTestBase {
       }
 
       // Get the location of the corner.
-      switch ($key) {
-        case 0:
-          $x = 0;
-          $y = 0;
-          break;
+      [$x, $y] = match ($key) {
+        0 => [0, 0],
+        1 => [$image->getWidth() - 1, 0],
+        2 => [$image->getWidth() - 1, $image->getHeight() - 1],
+        3 => [0, $image->getHeight() - 1],
+      };
 
-        case 1:
-          $x = $image->getWidth() - 1;
-          $y = 0;
-          break;
-
-        case 2:
-          $x = $image->getWidth() - 1;
-          $y = $image->getHeight() - 1;
-          break;
-
-        case 3:
-          $x = 0;
-          $y = $image->getHeight() - 1;
-          break;
-      }
       $actual_color = $this->getPixelColor($image, $x, $y);
 
       // If image cannot handle transparent colors, skip the pixel color test.
@@ -357,13 +348,7 @@ class ToolkitGdTest extends KernelTestBase {
 
     // Check that saved image reloads without raising PHP errors.
     $image_reloaded = $this->imageFactory->get($file_path);
-    if (PHP_VERSION_ID >= 80000) {
-      $this->assertInstanceOf(\GDImage::class, $image_reloaded->getToolkit()->getResource());
-    }
-    else {
-      $this->assertIsResource($image_reloaded->getToolkit()->getResource());
-      $this->assertSame(get_resource_type($image_reloaded->getToolkit()->getResource()), 'gd');
-    }
+    $this->assertInstanceOf(\GDImage::class, $image_reloaded->getToolkit()->getImage());
   }
 
   /**
@@ -394,7 +379,7 @@ class ToolkitGdTest extends KernelTestBase {
   /**
    * Data provider for ::testCreateImageFromScratch().
    */
-  public function providerSupportedImageTypes(): array {
+  public static function providerSupportedImageTypes(): array {
     return [
       [IMAGETYPE_PNG],
       [IMAGETYPE_GIF],
@@ -460,39 +445,6 @@ class ToolkitGdTest extends KernelTestBase {
   }
 
   /**
-   * Tests that GD resources are freed from memory.
-   *
-   * @todo Remove the method for PHP 8.0+ https://www.drupal.org/node/3179058
-   */
-  public function testResourceDestruction() {
-    if (PHP_VERSION_ID >= 80000) {
-      $this->markTestSkipped('In PHP8 resources are no longer used. \GdImage objects are used instead. These will be garbage collected like the regular objects they are.');
-    }
-    // Test that an Image object going out of scope releases its GD resource.
-    $image = $this->imageFactory->get('core/tests/fixtures/files/image-test.png');
-    $res = $image->getToolkit()->getResource();
-    $this->assertIsResource($res);
-    $image = NULL;
-    // @todo In https://www.drupal.org/node/3133236 convert this to
-    //   $this->assertIsNotResource($res).
-    $this->assertFalse(is_resource($res), 'Image resource was destroyed after losing scope.');
-
-    // Test that 'create_new' operation does not leave orphaned GD resources.
-    $image = $this->imageFactory->get('core/tests/fixtures/files/image-test.png');
-    $old_res = $image->getToolkit()->getResource();
-    // Check if resource has been created successfully.
-    $this->assertIsResource($old_res);
-    $image->createNew(20, 20);
-    $new_res = $image->getToolkit()->getResource();
-    // Check if the original resource has been destroyed.
-    // @todo In https://www.drupal.org/node/3133236 convert this to
-    //   $this->assertIsNotResource($old_res).
-    $this->assertFalse(is_resource($old_res));
-    // Check if a new resource has been created successfully.
-    $this->assertIsResource($new_res);
-  }
-
-  /**
    * Tests for GIF images with transparency.
    */
   public function testGifTransparentImages(): void {
@@ -500,9 +452,9 @@ class ToolkitGdTest extends KernelTestBase {
     // Color at top-right pixel should be fully transparent.
     $file = 'image-test-transparent-indexed.gif';
     $image = $this->imageFactory->get('core/tests/fixtures/files/' . $file);
-    $resource = $image->getToolkit()->getResource();
-    $color_index = imagecolorat($resource, $image->getWidth() - 1, 0);
-    $color = array_values(imagecolorsforindex($resource, $color_index));
+    $gd_image = $image->getToolkit()->getImage();
+    $color_index = imagecolorat($gd_image, $image->getWidth() - 1, 0);
+    $color = array_values(imagecolorsforindex($gd_image, $color_index));
     $this->assertEquals(static::ROTATE_TRANSPARENT, $color, "Image {$file} after load has full transparent color at corner 1.");
 
     // Test deliberately creating a GIF image with no transparent color set.
@@ -513,17 +465,17 @@ class ToolkitGdTest extends KernelTestBase {
     // Create image.
     $image = $this->imageFactory->get();
     $image->createNew(50, 20, 'gif', NULL);
-    $resource = $image->getToolkit()->getResource();
-    $color_index = imagecolorat($resource, $image->getWidth() - 1, 0);
-    $color = array_values(imagecolorsforindex($resource, $color_index));
+    $gd_image = $image->getToolkit()->getImage();
+    $color_index = imagecolorat($gd_image, $image->getWidth() - 1, 0);
+    $color = array_values(imagecolorsforindex($gd_image, $color_index));
     $this->assertEquals(static::ROTATE_TRANSPARENT, $color, "New GIF image with no transparent color set after creation has full transparent color at corner 1.");
     // Save image.
     $this->assertTrue($image->save($file_path), "New GIF image {$file} was saved.");
     // Reload image.
     $image_reloaded = $this->imageFactory->get($file_path);
-    $resource = $image_reloaded->getToolkit()->getResource();
-    $color_index = imagecolorat($resource, $image_reloaded->getWidth() - 1, 0);
-    $color = array_values(imagecolorsforindex($resource, $color_index));
+    $gd_image = $image_reloaded->getToolkit()->getImage();
+    $color_index = imagecolorat($gd_image, $image_reloaded->getWidth() - 1, 0);
+    $color = array_values(imagecolorsforindex($gd_image, $color_index));
     // Check explicitly for alpha == 0 as the rest of the color has been
     // compressed and may have slight difference from full white.
     $this->assertEquals(0, $color[3], "New GIF image {$file} after reload has no transparent color at corner 1.");
@@ -542,7 +494,7 @@ class ToolkitGdTest extends KernelTestBase {
     $file = 'image-test-transparent-out-of-range.gif';
     $image = $this->imageFactory->get('core/tests/fixtures/files/' . $file);
     $this->assertTrue($image->isValid(), "Image '$file' after load should be valid, but it is not.");
-    $this->assertTrue(imageistruecolor($image->getToolkit()->getResource()), "Image '$file' after load should be a truecolor image, but it is not.");
+    $this->assertTrue(imageistruecolor($image->getToolkit()->getImage()), "Image '$file' after load should be a truecolor image, but it is not.");
   }
 
   /**
@@ -555,6 +507,46 @@ class ToolkitGdTest extends KernelTestBase {
 
     // Try perform a missing toolkit operation.
     $this->assertFalse($image->apply('missing_op', []), 'Calling a missing image toolkit operation plugin should fail, but it did not.');
+  }
+
+  /**
+   * @covers ::getRequirements
+   */
+  public function testGetRequirements(): void {
+    $this->assertEquals([
+      'version' => [
+        'title' => t('GD library'),
+        'value' => gd_info()['GD Version'],
+        'description' => t("Supported image file formats: %formats.", [
+          '%formats' => implode(', ', ['GIF', 'JPEG', 'PNG', 'WEBP']),
+        ]),
+      ],
+    ], $this->imageFactory->get()->getToolkit()->getRequirements());
+  }
+
+  /**
+   * Tests deprecated setResource() and getResource().
+   *
+   * @group legacy
+   */
+  public function testResourceDeprecation(): void {
+    $toolkit = $this->imageFactory->get()->getToolkit();
+    $image = imagecreate(10, 10);
+    $this->expectDeprecation('Drupal\system\Plugin\ImageToolkit\GDToolkit::setResource() is deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. Use \Drupal\system\Plugin\ImageToolkit\GDToolkit::setImage() instead. See https://www.drupal.org/node/3265963');
+    $toolkit->setResource($image);
+    $this->expectDeprecation('Checking the \Drupal\system\Plugin\ImageToolkit\GDToolkit::resource property is deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. Use \Drupal\system\Plugin\ImageToolkit\GDToolkit::image instead. See https://www.drupal.org/node/3265963');
+    $this->assertTrue(isset($toolkit->resource));
+    $this->expectDeprecation('Drupal\system\Plugin\ImageToolkit\GDToolkit::getResource() is deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. Use \Drupal\system\Plugin\ImageToolkit\GDToolkit::getImage() instead. See https://www.drupal.org/node/3265963');
+    $this->assertSame($image, $toolkit->getResource());
+    $this->expectDeprecation('Accessing the \Drupal\system\Plugin\ImageToolkit\GDToolkit::resource property is deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. Use \Drupal\system\Plugin\ImageToolkit\GDToolkit::image instead. See https://www.drupal.org/node/3265963');
+    $this->assertSame($image, $toolkit->resource);
+    $this->expectDeprecation('Setting the \Drupal\system\Plugin\ImageToolkit\GDToolkit::resource property is deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. Use \Drupal\system\Plugin\ImageToolkit\GDToolkit::image instead. See https://www.drupal.org/node/3265963');
+    $toolkit->resource = NULL;
+    $this->assertNull($toolkit->getImage());
+    $this->expectDeprecation('Unsetting the \Drupal\system\Plugin\ImageToolkit\GDToolkit::resource property is deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. Use \Drupal\system\Plugin\ImageToolkit\GDToolkit::image instead. See https://www.drupal.org/node/3265963');
+    $toolkit->setImage($image);
+    unset($toolkit->resource);
+    $this->assertNull($toolkit->getImage());
   }
 
 }

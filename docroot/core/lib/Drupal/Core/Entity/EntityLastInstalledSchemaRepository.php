@@ -41,12 +41,8 @@ class EntityLastInstalledSchemaRepository implements EntityLastInstalledSchemaRe
    * @param \Drupal\Core\Cache\CacheBackendInterface $cache
    *   The cache backend.
    */
-  public function __construct(KeyValueFactoryInterface $key_value_factory, CacheBackendInterface $cache = NULL) {
+  public function __construct(KeyValueFactoryInterface $key_value_factory, CacheBackendInterface $cache) {
     $this->keyValueFactory = $key_value_factory;
-    if (!$cache) {
-      @trigger_error('The cache.discovery service must be passed to EntityLastInstalledSchemaRepository::__construct(), it is required before drupal:10.0.0.', E_USER_DEPRECATED);
-      $cache = \Drupal::cache('discovery');
-    }
     $this->cacheBackend = $cache;
   }
 
@@ -73,7 +69,7 @@ class EntityLastInstalledSchemaRepository implements EntityLastInstalledSchemaRe
 
     // Filter out field storage definitions.
     $filtered_keys = array_filter(array_keys($all_definitions), function ($key) {
-        return substr($key, -12) === '.entity_type';
+        return str_ends_with($key, '.entity_type');
     });
     $entity_type_definitions = array_intersect_key($all_definitions, array_flip($filtered_keys));
 

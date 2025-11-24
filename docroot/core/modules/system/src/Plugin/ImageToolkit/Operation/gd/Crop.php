@@ -2,17 +2,19 @@
 
 namespace Drupal\system\Plugin\ImageToolkit\Operation\gd;
 
+use Drupal\Core\ImageToolkit\Attribute\ImageToolkitOperation;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+
 /**
  * Defines GD2 Crop operation.
- *
- * @ImageToolkitOperation(
- *   id = "gd_crop",
- *   toolkit = "gd",
- *   operation = "crop",
- *   label = @Translation("Crop"),
- *   description = @Translation("Crops an image to a rectangle specified by the given dimensions.")
- * )
  */
+#[ImageToolkitOperation(
+  id: "gd_crop",
+  toolkit: "gd",
+  operation: "crop",
+  label: new TranslatableMarkup("Crop"),
+  description: new TranslatableMarkup("Crops an image to a rectangle specified by the given dimensions.")
+)]
 class Crop extends GDImageToolkitOperationBase {
 
   /**
@@ -73,10 +75,10 @@ class Crop extends GDImageToolkitOperationBase {
    * {@inheritdoc}
    */
   protected function execute(array $arguments) {
-    // Create a new resource of the required dimensions, and copy and resize
-    // the original resource on it with resampling. Destroy the original
-    // resource upon success.
-    $original_resource = $this->getToolkit()->getResource();
+    // Create a new image of the required dimensions, and copy and resize
+    // the original image on it with resampling. Restore the original image upon
+    // failure.
+    $original_image = $this->getToolkit()->getImage();
     $data = [
       'width' => $arguments['width'],
       'height' => $arguments['height'],
@@ -85,16 +87,11 @@ class Crop extends GDImageToolkitOperationBase {
       'is_temp' => TRUE,
     ];
     if ($this->getToolkit()->apply('create_new', $data)) {
-      if (imagecopyresampled($this->getToolkit()->getResource(), $original_resource, 0, 0, $arguments['x'], $arguments['y'], $arguments['width'], $arguments['height'], $arguments['width'], $arguments['height'])) {
-        imagedestroy($original_resource);
+      if (imagecopyresampled($this->getToolkit()->getImage(), $original_image, 0, 0, $arguments['x'], $arguments['y'], $arguments['width'], $arguments['height'], $arguments['width'], $arguments['height'])) {
         return TRUE;
       }
-      else {
-        // In case of failure, destroy the temporary resource and restore
-        // the original one.
-        imagedestroy($this->getToolkit()->getResource());
-        $this->getToolkit()->setResource($original_resource);
-      }
+      // In case of failure, restore the original image.
+      $this->getToolkit()->setImage($original_image);
     }
     return FALSE;
   }

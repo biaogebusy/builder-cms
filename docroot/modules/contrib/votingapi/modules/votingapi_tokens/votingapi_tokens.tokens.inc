@@ -64,7 +64,7 @@ function votingapi_tokens_tokens($type, $tokens, array $data, array $options, Bu
       $votes = \Drupal::service('plugin.manager.votingapi.resultfunction')
         ->getResults($entity_type, $data[$entity_type]->id());
       foreach ($tokens as $name => $original) {
-        list($token_name, $vote_type) = explode(':', $name);
+        [$token_name, $vote_type] = explode(':', $name);
         switch ($token_name) {
           case 'vote_count':
             $replacements[$original] = $votes[$vote_type]['vote_count'];

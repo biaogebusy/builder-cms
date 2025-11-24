@@ -2,6 +2,18 @@
 
 namespace Drupal\Tests\commerce_product\Functional\Jsonapi;
 
+use Drupal\Component\Serialization\Json;
+use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Access\AccessResultInterface;
+use Drupal\Core\Access\AccessResultReasonInterface;
+use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Url;
+use Drupal\jsonapi\JsonApiSpec;
+use Drupal\Tests\jsonapi\Functional\ResourceTestBase;
+use Drupal\Tests\jsonapi\Traits\CommonCollectionFilterAccessTestPatternsTrait;
 use Drupal\commerce_price\Comparator\NumberComparator;
 use Drupal\commerce_price\Price;
 use Drupal\commerce_product\Entity\Product;
@@ -9,17 +21,7 @@ use Drupal\commerce_product\Entity\ProductVariation;
 use Drupal\commerce_product\Entity\ProductVariationInterface;
 use Drupal\commerce_product\Entity\ProductVariationType;
 use Drupal\commerce_store\StoreCreationTrait;
-use Drupal\Component\Serialization\Json;
-use Drupal\Component\Utility\NestedArray;
-use Drupal\Core\Access\AccessResultInterface;
-use Drupal\Core\Access\AccessResultReasonInterface;
-use Drupal\Core\Entity\ContentEntityInterface;
-use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Session\AccountInterface;
-use Drupal\Core\Url;
 use Drupal\jsonapi\ResourceType\ResourceType;
-use Drupal\Tests\jsonapi\Functional\ResourceTestBase;
-use Drupal\Tests\jsonapi\Traits\CommonCollectionFilterAccessTestPatternsTrait;
 use GuzzleHttp\RequestOptions;
 use SebastianBergmann\Comparator\Factory as PhpUnitComparatorFactory;
 
@@ -179,10 +181,10 @@ class ProductVariationResourceTest extends ResourceTestBase {
       'jsonapi' => [
         'meta' => [
           'links' => [
-            'self' => ['href' => 'http://jsonapi.org/format/1.0/'],
+            'self' => ['href' => JsonApiSpec::SUPPORTED_SPECIFICATION_PERMALINK],
           ],
         ],
-        'version' => '1.0',
+        'version' => JsonApiSpec::SUPPORTED_SPECIFICATION_VERSION,
       ],
       'data' => [
         'id' => $this->entity->uuid(),
@@ -313,7 +315,7 @@ class ProductVariationResourceTest extends ResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function getExpectedCacheContexts(array $sparse_fieldset = NULL) {
+  protected function getExpectedCacheContexts(?array $sparse_fieldset = NULL) {
     $cacheability = parent::getExpectedCacheContexts($sparse_fieldset);
     $cacheability[] = 'store';
     $cacheability[] = 'url.query_args:v';
@@ -353,10 +355,7 @@ class ProductVariationResourceTest extends ResourceTestBase {
           // store -> type (bundle ref)
           // jsonapi auto aliases `type` to `{entity_type_id}_type`
           $internal_field_name = $resource_type->getInternalName($field_name);
-          if (!is_object($entity->{$internal_field_name})) {
-            throw new \RuntimeException("{$entity->getEntityTypeId()}: $field_name ($internal_field_name)");
-          }
-          if ($target_entity = $entity->{$internal_field_name}->entity) {
+          if ($target_entity = $entity->get($internal_field_name)->entity) {
             $deep = $get_nested_relationship_field_names($target_entity, $depth - 1, $next);
             $paths = array_merge($paths, $deep);
           }
@@ -378,7 +377,7 @@ class ProductVariationResourceTest extends ResourceTestBase {
    *
    * @todo remove after https://www.drupal.org/project/drupal/issues/3163590
    */
-  protected function getRelationshipFieldNames(EntityInterface $entity = NULL, ResourceType $resource_type = NULL) {
+  protected function getRelationshipFieldNames(?EntityInterface $entity = NULL, ?ResourceType $resource_type = NULL) {
     $entity = $entity ?: $this->entity;
     $resource_type = $resource_type ?: $this->resourceType;
     // Only content entity types can have relationships.
@@ -408,11 +407,36 @@ class ProductVariationResourceTest extends ResourceTestBase {
   /**
    * {@inheritdoc}
    */
+  protected function getPatchDocument(): array {
+    $patch_document = parent::getPatchDocument();
+    unset($patch_document['data']['attributes']['sku']);
+    return $patch_document;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   protected function getEntityDuplicate(EntityInterface $original, $key) {
     $dupe = parent::getEntityDuplicate($original, $key);
     assert($dupe instanceof ProductVariationInterface);
     $dupe->setSku('XYZ789');
     return $dupe;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getExpectedRelatedResponse($relationship_field_name, array $request_options, EntityInterface $entity) {
+    $response = parent::getExpectedRelatedResponse($relationship_field_name, $request_options, $entity);
+    $cache_data = $response->getCacheableMetadata();
+    $cacheability = new CacheableMetadata();
+    // Update cache data so the 'cache_tags' and 'cache_contexts' have proper
+    // index order in the array.
+    $cacheability->addCacheContexts(array_values($cache_data->getCacheContexts()));
+    $cacheability->addCacheTags(array_values($cache_data->getCacheTags()));
+    $cache_data->setCacheMaxAge($cache_data->getCacheMaxAge());
+    $response->addCacheableDependency($cacheability);
+    return $response;
   }
 
 }

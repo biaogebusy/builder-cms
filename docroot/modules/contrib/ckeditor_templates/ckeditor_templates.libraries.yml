@@ -10,3 +10,20 @@ ckeditor.templates.admin:
   version: 1.x
   js:
     js/ckeditor_templates.admin.js: {}
+
+ckeditor5.templates.dialog:
+  version: 2.x
+  css:
+    theme:
+      css/cke5_templates.dialog.css: {}
+  js:
+    js/dist/ckeditorTemplates.js: {}
+  dependencies:
+    - ckeditor5/ckeditor5
+    - editor/drupal.editor.dialog
+
+ckeditor5.templates.admin:
+  version: 2.x
+  css:
+    theme:
+      css/cke5_templates.admin.css: {}

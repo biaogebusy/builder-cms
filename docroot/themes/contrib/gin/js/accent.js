@@ -110,14 +110,14 @@
 
       // Change to Darkmode.
       window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-        if (e.matches && localStorage.getItem('Drupal.gin.darkmode') === 'auto') {
+        if (e.matches && window.ginDarkmode === 'auto') {
           document.querySelector('html').classList.add(darkmodeClass);
         }
       });
 
       // Change to Lightmode.
       window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', e => {
-        if (e.matches && localStorage.getItem('Drupal.gin.darkmode') === 'auto') {
+        if (e.matches && window.ginDarkmode === 'auto') {
           document.querySelector('html').classList.remove(darkmodeClass);
         }
       });

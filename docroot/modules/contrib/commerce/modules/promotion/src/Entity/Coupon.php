@@ -2,13 +2,13 @@
 
 namespace Drupal\commerce_promotion\Entity;
 
-use Drupal\commerce\Entity\CommerceContentEntityBase;
-use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityStorageInterface;
-use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\commerce\Entity\CommerceContentEntityBase;
+use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
 
 /**
@@ -107,7 +107,7 @@ class Coupon extends CommerceContentEntityBase implements CouponInterface {
    * {@inheritdoc}
    */
   public function getCreatedTime() {
-    return $this->get('created')->value;
+    return (int) $this->get('created')->value;
   }
 
   /**
@@ -170,6 +170,8 @@ class Coupon extends CommerceContentEntityBase implements CouponInterface {
     if (!$this->get('start_date')->isEmpty()) {
       return new DrupalDateTime($this->get('start_date')->value, $store_timezone);
     }
+
+    return NULL;
   }
 
   /**
@@ -187,16 +189,20 @@ class Coupon extends CommerceContentEntityBase implements CouponInterface {
     if (!$this->get('end_date')->isEmpty()) {
       return new DrupalDateTime($this->get('end_date')->value, $store_timezone);
     }
+
+    return NULL;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function setEndDate(DrupalDateTime $end_date = NULL) {
+  public function setEndDate(?DrupalDateTime $end_date = NULL) {
     $this->get('end_date')->value = NULL;
     if ($end_date) {
       $this->get('end_date')->value = $end_date->format(DateTimeItemInterface::DATETIME_STORAGE_FORMAT);
     }
+
+    return $this;
   }
 
   /**
@@ -218,6 +224,18 @@ class Coupon extends CommerceContentEntityBase implements CouponInterface {
     $end_date = $this->getEndDate($store_timezone);
     if ($end_date && $end_date->format('U') <= $date->format('U')) {
       return FALSE;
+    }
+
+    $promotion = $this->getPromotion();
+    $coupons = $order->get('coupons')->referencedEntities();
+    foreach ($coupons as $coupon) {
+      if (
+        $this->id() !== $coupon->id() &&
+        $promotion->id() === $coupon->getPromotionId() &&
+        !$promotion->isMultipleCouponsAllowed()
+      ) {
+        return FALSE;
+      }
     }
 
     $usage_limit = $this->getUsageLimit();
@@ -274,6 +292,7 @@ class Coupon extends CommerceContentEntityBase implements CouponInterface {
     /** @var \Drupal\commerce_promotion\PromotionUsageInterface $usage */
     $usage = \Drupal::service('commerce_promotion.usage');
     $usage->deleteByCoupon($entities);
+    $coupons_id = [];
     // Delete references to those coupons in promotions.
     foreach ($entities as $coupon) {
       $coupons_id[] = $coupon->id();
@@ -304,11 +323,12 @@ class Coupon extends CommerceContentEntityBase implements CouponInterface {
 
     $fields['code'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Coupon code'))
-      ->setDescription(t('The unique, machine-readable identifier for a coupon.'))
+      ->setDescription(t('The unique, machine-readable identifier for a coupon. Coupon code matching is case-insensitive.'))
       ->addConstraint('CouponCode')
       ->setSettings([
         'max_length' => 50,
         'text_processing' => 0,
+        'display_description' => TRUE,
       ])
       ->setDefaultValue('')
       ->setDisplayOptions('view', [

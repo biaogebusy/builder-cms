@@ -19,7 +19,7 @@ class ConfigImportTest extends FunctionalTestBase {
   /**
    * {@inheritdoc}
    */
-  public function setUp() {
+  public function setUp(): void {
     parent::setUp();
 
     $permissions = [
@@ -87,8 +87,8 @@ class ConfigImportTest extends FunctionalTestBase {
     $sync->write($entityBundleConfigName, $entityBundleConfiguration);
 
     // Import the configuration.
-    $this->drupalPostForm(Url::fromRoute('config.sync'), [], $this->t('Import all'));
-
+    $this->drupalGet(Url::fromRoute('config.sync'));
+    $this->submitForm([], 'Import all');
     // Verify the values appeared.
     $config = $this->config($entityTypeConfigName);
     $this->assertEquals($config->getRawData(), $entityTypeConfiguration, 'Entity type configuration imported successfully.');
@@ -107,7 +107,9 @@ class ConfigImportTest extends FunctionalTestBase {
       'eck_entity_type' => 'test_entity',
       'eck_entity_bundle' => 'bundle',
     ];
-    $this->drupalPostForm(Url::fromRoute($route, $routeArguments), $edit, $this->t('Save'));
+
+    $this->drupalGet(Url::fromRoute($route, $routeArguments));
+    $this->submitForm($edit, 'Save');
     $this->assertSession()->responseContains($edit['title[0][value]']);
   }
 

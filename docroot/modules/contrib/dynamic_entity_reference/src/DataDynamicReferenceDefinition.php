@@ -7,7 +7,7 @@ use Drupal\Core\TypedData\DataReferenceDefinition;
 /**
  * A typed data definition class for defining dynamic references.
  */
-class DataDynamicReferenceDefinition extends DataReferenceDefinition {
+final class DataDynamicReferenceDefinition extends DataReferenceDefinition {
 
   /**
    * The data definition of target.

@@ -1,21 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageEffect;
 
-use Drupal\Core\Image\ImageInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Image\ImageInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\image\Attribute\ImageEffect;
 use Drupal\image\ConfigurableImageEffectBase;
 
 /**
  * Filter image using convolution.
- *
- * @ImageEffect(
- *   id = "image_effects_convolution",
- *   label = @Translation("Convolution"),
- *   description = @Translation("Filter image using convolution.")
- * )
  */
+#[ImageEffect(
+  id: 'image_effects_convolution',
+  label: new TranslatableMarkup('Convolution'),
+  description: new TranslatableMarkup('Filter image using convolution.'),
+)]
 class ConvolutionImageEffect extends ConfigurableImageEffectBase implements ContainerFactoryPluginInterface {
 
   /**
@@ -23,9 +26,9 @@ class ConvolutionImageEffect extends ConfigurableImageEffectBase implements Cont
    */
   public function defaultConfiguration() {
     return [
-      'kernel' => [[0, 0, 0], [0, 0, 0], [0, 0, 0]],
-      'divisor' => 0,
-      'offset' => 0,
+      'kernel' => [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
+      'divisor' => 0.0,
+      'offset' => 0.0,
       'label' => '',
     ] + parent::defaultConfiguration();
   }
@@ -57,10 +60,14 @@ class ConvolutionImageEffect extends ConfigurableImageEffectBase implements Cont
     for ($i = 0; $i < 3; $i++) {
       $form['kernel']['entries'][$i] = [
         '#type' => 'container',
+        '#attributes' => [
+          'class' => ['container-inline'],
+        ],
       ];
       for ($j = 0; $j < 3; $j++) {
         $form['kernel']['entries'][$i][$j] = [
           '#type' => 'number',
+          '#step' => 0.01,
           '#title' => $this->t("Matrix entry (@i,@j)", ['@i' => $i, '@j' => $j]),
           '#title_display' => 'invisible',
           '#default_value' => $this->configuration['kernel'][$i][$j],
@@ -71,6 +78,7 @@ class ConvolutionImageEffect extends ConfigurableImageEffectBase implements Cont
     }
     $form['divisor'] = [
       '#type' => 'number',
+      '#step' => 0.01,
       '#title' => $this->t('Divisor'),
       '#description'  => $this->t('Typically the matrix entries sum (normalization).'),
       '#default_value' => $this->configuration['divisor'],
@@ -79,6 +87,7 @@ class ConvolutionImageEffect extends ConfigurableImageEffectBase implements Cont
     ];
     $form['offset'] = [
       '#type' => 'number',
+      '#step' => 0.01,
       '#title' => $this->t('Offset'),
       '#description'  => $this->t('This value is added to the division result.'),
       '#default_value' => $this->configuration['offset'],

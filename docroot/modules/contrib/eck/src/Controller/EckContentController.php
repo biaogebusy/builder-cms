@@ -2,12 +2,11 @@
 
 namespace Drupal\eck\Controller;
 
+use Drupal\Component\Utility\Xss;
 use Drupal\Core\Controller\ControllerBase;
-use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
-use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\Url;
 use Drupal\eck\EckEntityTypeInterface;
 use Drupal\eck\Entity\EckEntityBundle;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -15,39 +14,13 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  *
  * @ingroup eck
  */
-class EckContentController extends ControllerBase implements ContainerInjectionInterface {
-
-  /**
-   * The render service.
-   *
-   * @var \Drupal\Core\Render\RendererInterface
-   */
-  protected $renderer;
-
-  /**
-   * Constructs an EckContentController object.
-   *
-   * @param \Drupal\Core\Render\RendererInterface $renderer
-   *   The renderer service.
-   */
-  public function __construct(RendererInterface $renderer) {
-    $this->renderer = $renderer;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('renderer')
-    );
-  }
+class EckContentController extends ControllerBase {
 
   /**
    * Displays add content link for available entity types.
    *
    * @param \Drupal\eck\EckEntityTypeInterface $eck_entity_type
-   *   The request parameters.
+   *   The entity type.
    *
    * @return array
    *   The output as a renderable array.
@@ -55,23 +28,26 @@ class EckContentController extends ControllerBase implements ContainerInjectionI
   public function addPage(EckEntityTypeInterface $eck_entity_type) {
     $content = [];
     $bundleStorage = $this->getBundleStorage($eck_entity_type);
+    $accessControlHandler = $this->entityTypeManager()
+      ->getAccessControlHandler($eck_entity_type->id());
+
     /** @var \Drupal\eck\Entity\EckEntityBundle $bundle */
     foreach ($bundleStorage->loadMultiple() as $bundle) {
-      if ($this->entityTypeManager()
-        ->getAccessControlHandler($eck_entity_type->id())
-        ->createAccess($bundle->type)
-      ) {
-        $content[$bundle->type] = $bundle;
+      if ($accessControlHandler->createAccess($bundle->type)) {
+        $content[$bundle->type] = [
+          'title' => $bundle->label(),
+          'description' => Xss::filterAdmin($bundle->get('description')),
+          'url' => Url::fromRoute('eck.entity.add', [
+            'eck_entity_type' => $eck_entity_type->id(),
+            'eck_entity_bundle' => $bundle->id(),
+          ]),
+        ];
       }
     }
 
     return [
-      '#theme' => 'eck_content_add_list',
+      '#theme' => 'admin_block_content',
       '#content' => $content,
-      '#entity_type' => [
-        'id' => $eck_entity_type->id(),
-        'label' => $eck_entity_type->label(),
-      ],
     ];
   }
 

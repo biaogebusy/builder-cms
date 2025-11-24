@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Menu;
 
 use Drupal\Core\Url;
@@ -13,9 +15,7 @@ use Drupal\Tests\BrowserTestBase;
 class MenuRouterTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['block', 'menu_test', 'test_page_test'];
 
@@ -46,7 +46,7 @@ class MenuRouterTest extends BrowserTestBase {
   /**
    * Tests menu integration.
    */
-  public function testMenuIntegration() {
+  public function testMenuIntegration(): void {
     $this->doTestTitleMenuCallback();
     $this->doTestMenuOptionalPlaceholders();
     $this->doTestMenuHierarchy();
@@ -82,8 +82,8 @@ class MenuRouterTest extends BrowserTestBase {
    */
   protected function doTestTitleCallbackFalse() {
     $this->drupalGet('test-page');
-    $this->assertSession()->pageTextContains('A title with @placeholder', 'Raw text found on the page');
-    $this->assertSession()->pageTextNotContains('A title with some other text', 'Text with placeholder substitutions not found.');
+    $this->assertSession()->pageTextContains('A title with @placeholder');
+    $this->assertSession()->pageTextNotContains('A title with some other text');
   }
 
   /**
@@ -203,7 +203,7 @@ class MenuRouterTest extends BrowserTestBase {
       "éøïвβ中國書۞";
     $this->drupalGet($path);
     $this->assertSession()->pageTextContains('This is the menuTestCallback content.');
-    $this->assertSession()->pageTextNotContains('The website encountered an unexpected error. Please try again later.');
+    $this->assertSession()->pageTextNotContains('The website encountered an unexpected error. Try again later.');
   }
 
   /**
@@ -211,7 +211,7 @@ class MenuRouterTest extends BrowserTestBase {
    *
    * @see \Drupal\menu_test\EventSubscriber\MaintenanceModeSubscriber::onKernelRequestMaintenance()
    */
-  public function testMaintenanceModeLoginPaths() {
+  public function testMaintenanceModeLoginPaths(): void {
     $this->container->get('state')->set('system.maintenance_mode', TRUE);
 
     $offline_message = $this->config('system.site')->get('name') . ' is currently under maintenance. We should be back shortly. Thank you for your patience.';
@@ -229,7 +229,7 @@ class MenuRouterTest extends BrowserTestBase {
    * An authenticated user hitting 'user/login' should be redirected to 'user',
    * and 'user/register' should be redirected to the user edit page.
    */
-  public function testAuthUserUserLogin() {
+  public function testAuthUserUserLogin(): void {
     $web_user = $this->drupalCreateUser([]);
     $this->drupalLogin($web_user);
 
@@ -245,7 +245,7 @@ class MenuRouterTest extends BrowserTestBase {
   /**
    * Tests theme integration.
    */
-  public function testThemeIntegration() {
+  public function testThemeIntegration(): void {
     $this->defaultTheme = 'olivero';
     $this->adminTheme = 'claro';
 

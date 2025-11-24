@@ -3,18 +3,20 @@
 namespace Drupal\Tests\search_api\Kernel\ConfigEntity;
 
 use Drupal\KernelTests\KernelTestBase;
-use Drupal\search_api\Backend\BackendInterface;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Processor\ProcessorInterface;
 use Drupal\search_api\Utility\Utility;
+use Drupal\search_api_test\MethodOverrides;
 use Drupal\search_api_test\PluginTestTrait;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Contains tests for config entities with overrides.
  *
  * @group search_api
  */
+#[RunTestsInSeparateProcesses]
 class ConfigOverrideKernelTest extends KernelTestBase {
 
   use PluginTestTrait;
@@ -141,13 +143,10 @@ class ConfigOverrideKernelTest extends KernelTestBase {
 
     // Try to change the index's name (starting from the override-free index)
     // and verify a copy with overrides is used for post-save operations.
-    $args = [];
-    $this->setMethodOverride('backend', 'updateIndex', function () use (&$args) {
-      $args = func_get_args();
-    });
+    $this->setMethodOverride('backend', 'updateIndex', [MethodOverrides::class, 'genericMethod']);
     $index->set('name', 'New index name')->save();
-    $this->assertCount(2, $args);
-    $index = $args[1];
+    $this->assertCount(2, MethodOverrides::$methodArgs);
+    $index = MethodOverrides::$methodArgs[1];
     $this->assertEquals('Overridden index', $index->label());
 
     // Verify the override is correctly present when loading the index.
@@ -166,14 +165,12 @@ class ConfigOverrideKernelTest extends KernelTestBase {
    */
   public function testServerSave() {
     // Verify that in postInsert() the backend overrides are already applied.
-    $passed_config = [];
-    $passed_name = NULL;
-    $override = function (BackendInterface $backend) use (&$passed_config, &$passed_name) {
-      $passed_config = $backend->getConfiguration();
-      $passed_name = $backend->getServer()->label();
-    };
+    $override = [MethodOverrides::class, 'genericMethod'];
     $this->setMethodOverride('backend', 'postInsert', $override);
     $this->server->save();
+    $backend = MethodOverrides::$methodArgs[0];
+    $passed_config = $backend->getConfiguration();
+    $passed_name = $backend->getServer()->label();
     $this->assertEquals(['test' => 'foobar'], $passed_config);
     $this->assertEquals('Overridden server', $passed_name);
     $this->assertEquals('Test server', $this->server->label());
@@ -191,6 +188,8 @@ class ConfigOverrideKernelTest extends KernelTestBase {
     // Verify that in preUpdate() the backend overrides are already applied.
     $this->setMethodOverride('backend', 'preUpdate', $override);
     $this->server->save();
+    $backend = MethodOverrides::$methodArgs[0];
+    $passed_config = $backend->getConfiguration();
     $this->assertEquals(['test' => 'foobar'], $passed_config);
 
     // Verify that overriding "status" prevents the server's indexes from being

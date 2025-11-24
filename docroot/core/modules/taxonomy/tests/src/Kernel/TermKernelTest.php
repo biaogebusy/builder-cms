@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Kernel;
 
 use Drupal\taxonomy\Entity\Term;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
+use Drupal\Tests\user\Traits\UserCreationTrait;
 
 /**
  * Kernel tests for taxonomy term functions.
@@ -14,11 +17,12 @@ use Drupal\Tests\taxonomy\Traits\TaxonomyTestTrait;
 class TermKernelTest extends KernelTestBase {
 
   use TaxonomyTestTrait;
+  use UserCreationTrait;
 
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['filter', 'taxonomy', 'text', 'user'];
+  protected static $modules = ['filter', 'taxonomy', 'text', 'user', 'system'];
 
   /**
    * {@inheritdoc}
@@ -27,12 +31,13 @@ class TermKernelTest extends KernelTestBase {
     parent::setUp();
     $this->installConfig(['filter']);
     $this->installEntitySchema('taxonomy_term');
+    $this->installEntitySchema('user');
   }
 
   /**
    * Tests that a deleted term is no longer in the vocabulary.
    */
-  public function testTermDelete() {
+  public function testTermDelete(): void {
     $vocabulary = $this->createVocabulary();
     $valid_term = $this->createTerm($vocabulary);
     // Delete a valid term.
@@ -44,7 +49,7 @@ class TermKernelTest extends KernelTestBase {
   /**
    * Deleting a parent of a term with multiple parents does not delete the term.
    */
-  public function testMultipleParentDelete() {
+  public function testMultipleParentDelete(): void {
     $vocabulary = $this->createVocabulary();
     $parent_term1 = $this->createTerm($vocabulary);
     $parent_term2 = $this->createTerm($vocabulary);
@@ -68,7 +73,7 @@ class TermKernelTest extends KernelTestBase {
   /**
    * Tests a taxonomy with terms that have multiple parents of different depths.
    */
-  public function testTaxonomyVocabularyTree() {
+  public function testTaxonomyVocabularyTree(): void {
     // Create a new vocabulary with 6 terms.
     $vocabulary = $this->createVocabulary();
     $term = [];
@@ -148,7 +153,7 @@ class TermKernelTest extends KernelTestBase {
   /**
    * Tests that a Term is renderable when unsaved (preview).
    */
-  public function testTermPreview() {
+  public function testTermPreview(): void {
     $entity_manager = \Drupal::entityTypeManager();
     $vocabulary = $this->createVocabulary();
 
@@ -164,8 +169,69 @@ class TermKernelTest extends KernelTestBase {
     $this->assertNotEmpty($render_array, 'Term view builder is built.');
 
     // Confirm we can render said view.
-    $rendered = \Drupal::service('renderer')->renderPlain($render_array);
+    $rendered = (string) \Drupal::service('renderer')->renderInIsolation($render_array);
     $this->assertNotEmpty(trim($rendered), 'Term is able to be rendered.');
+  }
+
+  /**
+   * @covers \Drupal\taxonomy\TermStorage::deleteTermHierarchy
+   * @group legacy
+   */
+  public function testDeleteTermHierarchyDeprecation(): void {
+    $vocabulary = $this->createVocabulary();
+    $term = $this->createTerm($vocabulary);
+
+    /** @var \Drupal\taxonomy\TermStorageInterface $storage */
+    $storage = \Drupal::entityTypeManager()->getStorage('taxonomy_term');
+    $this->expectDeprecation('Drupal\taxonomy\TermStorage::deleteTermHierarchy() is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. It is a no-op since 8.6.0. Parent references are automatically cleared when deleting a taxonomy term. See https://www.drupal.org/node/2936675');
+    $storage->deleteTermHierarchy([$term->tid]);
+  }
+
+  /**
+   * @covers \Drupal\taxonomy\TermStorage::updateTermHierarchy
+   * @group legacy
+   */
+  public function testUpdateTermHierarchyDeprecation(): void {
+    $vocabulary = $this->createVocabulary();
+    $term = $this->createTerm($vocabulary);
+
+    /** @var \Drupal\taxonomy\TermStorageInterface $storage */
+    $storage = \Drupal::entityTypeManager()->getStorage('taxonomy_term');
+    $this->expectDeprecation('Drupal\taxonomy\TermStorage::updateTermHierarchy() is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. It is a no-op since 8.6.0. Parent references are automatically updated when updating a taxonomy term. See https://www.drupal.org/node/2936675');
+    $storage->updateTermHierarchy($term);
+  }
+
+  /**
+   * Tests revision log access.
+   */
+  public function testRevisionLogAccess(): void {
+    $vocabulary = $this->createVocabulary();
+    $entity = $this->createTerm($vocabulary, ['status' => TRUE]);
+    $admin = $this->createUser([
+      'administer taxonomy',
+      'access content',
+    ]);
+    $editor = $this->createUser([
+      'edit terms in ' . $vocabulary->id(),
+      'access content',
+    ]);
+    $viewer = $this->createUser([
+      'access content',
+    ]);
+
+    $this->assertTrue($entity->get('revision_log_message')->access('view', $admin));
+    $this->assertTrue($entity->get('revision_log_message')->access('view', $editor));
+    $this->assertFalse($entity->get('revision_log_message')->access('view', $viewer));
+  }
+
+  /**
+   * The "parent" field must restrict references to the same vocabulary.
+   */
+  public function testParentHandlerSettings(): void {
+    $vocabulary = $this->createVocabulary();
+    $vocabulary_fields = \Drupal::service('entity_field.manager')->getFieldDefinitions('taxonomy_term', $vocabulary->id());
+    $parent_target_bundles = $vocabulary_fields['parent']->getSetting('handler_settings')['target_bundles'];
+    $this->assertSame([$vocabulary->id() => $vocabulary->id()], $parent_target_bundles);
   }
 
 }

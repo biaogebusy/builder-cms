@@ -23,7 +23,8 @@ class UnflagConfirmForm extends FlagConfirmFormBase {
    * {@inheritdoc}
    */
   public function getQuestion() {
-    return $this->flag->getLinkTypePlugin()->getUnflagQuestion();
+    $link_plugin = $this->flag->getLinkTypePlugin();
+    return $link_plugin instanceof FormEntryInterface ? $link_plugin->getUnflagQuestion() : $this->t('Unflag this content');
   }
 
   /**
@@ -45,7 +46,7 @@ class UnflagConfirmForm extends FlagConfirmFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    \Drupal::service('flag')->unflag($this->flag, $this->entity);
+    $this->flagService->unflag($this->flag, $this->entity);
   }
 
 }

@@ -3,7 +3,7 @@
 namespace Drupal\easy_breadcrumb;
 
 /**
- * EasyBreadcrumb module's contants.
+ * EasyBreadcrumb module's constants.
  */
 class EasyBreadcrumbConstants {
 
@@ -142,7 +142,7 @@ class EasyBreadcrumbConstants {
   const REMOVE_REPEATED_SEGMENTS = 'remove_repeated_segments';
 
   /**
-   * Flag for removing repeated identical segments from the breadcrumb ignoring url information.
+   * Flag to remove repeated segments from breadcrumb ignoring url information.
    */
   const REMOVE_REPEATED_SEGMENTS_TEXT_ONLY = 'remove_repeated_segments_text_only';
 
@@ -180,6 +180,11 @@ class EasyBreadcrumbConstants {
    * Breadcrumb segment count.
    */
   const SEGMENT_DISPLAY_LIMIT = 'segment_display_limit';
+
+  /**
+   * Breadcrumb segment minimum count.
+   */
+  const SEGMENT_DISPLAY_MINIMUM = 'segment_display_minimum';
 
   /**
    * Breadcrumb truncator mode.

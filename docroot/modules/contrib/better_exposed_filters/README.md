@@ -28,15 +28,8 @@ Submit bug reports and feature suggestions, or track changes in the
 
 ## Requirements
 
-- [Views](https://www.drupal.org/project/views)
-- [Filter](https://www.drupal.org/project/filter)
-- [User](https://www.drupal.org/project/user)
-- [System](https://www.drupal.org/project/system)
-- [jQuery UI](https://www.drupal.org/project/jquery_ui)
-- [jQuery UI Slider](https://www.drupal.org/project/jquery_ui_slider)
-- [jQuery UI TouchPunch](https://www.drupal.org/project/jquery_ui_touch_punch)
-- [jQuery UI Datepicker](https://www.drupal.org/project/jquery_ui_datepicker)
-
+- Core modules
+  - views
 
 ## Installation
 
@@ -44,6 +37,19 @@ Install as you would normally install a contributed Drupal module. For further
 information, see
 [Installing Drupal Modules](https://www.drupal.org/docs/extending-drupal/installing-drupal-modules).
 
+### Use a local version of the Slider library
+
+If you want to use a local library for the Slider functionality instead of 
+loading the library from a CDN, you need to place the library in the `nouislider`
+directory of one of your Drupal installation's `libraries` folders.
+
+As of 7.0.3 we now have a drupal library project to pull from.
+
+#### Install manually
+
+Alternatively, if you don't want to use Composer to manage the library, you could download the library from `https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.5.1/nouislider.min.js` and place it into `libraries/nouislider` manually.
+
+Make sure to clear all caches for the changes to take effect.
 
 ## Configuration
 

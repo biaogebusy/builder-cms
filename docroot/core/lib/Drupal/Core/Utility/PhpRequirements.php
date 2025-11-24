@@ -31,10 +31,9 @@ final class PhpRequirements {
    *   by the PHP version.
    */
   private static $phpEolDates = [
-    '7.3' => '2021-12-06',
-    '7.4' => '2022-11-28',
-    '8.0' => '2023-11-26',
-    '8.1' => '2024-11-25',
+    '8.1' => '2025-12-31',
+    '8.2' => '2026-12-31',
+    '8.3' => '2027-12-31',
   ];
 
   /**
@@ -80,7 +79,7 @@ final class PhpRequirements {
     // The string cast ensures the value is a string, even if the PHP EOL date
     // array is empty. As of PHP 8.1, version_compare() no longer accepts NULL
     // as a parameter; empty string must be used instead.
-    $lowest_supported_version = $lowest_supported_version ?? (string) array_key_last(static::$phpEolDates);
+    $lowest_supported_version = (string) array_key_last(static::$phpEolDates);
 
     // Next, look at versions that are end-of-life after the current date.
     // Find the lowest PHP version that is still supported.

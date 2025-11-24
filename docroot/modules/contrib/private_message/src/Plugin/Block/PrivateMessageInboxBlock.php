@@ -1,113 +1,57 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\private_message\Plugin\Block;
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Access\CsrfTokenGenerator;
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Block\BlockPluginInterface;
 use Drupal\Core\Cache\Cache;
-use Drupal\Core\Config\Config;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\private_message\Service\PrivateMessageServiceInterface;
+use Drupal\private_message\Traits\PrivateMessageSettingsTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Config\ConfigFactoryInterface;
 
 /**
  * Provides the private message inbox block.
- *
- * @Block(
- *   id = "private_message_inbox_block",
- *   admin_label = @Translation("Private Message Inbox"),
- *   category =  @Translation("Private Message"),
- * )
  */
+#[Block(
+  id: 'private_message_inbox_block',
+  admin_label: new TranslatableMarkup('Private Message Inbox'),
+  category: new TranslatableMarkup('Private Message'),
+ )]
 class PrivateMessageInboxBlock extends BlockBase implements BlockPluginInterface, ContainerFactoryPluginInterface {
 
-  /**
-   * The private message service.
-   *
-   * @var \Drupal\private_message\Service\PrivateMessageServiceInterface
-   */
-  protected PrivateMessageServiceInterface $privateMessageService;
+  use PrivateMessageSettingsTrait;
 
-  /**
-   * The current user.
-   *
-   * @var \Drupal\Core\Session\AccountProxyInterface
-   */
-  protected AccountProxyInterface $currentUser;
-
-  /**
-   * The entity manager service.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected EntityTypeManagerInterface $entityTypeManager;
-
-  /**
-   * The CSRF token generator service.
-   *
-   * @var \Drupal\Core\Access\CsrfTokenGenerator
-   */
-  protected CsrfTokenGenerator $csrfToken;
-
-  /**
-   * The private message configuration.
-   *
-   * @var \Drupal\Core\Config\Config
-   */
-  protected Config $privateMessageConfig;
-
-  /**
-   * Constructs a PrivateMessageForm object.
-   *
-   * @param array $configuration
-   *   The block configuration.
-   * @param string $plugin_id
-   *   The ID of the plugin.
-   * @param mixed $plugin_definition
-   *   The plugin definition.
-   * @param \Drupal\Core\Session\AccountProxyInterface $currentUser
-   *   The current user.
-   * @param \Drupal\private_message\Service\PrivateMessageServiceInterface $privateMessageService
-   *   The private message service.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
-   *   The entity manager service.
-   * @param \Drupal\Core\Access\CsrfTokenGenerator $csrfToken
-   *   The CSRF token generator service.
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config
-   *   The config service.
-   */
   public function __construct(
     array $configuration,
     $plugin_id,
     $plugin_definition,
-    AccountProxyInterface $currentUser,
-    PrivateMessageServiceInterface $privateMessageService,
-    EntityTypeManagerInterface $entityTypeManager,
-    CsrfTokenGenerator $csrfToken,
-    ConfigFactoryInterface $config
+    protected readonly AccountProxyInterface $currentUser,
+    protected readonly PrivateMessageServiceInterface $privateMessageService,
+    protected readonly EntityTypeManagerInterface $entityTypeManager,
+    protected readonly CsrfTokenGenerator $csrfToken,
+    protected readonly ConfigFactoryInterface $configFactory,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
-
-    $this->currentUser = $currentUser;
-    $this->privateMessageService = $privateMessageService;
-    $this->entityTypeManager = $entityTypeManager;
-    $this->csrfToken = $csrfToken;
-    $this->privateMessageConfig = $config->get('private_message.settings');
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): PrivateMessageInboxBlock {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): self {
     return new static(
       $configuration,
       $plugin_id,
@@ -146,7 +90,7 @@ class PrivateMessageInboxBlock extends BlockBase implements BlockPluginInterface
       }
 
       $block['#attached']['library'][] = 'private_message/inbox_block_script';
-      $style_disabled = $this->privateMessageConfig->get('remove_css');
+      $style_disabled = $this->getPrivateMessageSettings()->get('remove_css');
       if (!$style_disabled) {
         $block['#attached']['library'][] = 'private_message/inbox_block_style';
       }

@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\search_api\Functional;
 
+use Drupal\Component\Utility\DeprecationHelper;
+use Drupal\entity_test\EntityTestHelper;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Utility\Utility;
 
@@ -28,8 +30,18 @@ trait ExampleContentTrait {
    * Sets up the necessary bundles on the test entity type.
    */
   protected function setUpExampleStructure() {
-    entity_test_create_bundle('item', NULL, 'entity_test_mulrev_changed');
-    entity_test_create_bundle('article', NULL, 'entity_test_mulrev_changed');
+    DeprecationHelper::backwardsCompatibleCall(
+      \Drupal::VERSION,
+      '11.2.0',
+      fn () => EntityTestHelper::createBundle('item', NULL, 'entity_test_mulrev_changed'),
+      fn () => entity_test_create_bundle('item', NULL, 'entity_test_mulrev_changed'),
+    );
+    DeprecationHelper::backwardsCompatibleCall(
+      \Drupal::VERSION,
+      '11.2.0',
+      fn () => EntityTestHelper::createBundle('article', NULL, 'entity_test_mulrev_changed'),
+      fn () => entity_test_create_bundle('article', NULL, 'entity_test_mulrev_changed'),
+    );
   }
 
   /**
@@ -42,6 +54,7 @@ trait ExampleContentTrait {
       'name' => 'foo bar baz foobaz föö smile' . $smiley,
       'body' => 'test test case Case casE',
       'type' => 'item',
+      // cspell:disable-next-line
       'keywords' => ['Orange', 'orange', 'örange', 'Orange', $smiley],
       'category' => 'item_category',
     ]);

@@ -39,8 +39,10 @@ a.ui-button:active,
   border: 1px solid var(--gin-border-color);
 }
 
-.js .form-autocomplete {
-  transition: var(--gin-transition), background-position none;
+@media (prefers-reduced-motion: no-preference) {
+  .js .form-autocomplete {
+    transition: var(--gin-transition), background-position none;
+  }
 }
 
 .js .form-autocomplete.is-autocompleting,
@@ -58,30 +60,26 @@ div.autocomplete-deluxe-container div.autocomplete-deluxe-throbber.autocomplete-
 div.autocomplete-deluxe-container div.autocomplete-deluxe-throbber.autocomplete-deluxe-open::after {
   content: "";
   position: absolute;
-  top: 35px;
+  inset-block-start: 35px;
+  inset-inline-end: 12px;
   display: block;
+  text-align: end;
   border: 2px solid var(--gin-bg-input);
   border-radius: 50%;
-  border-top: 2px solid var(--gin-color-primary);
+  border-block-start: 2px solid var(--gin-color-primary);
   width: 14px;
   height: 14px;
-  animation: gin-throbber 1s linear infinite;
 }
 
-[dir="ltr"] .form-autocomplete.is-autocompleting + .claro-autocomplete__message::after,
-[dir="ltr"] div.autocomplete-deluxe-container div.autocomplete-deluxe-throbber.autocomplete-deluxe-open::after {
-  right: 12px;
-  text-align: right;
-}
-
-[dir="rtl"] .form-autocomplete.is-autocompleting + .claro-autocomplete__message::after,
-[dir="rtl"] div.autocomplete-deluxe-container div.autocomplete-deluxe-throbber.autocomplete-deluxe-open::after {
-  left: 12px;
-  text-align: left;
+@media (prefers-reduced-motion: no-preference) {
+  .form-autocomplete.is-autocompleting + .claro-autocomplete__message::after,
+  div.autocomplete-deluxe-container div.autocomplete-deluxe-throbber.autocomplete-deluxe-open::after {
+    animation: gin-throbber 1s linear infinite;
+  }
 }
 
 div.autocomplete-deluxe-container div.autocomplete-deluxe-throbber.autocomplete-deluxe-open::after {
-  top: 2px;
+  inset-block-start: 2px;
 }
 
 div.autocomplete-deluxe-multiple {
@@ -90,7 +88,12 @@ div.autocomplete-deluxe-multiple {
   border: 1px solid var(--gin-border-color-form-element);
   border-radius: var(--gin-border-m);
   box-sizing: border-box;
-  transition: var(--gin-transition);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  div.autocomplete-deluxe-multiple {
+    transition: var(--gin-transition);
+  }
 }
 
 .autocomplete-deluxe-container input.autocomplete-deluxe-form {
@@ -100,18 +103,12 @@ div.autocomplete-deluxe-multiple {
 
 .autocomplete-deluxe-item {
   color: var(--gin-color-primary-hover);
+  padding-block: 6px;
+  padding-inline: 12px var(--gin-spacing-l);
   background-color: var(--gin-color-primary-light-hover);
   border-radius: var(--gin-border-l);
   border: 0 none;
   box-shadow: none;
-}
-
-[dir="ltr"] .autocomplete-deluxe-item {
-  padding: 6px var(--gin-spacing-l) 6px 12px;
-}
-
-[dir="rtl"] .autocomplete-deluxe-item {
-  padding: 6px 12px 6px var(--gin-spacing-l);
 }
 
 .autocomplete-deluxe-item:hover, .autocomplete-deluxe-item:active {
@@ -120,7 +117,8 @@ div.autocomplete-deluxe-multiple {
 }
 
 .autocomplete-deluxe-item .autocomplete-deluxe-item-delete {
-  top: 6px;
+  inset-block-start: 6px;
+  inset-inline-end: 6px;
   -webkit-mask-image: url("../../media/sprite.svg#close-view");
           mask-image: url("../../media/sprite.svg#close-view");
   -webkit-mask-size: 10px 10px;
@@ -130,14 +128,6 @@ div.autocomplete-deluxe-multiple {
   -webkit-mask-position: center;
           mask-position: center;
   background: var(--gin-color-primary);
-}
-
-[dir="ltr"] .autocomplete-deluxe-item .autocomplete-deluxe-item-delete {
-  right: 6px;
-}
-
-[dir="rtl"] .autocomplete-deluxe-item .autocomplete-deluxe-item-delete {
-  left: 6px;
 }
 
 .autocomplete-deluxe-item:hover .autocomplete-deluxe-item-delete,

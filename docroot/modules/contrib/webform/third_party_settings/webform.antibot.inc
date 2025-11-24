@@ -33,7 +33,7 @@ function _webform_antibot_enabled() {
   /** @var \Drupal\Core\Path\PathMatcherInterface $path_matcher */
   $path_matcher = \Drupal::service('path.matcher');
   $form_ids = \Drupal::config('antibot.settings')->get('form_ids') ?? [];
-  return $path_matcher->matchPath('webform_submission_asdas', implode("\n", $form_ids));
+  return $path_matcher->matchPath('webform_submission_', implode("\n", $form_ids));
 }
 
 /**

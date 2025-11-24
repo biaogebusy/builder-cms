@@ -1,4 +1,0 @@
-services:
-  swiftmailer.transport:
-    class: Drupal\swiftmailer\TransportFactory
-    arguments: ['@config.factory']

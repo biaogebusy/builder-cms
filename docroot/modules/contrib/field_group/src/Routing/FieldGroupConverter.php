@@ -2,8 +2,8 @@
 
 namespace Drupal\field_group\Routing;
 
-use Symfony\Component\Routing\Route;
 use Drupal\Core\ParamConverter\ParamConverterInterface;
+use Symfony\Component\Routing\Route;
 
 /**
  * Parameter converter for upcasting fieldgroup config ids to fieldgroup object.

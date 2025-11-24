@@ -17,7 +17,13 @@ class FileItemNormalizer extends FieldItemNormalizer {
    */
   public function normalize($field, $format = NULL, array $context = []) {
     $data = parent::normalize($field, $format, $context);
-    $data['file_url'] = \Drupal::service('file_url_generator')->generateAbsoluteString($field->entity->getFileUri());
+    if ($field->entity) {
+      $uri = $field->entity->getFileUri();
+      $data['file_url'] = \Drupal::service('file_url_generator')
+        ->generateAbsoluteString($uri);
+    } else {
+      \Drupal::logger('entity_theme_engine')->error("fileItem: {$field->getString()} not found.");
+    }
     return $data;
   }
 }

@@ -1,0 +1,23 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"AH",
+		"Huaibei Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Duji Qu": {
+			"local_name": "杜集区"
+		},
+		"Lieshan Qu": {
+			"local_name": "烈山区"
+		},
+		"Suixi Xian": {
+			"local_name": "濉溪县"
+		},
+		"Xiangshan Qu": {
+			"local_name": "相山区"
+		}
+	}
+}

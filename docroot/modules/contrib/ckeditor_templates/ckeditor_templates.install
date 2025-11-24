@@ -1,0 +1,14 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for CKEditor templates.
+ */
+
+/**
+ * Install the ckeditor_templates entity type definition.
+ */
+function ckeditor_templates_update_9001() {
+  \Drupal::entityTypeManager()->clearCachedDefinitions();
+  \Drupal::entityDefinitionUpdateManager()->installEntityType(\Drupal::entityTypeManager()->getDefinition('ckeditor_templates'));
+}

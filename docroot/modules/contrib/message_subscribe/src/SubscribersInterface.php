@@ -87,7 +87,7 @@ interface SubscribersInterface {
    *   `$subscribe_options` array for `self::sendMessage()`.
    * @param array $context
    *   (optional) The context array, passed by reference. This has the same
-   *   elements as the `$context` paramater for `self::sendMessage()`.
+   *   elements as the `$context` parameter for `self::sendMessage()`.
    *
    * @return \Drupal\message_subscribe\Subscribers\DeliveryCandidateInterface[]
    *   Array of delivery candidate objects keyed with the user IDs to send
@@ -134,6 +134,6 @@ interface SubscribersInterface {
    *
    * @see \Drupal\flag\FlagServiceInterface::getAllFlags()
    */
-  public function getFlags($entity_type = NULL, $bundle = NULL, AccountInterface $account = NULL);
+  public function getFlags($entity_type = NULL, $bundle = NULL, ?AccountInterface $account = NULL);
 
 }

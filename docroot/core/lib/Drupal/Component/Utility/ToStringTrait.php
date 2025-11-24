@@ -3,7 +3,7 @@
 namespace Drupal\Component\Utility;
 
 /**
- * Wraps __toString in a trait to avoid some fatals.
+ * Wraps __toString in a trait to avoid some fatal errors.
  */
 trait ToStringTrait {
 
@@ -17,7 +17,7 @@ trait ToStringTrait {
     catch (\Exception $e) {
       // User errors in __toString() methods are considered fatal in the Drupal
       // error handler.
-      trigger_error(get_class($e) . ' thrown while calling __toString on a ' . static::class . ' object in ' . $e->getFile() . ' on line ' . $e->getLine() . ': ' . $e->getMessage(), E_USER_ERROR);
+      trigger_error(get_class($e) . ' thrown while calling __toString on a ' . static::class . ' object in ' . $e->getFile() . ' on line ' . $e->getLine() . ': ' . $e->getMessage(), E_USER_WARNING);
       // In case we are using another error handler that did not fatal on the
       // E_USER_ERROR, we terminate execution. However, for test purposes allow
       // a return value.

@@ -90,7 +90,7 @@ class MigrationHelper {
         $widget = $row->get('widget/type');
         if ($widget === 'inline_entity_form_single' || $widget === 'inline_entity_form') {
           $data = $row->get('field_definition/data');
-          $definition = unserialize($data);
+          $definition = unserialize(($data), ['allowed_classes' => FALSE]);
           if (empty($definition['settings']['handler_settings']['target_bundles'])) {
             $entity_type = $row->get('entity_type');
             $bundles = $this->getBundles($source, $entity_type);
@@ -151,7 +151,8 @@ class MigrationHelper {
    */
   protected function getMigrationWithSharedConfiguration(array &$migration) {
     // Integrate shared group configuration into the migration.
-    if (!empty($migration['migration_group'])) {
+    if (!empty($migration['migration_group']) && class_exists('\Drupal\migrate_plus\Entity\MigrationGroup')) {
+      // phpcs:ignore Drupal.Classes.FullyQualifiedNamespace
       $group = \Drupal\migrate_plus\Entity\MigrationGroup::load($migration['migration_group']);
       $shared_configuration = !empty($group) ? $group->get('shared_configuration') : [];
       if (!empty($shared_configuration)) {
@@ -164,8 +165,8 @@ class MigrationHelper {
             $merged_values = array_replace_recursive($group_value, $migration_value);
             $migration[$key] = $merged_values;
           }
-          // Where the group provides a value the migration doesn't, use the group
-          // value.
+          // Where the group provides a value the migration doesn't,
+          // use the group value.
           elseif (is_null($migration_value)) {
             $migration[$key] = $group_value;
           }

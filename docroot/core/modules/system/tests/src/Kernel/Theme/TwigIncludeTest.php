@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Kernel\Theme;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
@@ -39,13 +41,13 @@ class TwigIncludeTest extends KernelTestBase {
       '#type' => 'inline_template',
       '#template' => "{% include '@system/container.html.twig' %}",
     ];
-    $this->assertEquals("<div></div>\n", $renderer->renderRoot($element));
+    $this->assertSame("<div></div>\n", (string) $renderer->renderRoot($element));
 
     // Test that SQL files cannot be included in Twig templates by default.
     $element = [];
     $element['test'] = [
       '#type' => 'inline_template',
-      '#template' => "{% include '@__main__\/core/tests/fixtures/files/sql-2.sql' %}",
+      '#template' => "{% include '@__main__/core/tests/fixtures/files/sql-2.sql' %}",
     ];
     try {
       $renderer->renderRoot($element);
@@ -68,8 +70,10 @@ class TwigIncludeTest extends KernelTestBase {
     $twig_config = $this->container->getParameter('twig.config');
     $twig_config['allowed_file_extensions'][] = 'sql';
     $this->twigConfig = $twig_config;
-    $this->container->get('kernel')->shutdown();
-    $this->container->get('kernel')->boot();
+    // @todo This used to call shutdown() and boot(). rebuildContainer() is
+    // needed until we stop pushing the request twice and only popping it once.
+    // @see https://www.drupal.org/i/2613044
+    $this->container->get('kernel')->rebuildContainer();
     /** @var \Drupal\Core\Template\Loader\FilesystemLoader $loader */
     $loader = \Drupal::service('twig.loader.filesystem');
     $source = $loader->getSourceContext('@__main__\/core/tests/fixtures/files/sql-2.sql');
@@ -80,8 +84,10 @@ class TwigIncludeTest extends KernelTestBase {
     $this->assertSame(['css', 'html', 'js', 'svg', 'twig', 'sql'], \Drupal::getContainer()->getParameter('twig.config')['allowed_file_extensions']);
     unset($twig_config['allowed_file_extensions']);
     $this->twigConfig = $twig_config;
-    $this->container->get('kernel')->shutdown();
-    $this->container->get('kernel')->boot();
+    // @todo This used to call shutdown() and boot(). rebuildContainer() is
+    // needed until we stop pushing the request twice and only popping it once.
+    // @see https://www.drupal.org/i/2613044
+    $this->container->get('kernel')->rebuildContainer();
     $this->assertArrayNotHasKey('allowed_file_extensions', \Drupal::getContainer()->getParameter('twig.config'));
     /** @var \Drupal\Core\Template\Loader\FilesystemLoader $loader */
     $loader = \Drupal::service('twig.loader.filesystem');
@@ -108,8 +114,10 @@ class TwigIncludeTest extends KernelTestBase {
     // Allow files with no extension.
     $twig_config['allowed_file_extensions'] = ['twig', ''];
     $this->twigConfig = $twig_config;
-    $this->container->get('kernel')->shutdown();
-    $this->container->get('kernel')->boot();
+    // @todo This used to call shutdown() and boot(). rebuildContainer() is
+    // needed until we stop pushing the request twice and only popping it once.
+    // @see https://www.drupal.org/i/2613044
+    $this->container->get('kernel')->rebuildContainer();
     /** @var \Drupal\Core\Template\Loader\FilesystemLoader $loader */
     $loader = \Drupal::service('twig.loader.filesystem');
     $source = $loader->getSourceContext('@__main__\/' . $this->siteDirectory . '/test_file');

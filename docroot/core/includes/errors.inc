@@ -34,7 +34,6 @@ function drupal_error_levels() {
     E_USER_ERROR => ['User error', RfcLogLevel::ERROR],
     E_USER_WARNING => ['User warning', RfcLogLevel::WARNING],
     E_USER_NOTICE => ['User notice', RfcLogLevel::NOTICE],
-    E_STRICT => ['Strict warning', RfcLogLevel::DEBUG],
     E_RECOVERABLE_ERROR => ['Recoverable fatal error', RfcLogLevel::ERROR],
     E_DEPRECATED => ['Deprecated function', RfcLogLevel::DEBUG],
     E_USER_DEPRECATED => ['User deprecated function', RfcLogLevel::DEBUG],
@@ -67,7 +66,7 @@ function _drupal_error_handler_real($error_level, $message, $filename, $line) {
     // As __toString() methods must not throw exceptions (recoverable errors)
     // in PHP, we allow them to trigger a fatal error by emitting a user error
     // using trigger_error().
-    $to_string = $error_level == E_USER_ERROR && substr($caller['function'], -strlen('__toString()')) == '__toString()';
+    $to_string = $error_level == E_USER_ERROR && str_ends_with($caller['function'], '__toString()');
     _drupal_log_error([
       '%type' => isset($types[$error_level]) ? $severity_msg : 'Unknown error',
       // The standard PHP error handler considers that the error messages
@@ -84,7 +83,7 @@ function _drupal_error_handler_real($error_level, $message, $filename, $line) {
   }
   // If the site is a test site then fail for user deprecations so they can be
   // caught by the deprecation error handler.
-  elseif (DRUPAL_TEST_IN_CHILD_SITE && $error_level === E_USER_DEPRECATED) {
+  elseif (defined('DRUPAL_TEST_IN_CHILD_SITE') && DRUPAL_TEST_IN_CHILD_SITE && $error_level === E_USER_DEPRECATED) {
     static $seen = [];
     if (array_search($message, $seen, TRUE) === FALSE) {
       // Only report each deprecation once. Too many headers can break some
@@ -147,7 +146,7 @@ function error_displayable($error = NULL) {
  *   Non-recoverable fatal errors cannot be logged by Drupal.
  */
 function _drupal_log_error($error, $fatal = FALSE) {
-  $is_installer = InstallerKernel::installationAttempted();
+  $is_installer = InstallerKernel::installationAttempted() && \Drupal::hasContainer();
 
   // Backtrace, exception and 'severity_level' are not valid replacement values
   // for t().
@@ -158,7 +157,7 @@ function _drupal_log_error($error, $fatal = FALSE) {
 
   // When running inside the testing framework, we relay the errors
   // to the tested site by the way of HTTP headers.
-  if (DRUPAL_TEST_IN_CHILD_SITE && !headers_sent() && (!defined('SIMPLETEST_COLLECT_ERRORS') || SIMPLETEST_COLLECT_ERRORS)) {
+  if (defined('DRUPAL_TEST_IN_CHILD_SITE') && DRUPAL_TEST_IN_CHILD_SITE && !headers_sent() && (!defined('SIMPLETEST_COLLECT_ERRORS') || SIMPLETEST_COLLECT_ERRORS)) {
     _drupal_error_header($error['@message'], $error['%type'], $error['%function'], $error['%file'], $error['%line']);
   }
 
@@ -174,7 +173,7 @@ function _drupal_log_error($error, $fatal = FALSE) {
       // implementations to use it.
       \Drupal::logger('php')->log($severity, '%type: @message in %function (line %line of %file) @backtrace_string.', $error + ['backtrace' => $backtrace, 'exception' => $exception, 'severity_level' => $severity]);
     }
-    catch (\Exception $e) {
+    catch (\Throwable) {
       // We can't log, for example because the database connection is not
       // available. At least try to log to PHP error log.
       error_log(strtr('Failed to log error: ' . Error::DEFAULT_ERROR_MESSAGE . ' @backtrace_string', $error));
@@ -223,12 +222,16 @@ function _drupal_log_error($error, $fatal = FALSE) {
       }
 
       // Attempt to reduce verbosity by removing DRUPAL_ROOT from the file path
-      // in the message. This does not happen for (false) security.
-      if (\Drupal::hasService('kernel')) {
-        $root_length = strlen(\Drupal::root());
-        if (substr($error['%file'], 0, $root_length) == \Drupal::root()) {
-          $error['%file'] = substr($error['%file'], $root_length + 1);
-        }
+      // in the message. This also prevents full path disclosure, see
+      // https://owasp.org/www-community/attacks/Full_Path_Disclosure.
+      try {
+        $root = \Drupal::root();
+      }
+      catch (\Throwable) {
+        $root = realpath(dirname(__DIR__, 2));
+      }
+      if (str_starts_with($error['%file'], $root)) {
+        $error['%file'] = substr($error['%file'], strlen($root) + 1);
       }
 
       // Check if verbose error reporting is on.
@@ -244,15 +247,14 @@ function _drupal_log_error($error, $fatal = FALSE) {
       }
       else {
         // With verbose logging, we will also include a backtrace.
-
         // First trace is the error itself, already contained in the message.
-        // While the second trace is the error source and also contained in the
-        // message, the message doesn't contain argument values, so we output it
-        // once more in the backtrace.
         array_shift($backtrace);
-        // Generate a backtrace containing only scalar argument values.
-        $error['@backtrace'] = Error::formatBacktrace($backtrace);
-        $message = new FormattableMarkup(Error::DEFAULT_ERROR_MESSAGE . ' <pre class="backtrace">@backtrace</pre>', $error);
+        // Strip arguments from the backtrace.
+        $error['@backtrace'] = Error::formatBacktrace(array_map(function ($trace) {
+          unset($trace['args']);
+          return $trace;
+        }, $backtrace));
+        $message = new FormattableMarkup('<details class="error-with-backtrace"><summary>' . Error::DEFAULT_ERROR_MESSAGE . '</summary><pre class="backtrace">@backtrace</pre></details>', $error);
       }
     }
 
@@ -260,7 +262,7 @@ function _drupal_log_error($error, $fatal = FALSE) {
       // We fallback to a maintenance page at this point, because the page generation
       // itself can generate errors.
       // Should not translate the string to avoid errors producing more errors.
-      $message = 'The website encountered an unexpected error. Please try again later.' . '<br />' . $message;
+      $message = 'The website encountered an unexpected error. Try again later.' . '<br />' . $message;
 
       if ($is_installer) {
         // install_display_output() prints the output and ends script execution.
@@ -268,8 +270,13 @@ function _drupal_log_error($error, $fatal = FALSE) {
           '#title' => 'Error',
           '#markup' => $message,
         ];
-        install_display_output($output, $GLOBALS['install_state']);
-        exit;
+        try {
+          install_display_output($output, $GLOBALS['install_state']);
+          exit;
+        }
+        catch (\Throwable) {
+          // The maintenance page failed, so fall back to a plain error message.
+        }
       }
 
       $response->setContent($message);

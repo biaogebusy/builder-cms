@@ -65,46 +65,17 @@ class PathautoSettingsForm extends ConfigFormBase {
   protected $aliasTypeManager;
 
   /**
-   * Constructs a PathautoSettingsForm.
-   *
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   Defines the configuration object factory.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   Manages entity type plugin definitions.
-   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
-   *   Manages the discovery of entity fields.
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
-   *   Manage drupal modules.
-   * @param \Drupal\pathauto\AliasCleanerInterface $pathauto_alias_cleaner
-   *   Provides an alias cleaner.
-   * @param \Drupal\pathauto\AliasStorageHelperInterface $pathauto_alias_storage_helper
-   *   Provides helper methods for accessing alias storage.
-   * @param \Drupal\pathauto\AliasTypeManager $alias_type_manager
-   *   Manages pathauto alias type plugins.
-   */
-  public function __construct(ConfigFactoryInterface $config_factory, EntityTypeManagerInterface $entity_type_manager, EntityFieldManagerInterface $entity_field_manager, ModuleHandlerInterface $module_handler, AliasCleanerInterface $pathauto_alias_cleaner, AliasStorageHelperInterface $pathauto_alias_storage_helper, AliasTypeManager $alias_type_manager) {
-    parent::__construct($config_factory);
-    $this->entityTypeManager = $entity_type_manager;
-    $this->entityFieldManager = $entity_field_manager;
-    $this->moduleHandler = $module_handler;
-    $this->aliasCleaner = $pathauto_alias_cleaner;
-    $this->aliasStorageHelper = $pathauto_alias_storage_helper;
-    $this->aliasTypeManager = $alias_type_manager;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('config.factory'),
-      $container->get('entity_type.manager'),
-      $container->get('entity_field.manager'),
-      $container->get('module_handler'),
-      $container->get('pathauto.alias_cleaner'),
-      $container->get('pathauto.alias_storage_helper'),
-      $container->get('plugin.manager.alias_type')
-    );
+    $form = parent::create($container);
+    $form->entityTypeManager = $container->get('entity_type.manager');
+    $form->entityFieldManager = $container->get('entity_field.manager');
+    $form->moduleHandler = $container->get('module_handler');
+    $form->aliasCleaner = $container->get('pathauto.alias_cleaner');
+    $form->aliasStorageHelper = $container->get('pathauto.alias_storage_helper');
+    $form->aliasTypeManager = $container->get('plugin.manager.alias_type');
+    return $form;
   }
 
   /**
@@ -147,10 +118,11 @@ class PathautoSettingsForm extends ConfigFormBase {
 
       if (is_subclass_of($entity_type->getClass(), FieldableEntityInterface::class) && $entity_type->hasLinkTemplate('canonical')) {
         $field_definitions = $this->entityFieldManager->getBaseFieldDefinitions($entity_type_id);
+        $enabled_entity_types = $config->get('enabled_entity_types') ?? [];
         $form['enabled_entity_types'][$entity_type_id] = [
           '#type' => 'checkbox',
           '#title' => $entity_type->getLabel(),
-          '#default_value' => isset($field_definitions['path']) || in_array($entity_type_id, $config->get('enabled_entity_types')),
+          '#default_value' => isset($field_definitions['path']) || in_array($entity_type_id, $enabled_entity_types),
           '#disabled' => isset($field_definitions['path']) && ($field_definitions['path']->getProvider() != 'pathauto' || $patterns_count),
         ];
       }
@@ -252,7 +224,7 @@ class PathautoSettingsForm extends ConfigFormBase {
     $form['safe_tokens'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Safe tokens'),
-      '#default_value' => implode(', ', $config->get('safe_tokens')),
+      '#default_value' => $config->get('safe_tokens') ? implode(', ', $config->get('safe_tokens')) : NULL,
       '#description' => $this->t('List of tokens that are safe to use in alias patterns and do not need to be cleaned. For example urls, aliases, machine names. Separated with a comma.'),
     ];
 

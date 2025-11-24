@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image\Kernel\Views;
 
 use Drupal\field\Entity\FieldStorageConfig;
@@ -15,9 +17,7 @@ use Drupal\views\Views;
 class ImageViewsDataTest extends ViewsKernelTestBase {
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'image',
@@ -43,7 +43,7 @@ class ImageViewsDataTest extends ViewsKernelTestBase {
    * @see image_field_views_data()
    * @see image_field_views_data_views_data_alter()
    */
-  public function testRelationshipViewsData() {
+  public function testRelationshipViewsData(): void {
     // Create image field to entity_test.
     FieldStorageConfig::create([
       'entity_type' => 'entity_test',

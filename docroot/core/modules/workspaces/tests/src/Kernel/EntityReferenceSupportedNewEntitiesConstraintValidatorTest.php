@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\workspaces\Kernel;
 
+use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\entity_test\Entity\EntityTestMulRevPub;
@@ -25,7 +28,6 @@ class EntityReferenceSupportedNewEntitiesConstraintValidatorTest extends KernelT
     'user',
     'workspaces',
     'entity_test',
-    'path_alias',
   ];
 
   /**
@@ -33,7 +35,7 @@ class EntityReferenceSupportedNewEntitiesConstraintValidatorTest extends KernelT
    *
    * @var \Drupal\Core\Entity\EntityTypeManager
    */
-  protected $entityTypeManager;
+  protected EntityTypeManager $entityTypeManager;
 
   /**
    * {@inheritdoc}
@@ -42,7 +44,6 @@ class EntityReferenceSupportedNewEntitiesConstraintValidatorTest extends KernelT
     parent::setUp();
 
     $this->installEntitySchema('user');
-    $this->installSchema('system', ['sequences']);
     $this->createUser();
 
     $fields['supported_reference'] = BaseFieldDefinition::create('entity_reference')->setSetting('target_type', 'entity_test_mulrevpub');
@@ -56,7 +57,7 @@ class EntityReferenceSupportedNewEntitiesConstraintValidatorTest extends KernelT
   /**
    * @covers ::validate
    */
-  public function testNewEntitiesAllowedInDefaultWorkspace() {
+  public function testNewEntitiesAllowedInDefaultWorkspace(): void {
     $entity = EntityTestMulRevPub::create([
       'unsupported_reference' => [
         'entity' => EntityTest::create([]),
@@ -71,7 +72,7 @@ class EntityReferenceSupportedNewEntitiesConstraintValidatorTest extends KernelT
   /**
    * @covers ::validate
    */
-  public function testNewEntitiesForbiddenInNonDefaultWorkspace() {
+  public function testNewEntitiesForbiddenInNonDefaultWorkspace(): void {
     $this->switchToWorkspace('stage');
     $entity = EntityTestMulRevPub::create([
       'unsupported_reference' => [
@@ -83,7 +84,7 @@ class EntityReferenceSupportedNewEntitiesConstraintValidatorTest extends KernelT
     ]);
     $violations = $entity->validate();
     $this->assertCount(1, $violations);
-    $this->assertEquals('<em class="placeholder">Test entity entities</em> can only be created in the default workspace.', $violations[0]->getMessage());
+    $this->assertEquals('Test entity entities can only be created in the default workspace.', $violations[0]->getMessage());
   }
 
 }

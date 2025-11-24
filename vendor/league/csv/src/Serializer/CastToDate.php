@@ -35,7 +35,7 @@ final class CastToDate implements TypeCasting
     private readonly bool $isNullable;
     private DateTimeImmutable|DateTime|null $default = null;
     private readonly Type $type;
-    private readonly string $propertyName;
+    private readonly TypeCastingInfo $info;
     private ?DateTimeZone $timezone = null;
     private ?string $format = null;
 
@@ -46,7 +46,7 @@ final class CastToDate implements TypeCasting
         ReflectionProperty|ReflectionParameter $reflectionProperty,
     ) {
         [$this->type, $this->class, $this->isNullable] = $this->init($reflectionProperty);
-        $this->propertyName = $reflectionProperty->getName();
+        $this->info = TypeCastingInfo::fromAccessor($reflectionProperty);
     }
 
     /**
@@ -58,13 +58,13 @@ final class CastToDate implements TypeCasting
         ?string $default = null,
         ?string $format = null,
         DateTimeZone|string|null $timezone = null,
-        ?string $className = null
+        ?string $className = null,
     ): void {
         $this->class = match (true) {
             !interface_exists($this->class) && !Type::Mixed->equals($this->type) => $this->class,
             DateTimeInterface::class === $this->class && null === $className => DateTimeImmutable::class,
             interface_exists($this->class) && null !== $className && class_exists($className) && (new ReflectionClass($className))->implementsInterface($this->class) => $className,
-            default => throw new MappingFailed('`'.$this->propertyName.'` type is `'.($this->class ?? 'mixed').'` but the specified class via the `$className` argument is invalid or could not be found.'),
+            default => throw new MappingFailed('`'.$this->info->targetName.'` type is `'.($this->class ?? 'mixed').'` but the specified class via the `$className` argument is invalid or could not be found.'),
         };
 
         try {
@@ -76,23 +76,38 @@ final class CastToDate implements TypeCasting
         }
     }
 
+    public function info(): TypeCastingInfo
+    {
+        return $this->info;
+    }
+
     /**
      * @throws TypeCastingFailed
      */
-    public function toVariable(?string $value): DateTimeImmutable|DateTime|null
+    public function toVariable(mixed $value): DateTimeImmutable|DateTime|null
     {
         return match (true) {
             null !== $value && '' !== $value => $this->cast($value),
             $this->isNullable => $this->default,
-            default => throw TypeCastingFailed::dueToNotNullableType($this->class),
+            default => throw TypeCastingFailed::dueToNotNullableType($this->class, info: $this->info),
         };
     }
 
     /**
      * @throws TypeCastingFailed
      */
-    private function cast(string $value): DateTimeImmutable|DateTime
+    private function cast(mixed $value): DateTimeImmutable|DateTime
     {
+        if ($value instanceof DateTimeInterface) {
+            if ($value instanceof $this->class) {
+                return $value;
+            }
+
+            return ($this->class)::createFromInterface($value);
+        }
+
+        is_string($value) || throw TypeCastingFailed::dueToInvalidValue($value, $this->class, info: $this->info);
+
         try {
             $date = null !== $this->format ?
                 ($this->class)::createFromFormat($this->format, $value, $this->timezone) :
@@ -105,7 +120,7 @@ final class CastToDate implements TypeCasting
                 throw $exception;
             }
 
-            throw TypeCastingFailed::dueToInvalidValue($value, $this->class, $exception);
+            throw TypeCastingFailed::dueToInvalidValue($value, $this->class, $exception, $this->info);
         }
 
         return $date;
@@ -134,9 +149,7 @@ final class CastToDate implements TypeCasting
             }
         }
 
-        if (null === $type) {
-            throw throw MappingFailed::dueToTypeCastingUnsupportedType($reflectionProperty, $this, DateTimeInterface::class, 'mixed');
-        }
+        null !== $type || throw throw MappingFailed::dueToTypeCastingUnsupportedType($reflectionProperty, $this, DateTimeInterface::class, 'mixed');
 
         /** @var class-string<DateTimeInterface> $className */
         $className = $type[1]->getName();

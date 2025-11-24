@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\advancedqueue\Unit;
 
 use Drupal\advancedqueue\Job;
@@ -17,7 +19,7 @@ class JobTest extends UnitTestCase {
    * @covers ::getPayload
    * @covers ::getState
    */
-  public function testCreate() {
+  public function testCreate(): void {
     $job = Job::create('test', ['my' => 'data']);
     $this->assertEquals('test', $job->getType());
     $this->assertEquals(['my' => 'data'], $job->getPayload());
@@ -27,7 +29,7 @@ class JobTest extends UnitTestCase {
   /**
    * @covers ::__construct
    */
-  public function testIncompleteDefinition() {
+  public function testIncompleteDefinition(): void {
     $this->expectException(\InvalidArgumentException::class);
     $this->expectExceptionMessage('Missing property "type"');
     new Job([
@@ -39,7 +41,7 @@ class JobTest extends UnitTestCase {
   /**
    * @covers ::__construct
    */
-  public function testInvalidState() {
+  public function testInvalidState(): void {
     $this->expectException(\InvalidArgumentException::class);
     $this->expectExceptionMessage('Invalid state "INVALID" given');
     new Job([
@@ -73,7 +75,7 @@ class JobTest extends UnitTestCase {
    * @covers ::getExpiresTime
    * @covers ::setExpiresTime
    */
-  public function testConstructor() {
+  public function testConstructor(): void {
     $job_definition = [
       'id' => 1,
       'queue_id' => 'default',
@@ -85,6 +87,8 @@ class JobTest extends UnitTestCase {
       // A queued job wouldn't have these two set, but we need it for the test.
       'message' => 'Test',
       'processed' => 1509018586,
+      'num_retries' => 0,
+      'fingerprint' => NULL,
     ];
     $job = new Job($job_definition);
 

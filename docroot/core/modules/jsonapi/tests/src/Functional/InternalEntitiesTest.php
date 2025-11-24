@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\jsonapi\Functional;
 
 use Drupal\Component\Serialization\Json;
@@ -8,7 +10,7 @@ use Drupal\entity_test\Entity\EntityTestBundle;
 use Drupal\entity_test\Entity\EntityTestNoLabel;
 use Drupal\entity_test\Entity\EntityTestWithBundle;
 use Drupal\Tests\BrowserTestBase;
-use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 
 /**
  * Makes assertions about the JSON:API behavior for internal entities.
@@ -19,7 +21,7 @@ use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
  */
 class InternalEntitiesTest extends BrowserTestBase {
 
-  use EntityReferenceTestTrait;
+  use EntityReferenceFieldCreationTrait;
 
   /**
    * {@inheritdoc}
@@ -59,7 +61,7 @@ class InternalEntitiesTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  public function setUp(): void {
+  protected function setUp(): void {
     parent::setUp();
     $this->testUser = $this->drupalCreateUser([
       'view test entity',
@@ -89,7 +91,7 @@ class InternalEntitiesTest extends BrowserTestBase {
   /**
    * Ensures that internal resources types aren't present in the entry point.
    */
-  public function testEntryPoint() {
+  public function testEntryPoint(): void {
     $document = $this->jsonapiGet('/jsonapi');
     $this->assertArrayNotHasKey(
       "{$this->internalEntity->getEntityTypeId()}--{$this->internalEntity->bundle()}",
@@ -101,7 +103,7 @@ class InternalEntitiesTest extends BrowserTestBase {
   /**
    * Ensures that internal resources types aren't present in the routes.
    */
-  public function testRoutes() {
+  public function testRoutes(): void {
     // This cannot be in a data provider because it needs values created by the
     // setUp method.
     $paths = [
@@ -119,7 +121,7 @@ class InternalEntitiesTest extends BrowserTestBase {
   /**
    * Asserts that internal entities are not included in compound documents.
    */
-  public function testIncludes() {
+  public function testIncludes(): void {
     $document = $this->getIndividual($this->referencingEntity, [
       'query' => ['include' => 'field_internal'],
     ]);
@@ -133,7 +135,7 @@ class InternalEntitiesTest extends BrowserTestBase {
   /**
    * Asserts that links to internal relationships aren't generated.
    */
-  public function testLinks() {
+  public function testLinks(): void {
     $document = $this->getIndividual($this->referencingEntity);
     $this->assertArrayNotHasKey(
       'related',

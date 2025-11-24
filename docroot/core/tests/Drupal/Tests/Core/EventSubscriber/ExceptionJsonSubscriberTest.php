@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\EventSubscriber;
 
 use Drupal\Core\Cache\CacheableJsonResponse;
@@ -24,10 +26,10 @@ class ExceptionJsonSubscriberTest extends UnitTestCase {
    * @covers ::on4xx
    * @dataProvider providerTestOn4xx
    */
-  public function testOn4xx(HttpExceptionInterface $exception, $expected_response_class) {
+  public function testOn4xx(HttpExceptionInterface $exception, $expected_response_class): void {
     $kernel = $this->prophesize(HttpKernelInterface::class);
     $request = Request::create('/test');
-    $event = new ExceptionEvent($kernel->reveal(), $request, HttpKernelInterface::MASTER_REQUEST, $exception);
+    $event = new ExceptionEvent($kernel->reveal(), $request, HttpKernelInterface::MAIN_REQUEST, $exception);
     $subscriber = new ExceptionJsonSubscriber();
     $subscriber->on4xx($event);
     $response = $event->getResponse();
@@ -39,7 +41,7 @@ class ExceptionJsonSubscriberTest extends UnitTestCase {
     $this->assertEquals('application/json', $response->headers->get('Content-Type'));
   }
 
-  public function providerTestOn4xx() {
+  public static function providerTestOn4xx() {
     return [
       'uncacheable exception' => [
         new MethodNotAllowedHttpException(['POST', 'PUT'], 'test message'),

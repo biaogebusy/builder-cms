@@ -2,8 +2,10 @@
 
 namespace Drupal\paragraphs_library\Plugin\Field\FieldFormatter;
 
+use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\paragraphs\Plugin\Field\FieldFormatter\ParagraphsSummaryFormatter;
 
 /**
@@ -17,6 +19,13 @@ use Drupal\paragraphs\Plugin\Field\FieldFormatter\ParagraphsSummaryFormatter;
  *   }
  * )
  */
+#[FieldFormatter(
+  id: 'library_item_summary',
+  label: new TranslatableMarkup('Library item summary'),
+  field_types: [
+    'entity_reference_revisions'
+  ]
+)]
 class LibraryItemSummaryFormatter extends ParagraphsSummaryFormatter {
 
   /**

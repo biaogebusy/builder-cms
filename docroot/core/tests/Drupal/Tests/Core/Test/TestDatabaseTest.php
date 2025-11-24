@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Test;
 
 use Drupal\Core\Test\TestDatabase;
@@ -17,7 +19,7 @@ class TestDatabaseTest extends UnitTestCase {
   /**
    * @covers ::__construct
    */
-  public function testConstructorException() {
+  public function testConstructorException(): void {
     $this->expectException(\InvalidArgumentException::class);
     $this->expectExceptionMessage("Invalid database prefix: blah1253");
     new TestDatabase('blah1253');
@@ -27,19 +29,21 @@ class TestDatabaseTest extends UnitTestCase {
    * @covers ::__construct
    * @covers ::getDatabasePrefix
    * @covers ::getTestSitePath
+   * @covers ::getPhpErrorLogPath
    *
    * @dataProvider providerTestConstructor
    */
-  public function testConstructor($db_prefix, $expected_db_prefix, $expected_site_path) {
+  public function testConstructor($db_prefix, $expected_db_prefix, $expected_site_path): void {
     $test_db = new TestDatabase($db_prefix);
     $this->assertEquals($expected_db_prefix, $test_db->getDatabasePrefix());
     $this->assertEquals($expected_site_path, $test_db->getTestSitePath());
+    $this->assertEquals($expected_site_path . '/error.log', $test_db->getPhpErrorLogPath());
   }
 
   /**
    * Data provider for self::testConstructor()
    */
-  public function providerTestConstructor() {
+  public static function providerTestConstructor() {
     return [
       ['test1234', 'test1234', 'sites/simpletest/1234'],
       ['test123456test234567', 'test123456test234567', 'sites/simpletest/234567'],
@@ -50,14 +54,18 @@ class TestDatabaseTest extends UnitTestCase {
    * Verify that a test lock is generated if there is no provided prefix.
    *
    * @covers ::__construct
+   * @covers ::getDatabasePrefix
+   * @covers ::getTestSitePath
+   * @covers ::getPhpErrorLogPath
    */
-  public function testConstructorNullPrefix() {
+  public function testConstructorNullPrefix(): void {
     // We use a stub class here because we can't mock getTestLock() so that it's
     // available before the constructor is called.
     $test_db = new TestTestDatabase(NULL);
 
     $this->assertEquals('test23', $test_db->getDatabasePrefix());
     $this->assertEquals('sites/simpletest/23', $test_db->getTestSitePath());
+    $this->assertEquals('sites/simpletest/23/error.log', $test_db->getPhpErrorLogPath());
   }
 
 }
@@ -67,7 +75,7 @@ class TestDatabaseTest extends UnitTestCase {
  */
 class TestTestDatabase extends TestDatabase {
 
-  protected function getTestLock($create_lock = FALSE) {
+  protected function getTestLock(bool $create_lock = FALSE): int {
     return 23;
   }
 

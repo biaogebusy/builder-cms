@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Functional\Boolean;
 
 use Drupal\field\Entity\FieldConfig;
@@ -14,9 +16,7 @@ use Drupal\Tests\BrowserTestBase;
 class BooleanFormatterSettingsTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['field', 'field_ui', 'text', 'node', 'user'];
 
@@ -46,7 +46,7 @@ class BooleanFormatterSettingsTest extends BrowserTestBase {
     parent::setUp();
 
     // Create a content type. Use Node because it has Field UI pages that work.
-    $type_name = mb_strtolower($this->randomMachineName(8)) . '_test';
+    $type_name = $this->randomMachineName(8) . '_test';
     $type = $this->drupalCreateContentType(['name' => $type_name, 'type' => $type_name]);
     $this->bundle = $type->id();
 
@@ -60,7 +60,7 @@ class BooleanFormatterSettingsTest extends BrowserTestBase {
     ]);
     $this->drupalLogin($admin_user);
 
-    $this->fieldName = mb_strtolower($this->randomMachineName(8));
+    $this->fieldName = $this->randomMachineName(8);
 
     $field_storage = FieldStorageConfig::create([
       'field_name' => $this->fieldName,
@@ -88,7 +88,7 @@ class BooleanFormatterSettingsTest extends BrowserTestBase {
   /**
    * Tests the formatter settings page for the Boolean formatter.
    */
-  public function testBooleanFormatterSettings() {
+  public function testBooleanFormatterSettings(): void {
     // List the options we expect to see on the settings form. Omit the one
     // with the Unicode check/x characters, which does not appear to work
     // well in BrowserTestBase.

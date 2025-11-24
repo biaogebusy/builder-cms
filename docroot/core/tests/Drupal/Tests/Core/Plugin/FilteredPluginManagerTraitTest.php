@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Plugin;
 
 use Drupal\Component\Plugin\PluginManagerBase;
@@ -20,7 +22,7 @@ class FilteredPluginManagerTraitTest extends UnitTestCase {
    * @covers ::getFilteredDefinitions
    * @dataProvider providerTestGetFilteredDefinitions
    */
-  public function testGetFilteredDefinitions($contexts, $expected) {
+  public function testGetFilteredDefinitions($contexts, $expected): void {
     // Start with two plugins.
     $definitions = [];
     $definitions['plugin1'] = ['id' => 'plugin1'];
@@ -54,7 +56,7 @@ class FilteredPluginManagerTraitTest extends UnitTestCase {
   /**
    * Provides test data for ::testGetFilteredDefinitions().
    */
-  public function providerTestGetFilteredDefinitions() {
+  public static function providerTestGetFilteredDefinitions() {
     $data = [];
     $data['populated context'] = [
       ['context1' => 'fake context'],
@@ -110,7 +112,7 @@ class TestFilteredPluginManager extends PluginManagerBase implements FilteredPlu
     return $this->themeManager;
   }
 
-  protected function getType() {
+  protected function getType(): string {
     return 'the_type';
   }
 

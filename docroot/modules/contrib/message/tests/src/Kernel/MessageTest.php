@@ -244,8 +244,16 @@ class MessageTest extends KernelTestBase {
 
   /**
    * Test callback method for ::testGetTextArgumentProcessing().
+   *
+   * @param string $arg_1
+   *   The first argument.
+   * @param \Drupal\message\MessageInterface|null $message
+   *   The message object.
+   *
+   * @return string
+   *   The text.
    */
-  public static function argumentCallback($arg_1, MessageInterface $message = NULL) {
+  public static function argumentCallback($arg_1, ?MessageInterface $message = NULL) {
     if ($message) {
       // Use the message ID appended to replacement text.
       $text = $arg_1 . '_' . $message->id();

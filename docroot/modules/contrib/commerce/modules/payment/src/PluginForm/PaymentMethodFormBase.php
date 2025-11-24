@@ -2,11 +2,11 @@
 
 namespace Drupal\commerce_payment\PluginForm;
 
-use Drupal\commerce\InlineFormManager;
-use Drupal\commerce_store\CurrentStoreInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\commerce\InlineFormManager;
+use Drupal\commerce_store\CurrentStoreInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 

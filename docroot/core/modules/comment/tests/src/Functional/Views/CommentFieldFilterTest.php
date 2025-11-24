@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Functional\Views;
 
 use Drupal\language\Entity\ConfigurableLanguage;
@@ -83,7 +85,7 @@ class CommentFieldFilterTest extends CommentTestBase {
   /**
    * Tests body and title filters.
    */
-  public function testFilters() {
+  public function testFilters(): void {
     // Test the title filter page, which filters for title contains 'Comida'.
     // Should show just the Spanish translation, once.
     $this->assertPageCounts('test-title-filter', ['es' => 1, 'fr' => 0, 'en' => 0], 'Comida title filter');

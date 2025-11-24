@@ -1,14 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\flag_follower\Functional;
 
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Tests\BrowserTestBase;
+
 /**
  * UI Test for flag_follower.
  *
  * @group flag_follower
  */
 class FlagFollowerUITest extends BrowserTestBase {
+
+  use StringTranslationTrait;
 
   /**
    * {@inheritdoc}
@@ -59,21 +65,21 @@ class FlagFollowerUITest extends BrowserTestBase {
   /**
    * Node A created by User A.
    *
-   * @var \Drupal\Node\NodeInterface
+   * @var \Drupal\node\NodeInterface
    */
   protected $nodeA;
 
   /**
    * Node B created by User B.
    *
-   * @var \Drupal\Node\NodeInterface
+   * @var \Drupal\node\NodeInterface
    */
   protected $nodeB;
 
   /**
    * Node C created by User C.
    *
-   * @var \Drupal\Node\NodeInterface
+   * @var \Drupal\node\NodeInterface
    */
   protected $nodeC;
 
@@ -132,7 +138,7 @@ class FlagFollowerUITest extends BrowserTestBase {
   }
 
   /**
-   * Perform all fallover tests.
+   * Perform all follower tests.
    */
   public function testUi() {
     $this->doUserFlagging();
@@ -149,16 +155,16 @@ class FlagFollowerUITest extends BrowserTestBase {
     // User A follows user C.
     $this->drupalLogin($this->userA);
     $this->drupalGet('user/' . $this->userC->id());
-    $this->clickLink(t('Follow this user'));
+    $this->clickLink($this->t('Follow this user'));
 
     // User B follows user A.
     $this->drupalLogin($this->userB);
     $this->drupalGet('user/' . $this->userA->id());
-    $this->clickLink(t('Follow this user'));
+    $this->clickLink($this->t('Follow this user'));
 
     // User B also follows user C.
     $this->drupalGet('user/' . $this->userC->id());
-    $this->clickLink(t('Follow this user'));
+    $this->clickLink($this->t('Follow this user'));
 
     // User C follows no one.
   }

@@ -3,6 +3,8 @@
 namespace Drupal\field_group\Plugin\field_group\FieldGroupFormatter;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility\Xss;
+use Drupal\Core\Render\Markup;
 use Drupal\field_group\FieldGroupFormatterBase;
 
 /**
@@ -34,7 +36,7 @@ class Tab extends FieldGroupFormatterBase {
 
     $add = [
       '#type' => 'details',
-      '#title' => $this->getLabel(),
+      '#title' => $this->getSetting('label_as_html') ? Markup::create(Xss::filterAdmin($this->getLabel())) : Markup::create(Html::escape($this->getLabel())),
       '#description' => $this->getSetting('description'),
       '#group' => $this->group->parent_name,
     ];
@@ -64,6 +66,8 @@ class Tab extends FieldGroupFormatterBase {
 
     $element += $add;
 
+    // Add tab validation behavior.
+    $element['#attached']['library'][] = 'field_group/tab_validation';
   }
 
   /**

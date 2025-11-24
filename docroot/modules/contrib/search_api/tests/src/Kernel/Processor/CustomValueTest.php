@@ -6,6 +6,7 @@ use Drupal\comment\Entity\Comment;
 use Drupal\node\Entity\Node;
 use Drupal\search_api\Item\Field;
 use Drupal\search_api\Utility\Utility;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the "Custom value" processor.
@@ -14,6 +15,7 @@ use Drupal\search_api\Utility\Utility;
  *
  * @coversDefaultClass \Drupal\search_api\Plugin\search_api\processor\CustomValue
  */
+#[RunTestsInSeparateProcesses]
 class CustomValueTest extends ProcessorTestBase {
 
   /**
@@ -49,6 +51,13 @@ class CustomValueTest extends ProcessorTestBase {
     $field->setPropertyPath('custom_value');
     $field->setLabel('Type/Author');
     $field->setConfiguration(['value' => '[node:type] [comment:author]']);
+    $this->index->addField($field);
+
+    $field = new Field($this->index, 'custom_value_fixed');
+    $field->setType('string');
+    $field->setPropertyPath('custom_value');
+    $field->setLabel('Some value');
+    $field->setConfiguration(['value' => 'Value without tokens']);
     $this->index->addField($field);
 
     $this->index->save();
@@ -93,6 +102,7 @@ class CustomValueTest extends ProcessorTestBase {
     $this->assertEquals($expected, $fields['custom_value_nodes']->getValues());
     $this->assertEquals([], $fields['custom_value_comments']->getValues());
     $this->assertEquals($expected, $fields['custom_value_both']->getValues());
+    $this->assertEquals(['Value without tokens'], $fields['custom_value_fixed']->getValues());
 
     // Test field value on comment.
     $comment = $this->entities['comment'];
@@ -107,6 +117,7 @@ class CustomValueTest extends ProcessorTestBase {
     $this->assertEquals([], $fields['custom_value_nodes']->getValues());
     $this->assertEquals($expected, $fields['custom_value_comments']->getValues());
     $this->assertEquals($expected, $fields['custom_value_both']->getValues());
+    $this->assertEquals(['Value without tokens'], $fields['custom_value_fixed']->getValues());
   }
 
 }

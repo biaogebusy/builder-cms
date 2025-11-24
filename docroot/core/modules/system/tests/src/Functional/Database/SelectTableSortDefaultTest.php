@@ -1,8 +1,8 @@
 <?php
 
-namespace Drupal\Tests\system\Functional\Database;
+declare(strict_types=1);
 
-use Drupal\Component\Render\FormattableMarkup;
+namespace Drupal\Tests\system\Functional\Database;
 
 /**
  * Tests the tablesort query extender.
@@ -22,13 +22,13 @@ class SelectTableSortDefaultTest extends DatabaseTestBase {
    * Note that we have to make an HTTP request to a test page handler
    * because the pager depends on GET parameters.
    */
-  public function testTableSortQuery() {
+  public function testTableSortQuery(): void {
     $sorts = [
       ['field' => 'Task ID', 'sort' => 'desc', 'first' => 'perform at superbowl', 'last' => 'eat'],
       ['field' => 'Task ID', 'sort' => 'asc', 'first' => 'eat', 'last' => 'perform at superbowl'],
       ['field' => 'Task', 'sort' => 'asc', 'first' => 'code', 'last' => 'sleep'],
       ['field' => 'Task', 'sort' => 'desc', 'first' => 'sleep', 'last' => 'code'],
-      // more elements here
+      // More elements here
 
     ];
 
@@ -50,13 +50,13 @@ class SelectTableSortDefaultTest extends DatabaseTestBase {
    * If a tablesort's orderByHeader is called before another orderBy, then its
    * header happens first.
    */
-  public function testTableSortQueryFirst() {
+  public function testTableSortQueryFirst(): void {
     $sorts = [
       ['field' => 'Task ID', 'sort' => 'desc', 'first' => 'perform at superbowl', 'last' => 'eat'],
       ['field' => 'Task ID', 'sort' => 'asc', 'first' => 'eat', 'last' => 'perform at superbowl'],
       ['field' => 'Task', 'sort' => 'asc', 'first' => 'code', 'last' => 'sleep'],
       ['field' => 'Task', 'sort' => 'desc', 'first' => 'sleep', 'last' => 'code'],
-      // more elements here
+      // More elements here
 
     ];
 
@@ -67,8 +67,8 @@ class SelectTableSortDefaultTest extends DatabaseTestBase {
       $first = array_shift($data->tasks);
       $last = array_pop($data->tasks);
 
-      $this->assertEquals($sort['first'], $first->task, new FormattableMarkup('Items appear in the correct order sorting by @field @sort.', ['@field' => $sort['field'], '@sort' => $sort['sort']]));
-      $this->assertEquals($sort['last'], $last->task, new FormattableMarkup('Items appear in the correct order sorting by @field @sort.', ['@field' => $sort['field'], '@sort' => $sort['sort']]));
+      $this->assertEquals($sort['first'], $first->task, "Items appear in the correct order sorting by {$sort['field']} {$sort['sort']}.");
+      $this->assertEquals($sort['last'], $last->task, "Items appear in the correct order sorting by {$sort['field']} {$sort['sort']}.");
     }
   }
 
@@ -78,7 +78,7 @@ class SelectTableSortDefaultTest extends DatabaseTestBase {
    * Specifically that no sort is set in a tableselect, and that header links
    * are correct.
    */
-  public function testTableSortDefaultSort() {
+  public function testTableSortDefaultSort(): void {
     $assert = $this->assertSession();
 
     $this->drupalGet('database_test/tablesort_default_sort');

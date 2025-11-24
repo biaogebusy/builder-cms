@@ -2,18 +2,18 @@
 
 namespace Drupal\field\Plugin\migrate\process\d7;
 
+use Drupal\migrate\Attribute\MigrateProcess;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\ProcessPluginBase;
 use Drupal\migrate\Row;
 
 /**
  * Determines the settings property and translation for boolean fields.
- *
- * @MigrateProcessPlugin(
- *   id = "d7_field_instance_option_translation",
- *   handle_multiples = TRUE
- * )
  */
+#[MigrateProcess(
+  id: "d7_field_instance_option_translation",
+  handle_multiples: TRUE,
+)]
 class FieldInstanceOptionTranslation extends ProcessPluginBase {
 
   /**
@@ -29,7 +29,7 @@ class FieldInstanceOptionTranslation extends ProcessPluginBase {
     if (isset($data['settings']['allowed_values'])) {
       $allowed_values = $data['settings']['allowed_values'];
       switch ($type) {
-        case 'boolean';
+        case 'boolean':
           if (isset($allowed_values[$property])) {
             $translation = $row->getSourceProperty('translation');
             break;

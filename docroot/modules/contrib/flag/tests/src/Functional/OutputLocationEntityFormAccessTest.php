@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\flag\Functional;
 
+use Drupal\Tests\BrowserTestBase;
 use Drupal\flag\Entity\Flag;
 use Drupal\node\Entity\Node;
 use Drupal\node\Entity\NodeType;
-use Drupal\Tests\BrowserTestBase;
 
 /**
  * Tests the entity form checkbox output respects flag access control.
@@ -42,14 +44,14 @@ class OutputLocationEntityFormAccessTest extends BrowserTestBase {
    *
    * @var \Drupal\flag\Entity\Flag
    */
-  protected $flag_granted;
+  protected $flagGranted;
 
   /**
    * A flag that denies access.
    *
    * @var \Drupal\flag\Entity\Flag
    */
-  protected $flag_denied;
+  protected $flagDenied;
 
   /**
    * {@inheritdoc}
@@ -61,7 +63,7 @@ class OutputLocationEntityFormAccessTest extends BrowserTestBase {
     $this->node = Node::create(['type' => 'page', 'title' => 'test']);
     $this->node->save();
 
-    $this->flag_granted = Flag::create([
+    $this->flagGranted = Flag::create([
       'id' => 'flag_granted',
       'label' => 'Flag allowed',
       'entity_type' => 'node',
@@ -77,9 +79,9 @@ class OutputLocationEntityFormAccessTest extends BrowserTestBase {
       'flag_short' => 'Flag this',
       'unflag_short' => 'Unflag this',
     ]);
-    $this->flag_granted->save();
+    $this->flagGranted->save();
 
-    $this->flag_denied = Flag::create([
+    $this->flagDenied = Flag::create([
       'id' => 'flag_denied',
       'label' => 'Flag denied',
       'entity_type' => 'node',
@@ -93,7 +95,7 @@ class OutputLocationEntityFormAccessTest extends BrowserTestBase {
       'flag_short' => 'Flag this',
       'unflag_short' => 'Unflag this',
     ]);
-    $this->flag_denied->save();
+    $this->flagDenied->save();
 
     // Create and login as an authenticated user.
     $auth_user = $this->drupalCreateUser([

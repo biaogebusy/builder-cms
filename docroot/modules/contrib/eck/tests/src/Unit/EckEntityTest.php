@@ -2,7 +2,7 @@
 
 namespace Drupal\Tests\eck\Unit;
 
-use Doctrine\Common\Annotations\SimpleAnnotationReader;
+use Drupal\Component\Annotation\Doctrine\SimpleAnnotationReader;
 use Drupal\Core\Annotation\Translation;
 use Drupal\Core\Entity\Annotation\ConfigEntityType;
 use Drupal\eck\Entity\EckEntity;

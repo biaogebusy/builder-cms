@@ -3,7 +3,7 @@
  * Buttons.
  */
 
-@import "../base/variables.pcss.css";
+@import "../base/media-queries.pcss.css";
 
 .button {
   display: inline-block;
@@ -16,8 +16,8 @@
   cursor: pointer;
   text-align: center;
   text-decoration: none;
-  color: var(--color--blue-20);
-  border: solid 2px var(--color--blue-20);
+  color: var(--color-text-primary-medium);
+  border: solid 2px currentColor;
   border-radius: var(--border-radius);
   background-color: var(--color--white);
   font-family: var(--font-sans);
@@ -29,27 +29,27 @@
   &:hover,
   &:focus {
     text-decoration: none;
-    color: var(--color--blue-10);
-    border: solid 2px var(--color--blue-10);
+    color: var(--color-text-primary-loud);
+    border: solid 2px currentColor;
     background: none;
     font-weight: 700;
   }
 
   &:focus {
-    outline: 2px solid var(--color--blue-70);
+    outline: 2px solid var(--color--primary-60);
     outline-offset: 2px;
   }
 
   &:active {
-    color: var(--color--blue-20);
-    border-color: var(--color--blue-20);
+    color: var(--color-text-primary-medium);
+    border-color: currentColor;
   }
 
   &:disabled,
   &.is-disabled {
     cursor: default;
-    color: var(--color--gray-70);
-    border-color: var(--color--gray-70);
+    color: var(--color--gray-90);
+    border-color: var(--color--gray-90);
   }
 
   /*
@@ -84,24 +84,25 @@
 
 .button--primary {
   color: var(--color--white);
-  background-color: var(--color--blue-20);
+  border-color: var(--color--primary-40);
+  background-color: var(--color--primary-40);
 
   &:hover,
   &:focus {
     color: var(--color--white);
-    border-color: var(--color--blue-10);
-    background-color: var(--color--blue-10);
+    border-color: var(--color--primary-30);
+    background-color: var(--color--primary-30);
   }
 
   &:active {
     color: var(--color--white);
-    background-color: var(--color--blue-20);
+    background-color: var(--color--primary-40);
   }
 
   &:disabled,
   &.is-disabled {
     color: var(--color--white);
-    background-color: var(--color--gray-70);
+    background-color: var(--color--gray-90);
   }
 }
 
@@ -109,7 +110,7 @@
   display: inline-flex;
   align-items: center;
 
-  &:before {
+  &::before {
     display: block;
     width: 0.5em;
     height: 0.5em;
@@ -121,7 +122,7 @@
   }
 }
 
-[dir="rtl"] .button--icon-back:before {
+[dir="rtl"] .button--icon-back::before {
   transform: rotate(-45deg);
 }
 

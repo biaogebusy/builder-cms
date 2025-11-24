@@ -59,12 +59,12 @@ class OffCanvasRenderer extends DialogRenderer {
     $main_content['#attached']['library'][] = 'core/drupal.dialog.off_canvas';
     $response->setAttachments($main_content['#attached']);
 
-    // If the main content doesn't provide a title, use the title resolver.
-    $title = $main_content['#title'] ?? $this->titleResolver->getTitle($request, $route_match->getRouteObject());
+    // Determine the title.
+    $title = $this->getTitleAsStringable($main_content, $request, $route_match);
 
     // Determine the title: use the title provided by the main content if any,
     // otherwise get it from the routing information.
-    $options = $request->request->get('dialogOptions', []);
+    $options = $request->request->all('dialogOptions');
     $response->addCommand(new OpenOffCanvasDialogCommand($title, $content, $options, NULL, $this->position));
     return $response;
   }

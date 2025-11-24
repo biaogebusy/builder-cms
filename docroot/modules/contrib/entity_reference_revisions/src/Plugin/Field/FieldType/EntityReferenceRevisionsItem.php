@@ -444,21 +444,6 @@ class EntityReferenceRevisionsItem extends EntityReferenceItem implements Option
             if (isset($dependencies[$bundle->getConfigDependencyKey()][$bundle->getConfigDependencyName()])) {
               unset($handler_settings['target_bundles'][$bundle->id()]);
               $changed = TRUE;
-
-              // In case we deleted the only target bundle allowed by the field
-              // we can log a message because the behaviour of the field will
-              // have changed.
-              if ($handler_settings['target_bundles'] === []) {
-                \Drupal::logger('entity_reference_revisions')
-                  ->notice('The %target_bundle bundle (entity type: %target_entity_type) was deleted. As a result, the %field_name entity reference revisions field (entity_type: %entity_type, bundle: %bundle) no longer specifies a specific target bundle. The field will now accept any bundle and may need to be adjusted.', [
-                    '%target_bundle' => $bundle->label(),
-                    '%target_entity_type' => $bundle->getEntityType()
-                      ->getBundleOf(),
-                    '%field_name' => $field_definition->getName(),
-                    '%entity_type' => $field_definition->getTargetEntityTypeId(),
-                    '%bundle' => $field_definition->getTargetBundle()
-                  ]);
-              }
             }
           }
         }

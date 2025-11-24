@@ -2,11 +2,11 @@
 
 namespace Drupal\Tests\commerce_promotion\Kernel\Plugin\Commerce\PromotionOffer;
 
-use Drupal\commerce_order\Entity\OrderItem;
+use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 use Drupal\commerce_order\Entity\Order;
+use Drupal\commerce_order\Entity\OrderItem;
 use Drupal\commerce_price\Price;
 use Drupal\commerce_promotion\Entity\Promotion;
-use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 
 /**
  * Tests the percentage off offer for orders.

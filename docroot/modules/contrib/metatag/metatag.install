@@ -125,7 +125,8 @@ function metatag_update_8109(&$sandbox) {
 
         // Determine the table and "value" field names.
         // @todo The class path to getTableMapping() seems to be invalid?
-        $table_mapping = Drupal::entityTypeManager()
+        /** @var \Drupal\Core\Entity\Sql\DefaultTableMapping $table_mapping */
+        $table_mapping = \Drupal::entityTypeManager()
           ->getStorage($field->getTargetEntityTypeId())
           ->getTableMapping();
         $field_table = $table_mapping->getFieldTableName($field_name);
@@ -151,7 +152,7 @@ function metatag_update_8109(&$sandbox) {
         $sandbox['fields'][$field_counter]['field_value_field'] = $field_value_field;
         $sandbox['fields'][$field_counter]['records'] = $records;
 
-        $sandbox['total_records'] += count($sandbox['fields'][$field_counter]['records'] = $records);
+        $sandbox['total_records'] += count($sandbox['fields'][$field_counter]['records']);
         $field_counter++;
       }
     }
@@ -229,4 +230,14 @@ function metatag_update_8109(&$sandbox) {
   else {
     return (string) t("There were no overridden Metatag records.");
   }
+}
+
+/**
+ * Sets tag_trim_end standard settings for existing installations.
+ */
+function metatag_update_9401() {
+  $config_factory = \Drupal::configFactory();
+  $config = $config_factory->getEditable('metatag.settings');
+  $config->set('tag_trim_end', "|.,-:;/+&([{\"'");
+  $config->save();
 }

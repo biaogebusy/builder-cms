@@ -6,11 +6,39 @@
  * .maintenance-page styling.
  */
 
-@import "../base/variables.pcss.css";
-
 .install-page {
   min-height: 100%;
   background-color: var(--color-gray-100);
+
+  & h1,
+  & h2 {
+    font-size: var(--font-size-h3);
+  }
+
+  & h3 {
+    font-size: var(--font-size-h4);
+  }
+
+  & .site-name {
+    margin-top: var(--space-s);
+    color: var(--color-gray);
+    font-size: var(--font-size-xl);
+  }
+
+  & .title {
+    margin-top: 0;
+    font-size: var(--font-size-h3);
+  }
+
+  & .content {
+    color: var(--color-gray);
+  }
+
+  & .site-name,
+  & .title,
+  & .content {
+    max-width: 34rem;
+  }
 }
 
 /**

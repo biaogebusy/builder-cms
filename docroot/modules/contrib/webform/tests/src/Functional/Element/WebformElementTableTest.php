@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\webform\Functional\Element;
 
+use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\webform\Entity\Webform;
 
 /**
@@ -46,7 +47,12 @@ class WebformElementTableTest extends WebformElementBrowserTestBase {
     $assert_session->responseContains('<table class="js-form-wrapper responsive-enabled" data-drupal-selector="edit-table" id="edit-table" data-striping="1">');
     $assert_session->responseMatches('#<th>First Name</th>\s+<th>Last Name</th>\s+<th>Gender</th>#');
     $assert_session->responseContains('<tr data-drupal-selector="edit-table-1">');
-    $assert_session->responseContains('<td><div class="js-form-item form-item js-form-type-textfield form-item-table__1__first-name js-form-item-table__1__first-name form-no-label">');
+    DeprecationHelper::backwardsCompatibleCall(
+      currentVersion: \Drupal::VERSION,
+      deprecatedVersion: '10.2',
+      currentCallable: fn() => $assert_session->responseContains('<td><div class="js-form-item form-item form-type-textfield js-form-type-textfield form-item-table__1__first-name js-form-item-table__1__first-name form-no-label">'),
+      deprecatedCallable: fn() => $assert_session->responseContains('<td><div class="js-form-item form-item js-form-type-textfield form-item-table__1__first-name js-form-item-table__1__first-name form-no-label">'),
+    );
     $assert_session->responseContains('<input data-drupal-selector="edit-table-1-first-name" type="text" id="edit-table-1-first-name" name="table__1__first_name" value="John" size="20" maxlength="255" class="form-text" />');
 
     // Check webform table basic rendering.
@@ -55,7 +61,12 @@ class WebformElementTableTest extends WebformElementBrowserTestBase {
     $assert_session->responseContains('<input data-drupal-selector="edit-table-basic-01-first-name" type="text" id="edit-table-basic-01-first-name" name="table_basic_01_first_name" value="" size="60" maxlength="255" class="form-text" />');
 
     // Check webform table advanced rendering.
-    $assert_session->responseContains('<table data-drupal-selector="edit-table-advanced" class="webform-table sticky-enabled responsive-enabled" id="edit-table-advanced" data-striping="1">');
+    DeprecationHelper::backwardsCompatibleCall(
+      currentVersion: \Drupal::VERSION,
+      deprecatedVersion: '10.3',
+      currentCallable: fn() => $assert_session->responseContains('<table data-drupal-selector="edit-table-advanced" class="webform-table sticky-header responsive-enabled" id="edit-table-advanced" data-striping="1">'),
+      deprecatedCallable: fn() => $assert_session->responseContains('<table data-drupal-selector="edit-table-advanced" class="webform-table sticky-enabled responsive-enabled" id="edit-table-advanced" data-striping="1">'),
+    );
     $assert_session->responseMatches('#<th width="50%">Composite</th>\s+<th width="50%">Nested</th>#');
 
     // Check webform table states rendering.
@@ -112,7 +123,12 @@ table_advanced_04_textfield: ''");
     $assert_session->responseContains('<section class="js-form-item form-item js-form-wrapper form-wrapper webform-section" id="test_element_table--table_advanced_01_container">');
 
     // Check states table display.
-    $assert_session->responseMatches('<div class="webform-element webform-element-type-webform-table js-form-item form-item js-form-type-item form-item-table-states js-form-item-table-states" id="test_element_table--table_states">');
+    DeprecationHelper::backwardsCompatibleCall(
+      currentVersion: \Drupal::VERSION,
+      deprecatedVersion: '10.2',
+      currentCallable: fn() => $assert_session->responseMatches('<div class="webform-element webform-element-type-webform-table js-form-item form-item form-type-item js-form-type-item form-item-table-states js-form-item-table-states" id="test_element_table--table_states">'),
+      deprecatedCallable: fn() => $assert_session->responseMatches('<div class="webform-element webform-element-type-webform-table js-form-item form-item js-form-type-item form-item-table-states js-form-item-table-states" id="test_element_table--table_states">'),
+    );
 
     /* ********************************************************************** */
     // User interface.

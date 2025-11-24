@@ -51,6 +51,11 @@ class Extension {
   protected $root;
 
   /**
+   * The extension info array.
+   */
+  public array $info;
+
+  /**
    * Constructs a new Extension object.
    *
    * @param string $root
@@ -155,12 +160,30 @@ class Extension {
    * Re-routes method calls to SplFileInfo.
    *
    * Offers all SplFileInfo methods to consumers; e.g., $extension->getMTime().
+   *
+   * @deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use
+   *   \Drupal\Core\Extension\Extension::getFileInfo() instead.
+   *
+   * @see https://www.drupal.org/node/2959989
    */
   public function __call($method, array $args) {
+    @trigger_error(__METHOD__ . "('$method')" . ' is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use \Drupal\Core\Extension\Extension::getFileInfo() instead. See https://www.drupal.org/node/3322608', E_USER_DEPRECATED);
+    return call_user_func_array([$this->getFileInfo(), $method], $args);
+  }
+
+  /**
+   * Returns SplFileInfo instance for the extension's info file.
+   *
+   * @return \SplFileInfo
+   *   The object to access a file information of info file.
+   *
+   * @see https://www.php.net/manual/class.splfileinfo.php
+   */
+  public function getFileInfo(): \SplFileInfo {
     if (!isset($this->splFileInfo)) {
       $this->splFileInfo = new \SplFileInfo($this->root . '/' . $this->pathname);
     }
-    return call_user_func_array([$this->splFileInfo, $method], $args);
+    return $this->splFileInfo;
   }
 
   /**
@@ -200,13 +223,7 @@ class Extension {
    *   TRUE if an extension is marked as experimental, FALSE otherwise.
    */
   public function isExperimental(): bool {
-    // Currently, this function checks for both the key/value pairs
-    // 'experimental: true' and 'lifecycle: experimental' to determine if an
-    // extension is marked as experimental.
-    // @todo Remove the check for 'experimental: true' as part of
-    // https://www.drupal.org/node/3250342
-    return (isset($this->info['experimental']) && $this->info['experimental'])
-    || (isset($this->info[ExtensionLifecycle::LIFECYCLE_IDENTIFIER])
+    return (isset($this->info[ExtensionLifecycle::LIFECYCLE_IDENTIFIER])
         && $this->info[ExtensionLifecycle::LIFECYCLE_IDENTIFIER] === ExtensionLifecycle::EXPERIMENTAL);
   }
 

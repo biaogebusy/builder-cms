@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\webform_example_element\Functional;
 
+use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\Tests\webform\Functional\WebformBrowserTestBase;
 use Drupal\webform\Entity\Webform;
 use Drupal\webform\Entity\WebformSubmission;
@@ -33,7 +34,12 @@ class WebformExampleElementTest extends WebformBrowserTestBase {
     // NOTE:
     // This is a very lazy but easy way to check that the element is rendering
     // as expected.
-    $assert_session->responseContains('<div class="js-form-item form-item js-form-type-webform-example-element form-item-webform-example-element js-form-item-webform-example-element">');
+    DeprecationHelper::backwardsCompatibleCall(
+      currentVersion: \Drupal::VERSION,
+      deprecatedVersion: '10.2',
+      currentCallable: fn() => $assert_session->responseContains('<div class="js-form-item form-item form-type-webform-example-element js-form-type-webform-example-element form-item-webform-example-element js-form-item-webform-example-element">'),
+      deprecatedCallable: fn() => $assert_session->responseContains('<div class="js-form-item form-item js-form-type-webform-example-element form-item-webform-example-element js-form-item-webform-example-element">'),
+    );
     $assert_session->responseContains('<label for="edit-webform-example-element">Webform Example Element</label>');
     $assert_session->responseContains('<input data-drupal-selector="edit-webform-example-element" type="text" id="edit-webform-example-element" name="webform_example_element" value="" size="60" class="form-text webform-example-element" />');
 

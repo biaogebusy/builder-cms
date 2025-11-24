@@ -2,10 +2,10 @@
 
 namespace Drupal\Tests\commerce_price\Kernel;
 
+use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
 use Drupal\commerce_price\Price;
 use Drupal\commerce_product\Entity\ProductVariation;
 use Drupal\commerce_store\StoreCreationTrait;
-use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
 
 /**
  * Tests price formatters provided by Price module.

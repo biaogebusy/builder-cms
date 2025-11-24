@@ -6,17 +6,17 @@ font files.
 
 ## Features:
 
-Uses the [PHP Font Lib](https://github.com/PhenX/php-font-lib) to read font
+Uses the [PHP Font Lib](https://github.com/dompdf/php-font-lib) to read font
 information from TTF/OTF/WOFF font files.
 
 
 ## Usage examples:
 
-1. Use the _file_metadata_manager_ service to prepare collecting metadata for
+1. Use the _FileMetadataManagerInterface::class_ service to prepare collecting metadata for
    the font located at a desired URI:
 
   ```php
-    $fmdm = \Drupal::service('file_metadata_manager');
+    $fmdm = \Drupal::service(FileMetadataManagerInterface::class);
     $my_font_metadata = $fmdm->uri('public::/my_font_directory/arial.ttf');
     ...
   ```

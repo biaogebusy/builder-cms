@@ -5,6 +5,8 @@ namespace Drupal\Tests\commerce_order\FunctionalJavascript;
 use Drupal\profile\Entity\Profile;
 use Drupal\profile\Entity\ProfileType;
 
+// cspell:ignore Cetinjska
+
 /**
  * Tests the customer_profile inline form.
  *

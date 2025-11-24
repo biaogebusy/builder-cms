@@ -86,6 +86,8 @@ class TcPdfv1 extends PrintEngineBase {
   public function addPage($content) {
     $this->tcpdf->AddPage($this->configuration['default_paper_orientation'], $this->configuration['default_paper_size']);
     $this->tcpdf->writeHTML($content);
+
+    return $this;
   }
 
   /**

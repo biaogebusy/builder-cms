@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\Tests\webform_cards\FunctionalJavaScript;
+namespace Drupal\Tests\webform_cards\FunctionalJavascript;
 
 use Drupal\Tests\webform\FunctionalJavascript\WebformWebDriverTestBase;
 use Drupal\webform\Entity\Webform;

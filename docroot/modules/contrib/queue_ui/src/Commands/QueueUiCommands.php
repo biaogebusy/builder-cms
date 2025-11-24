@@ -10,7 +10,7 @@ use Drupal\queue_ui\QueueUIManager;
 use Drush\Commands\DrushCommands;
 
 /**
- * A Drush commandfile.
+ * A Drush commands file.
  *
  * Provide Drush command for queue_ui module.
  *
@@ -23,41 +23,21 @@ class QueueUiCommands extends DrushCommands {
   use StringTranslationTrait;
 
   /**
-   * Queue worker manager.
-   *
-   * @var \Drupal\Core\Queue\QueueWorkerManagerInterface
-   */
-  protected $queueWorkerManager;
-
-  /**
-   * Queue UI manager.
-   *
-   * @var \Drupal\queue_ui\QueueUIManager
-   */
-  protected $queueUiManager;
-
-  /**
-   * Queue UI Batch service.
-   *
-   * @var \Drupal\queue_ui\QueueUIBatchInterface
-   */
-  protected $queueUiBatch;
-
-  /**
    * Constructor.
    *
-   * @param \Drupal\Core\Queue\QueueWorkerManagerInterface $queue_worker_manager
+   * @param \Drupal\Core\Queue\QueueWorkerManagerInterface $queueWorkerManager
    *   Queue worker manager.
-   * @param \Drupal\queue_ui\QueueUIManager $queue_ui_manager
+   * @param \Drupal\queue_ui\QueueUIManager $queueUiManager
    *   Queue UI manager.
-   * @param \Drupal\queue_ui\QueueUIBatchInterface $queue_ui_batch
+   * @param \Drupal\queue_ui\QueueUIBatchInterface $queueUiBatch
    *   Queue UI Batch service.
    */
-  public function __construct(QueueWorkerManagerInterface $queue_worker_manager, QueueUIManager $queue_ui_manager, QueueUIBatchInterface $queue_ui_batch) {
+  public function __construct(
+    protected QueueWorkerManagerInterface $queueWorkerManager,
+    protected QueueUIManager $queueUiManager,
+    protected QueueUIBatchInterface $queueUiBatch,
+  ) {
     parent::__construct();
-    $this->queueWorkerManager = $queue_worker_manager;
-    $this->queueUiManager = $queue_ui_manager;
-    $this->queueUiBatch = $queue_ui_batch;
   }
 
   /**
@@ -89,7 +69,7 @@ class QueueUiCommands extends DrushCommands {
    * @command queue:process
    * @aliases qp,queue-process
    */
-  public function process(string $queueName = NULL) {
+  public function process(?string $queueName = NULL) {
     // Require the choice name to be filled.
     if ($queueName = $this->queueChoice($queueName)) {
       // Add operations and start to batch process.
@@ -130,7 +110,7 @@ class QueueUiCommands extends DrushCommands {
    *
    * @throws \Drush\Exceptions\UserAbortException
    */
-  public function release(string $queueName = NULL): void {
+  public function release(?string $queueName = NULL): void {
     // Require the choice name to be filled.
     if ($queueName = $this->queueChoice($queueName)) {
       $this->releaseQueue($queueName);
@@ -182,7 +162,7 @@ class QueueUiCommands extends DrushCommands {
    *
    * @throws \Drush\Exceptions\UserAbortException
    */
-  protected function queueChoice(string $queueName = NULL): string {
+  protected function queueChoice(?string $queueName = NULL): string {
     // Queue name is not provided.
     if (empty($queueName)) {
       // Get all defined queue names.

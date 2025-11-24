@@ -28,18 +28,18 @@ elements: |
       '#type': webform_image_select_images
       '#title': webform_image_select_images_default_value
       '#default_value':
-        kitten_1:
-          text: 'Cute Kitten 1'
-          src: 'http://placekitten.com/220/200'
-        kitten_2:
-          text: 'Cute Kitten 2'
-          src: 'http://placekitten.com/180/200'
-        kitten_3:
-          text: 'Cute Kitten 3'
-          src: 'http://placekitten.com/130/200'
-        kitten_4:
-          text: 'Cute Kitten 4'
-          src: 'http://placekitten.com/270/200'
+        dog_1:
+          text: 'Cute Dog 1'
+          src: 'https://placedog.net/220/200'
+        dog_2:
+          text: 'Cute Dog 2'
+          src: 'https://placedog.net/180/200'
+        dog_3:
+          text: 'Cute Dog 3'
+          src: 'https://placedog.net/130/200'
+        dog_4:
+          text: 'Cute Dog 4'
+          src: 'https://placedog.net/270/200'
   webform_image_select_element_images_elements:
     '#type': details
     '#title': webform_image_select_element_images_elements
@@ -48,24 +48,24 @@ elements: |
       '#type': webform_image_select_element_images
       '#title': webform_image_select_element_images_entity
       '#required': true
-      '#default_value': kittens
+      '#default_value': dogs
     webform_image_select_element_images_custom:
       '#type': webform_image_select_element_images
       '#title': webform_image_select_element_images_custom
       '#required': true
       '#default_value':
-        kitten_1:
-          text: 'Cute Kitten 1'
-          src: 'http://placekitten.com/220/200'
-        kitten_2:
-          text: 'Cute Kitten 2'
-          src: 'http://placekitten.com/180/200'
-        kitten_3:
-          text: 'Cute Kitten 3'
-          src: 'http://placekitten.com/130/200'
-        kitten_4:
-          text: 'Cute Kitten 4'
-          src: 'http://placekitten.com/270/200'
+        dog_1:
+          text: 'Cute Dog 1'
+          src: 'https://placedog.net/220/200'
+        dog_2:
+          text: 'Cute Dog 2'
+          src: 'https://placedog.net/180/200'
+        dog_3:
+          text: 'Cute Dog 3'
+          src: 'https://placedog.net/130/200'
+        dog_4:
+          text: 'Cute Dog 4'
+          src: 'https://placedog.net/270/200'
 css: ''
 javascript: ''
 settings:

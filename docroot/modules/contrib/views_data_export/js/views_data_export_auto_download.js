@@ -5,13 +5,17 @@
  */
 (function (Drupal, once) {
   Drupal.behaviors.views_data_export_auto_download = {
-    attach: function () {
-      once('vde-automatic-download', '#vde-automatic-download').forEach(function (link) {
+    attach(context) {
+      once(
+        'vde-automatic-download',
+        '#vde-automatic-download',
+        context,
+      ).forEach(function (link) {
         link.focus();
         if (link.dataset.downloadEnabled === 'true') {
-          location.href = link.href;
+          window.location.href = link.href;
         }
-      })
-    }
+      });
+    },
   };
 })(Drupal, once);

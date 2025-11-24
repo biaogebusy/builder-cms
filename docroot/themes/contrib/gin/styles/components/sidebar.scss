@@ -1,7 +1,37 @@
-.layout-region-node-secondary {
-  transition: transform var(--gin-transition-fast);
+#gin-sidebar-draggable {
+  cursor: ew-resize;
+  z-index: 104;
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  padding: 0;
+  display: block;
+  width: 2px;
+  height: 100%;
 
-  // Fixes the flickering happinging on smaller devices.
+  @media (prefers-reduced-motion: no-preference) {
+    transition: var(--gin-transition-fast);
+  }
+
+  &:hover {
+    background-color: var(--gin-border-color-table);
+  }
+
+  &:active {
+    background-color: var(--gin-border-color);
+  }
+}
+
+.layout-region-node-secondary {
+  @media (prefers-reduced-motion: no-preference) {
+    transition: transform var(--gin-transition-fast);
+  }
+
+  @include mq($to: medium) {
+    --gin-sidebar-width: var(--gin-sidebar-small-width);
+  }
+
+  // Fixes the flickering happening on smaller devices.
   @include mq($to: large) {
     opacity: 0;
     visibility: hidden;
@@ -33,20 +63,22 @@ body[data-meta-sidebar=open] {
 }
 
 .meta-sidebar {
-  &__trigger,
   &__close {
     cursor: pointer;
     background: transparent;
     height: 32px;
     width: 32px;
     border-radius: var(--gin-border-m);
-    transition: background var(--gin-transition-fast);
+
+    @media (prefers-reduced-motion: no-preference) {
+      transition: background var(--gin-transition-fast);
+    }
 
     &::before {
+      content: "";
       display: inline-block;
       width: 100%;
       height: 100%;
-      content: "";
       mask-repeat: no-repeat;
       mask-position: center center;
       background-color: var(--gin-icon-color);
@@ -70,20 +102,48 @@ body[data-meta-sidebar=open] {
   }
 
   &__trigger {
-    margin-left: var(--gin-spacing-xs);
+    cursor: pointer;
+    background: transparent;
+    display: block;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--gin-border-m);
+
+    @media (prefers-reduced-motion: no-preference) {
+      transition: background var(--gin-transition-fast);
+    }
 
     &::before {
+      display: inline-block;
+      width: 100%;
+      height: 100%;
+      content: "";
+      mask-repeat: no-repeat;
+      mask-position: center center;
+      background-color: var(--gin-icon-color);
       mask-image: icon('sidebar');
       mask-size: var(--gin-icon-size-sidebar-toggle) var(--gin-icon-size-sidebar-toggle);
       border-radius: 50%;
+    }
+
+    &:hover, &:focus, &.is-active, &.is-active:hover {
+      background-color: var(--gin-color-primary-light);
+
+      &::before {
+        background-color: var(--gin-color-primary);
+      }
+    }
+
+    &.is-active {
+      background-color: var(--gin-bg-item-hover);
     }
   }
 
   &__close {
     z-index: 104;
     position: absolute;
-    top: 18px;
-    right: var(--gin-spacing-m);
+    inset-block-start: 18px;
+    inset-inline-end: var(--gin-spacing-m);
 
     @include mq(large) {
       display: none;
@@ -98,8 +158,8 @@ body[data-meta-sidebar=open] {
   &__overlay {
     z-index: 102;
     position: fixed;
-    top: 0;
-    left: 0;
+    inset-block-start: 0;
+    inset-inline-start: 0;
     width: 100%;
     height: 100%;
     opacity: 0;

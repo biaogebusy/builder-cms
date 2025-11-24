@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\module_filter\FunctionalJavascript;
 
 /**
- * Tests the Permisions tab on admin/people/permissions.
+ * Tests the Permissions tab on admin/people/permissions.
  *
  * @group module_filter
  */
@@ -12,7 +14,7 @@ class ModuleFilterJavascriptPermissionsTest extends ModuleFilterJavascriptTestBa
   /**
    * Tests the filtering of permissions.
    */
-  public function testPermissionsFiltering() {
+  public function testPermissionsFiltering(): void {
     /** @var \Drupal\Tests\WebAssert $assert */
     $assert = $this->assertSession();
 
@@ -54,7 +56,7 @@ class ModuleFilterJavascriptPermissionsTest extends ModuleFilterJavascriptTestBa
     $assert->pageTextContains('Buy fruit');
 
     // Enter 'buy' as the filter and check that both of the modules are shown
-    // but only with the permissions that contain 'buy'. This demonstates that
+    // but only with the permissions that contain 'buy'. This demonstrates that
     // matching text on permission hides permissions from a matching module that
     // do not contain that text in the permission.
     $page->fillField('edit-text', 'buy');
@@ -66,7 +68,7 @@ class ModuleFilterJavascriptPermissionsTest extends ModuleFilterJavascriptTestBa
     $assert->pageTextContains('Buy fruit');
 
     // Enter 'ana' as the filter and check that the matching module (Banana) is
-    // shown, and also the matching permission (Panama). This demonstates that
+    // shown, and also the matching permission (Panama). This demonstrates that
     // matching can be done simultaneously on the module and the permission.
     $page->fillField('edit-text', 'ana');
     $assert->waitForText('Send');

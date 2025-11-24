@@ -4,6 +4,7 @@ namespace Drupal\layout_builder_test\Plugin\SectionStorage;
 
 use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\layout_builder\Attribute\SectionStorage;
 use Drupal\layout_builder\Plugin\SectionStorage\SectionStorageBase;
 use Drupal\layout_builder\Section;
 use Drupal\layout_builder\SectionComponent;
@@ -11,11 +12,8 @@ use Symfony\Component\Routing\RouteCollection;
 
 /**
  * Provides a test section storage that is controlled by state.
- *
- * @SectionStorage(
- *   id = "layout_builder_test_state",
- * )
  */
+#[SectionStorage(id: "layout_builder_test_state")]
 class TestStateBasedSectionStorage extends SectionStorageBase {
 
   /**
@@ -43,7 +41,7 @@ class TestStateBasedSectionStorage extends SectionStorageBase {
   /**
    * {@inheritdoc}
    */
-  public function access($operation, AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access($operation, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
     throw new \RuntimeException(__METHOD__ . " not implemented for " . __CLASS__);
   }
 

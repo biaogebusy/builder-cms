@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_translation\Kernel\Migrate\d6;
 
 use Drupal\taxonomy\Entity\Term;
@@ -75,7 +77,7 @@ class MigrateTaxonomyTermTranslationTest extends MigrateDrupal6TestBase {
    *
    * @internal
    */
-  protected function assertEntity(int $id, string $expected_language, string $expected_label, string $expected_vid, string $expected_description = '', string $expected_format = NULL, int $expected_weight = 0, array $expected_parents = [], int $expected_field_integer_value = NULL, int $expected_term_reference_tid = NULL): void {
+  protected function assertEntity(int $id, string $expected_language, string $expected_label, string $expected_vid, string $expected_description = '', ?string $expected_format = NULL, int $expected_weight = 0, array $expected_parents = [], ?int $expected_field_integer_value = NULL, ?int $expected_term_reference_tid = NULL): void {
     /** @var \Drupal\taxonomy\TermInterface $entity */
     $entity = Term::load($id);
     $this->assertInstanceOf(TermInterface::class, $entity);
@@ -122,7 +124,7 @@ class MigrateTaxonomyTermTranslationTest extends MigrateDrupal6TestBase {
   /**
    * Tests the Drupal 6 i18n taxonomy term to Drupal 8 migration.
    */
-  public function testTranslatedTaxonomyTerms() {
+  public function testTranslatedTaxonomyTerms(): void {
     $this->assertEntity(1, 'zu', 'zu - term 1 of vocabulary 1', 'vocabulary_1_i_0_', 'zu - description of term 1 of vocabulary 1', NULL, 0, []);
     $this->assertEntity(2, 'fr', 'fr - term 2 of vocabulary 2', 'vocabulary_2_i_1_', 'fr - description of term 2 of vocabulary 2', NULL, 3, []);
     $this->assertEntity(3, 'fr', 'fr - term 3 of vocabulary 2', 'vocabulary_2_i_1_', 'fr - description of term 3 of vocabulary 2', NULL, 4, ['2']);

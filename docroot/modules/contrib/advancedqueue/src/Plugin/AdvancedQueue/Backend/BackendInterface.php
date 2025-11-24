@@ -75,6 +75,9 @@ interface BackendInterface extends ConfigurableInterface, PluginFormInterface, P
    * @param int $delay
    *   The time, in seconds, after which the job will become available to
    *   consumers. Defaults to 0, indicating no delay.
+   *
+   * @throws \Drupal\advancedqueue\Exception\InvalidBackendException
+   *   Thrown if the queue's backend is not suitable for the job.
    */
   public function enqueueJob(Job $job, $delay = 0);
 
@@ -89,6 +92,9 @@ interface BackendInterface extends ConfigurableInterface, PluginFormInterface, P
    * @param int $delay
    *   The time, in seconds, after which the jobs will become available to
    *   consumers. Defaults to 0, indicating no delay.
+   *
+   * @throws \Drupal\advancedqueue\Exception\InvalidBackendException
+   *   Thrown if the queue's backend is not suitable for any of the jobs.
    */
   public function enqueueJobs(array $jobs, $delay = 0);
 

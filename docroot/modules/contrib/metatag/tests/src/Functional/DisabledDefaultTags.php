@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\metatag\Functional;
 
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Tests\BrowserTestBase;
 
 /**
@@ -67,7 +68,7 @@ class DisabledDefaultTags extends BrowserTestBase {
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  protected function loadMetatagDefault($id) {
+  protected function loadMetatagDefault($id): EntityInterface|NULL {
     /** @var \Drupal\Core\Entity\EntityStorageInterface $global_metatag_manager */
     $global_metatag_manager = \Drupal::entityTypeManager()
       ->getStorage('metatag_defaults');
@@ -156,6 +157,34 @@ class DisabledDefaultTags extends BrowserTestBase {
     // The page url in Global will be /node's.
     $this_page_url = $this->buildUrl('/admin/content');
     $this->assertEquals((string) $xpath[0]->getAttribute('href'), $this_page_url);
+  }
+
+  /**
+   * Test that a Global metatag doesn't load if its values is set none.
+   *
+   * Even if it inherits a value from a parent.
+   */
+  public function testNone() {
+    /** @var \Drupal\metatag\Entity\MetatagDefaults $globalMetatag */
+    // Set a value for the global "canonical_url" metatag, which the 403
+    // metatag inherits from:
+    $globalMetatag = $this->loadMetatagDefault('global');
+    $globalMetatag->overwriteTags(['canonical_url' => 'https://test.canonical']);
+    $globalMetatag->save();
+
+    /** @var \Drupal\metatag\Entity\MetatagDefaults $accessDeniedMetatag */
+    $accessDeniedMetatag = $this->loadMetatagDefault('403');
+    // Now we disable the 403 canonical metatag, meaning, that the metatag
+    // should not exist entirely:
+    $accessDeniedMetatag->overwriteTags(['canonical_url' => '<none>']);
+    $accessDeniedMetatag->save();
+
+    // Check, that the metatag is gone entirely, and we don't have the parent
+    // fallback instead:
+    $this->drupalGet('/admin');
+    $this->assertSession()->statusCodeEquals(403);
+    $xpath = $this->xpath("//link[@rel='canonical']");
+    $this->assertEmpty($xpath);
   }
 
   /**

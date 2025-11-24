@@ -1,15 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\private_message\Plugin\Block;
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Block\BlockBase;
-use Drupal\Core\Block\BlockPluginInterface;
-use Drupal\Core\Config\ConfigFactory;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -17,60 +20,28 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Provides the private message actions block.
  *
  * This block holds links to perform actions on a private message thread.
- *
- * @Block(
- *   id = "private_message_actions_block",
- *   admin_label = @Translation("Private Message Actions"),
- *   category =  @Translation("Private Message"),
- * )
  */
-class PrivateMessageActionsBlock extends BlockBase implements BlockPluginInterface, ContainerFactoryPluginInterface {
+#[Block(
+  id: 'private_message_actions_block',
+  admin_label: new TranslatableMarkup('Private Message Actions'),
+  category: new TranslatableMarkup('Private Message'),
+)]
+class PrivateMessageActionsBlock extends BlockBase implements ContainerFactoryPluginInterface {
 
-  /**
-   * The current user.
-   *
-   * @var \Drupal\Core\Session\AccountProxyInterface
-   */
-  protected AccountProxyInterface $currentUser;
-
-  /**
-   * Configuration Factory.
-   *
-   * @var \Drupal\Core\Config\ConfigFactory
-   */
-  protected ConfigFactory $configFactory;
-
-  /**
-   * Constructs a PrivateMessageForm object.
-   *
-   * @param array $configuration
-   *   The block configuration.
-   * @param string $plugin_id
-   *   The ID of the plugin.
-   * @param mixed $plugin_definition
-   *   The plugin definition.
-   * @param \Drupal\Core\Session\AccountProxyInterface $currentUser
-   *   The current user.
-   * @param \Drupal\Core\Config\ConfigFactory $configFactory
-   *   The config factory service.
-   */
   public function __construct(
     array $configuration,
     $plugin_id,
     $plugin_definition,
-    AccountProxyInterface $currentUser,
-    ConfigFactory $configFactory
+    protected readonly AccountProxyInterface $currentUser,
+    protected readonly ConfigFactoryInterface $configFactory,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
-
-    $this->currentUser = $currentUser;
-    $this->configFactory = $configFactory;
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): PrivateMessageActionsBlock {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): self {
     return new static(
       $configuration,
       $plugin_id,
@@ -92,11 +63,22 @@ class PrivateMessageActionsBlock extends BlockBase implements BlockPluginInterfa
    * {@inheritdoc}
    */
   public function build(): array {
+    if (!$this->currentUser->hasPermission('use private messaging system')) {
+      return [];
+    }
+
     $config = $this->configFactory->get('private_message.settings');
     $url = Url::fromRoute('private_message.private_message_create');
-    $block['links'] = [
+    $block['links'][] = [
       '#type' => 'link',
       '#title' => $config->get("create_message_label"),
+      '#url' => $url,
+    ];
+
+    $url = Url::fromRoute('private_message.ban_page');
+    $block['links'][] = [
+      '#type' => 'link',
+      '#title' => $config->get("ban_page_label"),
       '#url' => $url,
     ];
 

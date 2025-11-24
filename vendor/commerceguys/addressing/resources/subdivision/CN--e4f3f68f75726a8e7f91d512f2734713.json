@@ -1,0 +1,41 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"HA",
+		"Xinyang Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Gushi Xian": {
+			"local_name": "固始县"
+		},
+		"Guangshan Xian": {
+			"local_name": "光山县"
+		},
+		"Huaibin Xian": {
+			"local_name": "淮滨县"
+		},
+		"Huangchuan Xian": {
+			"local_name": "潢川县"
+		},
+		"Luoshan Xian": {
+			"local_name": "罗山县"
+		},
+		"Pingqiao Qu": {
+			"local_name": "平桥区"
+		},
+		"Shangcheng Xian": {
+			"local_name": "商城县"
+		},
+		"Shihe Qu": {
+			"local_name": "浉河区"
+		},
+		"Xi Xian": {
+			"local_name": "息县"
+		},
+		"Xin Xian": {
+			"local_name": "新县"
+		}
+	}
+}

@@ -12,11 +12,16 @@
   height: 100%;
   display: block;
   line-height: 1.5rem;
-  padding: calc(var(--gin-spacing-s) - 1px) calc(var(--gin-spacing-m) - 1px);
+  padding-block: calc(var(--input-padding-vertical) - 1px);
+  padding-inline: var(--input-padding-horizontal);
 }
 
 .form-element.chosen-container-single .chosen-single b {
   background: none !important;
+}
+
+.form-element.chosen-container-single .chosen-single span {
+  color: var(--gin-color-text);
 }
 
 .form-element.chosen-container-multi {

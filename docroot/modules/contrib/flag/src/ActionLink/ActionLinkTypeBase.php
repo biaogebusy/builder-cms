@@ -4,12 +4,12 @@ namespace Drupal\flag\ActionLink;
 
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\Component\Utility\NestedArray;
-use Drupal\Core\Link;
-use Drupal\Core\Routing\RedirectDestinationTrait;
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Link;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Routing\RedirectDestinationTrait;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\flag\FlagInterface;
@@ -74,7 +74,7 @@ abstract class ActionLinkTypeBase extends PluginBase implements ActionLinkTypePl
    * @param \Drupal\Core\Entity\EntityInterface $entity
    *   The flaggable entity.
    *
-   * @return Url
+   * @return \Drupal\Core\Url
    *   The Url object for this plugin's flag/unflag route.
    */
   abstract protected function getUrl($action, FlagInterface $flag, EntityInterface $entity);
@@ -82,9 +82,18 @@ abstract class ActionLinkTypeBase extends PluginBase implements ActionLinkTypePl
   /**
    * {@inheritdoc}
    */
-  public function getAsLink(FlagInterface $flag, EntityInterface $entity) {
+  public function getAsLink(FlagInterface $flag, EntityInterface $entity, ?string $view_mode = NULL) {
+    // Trigger deprecation, if the $view_mode wasn't provided.:
+    // @see original issue: https://www.drupal.org/project/flag/issues/3049155
+    // @see change record: https://www.drupal.org/node/3458551.
+    if ($view_mode === NULL) {
+      $deprecation_message = 'Not providing the "$view_mode" parameter is deprecated in flag:8.x-4.0-beta4 and will throw an error from flag:8.x-4.0. See https://www.drupal.org/node/3458551.';
+      @trigger_error($deprecation_message, E_USER_DEPRECATED);
+    }
+
     $action = $this->getAction($flag, $entity);
     $url = $this->getUrl($action, $flag, $entity);
+    $url->setRouteParameter('view_mode', $view_mode);
     $url->setOption('query', ['destination' => $this->getDestination()]);
     $title = $flag->getShortText($action);
 
@@ -94,17 +103,27 @@ abstract class ActionLinkTypeBase extends PluginBase implements ActionLinkTypePl
   /**
    * {@inheritdoc}
    */
-  public function getAsFlagLink(FlagInterface $flag, EntityInterface $entity) {
+  public function getAsFlagLink(FlagInterface $flag, EntityInterface $entity, ?string $view_mode = NULL): array {
     $action = $this->getAction($flag, $entity);
     $access = $flag->actionAccess($action, $this->currentUser, $entity);
+
+    // Trigger deprecation, if the $view_mode wasn't provided.:
+    // @see original issue: https://www.drupal.org/project/flag/issues/3049155
+    // @see change record: https://www.drupal.org/node/3458551.
+    if ($view_mode === NULL) {
+      $deprecation_message = 'Not providing the "$view_mode" parameter is deprecated in flag:8.x-4.0-beta4 and will throw an error from flag:8.x-4.0. See https://www.drupal.org/node/3458551.';
+      @trigger_error($deprecation_message, E_USER_DEPRECATED);
+    }
 
     if ($access->isAllowed()) {
       $url = $this->getUrl($action, $flag, $entity);
       $url->setRouteParameter('destination', $this->getDestination());
+      $url->setRouteParameter('view_mode', $view_mode);
       $render = [
         '#theme' => 'flag',
         '#flag' => $flag,
         '#flaggable' => $entity,
+        '#view_mode' => $view_mode,
         '#action' => $action,
         '#access' => $access->isAllowed(),
         // Use render array for title to allow limited markup in the link text.
@@ -135,13 +154,6 @@ abstract class ActionLinkTypeBase extends PluginBase implements ActionLinkTypePl
 
   /**
    * Helper method to get the next flag action the user can take.
-   *
-   * @param string $action
-   *   The action, flag or unflag.
-   * @param \Drupal\flag\FlagInterface $flag
-   *   The flag entity.
-   *
-   * @return string
    */
   protected function getAction(FlagInterface $flag, EntityInterface $entity) {
     return $flag->isFlagged($entity) ? 'unflag' : 'flag';

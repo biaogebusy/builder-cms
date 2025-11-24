@@ -2,11 +2,11 @@
 
 namespace Drupal\commerce_order\Entity;
 
+use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\commerce_order\EntityAdjustableInterface;
 use Drupal\commerce_price\Price;
 use Drupal\commerce_store\Entity\EntityStoreInterface;
-use Drupal\Core\Entity\ContentEntityInterface;
-use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\profile\Entity\ProfileInterface;
 use Drupal\user\UserInterface;
 
@@ -23,8 +23,8 @@ interface OrderInterface extends ContentEntityInterface, EntityAdjustableInterfa
   /**
    * Gets the order number.
    *
-   * @return string
-   *   The order number.
+   * @return string|null
+   *   The order number, NULL if not set.
    */
   public function getOrderNumber();
 
@@ -97,8 +97,8 @@ interface OrderInterface extends ContentEntityInterface, EntityAdjustableInterfa
   /**
    * Gets the order email.
    *
-   * @return string
-   *   The order email.
+   * @return string|null
+   *   The order email, NULL if not known.
    */
   public function getEmail();
 
@@ -115,8 +115,8 @@ interface OrderInterface extends ContentEntityInterface, EntityAdjustableInterfa
   /**
    * Gets the order IP address.
    *
-   * @return string
-   *   The IP address.
+   * @return string|null
+   *   The IP address, NULL if not known.
    */
   public function getIpAddress();
 
@@ -405,8 +405,8 @@ interface OrderInterface extends ContentEntityInterface, EntityAdjustableInterfa
   /**
    * Gets the order creation timestamp.
    *
-   * @return int
-   *   Creation timestamp of the order.
+   * @return int|null
+   *   Creation timestamp of the order, NULL if not set.
    */
   public function getCreatedTime();
 
@@ -423,8 +423,8 @@ interface OrderInterface extends ContentEntityInterface, EntityAdjustableInterfa
   /**
    * Gets the order placed timestamp.
    *
-   * @return int
-   *   The order placed timestamp.
+   * @return int|null
+   *   The order placed timestamp, NULL if not set.
    */
   public function getPlacedTime();
 
@@ -441,8 +441,8 @@ interface OrderInterface extends ContentEntityInterface, EntityAdjustableInterfa
   /**
    * Gets the order completed timestamp.
    *
-   * @return int
-   *   The order completed timestamp.
+   * @return int|null
+   *   The order completed timestamp, NULL if not set.
    */
   public function getCompletedTime();
 
@@ -467,5 +467,23 @@ interface OrderInterface extends ContentEntityInterface, EntityAdjustableInterfa
    *   The calculation date/time, in the store timezone.
    */
   public function getCalculationDate();
+
+  /**
+   * Gets the customer comments.
+   *
+   * @return string|null
+   *   The customer comments.
+   */
+  public function getCustomerComments(): ?string;
+
+  /**
+   * Sets the customer comments.
+   *
+   * @param string $comments
+   *   The customer comments.
+   *
+   * @return $this
+   */
+  public function setCustomerComments(string $comments): static;
 
 }

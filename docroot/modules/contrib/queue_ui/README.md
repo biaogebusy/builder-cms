@@ -54,8 +54,8 @@ There are no configuration provided.
 
 - Oleh Vehera - [voleger](https://www.drupal.org/u/voleger)
 - Oleksandr Dekhteruk - [pifagor](https://www.drupal.org/u/pifagor)
-- DrupalSpoons Bot - [drupalspoons](https://www.drupal.org/u/drupalspoons)
 
 **Supporting organization:**
 
 - [Nascom](https://www.drupal.org/nascom)
+- [Golems G.A.B.B.](https://www.drupal.org/golems-gabb)

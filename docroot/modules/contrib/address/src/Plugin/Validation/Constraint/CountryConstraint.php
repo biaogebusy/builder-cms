@@ -19,20 +19,20 @@ class CountryConstraint extends Constraint {
    *
    * @var string[]
    */
-  public $availableCountries = [];
+  public array $availableCountries = [];
 
   /**
    * Validation message if a country is invalid.
    *
    * @var string
    */
-  public $invalidMessage = 'The country %value is not valid.';
+  public string $invalidMessage = 'The country %value is not valid.';
 
   /**
    * Validation message if a country is not available.
    *
    * @var string
    */
-  public $notAvailableMessage = 'The country %value is not available.';
+  public string $notAvailableMessage = 'The country %value is not available.';
 
 }

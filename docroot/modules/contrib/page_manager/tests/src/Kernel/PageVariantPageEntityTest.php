@@ -22,11 +22,11 @@ class PageVariantPageEntityTest extends KernelTestBase {
    * Tests that a page gets cached on the page variant.
    */
   public function testPageGetsCached() {
-    /* @var \Drupal\page_manager\PageInterface $page */
+    /** @var \Drupal\page_manager\PageInterface $page */
     $page = Page::create(['id' => 'test_page', 'path' => '/test_page_path']);
     $page->save();
 
-    /* @var \Drupal\page_manager\PageVariantInterface $page_variant */
+    /** @var \Drupal\page_manager\PageVariantInterface $page_variant */
     $page_variant = PageVariant::create([
       'id' => 'test_page_variant',
       'page' => 'test_page',
@@ -43,10 +43,10 @@ class PageVariantPageEntityTest extends KernelTestBase {
    * Tests that a an unsaved page can be set against a page variant.
    */
   public function testUnsavedPage() {
-    /* @var \Drupal\page_manager\PageInterface $page */
+    /** @var \Drupal\page_manager\PageInterface $page */
     $page = Page::create(['id' => 'test_page']);
 
-    /* @var \Drupal\page_manager\PageVariantInterface $page_variant */
+    /** @var \Drupal\page_manager\PageVariantInterface $page_variant */
     $page_variant = PageVariant::create([
       'id' => 'test_page_variant',
       'page' => 'test_page',
@@ -62,17 +62,17 @@ class PageVariantPageEntityTest extends KernelTestBase {
    * Tests that a page gets cached on the page variant.
    */
   public function testChangePageId() {
-    /* @var \Drupal\page_manager\PageVariantInterface $page_variant */
+    /** @var \Drupal\page_manager\PageVariantInterface $page_variant */
     $page_variant = PageVariant::create(['id' => 'test_page_variant']);
 
     // Check the page gets set correctly.
-    /* @var \Drupal\page_manager\PageInterface $page */
+    /** @var \Drupal\page_manager\PageInterface $page */
     $page1 = Page::create(['id' => 'test_page_1']);
     $page_variant->setPageEntity($page1);
     $this->assertEquals('test_page_1', $page_variant->get('page'));
 
     // Check the page gets changed correctly.
-    /* @var \Drupal\page_manager\PageInterface $page */
+    /** @var \Drupal\page_manager\PageInterface $page */
     $page2 = Page::create(['id' => 'test_page_2']);
     $page_variant->setPageEntity($page2);
     $this->assertEquals('test_page_2', $page_variant->get('page'));

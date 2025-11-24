@@ -2,7 +2,9 @@
     "name": "drupal/unique_content_field_validation",
     "type": "drupal-module",
     "description": "Validate the uniqueness of the entities fields or title.",
-    "homepage": "http://drupal.org/project/unique_content_field_validation",
+    "homepage": "https://drupal.org/project/unique_content_field_validation",
+    "license": "GPL-2.0-or-later",
+    "minimum-stability": "dev",
     "authors": [
         {
             "name": "Fabian Sierra",
@@ -12,8 +14,6 @@
     ],
     "support": {
         "issues": "https://drupal.org/project/issues/unique_content_field_validation",
-        "source": "https://cgit.drupalcode.org/unique_content_field_validation"
-    },
-    "license": "GPL-2.0-or-later",
-    "minimum-stability": "dev"
+        "source": "https://git.drupalcode.org/project/unique_content_field_validation"
+    }
 }

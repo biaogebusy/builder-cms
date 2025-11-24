@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Kernel\Condition;
 
 use Drupal\Component\Render\FormattableMarkup;
@@ -44,9 +46,7 @@ class UserRoleConditionTest extends KernelTestBase {
   protected $role;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['system', 'user', 'field'];
 
@@ -56,7 +56,6 @@ class UserRoleConditionTest extends KernelTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    $this->installSchema('system', 'sequences');
     $this->installEntitySchema('user');
 
     $this->manager = $this->container->get('plugin.manager.condition');
@@ -72,7 +71,7 @@ class UserRoleConditionTest extends KernelTestBase {
     ])->save();
 
     // Create new role.
-    $rid = strtolower($this->randomMachineName(8));
+    $rid = $this->randomMachineName(8);
     $label = $this->randomString(8);
     $role = Role::create([
       'id' => $rid,
@@ -102,7 +101,7 @@ class UserRoleConditionTest extends KernelTestBase {
   /**
    * Tests the user_role condition.
    */
-  public function testConditions() {
+  public function testConditions(): void {
     // Grab the user role condition and configure it to check against
     // authenticated user roles.
     /** @var \Drupal\Core\Condition\ConditionInterface $condition */
@@ -148,16 +147,6 @@ class UserRoleConditionTest extends KernelTestBase {
     $condition->setConfig('negate', FALSE);
     $this->assertTrue($condition->execute(), 'Authenticated user is a member of the custom role.');
     $this->assertEquals(new FormattableMarkup('The user is a member of @roles', ['@roles' => $this->role->label()]), $condition->summary());
-  }
-
-  /**
-   * @group legacy
-   */
-  public function testLegacy() {
-    $this->expectDeprecation('Passing context values to plugins via configuration is deprecated in drupal:9.1.0 and will be removed before drupal:10.0.0. Instead, call ::setContextValue() on the plugin itself. See https://www.drupal.org/node/3120980');
-    // Test Constructor injection.
-    $condition = $this->manager->createInstance('user_role', ['roles' => [RoleInterface::AUTHENTICATED_ID => RoleInterface::AUTHENTICATED_ID], 'context' => ['user' => $this->authenticated]]);
-    $this->assertTrue($condition->execute(), 'Constructor injection of context and configuration working as anticipated.');
   }
 
 }

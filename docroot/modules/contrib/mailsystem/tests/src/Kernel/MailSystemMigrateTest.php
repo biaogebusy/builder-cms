@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\Tests\mailsystem\Kernel\d7;
+namespace Drupal\Tests\mailsystem\Kernel;
 
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
 
@@ -15,7 +15,6 @@ class MailSystemMigrateTest extends MigrateDrupal7TestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
-    'color',
     'mailsystem',
   ];
 
@@ -42,16 +41,16 @@ class MailSystemMigrateTest extends MigrateDrupal7TestBase {
         'formatter' => 'test_mail_collector',
       ],
       'modules' => [
-        'color' => [
+        'user' => [
           '1111' => [
-            'formatter' => 'php_mail',
             'sender' => 'php_mail',
+            'formatter' => 'php_mail',
           ],
         ],
         'system' => [
           '123' => [
-            'formatter' => 'test_mail_collector',
             'sender' => 'test_mail_collector',
+            'formatter' => 'test_mail_collector',
           ],
         ],
       ],

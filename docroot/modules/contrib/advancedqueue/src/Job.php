@@ -88,6 +88,15 @@ class Job {
   protected $expires;
 
   /**
+   * A unique fingerprint for this job.
+   *
+   * This can be used for detecting duplicate jobs.
+   *
+   * @var string
+   */
+  protected $fingerprint;
+
+  /**
    * Constructs a new Job object.
    *
    * @param array $definition
@@ -111,6 +120,7 @@ class Job {
     $this->available = !empty($definition['available']) ? (int) $definition['available'] : 0;
     $this->processed = !empty($definition['processed']) ? (int) $definition['processed'] : 0;
     $this->expires = !empty($definition['expires']) ? (int) $definition['expires'] : 0;
+    $this->fingerprint = !empty($definition['fingerprint']) ? $definition['fingerprint'] : NULL;
   }
 
   /**
@@ -120,15 +130,17 @@ class Job {
    *   The job type.
    * @param array $payload
    *   The payload.
+   * @param array $definition
+   *   The definition.
    *
    * @return static
    */
-  public static function create($type, array $payload) {
+  public static function create($type, array $payload, array $definition = []) {
     return new static([
       'type' => $type,
       'payload' => $payload,
       'state' => self::STATE_QUEUED,
-    ]);
+    ] + $definition);
   }
 
   /**
@@ -399,6 +411,30 @@ class Job {
   }
 
   /**
+   * Gets the unique fingerprint of the job, used for detecting duplicates.
+   *
+   * @return null|string
+   *   A unique fingerprint for the job.
+   *   This should be set using the job type plugin when the job is queued, if a
+   *   fingerprint is not otherwise provided for the job.
+   *   This can be NULL if duplicate jobs do not need to be detected for this
+   *   job type.
+   */
+  public function getFingerprint(): ?string {
+    return $this->fingerprint;
+  }
+
+  /**
+   * Sets the fingerprint of the job, used for detecting duplicates.
+   *
+   * @param string $fingerprint
+   *   This can be any 32 character identifier.
+   */
+  public function setFingerprint(string $fingerprint): void {
+    $this->fingerprint = $fingerprint;
+  }
+
+  /**
    * Returns the job as an array.
    *
    * @return array
@@ -415,6 +451,8 @@ class Job {
       'available' => $this->available,
       'processed' => $this->processed,
       'expires' => $this->expires,
+      'num_retries' => $this->numRetries,
+      'fingerprint' => $this->fingerprint,
     ];
   }
 

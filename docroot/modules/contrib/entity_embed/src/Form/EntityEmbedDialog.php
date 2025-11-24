@@ -180,7 +180,7 @@ class EntityEmbedDialog extends FormBase {
    * @param \Drupal\embed\EmbedButtonInterface $embed_button
    *   The URL button to which this dialog corresponds.
    */
-  public function buildForm(array $form, FormStateInterface $form_state, EditorInterface $editor = NULL, EmbedButtonInterface $embed_button = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?EditorInterface $editor = NULL, ?EmbedButtonInterface $embed_button = NULL) {
     $values = $form_state->getValues();
     $input = $form_state->getUserInput();
     // Set embed button element in form state, so that it can be used later in

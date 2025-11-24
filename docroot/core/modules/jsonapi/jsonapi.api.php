@@ -98,7 +98,7 @@ use Drupal\Core\Access\AccessResult;
  * revision ID. The `rel` negotiator takes a version argument which is either
  * the string `latest-version` or the string `working-copy`.
  *
- * In the future, other negotiatiors may be developed, such as negotiatiors that
+ * In the future, other negotiators may be developed, such as negotiators that
  * are UUID-, timestamp-, or workspace-based.
  *
  * To illustrate how a particular entity revision is requested, imagine a node
@@ -124,7 +124,7 @@ use Drupal\Core\Access\AccessResult;
  * @section translations Resource translations
  *
  * Some multilingual features currently do not work well with JSON:API. See
- * JSON:API modules's multilingual support documentation online for more
+ * JSON:API modules' multilingual support documentation online for more
  * information on the current status of multilingual support.
  *
  * @see https://www.drupal.org/docs/8/modules/jsonapi/translations

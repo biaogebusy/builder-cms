@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\slick\Unit;
 
+use Drupal\Tests\UnitTestCase;
 use Drupal\slick\Entity\Slick;
 use Drupal\slick\SlickDefault;
-use Drupal\Tests\UnitTestCase;
 
 /**
  * @coversDefaultClass \Drupal\slick\Entity\Slick

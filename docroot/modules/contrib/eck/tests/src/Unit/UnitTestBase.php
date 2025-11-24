@@ -33,12 +33,11 @@ namespace Drupal\Tests\eck\Unit {
     /**
      * {@inheritdoc}
      */
-    protected function setUp() {
+    protected function setUp(): void {
       parent::setUp();
       $this->entities = [];
       $this->prepareContainer();
       $this->registerServiceWithContainerMock('current_user', $this->getNewUserMock());
-      $this->registerServiceWithContainerMock('entity.manager', $this->getEntityManagerMock());
       $this->registerServiceWithContainerMock('entity_type.manager', $this->getEntityTypeManagerMock());
       $this->registerServiceWithContainerMock('entity_type.repository', $this->getEntityTypeRepositoryMock());
       $this->registerServiceWithContainerMock('plugin.manager.field.field_type', new FieldTypePluginManagerMock());
@@ -52,7 +51,7 @@ namespace Drupal\Tests\eck\Unit {
       $methods = get_class_methods($container_class);
       $container = $this->getMockBuilder($container_class)
         ->disableOriginalConstructor()
-        ->setMethods($methods)
+        ->onlyMethods($methods)
         ->getMock();
       \Drupal::setContainer($container);
 
@@ -133,11 +132,11 @@ namespace Drupal\Tests\eck\Unit {
     /**
      * Creates and returns a mocked user.
      *
-     * @return \PHPUnit_Framework_MockObject_MockObject
+     * @return \Drupal\Core\Session\AccountProxyInterface
      *   The mocked user.
      */
     private function getNewUserMock() {
-      $user_mock = $this->getMockForAbstractClass('\Drupal\Core\Session\AccountProxyInterface', ['id']);
+      $user_mock = $this->getMockForAbstractClass('\Drupal\Core\Session\AccountProxyInterface');
       $user_mock->method('id')->willReturn(1);
       return $user_mock;
     }
@@ -222,7 +221,7 @@ namespace Drupal\Tests\eck\Unit {
 
 namespace Drupal\eck\Entity {
 
-  if (!function_exists('t')) {
+  if (!\function_exists('t')) {
 
     /**
      * Mock for the t() function.

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate_drupal\Kernel;
 
 use Drupal\Component\Discovery\YamlDiscovery;
@@ -36,14 +38,11 @@ class StateFileExistsTest extends MigrateDrupalTestBase {
    * @var array
    */
   protected $stateFileRequired = [
-    // @todo Remove aggregator in https://www.drupal.org/project/drupal/issues/3264120
-    'aggregator',
     'ban',
     'block',
     'block_content',
+    // @todo Remove book in https://www.drupal.org/project/drupal/issues/3376101
     'book',
-    // @todo Remove Color in https://www.drupal.org/project/drupal/issues/3270899
-    'color',
     'comment',
     'config_translation',
     'contact',
@@ -53,6 +52,7 @@ class StateFileExistsTest extends MigrateDrupalTestBase {
     'field',
     'file',
     'filter',
+    // @todo Remove forum in https://www.drupal.org/project/drupal/issues/3261653
     'forum',
     'image',
     'language',
@@ -66,11 +66,10 @@ class StateFileExistsTest extends MigrateDrupalTestBase {
     'node',
     'options',
     'path',
-    // @todo Remove RDF in https://www.drupal.org/node/3267515
-    'rdf',
     'responsive_image',
     'search',
     'shortcut',
+    // @todo Remove statistics in https://www.drupal.org/project/drupal/issues/3341092
     'statistics',
     'syslog',
     'system',
@@ -86,7 +85,7 @@ class StateFileExistsTest extends MigrateDrupalTestBase {
   /**
    * Tests that the migrate_drupal.yml files exist as needed.
    */
-  public function testMigrationState() {
+  public function testMigrationState(): void {
     // Install all available modules.
     $module_handler = $this->container->get('module_handler');
     $all_modules = $this->coreModuleListDataProvider();

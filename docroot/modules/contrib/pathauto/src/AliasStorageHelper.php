@@ -76,7 +76,7 @@ class AliasStorageHelper implements AliasStorageHelperInterface {
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manger.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, AliasRepositoryInterface $alias_repository, Connection $database, MessengerInterface $messenger, TranslationInterface $string_translation, EntityTypeManagerInterface $entity_type_manager = NULL) {
+  public function __construct(ConfigFactoryInterface $config_factory, AliasRepositoryInterface $alias_repository, Connection $database, MessengerInterface $messenger, TranslationInterface $string_translation, ?EntityTypeManagerInterface $entity_type_manager = NULL) {
     $this->configFactory = $config_factory;
     $this->aliasRepository = $alias_repository;
     $this->database = $database;
@@ -242,7 +242,10 @@ class AliasStorageHelper implements AliasStorageHelperInterface {
    * {@inheritdoc}
    */
   public function deleteMultiple($pids) {
-    $this->entityTypeManager->getStorage('path_alias')->delete($this->entityTypeManager->getStorage('path_alias')->loadMultiple($pids));
+    // Avoid hitting memory limit by deleting a chunk at a time.
+    foreach (array_chunk($pids, 100) as $chunk) {
+      $this->entityTypeManager->getStorage('path_alias')->delete($this->entityTypeManager->getStorage('path_alias')->loadMultiple($chunk));
+    }
   }
 
 }

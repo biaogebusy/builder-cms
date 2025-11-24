@@ -11,5 +11,4 @@
       $(once('footable', '.footable', context)).footable();
     }
   };
-
 }(jQuery));

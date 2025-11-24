@@ -6,11 +6,13 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableDependencyInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\user\PermissionHandlerInterface;
 use Drupal\user\UserInterface;
+use Drupal\views\Attribute\ViewsArgumentValidator;
 use Drupal\views\Plugin\views\argument_validator\ArgumentValidatorPluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -18,13 +20,12 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Validates whether the argument matches the current user.
  *
  * Anonymous users will always be considered invalid.
- *
- * @ViewsArgumentValidator(
- *   id = "commerce_current_user",
- *   title = @Translation("Current user"),
- *   entity_type = "user"
- * )
  */
+#[ViewsArgumentValidator(
+  id: 'commerce_current_user',
+  title: new TranslatableMarkup('Current user'),
+  entity_type: 'user'
+)]
 class CurrentUser extends ArgumentValidatorPluginBase implements CacheableDependencyInterface {
 
   /**
@@ -44,9 +45,9 @@ class CurrentUser extends ArgumentValidatorPluginBase implements CacheableDepend
   /**
    * The module handler.
    *
-   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   * @var \Drupal\Core\Extension\ModuleExtensionList
    */
-  protected $moduleHandler;
+  protected $moduleList;
 
   /**
    * The permission handler.
@@ -68,17 +69,17 @@ class CurrentUser extends ArgumentValidatorPluginBase implements CacheableDepend
    *   The current user.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
-   *   The module handler.
+   * @param \Drupal\Core\Extension\ModuleExtensionList $module_list
+   *   The module list object.
    * @param \Drupal\user\PermissionHandlerInterface $permission_handler
    *   The permission handler.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, AccountInterface $current_user, EntityTypeManagerInterface $entity_type_manager, ModuleHandlerInterface $module_handler, PermissionHandlerInterface $permission_handler) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, AccountInterface $current_user, EntityTypeManagerInterface $entity_type_manager, ModuleExtensionList $module_list, PermissionHandlerInterface $permission_handler) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     $this->currentUser = $current_user;
     $this->entityTypeManager = $entity_type_manager;
-    $this->moduleHandler = $module_handler;
+    $this->moduleList = $module_list;
     $this->permissionHandler = $permission_handler;
   }
 
@@ -92,7 +93,7 @@ class CurrentUser extends ArgumentValidatorPluginBase implements CacheableDepend
       $plugin_definition,
       $container->get('current_user'),
       $container->get('entity_type.manager'),
-      $container->get('module_handler'),
+      $container->get('extension.list.module'),
       $container->get('user.permissions')
     );
   }
@@ -116,7 +117,7 @@ class CurrentUser extends ArgumentValidatorPluginBase implements CacheableDepend
     $permissions = [];
     foreach ($this->permissionHandler->getPermissions() as $permission => $permission_item) {
       $provider = $permission_item['provider'];
-      $display_name = $this->moduleHandler->getName($provider);
+      $display_name = $this->moduleList->getName($provider);
       $permissions[$display_name][$permission] = Html::escape($permission_item['title']);
     }
 

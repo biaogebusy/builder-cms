@@ -22,9 +22,9 @@ class FieldCollectionTypeSourceTest extends MigrateSqlSourceTestBase {
   /**
    * {@inheritdoc}
    */
-  public function providerSource() {
-    $data = $this->getSourceData();
-    $data[0]['expected_results'] = [
+  public static function providerSource() {
+    $data = static::getSourceData();
+    $data[0]['expected_data'] = [
       [
         'id' => '1',
         'field_name' => 'field_field_collection_field',

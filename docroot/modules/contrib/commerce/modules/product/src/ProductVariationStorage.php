@@ -2,11 +2,11 @@
 
 namespace Drupal\commerce_product;
 
+use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\commerce\CommerceContentEntityStorage;
 use Drupal\commerce_product\Entity\ProductInterface;
 use Drupal\commerce_product\Event\FilterVariationsEvent;
 use Drupal\commerce_product\Event\ProductEvents;
-use Drupal\Core\Entity\EntityTypeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -56,7 +56,7 @@ class ProductVariationStorage extends CommerceContentEntityStorage implements Pr
       if (in_array($variation_id, $product->getVariationIds())) {
         /** @var \Drupal\commerce_product\Entity\ProductVariationInterface $variation */
         $variation = $this->load($variation_id);
-        if ($variation->isPublished() && $variation->access('view')) {
+        if ($variation->access('view')) {
           return $variation;
         }
       }
@@ -84,7 +84,6 @@ class ProductVariationStorage extends CommerceContentEntityStorage implements Pr
     $query = $this->getQuery()
       ->accessCheck(TRUE)
       ->addTag('entity_access')
-      ->condition('status', TRUE)
       ->condition('variation_id', $ids, 'IN');
     $result = $query->execute();
     if (empty($result)) {

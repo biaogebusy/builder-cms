@@ -11,7 +11,7 @@
 .show-6 {
   .views-row {
     @include mq(tiny) {
-      float: left;
+      float: inline-start;
       width: 50%;
     }
 
@@ -30,49 +30,51 @@
 }
 
 .views-exposed-form.views-exposed-form {
-  padding-top: var(--gin-spacing-xs);
+  padding-block-start: var(--gin-spacing-xs);
 
   .form-element--type-select {
     max-width: 240px;
   }
 
   .form-type--boolean .form-boolean {
-    margin-left: 0;
-    margin-right: var(--gin-spacing-xs);
+    margin-inline-start: 0;
+    margin-inline-end: var(--gin-spacing-xs);
   }
 
   // Single on/off checkbox (through Better Exposed Filters)
   .form-type--boolean.form-type--checkbox {
-    margin-top: auto;
-    margin-bottom: var(--gin-spacing-s);
+    margin-block-start: auto;
+    margin-block-end: var(--gin-spacing-s);
 
     .form-item__label {
-      margin-bottom: 0;
+      margin-block-end: 0;
     }
   }
 
   .fieldset--group {
-    margin-top: var(--gin-spacing-s);
+    margin-block-start: var(--gin-spacing-s);
   }
 
   // Exposed filter with fieldgroup
   fieldset {
-    margin-right: var(--gin-spacing-s);
-    margin-bottom: .4rem;
+    margin-inline-end: var(--gin-spacing-s);
+    margin-block-end: .4rem;
 
     > .fieldset__legend > .fieldset__label {
       font-size: var(--gin-font-size-s);
       padding: 0 var(--gin-spacing-xs);
-      margin-bottom: var(--gin-spacing-xxs);
+      margin-block-end: var(--gin-spacing-xxs);
     }
 
     .fieldset__wrapper {
       display: flex;
-      margin: 0 0 0 var(--gin-spacing-xs);
+      margin: 0;
+      margin-inline-start: var(--gin-spacing-xs);
     }
 
     .form-item {
-      margin: 0 var(--gin-spacing-xs) var(--gin-spacing-xs) 0;
+      margin-block: 0 var(--gin-spacing-xs);
+      margin-inline: 0 var(--gin-spacing-xs);
     }
   }
 }
@@ -81,35 +83,39 @@
   background: none;
   border-color: var(--gin-border-color);
   border-radius: var(--gin-border-l);
-
 }
 
 .views-exposed-form__item--preceding-actions.views-exposed-form__item--preceding-actions {
-  margin-right: var(--gin-spacing-xs);
+  margin-inline-end: var(--gin-spacing-xs);
+}
+
+.views-exposed-form .form-item--no-label,
+.views-exposed-form__item.views-exposed-form__item.views-exposed-form__item--actions {
+  margin-block: var(--gin-spacing-s) 0;
+  align-self: flex-end;
 }
 
 .gin-layer-wrapper {
-  padding: var(--gin-spacing-l);
+  padding: var(--gin-spacing-s);
 
-  @include mq($to: large) {
-    overflow: auto;
-    -webkit-overflow-scrolling: touch;
+  @include mq(medium) {
+    padding: var(--gin-spacing-l);
   }
 
   & + .gin-layer-wrapper {
-    margin-top: var(--gin-spacing-l);
+    margin-block-start: var(--gin-spacing-l);
   }
 
   & + h2,
   & + h3 {
-    margin-top: var(--gin-spacing-xl);
+    margin-block-start: var(--gin-spacing-xl);
   }
 }
 
 .views-edit-view {
   .unit-title {
-    margin-top: 0;
-    margin-bottom: var(--gin-spacing-m);
+    margin-block-start: 0;
+    margin-block-end: var(--gin-spacing-m);
     @extend h2;
   }
 }
@@ -119,12 +125,12 @@
   &__title {
     padding: 0;
     background-color: transparent;
-    border-bottom: 0 none;
+    border-block-end: 0 none;
   }
 
   .preview-section {
     padding: var(--gin-spacing-m);
-    border: 1px dashed var(--gin-border-color-layer2)
+    border: 1px dashed var(--gin-border-color-layer2);
   }
 
   .view-filters .preview-section {
@@ -138,16 +144,20 @@
 
   .form-item--live-preview {
     position: static !important;
-    margin-top: var(--gin-spacing-l);
+    margin-block-start: var(--gin-spacing-l);
   }
 
   .arguments-preview {
-    margin-left: 0;
+    margin-inline-start: 0;
   }
 }
 
 .views-live-preview {
   padding: 0;
+
+  .section-title {
+    color: var(--gin-color-text);
+  }
 
   .gin-layer-wrapper {
     border-color: var(--gin-border-color);
@@ -172,26 +182,26 @@
 }
 
 .views-display-top {
-  padding: var(--gin-spacing-m);
+  padding-block: var(--gin-spacing-m) var(--gin-spacing-xs);
   background-color: var(--gin-bg-header);
   border: 0 none;
   border-radius: var(--gin-border-l);
 
   // #3186729: Drupal 9.1 fix
   &__extra-actions-wrapper {
-    margin-bottom: 0;
+    margin-block: 0;
   }
 
   .dropbutton-wrapper {
-    top: 20px;
-    right: var(--gin-spacing-l);
+    inset-block-start: 20px;
+    inset-inline-end: var(--gin-spacing-l);
   }
 }
 
 #edit-displays {
   .views-display-top {
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
+    border-end-start-radius: 0;
+    border-end-end-radius: 0;
   }
 }
 
@@ -200,7 +210,7 @@
   margin: 0;
 }
 
-.views-tabs {
+.views-tabs.views-tabs {
   a {
     padding: var(--gin-spacing-xs) var(--gin-spacing-m);
 
@@ -233,7 +243,7 @@
     border-radius: var(--gin-border-xs);
 
     &::before {
-      display: none;
+      display: none !important;
     }
 
     .icon.add {
@@ -272,7 +282,7 @@
   }
 
   .action-list {
-    top: 36px;
+    inset-block-start: 36px;
     background: var(--gin-bg-layer3);
     box-shadow: 0 1px 2px var(--gin-shadow-button);
 
@@ -282,7 +292,7 @@
 
       input.button {
         width: 100%;
-        text-align: left;
+        text-align: start;
         line-height: 1.2;
         box-shadow: none;
         border: none !important;
@@ -315,14 +325,15 @@
 
   // #3186729: Drupal 9.1 fix
   &__header {
-    padding: var(--gin-spacing-m) 0 var(--gin-spacing-xs);
+    padding-block: var(--gin-spacing-m) var(--gin-spacing-xs);
+    padding-inline: 0;
 
     .views-ui-display-tab-bucket__title {
       padding: 0 var(--gin-spacing-m);
     }
 
     .views-ui-display-tab-bucket__actions {
-      margin-right: var(--gin-spacing-m);
+      margin-inline-end: var(--gin-spacing-m);
     }
   }
 
@@ -340,8 +351,8 @@
   }
 
   .dropbutton-wrapper {
-    top: 14px;
-    right: var(--gin-spacing-m);
+    inset-block-start: 14px;
+    inset-inline-end: var(--gin-spacing-m);
   }
 
   &.pager {
@@ -350,9 +361,9 @@
 }
 
 .views-ui-display-tab-bucket.views-ui-display-tab-bucket {
-  padding-top: 0;
-  margin-bottom: 0;
-  border-bottom-color: var(--gin-border-color);
+  padding-block-start: 0;
+  margin-block-end: 0;
+  border-block-end-color: var(--gin-border-color);
 }
 
 .views-ui-display-tab-actions {
@@ -374,8 +385,8 @@
   tr.even,
   tr.odd {
     background: none;
-    border-top: 1px solid var(--gin-border-color);
-    border-bottom: none;
+    border-block-start: 1px solid var(--gin-border-color);
+    border-block-end: none;
   }
 }
 
@@ -390,7 +401,7 @@
 
 .views-display-column,
 .edit-display-settings-top.views-ui-display-tab-bucket {
-  margin-bottom: var(--gin-spacing-m);
+  margin-block-end: var(--gin-spacing-m);
   border-color: var(--gin-border-color);
   border-radius: var(--gin-border-m);
   box-shadow: none;
@@ -398,17 +409,17 @@
 
 .views-ui-dialog {
   .form--inline {
-    padding-top: 0;
+    padding-block-start: 0;
   }
 
   .views-override:not(:empty) {
     background-color: var(--gin-bg-app);
-    border-bottom: 0 none;
+    border-block-end: 0 none;
   }
 
   .form-item--fields-area-text-custom-removed {
     display: inline-block;
-    margin-right: var(--gin-spacing-xxs);
+    margin-inline-end: var(--gin-spacing-xxs);
   }
 }
 
@@ -417,11 +428,11 @@ a.views-field-excluded {
 }
 
 .views-filterable-options {
-  border-top: none;
+  border-block-start: none;
 }
 
 .view-block-content .views-table {
-  margin-top: 0;
+  margin-block-start: 0;
 }
 
 .views-display-columns {
@@ -439,10 +450,20 @@ a.views-field-excluded {
 }
 
 .views-exposed-form .form-datetime-wrapper {
-  margin-bottom: 0;
-  margin-right: var(--gin-spacing-xs);
+  margin-block-end: 0;
+  margin-inline-end: var(--gin-spacing-xs);
 }
 
 .view-header {
-  margin-bottom: var(--gin-spacing-l);
+  margin-block-end: var(--gin-spacing-l);
+}
+
+// Disabled
+.views-edit-view.disabled .views-displays,
+.views-edit-view.disabled .views-display-column {
+  background-color: transparent;
+}
+
+.views-edit-view.disabled .views-display-column {
+  opacity: 0.75;
 }

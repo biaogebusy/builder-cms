@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\commerce_order\Unit\Plugin\Commerce\Condition;
 
+use Drupal\Tests\UnitTestCase;
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_order\Plugin\Commerce\Condition\OrderCustomerRole;
-use Drupal\Tests\UnitTestCase;
 use Drupal\user\UserInterface;
 
 /**

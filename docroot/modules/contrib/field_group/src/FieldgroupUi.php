@@ -16,7 +16,7 @@ class FieldgroupUi {
    * @param object $group
    *   The group to get the field ui route for.
    *
-   * @return \Drupal\Core\Url
+   * @return \Drupal\Core\Url|null
    *   A URL object.
    */
   public static function getFieldUiRoute($group) {

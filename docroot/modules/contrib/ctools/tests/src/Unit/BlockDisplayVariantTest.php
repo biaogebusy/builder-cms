@@ -68,7 +68,7 @@ class BlockDisplayVariantTest extends UnitTestCase {
   /**
    * Provides data for testSubmitConfigurationForm().
    */
-  public function providerTestSubmitConfigurationForm() {
+  public static function providerTestSubmitConfigurationForm() {
     $data = [];
     $data[] = [
       [

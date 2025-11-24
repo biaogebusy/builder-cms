@@ -19,5 +19,20 @@ namespace Drupal\metatag\Plugin\metatag\Tag;
  * )
  */
 class Title extends MetaNameBase {
-  // Nothing here yet. Just a placeholder class for a plugin.
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTestOutputExistsXpath(): array {
+    return ["//title"];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTestOutputValuesXpath(array $values): array {
+    // @todo This isn't actually testing the output.
+    return ["//title"];
+  }
+
 }

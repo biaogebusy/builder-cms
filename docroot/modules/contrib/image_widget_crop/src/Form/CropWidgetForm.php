@@ -3,13 +3,9 @@
 namespace Drupal\image_widget_crop\Form;
 
 use Drupal\Core\Cache\Cache;
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\crop\Entity\CropType;
-use Drupal\image_widget_crop\ImageWidgetCropInterface;
-use GuzzleHttp\ClientInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -48,35 +44,16 @@ class CropWidgetForm extends ConfigFormBase {
   protected $httpClient;
 
   /**
-   * Constructs a CropWidgetForm object.
-   *
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   The factory for configuration objects.
-   * @param \Drupal\image_widget_crop\ImageWidgetCropInterface $iwc_manager
-   *   The ImageWidgetCrop manager service.
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
-   *   The module handler to use to load modules.
-   * @param \GuzzleHttp\ClientInterface $http_client
-   *   The Guzzle HTTP client.
-   */
-  public function __construct(ConfigFactoryInterface $config_factory, ImageWidgetCropInterface $iwc_manager, ModuleHandlerInterface $module_handler, ClientInterface $http_client) {
-    parent::__construct($config_factory);
-    $this->settings = $this->config('image_widget_crop.settings');
-    $this->imageWidgetCropManager = $iwc_manager;
-    $this->moduleHandler = $module_handler;
-    $this->httpClient = $http_client;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('config.factory'),
-      $container->get('image_widget_crop.manager'),
-      $container->get('module_handler'),
-      $container->get('http_client')
-    );
+    $instance = parent::create($container);
+    $instance->settings = $container->get('config.factory')->get('image_widget_crop.settings');
+    $instance->imageWidgetCropManager = $container->get('image_widget_crop.manager');
+    $instance->moduleHandler = $container->get('module_handler');
+    $instance->httpClient = $container->get('http_client');
+
+    return $instance;
   }
 
   /**

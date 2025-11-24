@@ -1,7 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Unit\Menu;
 
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\Extension;
 use Drupal\Tests\Core\Menu\LocalTaskIntegrationTestBase;
 
@@ -15,7 +19,7 @@ class SystemLocalTasksTest extends LocalTaskIntegrationTestBase {
   /**
    * The mocked theme handler.
    *
-   * @var \Drupal\Core\Extension\ThemeHandlerInterface|\PHPUnit\Framework\MockObject\MockObject
+   * @var \Drupal\Core\Extension\ThemeHandlerInterface
    */
   protected $themeHandler;
 
@@ -44,6 +48,20 @@ class SystemLocalTasksTest extends LocalTaskIntegrationTestBase {
       ->with('olivero')
       ->willReturn(TRUE);
     $this->container->set('theme_handler', $this->themeHandler);
+
+    $fooEntityDefinition = $this->createMock(EntityTypeInterface::class);
+    $fooEntityDefinition
+      ->expects($this->once())
+      ->method('hasLinkTemplate')
+      ->with('version-history')
+      ->willReturn(TRUE);
+    $entityTypeManager = $this->createMock(EntityTypeManagerInterface::class);
+    $entityTypeManager->expects($this->any())
+      ->method('getDefinitions')
+      ->willReturn([
+        'foo' => $fooEntityDefinition,
+      ]);
+    $this->container->set('entity_type.manager', $entityTypeManager);
   }
 
   /**
@@ -51,14 +69,14 @@ class SystemLocalTasksTest extends LocalTaskIntegrationTestBase {
    *
    * @dataProvider getSystemAdminRoutes
    */
-  public function testSystemAdminLocalTasks($route, $expected) {
+  public function testSystemAdminLocalTasks($route, $expected): void {
     $this->assertLocalTasks($route, $expected);
   }
 
   /**
    * Provides a list of routes to test.
    */
-  public function getSystemAdminRoutes() {
+  public static function getSystemAdminRoutes() {
     return [
       ['system.admin_content', [['system.admin_content']]],
       [
@@ -66,6 +84,12 @@ class SystemLocalTasksTest extends LocalTaskIntegrationTestBase {
         [
           ['system.themes_page', 'system.theme_settings'],
           ['system.theme_settings_global', 'system.theme_settings_theme:olivero'],
+        ],
+      ],
+      [
+        'entity.foo.version_history',
+        [
+          ['entity.version_history:foo.version_history'],
         ],
       ],
     ];

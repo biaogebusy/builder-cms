@@ -1,0 +1,56 @@
+{
+	"country_code": "KR",
+	"parents": [
+		"KR",
+		"44"
+	],
+	"locale": "ko",
+	"subdivisions": {
+		"Gyeryong-si": {
+			"local_name": "계룡시"
+		},
+		"Gongju-si": {
+			"local_name": "공주시"
+		},
+		"Geumsan-gun": {
+			"local_name": "금산군"
+		},
+		"Nonsan-si": {
+			"local_name": "논산시"
+		},
+		"Dangjin-si": {
+			"local_name": "당진시"
+		},
+		"Boryeong-si": {
+			"local_name": "보령시"
+		},
+		"Buyeo-gun": {
+			"local_name": "부여군"
+		},
+		"Seosan-si": {
+			"local_name": "서산시"
+		},
+		"Seocheon-gun": {
+			"local_name": "서천군"
+		},
+		"Asan-si": {
+			"local_name": "아산시"
+		},
+		"Yesan-gun": {
+			"local_name": "예산군"
+		},
+		"Cheonan-si": {
+			"local_name": "천안시",
+			"has_children": true
+		},
+		"Cheongyang-gun": {
+			"local_name": "청양군"
+		},
+		"Taean-gun": {
+			"local_name": "태안군"
+		},
+		"Hongseong-gun": {
+			"local_name": "홍성군"
+		}
+	}
+}

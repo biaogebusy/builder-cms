@@ -34,7 +34,7 @@
             // Remove our changes and refresh the page.
             revert_tab.set({loading: true});
             $.ajax({
-              url: drupalSettings.path.baseUrl + drupalSettings.path.pathPrefix + 'admin/panelizer/panels_ipe/' + entity.entity_type_id + '/' + entity.entity_id + '/' + entity.view_mode + '/revert_to_default',
+              url: drupalSettings.path.baseUrl + 'admin/panelizer/panels_ipe/' + entity.entity_type_id + '/' + entity.entity_id + '/' + entity.view_mode + '/revert_to_default',
               data: {},
               type: 'POST'
             }).done(function (data) {

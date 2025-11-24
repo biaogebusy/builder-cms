@@ -9,7 +9,7 @@
 .erl-field .erl-disabled-items,
 .erl-field .erl-disabled-items.form-item.form-wrapper {
   padding: var(--gin-spacing-m);
-  margin-bottom: -6rem;
+  margin-block-end: -6rem;
   background: #f1f1f3;
   border-radius: var(--gin-border-m);
 
@@ -22,7 +22,8 @@
   }
 
   .fieldset__label {
-    padding: var(--gin-spacing-m) 0 var(--gin-spacing-l);
+    padding-block: var(--gin-spacing-m) var(--gin-spacing-l);
+    padding-inline: 0;
   }
 
   &__description {
@@ -63,7 +64,8 @@
   color: var(--gin-color-primary);
   line-height: 1.3;
   background: var(--gin-bg-item-hover);
-  padding: var(--gin-spacing-m) var(--gin-spacing-m) 34px var(--gin-spacing-m);
+  padding-block: var(--gin-spacing-m) 34px;
+  padding-inline: var(--gin-spacing-m);
   border: 1px dashed var(--gin-color-primary);
   border-radius: var(--gin-border-m);
   transform: none;
@@ -89,7 +91,7 @@
   .erl-add-content--single {
     button {
       .icon {
-        margin-right: var(--gin-spacing-xs);
+        margin-inline-end: var(--gin-spacing-xs);
       }
     }
   }
@@ -101,7 +103,7 @@
     }
 
     .form-item {
-      margin-left: var(--gin-spacing-xs);
+      margin-inline-start: var(--gin-spacing-xs);
     }
 
     &.active {
@@ -137,13 +139,13 @@
   border-color: #fff;
 
   &:not(:last-of-type) {
-    margin-bottom: var(--gin-spacing-m);
+    margin-block-end: var(--gin-spacing-m);
   }
 }
 
 // Disabled description position
 .erl-disabled-wrapper .erl-disabled-items__description {
-  top: var(--gin-spacing-m);
+  inset-block-start: var(--gin-spacing-m);
 }
 
 // Basic item styles
@@ -152,8 +154,8 @@
   label.paragraph-type--label {
     margin: -1px;
     position: absolute;
-    top: 12px;
-    left: 50%;
+    inset-block-start: 12px;
+    inset-inline-start: 50%;
     transform: translate(-50%);
     border: 0 none;
     font-style: normal;
@@ -164,8 +166,8 @@
   .layout-controls {
     opacity: 1;
     position: absolute;
-    left: var(--gin-spacing-xxs);
-    top: var(--gin-spacing-xs);
+    inset-inline-start: var(--gin-spacing-xxs);
+    inset-block-start: var(--gin-spacing-xs);
   }
 
   .paragraph {
@@ -189,7 +191,7 @@
 
       .field__item {
         flex-basis: 100%;
-        margin-right: var(--gin-spacing-xs);
+        margin-inline-end: var(--gin-spacing-xs);
       }
     }
   }
@@ -199,8 +201,8 @@
 .erl-item .erl-actions {
   visibility: visible;
   position: absolute;
-  right: var(--gin-spacing-xxs);
-  top: var(--gin-spacing-xs);
+  inset-inline-end: var(--gin-spacing-xxs);
+  inset-block-start: var(--gin-spacing-xs);
 }
 
 // Form wrapper

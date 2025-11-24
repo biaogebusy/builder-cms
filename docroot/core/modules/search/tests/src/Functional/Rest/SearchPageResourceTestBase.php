@@ -1,10 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\search\Functional\Rest;
 
 use Drupal\search\Entity\SearchPage;
 use Drupal\Tests\rest\Functional\EntityResource\ConfigEntityResourceTestBase;
 
+// cspell:ignore hinode
+
+/**
+ * Base class for Search page tests.
+ */
 abstract class SearchPageResourceTestBase extends ConfigEntityResourceTestBase {
 
   /**

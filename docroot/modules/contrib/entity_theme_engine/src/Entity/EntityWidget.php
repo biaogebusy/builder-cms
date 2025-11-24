@@ -35,18 +35,18 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  * "collection" = "/admin/structure/entity-widget"
  * },
  * config_export = {
- *    "id",
- *    "label",
- *    "entity_type",
- *    "bundle",
- *    "display",
- *    "theme",
- *    "library",
- *    "category",
- *    "preview",
- *    "attach",
- *    "enabled",
- *    "template"
+ *   "id",
+ *   "label",
+ *   "entity_type",
+ *   "bundle",
+ *   "template",
+ *   "display",
+ *   "theme",
+ *   "library",
+ *   "category",
+ *   "preview",
+ *   "attach",
+ *   "uuid"
  * }
  * )
  */
@@ -107,14 +107,14 @@ class EntityWidget extends ConfigEntityBase {
    * @var string
    */
   protected $library;
-
+  
   /**
    * The widget cagetory.
    *
    * @var string
    */
   protected $category;
-
+  
   /**
    * The widget preview image path.
    *
@@ -128,7 +128,7 @@ class EntityWidget extends ConfigEntityBase {
    * @var bool
    */
   protected $attach = 0;
-
+  
   /**
    * Is enabled.
    *
@@ -247,42 +247,42 @@ class EntityWidget extends ConfigEntityBase {
   public function setTheme($theme) {
     $this->theme = $theme;
   }
-
+  
   /**
    * @return string
    */
   public function getCategory() {
       return $this->category;
   }
-
+  
   /**
    * @return string
    */
   public function getPreview() {
       return $this->preview;
   }
-
+  
   /**
    * @param string $category
    */
   public function setCategory($category) {
       $this->category = $category;
   }
-
+  
   /**
    * @param string $preview
    */
   public function setPreview($preview) {
       $this->preview = $preview;
   }
-
+  
   /**
    * @return boolean
    */
   public function isAttach() {
       return $this->attach;
   }
-
+  
   /**
    * @param boolean $attach
    */

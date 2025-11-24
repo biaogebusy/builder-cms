@@ -3,8 +3,8 @@
 namespace Drupal\blazy\Traits;
 
 use Drupal\blazy\Blazy;
-use Drupal\blazy\internals\Internals;
 use Drupal\blazy\Utility\Arrays;
+use Drupal\blazy\internals\Internals;
 
 /**
  * A Trait for plugins, common for Blazy, Splide, Slick, etc.

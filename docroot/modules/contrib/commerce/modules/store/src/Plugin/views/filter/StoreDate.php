@@ -5,6 +5,7 @@ namespace Drupal\commerce_store\Plugin\views\filter;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
 use Drupal\datetime\Plugin\views\filter\Date;
+use Drupal\views\Attribute\ViewsFilter;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
@@ -16,9 +17,8 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * The "datetime" filter performs timezone conversion, assuming
  * that the entered value is in the user's timezone, and converting it to
  * UTC on storage. This filter ensures there is no conversion.
- *
- * @ViewsFilter("commerce_store_datetime")
  */
+#[ViewsFilter("commerce_store_datetime")]
 class StoreDate extends Date {
 
   /**

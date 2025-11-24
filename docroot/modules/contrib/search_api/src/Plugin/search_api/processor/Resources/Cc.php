@@ -12,6 +12,7 @@ class Cc implements UnicodeCharacterPropertyInterface {
    */
   public static function getRegularExpression() {
     // phpcs:disable
+    // cspell:disable
     return
       '\x{0000}\x{0001}\x{0002}\x{0003}\x{0004}\x{0005}\x{0006}' .
       '\x{0007}\x{0008}\x{0009}\x{000A}\x{000B}\x{000C}\x{000D}' .
@@ -24,6 +25,7 @@ class Cc implements UnicodeCharacterPropertyInterface {
       '\x{0097}\x{0098}\x{0099}\x{009A}\x{009B}\x{009C}\x{009D}' .
       '\x{009E}\x{009F}';
     // phpcs:enable
+    // cspell:enable
   }
 
 }

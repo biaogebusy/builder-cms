@@ -2,15 +2,15 @@
 
 namespace Drupal\Tests\page_manager\Unit;
 
-use Prophecy\PhpUnit\ProphecyTrait;
 use Drupal\Component\Plugin\Exception\ContextException;
 use Drupal\Core\Config\Entity\ConfigEntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Path\CurrentPathStack;
+use Drupal\Core\Routing\EnhancerInterface;
 use Drupal\page_manager\PageVariantInterface;
 use Drupal\page_manager\Routing\VariantRouteFilter;
 use Drupal\Tests\UnitTestCase;
-use Drupal\Core\Routing\EnhancerInterface;
+use Prophecy\PhpUnit\ProphecyTrait;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\Route;
@@ -62,6 +62,7 @@ class VariantRouteFilterTest extends UnitTestCase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    parent::setUp();
     $this->pageVariantStorage = $this->prophesize(ConfigEntityStorageInterface::class);
 
     $this->entityTypeManager = $this->prophesize(EntityTypeManagerInterface::class);
@@ -106,7 +107,7 @@ class VariantRouteFilterTest extends UnitTestCase {
     $route_collection = new RouteCollection();
     $request = new Request();
 
-    $route = new Route('/path/with/{slug}', ['page_manager_page_variant' => 'a_variant']);
+    $route = new Route('/path/with/{slug}', ['_page_manager_page_variant' => 'a_variant']);
     $route_collection->add('a_route', $route);
 
     $page_variant = $this->prophesize(PageVariantInterface::class);
@@ -149,7 +150,7 @@ class VariantRouteFilterTest extends UnitTestCase {
     $route_collection = new RouteCollection();
     $request = new Request();
 
-    $route = new Route('/path/with/{slug}', ['page_manager_page_variant' => 'a_variant']);
+    $route = new Route('/path/with/{slug}', ['_page_manager_page_variant' => 'a_variant']);
     $route_collection->add('a_route', $route);
 
     $page_variant = $this->prophesize(PageVariantInterface::class);
@@ -173,7 +174,7 @@ class VariantRouteFilterTest extends UnitTestCase {
     $route_collection = new RouteCollection();
     $request = new Request();
 
-    $route = new Route('/path/with/{slug}', ['page_manager_page_variant' => 'a_variant']);
+    $route = new Route('/path/with/{slug}', ['_page_manager_page_variant' => 'a_variant']);
     $route_collection->add('a_route', $route);
 
     $page_variant = $this->prophesize(PageVariantInterface::class);
@@ -186,7 +187,7 @@ class VariantRouteFilterTest extends UnitTestCase {
     $expected = ['a_route' => $route];
     $this->assertSame($expected, $result->all());
     $expected_attributes = [
-      'page_manager_page_variant' => 'a_variant',
+      '_page_manager_page_variant' => 'a_variant',
       '_route_object' => $route,
       '_route' => 'a_route',
       '_page_manager_attributes_prepared' => TRUE,
@@ -202,8 +203,10 @@ class VariantRouteFilterTest extends UnitTestCase {
     $route_collection = new RouteCollection();
     $request = new Request();
 
-    $route1 = new Route('/path/with/{slug}', ['page_manager_page_variant' => 'variant_1', 'page_manager_page_variant_weight' => 0]);
-    $route2 = new Route('/path/with/{slug}', ['page_manager_page_variant' => 'variant_2', 'page_manager_page_variant_weight' => 2]);
+    // phpcs:ignore
+    $route1 = new Route('/path/with/{slug}', ['_page_manager_page_variant' => 'variant_1', '_page_manager_page_variant_weight' => 0]);
+    // phpcs:ignore
+    $route2 = new Route('/path/with/{slug}', ['_page_manager_page_variant' => 'variant_2', '_page_manager_page_variant_weight' => 2]);
     // Add route2 first to ensure that the routes get sorted by weight.
     $route_collection->add('route_2', $route2);
     $route_collection->add('route_1', $route1);
@@ -219,8 +222,8 @@ class VariantRouteFilterTest extends UnitTestCase {
     $expected = ['route_1' => $route1];
     $this->assertSame($expected, $result->all());
     $expected_attributes = [
-      'page_manager_page_variant' => 'variant_1',
-      'page_manager_page_variant_weight' => 0,
+      '_page_manager_page_variant' => 'variant_1',
+      '_page_manager_page_variant_weight' => 0,
       '_route_object' => $route1,
       '_route' => 'route_1',
       '_page_manager_attributes_prepared' => TRUE,
@@ -236,11 +239,12 @@ class VariantRouteFilterTest extends UnitTestCase {
     $route_collection = new RouteCollection();
     $request = new Request();
 
-    $route1 = new Route('/path/with/{slug}', ['page_manager_page_variant' => 'variant_1', 'page_manager_page_variant_weight' => 1]);
+    // phpcs:ignore
+    $route1 = new Route('/path/with/{slug}', ['_page_manager_page_variant' => 'variant_1', '_page_manager_page_variant_weight' => 1]);
     $defaults = [
-      'page_manager_page_variant' => 'variant_2',
-      'page_manager_page_variant_weight' => 2,
-      'overridden_route_name' => 'overridden_route_name_for_selected_route',
+      '_page_manager_page_variant' => 'variant_2',
+      '_page_manager_page_variant_weight' => 2,
+      '_overridden_route_name' => 'overridden_route_name_for_selected_route',
     ];
     $route2 = new Route('/path/with/{slug}', $defaults);
     // Add route2 first to ensure that the routes get sorted by weight.
@@ -281,13 +285,14 @@ class VariantRouteFilterTest extends UnitTestCase {
 
     // The selected route specifies a different base route.
     $defaults = [
-      'page_manager_page_variant' => 'variant1',
-      'page_manager_page_variant_weight' => -2,
-      'overridden_route_name' => 'route_1',
+      '_page_manager_page_variant' => 'variant1',
+      '_page_manager_page_variant_weight' => -2,
+      '_overridden_route_name' => 'route_1',
     ];
     $route1 = new Route('/path/with/{slug}');
     $route2 = new Route('/path/with/{slug}', $defaults);
-    $route3 = new Route('/path/with/{slug}', ['page_manager_page_variant' => 'variant2', 'page_manager_page_variant_weight' => -1]);
+    // phpcs:ignore
+    $route3 = new Route('/path/with/{slug}', ['_page_manager_page_variant' => 'variant2', '_page_manager_page_variant_weight' => -1]);
     $route4 = new Route('/path/with/{slug}');
     // Add routes in different order to test sorting.
     $route_collection->add('route_3', $route3);
@@ -323,7 +328,7 @@ class VariantRouteFilterTest extends UnitTestCase {
     $route_collection = new RouteCollection();
     $request = new Request([], [], ['foo' => 'bar', 'slug' => 2]);
 
-    $route = new Route('/path/with/{slug}', ['page_manager_page_variant' => 'a_variant']);
+    $route = new Route('/path/with/{slug}', ['_page_manager_page_variant' => 'a_variant']);
     $route_collection->add('a_route', $route);
 
     $page_variant = $this->prophesize(PageVariantInterface::class);
@@ -337,7 +342,7 @@ class VariantRouteFilterTest extends UnitTestCase {
     $result_enhance_attributes = $expected_enhance_attributes = [
       'foo' => 'bar',
       'slug' => '1',
-      'page_manager_page_variant' => 'a_variant',
+      '_page_manager_page_variant' => 'a_variant',
       '_route_object' => $route,
       '_route' => 'a_route',
     ];
@@ -350,7 +355,7 @@ class VariantRouteFilterTest extends UnitTestCase {
     $expected_attributes = [
       'foo' => 'bar',
       'slug' => 'slug 1',
-      'page_manager_page_variant' => 'a_variant',
+      '_page_manager_page_variant' => 'a_variant',
       '_route_object' => $route,
       '_route' => 'a_route',
       '_page_manager_attributes_prepared' => TRUE,
@@ -368,7 +373,7 @@ class VariantRouteFilterTest extends UnitTestCase {
     $original_attributes = ['foo' => 'bar', 'slug' => 2];
     $request = new Request([], [], $original_attributes);
 
-    $route = new Route('/path/with/{slug}', ['page_manager_page_variant' => 'a_variant']);
+    $route = new Route('/path/with/{slug}', ['_page_manager_page_variant' => 'a_variant']);
     $route_collection->add('a_route', $route);
 
     $page_variant = $this->prophesize(PageVariantInterface::class);
@@ -382,7 +387,7 @@ class VariantRouteFilterTest extends UnitTestCase {
     $expected_enhance_attributes = [
       'foo' => 'bar',
       'slug' => '1',
-      'page_manager_page_variant' => 'a_variant',
+      '_page_manager_page_variant' => 'a_variant',
       '_route_object' => $route,
       '_route' => 'a_route',
     ];
@@ -402,8 +407,10 @@ class VariantRouteFilterTest extends UnitTestCase {
     $request = new Request();
 
     // Add routes in different order to also test order preserving.
-    $route1 = new Route('/path/with/{slug}', ['page_manager_page_variant' => 'variant1', 'page_manager_page_variant_weight' => -10, 'overridden_route_name' => 'preserved_route_name']);
-    $route2 = new Route('/path/with/{slug}', ['page_manager_page_variant' => 'variant2', 'page_manager_page_variant_weight' => -5]);
+    // phpcs:ignore
+    $route1 = new Route('/path/with/{slug}', ['_page_manager_page_variant' => 'variant1', '_page_manager_page_variant_weight' => -10, '_overridden_route_name' => 'preserved_route_name']);
+    // phpcs:ignore
+    $route2 = new Route('/path/with/{slug}', ['_page_manager_page_variant' => 'variant2', '_page_manager_page_variant_weight' => -5]);
     $route3 = new Route('/path/with/{slug}', []);
     $route4 = new Route('/path/with/{slug}', []);
     $route_collection->add('route_4', $route4);

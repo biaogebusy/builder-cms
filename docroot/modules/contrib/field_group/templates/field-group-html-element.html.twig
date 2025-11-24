@@ -17,14 +17,14 @@
 #}
 
 <{{ wrapper_element }} {{ attributes }}>
-  {% if title %}
+{% if title %}
   <{{ title_element }}{{ title_attributes }}>{{ title }}</{{ title_element }}>
-  {% endif %}
+{% endif %}
   {% if collapsible %}
-  <div class="field-group-wrapper">
+<div class="field-group-wrapper">
   {% endif %}
   {{children}}
   {% if collapsible %}
-  </div>
-  {% endif %}
+</div>
+{% endif %}
 </{{ wrapper_element }}>

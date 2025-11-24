@@ -2,11 +2,11 @@
 
 namespace Drupal\commerce_promotion;
 
+use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\commerce\CommerceContentEntityStorage;
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_promotion\Event\FilterPromotionsEvent;
 use Drupal\commerce_promotion\Event\PromotionEvents;
-use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -38,6 +38,8 @@ class PromotionStorage extends CommerceContentEntityStorage implements Promotion
     $date = $order->getCalculationDate()->format(DateTimeItemInterface::DATETIME_STORAGE_FORMAT);
 
     $query = $this->getQuery();
+    $query->addTag('commerce_promotion_available');
+    $query->accessCheck(FALSE);
     $or_condition = $query->orConditionGroup()
       ->condition('end_date', $date, '>')
       ->notExists('end_date');
@@ -49,8 +51,7 @@ class PromotionStorage extends CommerceContentEntityStorage implements Promotion
       ->condition('start_date', $date, '<=')
       ->condition('status', TRUE)
       ->condition($or_condition)
-      ->condition($store_condition)
-      ->accessCheck(FALSE);
+      ->condition($store_condition);
     if ($offer_ids) {
       $query->condition('offer.target_plugin_id', $offer_ids, 'IN');
     }

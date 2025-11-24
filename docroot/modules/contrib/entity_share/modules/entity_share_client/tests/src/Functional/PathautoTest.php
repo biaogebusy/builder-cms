@@ -4,11 +4,11 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\entity_share_client\Functional;
 
-use Drupal\entity_share\Plugin\jsonapi\FieldEnhancer\EntitySharePathautoEnhancer;
-use Drupal\node\NodeInterface;
 use Drupal\Component\Serialization\Json;
 use Drupal\entity_share\EntityShareUtility;
+use Drupal\entity_share\Plugin\jsonapi\FieldEnhancer\EntitySharePathautoEnhancer;
 use Drupal\entity_share_client\ImportContext;
+use Drupal\node\NodeInterface;
 
 /**
  * General functional test class for path field with Pathauto.
@@ -59,6 +59,10 @@ class PathautoTest extends EntityShareClientFunctionalTestBase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    // This test is skipped because it is broken.
+    // @see https://www.drupal.org/project/entity_share/issues/3540971
+    $this->markTestSkipped();
+
     parent::setUp();
 
     $this->configFactory = $this->container->get('config.factory');

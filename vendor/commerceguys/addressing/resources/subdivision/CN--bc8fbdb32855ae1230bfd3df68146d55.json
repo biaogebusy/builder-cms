@@ -1,0 +1,32 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"SC",
+		"Dazhou Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Dachuan Qu": {
+			"local_name": "达川区"
+		},
+		"Dazhu Xian": {
+			"local_name": "大竹县"
+		},
+		"Kaijiang Xian": {
+			"local_name": "开江县"
+		},
+		"Qu Xian": {
+			"local_name": "渠县"
+		},
+		"Tongzhou Qu": {
+			"local_name": "通川区"
+		},
+		"Wanyuan Shi": {
+			"local_name": "万源市"
+		},
+		"Xuanhan Xian": {
+			"local_name": "宣汉县"
+		}
+	}
+}

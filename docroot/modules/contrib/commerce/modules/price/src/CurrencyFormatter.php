@@ -2,10 +2,10 @@
 
 namespace Drupal\commerce_price;
 
-use CommerceGuys\Intl\Currency\CurrencyRepositoryInterface;
 use CommerceGuys\Intl\Formatter\CurrencyFormatter as ExternalCurrencyFormatter;
 use CommerceGuys\Intl\NumberFormat\NumberFormatRepositoryInterface;
 use Drupal\commerce\CurrentLocaleInterface;
+use Drupal\commerce_price\Repository\CurrencyRepositoryInterface;
 
 /**
  * Extends the commerceguys/intl CurrencyFormatter to provide better defaults.
@@ -19,7 +19,7 @@ class CurrencyFormatter extends ExternalCurrencyFormatter {
    *
    * @param \CommerceGuys\Intl\NumberFormat\NumberFormatRepositoryInterface $number_format_repository
    *   The number format repository.
-   * @param \CommerceGuys\Intl\Currency\CurrencyRepositoryInterface $currency_repository
+   * @param \Drupal\commerce_price\Repository\CurrencyRepositoryInterface $currency_repository
    *   The currency repository.
    * @param \Drupal\commerce\CurrentLocaleInterface $current_locale
    *   The current locale.

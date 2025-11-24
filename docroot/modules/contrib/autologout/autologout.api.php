@@ -47,3 +47,13 @@ function hook_autologout_refresh_only() {
     return TRUE;
   }
 }
+
+/**
+ * React right after user has been logged out via autologout.
+ *
+ * This hook fires only when user is logged out via autologout, not when the
+ * user logs themselves out. This is fired after the session has been destroyed
+ * and the active user has been set to anonymous.
+ */
+function hook_autologout_user_logout() {
+}

@@ -69,7 +69,7 @@ class ViewsDataHelper {
         foreach ($table_data as $field => $info) {
           // Collect table data from this table
           if ($field == 'table') {
-            // calculate what tables this table can join to.
+            // Calculate what tables this table can join to.
             if (!empty($info['join'])) {
               $bases = array_keys($info['join']);
             }
@@ -148,7 +148,7 @@ class ViewsDataHelper {
           $strings += $this->fields[$base_table][$type];
         }
       }
-      uasort($strings, ['self', 'fetchedFieldSort']);
+      uasort($strings, [$this, 'fetchedFieldSort']);
       return $strings;
     }
 

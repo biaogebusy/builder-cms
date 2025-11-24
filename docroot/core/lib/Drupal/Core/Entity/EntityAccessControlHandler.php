@@ -58,7 +58,7 @@ class EntityAccessControlHandler extends EntityHandlerBase implements EntityAcce
   /**
    * {@inheritdoc}
    */
-  public function access(EntityInterface $entity, $operation, AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access(EntityInterface $entity, $operation, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
     $account = $this->prepareUser($account);
     $langcode = $entity->language()->getId();
 
@@ -76,6 +76,10 @@ class EntityAccessControlHandler extends EntityHandlerBase implements EntityAcce
     if ($entity instanceof RevisionableInterface) {
       /** @var \Drupal\Core\Entity\RevisionableInterface $entity */
       $cid .= ':' . $entity->getRevisionId();
+      // It is not possible to delete or revert the default revision.
+      if ($entity->isDefaultRevision() && ($operation === 'revert' || $operation === 'delete revision')) {
+        return $return_as_object ? AccessResult::forbidden() : FALSE;
+      }
     }
 
     if (($return = $this->getCache($cid, $operation, $langcode, $account)) !== NULL) {
@@ -227,15 +231,15 @@ class EntityAccessControlHandler extends EntityHandlerBase implements EntityAcce
   /**
    * {@inheritdoc}
    */
-  public function createAccess($entity_bundle = NULL, AccountInterface $account = NULL, array $context = [], $return_as_object = FALSE) {
+  public function createAccess($entity_bundle = NULL, ?AccountInterface $account = NULL, array $context = [], $return_as_object = FALSE) {
     $account = $this->prepareUser($account);
     $context += [
       'entity_type_id' => $this->entityTypeId,
       'langcode' => LanguageInterface::LANGCODE_DEFAULT,
     ];
 
-    $cid = $entity_bundle ? 'create:' . $entity_bundle : 'create';
-    if (($access = $this->getCache($cid, 'create', $context['langcode'], $account)) !== NULL) {
+    $cid = $this->buildCreateAccessCid($context, $entity_bundle);
+    if ($cid && ($access = $this->getCache($cid, 'create', $context['langcode'], $account)) !== NULL) {
       // Cache hit, no work necessary.
       return $return_as_object ? $access : $access->isAllowed();
     }
@@ -261,7 +265,7 @@ class EntityAccessControlHandler extends EntityHandlerBase implements EntityAcce
     if (!$return->isForbidden()) {
       $return = $return->orIf($this->checkCreateAccess($account, $context, $entity_bundle));
     }
-    $result = $this->setCache($return, $cid, 'create', $context['langcode'], $account);
+    $result = $cid ? $this->setCache($return, $cid, 'create', $context['langcode'], $account) : $return;
     return $return_as_object ? $result : $result->isAllowed();
   }
 
@@ -301,7 +305,7 @@ class EntityAccessControlHandler extends EntityHandlerBase implements EntityAcce
    * @return \Drupal\Core\Session\AccountInterface
    *   Returns the current account object.
    */
-  protected function prepareUser(AccountInterface $account = NULL) {
+  protected function prepareUser(?AccountInterface $account = NULL) {
     if (!$account) {
       $account = \Drupal::currentUser();
     }
@@ -311,7 +315,7 @@ class EntityAccessControlHandler extends EntityHandlerBase implements EntityAcce
   /**
    * {@inheritdoc}
    */
-  public function fieldAccess($operation, FieldDefinitionInterface $field_definition, AccountInterface $account = NULL, FieldItemListInterface $items = NULL, $return_as_object = FALSE) {
+  public function fieldAccess($operation, FieldDefinitionInterface $field_definition, ?AccountInterface $account = NULL, ?FieldItemListInterface $items = NULL, $return_as_object = FALSE) {
     $account = $this->prepareUser($account);
 
     // Get the default access restriction that lives within this field.
@@ -384,8 +388,45 @@ class EntityAccessControlHandler extends EntityHandlerBase implements EntityAcce
    * @return \Drupal\Core\Access\AccessResultInterface
    *   The access result.
    */
-  protected function checkFieldAccess($operation, FieldDefinitionInterface $field_definition, AccountInterface $account, FieldItemListInterface $items = NULL) {
+  protected function checkFieldAccess($operation, FieldDefinitionInterface $field_definition, AccountInterface $account, ?FieldItemListInterface $items = NULL) {
+    if (!$items instanceof FieldItemListInterface || $operation !== 'view') {
+      return AccessResult::allowed();
+    }
+    $entity = $items->getEntity();
+    $isRevisionLogField = $this->entityType instanceof ContentEntityTypeInterface && $field_definition->getName() === $this->entityType->getRevisionMetadataKey('revision_log_message');
+    if ($entity && $isRevisionLogField) {
+      // The revision log should only be visible to those who can view the
+      // revisions OR edit the entity.
+      return $entity->access('view revision', $account, TRUE)
+        ->orIf($entity->access('update', $account, TRUE));
+    }
     return AccessResult::allowed();
+  }
+
+  /**
+   * Builds the create access result cache ID.
+   *
+   * If there is no context other than langcode and entity type id, then the
+   * cache id can be simply the bundle. Otherwise, a custom implementation is
+   * needed to ensure cacheability, and the default implementation here
+   * returns null.
+   *
+   * @param array $context
+   *   The create access context.
+   * @param string|null $entity_bundle
+   *   The entity bundle, if the entity type has bundles.
+   *
+   * @return string|null
+   *   The create access result cache ID, or null if uncacheable.
+   */
+  protected function buildCreateAccessCid(array $context, ?string $entity_bundle): ?string {
+    $extendedContext = array_filter($context, function ($key) {
+      return !(in_array($key, ['entity_type_id', 'langcode']));
+    }, ARRAY_FILTER_USE_KEY);
+    if (empty($extendedContext)) {
+      return $entity_bundle ? 'create:' . $entity_bundle : 'create';
+    }
+    return NULL;
   }
 
 }

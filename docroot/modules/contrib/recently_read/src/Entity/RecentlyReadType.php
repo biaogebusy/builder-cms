@@ -68,14 +68,14 @@ class RecentlyReadType extends ConfigEntityBundleBase implements RecentlyReadTyp
   /**
    * {@inheritdoc}
    */
-  public function getTypes() {
+  public function getTypes(): array {
     return array_filter($this->get('types'));
   }
 
   /**
    * {@inheritdoc}
    */
-  public function preSave(EntityStorageInterface $storage) {
+  public function preSave(EntityStorageInterface $storage): void {
     parent::preSave($storage);
 
     $types = array_filter($this->get('types'));

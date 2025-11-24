@@ -73,7 +73,7 @@ class ServerClearConfirmForm extends EntityConfirmFormBase {
       $server->deleteAllItems();
       $this->messenger->addStatus($this->t('All indexed data was successfully deleted from the server.'));
     }
-    catch (SearchApiException $e) {
+    catch (SearchApiException) {
       $this->messenger->addError($this->t('Indexed data could not be cleared for some indexes. Check the logs for details.'));
     }
 
@@ -89,7 +89,7 @@ class ServerClearConfirmForm extends EntityConfirmFormBase {
       catch (SearchApiException $e) {
         $message = '%type while clearing index %index: @message in %function (line %line of %file).';
         $variables = [
-          '%index' => $index->label(),
+          '%index' => $index->label() ?? $index->id(),
         ];
         $variables += Error::decodeException($e);
         $this->getLogger('search_api')->error($message, $variables);

@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\flag\Functional;
 
+use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\flag\Traits\FlagCreateTrait;
 use Drupal\Tests\flag\Traits\FlagPermissionsTrait;
-use Drupal\Core\Url;
 
 /**
  * Test the NoJS responses to clicking on  AjaxLinks.
@@ -67,7 +69,7 @@ class AjaxLinkNoJsTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() :void{
+  protected function setUp() :void {
     parent::setUp();
 
     // A article to test with.
@@ -127,7 +129,7 @@ class AjaxLinkNoJsTest extends BrowserTestBase {
     // Simulate a noJs ActionLink (unflag).
     $unflag_link->click();
 
-    // Verfy unflag message appears.
+    // Verify unflag message appears.
     $unflag_message = $this->flag->getMessage('unflag');
     $this->assertSession()->pageTextContains($unflag_message);
 

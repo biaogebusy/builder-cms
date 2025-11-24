@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Functional;
 
 use Drupal\block\Entity\Block;
@@ -38,9 +40,7 @@ class NodeBlockFunctionalTest extends NodeTestBase {
   protected $webUser;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['block', 'views', 'node_block_test'];
 
@@ -67,7 +67,7 @@ class NodeBlockFunctionalTest extends NodeTestBase {
   /**
    * Tests the recent comments block.
    */
-  public function testRecentNodeBlock() {
+  public function testRecentNodeBlock(): void {
     $this->drupalLogin($this->adminUser);
 
     // Disallow anonymous users to view content.
@@ -147,9 +147,8 @@ class NodeBlockFunctionalTest extends NodeTestBase {
     $theme = \Drupal::service('theme_handler')->getDefault();
     $this->drupalGet("admin/structure/block/add/system_powered_by_block/{$theme}");
     $this->assertSession()->pageTextContains('Content type');
-    $this->assertSession()->pageTextNotContains('Content types (Deprecated)');
     $edit = [
-      'id' => strtolower($this->randomMachineName()),
+      'id' => $this->randomMachineName(),
       'region' => 'sidebar_first',
       'visibility[entity_bundle:node][bundles][article]' => 'article',
     ];
@@ -172,10 +171,13 @@ class NodeBlockFunctionalTest extends NodeTestBase {
     $this->assertSession()->pageTextNotContains($label);
     $this->assertCacheContexts(['languages:language_content', 'languages:language_interface', 'theme', 'url.query_args:' . MainContentViewSubscriber::WRAPPER_FORMAT, 'url.site', 'user', 'route']);
 
-    // Ensure that a page that does not have a node context can still be cached,
-    // the front page is the user page which is already cached from the login
-    // request above.
+    // Ensure that a page that does not have a node context can still be cached.
+    \Drupal::service('module_installer')->install(['dynamic_page_cache_test']);
+    $this->drupalGet(Url::fromRoute('dynamic_page_cache_test.cacheable_response'));
+    $this->assertSession()->responseHeaderEquals('X-Drupal-Dynamic-Cache', 'MISS');
+    $this->drupalGet(Url::fromRoute('dynamic_page_cache_test.cacheable_response'));
     $this->assertSession()->responseHeaderEquals('X-Drupal-Dynamic-Cache', 'HIT');
+    \Drupal::service('module_installer')->uninstall(['dynamic_page_cache_test']);
 
     $this->drupalGet('node/add/article');
     // Check that block is displayed on the add article page.
@@ -183,7 +185,7 @@ class NodeBlockFunctionalTest extends NodeTestBase {
     $this->assertCacheContexts(['languages:language_content', 'languages:language_interface', 'session', 'theme', 'url.path', 'url.query_args', 'user', 'route']);
 
     // The node/add/article page is an admin path and currently uncacheable.
-    $this->assertSession()->responseHeaderEquals('X-Drupal-Dynamic-Cache', 'UNCACHEABLE');
+    $this->assertSession()->responseHeaderEquals('X-Drupal-Dynamic-Cache', 'UNCACHEABLE (poor cacheability)');
 
     $this->drupalGet('node/' . $node1->id());
     // Check that block is displayed on the node page when node is of type
@@ -235,35 +237,6 @@ class NodeBlockFunctionalTest extends NodeTestBase {
     // Check that block is displayed on the admin/structure/block page.
     $this->assertSession()->pageTextContains($label);
     $this->assertSession()->linkByHrefExists($block->toUrl()->toString());
-  }
-
-  /**
-   * Tests customization of deprecated node type condition.
-   *
-   * @group legacy
-   */
-  public function testDeprecatedNodeTypeCondition() {
-    $this->expectDeprecation('\Drupal\node\Plugin\Condition\NodeType is deprecated in drupal:9.3.0 and is removed from drupal:10.0.0. Use \Drupal\Core\Entity\Plugin\Condition\EntityBundle instead. See https://www.drupal.org/node/2983299');
-    $this->expectDeprecation("The 'condition.plugin.node_type' config schema is deprecated in drupal:9.3.0 and is removed from drupal 10.0.0. Use the 'entity_bundle:node_type' key instead to define a node type condition. See https://www.drupal.org/node/2983299.");
-    $this->drupalLogin($this->adminUser);
-    $this->drupalPlaceBlock('system_powered_by_block', [
-      'id' => 'powered_by_deprecated',
-      'visibility' => [
-        'node_type' => [
-          'bundles' => [
-            'article' => 'article',
-          ],
-        ],
-      ],
-      'context_mapping' => ['node' => '@node.node_route_context:node'],
-    ]);
-
-    // On an existing block with the deprecated plugin, the deprecated
-    // label is shown.
-    $this->drupalGet("admin/structure/block/manage/powered_by_deprecated");
-    $this->assertSession()->pageTextContains('Content type');
-    $this->assertSession()->pageTextContains('Content types (Deprecated)');
-    $this->submitForm([], 'Save');
   }
 
 }

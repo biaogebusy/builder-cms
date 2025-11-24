@@ -5,6 +5,7 @@ namespace Drupal\layout_builder\Plugin\Block;
 use Drupal\Component\Plugin\Factory\DefaultFactory;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityDisplayBase;
@@ -21,22 +22,25 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\ContextAwarePluginInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\field\FieldConfigInterface;
+use Drupal\layout_builder\Plugin\Derivative\FieldBlockDeriver;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\field\FieldLabelOptionsTrait;
 
 /**
  * Provides a block that renders a field from an entity.
  *
- * @Block(
- *   id = "field_block",
- *   deriver = "\Drupal\layout_builder\Plugin\Derivative\FieldBlockDeriver",
- * )
- *
  * @internal
  *   Plugin classes are internal.
  */
+#[Block(
+  id: "field_block",
+  deriver: FieldBlockDeriver::class
+)]
 class FieldBlock extends BlockBase implements ContextAwarePluginInterface, ContainerFactoryPluginInterface {
 
+  use FieldLabelOptionsTrait;
   /**
    * The entity field manager.
    *
@@ -159,7 +163,11 @@ class FieldBlock extends BlockBase implements ContextAwarePluginInterface, Conta
     $display_settings['third_party_settings']['layout_builder']['view_mode'] = $this->getContextValue('view_mode');
     $entity = $this->getEntity();
     try {
-      $build = $entity->get($this->fieldName)->view($display_settings);
+      $build = [];
+      $view = $entity->get($this->fieldName)->view($display_settings);
+      if ($view) {
+        $build = [$view];
+      }
     }
     // @todo Remove in https://www.drupal.org/project/drupal/issues/2367555.
     catch (EnforcedResponseException $e) {
@@ -205,13 +213,7 @@ class FieldBlock extends BlockBase implements ContextAwarePluginInterface, Conta
     }
 
     // Check to see if the field has any values or a default value.
-    if ($field->isEmpty() && !$field->getFieldDefinition()->getDefaultValue($entity)) {
-      // @todo Remove special handling of image fields after
-      //   https://www.drupal.org/project/drupal/issues/3005528.
-      if ($field->getFieldDefinition()->getType() === 'image' && $field->getFieldDefinition()->getSetting('default_image')) {
-        return $access;
-      }
-
+    if ($field->isEmpty() && !$this->entityFieldHasDefaultValue()) {
       return $access->andIf(AccessResult::forbidden());
     }
     return $access;
@@ -247,15 +249,7 @@ class FieldBlock extends BlockBase implements ContextAwarePluginInterface, Conta
     $form['formatter']['label'] = [
       '#type' => 'select',
       '#title' => $this->t('Label'),
-      // @todo This is directly copied from
-      //   \Drupal\field_ui\Form\EntityViewDisplayEditForm::getFieldLabelOptions(),
-      //   resolve this in https://www.drupal.org/project/drupal/issues/2933924.
-      '#options' => [
-        'above' => $this->t('Above'),
-        'inline' => $this->t('Inline'),
-        'hidden' => '- ' . $this->t('Hidden') . ' -',
-        'visually_hidden' => '- ' . $this->t('Visually Hidden') . ' -',
-      ],
+      '#options' => $this->getFieldLabelOptions(),
       '#default_value' => $config['formatter']['label'],
     ];
 
@@ -413,6 +407,35 @@ class FieldBlock extends BlockBase implements ContextAwarePluginInterface, Conta
       'view_mode' => EntityDisplayBase::CUSTOM_MODE,
       'prepare' => TRUE,
     ]);
+  }
+
+  /**
+   * Checks whether there is a default value set on the field.
+   *
+   * @return bool
+   *   TRUE if default value set, FALSE otherwise.
+   */
+  protected function entityFieldHasDefaultValue(): bool {
+    $entity = $this->getEntity();
+    $field = $entity->get($this->fieldName);
+    $definition = $field->getFieldDefinition();
+    if ($definition->getDefaultValue($entity)) {
+      return TRUE;
+    }
+
+    // @todo Remove special handling of image fields after
+    // https://www.drupal.org/project/drupal/issues/3005528.
+    if ($definition->getType() !== 'image') {
+      return FALSE;
+    }
+
+    $default_image = $definition->getSetting('default_image');
+    // If we are dealing with a configurable field, look in both instance-level
+    // and field-level settings.
+    if (empty($default_image['uuid']) && ($definition instanceof FieldConfigInterface)) {
+      $default_image = $definition->getFieldStorageDefinition()->getSetting('default_image');
+    }
+    return !empty($default_image['uuid']);
   }
 
 }

@@ -4,8 +4,8 @@ namespace Drupal\commerce;
 
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Ajax\AjaxResponse;
-use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Ajax\PrependCommand;
+use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Form\FormStateInterface;
 
 trait AjaxFormTrait {
@@ -14,7 +14,7 @@ trait AjaxFormTrait {
    * Ajax handler for refreshing an entire form.
    *
    * All status messages need to be displayed when refreshing the form.
-   * In large forms, it is a best practise to output these messages close
+   * In large forms, it is a best practice to output these messages close
    * to the triggering element. For example, when ajax is triggered at
    * checkout, the messages should be shown above the relevant checkout pane.
    * When ['#ajax']['element'] is specified, the messages will be shown above

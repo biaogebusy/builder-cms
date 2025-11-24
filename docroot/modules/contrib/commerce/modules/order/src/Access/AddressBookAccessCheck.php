@@ -2,10 +2,10 @@
 
 namespace Drupal\commerce_order\Access;
 
-use Drupal\commerce_order\AddressBookInterface;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Routing\Access\AccessInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\commerce_order\AddressBookInterface;
 
 /**
  * Checks address book access.
@@ -17,21 +17,12 @@ use Drupal\Core\Session\AccountInterface;
 class AddressBookAccessCheck implements AccessInterface {
 
   /**
-   * The address book.
-   *
-   * @var \Drupal\commerce_order\AddressBookInterface
-   */
-  protected $addressBook;
-
-  /**
    * Constructs a new AddressBookAccessCheck object.
    *
-   * @param \Drupal\commerce_order\AddressBookInterface $address_book
+   * @param \Drupal\commerce_order\AddressBookInterface $addressBook
    *   The address book.
    */
-  public function __construct(AddressBookInterface $address_book) {
-    $this->addressBook = $address_book;
-  }
+  public function __construct(protected AddressBookInterface $addressBook) {}
 
   /**
    * Checks address book access.

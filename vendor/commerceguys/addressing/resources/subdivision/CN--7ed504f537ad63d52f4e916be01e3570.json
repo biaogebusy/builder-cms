@@ -1,0 +1,29 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"LN",
+		"Yingkou Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Bayuquan Qu": {
+			"local_name": "鲅鱼圈区"
+		},
+		"Dashiqiao Shi": {
+			"local_name": "大石桥市"
+		},
+		"Gaizhou Shi": {
+			"local_name": "盖州市"
+		},
+		"Laobian Qu": {
+			"local_name": "老边区"
+		},
+		"Xishi Qu": {
+			"local_name": "西市区"
+		},
+		"Zhanqian Qu": {
+			"local_name": "站前区"
+		}
+	}
+}

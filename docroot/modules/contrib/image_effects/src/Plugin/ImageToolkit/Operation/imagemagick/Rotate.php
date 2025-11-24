@@ -1,22 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageToolkit\Operation\imagemagick;
 
-use Drupal\imagemagick\Plugin\ImageToolkit\Operation\imagemagick\ImagemagickImageToolkitOperationBase;
+use Drupal\Core\ImageToolkit\Attribute\ImageToolkitOperation;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\image_effects\Component\Rectangle;
 use Drupal\image_effects\Plugin\ImageToolkit\Operation\RotateTrait;
+use Drupal\imagemagick\PackageSuite;
+use Drupal\imagemagick\Plugin\ImageToolkit\Operation\imagemagick\ImagemagickImageToolkitOperationBase;
 
 /**
  * Defines ImageMagick Rotate operation.
- *
- * @ImageToolkitOperation(
- *   id = "image_effects_imagemagick_rotate",
- *   toolkit = "imagemagick",
- *   operation = "rotate_ie",
- *   label = @Translation("Rotate"),
- *   description = @Translation("Rotate image.")
- * )
  */
+#[ImageToolkitOperation(
+  id: 'image_effects_imagemagick_rotate',
+  toolkit: 'imagemagick',
+  operation: 'rotate_ie',
+  label: new TranslatableMarkup('Rotate'),
+  description: new TranslatableMarkup('Rotate image.'),
+)]
 class Rotate extends ImagemagickImageToolkitOperationBase {
 
   use RotateTrait;
@@ -28,7 +32,7 @@ class Rotate extends ImagemagickImageToolkitOperationBase {
   protected function execute(array $arguments) {
     $toolkit_arguments = $this->getToolkit()->arguments();
 
-    if ($this->getToolkit()->getExecManager()->getPackage() === 'graphicsmagick' && !empty($arguments['background'])) {
+    if ($this->getToolkit()->getExecManager()->getPackageSuite() === PackageSuite::Graphicsmagick && !empty($arguments['background'])) {
       // GraphicsMagick does not support alpha in background color.
       $arguments['background'] = substr($arguments['background'], 0, 7);
     }
@@ -38,19 +42,18 @@ class Rotate extends ImagemagickImageToolkitOperationBase {
       $mime_type = $this->getFormatMapper()->getMimeTypeFromFormat($format);
       if ($mime_type === 'image/jpeg') {
         // JPEG does not allow transparency. Set to fallback color.
-        $this->addArgument('-background ' . $this->escapeArgument($arguments['fallback_transparency_color']));
+        $this->addArguments(['-background', $arguments['fallback_transparency_color']]);
       }
       else {
-        $this->addArgument('-background transparent');
+        $this->addArguments(['-background', 'transparent']);
       }
     }
     else {
-      $this->addArgument('-background ' . $this->escapeArgument($arguments['background']));
+      $this->addArguments(['-background', $arguments['background']]);
     }
 
     // Rotate.
-    $this->addArgument('-rotate ' . $arguments['degrees']);
-    $this->addArgument('+repage');
+    $this->addArguments(['-rotate', $arguments['degrees'], '+repage']);
 
     // Need to resize the image after rotation to make sure it complies with
     // the dimensions expected, calculated via the Rectangle class.

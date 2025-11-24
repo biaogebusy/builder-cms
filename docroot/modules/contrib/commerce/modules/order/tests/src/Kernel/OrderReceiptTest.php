@@ -2,16 +2,16 @@
 
 namespace Drupal\Tests\commerce_order\Kernel;
 
+use Drupal\Component\Render\FormattableMarkup;
+use Drupal\Core\Language\Language;
+use Drupal\Core\Site\Settings;
+use Drupal\Core\Test\AssertMailTrait;
 use Drupal\commerce_order\Entity\Order;
 use Drupal\commerce_order\Entity\OrderType;
 use Drupal\commerce_payment\Entity\PaymentGateway;
 use Drupal\commerce_price\Price;
 use Drupal\commerce_product\Entity\Product;
 use Drupal\commerce_product\Entity\ProductVariation;
-use Drupal\Component\Render\FormattableMarkup;
-use Drupal\Core\Language\Language;
-use Drupal\Core\Site\Settings;
-use Drupal\Core\Test\AssertMailTrait;
 use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\profile\Entity\Profile;
 
@@ -38,15 +38,23 @@ class OrderReceiptTest extends OrderKernelTestBase {
    */
   protected $translations = [
     'fr' => [
+      // cspell:disable-next-line
       'Order #@number confirmed' => 'Commande #@number confirmée',
+      // cspell:disable-next-line
       'Thank you for your order!' => 'Nous vous remercions de votre commande!',
+      // cspell:disable-next-line
       'Default store' => 'Magasin par défaut',
+      // cspell:disable-next-line
       'Cash on delivery' => 'Paiement à la livraison',
     ],
     'es' => [
+      // cspell:disable-next-line
       'Order #@number confirmed' => 'Pedido #@number confirmado',
+      // cspell:disable-next-line
       'Thank you for your order!' => '¡Gracias por su orden!',
+      // cspell:disable-next-line
       'Default store' => 'Tienda por defecto',
+      // cspell:disable-next-line
       'Cash on delivery' => 'Contra reembolso',
     ],
   ];
@@ -70,7 +78,7 @@ class OrderReceiptTest extends OrderKernelTestBase {
 
     $this->installConfig(['system', 'language']);
     $this->installSchema('locale', ['locales_source', 'locales_target', 'locales_location']);
-    $user = $this->createUser(['mail' => $this->randomString() . '@example.com']);
+    $user = $this->createUser();
 
     foreach (array_keys($this->translations) as $langcode) {
       ConfigurableLanguage::createFromLangcode($langcode)->save();
@@ -254,7 +262,7 @@ class OrderReceiptTest extends OrderKernelTestBase {
    * @return array
    *   The data.
    */
-  public function providerOrderReceiptMultilingualData() {
+  public static function providerOrderReceiptMultilingualData() {
     return [
       [NULL, 'en', '$12.00'],
       [Language::LANGCODE_DEFAULT, 'en', '$12.00'],

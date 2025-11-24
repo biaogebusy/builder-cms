@@ -1,0 +1,26 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"AH",
+		"Suzhou Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Dangshan Xian": {
+			"local_name": "砀山县"
+		},
+		"Lingbi Xian": {
+			"local_name": "灵璧县"
+		},
+		"Si Xian": {
+			"local_name": "泗县"
+		},
+		"Xiao Xian": {
+			"local_name": "萧县"
+		},
+		"Yongqiao Qu": {
+			"local_name": "埇桥区"
+		}
+	}
+}

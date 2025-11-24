@@ -1,6 +1,0 @@
-ckeditor_uploadimage.save:
-  path: '/ckeditor_uploadimage/save_file'
-  defaults:
-    _controller: '\Drupal\ckeditor_uploadimage\Controller\CKEditorUploadImageController::saveFile'
-  requirements:
-    _permission: 'use ckeditor_uploadimage'

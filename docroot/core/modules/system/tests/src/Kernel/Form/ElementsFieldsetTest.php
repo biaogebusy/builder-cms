@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Kernel\Form;
 
 use Drupal\Core\Form\FormInterface;
@@ -109,7 +111,7 @@ class ElementsFieldsetTest extends KernelTestBase implements FormInterface {
   /**
    * Tests different display options for fieldset element descriptions.
    */
-  public function testFieldsetDescriptions() {
+  public function testFieldsetDescriptions(): void {
     $form_state = new FormState();
     $form = \Drupal::formBuilder()->getForm($this);
     $this->render($form);

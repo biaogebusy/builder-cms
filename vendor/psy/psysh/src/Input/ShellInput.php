@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2023 Justin Hileman
+ * (c) 2012-2025 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -21,14 +21,14 @@ class ShellInput extends StringInput
 {
     public const REGEX_STRING = '([^\s]+?)(?:\s|(?<!\\\\)"|(?<!\\\\)\'|$)';
 
-    private $hasCodeArgument = false;
+    private bool $hasCodeArgument = false;
 
     /**
      * Unlike the parent implementation's tokens, this contains an array of
      * token/rest pairs, so that code arguments can be handled while parsing.
      */
-    private $tokenPairs;
-    private $parsed;
+    private array $tokenPairs;
+    private array $parsed = [];
 
     /**
      * Constructor.

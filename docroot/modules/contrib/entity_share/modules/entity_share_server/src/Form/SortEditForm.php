@@ -8,8 +8,6 @@ use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Form to edit a sort on a channel.
- *
- * @package Drupal\entity_share_server\Form
  */
 class SortEditForm extends SortBaseForm {
 

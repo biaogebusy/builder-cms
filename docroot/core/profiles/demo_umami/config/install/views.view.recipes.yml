@@ -75,6 +75,7 @@ display:
         type: mini
         options:
           offset: 0
+          pagination_heading_level: h4
           items_per_page: 12
           total_pages: null
           id: 0
@@ -212,7 +213,13 @@ display:
         groups:
           1: AND
       style:
-        type: default
+        type: grid_responsive
+        options:
+          uses_fields: false
+          columns: 4
+          cell_min_width: 240
+          grid_gutter: 14
+          alignment: horizontal
       row:
         type: 'entity:node'
         options:
@@ -227,7 +234,7 @@ display:
           replica: false
           query_tags: {  }
       relationships: {  }
-      css_class: grid--4
+      css_class: ''
       header: {  }
       footer: {  }
       display_extenders: {  }
@@ -246,7 +253,7 @@ display:
     display_plugin: page
     position: 1
     display_options:
-      rendering_language: '***LANGUAGE_language_interface***'
+      rendering_language: '***LANGUAGE_language_content***'
       display_extenders: {  }
       path: recipes
       menu:

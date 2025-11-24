@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.boss.prod.ant.casign.create request
  *
  * @author auto create
- * @since 1.0, 2024-03-01 16:28:48
+ * @since 1.0, 2024-09-05 15:27:09
  */
 class AlipayBossProdAntCasignCreateRequest
 {

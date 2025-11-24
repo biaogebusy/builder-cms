@@ -1,10 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\file_mdm\Plugin\FileMetadata;
 
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheBackendInterface;
+use Drupal\Core\Config\Config;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\ImmutableConfig;
+use Drupal\Core\File\Exception\FileNotExistsException;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
@@ -19,32 +24,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 abstract class FileMetadataPluginBase extends PluginBase implements FileMetadataPluginInterface {
 
   /**
-   * The cache service.
-   *
-   * @var \Drupal\Core\Cache\CacheBackendInterface
-   */
-  protected $cache;
-
-  /**
-   * The config factory.
-   *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface
-   */
-  protected $configFactory;
-
-  /**
-   * The stream wrapper manager service.
-   *
-   * @var \Drupal\Core\StreamWrapper\StreamWrapperManagerInterface
-   */
-  protected $streamWrapperManager;
-
-  /**
    * The URI of the file.
-   *
-   * @var string
    */
-  protected $uri;
+  protected string $uri;
 
   /**
    * The local filesystem path to the file.
@@ -52,45 +34,33 @@ abstract class FileMetadataPluginBase extends PluginBase implements FileMetadata
    * This is used to allow accessing local copies of files stored remotely, to
    * minimise remote calls and allow functions that cannot access remote stream
    * wrappers to operate locally.
-   *
-   * @var string
    */
-  protected $localTempPath;
+  protected string $localTempPath;
 
   /**
    * The hash used to reference the URI.
-   *
-   * @var string
    */
-  protected $hash;
+  protected string $hash;
 
   /**
    * The metadata of the file.
-   *
-   * @var mixed
    */
-  protected $metadata = NULL;
+  protected mixed $metadata = NULL;
 
   /**
    * The metadata loading status.
-   *
-   * @var int
    */
-  protected $isMetadataLoaded = FileMetadataInterface::NOT_LOADED;
+  protected int $isMetadataLoaded = FileMetadataInterface::NOT_LOADED;
 
   /**
    * Track if metadata has been changed from version on file.
-   *
-   * @var bool
    */
-  protected $hasMetadataChangedFromFileVersion = FALSE;
+  protected bool $hasMetadataChangedFromFileVersion = FALSE;
 
   /**
    * Track if file metadata on cache needs update.
-   *
-   * @var bool
    */
-  protected $hasMetadataChangedFromCacheVersion = FALSE;
+  protected bool $hasMetadataChangedFromCacheVersion = FALSE;
 
   /**
    * Constructs a FileMetadataPluginBase plugin.
@@ -101,38 +71,36 @@ abstract class FileMetadataPluginBase extends PluginBase implements FileMetadata
    *   The plugin_id for the plugin instance.
    * @param array $plugin_definition
    *   The plugin implementation definition.
-   * @param \Drupal\Core\Cache\CacheBackendInterface $cache_service
+   * @param \Drupal\Core\Cache\CacheBackendInterface $cache
    *   The cache service.
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
    *   The config factory.
-   * @param \Drupal\Core\StreamWrapper\StreamWrapperManagerInterface $stream_wrapper_manager
+   * @param \Drupal\Core\StreamWrapper\StreamWrapperManagerInterface $streamWrapperManager
    *   The stream wrapper manager service.
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, CacheBackendInterface $cache_service, ConfigFactoryInterface $config_factory, StreamWrapperManagerInterface $stream_wrapper_manager) {
+  final public function __construct(
+    array $configuration,
+    string $plugin_id,
+    array $plugin_definition,
+    protected readonly CacheBackendInterface $cache,
+    protected readonly ConfigFactoryInterface $configFactory,
+    protected readonly StreamWrapperManagerInterface $streamWrapperManager,
+  ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
-    $this->cache = $cache_service;
-    $this->configFactory = $config_factory;
-    $this->streamWrapperManager = $stream_wrapper_manager;
   }
 
-  /**
-   * {@inheritdoc}
-   */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     return new static(
       $configuration,
       $plugin_id,
       $plugin_definition,
       $container->get('cache.file_mdm'),
-      $container->get('config.factory'),
-      $container->get('stream_wrapper_manager')
+      $container->get(ConfigFactoryInterface::class),
+      $container->get(StreamWrapperManagerInterface::class),
     );
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public static function defaultConfiguration() {
+  public static function defaultConfiguration(): array {
     return [
       'cache' => [
         'override' => FALSE,
@@ -154,15 +122,12 @@ abstract class FileMetadataPluginBase extends PluginBase implements FileMetadata
    * @return \Drupal\Core\Config\ImmutableConfig|\Drupal\Core\Config\Config
    *   The ImmutableConfig of the Config object for this plugin.
    */
-  protected function getConfigObject($editable = FALSE) {
+  protected function getConfigObject(bool $editable = FALSE): ImmutableConfig|Config {
     $plugin_definition = $this->getPluginDefinition();
     $config_name = $plugin_definition['provider'] . '.file_metadata_plugin.' . $plugin_definition['id'];
     return $editable ? $this->configFactory->getEditable($config_name) : $this->configFactory->get($config_name);
   }
 
-  /**
-   * {@inheritdoc}
-   */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $form['override'] = [
       '#type' => 'checkbox',
@@ -189,15 +154,9 @@ abstract class FileMetadataPluginBase extends PluginBase implements FileMetadata
     return $form;
   }
 
-  /**
-   * {@inheritdoc}
-   */
   public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
   }
 
-  /**
-   * {@inheritdoc}
-   */
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
     // @codingStandardsIgnoreStart
     $this->configuration['cache']['override'] = (bool) $form_state->getValue([$this->getPluginId(), 'override']);
@@ -211,10 +170,7 @@ abstract class FileMetadataPluginBase extends PluginBase implements FileMetadata
     }
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function setUri($uri) {
+  public function setUri(string $uri): static {
     if (!$uri) {
       throw new FileMetadataException('Missing $uri argument', $this->getPluginId(), __FUNCTION__);
     }
@@ -222,50 +178,29 @@ abstract class FileMetadataPluginBase extends PluginBase implements FileMetadata
     return $this;
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function getUri() {
+  public function getUri(): string {
     return $this->uri;
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function setLocalTempPath($temp_path) {
+  public function setLocalTempPath(string $temp_path): static {
     $this->localTempPath = $temp_path;
     return $this;
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function getLocalTempPath() {
+  public function getLocalTempPath(): string {
     return $this->localTempPath;
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function setHash($hash) {
-    if (!$hash) {
-      throw new FileMetadataException('Missing $hash argument', $this->getPluginId(), __FUNCTION__);
-    }
+  public function setHash(string $hash): static {
     $this->hash = $hash;
     return $this;
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function isMetadataLoaded() {
+  public function isMetadataLoaded(): int|bool {
     return $this->isMetadataLoaded;
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function loadMetadata($metadata) {
+  public function loadMetadata(mixed $metadata): bool {
     $this->metadata = $metadata;
     $this->hasMetadataChangedFromFileVersion = TRUE;
     $this->hasMetadataChangedFromCacheVersion = TRUE;
@@ -280,14 +215,11 @@ abstract class FileMetadataPluginBase extends PluginBase implements FileMetadata
     return (bool) $this->metadata;
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function loadMetadataFromFile() {
+  public function loadMetadataFromFile(): bool {
     if (!file_exists($this->getLocalTempPath())) {
-      // File does not exists.
-      throw new FileMetadataException("File at '{$this->getLocalTempPath()}' does not exist", $this->getPluginId(), __FUNCTION__);
+      throw new FileNotExistsException("Could not load metadata from '{$this->getLocalTempPath()}' because it does not exist.");
     }
+
     $this->hasMetadataChangedFromFileVersion = FALSE;
     if (($this->metadata = $this->doGetMetadataFromFile()) === NULL) {
       $this->isMetadataLoaded = FileMetadataInterface::NOT_LOADED;
@@ -309,12 +241,9 @@ abstract class FileMetadataPluginBase extends PluginBase implements FileMetadata
    * @throws \Drupal\file_mdm\FileMetadataException
    *   In case there were significant errors reading from file.
    */
-  abstract protected function doGetMetadataFromFile();
+  abstract protected function doGetMetadataFromFile(): mixed;
 
-  /**
-   * {@inheritdoc}
-   */
-  public function loadMetadataFromCache() {
+  public function loadMetadataFromCache(): bool {
     $plugin_id = $this->getPluginId();
     $this->hasMetadataChangedFromFileVersion = FALSE;
     $this->hasMetadataChangedFromCacheVersion = FALSE;
@@ -336,7 +265,7 @@ abstract class FileMetadataPluginBase extends PluginBase implements FileMetadata
    *   The caching settings array retrieved from configuration if file metadata
    *   is cacheable, FALSE otherwise.
    */
-  protected function isUriFileMetadataCacheable() {
+  protected function isUriFileMetadataCacheable(): array|bool {
     // Check plugin settings first, if they override general settings.
     if ($this->configuration['cache']['override']) {
       $settings = $this->configuration['cache']['settings'];
@@ -369,10 +298,7 @@ abstract class FileMetadataPluginBase extends PluginBase implements FileMetadata
     return $settings;
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function getMetadata($key = NULL) {
+  public function getMetadata(mixed $key = NULL): mixed {
     if (!$this->getUri()) {
       throw new FileMetadataException("No URI specified", $this->getPluginId(), __FUNCTION__);
     }
@@ -394,20 +320,17 @@ abstract class FileMetadataPluginBase extends PluginBase implements FileMetadata
   /**
    * Gets a metadata element.
    *
-   * @param mixed|null $key
+   * @param mixed $key
    *   A key to determine the metadata element to be returned. If NULL, the
    *   entire metadata will be returned.
    *
-   * @return mixed|null
+   * @return mixed
    *   The value of the element specified by $key. If $key is NULL, the entire
    *   metadata. If no metadata is available, return NULL.
    */
-  abstract protected function doGetMetadata($key = NULL);
+  abstract protected function doGetMetadata(mixed $key = NULL): mixed;
 
-  /**
-   * {@inheritdoc}
-   */
-  public function setMetadata($key, $value) {
+  public function setMetadata(mixed $key, mixed $value): bool {
     if ($key === NULL) {
       throw new FileMetadataException("No metadata key specified for file at '{$this->getUri()}'", $this->getPluginId(), __FUNCTION__);
     }
@@ -435,12 +358,9 @@ abstract class FileMetadataPluginBase extends PluginBase implements FileMetadata
    * @return bool
    *   TRUE if metadata was changed successfully, FALSE otherwise.
    */
-  abstract protected function doSetMetadata($key, $value);
+  abstract protected function doSetMetadata(mixed $key, mixed $value): bool;
 
-  /**
-   * {@inheritdoc}
-   */
-  public function removeMetadata($key) {
+  public function removeMetadata(mixed $key): bool {
     if ($key === NULL) {
       throw new FileMetadataException("No metadata key specified for file at '{$this->getUri()}'", $this->getPluginId(), __FUNCTION__);
     }
@@ -466,19 +386,13 @@ abstract class FileMetadataPluginBase extends PluginBase implements FileMetadata
    * @return bool
    *   TRUE if metadata was removed successfully, FALSE otherwise.
    */
-  abstract protected function doRemoveMetadata($key);
+  abstract protected function doRemoveMetadata(mixed $key): bool;
 
-  /**
-   * {@inheritdoc}
-   */
-  public function isSaveToFileSupported() {
+  public function isSaveToFileSupported(): bool {
     return FALSE;
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function saveMetadataToFile() {
+  public function saveMetadataToFile(): bool {
     if (!$this->isSaveToFileSupported()) {
       throw new FileMetadataException('Write metadata to file is not supported', $this->getPluginId(), __FUNCTION__);
     }
@@ -499,21 +413,18 @@ abstract class FileMetadataPluginBase extends PluginBase implements FileMetadata
    * @return bool
    *   TRUE if metadata was saved successfully, FALSE otherwise.
    */
-  protected function doSaveMetadataToFile() {
+  protected function doSaveMetadataToFile(): bool {
     return FALSE;
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function saveMetadataToCache(array $tags = []) {
+  public function saveMetadataToCache(array $tags = []): bool {
     if ($this->metadata === NULL) {
       return FALSE;
     }
     if (($cache_settings = $this->isUriFileMetadataCacheable()) === FALSE) {
       return FALSE;
     }
-    if ($this->isMetadataLoaded !== FileMetadataInterface::LOADED_FROM_CACHE || ($this->isMetadataLoaded === FileMetadataInterface::LOADED_FROM_CACHE && $this->hasMetadataChangedFromCacheVersion)) {
+    if ($this->isMetadataLoaded !== FileMetadataInterface::LOADED_FROM_CACHE || $this->hasMetadataChangedFromCacheVersion) {
       $tags = Cache::mergeTags($tags, $this->getConfigObject()->getCacheTags());
       $tags = Cache::mergeTags($tags, $this->configFactory->get('file_mdm.settings')->getCacheTags());
       $expire = $cache_settings['expiration'] === -1 ? Cache::PERMANENT : time() + $cache_settings['expiration'];
@@ -530,14 +441,11 @@ abstract class FileMetadataPluginBase extends PluginBase implements FileMetadata
    * @return mixed
    *   The metadata to be cached.
    */
-  protected function getMetadataToCache() {
+  protected function getMetadataToCache(): mixed {
     return $this->metadata;
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function deleteCachedMetadata() {
+  public function deleteCachedMetadata(): bool {
     if ($this->isUriFileMetadataCacheable() === FALSE) {
       return FALSE;
     }

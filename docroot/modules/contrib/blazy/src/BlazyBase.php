@@ -2,22 +2,18 @@
 
 namespace Drupal\blazy;
 
-use Drupal\blazy\Cache\BlazyCache;
-use Drupal\blazy\internals\Internals;
-use Drupal\blazy\Theme\Grid;
-use Drupal\blazy\Utility\Arrays;
 use Drupal\Component\Utility\Html;
-use Drupal\Core\Cache\Cache;
-use Drupal\Core\Cache\CacheBackendInterface;
-use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\blazy\Asset\LibrariesInterface;
+use Drupal\blazy\Theme\Grid;
+use Drupal\blazy\Utility\Arrays;
+use Drupal\blazy\internals\Internals;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -49,6 +45,13 @@ abstract class BlazyBase implements BlazyInterface {
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
   protected $entityTypeManager;
+
+  /**
+   * The blazy libraries service.
+   *
+   * @var \Drupal\blazy\Asset\LibrariesInterface
+   */
+  protected $libraries;
 
   /**
    * The module handler service.
@@ -86,13 +89,6 @@ abstract class BlazyBase implements BlazyInterface {
   protected $languageManager;
 
   /**
-   * The cached data/ options.
-   *
-   * @var array
-   */
-  protected $cachedOptions;
-
-  /**
    * The main module namespace, kind of group name including their sub-modules.
    *
    * Unlike classes, slick_views, etc. will be under slick namespace with this.
@@ -118,50 +114,34 @@ abstract class BlazyBase implements BlazyInterface {
 
   /**
    * Constructs a BlazyBase object.
-   *
-   * @todo replace dups with blazy.libraries at 3.x.
    */
   public function __construct(
-    $root,
+    LibrariesInterface $libraries,
     EntityRepositoryInterface $entity_repository,
     EntityTypeManagerInterface $entity_type_manager,
-    ModuleHandlerInterface $module_handler,
     RendererInterface $renderer,
-    ConfigFactoryInterface $config_factory,
-    CacheBackendInterface $cache,
-    LanguageManagerInterface $language_manager
+    LanguageManagerInterface $language_manager,
   ) {
-    // @todo enable at 3.x:
-    // $this->libraries = $libraries;
-    // $this->root = $libraries->root();
-    // $this->cache = $libraries->cache();
-    // $this->configFactory = $libraries->configFactory();
-    // $this->moduleHandler = $libraries->moduleHandler();
-    $this->root              = $root;
+    $this->libraries         = $libraries;
+    $this->root              = $libraries->root();
+    $this->cache             = $libraries->cache();
+    $this->configFactory     = $libraries->configFactory();
+    $this->moduleHandler     = $libraries->moduleHandler();
     $this->entityRepository  = $entity_repository;
     $this->entityTypeManager = $entity_type_manager;
-    $this->moduleHandler     = $module_handler;
     $this->renderer          = $renderer;
-    $this->configFactory     = $config_factory;
-    $this->cache             = $cache;
     $this->languageManager   = $language_manager;
   }
 
   /**
    * {@inheritdoc}
-   *
-   * @todo replace dups with blazy.libraries at 3.x.
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      // @todo enable at 3.x: $container->get('blazy.libraries'),
-      Internals::root($container),
+      $container->get('blazy.libraries'),
       $container->get('entity.repository'),
       $container->get('entity_type.manager'),
-      $container->get('module_handler'),
       $container->get('renderer'),
-      $container->get('config.factory'),
-      $container->get('cache.default'),
       $container->get('language_manager')
     );
   }
@@ -190,6 +170,13 @@ abstract class BlazyBase implements BlazyInterface {
   /**
    * {@inheritdoc}
    */
+  public function libraries() {
+    return $this->libraries;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function moduleHandler() {
     return $this->moduleHandler;
   }
@@ -199,6 +186,20 @@ abstract class BlazyBase implements BlazyInterface {
    */
   public function renderer() {
     return $this->renderer;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function renderInIsolation(array &$elements) {
+    // @todo call directly ::renderInIsolation() when min D10.3.
+    return Blazy::backwardsCompatibleCall(
+      deprecatedVersion: '10.3',
+      // @phpstan-ignore-next-line
+      currentCallable: fn() => $this->renderer->renderInIsolation($elements),
+      // @phpstan-ignore-next-line
+      deprecatedCallable: fn() => $this->renderer->renderPlain($elements),
+    );
   }
 
   /**
@@ -226,27 +227,21 @@ abstract class BlazyBase implements BlazyInterface {
    * {@inheritdoc}
    */
   public function routeMatch() {
-    // @todo at 3.x: return $this->libraries->routeMatch();
-    return Internals::service('current_route_match');
+    return $this->libraries->routeMatch();
   }
 
   /**
    * {@inheritdoc}
    */
   public function config($key = NULL, $group = 'blazy.settings') {
-    $config  = $this->configFactory->get($group);
-    $configs = $config->get();
-    unset($configs['_core']);
-    // @todo at 3.x: return $this->libraries->config($key, $group);
-    return empty($key) ? $configs : $config->get($key);
+    return $this->libraries->config($key, $group);
   }
 
   /**
    * {@inheritdoc}
    */
   public function configMultiple($group = 'blazy.settings'): array {
-    // @todo at 3.x: return $this->libraries->configMultiple($group);
-    return $this->config(NULL, $group) ?: [];
+    return $this->libraries->configMultiple($group);
   }
 
   /**
@@ -269,7 +264,7 @@ abstract class BlazyBase implements BlazyInterface {
   public function configSchemaInfoAlter(
     array &$definitions,
     $formatter = 'blazy_base',
-    array $settings = []
+    array $settings = [],
   ): void {
     BlazyAlter::configSchemaInfoAlter($definitions, $formatter, $settings);
   }
@@ -294,7 +289,7 @@ abstract class BlazyBase implements BlazyInterface {
   public function getCachedData(
     $cid,
     array $data = [],
-    array $info = []
+    array $info = [],
   ): array {
     return $this->getCachedOptions($cid, $data, FALSE, $info);
   }
@@ -306,56 +301,21 @@ abstract class BlazyBase implements BlazyInterface {
     $cid,
     array $data = [],
     $as_options = TRUE,
-    array $info = []
+    array $info = [],
   ): array {
-    $reset = $info['reset'] ?? FALSE;
-    if (!isset($this->cachedOptions[$cid]) || $reset) {
-      $cache = $this->cache->get($cid);
-
-      if (!$reset && $cache && $data = $cache->data) {
-        $this->cachedOptions[$cid] = $data;
-      }
-      else {
-        $alter   = $info['alter'] ?? $cid;
-        $context = $info['context'] ?? [];
-        $key     = $info['key'] ?? NULL;
-
-        // Allows empty array to trigger hook_alter.
-        if (is_array($data)) {
-          $this->moduleHandler->alter($alter, $data, $context);
-        }
-
-        // Only if we have data, cache them.
-        if ($data && is_array($data)) {
-          if (isset($data[1])) {
-            $data = array_unique($data, SORT_REGULAR);
-          }
-
-          if ($as_options) {
-            $data = $this->toOptions($data);
-          }
-          else {
-            ksort($data);
-          }
-
-          $count = $key && isset($data[$key]) ? count($data[$key]) : count($data);
-          $tags = Cache::buildTags($cid, ['count:' . $count]);
-          $this->cache->set($cid, $data, Cache::PERMANENT, $tags);
-        }
-
-        $this->cachedOptions[$cid] = $data;
-      }
-    }
-    // @todo at 3.x: return $this->libraries->getCachedData();
-    return $this->cachedOptions[$cid] ?: [];
+    return $this->libraries->getCachedData(
+      $cid,
+      $data,
+      $as_options,
+      $info
+    );
   }
 
   /**
    * {@inheritdoc}
    */
   public function getCacheMetadata(array $build): array {
-    // @todo at 3.x: return $this->libraries->getCacheMetadata($build);
-    return BlazyCache::metadata($build);
+    return $this->libraries->getCacheMetadata($build);
   }
 
   /**
@@ -383,8 +343,7 @@ abstract class BlazyBase implements BlazyInterface {
    * {@inheritdoc}
    */
   public function getLibrariesPath($name, $base_path = FALSE): ?string {
-    // @todo at 3.x: return $this->libraries->getPath($name, $base_path);
-    return Internals::getLibrariesPath($name, $base_path);
+    return $this->libraries->getPath($name, $base_path);
   }
 
   /**
@@ -425,7 +384,7 @@ abstract class BlazyBase implements BlazyInterface {
     array &$attrs,
     array &$content_attrs,
     $blazies,
-    $root = FALSE
+    $root = FALSE,
   ): void {
     Grid::checkAttributes($attrs, $content_attrs, $blazies, $root);
   }
@@ -436,7 +395,7 @@ abstract class BlazyBase implements BlazyInterface {
   public function gridItemAttributes(
     array &$attrs,
     array &$content_attrs,
-    array $settings
+    array $settings,
   ): void {
     Grid::itemAttributes($attrs, $content_attrs, $settings);
   }
@@ -445,7 +404,7 @@ abstract class BlazyBase implements BlazyInterface {
    * {@inheritdoc}
    */
   public function import(array $options): void {
-    Internals::import($options);
+    $this->libraries->import($options);
   }
 
   /**
@@ -480,7 +439,7 @@ abstract class BlazyBase implements BlazyInterface {
     $type = 'file',
     $access = TRUE,
     $conjunction = 'AND',
-    $condition = 'IN'
+    $condition = 'IN',
   ): array {
     $storage = $this->getStorage($type);
     $query = $storage->getQuery($conjunction);
@@ -570,12 +529,7 @@ abstract class BlazyBase implements BlazyInterface {
    * {@inheritdoc}
    */
   public function toOptions(array $options): array {
-    if ($options) {
-      $options = array_map('\Drupal\Component\Utility\Html::escape', $options);
-      uasort($options, 'strnatcasecmp');
-    }
-    // @todo at 3.x: return $this->libraries->toOptions($options);
-    return $options;
+    return $this->libraries->toOptions($options);
   }
 
   /**
@@ -585,7 +539,7 @@ abstract class BlazyBase implements BlazyInterface {
     array &$settings,
     array $data = [],
     $key = 'blazies',
-    array $defaults = []
+    array $defaults = [],
   ): array {
     $object = Internals::reset($settings, $key, $defaults);
     if ($data) {
@@ -694,17 +648,6 @@ abstract class BlazyBase implements BlazyInterface {
    */
   public function toHashtag(array $data, $key = 'settings', $default = []) {
     return Internals::toHashtag($data, $key, $default);
-  }
-
-  /**
-   * {@inheritdoc}
-   *
-   * @todo deprecated in blazy:8.x-2.17 and is removed from blazy:3.0.0. Use
-   * \Drupal\blazy\BlazyInterface::verifySafely() instead.
-   */
-  public function verify(array &$settings): void {
-    // @todo @trigger_error('verify is deprecated in blazy:8.x-2.17 and is removed from blazy:3.0.0. Use \Drupal\blazy\BlazyInterface::verify() instead. See https://www.drupal.org/node/3367291', E_USER_DEPRECATED);
-    Internals::verify($settings);
   }
 
 }

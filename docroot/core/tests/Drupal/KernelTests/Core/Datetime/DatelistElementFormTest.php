@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Datetime;
 
 use Drupal\Component\Utility\Variable;
@@ -8,6 +10,7 @@ use Drupal\Core\Form\FormInterface;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Security\TrustedCallbackInterface;
+use Drupal\Core\Security\UntrustedCallbackException;
 use Drupal\KernelTests\KernelTestBase;
 
 /**
@@ -18,9 +21,7 @@ use Drupal\KernelTests\KernelTestBase;
 class DatelistElementFormTest extends KernelTestBase implements FormInterface, TrustedCallbackInterface {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['datetime', 'system'];
 
@@ -41,7 +42,7 @@ class DatelistElementFormTest extends KernelTestBase implements FormInterface, T
   /**
    * {@inheritdoc}
    */
-  public function datelistDateCallbackTrusted(array &$element, FormStateInterface $form_state, DrupalDateTime $date = NULL) {
+  public function datelistDateCallbackTrusted(array &$element, FormStateInterface $form_state, ?DrupalDateTime $date = NULL) {
     $element['datelistDateCallbackExecuted'] = [
       '#value' => TRUE,
     ];
@@ -51,7 +52,7 @@ class DatelistElementFormTest extends KernelTestBase implements FormInterface, T
   /**
    * {@inheritdoc}
    */
-  public function datelistDateCallback(array &$element, FormStateInterface $form_state, DrupalDateTime $date = NULL) {
+  public function datelistDateCallback(array &$element, FormStateInterface $form_state, ?DrupalDateTime $date = NULL) {
     $element['datelistDateCallbackExecuted'] = [
       '#value' => TRUE,
     ];
@@ -106,7 +107,7 @@ class DatelistElementFormTest extends KernelTestBase implements FormInterface, T
   /**
    * Tests that trusted callbacks are executed.
    */
-  public function testDatelistElement() {
+  public function testDatelistElement(): void {
     $form_state = new FormState();
     $form = \Drupal::formBuilder()->buildForm($this, $form_state);
     $this->render($form);
@@ -116,16 +117,14 @@ class DatelistElementFormTest extends KernelTestBase implements FormInterface, T
   }
 
   /**
-   * Tests that deprecations are raised if untrusted callbacks are used.
+   * Tests that exceptions are raised if untrusted callbacks are used.
    *
    * @group legacy
    */
   public function testDatelistElementUntrustedCallbacks() : void {
+    $this->expectException(UntrustedCallbackException::class);
+    $this->expectExceptionMessage(sprintf('Datelist element #date_date_callbacks callbacks must be methods of a class that implements \Drupal\Core\Security\TrustedCallbackInterface or be an anonymous function. The callback was %s. See https://www.drupal.org/node/3217966', Variable::callableToString([$this, 'datelistDateCallback'])));
     $form = \Drupal::formBuilder()->getForm($this, 'datelistDateCallback');
-    $this->expectDeprecation(sprintf('Datelist element #date_date_callbacks callbacks must be methods of a class that implements \Drupal\Core\Security\TrustedCallbackInterface or be an anonymous function. The callback was %s. Support for this callback implementation is deprecated in drupal:9.3.0 and will be removed in drupal:10.0.0. See https://www.drupal.org/node/3217966', Variable::callableToString([$this, 'datelistDateCallback'])));
-    $this->render($form);
-
-    $this->assertTrue($form['datelist_element']['datelistDateCallbackExecuted']['#value']);
   }
 
   /**

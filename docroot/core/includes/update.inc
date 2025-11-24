@@ -11,42 +11,7 @@
 use Drupal\Component\Graph\Graph;
 use Drupal\Core\Extension\Exception\UnknownExtensionException;
 use Drupal\Core\Utility\Error;
-
-/**
- * Tests the compatibility of a module or theme.
- *
- * @deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. No direct
- *   replacement is provided.
- *
- * @see https://www.drupal.org/node/3150727
- * @see \Drupal\Core\Extension\ExtensionList::checkIncompatibility()
- */
-function update_check_incompatibility($name, $type = 'module') {
-  @trigger_error('update_check_incompatibility() is deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. No direct replacement is provided. See https://www.drupal.org/node/3150727', E_USER_DEPRECATED);
-  static $themes, $modules;
-
-  // Store values of expensive functions for future use.
-  if (empty($themes) || empty($modules)) {
-    // We need to do a full rebuild here to make sure the database reflects any
-    // code changes that were made in the filesystem before the update script
-    // was initiated.
-    $themes = \Drupal::service('theme_handler')->rebuildThemeData();
-    $modules = \Drupal::service('extension.list.module')->reset()->getList();
-  }
-
-  if ($type == 'module' && isset($modules[$name])) {
-    $file = $modules[$name];
-  }
-  elseif ($type == 'theme' && isset($themes[$name])) {
-    $file = $themes[$name];
-  }
-  if (!isset($file)
-      || $file->info['core_incompatible']
-      || version_compare(phpversion(), $file->info['php']) < 0) {
-    return TRUE;
-  }
-  return FALSE;
-}
+use Drupal\Core\Update\EquivalentUpdate;
 
 /**
  * Returns whether the minimum schema requirement has been satisfied.
@@ -88,6 +53,7 @@ function update_check_requirements() {
 
   // Check requirements of all loaded modules.
   $requirements = \Drupal::moduleHandler()->invokeAll('requirements', ['update']);
+  \Drupal::moduleHandler()->alter('requirements', $requirements);
   $requirements += update_system_schema_requirements();
   return $requirements;
 }
@@ -100,7 +66,7 @@ function update_check_requirements() {
  * system would detect and attempt to run all historical updates for a
  * module.
  *
- * @todo: remove in a major version after
+ * @todo remove in a major version after
  * https://www.drupal.org/project/drupal/issues/3130037 has been fixed.
  */
 function _update_fix_missing_schema() {
@@ -144,30 +110,6 @@ function _update_fix_missing_schema() {
       \Drupal::logger('update')->warning('Schema information for module %module was missing from the database. You should manually review the module updates and your database to check if any updates have been skipped up to, and including, %last_update_hook.', $args);
     }
   }
-}
-
-/**
- * Forces a module to a given schema version.
- *
- * This function is rarely necessary.
- *
- * @param string $module
- *   Name of the module.
- * @param string $schema_version
- *   The schema version the module should be set to.
- *
- * @deprecated in drupal:9.2.0 and is removed from drupal:10.0.0. No direct
- *   replacement is provided.
- *
- * @see https://www.drupal.org/node/3210925
- */
-function update_set_schema($module, $schema_version) {
-  @trigger_error('update_set_schema() is deprecated in drupal:9.2.0 and is removed from drupal:10.0.0. No direct replacement is provided. See https://www.drupal.org/node/3210925', E_USER_DEPRECATED);
-  \Drupal::service('update.update_hook_registry')->setInstalledVersion($module, $schema_version);
-  \Drupal::service('extension.list.profile')->reset();
-  \Drupal::service('extension.list.module')->reset();
-  \Drupal::service('extension.list.theme_engine')->reset();
-  \Drupal::service('extension.list.theme')->reset();
 }
 
 /**
@@ -225,19 +167,25 @@ function update_do_one($module, $number, $dependency_map, &$context) {
   }
 
   $ret = [];
-  if (function_exists($function)) {
+  $equivalent_update = \Drupal::service('update.update_hook_registry')->getEquivalentUpdate($module, $number);
+  if ($equivalent_update instanceof EquivalentUpdate) {
+    $ret['results']['query'] = $equivalent_update->toSkipMessage();
+    $ret['results']['success'] = TRUE;
+    $context['sandbox']['#finished'] = TRUE;
+  }
+  elseif (function_exists($function)) {
     try {
       $ret['results']['query'] = $function($context['sandbox']);
       $ret['results']['success'] = TRUE;
     }
-    // @TODO We may want to do different error handling for different
+    // @todo We may want to do different error handling for different
     // exception types, but for now we'll just log the exception and
     // return the message for printing.
     // @see https://www.drupal.org/node/2564311
     catch (Exception $e) {
-      watchdog_exception('update', $e);
-
       $variables = Error::decodeException($e);
+      \Drupal::logger('update')->error(Error::DEFAULT_ERROR_MESSAGE, $variables);
+
       unset($variables['backtrace'], $variables['exception'], $variables['severity_level']);
       $ret['#abort'] = ['success' => FALSE, 'query' => t(Error::DEFAULT_ERROR_MESSAGE, $variables)];
     }
@@ -299,14 +247,13 @@ function update_invoke_post_update($function, &$context) {
         \Drupal::service('update.post_update_registry')->registerInvokedUpdates([$function]);
       }
     }
-    // @TODO We may want to do different error handling for different exception
+    // @todo We may want to do different error handling for different exception
     // types, but for now we'll just log the exception and return the message
     // for printing.
     // @see https://www.drupal.org/node/2564311
     catch (Exception $e) {
-      watchdog_exception('update', $e);
-
       $variables = Error::decodeException($e);
+      \Drupal::logger('update')->error(Error::DEFAULT_ERROR_MESSAGE, $variables);
       unset($variables['backtrace'], $variables['exception'], $variables['severity_level']);
       $ret['#abort'] = [
         'success' => FALSE,
@@ -402,7 +349,7 @@ function update_get_update_list() {
     if ($updates) {
       foreach ($updates as $update) {
         if ($update == \Drupal::CORE_MINIMUM_SCHEMA_VERSION) {
-          $ret[$module]['warning'] = '<em>' . $module . '</em> module cannot be updated. It contains an update numbered as ' . \Drupal::CORE_MINIMUM_SCHEMA_VERSION . ' which is reserved for the earliest installation of a module in Drupal ' . \Drupal::CORE_COMPATIBILITY . ', before any updates. In order to update <em>' . $module . '</em> module, you will need to install a version of the module with valid updates.';
+          $ret[$module]['warning'] = '<em>' . $module . '</em> module cannot be updated. It contains an update numbered as ' . \Drupal::CORE_MINIMUM_SCHEMA_VERSION . ' which is reserved for the earliest installation of a module in Drupal ' . \Drupal::CORE_COMPATIBILITY . ', before any updates. In order to update <em>' . $module . '</em> module, you will need to download a version of the module with valid updates.';
           continue 2;
         }
         if ($update > $schema_version) {
@@ -694,7 +641,7 @@ function update_retrieve_dependencies() {
   // the same order that \Drupal::moduleHandler()->invokeAll() does.
   foreach ($update_registry->getAllInstalledVersions() as $module => $schema) {
     // Skip modules that are entirely missing from the filesystem here, since
-    // module_load_install() will call trigger_error() if invoked on a module
+    // loading .install file will call trigger_error() if invoked on a module
     // that doesn't exist. There's no way to catch() that, so avoid it entirely.
     // This can happen when there are orphaned entries in the system.schema k/v
     // store for modules that have been removed from a site without first being

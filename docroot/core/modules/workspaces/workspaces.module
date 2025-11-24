@@ -5,7 +5,7 @@
  * Provides full-site preview functionality for content staging.
  */
 
-use Drupal\Component\Serialization\Json;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Entity\EntityFormInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
@@ -29,9 +29,39 @@ function workspaces_help($route_name, RouteMatchInterface $route_match) {
     // Main module help for the Workspaces module.
     case 'help.page.workspaces':
       $output = '';
-      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<h2>' . t('About') . '</h2>';
       $output .= '<p>' . t('The Workspaces module allows workspaces to be defined and switched between. Content is then assigned to the active workspace when created. For more information, see the <a href=":workspaces">online documentation for the Workspaces module</a>.', [':workspaces' => 'https://www.drupal.org/docs/8/core/modules/workspace/overview']) . '</p>';
       return $output;
+  }
+}
+
+/**
+ * Implements hook_module_implements_alter().
+ */
+function workspaces_module_implements_alter(&$implementations, $hook): void {
+  // Move our 'hook_entity_presave' implementation at the beginning to ensure
+  // that other presave implementations are aware of the changes done in
+  // \Drupal\workspaces\EntityOperations::entityPresave().
+  if ($hook === 'entity_presave') {
+    $implementation = $implementations['workspaces'];
+    $implementations = ['workspaces' => $implementation] + $implementations;
+
+    // Move Content Moderation's implementation before Workspaces, so we can
+    // alter the publishing status for the default revision.
+    if (isset($implementations['content_moderation'])) {
+      $implementation = $implementations['content_moderation'];
+      $implementations = ['content_moderation' => $implementation] + $implementations;
+    }
+  }
+
+  // Move our 'hook_entity_insert' implementation at the end to ensure that
+  // the second (pending) revision created for published entities is not used
+  // by other 'hook_entity_insert' implementations.
+  // @see \Drupal\workspaces\EntityOperations::entityInsert()
+  if ($hook === 'entity_insert') {
+    $group = $implementations['workspaces'];
+    unset($implementations['workspaces']);
+    $implementations['workspaces'] = $group;
   }
 }
 
@@ -131,6 +161,15 @@ function workspaces_entity_update(EntityInterface $entity) {
 }
 
 /**
+ * Implements hook_entity_translation_insert().
+ */
+function workspaces_entity_translation_insert(EntityInterface $translation): void {
+  \Drupal::service('class_resolver')
+    ->getInstanceFromDefinition(EntityOperations::class)
+    ->entityTranslationInsert($translation);
+}
+
+/**
  * Implements hook_entity_predelete().
  */
 function workspaces_entity_predelete(EntityInterface $entity) {
@@ -141,6 +180,26 @@ function workspaces_entity_predelete(EntityInterface $entity) {
   return \Drupal::service('class_resolver')
     ->getInstanceFromDefinition(EntityOperations::class)
     ->entityPredelete($entity);
+}
+
+/**
+ * Implements hook_entity_delete().
+ */
+function workspaces_entity_delete(EntityInterface $entity) {
+  if (\Drupal::service('workspaces.information')->isEntityTypeSupported($entity->getEntityType())) {
+    \Drupal::service('workspaces.association')
+      ->deleteAssociations(NULL, $entity->getEntityTypeId(), [$entity->id()]);
+  }
+}
+
+/**
+ * Implements hook_entity_revision_delete().
+ */
+function workspaces_entity_revision_delete(EntityInterface $entity) {
+  if (\Drupal::service('workspaces.information')->isEntityTypeSupported($entity->getEntityType())) {
+    \Drupal::service('workspaces.association')
+      ->deleteAssociations(NULL, $entity->getEntityTypeId(), [$entity->id()], [$entity->getRevisionId()]);
+  }
 }
 
 /**
@@ -163,6 +222,22 @@ function workspaces_entity_create_access(AccountInterface $account, array $conte
   return \Drupal::service('class_resolver')
     ->getInstanceFromDefinition(EntityAccess::class)
     ->entityCreateAccess($account, $context, $entity_bundle);
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_update() for the 'menu_link_content' entity type.
+ */
+function workspaces_menu_link_content_update(EntityInterface $entity) {
+  /** @var \Drupal\menu_link_content\MenuLinkContentInterface $entity */
+  if ($entity->getLoadedRevisionId() != $entity->getRevisionId()) {
+    // We are not updating the menu tree definitions when a custom menu link
+    // entity is saved as a pending revision (because the parent can not be
+    // changed), so we need to clear the system menu cache manually. However,
+    // inserting or deleting a custom menu link updates the menu tree
+    // definitions, so we don't have to do anything in those cases.
+    $cache_tags = Cache::buildTags('config:system.menu', [$entity->getMenuName()], '.');
+    \Drupal::service('cache_tags.invalidator')->invalidateTags($cache_tags);
+  }
 }
 
 /**
@@ -205,28 +280,19 @@ function workspaces_toolbar() {
   $items['workspace'] += [
     '#type' => 'toolbar_item',
     'tab' => [
-      '#type' => 'link',
-      '#title' => $active_workspace ? $active_workspace->label() : t('Live'),
-      '#url' => Url::fromRoute('entity.workspace.collection', [], ['query' => \Drupal::destination()->getAsArray()]),
-      '#attributes' => [
-        'title' => t('Switch workspace'),
-        'class' => ['use-ajax', 'toolbar-icon', 'toolbar-icon-workspace'],
-        'data-dialog-type' => 'dialog',
-        'data-dialog-renderer' => 'off_canvas_top',
-        'data-dialog-options' => Json::encode([
-          'height' => 161,
-          'classes' => [
-            'ui-dialog' => 'workspaces-dialog',
-          ],
-        ]),
+      '#lazy_builder' => ['workspaces.lazy_builders:renderToolbarTab', []],
+      '#create_placeholder' => TRUE,
+      '#lazy_builder_preview' => [
+        '#type' => 'link',
+        '#title' => $active_workspace ? $active_workspace->label() : t('Live'),
+        '#url' => Url::fromRoute('entity.workspace.collection'),
+        '#attributes' => [
+          'class' => ['toolbar-tray-lazy-placeholder-link'],
+        ],
       ],
-      '#cache' => ['tags' => $active_workspace ? $active_workspace->getCacheTags() : []],
     ],
     '#wrapper_attributes' => [
       'class' => ['workspaces-toolbar-tab'],
-    ],
-    '#attached' => [
-      'library' => ['workspaces/drupal.workspaces.toolbar'],
     ],
     '#weight' => 500,
   ];
@@ -236,6 +302,14 @@ function workspaces_toolbar() {
   if (!$active_workspace) {
     $items['workspace']['#wrapper_attributes']['class'][] = 'workspaces-toolbar-tab--is-default';
   }
+
+  // \Drupal\toolbar\Element\ToolbarItem::preRenderToolbarItem adds an
+  // #attributes property to each toolbar item's tab child automatically.
+  // Lazy builders don't support an #attributes property so we need to
+  // add another render callback to remove the #attributes property. We start by
+  // adding the defaults, and then we append our own pre render callback.
+  $items['workspace'] += \Drupal::service('plugin.manager.element_info')->getInfo('toolbar_item');
+  $items['workspace']['#pre_render'][] = 'workspaces.lazy_builders:removeTabAttributes';
 
   return $items;
 }

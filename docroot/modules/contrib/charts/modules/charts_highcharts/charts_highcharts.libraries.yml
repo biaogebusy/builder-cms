@@ -15,28 +15,114 @@ highcharts:
     url: https://creativecommons.org/licenses/by-nc/3.0/
     gpl-compatible: false
   cdn:
-    /libraries/highcharts/highcharts.js: https://code.highcharts.com/11.1.0/highcharts.js
-    /libraries/highcharts_more/highcharts-more.js: https://code.highcharts.com/11.1.0/highcharts-more.js
-    /libraries/highcharts_accessibility/accessibility.js: https://code.highcharts.com/11.1.0/modules/accessibility.js
-    /libraries/highcharts_3d/highcharts-3d.js: https://code.highcharts.com/11.1.0/highcharts-3d.js
+    /libraries/highcharts/highcharts.js: https://code.highcharts.com/12.1.1/highcharts.js
+    /libraries/highcharts_more/highcharts-more.js: https://code.highcharts.com/12.1.1/highcharts-more.js
   js:
     /libraries/highcharts/highcharts.js: { minified: true }
     /libraries/highcharts_more/highcharts-more.js: { minified: true }
-    /libraries/highcharts_accessibility/accessibility.js: { minified: true }
-    /libraries/highcharts_3d/highcharts-3d.js: { minified: true }
   dependencies:
     - charts_highcharts/charts_highcharts
 
-highcharts_exporting:
-  remote: https://code.highcharts.com/highcharts.js
+3d:
+  remote: https://code.highcharts.com/12.1.1/highcharts-3d.js
   version: VERSION
   license:
     name: Non-commercial
     url: https://creativecommons.org/licenses/by-nc/3.0/
     gpl-compatible: false
   cdn:
-    /libraries/highcharts_exporting/exporting.js: https://code.highcharts.com/11.1.0/modules/exporting.js
-    /libraries/highcharts_export-data/export-data.js: https://code.highcharts.com/11.1.0/modules/export-data.js
+    /libraries/highcharts_3d/highcharts-3d.js: https://code.highcharts.com/12.1.1/highcharts-3d.js
+  js:
+    /libraries/highcharts_3d/highcharts-3d.js: { minified: true }
+  dependencies:
+    - charts_highcharts/charts_highcharts
+    - charts_highcharts/highcharts
+
+accessibility:
+  remote: https://code.highcharts.com/12.1.1/modules/accessibility.js
+  version: VERSION
+  license:
+    name: Non-commercial
+    url: https://creativecommons.org/licenses/by-nc/3.0/
+    gpl-compatible: false
+  cdn:
+    /libraries/highcharts_accessibility/accessibility.js: https://code.highcharts.com/12.1.1/modules/accessibility.js
+  js:
+    /libraries/highcharts_accessibility/accessibility.js: { minified: true }
+  dependencies:
+    - charts_highcharts/charts_highcharts
+    - charts_highcharts/highcharts
+
+annotations:
+  remote: https://code.highcharts.com/12.1.1/modules/annotations.js
+  version: VERSION
+  license:
+    name: Non-commercial
+    url: https://creativecommons.org/licenses/by-nc/3.0/
+    gpl-compatible: false
+  cdn:
+    /libraries/highcharts_annotations/annotations.js: https://code.highcharts.com/12.1.1/modules/annotations.js
+  js:
+    /libraries/highcharts_annotations/annotations.js: { minified: true }
+  dependencies:
+    - charts_highcharts/charts_highcharts
+    - charts_highcharts/highcharts
+
+boost:
+  remote: https://code.highcharts.com/12.1.1/modules/boost.js
+  version: VERSION
+  license:
+    name: Non-commercial
+    url: https://creativecommons.org/licenses/by-nc/3.0/
+    gpl-compatible: false
+  cdn:
+    /libraries/highcharts_boost/boost.js: https://code.highcharts.com/12.1.1/modules/boost.js
+  js:
+    /libraries/highcharts_boost/boost.js: { minified: true }
+  dependencies:
+    - charts_highcharts/charts_highcharts
+    - charts_highcharts/highcharts
+
+coloraxis:
+  remote: https://code.highcharts.com/12.1.1/modules/coloraxis.js
+  version: VERSION
+  license:
+    name: Non-commercial
+    url: https://creativecommons.org/licenses/by-nc/3.0/
+    gpl-compatible: false
+  cdn:
+    /libraries/highcharts_coloraxis/coloraxis.js: https://code.highcharts.com/12.1.1/modules/coloraxis.js
+  js:
+    /libraries/highcharts_coloraxis/coloraxis.js: { minified: true }
+  dependencies:
+    - charts_highcharts/charts_highcharts
+    - charts_highcharts/highcharts
+
+data:
+  remote: https://code.highcharts.com/12.1.1/modules/data.js
+  version: VERSION
+  license:
+    name: Non-commercial
+    url: https://creativecommons.org/licenses/by-nc/3.0/
+    gpl-compatible: false
+  cdn:
+    /libraries/highcharts_data/data.js: https://code.highcharts.com/12.1.1/modules/data.js
+  js:
+    /libraries/highcharts_data/data.js: { minified: true }
+  dependencies:
+    - charts_highcharts/charts_highcharts
+    - charts_highcharts/highcharts
+
+exporting:
+  remote: https://code.highcharts.com/12.1.1/modules/exporting.js
+  version: VERSION
+  license:
+    name: Non-commercial
+    url: https://creativecommons.org/licenses/by-nc/3.0/
+    gpl-compatible: false
+  cdn:
+    /libraries/highcharts_exporting/exporting.js: https://code.highcharts.com/12.1.1/modules/exporting.js
+    /libraries/highcharts_export-data/export-data.js: https://code.highcharts.com/12.1.1/modules/export-data.js
   js:
     /libraries/highcharts_exporting/exporting.js: { minified: true }
     /libraries/highcharts_export-data/export-data.js: { minified: true }
@@ -44,30 +130,84 @@ highcharts_exporting:
     - charts_highcharts/charts_highcharts
     - charts_highcharts/highcharts
 
-texture:
-  remote: https://code.highcharts.com/highcharts.js
+heatmap:
+  remote: https://code.highcharts.com/12.1.1/modules/heatmap.js
   version: VERSION
   license:
     name: Non-commercial
     url: https://creativecommons.org/licenses/by-nc/3.0/
     gpl-compatible: false
   cdn:
-    /libraries/highcharts_pattern-fill/pattern-fill.js: https://code.highcharts.com/11.1.0/modules/pattern-fill.js
-    /libraries/highcharts_high-contrast-light/high-contrast-light.js: https://code.highcharts.com/11.1.0/themes/high-contrast-light.js
+    /libraries/highcharts_heatmap/heatmap.js: https://code.highcharts.com/12.1.1/modules/heatmap.js
+  js:
+    /libraries/highcharts_heatmap/heatmap.js: { minified: true }
+  dependencies:
+    - charts_highcharts/charts_highcharts
+    - charts_highcharts/highcharts
+
+no_data:
+  remote: https://code.highcharts.com/12.1.1/modules/no-data-to-display.js
+  version: VERSION
+  license:
+    name: Non-commercial
+    url: https://creativecommons.org/licenses/by-nc/3.0/
+    gpl-compatible: false
+  cdn:
+    /libraries/highcharts_no-data-to-display/no-data-to-display.js: https://code.highcharts.com/12.1.1/modules/no-data-to-display.js
+  js:
+    /libraries/highcharts_no-data-to-display/no-data-to-display.js:
+      { minified: true }
+  dependencies:
+    - charts_highcharts/charts_highcharts
+    - charts_highcharts/highcharts
+
+texture:
+  remote: https://code.highcharts.com/12.1.1/modules/pattern-fill.js
+  version: VERSION
+  license:
+    name: Non-commercial
+    url: https://creativecommons.org/licenses/by-nc/3.0/
+    gpl-compatible: false
+  cdn:
+    /libraries/highcharts_pattern-fill/pattern-fill.js: https://code.highcharts.com/12.1.1/modules/pattern-fill.js
+    /libraries/highcharts_high-contrast-light/high-contrast-light.js: https://code.highcharts.com/12.1.1/themes/high-contrast-light.js
   js:
     /libraries/highcharts_pattern-fill/pattern-fill.js: { minified: true }
-    /libraries/highcharts_high-contrast-light/high-contrast-light.js: { minified: true }
+    /libraries/highcharts_high-contrast-light/high-contrast-light.js:
+      { minified: true }
     js/textures.js: { weight: -5 }
   dependencies:
     - charts/global
     - core/once
     - charts_highcharts/charts_highcharts
 
+solidgauge:
+  remote: https://code.highcharts.com/12.1.1/modules/solid-gauge.js
+  version: VERSION
+  license:
+    name: Non-commercial
+    url: https://creativecommons.org/licenses/by-nc/3.0/
+    gpl-compatible: false
+  cdn:
+    /libraries/highcharts_solid-gauge/solid-gauge.js: https://code.highcharts.com/12.1.1/modules/solid-gauge.js
+  js:
+    /libraries/highcharts_solid-gauge/solid-gauge.js: { minified: true }
+  dependencies:
+    - charts_highcharts/charts_highcharts
+    - charts_highcharts/highcharts
+
 color_changer:
   version: VERSION
   js:
-    js/color_changer.js: { }
+    js/color_changer.js: {}
   dependencies:
     - charts/global
     - core/once
     - charts_highcharts/charts_highcharts
+
+# Default CSS, for example when using styledMode true
+highcharts_default_css:
+  version: VERSION
+  css:
+    theme:
+      https://code.highcharts.com/css/highcharts.css: { type: external }

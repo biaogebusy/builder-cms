@@ -1,0 +1,30 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"GX",
+		"Laibin Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Heshan Shi": {
+			"local_name": "合山市"
+		},
+		"Jinxiu Xian": {
+			"local_code": "金秀瑶族自治县",
+			"local_name": "金秀县"
+		},
+		"Wuxuan Xian": {
+			"local_name": "武宣县"
+		},
+		"Xiangzhou Xian": {
+			"local_name": "象州县"
+		},
+		"Xincheng Xian": {
+			"local_name": "忻城县"
+		},
+		"Xingbin Qu": {
+			"local_name": "兴宾区"
+		}
+	}
+}

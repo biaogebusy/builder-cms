@@ -5,7 +5,7 @@
   "license": "GPL-2.0-or-later",
   "description": "Add Bootstrap Grid support to Layout Builder module.",
   "require": {
-    "drupal/core": "<10.3",
-    "drupal/bootstrap_styles": "^1.1.0"
+    "drupal/bootstrap_styles": "^1.2.0",
+    "drupal/core": "^10.3 || ^11"
   }
 }

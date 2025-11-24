@@ -21,15 +21,17 @@
 
 ## Branches
 
-| Branch | Support Level | Symfony Versions | League Container | PHP Versions |
-| ------ | ------------- | ---------------- | ---------------- | ------------ |
-| [3.x](https://github.com/consolidation/robo/tree/3.x) | Stable          | 4 & 5 | ^3 | 7.1 - 8.0 |
-| [2.x](https://github.com/consolidation/robo/tree/2.x) | Not recommended | 4 & 5 | ^2 | 7.1 - 7.4 |
-| [1.x](https://github.com/consolidation/robo/tree/1.x) | Not recommended | 2 - 4 | ^2 | 5.5 - 7.4 |
+| Branch | Support Level | Symfony | League Container | psr/log | PHP Versions |
+| ------ | ------------- | ------- | ---------------- | ------------ | ------------ |
+| [5.x](https://github.com/consolidation/robo/tree/5.x) | Stable             | 6 - 7 | 3 | 2 - 3 | 8.2 - 8.3 |
+| [4.x](https://github.com/consolidation/robo/tree/4.x) | Stable             | 6     | 3 | 2 - 3 | 8.0 - 8.3 |
+| [3.x](https://github.com/consolidation/robo/tree/3.x) | Not supported      | 4 - 6 | 3 | 1 - 2 | 7.1 - 8.1 |
+| [2.x](https://github.com/consolidation/robo/tree/2.x) | Not supported      | 4 - 5 | 2 | 1 - 2 | 7.1 - 7.4 |
+| [1.x](https://github.com/consolidation/robo/tree/1.x) | Not supported      | 2 - 4 | 2 | 1 - 2 | 5.5 - 7.4 |
 
-The pre-build [robo.phar](https://robo.li/robo.phar) is built with Symfony 5, and requires PHP 7.2+.  Robo also works with Symfony 4 and PHP 7.1.3+ if packaged as a library in another application. For Symfony 2 or 3 support, or PHP versions prior to 7.1, please use the Robo 1.x branch.
+All versions are roughly compatible; the breaking changes introduced at each major version are fairly minor, and typically only affect classes that are not used by most clients.
 
-All three branches of Robo are currently supported, although the 2.x and 1.x branches receive minimum support. All versions are roughly compatible; the breaking changes introduced at each major version are fairly minor, and typically only affect classes that are not used by most clients.
+Note also that Robo 5.x removed consolidation/self-update as a direct dependency. You will need to explicitly add it if you are using it to update your application phar.
 
 ## Installing
 
@@ -56,7 +58,7 @@ Now you can use it simply via `robo`.
 
 ### Composer
 
-* Run `composer require consolidation/robo:^3`
+* Run `composer require consolidation/robo:^4`
 * Use `vendor/bin/robo` to execute Robo tasks.
 
 ## Usage
@@ -122,7 +124,7 @@ class RoboFile extends \Robo\Tasks {
     function watchComposer(ConsoleIO $io)
     {
         // when composer.json changes `composer update` will be executed
-        $this->collectionBuilder($io)->taskWatch()->monitor('composer.json', function() {
+        $this->collectionBuilder($io)->taskWatch()->monitor('composer.json', function() use ($io) {
             $this->collectionBuilder($io)->taskComposerUpdate()->run();
         })->run();
     }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\flag\Kernel;
 
 use Drupal\flag\Entity\Flag;
@@ -31,7 +33,6 @@ class FlagServiceTest extends FlagKernelTestBase {
     $flag->save();
 
     // Search for flag.
-    $user_with_access = $this->createUser(['flag ' . $flag->id()]);
     $result = $this->flagService->getAllFlags('node', 'article');
     $this->assertSame(count($result), 1, 'Found flag type');
     $this->assertEquals([$flag->id()], array_keys($result));
@@ -50,7 +51,7 @@ class FlagServiceTest extends FlagKernelTestBase {
     // First user created has uid == 0, the anonymous user. For non-global flags
     // we need to fake a session_id.
     $account = $this->createUser();
-    $session_id = 'anonymouse user 1 session_id';
+    $session_id = 'anonymous user 1 session_id';
 
     // Create a flag.
     $flag = Flag::create([
@@ -155,7 +156,7 @@ class FlagServiceTest extends FlagKernelTestBase {
       $this->flagService->unflag($flag, $flaggable_node, $account, $session_id);
     }
     catch (\LogicException $e) {
-      $this->fail('The unfag() method threw an exception where processing a valid unflag request.');
+      $this->fail('The unflag() method threw an exception where processing a valid unflag request.');
     }
   }
 
@@ -195,10 +196,13 @@ class FlagServiceTest extends FlagKernelTestBase {
     foreach ($accounts as $account) {
       foreach ($flagging_users as $flagging_user) {
         if ($flagging_user->id() == $account->id()) {
+          $this->assertTrue(
+            $flagging_user->id() == $account->id(),
+            "The returned array has the flagged account included."
+          );
           break;
         }
       }
-      $this->assertTrue($flagging_user->id() == $account->id(), "The returned array has the flagged account included.");
     }
   }
 

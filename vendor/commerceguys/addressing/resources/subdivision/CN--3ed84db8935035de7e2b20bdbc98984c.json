@@ -1,0 +1,47 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"SN",
+		"Baoji Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Chencang Qu": {
+			"local_name": "陈仓区"
+		},
+		"Feng Xian": {
+			"local_name": "凤县"
+		},
+		"Fengxiang Xian": {
+			"local_name": "凤翔县"
+		},
+		"Fufeng Xian": {
+			"local_name": "扶风县"
+		},
+		"Jintai Qu": {
+			"local_name": "金台区"
+		},
+		"Linyou Xian": {
+			"local_name": "麟游县"
+		},
+		"Long Xian": {
+			"local_name": "陇县"
+		},
+		"Mei Xian": {
+			"local_name": "眉县"
+		},
+		"Qishan Xian": {
+			"local_name": "岐山县"
+		},
+		"Qianyang Xian": {
+			"local_name": "千阳县"
+		},
+		"Taibai Xian": {
+			"local_name": "太白县"
+		},
+		"Weibin Qu": {
+			"local_name": "渭滨区"
+		}
+	}
+}

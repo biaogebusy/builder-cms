@@ -12,6 +12,13 @@ views.field.webform_submission_field:
     webform_multiple_delta:
       type: integer
       label: 'Delta to use'
+    webform_check_access:
+      type: integer
+      label: 'Check access'
+
+# Schema definition for field filter.
+views.filter.webform_submission_field_filter:
+  type: views.filter.string
 
 # Schema definition for select filter.
 views.filter.webform_submission_select_filter:

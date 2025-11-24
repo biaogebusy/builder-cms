@@ -1,0 +1,27 @@
+admin_toolbar.settings:
+  type: config_object
+  label: 'Admin Toolbar settings'
+  mapping:
+    enable_toggle_shortcut:
+      type: boolean
+      label: 'Enable toggle toolbar keyboard shortcut'
+    menu_depth:
+      type: integer
+      label: 'Depth of displayed menu'
+    sticky_behavior:
+      type: string
+      label: 'Toolbar sticky behavior'
+      options:
+        enabled: 'Enabled'
+        disabled: 'Disabled'
+        hide_on_scroll_down: 'Disabled: Hide on scroll-down, show on scroll-up'
+    hoverintent_behavior:
+      type: mapping
+      label: 'hoverIntent behavior'
+      mapping:
+        enabled:
+          type: boolean
+          label: 'Enable hoverIntent'
+        timeout:
+          type: integer
+          label: 'hoverIntent timeout'

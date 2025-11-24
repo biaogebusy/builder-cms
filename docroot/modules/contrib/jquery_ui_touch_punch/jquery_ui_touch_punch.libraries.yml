@@ -1,8 +1,0 @@
-touch-punch:
-  title: 'jQuery Touch Punch'
-  website: https://github.com/furf/jquery-ui-touch-punch
-  version: 0.0
-  js:
-    /libraries/jquery-ui-touch-punch/jquery.ui.touch-punch.min.js: { minified: true }
-  dependencies:
-    - jquery_ui/core

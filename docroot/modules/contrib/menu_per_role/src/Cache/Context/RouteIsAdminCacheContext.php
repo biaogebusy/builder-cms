@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\menu_per_role\Cache\Context;
 
@@ -34,7 +34,7 @@ class RouteIsAdminCacheContext implements CacheContextInterface {
    *   The router admin context service.
    */
   public function __construct(
-    AdminContext $adminContext
+    AdminContext $adminContext,
   ) {
     $this->adminContext = $adminContext;
   }

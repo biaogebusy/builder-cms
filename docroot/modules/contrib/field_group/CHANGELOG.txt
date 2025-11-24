@@ -2,7 +2,7 @@
 -----------------------
 - View Mode '_custom' should not go through the entity_display_build_alter.
 - Fix deprecated methods.
-- Temp remove the typehinting.
+- Temp remove the type hinting.
 - Fatal error when creating a paragraph.
 - Use mb_* functions instead of deprecated Unicode::* methods.
 - Large amount of fields causes tab functionality to break.
@@ -77,5 +77,5 @@
 - MessageWarning: Invalid argument supplied for foreach() in
   field_group_info_groups()
   (line 663 of modules/contrib/field_group/field_group.module).
-- Replace removed formBuilder->setError with formstate->setError.
+- Replace removed formBuilder->setError with form_state->setError.
 - Undefined index: id in template_preprocess_fieldset() notice.

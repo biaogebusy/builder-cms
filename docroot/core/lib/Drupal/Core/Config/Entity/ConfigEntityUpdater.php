@@ -106,7 +106,7 @@ class ConfigEntityUpdater implements ContainerInjectionInterface {
    *   Thrown when used twice in the same update function for different entity
    *   types. This method should only be called once per update function.
    */
-  public function update(array &$sandbox, $entity_type_id, callable $callback = NULL, bool $continue_on_error = FALSE) {
+  public function update(array &$sandbox, $entity_type_id, ?callable $callback = NULL, bool $continue_on_error = FALSE) {
     $storage = $this->entityTypeManager->getStorage($entity_type_id);
 
     if (isset($sandbox[self::SANDBOX_KEY]) && $sandbox[self::SANDBOX_KEY]['entity_type'] !== $entity_type_id) {
@@ -163,7 +163,7 @@ class ConfigEntityUpdater implements ContainerInjectionInterface {
     if (!empty($sandbox[self::SANDBOX_KEY]['failed_entity_ids'])) {
       $entity_type = $this->entityTypeManager->getDefinition($entity_type_id);
       if (\Drupal::moduleHandler()->moduleExists('dblog')) {
-        return new TranslatableMarkup("Updates failed for the entity type %entity_type, for %entity_ids. <a href=:url>Check the logs</a>.", [
+        return new TranslatableMarkup('Updates failed for the entity type %entity_type, for %entity_ids. <a href=":url">Check the logs</a>.', [
           '%entity_type' => $entity_type->getLabel(),
           '%entity_ids' => implode(', ', $sandbox[self::SANDBOX_KEY]['failed_entity_ids']),
           ':url' => Url::fromRoute('dblog.overview')->toString(),

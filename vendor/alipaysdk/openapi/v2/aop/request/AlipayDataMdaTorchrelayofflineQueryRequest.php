@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.data.mda.torchrelayoffline.query request
  *
  * @author auto create
- * @since 1.0, 2023-08-21 02:01:41
+ * @since 1.0, 2025-08-14 10:47:36
  */
 class AlipayDataMdaTorchrelayofflineQueryRequest
 {

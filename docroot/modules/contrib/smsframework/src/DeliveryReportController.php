@@ -9,6 +9,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Drupal\sms\Entity\SmsGatewayInterface;
 use Drupal\sms\Provider\SmsProviderInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Provides delivery reports acknowledgement and passes to the correct gateway.
@@ -16,27 +17,21 @@ use Drupal\sms\Provider\SmsProviderInterface;
 class DeliveryReportController implements ContainerInjectionInterface {
 
   /**
-   * The SMS Provider.
-   *
-   * @var \Drupal\sms\Provider\SmsProviderInterface
-   */
-  protected $smsProvider;
-
-  /**
    * The request stack.
    *
    * @var \Symfony\Component\HttpFoundation\RequestStack
    */
-  protected $requestStack;
+  protected RequestStack $requestStack;
 
   /**
    * Creates an new delivery report controller.
    *
-   * @param \Drupal\sms\Provider\SmsProviderInterface $sms_provider
+   * @param \Drupal\sms\Provider\SmsProviderInterface $smsProvider
    *   The SMS service provider.
    */
-  public function __construct(SmsProviderInterface $sms_provider) {
-    $this->smsProvider = $sms_provider;
+  public function __construct(
+    protected SmsProviderInterface $smsProvider,
+  ) {
   }
 
   /**
@@ -44,7 +39,7 @@ class DeliveryReportController implements ContainerInjectionInterface {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('sms.provider')
+      $container->get('sms.provider'),
     );
   }
 

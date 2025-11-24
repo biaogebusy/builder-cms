@@ -2,30 +2,31 @@
 
 namespace Drupal\commerce_promotion\Plugin\Commerce\Condition;
 
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce\Attribute\CommerceCondition;
 use Drupal\commerce\ConditionGroup;
 use Drupal\commerce\Plugin\Commerce\Condition\ConditionBase;
 use Drupal\commerce\Plugin\Commerce\Condition\ParentEntityAwareInterface;
 use Drupal\commerce\Plugin\Commerce\Condition\ParentEntityAwareTrait;
 use Drupal\commerce_price\Calculator;
 use Drupal\commerce_promotion\Plugin\Commerce\PromotionOffer\OrderItemPromotionOfferInterface;
-use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Provides the total discounted product quantity condition.
  *
  * Implemented as an order condition to be able to count products across
  * non-combined order items.
- *
- * @CommerceCondition(
- *   id = "order_item_quantity",
- *   label = @Translation("Total discounted product quantity"),
- *   category = @Translation("Products"),
- *   entity_type = "commerce_order",
- *   parent_entity_type = "commerce_promotion",
- *   weight = 10,
- * )
  */
+#[CommerceCondition(
+  id: "order_item_quantity",
+  label: new TranslatableMarkup("Total discounted product quantity"),
+  entity_type: "commerce_order",
+  category: new TranslatableMarkup("Products"),
+  parent_entity_type: "commerce_promotion",
+  weight: 10,
+)]
 class OrderItemQuantity extends ConditionBase implements ParentEntityAwareInterface {
 
   use ParentEntityAwareTrait;

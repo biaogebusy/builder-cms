@@ -1,18 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drush\Commands\core;
 
 use Consolidation\SiteProcess\Util\Tty;
-use Drush\Drush;
 use Drupal\Core\Url;
+use Drush\Attributes as CLI;
+use Drush\Boot\DrupalBootLevels;
 use Drush\Commands\DrushCommands;
+use Drush\Drush;
 use Drush\Exec\ExecTrait;
 use Symfony\Component\Filesystem\Path;
 
-class RunserverCommands extends DrushCommands
+final class RunserverCommands extends DrushCommands
 {
     use ExecTrait;
 
+    const RUNSERVER = 'runserver';
     protected $uri;
 
     /**
@@ -21,35 +26,25 @@ class RunserverCommands extends DrushCommands
      * - Don't use this for production, it is neither scalable nor secure for this use.
      * - If you run multiple servers simultaneously, you will need to assign each a unique port.
      * - Use Ctrl-C or equivalent to stop the server when complete.
-     *
-     * @command runserver
-     * @param $uri Host IP address and port number to bind to and path to open in web browser. Format is addr:port/path. Only opens a browser if a path is specified.
-     * @option default-server A default addr:port/path to use for any values not specified as an argument.
-     * @option browser Open the URL in the default browser. Use --no-browser to avoid opening a browser.
-     * @option dns Resolve hostnames/IPs using DNS/rDNS (if possible) to determine binding IPs and/or human friendly hostnames for URLs and browser.
-     * @bootstrap full
-     * @aliases rs,serve
-     * @usage drush rs 8080
-     *   Start a web server on 127.0.0.1, port 8080.
-     * @usage drush rs 10.0.0.28:80
-     *   Start runserver on 10.0.0.28, port 80.
-     * @usage drush rs [::1]:80
-     *   Start runserver on IPv6 localhost ::1, port 80.
-     * @usage drush rs --dns localhost:8888/user
-     *   Start runserver on localhost (using rDNS to determine binding IP), port 8888, and open /user in browser.
-     * @usage drush rs /
-     *  Start runserver on default IP/port (127.0.0.1, port 8888), and open / in browser.
-     * @usage drush rs :9000/admin
-     *   Start runserver on 127.0.0.1, port 9000, and open /admin in browser. Note that you need a colon when you specify port and path, but no IP.
-     * @usage drush --quiet rs
-     *   Silence logging the printing of web requests to the console.
      */
-    public function runserver($uri = null, $options = ['default-server' => self::REQ, 'browser' => true, 'dns' => false])
+    #[CLI\Command(name: self::RUNSERVER, aliases: ['rs', 'serve'])]
+    #[CLI\Argument(name: 'uri', description: 'IP address and port number to bind to and path to open in web browser. Format is addr:port/path. Only opens a browser if a path is specified.')]
+    #[CLI\Option(name: 'default-server', description: 'A default addr:port/path to use for any values not specified as an argument.')]
+    #[CLI\Option(name: 'browser', description: 'Open the URL in the default browser. Use --no-browser to avoid opening a browser.')]
+    #[CLI\Option(name: 'dns', description: 'Resolve hostnames/IPs using DNS/rDNS (if possible) to determine binding IPs and/or human friendly hostnames for URLs and browser.')]
+    #[CLI\Usage(name: 'drush rs 8080', description: 'Start a web server on 127.0.0.1, port 8080.')]
+    #[CLI\Usage(name: 'drush rs 10.0.0.28:80', description: 'Start runserver on 10.0.0.28, port 80.')]
+    #[CLI\Usage(name: 'drush rs [::1]:80', description: 'Start runserver on IPv6 localhost ::1, port 80.')]
+    #[CLI\Usage(name: 'drush rs --dns localhost:8888/user', description: 'Start runserver on localhost (using rDNS to determine binding IP), port 8888, and open /user in browser.')]
+    #[CLI\Usage(name: 'drush rs /', description: 'Start runserver on default IP/port (127.0.0.1, port 8888), and open / in browser.')]
+    #[CLI\Usage(name: 'drush rs :9000/admin', description: 'Start runserver on 127.0.0.1, port 9000, and open /admin in browser. Note that you need a colon when you specify port and path, but no IP.')]
+    #[CLI\Usage(name: 'drush --quiet rs', description: 'Silence logging the printing of web requests to the console.')]
+    #[CLI\Bootstrap(level: DrupalBootLevels::FULL)]
+    public function runserver($uri = null, $options = ['default-server' => self::REQ, 'browser' => true, 'dns' => false]): void
     {
-        // Determine active configuration.
         $uri = $this->uri($uri, $options);
         if (!$uri) {
-            return false;
+            throw new \RuntimeException('Unable to determine URI');
         }
 
         // Remove any leading slashes from the path, since that is what url() expects.
@@ -72,7 +67,7 @@ class RunserverCommands extends DrushCommands
             $this->startBrowser($link, 2);
         }
         // Start the server using 'php -S'.
-        $router = Path::join(DRUSH_BASE_PATH, '/misc/d8-rs-router.php');
+        $router = Path::join($this->getConfig()->get('drush.base-dir'), '/misc/d8-rs-router.php');
         $php = $this->getConfig()->get('php', 'php');
         $process = $this->processManager()->process([$php, '-S', $addr . ':' . $uri['port'], $router]);
         $process->setTimeout(null);
@@ -97,21 +92,20 @@ class RunserverCommands extends DrushCommands
         $user_default = $this->parseUri($options['default-server']);
         $site_default = $this->parseUri($uri);
         $uri = $this->parseUri($uri);
-        if (is_array($uri)) {
-            // Populate defaults.
-            $uri = $uri + $user_default + $site_default + $drush_default;
-            if (ltrim($uri['path'], '/') == '-') {
-                // Allow a path of a single hyphen to clear a default path.
-                $uri['path'] = '';
-            }
-            // Determine and set the new URI.
-            $uri['addr'] = $uri['host'];
-            if ($options['dns']) {
-                if (ip2long($uri['host'])) {
-                    $uri['host'] = gethostbyaddr($uri['host']);
-                } else {
-                    $uri['addr'] = gethostbyname($uri['host']);
-                }
+
+        // Populate defaults.
+        $uri = $uri + $user_default + $site_default + $drush_default;
+        if (ltrim($uri['path'], '/') === '-') {
+            // Allow a path of a single hyphen to clear a default path.
+            $uri['path'] = '';
+        }
+        // Determine and set the new URI.
+        $uri['addr'] = $uri['host'];
+        if ($options['dns']) {
+            if (ip2long($uri['host'])) {
+                $uri['host'] = gethostbyaddr($uri['host']);
+            } else {
+                $uri['addr'] = gethostbyname($uri['host']);
             }
         }
         return $uri;
@@ -130,14 +124,14 @@ class RunserverCommands extends DrushCommands
         if (empty($uri)) {
             return [];
         }
-        if ($uri[0] == ':') {
+        if ($uri[0] === ':') {
             // ':port/path' shorthand, insert a placeholder hostname to allow parsing.
             $uri = 'placeholder-hostname' . $uri;
         }
         // FILTER_VALIDATE_IP expects '[' and ']' to be removed from IPv6 addresses.
         // We check for colon from the right, since IPv6 addresses contain colons.
-        $to_path = trim(substr($uri, 0, strpos($uri, '/')), '[]');
-        $to_port = trim(substr($uri, 0, strrpos($uri, ':')), '[]');
+        $to_path = trim(substr($uri, 0, (int)strpos($uri, '/')), '[]');
+        $to_port = trim(substr($uri, 0, (int)strrpos($uri, ':')), '[]');
         if (filter_var(trim($uri, '[]'), FILTER_VALIDATE_IP) || filter_var($to_path, FILTER_VALIDATE_IP) || filter_var($to_port, FILTER_VALIDATE_IP)) {
             // 'IP', 'IP/path' or 'IP:port' shorthand, insert a schema to allow parsing.
             $uri = 'http://' . $uri;
@@ -153,7 +147,7 @@ class RunserverCommands extends DrushCommands
                 unset($uri['path']);
             }
         }
-        if (isset($uri['host']) && $uri['host'] == 'placeholder-hostname') {
+        if (isset($uri['host']) && $uri['host'] === 'placeholder-hostname') {
             unset($uri['host']);
         }
         return $uri;

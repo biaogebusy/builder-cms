@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.commerce.transport.etc.cardapply.notify request
  *
  * @author auto create
- * @since 1.0, 2023-05-30 22:46:48
+ * @since 1.0, 2024-08-09 18:43:41
  */
 class AlipayCommerceTransportEtcCardapplyNotifyRequest
 {

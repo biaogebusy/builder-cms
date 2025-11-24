@@ -108,10 +108,7 @@ absolute position and fixed dimensions. */
 .media--fx .b-blur {
   position: absolute;
   z-index: 0;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
+  inset: 0;
   width: 100%;
   height: 100%;
   min-height: 1px;
@@ -168,4 +165,28 @@ absolute position and fixed dimensions. */
   z-index: -1;
   visibility: hidden;
   opacity: 0;
+}
+
+.blazy .grid__content,
+.blazy .region__content {
+  position: relative;
+  overflow: visible;
+  width: 100%;
+  max-width: 100%;
+  margin-block-end: 0;
+}
+
+.b-error.b-checked {
+  display: none;
+}
+
+/* Fix for unnecessary Olivero Grid surprises with Splide/Slick excessive width. */
+.view.view--blazy,
+.view.view--blazy .view-content {
+  display: block;
+}
+
+/* Olivero surprises when blazy grid item is acting as a layout region. */
+.blazy > .grid {
+  margin-block-end: 0;
 }

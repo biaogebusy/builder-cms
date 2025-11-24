@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\TestSite\Commands;
 
+use Drupal\Core\Config\ConfigImporter;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Test\FunctionalTestSetupTrait;
 use Drupal\Core\Test\TestDatabase;
@@ -36,29 +39,23 @@ class TestSiteInstallCommand extends Command {
    *
    * Defaults to the install profile's default theme, if it specifies any.
    */
-  protected $defaultTheme;
+  protected string $defaultTheme;
 
   /**
    * The base URL.
    */
-  protected $baseUrl;
+  protected string $baseUrl;
 
   /**
    * The original array of shutdown function callbacks.
    */
-  protected $originalShutdownCallbacks = [];
+  protected array $originalShutdownCallbacks = [];
 
-  /**
-   * The translation file directory for the test environment.
-   *
-   * This is set in BrowserTestBase::prepareEnvironment().
-   */
-  protected $translationFilesDirectory;
 
   /**
    * The config importer that can be used in a test.
    */
-  protected $configImporter;
+  protected ?ConfigImporter $configImporter;
 
   /**
    * The install profile to use.
@@ -85,6 +82,17 @@ class TestSiteInstallCommand extends Command {
 
   /**
    * {@inheritdoc}
+   *
+   * @todo Remove and fix test to not rely on super user.
+   * @see https://www.drupal.org/project/drupal/issues/3437620
+   */
+  public function __construct(?string $name = NULL) {
+    parent::__construct($name);
+    $this->usesSuperUserAccessPolicy = TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
    */
   protected function configure() {
     $this->setName('install')
@@ -98,13 +106,13 @@ class TestSiteInstallCommand extends Command {
       ->addOption('json', NULL, InputOption::VALUE_NONE, 'Output test site connection details in JSON.')
       ->addUsage('--setup-file core/tests/Drupal/TestSite/TestSiteMultilingualInstallTestScript.php --json')
       ->addUsage('--install-profile demo_umami --langcode fr')
-      ->addUsage('--base-url "http://example.com" --db-url "mysql://username:password@localhost/databasename#table_prefix"');
+      ->addUsage('--base-url "http://example.com" --db-url "mysql://username:password@localhost/database_name#table_prefix"');
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function execute(InputInterface $input, OutputInterface $output) {
+  protected function execute(InputInterface $input, OutputInterface $output): int {
     // Determines and validates the setup class prior to installing a database
     // to avoid creating unnecessary sites.
     $root = dirname(__DIR__, 5);

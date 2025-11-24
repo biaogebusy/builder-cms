@@ -21,6 +21,10 @@
 	"BOB": {
 		"name": "boliviano"
 	},
+	"XCG": {
+		"name": "Caribbean guilder",
+		"symbol": "Cg."
+	},
 	"GHS": {
 		"name": "cedi ghanés"
 	},
@@ -169,9 +173,6 @@
 		"name": "euro",
 		"symbol": "€"
 	},
-	"ANG": {
-		"name": "florín das Antillas Neerlandesas"
-	},
 	"AWG": {
 		"name": "florín de Aruba"
 	},
@@ -257,9 +258,6 @@
 	},
 	"SLE": {
 		"name": "leone de Serra Leoa"
-	},
-	"SLL": {
-		"name": "leone de Serra Leoa (1964—2022)"
 	},
 	"MDL": {
 		"name": "leu moldovo"
@@ -356,9 +354,6 @@
 	},
 	"CUP": {
 		"name": "peso cubano"
-	},
-	"CUC": {
-		"name": "peso cubano convertible"
 	},
 	"DOP": {
 		"name": "peso dominicano"

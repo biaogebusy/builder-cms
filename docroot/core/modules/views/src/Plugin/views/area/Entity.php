@@ -6,6 +6,7 @@ use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\views\Attribute\ViewsArea;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\ViewExecutable;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -14,9 +15,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Provides an area handler which renders an entity in a certain view mode.
  *
  * @ingroup views_area_handlers
- *
- * @ViewsArea("entity")
  */
+#[ViewsArea("entity")]
 class Entity extends TokenizeAreaPluginBase {
 
   /**
@@ -53,7 +53,7 @@ class Entity extends TokenizeAreaPluginBase {
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -88,7 +88,7 @@ class Entity extends TokenizeAreaPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function init(ViewExecutable $view, DisplayPluginBase $display, array &$options = NULL) {
+  public function init(ViewExecutable $view, DisplayPluginBase $display, ?array &$options = NULL) {
     parent::init($view, $display, $options);
     $this->entityType = $this->definition['entity_type'];
   }
@@ -131,7 +131,7 @@ class Entity extends TokenizeAreaPluginBase {
     // display the entity ID to the admin form user.
     // @todo Use a method to check for tokens in
     //   https://www.drupal.org/node/2396607.
-    if (strpos($this->options['target'], '{{') === FALSE) {
+    if (!str_contains($this->options['target'], '{{')) {
       // @todo If the entity does not exist, this will show the config target
       //   identifier. Decide if this is the correct behavior in
       //   https://www.drupal.org/node/2415391.
@@ -164,7 +164,7 @@ class Entity extends TokenizeAreaPluginBase {
     // @todo Use a method to check for tokens in
     //   https://www.drupal.org/node/2396607.
     $options = $form_state->getValue('options');
-    if (strpos($options['target'], '{{') === FALSE) {
+    if (!str_contains($options['target'], '{{')) {
       if ($entity = $this->entityTypeManager->getStorage($this->entityType)->load($options['target'])) {
         $options['target'] = $entity->getConfigTarget();
       }
@@ -179,7 +179,7 @@ class Entity extends TokenizeAreaPluginBase {
     if (!$empty || !empty($this->options['empty'])) {
       // @todo Use a method to check for tokens in
       //   https://www.drupal.org/node/2396607.
-      if (strpos($this->options['target'], '{{') !== FALSE) {
+      if (str_contains($this->options['target'], '{{')) {
         // We cast as we need the integer/string value provided by the
         // ::tokenizeValue() call.
         $target_id = (string) $this->tokenizeValue($this->options['target']);
@@ -210,7 +210,7 @@ class Entity extends TokenizeAreaPluginBase {
     // Ensure that we don't add dependencies for placeholders.
     // @todo Use a method to check for tokens in
     //   https://www.drupal.org/node/2396607.
-    if (strpos($this->options['target'], '{{') === FALSE) {
+    if (!str_contains($this->options['target'], '{{')) {
       if ($entity = $this->entityRepository->loadEntityByConfigTarget($this->entityType, $this->options['target'])) {
         $dependencies[$this->entityTypeManager->getDefinition($this->entityType)->getConfigDependencyKey()][] = $entity->getConfigDependencyName();
       }

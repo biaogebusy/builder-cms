@@ -26,7 +26,7 @@ class Util {
    * @return array
    *   Data.
    */
-  public static function viewsData(ViewExecutable $view = NULL, array $labelValues = [], $labelField = '', array $color = [], $attachmentChartTypeOption = NULL) {
+  public static function viewsData(?ViewExecutable $view = NULL, array $labelValues = [], $labelField = '', array $color = [], $attachmentChartTypeOption = NULL) {
     $data = [];
     $style_options = $view->getStyle()->options['chart_settings'];
     foreach ($view->result as $row_number => $row) {

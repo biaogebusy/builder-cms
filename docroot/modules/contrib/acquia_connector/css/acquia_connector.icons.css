@@ -6,6 +6,11 @@
   background-image: url('../images/check.svg');
 }
 
+.toolbar-bar .acquia-unknown-subscription:before {
+  background-image: url('../../../../core/misc/icons/e29700/warning.svg');
+}
+
+.toolbar .toolbar-bar .toolbar-tab .acquia-unknown-subscription,
 .toolbar .toolbar-bar .toolbar-tab .acquia-active-subscription,
 .toolbar .toolbar-bar .toolbar-tab .acquia-inactive-subscription {
   z-index: 0;

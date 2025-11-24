@@ -2,9 +2,9 @@
 
 namespace Drupal\autologout\Form;
 
-use Drupal\autologout\AutologoutManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\autologout\AutologoutManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**

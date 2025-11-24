@@ -3,19 +3,22 @@
 namespace Drupal\autologout;
 
 use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Component\Utility\Xss;
+use Drupal\Core\Config\Config;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\Core\Session\SessionManager;
-use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Session\AnonymousUserSession;
-use Drupal\user\UserData;
-use Drupal\Component\Utility\Xss;
+use Drupal\Core\Session\SessionManager;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\user\UserData;
+use Drupal\user\UserDataInterface;
 use Drupal\user\UserInterface;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Defines an AutologoutManager service.
@@ -29,76 +32,76 @@ class AutologoutManager implements AutologoutManagerInterface {
    *
    * @var \Drupal\Core\Extension\ModuleHandlerInterface
    */
-  protected $moduleHandler;
+  protected ModuleHandlerInterface $moduleHandler;
 
   /**
    * The config object for 'autologout.settings'.
    *
    * @var \Drupal\Core\Config\Config
    */
-  protected $autoLogoutSettings;
+  protected Config $autoLogoutSettings;
 
   /**
    * The config factory service.
    *
    * @var \Drupal\Core\Config\ConfigFactoryInterface
    */
-  protected $configFactory;
+  protected ConfigFactoryInterface $configFactory;
 
   /**
    * The Messenger service.
    *
    * @var \Drupal\Core\Messenger\MessengerInterface
    */
-  protected $messenger;
+  protected MessengerInterface $messenger;
   /**
    * The current user.
    *
    * @var \Drupal\Core\Session\AccountInterface
    */
-  protected $currentUser;
+  protected AccountInterface $currentUser;
 
   /**
    * Logger service.
    *
-   * @var \Drupal\Core\Logger\LoggerChannelInterface
+   * @var \Psr\Log\LoggerInterface
    */
-  protected $logger;
+  protected LoggerInterface $logger;
 
   /**
    * The session.
    *
    * @var \Drupal\Core\Session\SessionManager
    */
-  protected $session;
+  protected SessionManager $session;
 
   /**
    * Data of the user.
    *
    * @var \Drupal\user\UserDataInterface
    */
-  protected $userData;
+  protected UserDataInterface $userData;
 
   /**
    * The Time Service.
    *
    * @var \Drupal\Component\Datetime\TimeInterface
    */
-  protected $time;
+  protected TimeInterface $time;
 
   /**
    * The entity type manager service.
    *
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected $entityTypeManager;
+  protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
-   * The translation service.
+   * The request stack.
    *
-   * @var \Drupal\Core\StringTranslation\TranslationInterface
+   * @var \Symfony\Component\HttpFoundation\RequestStack
    */
-  protected $stringTranslation;
+  protected RequestStack $requestStack;
 
   /**
    * Constructs an AutologoutManager object.
@@ -121,21 +124,10 @@ class AutologoutManager implements AutologoutManagerInterface {
    *   The time service.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager service.
-   * @param \Drupal\Core\StringTranslation\TranslationInterface $stringTranslation
-   *   The string translation service.
+   * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
+   *   The request stack.
    */
-  public function __construct(
-    ModuleHandlerInterface $module_handler,
-    ConfigFactoryInterface $config_factory,
-    MessengerInterface $messenger,
-    AccountInterface $current_user,
-    LoggerChannelFactoryInterface $logger,
-    SessionManager $sessionManager,
-    UserData $userData,
-    TimeInterface $time,
-    EntityTypeManagerInterface $entityTypeManager,
-    TranslationInterface $stringTranslation
-  ) {
+  public function __construct(ModuleHandlerInterface $module_handler, ConfigFactoryInterface $config_factory, MessengerInterface $messenger, AccountInterface $current_user, LoggerChannelFactoryInterface $logger, SessionManager $sessionManager, UserData $userData, TimeInterface $time, EntityTypeManagerInterface $entityTypeManager, RequestStack $requestStack) {
     $this->moduleHandler = $module_handler;
     $this->autoLogoutSettings = $config_factory->get('autologout.settings');
     $this->configFactory = $config_factory;
@@ -146,7 +138,7 @@ class AutologoutManager implements AutologoutManagerInterface {
     $this->userData = $userData;
     $this->time = $time;
     $this->entityTypeManager = $entityTypeManager;
-    $this->stringTranslation = $stringTranslation;
+    $this->requestStack = $requestStack;
   }
 
   /**
@@ -185,7 +177,7 @@ class AutologoutManager implements AutologoutManagerInterface {
    */
   public function inactivityMessage() {
     $message = Xss::filter($this->autoLogoutSettings->get('inactivity_message'));
-    $type = $this->autoLogoutSettings->get('inactivity_message_type');
+    $type = $this->autoLogoutSettings->get('inactivity_message_type') ?? 'status';
     if (!empty($message)) {
       $this->messenger->addMessage($this->t('@message', ['@message' => $message]), $type);
     }
@@ -205,15 +197,17 @@ class AutologoutManager implements AutologoutManagerInterface {
 
     // Destroy the current session.
     $this->moduleHandler->invokeAll('user_logout', [$user]);
-    $this->session->destroy();
+    $this->session->clear();
     $user->setAccount(new AnonymousUserSession());
+
+    $this->moduleHandler->invokeAll('autologout_user_logout', []);
   }
 
   /**
    * {@inheritdoc}
    */
   public function getRoleTimeout() {
-    $roles = user_roles(TRUE);
+    $roles = $this->entityTypeManager->getStorage('user_role')->loadMultiple();
     $role_timeout = [];
 
     // Go through roles, get timeouts for each and return as array.
@@ -232,7 +226,7 @@ class AutologoutManager implements AutologoutManagerInterface {
    * {@inheritdoc}
    */
   public function getRoleUrl() {
-    $roles = user_roles(TRUE);
+    $roles = $this->entityTypeManager->getStorage('user_role')->loadMultiple();
     $role_url = [];
 
     // Go through roles, get timeouts for each and return as array.
@@ -250,12 +244,13 @@ class AutologoutManager implements AutologoutManagerInterface {
    * {@inheritdoc}
    */
   public function getRemainingTime() {
-    if ($this->configFactory->get('logout_regardless_of_activity')) {
-      $time_passed = $this->time->getRequestTime() - $_COOKIE['Drupal_visitor_autologout_login'];
+    if ($this->autoLogoutSettings->get('logout_regardless_of_activity')) {
+      $time_passed = $this->time->getRequestTime() - $this->requestStack->getCurrentRequest()->cookies->get('Drupal_visitor_autologout_login');
     }
     else {
-      $time_passed = isset($_SESSION['autologout_last'])
-        ? $this->time->getRequestTime() - $_SESSION['autologout_last']
+      $session = $this->requestStack->getCurrentRequest()->getSession()->get('autologout_last');
+      $time_passed = isset($session)
+        ? $this->time->getRequestTime() - $session
         : 0;
     }
     $timeout = $this->getUserTimeout();
@@ -357,8 +352,8 @@ class AutologoutManager implements AutologoutManagerInterface {
       }
     }
 
-    // If no user or role override exists, return the default timeout.
-    return $this->autoLogoutSettings->get('redirect_url');
+    // If the redirect URL set in configuration is empty, use user login URL.
+    return $this->autoLogoutSettings->get('redirect_url') ?? "/user/login";
   }
 
   /**

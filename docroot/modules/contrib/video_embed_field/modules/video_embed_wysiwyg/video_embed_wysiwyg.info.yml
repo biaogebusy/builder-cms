@@ -2,13 +2,16 @@ name: Video Embed WYSIWYG
 type: module
 description: 'Integrates video_embed_field directly into ckeditor. Useful for websites not using the media suite of modules that need WYSIWYG support.'
 package: Video Embed Field
-core_version_requirement: ^9.2 || ^10
+core_version_requirement: ^10.3 || ^11
 dependencies:
+  - drupal:ckeditor5
   - drupal:field
-  - drupal:ckeditor
+  - drupal:editor
   - video_embed_field:video_embed_field
+ckeditor5-stylesheets:
+  - css/video_embed.ckeditor5.css
 
-# Information added by Drupal.org packaging script on 2022-12-19
-version: '8.x-2.5'
+# Information added by Drupal.org packaging script on 2025-11-04
+version: '3.0.0-beta3'
 project: 'video_embed_field'
-datestamp: 1671413313
+datestamp: 1762283620

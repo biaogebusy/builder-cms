@@ -75,7 +75,7 @@ class EckEntityBundleListBuilder extends ConfigEntityListBuilder {
       'data' => $entity->label(),
       'class' => ['menu-label'],
     ];
-    $row['description'] = Xss::filterAdmin($entity->description);
+    $row['description']['data'] = ['#markup' => Xss::filterAdmin($entity->description)];
 
     return $row + parent::buildRow($entity);
   }

@@ -2,18 +2,19 @@
 
 namespace Drupal\commerce_test\Plugin\Commerce\EntityTrait;
 
-use Drupal\entity\BundleFieldDefinition;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce\Attribute\CommerceEntityTrait;
 use Drupal\commerce\Plugin\Commerce\EntityTrait\EntityTraitBase;
+use Drupal\entity\BundleFieldDefinition;
 
 /**
  * Provides the first entity trait.
- *
- * @CommerceEntityTrait(
- *   id = "first",
- *   label = @Translation("First"),
- *   entity_types = {"commerce_store"}
- * )
  */
+#[CommerceEntityTrait(
+  id: "first",
+  label: new TranslatableMarkup("First"),
+  entity_types: ["commerce_store"],
+)]
 class First extends EntityTraitBase {
 
   /**

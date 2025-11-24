@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\filter\Functional;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\comment\Tests\CommentTestTrait;
 use Drupal\Core\StreamWrapper\PublicStream;
 use Drupal\filter\Entity\FilterFormat;
@@ -20,9 +21,7 @@ class FilterHtmlImageSecureTest extends BrowserTestBase {
   use TestFileCreationTrait;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['filter', 'node', 'comment'];
 
@@ -45,7 +44,7 @@ class FilterHtmlImageSecureTest extends BrowserTestBase {
         'filter_html' => [
           'status' => 1,
           'settings' => [
-            'allowed_html' => '<img src testattribute> <a>',
+            'allowed_html' => '<img src test-attribute> <a>',
           ],
         ],
         'filter_autop' => [
@@ -77,7 +76,7 @@ class FilterHtmlImageSecureTest extends BrowserTestBase {
   /**
    * Tests removal of images having a non-local source.
    */
-  public function testImageSource() {
+  public function testImageSource(): void {
     global $base_url;
 
     $node = $this->drupalCreateNode();
@@ -134,7 +133,7 @@ class FilterHtmlImageSecureTest extends BrowserTestBase {
       $comment[] = $image . ':';
       // Hash the image source in a custom test attribute, because it might
       // contain characters that confuse XPath.
-      $comment[] = '<img src="' . $image . '" testattribute="' . hash('sha256', $image) . '" />';
+      $comment[] = '<img src="' . $image . '" test-attribute="' . hash('sha256', $image) . '" />';
     }
     $edit = [
       'comment_body[0][value]' => implode("\n", $comment),
@@ -143,7 +142,7 @@ class FilterHtmlImageSecureTest extends BrowserTestBase {
     $this->submitForm($edit, 'Save');
     foreach ($images as $image => $converted) {
       $found = FALSE;
-      foreach ($this->xpath('//img[@testattribute="' . hash('sha256', $image) . '"]') as $element) {
+      foreach ($this->xpath('//img[@test-attribute="' . hash('sha256', $image) . '"]') as $element) {
         $found = TRUE;
         if ($converted == $red_x_image) {
           $this->assertEquals($red_x_image, $element->getAttribute('src'));
@@ -156,7 +155,7 @@ class FilterHtmlImageSecureTest extends BrowserTestBase {
           $this->assertEquals($converted, $element->getAttribute('src'));
         }
       }
-      $this->assertTrue($found, new FormattableMarkup('@image was found.', ['@image' => $image]));
+      $this->assertTrue($found, "$image was found.");
     }
   }
 

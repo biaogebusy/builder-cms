@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views_ui\Functional;
 
 use Drupal\views\Views;
@@ -20,11 +22,11 @@ class StyleTableTest extends UITestBase {
   /**
    * Tests created a table style view.
    */
-  public function testWizard() {
+  public function testWizard(): void {
     // Create a new view and check that the first field has a label.
     $view = [];
     $view['label'] = $this->randomMachineName(16);
-    $view['id'] = strtolower($this->randomMachineName(16));
+    $view['id'] = $this->randomMachineName(16);
     $view['show[wizard_key]'] = 'node';
     $view['page[create]'] = TRUE;
     $view['page[style][style_plugin]'] = 'table';

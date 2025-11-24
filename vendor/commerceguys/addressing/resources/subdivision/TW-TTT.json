@@ -1,0 +1,58 @@
+{
+	"country_code": "TW",
+	"parents": [
+		"TW",
+		"TTT"
+	],
+	"locale": "zh-Hant",
+	"subdivisions": {
+		"Dawu Township": {
+			"local_name": "大武鄉"
+		},
+		"Taimali Township": {
+			"local_name": "太麻里鄉"
+		},
+		"Taitung City": {
+			"local_name": "台東市"
+		},
+		"Chenggong Township": {
+			"local_name": "成功鎮"
+		},
+		"Chishang Township": {
+			"local_name": "池上鄉"
+		},
+		"Beinan Township": {
+			"local_name": "卑南鄉"
+		},
+		"Yanping Township": {
+			"local_name": "延平鄉"
+		},
+		"Donghe Township": {
+			"local_name": "東河鄉"
+		},
+		"Jinfeng Township": {
+			"local_name": "金峰鄉"
+		},
+		"Changbin Township": {
+			"local_name": "長濱鄉"
+		},
+		"Haiduan Township": {
+			"local_name": "海端鄉"
+		},
+		"Luye Township": {
+			"local_name": "鹿野鄉"
+		},
+		"Daren Township": {
+			"local_name": "達仁鄉"
+		},
+		"Lüdao Township": {
+			"local_name": "綠島鄉"
+		},
+		"Guanshan Township": {
+			"local_name": "關山鎮"
+		},
+		"Lanyu Township": {
+			"local_name": "蘭嶼鄉"
+		}
+	}
+}

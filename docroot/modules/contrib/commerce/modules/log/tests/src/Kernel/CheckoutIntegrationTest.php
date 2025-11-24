@@ -2,10 +2,10 @@
 
 namespace Drupal\Tests\commerce_log\Kernel;
 
+use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 use Drupal\commerce_checkout\Event\CheckoutEvents;
 use Drupal\commerce_order\Entity\Order;
 use Drupal\commerce_order\Event\OrderEvent;
-use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 
 /**
  * Tests integration with checkout events.

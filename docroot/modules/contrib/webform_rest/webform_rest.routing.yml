@@ -1,0 +1,7 @@
+webform_rest.settings:
+  path: '/admin/webform_rest/settings'
+  defaults:
+    _form: '\Drupal\webform_rest\Form\WebformRestForm'
+    _title: 'Webform Rest Settings'
+  requirements:
+    _permission: 'access webform rest settings'  

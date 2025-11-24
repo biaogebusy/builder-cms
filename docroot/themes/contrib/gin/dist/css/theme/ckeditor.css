@@ -60,33 +60,19 @@ a {
 body.cke_editable_themed blockquote {
   font-size: var(--gin-font-size-quote);
   position: relative;
+  padding-inline-start: var(--gin-spacing-l);
   margin: var(--gin-spacing-m);
-}
-
-[dir="ltr"] body.cke_editable_themed blockquote {
-  padding-left: var(--gin-spacing-l);
-}
-
-[dir="rtl"] body.cke_editable_themed blockquote {
-  padding-right: var(--gin-spacing-l);
 }
 
 body.cke_editable_themed blockquote::before {
   content: "";
   display: block;
   position: absolute;
-  top: 0;
+  inset-block-start: 0;
+  inset-inline-start: 0;
   width: 4px;
   height: 100%;
   background-color: var(--gin-color-primary);
   border-radius: 2px;
-}
-
-[dir="ltr"] body.cke_editable_themed blockquote::before {
-  left: 0;
-}
-
-[dir="rtl"] body.cke_editable_themed blockquote::before {
-  right: 0;
 }
 

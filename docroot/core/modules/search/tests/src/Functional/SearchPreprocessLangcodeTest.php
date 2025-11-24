@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\search\Functional;
 
 use Drupal\Tests\BrowserTestBase;
@@ -48,7 +50,7 @@ class SearchPreprocessLangcodeTest extends BrowserTestBase {
   /**
    * Tests that hook_search_preprocess() returns the correct langcode.
    */
-  public function testPreprocessLangcode() {
+  public function testPreprocessLangcode(): void {
     // Create a node.
     $this->node = $this->drupalCreateNode(['body' => [[]], 'langcode' => 'en']);
 
@@ -69,7 +71,7 @@ class SearchPreprocessLangcodeTest extends BrowserTestBase {
   /**
    * Tests stemming for hook_search_preprocess().
    */
-  public function testPreprocessStemming() {
+  public function testPreprocessStemming(): void {
     // Create a node.
     $this->node = $this->drupalCreateNode([
       'title' => 'we are testing',

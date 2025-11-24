@@ -1,1 +1,1 @@
-!function(i){const n=i.sr=i.sr||{};n.dictionary=Object.assign(n.dictionary||{},{Source:"Извор"})}(window.CKEDITOR_TRANSLATIONS||(window.CKEDITOR_TRANSLATIONS={}));
+!function(i){const o=i.sr=i.sr||{};o.dictionary=Object.assign(o.dictionary||{},{"Show source":"Pokaži izvor"})}(window.CKEDITOR_TRANSLATIONS||(window.CKEDITOR_TRANSLATIONS={}));

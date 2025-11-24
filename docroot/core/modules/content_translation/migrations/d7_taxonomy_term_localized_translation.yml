@@ -1,3 +1,4 @@
+# cspell:ignore ltlanguage
 id: d7_taxonomy_term_localized_translation
 label: Taxonomy localized term translations
 migration_tags:
@@ -44,3 +45,5 @@ migration_dependencies:
   required:
     - language
     - d7_taxonomy_term
+  optional:
+    - d7_language_content_taxonomy_vocabulary_settings

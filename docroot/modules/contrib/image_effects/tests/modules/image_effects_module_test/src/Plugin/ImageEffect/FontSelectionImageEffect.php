@@ -1,38 +1,37 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects_module_test\Plugin\ImageEffect;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Image\ImageInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\image\Attribute\ImageEffect;
 use Drupal\image\ConfigurableImageEffectBase;
+use Drupal\image_effects\Plugin\FontSelectorPluginManager;
 use Drupal\image_effects\Plugin\ImageEffectsFontSelectorPluginInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Image effect that relies on a font URI selected via the font selector plugin.
- *
- * @ImageEffect(
- *   id = "image_effects_module_test_font_selection",
- *   label = @Translation("Font selection test image effect")
- * )
  */
+#[ImageEffect(
+  id: 'image_effects_module_test_font_selection',
+  label: new TranslatableMarkup('Font selection test image effect'),
+)]
 class FontSelectionImageEffect extends ConfigurableImageEffectBase implements ContainerFactoryPluginInterface {
 
-  /**
-   * The image selector plugin.
-   *
-   * @var \Drupal\image_effects\Plugin\ImageEffectsFontSelectorPluginInterface
-   */
-  protected $fontSelector;
-
-  /**
-   * {@inheritdoc}
-   */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, LoggerInterface $logger, ImageEffectsFontSelectorPluginInterface $font_selector_plugin) {
+  public function __construct(
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+    LoggerInterface $logger,
+    protected readonly ImageEffectsFontSelectorPluginInterface $fontSelector,
+  ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $logger);
-    $this->fontSelector = $font_selector_plugin;
   }
 
   /**
@@ -44,7 +43,7 @@ class FontSelectionImageEffect extends ConfigurableImageEffectBase implements Co
       $plugin_id,
       $plugin_definition,
       $container->get('logger.factory')->get('image'),
-      $container->get('plugin.manager.image_effects.font_selector')->getPlugin()
+      $container->get(FontSelectorPluginManager::class)->getPlugin()
     );
   }
 

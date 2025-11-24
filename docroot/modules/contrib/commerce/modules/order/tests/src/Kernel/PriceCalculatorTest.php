@@ -137,8 +137,12 @@ class PriceCalculatorTest extends OrderKernelTestBase {
     $this->firstVariation = $this->reloadEntity($first_variation);
     $this->secondVariation = $this->reloadEntity($second_variation);
 
-    $this->firstUser = $this->createUser(['mail' => 'user1@example.com']);
-    $this->secondUser = $this->createUser(['mail' => 'user2@example.com']);
+    $this->firstUser = $this->createUser([], NULL, FALSE, [
+      'mail' => 'user1@example.com',
+    ]);
+    $this->secondUser = $this->createUser([], NULL, FALSE, [
+      'mail' => 'user2@example.com',
+    ]);
 
     $this->priceCalculator = $this->container->get('commerce_order.price_calculator');
   }

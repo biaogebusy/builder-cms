@@ -1,0 +1,26 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"GD",
+		"Maoming Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Dianbai Qu": {
+			"local_name": "电白区"
+		},
+		"Gaozhou Shi": {
+			"local_name": "高州市"
+		},
+		"Huazhou Shi": {
+			"local_name": "化州市"
+		},
+		"Maonan Qu": {
+			"local_name": "茂南区"
+		},
+		"Xinyi Shi": {
+			"local_name": "信宜市"
+		}
+	}
+}

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalTests\Installer;
 
 use Drupal\Core\Database\Database;
@@ -15,7 +17,7 @@ class InstallerTranslationTest extends InstallerTestBase {
   /**
    * {@inheritdoc}
    */
-  protected $defaultTheme = 'starterkit_theme';
+  protected $defaultTheme = 'test_theme';
 
   /**
    * Overrides the language code in which to install Drupal.
@@ -78,7 +80,7 @@ class InstallerTranslationTest extends InstallerTestBase {
   /**
    * Verifies the expected behaviors of the installation result.
    */
-  public function testInstaller() {
+  public function testInstaller(): void {
     $this->assertSession()->addressEquals('user/1');
     $this->assertSession()->statusCodeEquals(200);
 
@@ -107,7 +109,7 @@ class InstallerTranslationTest extends InstallerTestBase {
     $this->drupalGet('admin/config/development/performance');
     $this->submitForm($edit, 'Save configuration');
     $this->drupalGet('<front>');
-    $this->assertSession()->responseContains('starterkit_theme/css/components/action-links.css');
+    $this->assertSession()->responseContains('my_theme/css/my-container-inline.css');
 
     // Verify the strings from the translation files were imported.
     $test_samples = ['Save and continue', 'Anonymous'];
@@ -152,8 +154,8 @@ class InstallerTranslationTest extends InstallerTestBase {
    * @return string
    *   Contents for the test .po file.
    */
-  protected function getPo($langcode) {
-    return <<<ENDPO
+  protected function getPo($langcode): string {
+    return <<<PO
 msgid ""
 msgstr ""
 
@@ -168,7 +170,7 @@ msgstr "Beheben Sie alle Probleme unten, um die Installation fortzusetzen. Infor
 
 msgid "Failed to <strong>CREATE</strong> a test table on your database server with the command %query. The server reports the following message: %error.<p>Are you sure the configured username has the necessary permissions to create tables in the database?</p>"
 msgstr "<strong>CREATE</strong> ein Test-Tabelle auf Ihrem Datenbankserver mit dem Befehl %query fehlgeschlagen."
-ENDPO;
+PO;
   }
 
 }

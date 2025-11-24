@@ -2,9 +2,9 @@
 
 namespace Drupal\commerce_test\Form;
 
-use Drupal\commerce\Response\NeedsRedirectException;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\commerce\Response\NeedsRedirectException;
 
 /**
  * Redirects the user to drupal.org.

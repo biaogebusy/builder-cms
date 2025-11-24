@@ -20,7 +20,7 @@ class WebformLogicHelper {
    * @param string $value
    *   A string value typically a token.
    * @param bool $increment
-   *   TRUE to increment tracking and FALSE to deincrement tracking.
+   *   TRUE to increment tracking and FALSE to decrement tracking.
    *
    * @return bool
    *   FALSE when recursion is detected.

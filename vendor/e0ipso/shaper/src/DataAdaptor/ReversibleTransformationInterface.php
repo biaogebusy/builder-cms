@@ -23,6 +23,6 @@ interface ReversibleTransformationInterface {
    * @throws \TypeError
    *   When the transformation cannot be applied.
    */
-  public function undoTransform($data, Context $context = NULL);
+  public function undoTransform($data, ?Context $context = NULL);
 
 }

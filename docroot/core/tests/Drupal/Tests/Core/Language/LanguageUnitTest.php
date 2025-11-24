@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Language;
 
 use Drupal\Core\Language\Language;
@@ -15,7 +17,7 @@ class LanguageUnitTest extends UnitTestCase {
   /**
    * @covers ::__construct
    */
-  public function testConstruct() {
+  public function testConstruct(): void {
     $name = $this->randomMachineName();
     $language_code = $this->randomMachineName(2);
     $uuid = $this->randomMachineName();
@@ -29,7 +31,7 @@ class LanguageUnitTest extends UnitTestCase {
   /**
    * @covers ::getName
    */
-  public function testGetName() {
+  public function testGetName(): void {
     $name = $this->randomMachineName();
     $language_code = $this->randomMachineName(2);
     $language = new Language(['id' => $language_code, 'name' => $name]);
@@ -39,7 +41,7 @@ class LanguageUnitTest extends UnitTestCase {
   /**
    * @covers ::getId
    */
-  public function testGetLangcode() {
+  public function testGetLangcode(): void {
     $language_code = $this->randomMachineName(2);
     $language = new Language(['id' => $language_code]);
     $this->assertSame($language_code, $language->getId());
@@ -48,7 +50,7 @@ class LanguageUnitTest extends UnitTestCase {
   /**
    * @covers ::getDirection
    */
-  public function testGetDirection() {
+  public function testGetDirection(): void {
     $language_code = $this->randomMachineName(2);
     $language = new Language(['id' => $language_code, 'direction' => LanguageInterface::DIRECTION_RTL]);
     $this->assertSame(LanguageInterface::DIRECTION_RTL, $language->getDirection());
@@ -57,7 +59,7 @@ class LanguageUnitTest extends UnitTestCase {
   /**
    * @covers ::isDefault
    */
-  public function testIsDefault() {
+  public function testIsDefault(): void {
     $language_default = $this->getMockBuilder('Drupal\Core\Language\LanguageDefault')->disableOriginalConstructor()->getMock();
     $container = $this->createMock('Symfony\Component\DependencyInjection\ContainerInterface');
     $container->expects($this->any())
@@ -92,7 +94,7 @@ class LanguageUnitTest extends UnitTestCase {
    * @param array $expected
    *   The expected array of keys.
    */
-  public function testSortArrayOfLanguages(array $languages, array $expected) {
+  public function testSortArrayOfLanguages(array $languages, array $expected): void {
     Language::sort($languages);
     $this->assertSame($expected, array_keys($languages));
   }
@@ -103,7 +105,7 @@ class LanguageUnitTest extends UnitTestCase {
    * @return array
    *   An array of test data.
    */
-  public function providerTestSortArrayOfLanguages() {
+  public static function providerTestSortArrayOfLanguages() {
     $language9A = new Language(['id' => 'dd', 'name' => 'A', 'weight' => 9]);
     $language10A = new Language(['id' => 'ee', 'name' => 'A', 'weight' => 10]);
     $language10B = new Language(['id' => 'ff', 'name' => 'B', 'weight' => 10]);

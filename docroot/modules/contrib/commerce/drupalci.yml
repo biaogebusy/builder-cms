@@ -2,8 +2,6 @@
 build:
   assessment:
     validate_codebase:
-      phplint:
-      container_composer:
       phpcs:
         # phpcs will use core's specified version of Coder.
         sniff-all-files: true

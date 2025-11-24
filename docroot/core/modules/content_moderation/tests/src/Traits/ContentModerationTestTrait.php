@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_moderation\Traits;
 
 use Drupal\workflows\Entity\Workflow;
@@ -17,6 +19,10 @@ trait ContentModerationTestTrait {
    *   The editorial workflow entity.
    */
   protected function createEditorialWorkflow() {
+    // Allow this method to be called twice from the same test method.
+    if ($workflow = Workflow::load('editorial')) {
+      return $workflow;
+    }
     $workflow = Workflow::create([
       'type' => 'content_moderation',
       'id' => 'editorial',

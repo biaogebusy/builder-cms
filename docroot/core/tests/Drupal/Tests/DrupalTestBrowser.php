@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests;
 
 use GuzzleHttp\Client;
@@ -89,7 +91,7 @@ class DrupalTestBrowser extends AbstractBrowser {
         'content-md5' => TRUE,
         'content-type' => TRUE,
       ];
-      if (strpos($key, 'http-') === 0) {
+      if (str_starts_with($key, 'http-')) {
         $headers[substr($key, 5)] = $val;
       }
       // CONTENT_* are not prefixed with HTTP_
@@ -136,8 +138,8 @@ class DrupalTestBrowser extends AbstractBrowser {
     try {
       $response = $this->getClient()->request($method, $uri, $request_options);
     }
-    // Catch RequestException rather than TransferException because we want
-    // to re-throw the exception whenever the response is NULL, and
+    // Catch RequestException rather than ClientExceptionInterface because we
+    // want to re-throw the exception whenever the response is NULL, and
     // ConnectException always has a NULL response.
     catch (RequestException $e) {
       if (!$e->hasResponse()) {
@@ -237,30 +239,6 @@ class DrupalTestBrowser extends AbstractBrowser {
    */
   protected function createResponse(ResponseInterface $response) {
     return new Response((string) $response->getBody(), $response->getStatusCode(), $response->getHeaders());
-  }
-
-  /**
-   * Reads response meta tags to guess content-type charset.
-   *
-   * @param \Symfony\Component\BrowserKit\Response $response
-   *   The origin response to filter.
-   *
-   * @return \Symfony\Component\BrowserKit\Response
-   *   A BrowserKit Response instance.
-   */
-  protected function filterResponse($response) {
-    $content_type = $response->getHeader('Content-Type');
-
-    if (!$content_type || strpos($content_type, 'charset=') === FALSE) {
-      if (preg_match('/\<meta[^\>]+charset *= *["\']?([a-zA-Z\-0-9]+)/i', $response->getContent(), $matches)) {
-        $headers = $response->getHeaders();
-        $headers['Content-Type'] = $content_type . ';charset=' . $matches[1];
-
-        $response = new Response($response->getContent(), $response->getStatus(), $headers);
-      }
-    }
-
-    return parent::filterResponse($response);
   }
 
 }

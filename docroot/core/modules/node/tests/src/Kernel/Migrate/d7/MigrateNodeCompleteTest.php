@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Kernel\Migrate\d7;
 
 use Drupal\migrate\MigrateExecutable;
@@ -43,7 +45,7 @@ class MigrateNodeCompleteTest extends MigrateDrupal7TestBase {
   /**
    * The entity storage for node.
    *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
+   * @var \Drupal\Core\Entity\RevisionableStorageInterface
    */
   protected $nodeStorage;
 
@@ -62,7 +64,6 @@ class MigrateNodeCompleteTest extends MigrateDrupal7TestBase {
     $this->installEntitySchema('taxonomy_term');
     $this->installSchema('comment', ['comment_entity_statistics']);
     $this->installSchema('node', ['node_access']);
-    $this->installSchema('system', ['sequences']);
 
     $this->createContent();
 
@@ -89,7 +90,7 @@ class MigrateNodeCompleteTest extends MigrateDrupal7TestBase {
   protected function getFileMigrationInfo() {
     return [
       'path' => 'public://sites/default/files/cube.jpeg',
-      'size' => '3620',
+      'size' => 3620,
       'base_path' => 'public://',
       'plugin_id' => 'd7_file',
     ];
@@ -98,7 +99,7 @@ class MigrateNodeCompleteTest extends MigrateDrupal7TestBase {
   /**
    * Tests the complete node migration.
    */
-  public function testNodeCompleteMigration() {
+  public function testNodeCompleteMigration(): void {
     // Confirm there are only complete node migration map tables. This shows
     // that only the complete migration ran.
     $results = $this->nodeMigrateMapTableCount('7');
@@ -160,7 +161,7 @@ class MigrateNodeCompleteTest extends MigrateDrupal7TestBase {
   /**
    * Tests rollback of the complete node migration.
    */
-  public function testRollbackNodeComplete() {
+  public function testRollbackNodeComplete(): void {
     $db = \Drupal::database();
     $node_types = [
       'article',

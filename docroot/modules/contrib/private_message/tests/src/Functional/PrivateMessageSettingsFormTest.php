@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\private_message\Functional;
 
 use Drupal\Tests\BrowserTestBase;
+use Drupal\user\UserInterface;
 
 /**
  * Tests for the Lorem Ipsum module.
@@ -10,38 +13,34 @@ use Drupal\Tests\BrowserTestBase;
  * @group private_message
  */
 class PrivateMessageSettingsFormTest extends BrowserTestBase {
+
   /**
    * {@inheritdoc}
    */
 
   protected $defaultTheme = 'stark';
+
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['private_message'];
 
   /**
-   * The User used for the test.
-   *
-   * @var \Drupal\Core\Session\AccountInterface
+   * The admin user used for the test.
    */
-  private $adminUser;
+  private UserInterface $adminUser;
 
   /**
    * The User used for the test.
-   *
-   * @var \Drupal\Core\Session\AccountInterface
    */
-  private $user;
+  private UserInterface $user;
 
   /**
-   * SetUp the test class.
+   * {@inheritdoc}
    */
   public function setUp(): void {
     parent::setUp();
-    $this->user = $this->DrupalCreateUser();
+    $this->user = $this->createUser();
     $this->adminUser = $this->DrupalCreateUser([
       'administer site configuration',
       'administer private message module',
@@ -51,7 +50,7 @@ class PrivateMessageSettingsFormTest extends BrowserTestBase {
   /**
    * Tests that the settings page can be reached.
    */
-  public function testSettingsPageExists() {
+  public function testSettingsPageExists(): void {
     $this->drupalLogin($this->user);
     $this->drupalGet('admin/config/private-message/config');
     $this->assertSession()->statusCodeEquals(403);
@@ -64,14 +63,15 @@ class PrivateMessageSettingsFormTest extends BrowserTestBase {
   /**
    * Tests the config form.
    */
-  public function testConfigForm() {
+  public function testConfigForm(): void {
     $this->drupalLogin($this->adminUser);
     $this->drupalGet('admin/config/private-message/config');
     $this->assertSession()->statusCodeEquals(200);
 
     // Test form submission.
     $this->submitForm([], t('Save configuration'));
-    $this->assertSession()->pageTextContains('The configuration options have been saved.');
+    $this->assertSession()
+      ->pageTextContainsOnce('The configuration options have been saved.');
   }
 
 }

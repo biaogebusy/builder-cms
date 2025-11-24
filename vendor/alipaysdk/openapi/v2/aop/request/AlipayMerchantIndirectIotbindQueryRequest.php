@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.merchant.indirect.iotbind.query request
  *
  * @author auto create
- * @since 1.0, 2023-10-13 15:36:48
+ * @since 1.0, 2025-06-26 21:12:31
  */
 class AlipayMerchantIndirectIotbindQueryRequest
 {

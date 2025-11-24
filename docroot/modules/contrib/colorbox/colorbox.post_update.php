@@ -5,8 +5,8 @@
  * Post-update functions for Colorbox.
  */
 
-use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
+use Drupal\Core\Entity\Entity\EntityViewDisplay;
 
 /**
  * Saves the image style dependencies into form and view display entities.

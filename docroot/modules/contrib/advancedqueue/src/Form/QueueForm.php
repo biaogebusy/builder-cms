@@ -195,6 +195,13 @@ class QueueForm extends EntityForm {
       '#access' => !empty($threshold_type),
     ];
 
+    $form['stop_when_empty'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Stop when empty'),
+      '#description' => $this->t('If checked, the processor will stop when the queue is empty.'),
+      '#default_value' => $queue->getStopWhenEmpty(),
+    ];
+
     return $form;
   }
 
@@ -231,6 +238,7 @@ class QueueForm extends EntityForm {
     parent::submitForm($form, $form_state);
 
     $values = $form_state->getValues();
+
     /** @var \Drupal\advancedqueue\Plugin\AdvancedQueue\Backend\BackendInterface $backend */
     $backend = $this->backendManager->createInstance($values['backend'], $form['configuration']['#default_configuration']);
     $backend->submitConfigurationForm($form['configuration'], $form_state);
@@ -243,9 +251,10 @@ class QueueForm extends EntityForm {
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
-    $this->entity->save();
+    $save = $this->entity->save();
     $this->messenger()->addStatus($this->t('Saved the %label queue.', ['%label' => $this->entity->label()]));
     $form_state->setRedirect('entity.advancedqueue_queue.collection');
+    return $save;
   }
 
 }

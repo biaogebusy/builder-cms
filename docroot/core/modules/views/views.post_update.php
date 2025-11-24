@@ -31,77 +31,143 @@ function views_removed_post_updates() {
     'views_post_update_make_placeholders_translatable' => '9.0.0',
     'views_post_update_limit_operator_defaults' => '9.0.0',
     'views_post_update_remove_core_key' => '9.0.0',
+    'views_post_update_field_names_for_multivalue_fields' => '10.0.0',
+    'views_post_update_configuration_entity_relationships' => '10.0.0',
+    'views_post_update_rename_default_display_setting' => '10.0.0',
+    'views_post_update_remove_sorting_global_text_field' => '10.0.0',
+    'views_post_update_title_translations' => '10.0.0',
+    'views_post_update_sort_identifier' => '10.0.0',
+    'views_post_update_provide_revision_table_relationship' => '10.0.0',
+    'views_post_update_image_lazy_load' => '10.0.0',
   ];
 }
 
 /**
- * Update field names for multi-value base fields.
+ * Update Views config schema to make boolean custom titles translatable.
  */
-function views_post_update_field_names_for_multivalue_fields(&$sandbox = NULL) {
-  /** @var \Drupal\views\ViewsConfigUpdater $view_config_updater */
-  $view_config_updater = \Drupal::classResolver(ViewsConfigUpdater::class);
-  $view_config_updater->setDeprecationsEnabled(FALSE);
-  return \Drupal::classResolver(ConfigEntityUpdater::class)->update($sandbox, 'view', function ($view) use ($view_config_updater) {
-    return $view_config_updater->needsMultivalueBaseFieldUpdate($view);
-  }, TRUE);
+function views_post_update_boolean_custom_titles(?array &$sandbox = NULL): void {
+  // Empty update to rebuild Views config schema.
 }
 
 /**
- * Clear errors caused by relationships to configuration entities.
+ * Add eager load option to all oembed type field configurations.
  */
-function views_post_update_configuration_entity_relationships() {
-  // Empty update to clear Views data.
-}
-
-/**
- * Rename the setting for showing the default display to 'default_display'.
- */
-function views_post_update_rename_default_display_setting() {
-  $config = \Drupal::configFactory()->getEditable('views.settings');
-  $config->set('ui.show.default_display', $config->get('ui.show.master_display'));
-  $config->clear('ui.show.master_display');
-  $config->save();
-}
-
-/**
- * Clear caches due to removal of sorting for global custom text field.
- */
-function views_post_update_remove_sorting_global_text_field() {
-  // Empty post-update hook.
-}
-
-/**
- * Rebuild routes to fix view title translations.
- */
-function views_post_update_title_translations() {
-  \Drupal::service('router.builder')->setRebuildNeeded();
-}
-
-/**
- * Add the identifier option to all sort handler configurations.
- */
-function views_post_update_sort_identifier(?array &$sandbox = NULL): void {
+function views_post_update_oembed_eager_load(?array &$sandbox = NULL): void {
   /** @var \Drupal\views\ViewsConfigUpdater $view_config_updater */
   $view_config_updater = \Drupal::classResolver(ViewsConfigUpdater::class);
   \Drupal::classResolver(ConfigEntityUpdater::class)->update($sandbox, 'view', function (ViewEntityInterface $view) use ($view_config_updater): bool {
-    return $view_config_updater->needsSortFieldIdentifierUpdate($view);
+    return $view_config_updater->needsOembedEagerLoadFieldUpdate($view);
   });
 }
 
 /**
- * Clear caches due to adding a relationship from revision table to base table.
+ * Add lazy load options to all responsive image type field configurations.
  */
-function views_post_update_provide_revision_table_relationship() {
-  // Empty post-update hook.
-}
-
-/**
- * Add lazy load options to all image type field configurations.
- */
-function views_post_update_image_lazy_load(?array &$sandbox = NULL): void {
+function views_post_update_responsive_image_lazy_load(?array &$sandbox = NULL): void {
   /** @var \Drupal\views\ViewsConfigUpdater $view_config_updater */
   $view_config_updater = \Drupal::classResolver(ViewsConfigUpdater::class);
   \Drupal::classResolver(ConfigEntityUpdater::class)->update($sandbox, 'view', function (ViewEntityInterface $view) use ($view_config_updater): bool {
-    return $view_config_updater->needsImageLazyLoadFieldUpdate($view);
-  }, TRUE);
+    return $view_config_updater->needsResponsiveImageLazyLoadFieldUpdate($view);
+  });
+}
+
+/**
+ * Update timestamp formatter settings for views.
+ */
+function views_post_update_timestamp_formatter(?array &$sandbox = NULL): void {
+  /** @var \Drupal\views\ViewsConfigUpdater $view_config_updater */
+  $view_config_updater = \Drupal::classResolver(ViewsConfigUpdater::class);
+  \Drupal::classResolver(ConfigEntityUpdater::class)->update($sandbox, 'view', function (ViewEntityInterface $view) use ($view_config_updater): bool {
+    return $view_config_updater->needsTimestampFormatterTimeDiffUpdate($view);
+  });
+}
+
+/**
+ * Fix '-revision_id' replacement token syntax.
+ */
+function views_post_update_fix_revision_id_part(&$sandbox = NULL): void {
+  /** @var \Drupal\views\ViewsConfigUpdater $view_config_updater */
+  $view_config_updater = \Drupal::classResolver(ViewsConfigUpdater::class);
+  $view_config_updater->setDeprecationsEnabled(FALSE);
+  \Drupal::classResolver(ConfigEntityUpdater::class)
+    ->update($sandbox, 'view', function (ViewEntityInterface $view) use ($view_config_updater) {
+      return $view_config_updater->needsRevisionFieldHyphenFix($view);
+    });
+}
+
+/**
+ * Add labels to views which don't have one.
+ */
+function views_post_update_add_missing_labels(&$sandbox = NULL): void {
+  /** @var \Drupal\views\ViewsConfigUpdater $view_config_updater */
+  $view_config_updater = \Drupal::classResolver(ViewsConfigUpdater::class);
+  \Drupal::classResolver(ConfigEntityUpdater::class)->update($sandbox, 'view', function (ViewEntityInterface $view) use ($view_config_updater): bool {
+    return $view_config_updater->addLabelIfMissing($view);
+  });
+}
+
+/**
+ * Remove the skip_cache settings.
+ */
+function views_post_update_remove_skip_cache_setting(): void {
+  \Drupal::configFactory()
+    ->getEditable('views.settings')
+    ->clear('skip_cache')
+    ->save(TRUE);
+}
+
+/**
+ * Remove default_argument_skip_url setting.
+ */
+function views_post_update_remove_default_argument_skip_url(?array &$sandbox = NULL): void {
+  /** @var \Drupal\views\ViewsConfigUpdater $view_config_updater */
+  $view_config_updater = \Drupal::classResolver(ViewsConfigUpdater::class);
+  \Drupal::classResolver(ConfigEntityUpdater::class)->update($sandbox, 'view', function (ViewEntityInterface $view) use ($view_config_updater): bool {
+    return $view_config_updater->needsDefaultArgumentSkipUrlUpdate($view);
+  });
+}
+
+/**
+ * Removes User context from views with taxonomy filters.
+ */
+function views_post_update_taxonomy_filter_user_context(?array &$sandbox = NULL): void {
+  /** @var \Drupal\views\ViewsConfigUpdater $view_config_updater */
+  $view_config_updater = \Drupal::classResolver(ViewsConfigUpdater::class);
+  \Drupal::classResolver(ConfigEntityUpdater::class)->update($sandbox, 'view', function (ViewEntityInterface $view) use ($view_config_updater): bool {
+    return $view_config_updater->needsTaxonomyTermFilterUpdate($view);
+  });
+}
+
+/**
+ * Adds a default pager heading.
+ */
+function views_post_update_pager_heading(?array &$sandbox = NULL): void {
+  /** @var \Drupal\views\ViewsConfigUpdater $view_config_updater */
+  $view_config_updater = \Drupal::classResolver(ViewsConfigUpdater::class);
+  \Drupal::classResolver(ConfigEntityUpdater::class)->update($sandbox, 'view', function (ViewEntityInterface $view) use ($view_config_updater): bool {
+    return $view_config_updater->needsPagerHeadingUpdate($view);
+  });
+}
+
+/**
+ * Removes entity display cache metadata from views with rendered entity fields.
+ */
+function views_post_update_rendered_entity_field_cache_metadata(?array &$sandbox = NULL): void {
+  /** @var \Drupal\views\ViewsConfigUpdater $view_config_updater */
+  $view_config_updater = \Drupal::classResolver(ViewsConfigUpdater::class);
+  \Drupal::classResolver(ConfigEntityUpdater::class)->update($sandbox, 'view', function (ViewEntityInterface $view) use ($view_config_updater): bool {
+    return $view_config_updater->needsRenderedEntityFieldUpdate($view);
+  });
+}
+
+/**
+ * Post update configured views for entity reference argument plugin IDs.
+ */
+function views_post_update_views_data_argument_plugin_id(?array &$sandbox = NULL): void {
+  /** @var \Drupal\views\ViewsConfigUpdater $view_config_updater */
+  $view_config_updater = \Drupal::classResolver(ViewsConfigUpdater::class);
+  $view_config_updater->setDeprecationsEnabled(FALSE);
+  \Drupal::classResolver(ConfigEntityUpdater::class)->update($sandbox, 'view', function (ViewEntityInterface $view) use ($view_config_updater): bool {
+    return $view_config_updater->needsEntityArgumentUpdate($view);
+  });
 }

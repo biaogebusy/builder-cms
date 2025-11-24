@@ -6,8 +6,8 @@ version: VERSION
 libraries:
   - umami/classy.base
   - core/normalize
+  - core/drupal.message
   - umami/global
-  - umami/messages
 
 libraries-override:
   layout_builder/twocol_section:
@@ -24,8 +24,8 @@ libraries-override:
         layouts/fourcol_section/fourcol_section.css: layouts/fourcol_section/fourcol_section.css
 
 libraries-extend:
-  tour/tour-styling:
-    - umami/demo-umami-tour
+  core/drupal.message:
+    - umami/messages
   core/drupal.dialog:
     - umami/classy.dialog
   core/drupal.dropbutton:

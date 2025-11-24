@@ -1,7 +1,0 @@
-acquia_telemetry.settings:
-  type: config_object
-  label: 'Acquia Telemetry settings'
-  mapping:
-    api_key:
-      type: string
-      label: 'Amplitude API key'

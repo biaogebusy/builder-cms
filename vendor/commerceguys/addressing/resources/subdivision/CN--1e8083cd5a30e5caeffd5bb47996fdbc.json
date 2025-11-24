@@ -1,0 +1,32 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"AH",
+		"Xuancheng Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Guangde Xian": {
+			"local_name": "广德县"
+		},
+		"Jixi Xian": {
+			"local_name": "绩溪县"
+		},
+		"Jing Xian": {
+			"local_name": "泾县"
+		},
+		"Jingde Xian": {
+			"local_name": "旌德县"
+		},
+		"Langxi Xian": {
+			"local_name": "郎溪县"
+		},
+		"Ningguo Shi": {
+			"local_name": "宁国市"
+		},
+		"Xuanzhou Qu": {
+			"local_name": "宣州区"
+		}
+	}
+}

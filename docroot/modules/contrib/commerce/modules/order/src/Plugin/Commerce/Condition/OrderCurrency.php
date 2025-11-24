@@ -2,20 +2,21 @@
 
 namespace Drupal\commerce_order\Plugin\Commerce\Condition;
 
-use Drupal\commerce\Plugin\Commerce\Condition\ConditionBase;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce\Attribute\CommerceCondition;
+use Drupal\commerce\Plugin\Commerce\Condition\ConditionBase;
 
 /**
  * Provides the currency condition for orders.
- *
- * @CommerceCondition(
- *   id = "order_currency",
- *   label = @Translation("Order currency"),
- *   category = @Translation("Order", context = "Commerce"),
- *   entity_type = "commerce_order",
- * )
  */
+#[CommerceCondition(
+  id: "order_currency",
+  label: new TranslatableMarkup('Order currency'),
+  entity_type: "commerce_order",
+  category: new TranslatableMarkup("Order", [], ["context" => "Commerce"]),
+)]
 class OrderCurrency extends ConditionBase {
 
   /**

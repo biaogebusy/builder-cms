@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\FileTransfer;
 
 use Drupal\Core\FileTransfer\FileTransfer;
@@ -36,18 +38,16 @@ class TestFileTransfer extends FileTransfer {
    */
   public $shouldIsDirectoryReturnTrue = FALSE;
 
-  public function __construct($jail, $username, $password, $hostname = 'localhost', $port = 9999) {
-    parent::__construct($jail, $username, $password, $hostname, $port);
-  }
-
   public static function factory($jail, $settings) {
-    return new TestFileTransfer($jail, $settings['username'], $settings['password'], $settings['hostname'], $settings['port']);
+    assert(is_array($settings));
+    return new TestFileTransfer($jail);
   }
 
   public function connect() {
-    $connection = new MockTestConnection();
-    $connection->connectionString = 'test://' . urlencode($this->username) . ':' . urlencode($this->password) . "@$this->host:$this->port/";
-    $this->connection = $connection;
+    $this->connection = new MockTestConnection();
+    // Access the connection via the property. The property used to be set via a
+    // magic method and this can cause problems if coded incorrectly.
+    $this->connection->connectionString = 'test://' . urlencode($this->username) . ':' . urlencode($this->password) . "@$this->host:$this->port/";
   }
 
   public function copyFileJailed($source, $destination) {

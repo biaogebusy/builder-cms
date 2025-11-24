@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\diff\Functional;
 
 use Drupal\comment\Tests\CommentTestTrait;
@@ -74,7 +76,7 @@ class DiffPluginTest extends DiffPluginTestBase {
     $this->drupalPostNodeForm('node/' . $node->id() . '/edit', $edit, 'Save');
 
     // Check the difference between the last two revisions.
-    $this->clickLink(t('Revisions'));
+    $this->clickLink(\t('Revisions'));
     $this->submitForm([], 'Compare selected revisions');
 
     // "changed" field is not displayed since there is no plugin for it. This
@@ -144,7 +146,7 @@ class DiffPluginTest extends DiffPluginTestBase {
     $this->drupalPostNodeForm('node/' . $node->id() . '/edit', $edit, 'Save');
 
     // Check differences between revisions.
-    $this->clickLink(t('Revisions'));
+    $this->clickLink(\t('Revisions'));
     $this->submitForm([], 'Compare selected revisions');
 
     // Check diff for an applicable field of testTextPlugin.
@@ -194,7 +196,7 @@ class DiffPluginTest extends DiffPluginTestBase {
     $rows = $this->xpath('//tbody/tr');
     $diff_row = $rows[1]->findAll('xpath', '/td');
     $this->assertCount(3, $rows);
-    $this->assertEquals(htmlspecialchars_decode(strip_tags($diff_row[2]->getHtml())), '<p>body</p>');
+    $this->assertEquals(\htmlspecialchars_decode(\strip_tags((string) $diff_row[2]->getHtml())), '<p>body</p>');
 
     // Create a new revision and update the body.
     $edit = [
@@ -213,10 +215,10 @@ class DiffPluginTest extends DiffPluginTestBase {
     // of rows before and after that engine change. The important thing is that
     // multiple rows show and all of them, including empty lines, display line
     // numbers.
-    $this->assertGreaterThan(3, count($rows));
-    $this->assertEquals(htmlspecialchars_decode(strip_tags($rows[1]->findAll('xpath', '/td')[3]->getHtml())), '1');
-    $this->assertEquals(htmlspecialchars_decode(strip_tags($rows[2]->findAll('xpath', '/td')[3]->getHtml())), '2');
-    $this->assertEquals(htmlspecialchars_decode(strip_tags($rows[3]->findAll('xpath', '/td')[3]->getHtml())), '3');
+    $this->assertGreaterThan(3, \count($rows));
+    $this->assertEquals(\htmlspecialchars_decode(\strip_tags((string) $rows[1]->findAll('xpath', '/td')[3]->getHtml())), '1');
+    $this->assertEquals(\htmlspecialchars_decode(\strip_tags((string) $rows[2]->findAll('xpath', '/td')[3]->getHtml())), '2');
+    $this->assertEquals(\htmlspecialchars_decode(\strip_tags((string) $rows[3]->findAll('xpath', '/td')[3]->getHtml())), '3');
   }
 
 }

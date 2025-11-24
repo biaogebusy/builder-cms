@@ -15,7 +15,7 @@ flag.flag.*:
       type: sequence
       label: 'The entity bundles this flag applies to'
       sequence:
-        - type: string
+        type: string
     entity_type:
       type: string
       label: 'Flaggable entity type'
@@ -105,8 +105,8 @@ flag.link_type.plugin.confirm:
       type: label
       label: 'Flag confirmation'
     unflag_confirmation:
-       type: label
-       label: 'Unflag confirmation'
+      type: label
+      label: 'Unflag confirmation'
     flag_create_button:
       type: label
       label: 'Create flagging button text'

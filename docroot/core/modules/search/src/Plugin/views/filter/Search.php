@@ -4,6 +4,7 @@ namespace Drupal\search\Plugin\views\filter;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\search\ViewsSearchQuery;
+use Drupal\views\Attribute\ViewsFilter;
 use Drupal\views\Plugin\views\filter\FilterPluginBase;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\ViewExecutable;
@@ -13,9 +14,8 @@ use Drupal\views\Views;
  * Filter handler for search keywords.
  *
  * @ingroup views_filter_handlers
- *
- * @ViewsFilter("search_keywords")
  */
+#[ViewsFilter("search_keywords")]
 class Search extends FilterPluginBase {
 
   /**
@@ -47,9 +47,15 @@ class Search extends FilterPluginBase {
   protected $searchType;
 
   /**
+   * The search score.
+   */
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
+  public string $search_score;
+
+  /**
    * {@inheritdoc}
    */
-  public function init(ViewExecutable $view, DisplayPluginBase $display, array &$options = NULL) {
+  public function init(ViewExecutable $view, DisplayPluginBase $display, ?array &$options = NULL) {
     parent::init($view, $display, $options);
 
     $this->searchType = $this->definition['search_type'];

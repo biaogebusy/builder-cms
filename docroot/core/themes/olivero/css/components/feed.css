@@ -13,27 +13,27 @@
 .feed-icon {
   display: flex;
   align-items: center;
+  -webkit-text-decoration: none;
   text-decoration: none;
-  color: #5d7585;
+  color: var(--color-text-neutral-soft);
 }
 
 .feed-icon:hover {
-  color: #2494db;
+  color: var(--color--primary-50);
+}
+
+@media (max-width: 75rem) {
+  .feed-icon {
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+  }
 }
 
 .feed-icon__label {
   flex-shrink: 0;
   letter-spacing: 0.08em;
-  font-size: 0.75rem;
+  font-size: var(--font-size-xxs);
   font-weight: 600;
-}
-
-[dir="ltr"] .feed-icon__icon {
-  margin-left: 0.5625rem;
-}
-
-[dir="rtl"] .feed-icon__icon {
-  margin-right: 0.5625rem;
 }
 
 .feed-icon__icon {
@@ -41,13 +41,21 @@
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  width: 1.6875rem;
-  height: 1.6875rem;
-  color: #fff;
-  background-color: #2494db;
+  width: var(--sp1-5);
+  height: var(--sp1-5);
+  margin-inline-start: var(--sp0-5);
+  color: var(--color--white);
+  border-radius: 2px;
+  background-color: var(--color--primary-50);
 }
 
 .feed-icon__icon svg {
   vertical-align: top;
   fill: currentColor;
+}
+
+@media (max-width: 75rem) {
+  .feed-icon__icon {
+    margin-inline: 0 var(--sp0-5);
+  }
 }

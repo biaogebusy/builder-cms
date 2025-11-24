@@ -3,7 +3,6 @@
 namespace Drupal\blazy\Form;
 
 use Drupal\Component\Utility\Unicode;
-use Drupal\Core\Url;
 
 /**
  * A base for field formatter admin to have re-usable methods in one place.
@@ -33,12 +32,11 @@ abstract class BlazyAdminFormatterBase extends BlazyAdminBase {
    * {@inheritdoc}
    */
   public function imageStyleForm(array &$form, array $definition): void {
-    $scopes       = $this->toScopes($definition);
-    $blazies      = $definition['blazies'];
-    $field_type   = $blazies->get('field.type');
-    $plugin_id    = $blazies->get('field.plugin_id', '');
-    $no_image     = $scopes->is('no_image_style');
-    $descriptions = $this->formatterBaseDescriptions($scopes);
+    $scopes     = $this->toScopes($definition);
+    $blazies    = $definition['blazies'];
+    $field_type = $blazies->get('field.type');
+    $plugin_id  = $blazies->get('field.plugin_id', '');
+    $no_image   = $scopes->is('no_image_style');
 
     // Not all has defined plugin_id such as filters for now.
     if ($no_image || strpos($plugin_id, '_text') !== FALSE) {
@@ -55,7 +53,7 @@ abstract class BlazyAdminFormatterBase extends BlazyAdminBase {
       $form['preload'] = $base['preload'];
     }
 
-    foreach (['image_style', 'loading'] as $key) {
+    foreach (['loading', 'image_style', 'responsive_image_style'] as $key) {
       if (isset($base[$key])) {
         $form[$key] = $base[$key];
       }
@@ -67,42 +65,9 @@ abstract class BlazyAdminFormatterBase extends BlazyAdminBase {
       }
     }
 
-    if ($scopes->is('responsive_image')) {
-      $options = $this->getResponsiveImageOptions();
-      $form['responsive_image_style'] = [
-        '#type'        => 'select',
-        '#title'       => $this->t('Responsive image'),
-        '#options'     => $options,
-        '#description' => $descriptions['responsive_image_style'],
-        '#access'      => count($options) > 0,
-        '#weight'      => -105,
-      ];
-    }
-
     if ($scopes->form('svg')) {
-      $this->svgForm($form, $definition, $scopes);
+      $this->svgForm($form, $definition);
     }
-  }
-
-  /**
-   * Returns formatter base descriptions.
-   */
-  protected function formatterBaseDescriptions($scopes): array {
-    if (!$scopes->is('responsive_image')) {
-      return [];
-    }
-    $url = Url::fromRoute('entity.responsive_image_style.collection')->toString();
-    $description = $this->t('Responsive image style for the main stage image is more reasonable for large images. Works with multi-serving IMG, or PICTURE element. Leave empty to disable. <a href=":url" target="_blank">Manage responsive image styles</a>.', [
-      ':url' => $url,
-    ]);
-    if ($this->blazyManager->moduleExists('blazy_ui')) {
-      $description .= ' ' . $this->t('<a href=":url2">Enable lazyloading Responsive image</a>.', [
-        ':url2' => Url::fromRoute('blazy.settings')->toString(),
-      ]);
-    }
-    return [
-      'responsive_image_style' => $description,
-    ];
   }
 
   /**
@@ -190,6 +155,9 @@ abstract class BlazyAdminFormatterBase extends BlazyAdminBase {
     if ($blazy) {
       $excludes['optionset'] = TRUE;
     }
+
+    $excludes['admin_uri'] = TRUE;
+    $excludes['use_lb'] = TRUE;
 
     if (empty($settings['grid'])) {
       foreach (['grid', 'grid_medium', 'grid_small', 'visible_items'] as $key) {

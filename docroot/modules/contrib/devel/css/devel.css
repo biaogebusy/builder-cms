@@ -2,9 +2,9 @@
  * Dumpers
  */
 .devel-dumper .details-wrapper {
+  overflow: auto;
   max-height: 450px;
   margin-right: 3px;
-  overflow: auto;
 }
 
 /**

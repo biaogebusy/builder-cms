@@ -72,7 +72,7 @@ class WebformOptionsLimitUserTest extends WebformBrowserTestBase {
     // Logout.
     // NOTE:
     // We are are testing anonymous user last because anonymous
-    // submission are transfered to authenticated users when they login.
+    // submission are transferred to authenticated users when they login.
     $this->drupalLogout();
 
     // Check that options limit is not met for anonymous user.

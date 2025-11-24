@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Database;
 
 use Drupal\Core\Database\IntegrityConstraintViolationException;
@@ -14,7 +16,7 @@ class InvalidDataTest extends DatabaseTestBase {
   /**
    * Tests aborting of traditional SQL database systems with invalid data.
    */
-  public function testInsertDuplicateData() {
+  public function testInsertDuplicateData(): void {
     // Try to insert multiple records where at least one has bad data.
     $this->expectException(IntegrityConstraintViolationException::class);
     try {
@@ -53,7 +55,7 @@ class InvalidDataTest extends DatabaseTestBase {
   /**
    * Tests inserting with invalid data from a select query.
    */
-  public function testInsertDuplicateDataFromSelect() {
+  public function testInsertDuplicateDataFromSelect(): void {
     // Insert multiple records in 'test_people' where one has bad data
     // (duplicate key). A 'Meredith' record has already been inserted
     // in ::setUp.

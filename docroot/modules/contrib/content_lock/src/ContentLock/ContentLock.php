@@ -3,18 +3,18 @@
 namespace Drupal\content_lock\ContentLock;
 
 use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Extension\ModuleHandler;
-use Drupal\Core\DependencyInjection\ServiceProviderBase;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Link;
-use Drupal\Core\Datetime\DateFormatter;
 use Drupal\Core\Session\AccountProxyInterface;
-use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Url;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -23,24 +23,9 @@ use Symfony\Component\HttpFoundation\RequestStack;
  *
  * The content lock service.
  */
-class ContentLock extends ServiceProviderBase {
+class ContentLock implements ContentLockInterface {
 
   use StringTranslationTrait;
-
-  /**
-   * Form operation mode disabled.
-   */
-  const FORM_OP_MODE_DISABLED = 0;
-
-  /**
-   * Form operation mode whitelist.
-   */
-  const FORM_OP_MODE_WHITELIST = 1;
-
-  /**
-   * Form operation mode blacklist.
-   */
-  const FORM_OP_MODE_BLACKLIST = 2;
 
   /**
    * The database service.
@@ -106,17 +91,31 @@ class ContentLock extends ServiceProviderBase {
   protected $messenger;
 
   /**
+   * The time service.
+   *
+   * @var \Drupal\Component\Datetime\TimeInterface
+   */
+  protected $time;
+
+  /**
+   * The lock service.
+   *
+   * @var \Drupal\Core\Lock\LockBackendInterface
+   */
+  protected LockBackendInterface $lock;
+
+  /**
    * Constructor.
    *
    * @param \Drupal\Core\Database\Connection $database
    *   The database connection.
-   * @param \Drupal\Core\Extension\ModuleHandler $moduleHandler
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $moduleHandler
    *   The module Handler service.
-   * @param \Drupal\Core\Datetime\DateFormatter $dateFormatter
+   * @param \Drupal\Core\Datetime\DateFormatterInterface $dateFormatter
    *   The date.formatter service.
    * @param \Drupal\Core\Session\AccountProxyInterface $currentUser
    *   The current_user service.
-   * @param \Drupal\Core\Config\ConfigFactory $configFactory
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
    *   The config.factory service.
    * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
    *   The request stack service.
@@ -126,8 +125,21 @@ class ContentLock extends ServiceProviderBase {
    *   The messenger service.
    * @param \Drupal\Component\Datetime\TimeInterface $time
    *   The time service.
+   * @param \Drupal\Core\Lock\LockBackendInterface $lock
+   *   The lock service.
    */
-  public function __construct(Connection $database, ModuleHandler $moduleHandler, DateFormatter $dateFormatter, AccountProxyInterface $currentUser, ConfigFactory $configFactory, RequestStack $requestStack, EntityTypeManagerInterface $entityTypeManager, MessengerInterface $messenger, TimeInterface $time) {
+  public function __construct(
+    Connection $database,
+    ModuleHandlerInterface $moduleHandler,
+    DateFormatterInterface $dateFormatter,
+    AccountProxyInterface $currentUser,
+    ConfigFactoryInterface $configFactory,
+    RequestStack $requestStack,
+    EntityTypeManagerInterface $entityTypeManager,
+    MessengerInterface $messenger,
+    TimeInterface $time,
+    LockBackendInterface $lock
+  ) {
     $this->database = $database;
     $this->moduleHandler = $moduleHandler;
     $this->dateFormatter = $dateFormatter;
@@ -137,22 +149,11 @@ class ContentLock extends ServiceProviderBase {
     $this->entityTypeManager = $entityTypeManager;
     $this->messenger = $messenger;
     $this->time = $time;
+    $this->lock = $lock;
   }
 
   /**
-   * Fetch the lock for an entity.
-   *
-   * @param int $entity_id
-   *   The entity id.
-   * @param string $langcode
-   *   The translation language code of the entity.
-   * @param string $form_op
-   *   (optional) The entity form operation.
-   * @param string $entity_type
-   *   The entity type.
-   *
-   * @return object
-   *   The lock for the node. FALSE, if the document is not locked.
+   * {@inheritdoc}
    */
   public function fetchLock($entity_id, $langcode, $form_op = NULL, $entity_type = 'node') {
     if (!$this->isTranslationLockEnabled($entity_type)) {
@@ -176,15 +177,7 @@ class ContentLock extends ServiceProviderBase {
   }
 
   /**
-   * Tell who has locked node.
-   *
-   * @param object $lock
-   *   The lock for a node.
-   * @param bool $translation_lock
-   *   Defines whether the lock is on translation level or not.
-   *
-   * @return string
-   *   String with the message.
+   * {@inheritdoc}
    */
   public function displayLockOwner($lock, $translation_lock) {
     $username = $this->entityTypeManager->getStorage('user')->load($lock->uid);
@@ -206,21 +199,7 @@ class ContentLock extends ServiceProviderBase {
   }
 
   /**
-   * Check lock status.
-   *
-   * @param int $entity_id
-   *   The entity id.
-   * @param string $langcode
-   *   The translation language code of the entity.
-   * @param string $form_op
-   *   The entity form operation.
-   * @param int $uid
-   *   The user id.
-   * @param string $entity_type
-   *   The entity type.
-   *
-   * @return bool
-   *   Return TRUE OR FALSE.
+   * {@inheritdoc}
    */
   public function isLockedBy($entity_id, $langcode, $form_op, $uid, $entity_type = 'node') {
     if (!$this->isTranslationLockEnabled($entity_type)) {
@@ -242,18 +221,7 @@ class ContentLock extends ServiceProviderBase {
   }
 
   /**
-   * Release a locked entity.
-   *
-   * @param int $entity_id
-   *   The entity id.
-   * @param string $langcode
-   *   The translation language code of the entity.
-   * @param string $form_op
-   *   (optional) The entity form operation.
-   * @param int $uid
-   *   If set, verify that a lock belongs to this user prior to release.
-   * @param string $entity_type
-   *   The entity type.
+   * {@inheritdoc}
    */
   public function release($entity_id, $langcode, $form_op = NULL, $uid = NULL, $entity_type = 'node') {
     if (!$this->isTranslationLockEnabled($entity_type)) {
@@ -272,10 +240,7 @@ class ContentLock extends ServiceProviderBase {
   }
 
   /**
-   * Release all locks set by a user.
-   *
-   * @param int $uid
-   *   The user uid.
+   * {@inheritdoc}
    */
   public function releaseAllUserLocks($uid) {
     $this->database->delete('content_lock')
@@ -308,7 +273,7 @@ class ContentLock extends ServiceProviderBase {
       $form_op = '*';
     }
     $result = $this->database->merge('content_lock')
-      ->key([
+      ->keys([
         'entity_id' => $entity_id,
         'entity_type' => $entity_type,
         'langcode' => $langcode,
@@ -368,38 +333,14 @@ class ContentLock extends ServiceProviderBase {
   }
 
   /**
-   * Check if locking is verbose.
-   *
-   * @return bool
-   *   Return true if locking is verbose.
+   * {@inheritdoc}
    */
   public function verbose() {
     return $this->config->get('verbose');
   }
 
   /**
-   * Try to lock a document for editing.
-   *
-   * @param int $entity_id
-   *   The entity id.
-   * @param string $langcode
-   *   The translation language of the entity.
-   * @param string $form_op
-   *   The entity form operation.
-   * @param int $uid
-   *   The user id to lock the node for.
-   * @param string $entity_type
-   *   The entity type.
-   * @param bool $quiet
-   *   Suppress any normal user messages.
-   * @param string $destination
-   *   Destination to redirect when break. Defaults to current page.
-   *
-   * @return bool
-   *   FALSE, if a document has already been locked by someone else.
-   *
-   * @throws \InvalidArgumentException
-   *   An exception will be thrown if the
+   * {@inheritdoc}
    */
   public function locking($entity_id, $langcode, $form_op, $uid, $entity_type = 'node', $quiet = FALSE, $destination = NULL) {
     $translation_lock = $this->isTranslationLockEnabled($entity_type);
@@ -410,11 +351,21 @@ class ContentLock extends ServiceProviderBase {
       $form_op = '*';
     }
 
+    // Acquire a lock from the lock service to prevent a race condition when
+    // checking if a lock exists and update the content lock table with the new
+    // information.
+    $lock_service_name = "content_lock:$entity_type:$entity_id";
+    $lock_service_acquired = $this->lock->acquire($lock_service_name);
+    if (!$lock_service_acquired) {
+      $this->lock->wait($lock_service_name, 5);
+      $lock_service_acquired = $this->lock->acquire($lock_service_name);
+    }
+
     // Check locking status.
     $lock = $this->fetchLock($entity_id, $langcode, $form_op, $entity_type);
 
     // No lock yet.
-    if ($lock === FALSE || !is_object($lock)) {
+    if ($lock_service_acquired && ($lock === FALSE || !is_object($lock))) {
       // Save locking into database.
       $this->lockingSave($entity_id, $langcode, $form_op, $uid, $entity_type);
 
@@ -436,11 +387,11 @@ class ContentLock extends ServiceProviderBase {
       ]);
 
       // Send success flag.
-      return TRUE;
+      $return = TRUE;
     }
     else {
       // Currently locking by other user.
-      if ($lock->uid != $uid) {
+      if (is_object($lock) && $lock->uid != $uid) {
         // Send message.
         $message = $this->displayLockOwner($lock, $translation_lock);
         $this->messenger->addWarning($message);
@@ -464,9 +415,9 @@ class ContentLock extends ServiceProviderBase {
         }
 
         // Return FALSE flag.
-        return FALSE;
+        $return = FALSE;
       }
-      else {
+      elseif ($lock_service_acquired) {
         // Save locking into database.
         $this->lockingSave($entity_id, $langcode, $form_op, $uid, $entity_type);
 
@@ -481,40 +432,37 @@ class ContentLock extends ServiceProviderBase {
         }
 
         // Send success flag.
-        return TRUE;
+        $return = TRUE;
+      }
+      else {
+        $this->messenger->addWarning('This content is being edited by another user.');
+        // Return FALSE flag.
+        $return = FALSE;
       }
     }
+    if ($lock_service_acquired) {
+      $this->lock->release($lock_service_name);
+    }
+    return $return;
   }
 
   /**
-   * Check whether a node is configured to be protected by content_lock.
-   *
-   * @param \Drupal\Core\Entity\EntityInterface $entity
-   *   The entity to check.
-   * @param string $form_op
-   *   (optional) The entity form operation.
-   *
-   * @return bool
-   *   TRUE is entity is lockable
+   * {@inheritdoc}
    */
   public function isLockable(EntityInterface $entity, $form_op = NULL) {
-    $entity_id = $entity->id();
     $entity_type = $entity->getEntityTypeId();
     $bundle = $entity->bundle();
 
     $config = $this->config->get("types.$entity_type");
 
-    $this->moduleHandler->invokeAll('content_lock_entity_lockable', [
-      $entity,
-      $entity_id,
-      $entity->language()->getId(),
-      $form_op,
-      $entity_type,
-      $bundle,
-      $config,
-    ]);
+    $allowed = TRUE;
+    $this->moduleHandler->invokeAllWith('content_lock_entity_lockable', function (callable $hook) use (&$allowed, $entity, $config, $form_op) {
+      if ($allowed && $hook($entity, $config, $form_op) === FALSE) {
+        $allowed = FALSE;
+      }
+    });
 
-    if (is_array($config) && (in_array($bundle, $config) || in_array('*', $config))) {
+    if ($allowed && is_array($config) && (in_array($bundle, $config) || in_array('*', $config))) {
       if (isset($form_op) && $this->isFormOperationLockEnabled($entity_type)) {
         $mode = $this->config->get("form_op_lock.$entity_type.mode");
         $values = $this->config->get("form_op_lock.$entity_type.values");
@@ -534,33 +482,14 @@ class ContentLock extends ServiceProviderBase {
   }
 
   /**
-   * Check if for this entity_type content lock over JS is enabled.
-   *
-   * @param string $entity_type_id
-   *   The entity type id.
-   *
-   * @return bool
+   * {@inheritdoc}
    */
   public function isJsLock($entity_type_id) {
     return in_array($entity_type_id, $this->config->get("types_js_lock") ?: []);
   }
 
   /**
-   * Builds a button class, link type form element to unlock the content.
-   *
-   * @param string $entity_type
-   *   The entity type of the content.
-   * @param int $entity_id
-   *   The entity id of the content.
-   * @param string $langcode
-   *   The translation language code of the entity.
-   * @param string $form_op
-   *   The entity form operation.
-   * @param string $destination
-   *   The destination query parameter to build the link with.
-   *
-   * @return array
-   *   The link form element.
+   * {@inheritdoc}
    */
   public function unlockButton($entity_type, $entity_id, $langcode, $form_op, $destination) {
     $unlock_url_options = [];
@@ -585,28 +514,21 @@ class ContentLock extends ServiceProviderBase {
   }
 
   /**
-   * Checks whether the entity type is lockable on translation level.
-   *
-   * @param string $entity_type_id
-   *   The entity type ID.
-   *
-   * @return bool
-   *   TRUE if the entity type should be locked on translation level, FALSE if
-   *   it should be locked on entity level.
+   * {@inheritdoc}
    */
   public function isTranslationLockEnabled($entity_type_id) {
     return $this->moduleHandler->moduleExists('conflict') && in_array($entity_type_id, $this->config->get("types_translation_lock"));
   }
 
   /**
-   * Checks whether the entity type is lockable on translation level.
-   *
-   * @param string $entity_type_id
-   *   The entity type ID.
-   *
-   * @return bool
-   *   TRUE if the entity type should be locked on translation level, FALSE if
-   *   it should be locked on entity level.
+   * {@inheritdoc}
+   */
+  public function hasLockEnabled(string $entity_type_id): bool {
+    return !empty($this->config->get("types")[$entity_type_id]);
+  }
+
+  /**
+   * {@inheritdoc}
    */
   public function isFormOperationLockEnabled($entity_type_id) {
     return $this->config->get("form_op_lock.$entity_type_id.mode") != self::FORM_OP_MODE_DISABLED;

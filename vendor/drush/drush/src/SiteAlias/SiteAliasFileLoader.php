@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drush\SiteAlias;
 
+use Consolidation\SiteAlias\SiteAliasFileDiscovery;
 use Drush\SiteAlias\Util\InternalYamlDataFileLoader;
 
 /**
@@ -12,12 +15,7 @@ use Drush\SiteAlias\Util\InternalYamlDataFileLoader;
  */
 class SiteAliasFileLoader extends \Consolidation\SiteAlias\SiteAliasFileLoader
 {
-    /**
-     * SiteAliasFileLoader constructor
-     *
-     * @param SiteAliasFileDiscovery|null $discovery
-     */
-    public function __construct($discovery = null)
+    public function __construct(?SiteAliasFileDiscovery $discovery = null)
     {
         parent::__construct($discovery);
         $this->addLoader('yml', new InternalYamlDataFileLoader());

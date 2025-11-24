@@ -31,7 +31,7 @@ class DimensionsTest extends BaseDimensionsTest {
    *
    * @dataProvider provideChartElements
    */
-  public function testDimensions(array $element, string $expected_width = NULL, string $expected_height = NULL) {
+  public function testDimensions(array $element, ?string $expected_width = NULL, ?string $expected_height = NULL) {
     $element['#chart_library'] = 'chartjs';
     $styles = $this->getChartStyle($element, '[data-chartjs-render-wrapper]');
     $width = $styles['width'] ?? NULL;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Test;
 
 use Drupal\Core\Test\JUnitConverter;
@@ -25,11 +27,11 @@ class JUnitConverterTest extends UnitTestCase {
    * Tests errors reported.
    * @covers ::xmlToRows
    */
-  public function testXmlToRowsWithErrors() {
+  public function testXmlToRowsWithErrors(): void {
     $phpunit_error_xml = __DIR__ . '/fixtures/phpunit_error.xml';
 
     $res = JUnitConverter::xmlToRows(1, $phpunit_error_xml);
-    $this->assertCount(4, $res, 'All testcases got extracted');
+    $this->assertCount(4, $res, 'All test cases got extracted');
     $this->assertNotEquals('pass', $res[0]['status']);
     $this->assertEquals('fail', $res[0]['status']);
 
@@ -46,7 +48,7 @@ class JUnitConverterTest extends UnitTestCase {
   /**
    * @covers ::xmlToRows
    */
-  public function testXmlToRowsEmptyFile() {
+  public function testXmlToRowsEmptyFile(): void {
     // File system with an empty XML file.
     vfsStream::setup('junit_test', NULL, ['empty.xml' => '']);
     $this->assertSame([], JUnitConverter::xmlToRows(23, vfsStream::url('junit_test/empty.xml')));
@@ -55,7 +57,7 @@ class JUnitConverterTest extends UnitTestCase {
   /**
    * @covers ::xmlElementToRows
    */
-  public function testXmlElementToRows() {
+  public function testXmlElementToRows(): void {
     $junit = <<<EOD
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
@@ -82,7 +84,7 @@ EOD;
   /**
    * @covers ::convertTestCaseToSimpletestRow
    */
-  public function testConvertTestCaseToSimpletestRow() {
+  public function testConvertTestCaseToSimpletestRow(): void {
     $junit = <<<EOD
     <testcase name="testGetTestClasses" class="Drupal\Tests\simpletest\Unit\TestDiscoveryTest" classname="Drupal.Tests.simpletest.Unit.TestDiscoveryTest" file="/Users/paul/projects/drupal/core/modules/simpletest/tests/src/Unit/TestDiscoveryTest.php" line="108" assertions="2" time="0.100787"/>
 EOD;

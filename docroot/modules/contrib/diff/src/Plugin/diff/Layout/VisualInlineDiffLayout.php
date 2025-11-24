@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\diff\Plugin\diff\Layout;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -9,6 +11,8 @@ use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\PhpStorage\PhpStorageFactory;
 use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\diff\Attribute\DiffLayoutBuilder;
 use Drupal\diff\Controller\PluginRevisionController;
 use Drupal\diff\DiffEntityComparison;
 use Drupal\diff\DiffEntityParser;
@@ -18,28 +22,13 @@ use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Provides Visual Inline diff layout.
- *
- * @DiffLayoutBuilder(
- *   id = "visual_inline",
- *   label = @Translation("Visual Inline"),
- *   description = @Translation("Visual layout, displays revision comparison using the entity type view mode."),
- * )
  */
+#[DiffLayoutBuilder(
+  id: 'visual_inline',
+  label: new TranslatableMarkup('Visual Inline'),
+  description: new TranslatableMarkup('Visual layout, displays revision comparison using the entity type view mode.'),
+)]
 class VisualInlineDiffLayout extends DiffLayoutBase {
-
-  /**
-   * The renderer.
-   *
-   * @var \Drupal\Core\Render\RendererInterface
-   */
-  protected $renderer;
-
-  /**
-   * The diff entity comparison service.
-   *
-   * @var \Drupal\diff\DiffEntityComparison
-   */
-  protected $entityComparison;
 
   /**
    * The html diff service.
@@ -49,46 +38,7 @@ class VisualInlineDiffLayout extends DiffLayoutBase {
   protected $htmlDiff;
 
   /**
-   * The request stack.
-   *
-   * @var \Symfony\Component\HttpFoundation\RequestStack
-   */
-  protected $requestStack;
-
-  /**
-   * The entity display repository.
-   *
-   * @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface
-   */
-  protected $entityDisplayRepository;
-
-  /**
    * Constructs a VisualInlineDiffLayout object.
-   *
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
-   * @param mixed $plugin_definition
-   *   The plugin implementation definition.
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config
-   *   The configuration factory object.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
-   * @param \Drupal\diff\DiffEntityParser $entity_parser
-   *   The entity parser.
-   * @param \Drupal\Core\Datetime\DateFormatterInterface $date
-   *   The date service.
-   * @param \Drupal\Core\Render\RendererInterface $renderer
-   *   The renderer.
-   * @param \Drupal\diff\DiffEntityComparison $entity_comparison
-   *   The diff entity comparison service.
-   * @param \HtmlDiffAdvancedInterface $html_diff
-   *   The html diff service.
-   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
-   *   The request stack.
-   * @param \Drupal\Core\Entity\EntityDisplayRepositoryInterface $entity_display_repository
-   *   The entity display repository.
    */
   public function __construct(
     array $configuration,
@@ -98,23 +48,19 @@ class VisualInlineDiffLayout extends DiffLayoutBase {
     EntityTypeManagerInterface $entity_type_manager,
     DiffEntityParser $entity_parser,
     DateFormatterInterface $date,
-    RendererInterface $renderer,
-    DiffEntityComparison $entity_comparison,
+    protected RendererInterface $renderer,
+    protected DiffEntityComparison $entityComparison,
     \HtmlDiffAdvancedInterface $html_diff,
-    RequestStack $request_stack,
-    EntityDisplayRepositoryInterface $entity_display_repository,
+    protected RequestStack $requestStack,
+    protected EntityDisplayRepositoryInterface $entityDisplayRepository,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $config, $entity_type_manager, $entity_parser, $date);
-    $this->renderer = $renderer;
-    $this->entityComparison = $entity_comparison;
     $storage = PhpStorageFactory::get('html_purifier_serializer');
     if (!$storage->exists('cache.php')) {
       $storage->save('cache.php', 'dummy');
     }
-    $html_diff->getConfig()->setPurifierCacheLocation(dirname($storage->getFullPath('cache.php')));
+    $html_diff->getConfig()->setPurifierCacheLocation(\dirname($storage->getFullPath('cache.php')));
     $this->htmlDiff = $html_diff;
-    $this->requestStack = $request_stack;
-    $this->entityDisplayRepository = $entity_display_repository;
   }
 
   /**
@@ -140,7 +86,7 @@ class VisualInlineDiffLayout extends DiffLayoutBase {
   /**
    * {@inheritdoc}
    */
-  public function build(ContentEntityInterface $left_revision, ContentEntityInterface $right_revision, ContentEntityInterface $entity) {
+  public function build(ContentEntityInterface $left_revision, ContentEntityInterface $right_revision, ContentEntityInterface $entity): array {
     // Build the revisions data.
     $build = $this->buildRevisionsData($left_revision, $right_revision);
 
@@ -151,7 +97,7 @@ class VisualInlineDiffLayout extends DiffLayoutBase {
     $view_modes = $this->entityDisplayRepository->getViewModeOptionsByBundle($entity->getEntityTypeId(), $entity->bundle());
     foreach ($view_modes as $view_mode => $view_mode_info) {
       // Skip view modes that are not used in the front end.
-      if (in_array($view_mode, ['rss', 'search_index'])) {
+      if (\in_array($view_mode, ['rss', 'search_index'])) {
         continue;
       }
       $options[$view_mode] = [
@@ -168,9 +114,9 @@ class VisualInlineDiffLayout extends DiffLayoutBase {
     $default_view_mode = $this->configFactory->get('diff.settings')->get('general_settings.visual_default_view_mode');
     // If the configured default view mode is not enabled on the current
     // bundle type, fallback to one of the enabled ones.
-    if (!is_string($default_view_mode) || !in_array($default_view_mode, array_keys($view_modes), TRUE)) {
-      $keys = array_keys($options);
-      $active_option = reset($keys);
+    if (!\is_string($default_view_mode) || !\in_array($default_view_mode, \array_keys($view_modes), TRUE)) {
+      $keys = \array_keys($options);
+      $active_option = \reset($keys);
     }
     else {
       $active_option = $default_view_mode;
@@ -179,7 +125,7 @@ class VisualInlineDiffLayout extends DiffLayoutBase {
 
     $filter = $options[$active_view_mode];
     unset($options[$active_view_mode]);
-    array_unshift($options, $filter);
+    \array_unshift($options, $filter);
 
     $build['controls']['view_mode'] = [
       '#type' => 'item',

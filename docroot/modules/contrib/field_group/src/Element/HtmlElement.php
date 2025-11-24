@@ -3,7 +3,7 @@
 namespace Drupal\field_group\Element;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Element\RenderElement;
+use Drupal\Core\Render\Element\RenderElementBase;
 use Drupal\Core\Template\Attribute;
 
 /**
@@ -11,7 +11,7 @@ use Drupal\Core\Template\Attribute;
  *
  * @FormElement("field_group_html_element")
  */
-class HtmlElement extends RenderElement {
+class HtmlElement extends RenderElementBase {
 
   /**
    * {@inheritdoc}
@@ -65,11 +65,6 @@ class HtmlElement extends RenderElement {
       }
       else {
         $element['#attributes']['classes'] = array_merge($element['#attributes']['classes'], $classes);
-      }
-
-      // Add jquery ui effects library for the blind effect.
-      if ($element['#effect'] == 'blind') {
-        $element['#attached']['library'][] = 'core/jquery.ui.effects.blind';
       }
 
     }

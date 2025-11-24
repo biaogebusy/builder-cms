@@ -1,10 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Component\Utility;
 
 use Drupal\Component\Utility\Random;
 use Drupal\Component\Utility\UserAgent;
 use PHPUnit\Framework\TestCase;
+
+// cspell:ignore Teletubbies
 
 /**
  * Tests bytes size parsing helper methods.
@@ -70,7 +74,7 @@ class UserAgentTest extends TestCase {
    * @dataProvider providerTestGetBestMatchingLangcode
    * @covers ::getBestMatchingLangcode
    */
-  public function testGetBestMatchingLangcode($accept_language, $expected) {
+  public function testGetBestMatchingLangcode($accept_language, $expected): void {
     $result = UserAgent::getBestMatchingLangcode($accept_language, $this->getLanguages(), $this->getMappings());
     $this->assertSame($expected, $result);
   }
@@ -82,7 +86,7 @@ class UserAgentTest extends TestCase {
    *   - An accept-language string.
    *   - Expected best matching language code.
    */
-  public function providerTestGetBestMatchingLangcode() {
+  public static function providerTestGetBestMatchingLangcode() {
     // Random generator.
     $random = new Random();
 
@@ -152,9 +156,9 @@ class UserAgentTest extends TestCase {
       ['zh-tw, en-us;q=0.90, en;q=0.80, zh;q=0.70', 'zh-hant'],
       ['zh-hant, en-us;q=0.90, en;q=0.80, zh;q=0.70', 'zh-hant'],
       ['zh-hans, en-us;q=0.90, en;q=0.80, zh;q=0.70', 'zh-hans'],
-      // @todo: This is copied from RFC4647 but our regex skips the numbers so
-      // they where removed. Our code should be updated so private1-private2 is
-      // valid. http://tools.ietf.org/html/rfc4647#section-3.4
+      // @todo This is copied from RFC4647 but our regex skips the numbers so
+      //   they where removed. Our code should be updated so private1-private2
+      //   is valid. http://tools.ietf.org/html/rfc4647#section-3.4
       ['zh-hant-CN-x-private-private, en-us;q=0.90, en;q=0.80, zh;q=0.70', 'zh-hant'],
       ['zh-cn', 'zh-hans'],
       ['zh-sg', 'zh-hans'],

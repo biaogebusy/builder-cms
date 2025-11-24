@@ -87,7 +87,7 @@ class Routes implements ContainerInjectionInterface {
       sprintf('The provided base path should contain a leading slash "/". Given: "%s".', $jsonapi_base_path)
     );
     assert(
-      substr($jsonapi_base_path, -1) !== '/',
+      !str_ends_with($jsonapi_base_path, '/'),
       sprintf('The provided base path should not contain a trailing slash "/". Given: "%s".', $jsonapi_base_path)
     );
     $this->jsonApiBasePath = $jsonapi_base_path;
@@ -265,7 +265,7 @@ class Routes implements ContainerInjectionInterface {
    */
   public static function isJsonApiRequest(array $defaults) {
     return isset($defaults[RouteObjectInterface::CONTROLLER_NAME])
-      && strpos($defaults[RouteObjectInterface::CONTROLLER_NAME], static::CONTROLLER_SERVICE_NAME) === 0;
+      && str_starts_with($defaults[RouteObjectInterface::CONTROLLER_NAME], static::CONTROLLER_SERVICE_NAME);
   }
 
   /**

@@ -1052,7 +1052,7 @@ libraries.choices:
       /libraries/choices/public/assets/styles/choices.min.css: { minified: true }
   js:
     /libraries/choices/public/assets/scripts/choices.min.js: { minified: true }
-    'https://polyfill.io/v3/polyfill.min.js?features=es5%2Ces6%2CArray.prototype.includes%2Cfetch%2CCustomEvent%2CElement.prototype.closest%2CElement.prototype.classList': { weight: -1, browsers: { IE: 'lte IE 11'} }
+    'https://polyfill-fastly.io/v3/polyfill.min.js?features=es5%2Ces6%2CArray.prototype.includes%2Cfetch%2CCustomEvent%2CElement.prototype.closest%2CElement.prototype.classList': { weight: -1, browsers: { IE: 'lte IE 11'} }
 
 libraries.codemirror.text:
   remote: https://github.com/codemirror/codemirror

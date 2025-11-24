@@ -2,9 +2,9 @@
 
 namespace Drupal\blazy\Media;
 
-use Drupal\blazy\internals\Internals;
-use Drupal\blazy\Theme\Attributes;
 use Drupal\Component\Utility\UrlHelper;
+use Drupal\blazy\Theme\Attributes;
+use Drupal\blazy\internals\Internals;
 
 /**
  * Provides thumbnail-related methods.
@@ -78,10 +78,7 @@ class Thumbnail {
       ?: $settings['thumbnail_style'] ?? $blazies->get('thumbnail.fallback');
 
     // @todo remove if against previous convention with core thumbnail fallback.
-    // We are here from Views style which may set just thumbnail.uri without
-    // thumbnail_style, unlike field formatters which set thumbnail_style,
-    // hardly thumbnail URI. Shortly, Views style offers Thumbnail image,
-    // field formatters Thumbnail style.
+    // Thumbnail URI may be provided via Views style, but not thumbnail_style.
     if (!$style && !$tn_uri) {
       return [];
     }

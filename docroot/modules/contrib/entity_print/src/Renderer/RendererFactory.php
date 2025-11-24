@@ -30,7 +30,7 @@ class RendererFactory implements RendererFactoryInterface {
 
     // If we get an array or something, just look at the first one.
     if (is_array($item)) {
-      $item = array_pop($item);
+      $item = reset($item);
     }
 
     if ($item instanceof EntityInterface && $entity_type_manager->hasHandler($item->getEntityTypeId(), 'entity_print')) {

@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\views_custom_cache_tag\Plugin\views\cache\CustomTag.
- */
-
 namespace Drupal\views_custom_cache_tag\Plugin\views\cache;
 
 use Drupal\Core\Cache\Cache;
@@ -29,6 +24,8 @@ class CustomTag extends Tag {
 
   /**
    * Overrides Drupal\views\Plugin\Plugin::$usesOptions.
+   *
+   * @var bool
    */
   protected $usesOptions = TRUE;
 
@@ -44,7 +41,7 @@ class CustomTag extends Tag {
    */
   public function defineOptions() {
     $options = parent::defineOptions();
-    $options['custom_tag'] = array('default' => '');
+    $options['custom_tag'] = ['default' => ''];
     return $options;
   }
 
@@ -54,19 +51,19 @@ class CustomTag extends Tag {
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
 
-    $form['custom_tag'] = array(
+    $form['custom_tag'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Custom tag list'),
       '#description' => $this->t('Custom tag list, separated by new lines. Caching based on custom cache tag must be manually cleared using custom code. You can use Twig (to explode a multi-value contextual filter into multiple tags for example) as long as the result delivers each tag in a separate line.'),
       '#default_value' => $this->options['custom_tag'],
-    );
+    ];
 
     // Setup the tokens for fields.
-    $optgroup_arguments = (string) t('Arguments');
+    $optgroup_arguments = (string) $this->t('Arguments');
 
     foreach ($this->view->display_handler->getHandlers('argument') as $arg => $handler) {
-      $options[$optgroup_arguments]["{{ arguments.$arg }}"] = $this->t('@argument title', array('@argument' => $handler->adminLabel()));
-      $options[$optgroup_arguments]["{{ raw_arguments.$arg }}"] = $this->t('@argument input', array('@argument' => $handler->adminLabel()));
+      $options[$optgroup_arguments]["{{ arguments.$arg }}"] = $this->t('@argument title', ['@argument' => $handler->adminLabel()]);
+      $options[$optgroup_arguments]["{{ raw_arguments.$arg }}"] = $this->t('@argument input', ['@argument' => $handler->adminLabel()]);
     }
 
     // We have some options, so make a list.
@@ -76,20 +73,19 @@ class CustomTag extends Tag {
       ];
       foreach (array_keys($options) as $type) {
         if (!empty($options[$type])) {
-          $items = array();
+          $items = [];
           foreach ($options[$type] as $key => $value) {
             $items[] = $key . ' == ' . $value;
           }
-          $item_list = array(
+          $item_list = [
             '#theme' => 'item_list',
             '#items' => $items,
-          );
+          ];
           $output['list'] = $item_list;
         }
       }
       $form['tokens'] = $output;
     }
-
 
   }
 
@@ -104,7 +100,7 @@ class CustomTag extends Tag {
     $entity_information = $this->view->getQuery()->getEntityTableInfo();
     if (!empty($entity_information)) {
       // Add the list cache tags for each entity type used by this view.
-      foreach ($entity_information as $table => $metadata) {
+      foreach ($entity_information as $metadata) {
         $remove = \Drupal::entityTypeManager()->getDefinition($metadata['entity_type'])->getListCacheTags();
         $tags = array_diff($tags, $remove);
       }

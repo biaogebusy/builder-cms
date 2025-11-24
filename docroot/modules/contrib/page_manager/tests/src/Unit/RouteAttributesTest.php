@@ -23,11 +23,15 @@ class RouteAttributesTest extends UnitTestCase {
     $this->assertEquals($expected, RouteAttributes::extractRawAttributes($route, $name, $path));
   }
 
-  public function providerTestExtractRawAttributes() {
+  /**
+   * Data provider for testExtractRawAttributes.
+   */
+  public static function providerTestExtractRawAttributes() {
     $data = [];
     $data['no-parameters'] = [new Route('/prefix/a'), 'a_route', '/prefix', []];
     $data['no-matching-parameters'] = [new Route('/prefix/{x}'), 'a_route', '/different-prefix/b', []];
     $data['matching-parameters'] = [new Route('/prefix/{x}'), 'a_route', '/prefix/b', ['x' => 'b']];
+    // phpcs:ignore
     $data['with-defaults'] = [new Route('/prefix/{x}', ['foo' => 'bar']), 'a_route', '/different-prefix/b', ['foo' => 'bar']];
     return $data;
   }

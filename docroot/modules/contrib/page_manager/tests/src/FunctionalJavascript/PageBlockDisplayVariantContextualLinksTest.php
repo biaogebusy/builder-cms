@@ -21,7 +21,7 @@ class PageBlockDisplayVariantContextualLinksTest extends WebDriverTestBase {
   /**
    * {@inheritdoc}
    */
-  protected $defaultTheme = 'classy';
+  protected $defaultTheme = 'olivero';
 
   /**
    * Testing content block.
@@ -45,7 +45,7 @@ class PageBlockDisplayVariantContextualLinksTest extends WebDriverTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    BlockContentType::create(['id' => 'test_block_type'])->save();
+    BlockContentType::create(['id' => 'test_block_type', 'label' => 'test_block_type'])->save();
     block_content_add_body_field('test_block_type');
     $this->contentBlock = BlockContent::create([
       'type' => 'test_block_type',
@@ -60,11 +60,14 @@ class PageBlockDisplayVariantContextualLinksTest extends WebDriverTestBase {
     \Drupal::service('module_installer')
       ->install(['page_manager_contextual_links_test']);
 
+    $administer_block_content = version_compare(\Drupal::VERSION, '10.0', '>') ? 'administer block content' : 'administer views';
+
     $this->drupalLogin($this->createUser([
       'access contextual links',
       'access user profiles',
       'administer blocks',
       'administer views',
+      $administer_block_content,
     ]));
   }
 

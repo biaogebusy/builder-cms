@@ -661,16 +661,19 @@ class LocaleConfigManager {
       // Update active configuration copies of all prior shipped configuration if
       // they are still English. It is not enough to change configuration shipped
       // with the components just installed, because installing a component such
-      // as views or tour module may bring in default configuration from prior
-      // components.
+      // as views may bring in default configuration from prior components.
       $names = $this->getComponentNames();
       foreach ($names as $name) {
         $config = $this->configFactory->reset($name)->getEditable($name);
         // Should only update if still exists in active configuration. If locale
         // module is enabled later, then some configuration may not exist anymore.
         if (!$config->isNew()) {
+          $typed_config = $this->typedConfigManager->createFromNameAndData($config->getName(), $config->getRawData());
           $langcode = $config->get('langcode');
-          if (empty($langcode) || $langcode == 'en') {
+          // Only set a `langcode` if this config actually contains translatable
+          // data.
+          // @see \Drupal\Core\Config\Plugin\Validation\Constraint\LangcodeRequiredIfTranslatableValuesConstraint
+          if (!empty($this->getTranslatableData($typed_config)) && (empty($langcode) || $langcode == 'en')) {
             $config->set('langcode', $default_langcode)->save();
           }
         }

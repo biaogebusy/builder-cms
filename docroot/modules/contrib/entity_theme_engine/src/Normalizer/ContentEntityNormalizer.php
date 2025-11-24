@@ -41,12 +41,18 @@ class ContentEntityNormalizer extends NormalizerBase {
    * {@inheritdoc}
    */
   public function normalize($entity, $format = NULL, array $context = []) {
+    $label = '';
+    try {
+      $label = $entity->label();
+    } catch(\Exception $e) {}
     $data = [
       'entity_id' => $entity->id(),
       'entity_uuid' => $entity->uuid(),
-      'entity_label' => $entity->label(),
-      'entity_url' => ($entity->id() && $entity->hasLinkTemplate('canonical'))?$entity->toUrl()->toString():"",
+      'entity_label' => $label,
+      'entity_url' => ($entity->id() && $entity->hasLinkTemplate('canonical'))?$entity->toUrl()->toString(TRUE)->getGeneratedUrl():"",
       'entity_type' => $entity->getEntityTypeId(),
+      'entity_bundle' => $entity->bundle(),
+      'entity_revision_id' => $entity->getRevisionId()
     ];
     $_cache = &drupal_static('twig_variables_entity',[]);
     if(!empty($_cache[$entity->getEntityTypeId()][$entity->id()])) {
@@ -59,19 +65,26 @@ class ContentEntityNormalizer extends NormalizerBase {
     ];
     $data['#cache'] = $cache;
     $_cache[$entity->getEntityTypeId()][$entity->id()] = $data;
-    if($context['level'] > 5) {
+    if(isset($context['level']) && $context['level'] > 5) {
       return $data;
     };
     if($entity instanceof FieldableEntityInterface) {
       $fields = $entity->getFieldDefinitions();
       foreach ($fields as $field_name => $field_def) {
         if(array_key_exists($field_name, $data)) continue;
+        if(in_array($field_name, [
+          'nid', 'uuid', 'vid', 'revision_timestamp', 'revision_uid', 'revision_log',
+          'revision_default', 'revision_translation_affected', '_deleted', '_rev', 'path',
+          'revision_user', 'revision_created', 'roles', 'parent'
+        ])) continue;
         $field_type = $field_def->getType();
-        $sub_context = $context + [
-        'field_name' => $field_name,
-        'field_type' => $field_type,
-        'field_definition' => $field_def
-        ];
+        if (isset($context['#ignore_fields']) && in_array($field_name, $context['#ignore_fields'])) {
+          continue;
+        }
+        $sub_context = $context;
+        $sub_context['field_name'] = $field_name;
+        $sub_context['field_type'] = $field_type;
+        $sub_context['field_definition'] = $field_def;
         if($field_def->getFieldStorageDefinition()->getCardinality() == 1) {
           if($entity->get($field_name)->isEmpty()){
             $data[$field_name] = NULL;
@@ -106,12 +119,20 @@ class ContentEntityNormalizer extends NormalizerBase {
           $media_source = \Drupal::service('file_url_generator')->generateAbsoluteString($file->getFileUri());
         }
         $data['media_source'] = $media_source;
+        $data['filesize'] = $file->filesize->value;
         break;
       case 'image':
         $data['styles'] = $this->getImageStylesVariables($entity);
         break;
       case 'taxonomy_vocabulary':
         $data['data'] = $this->getVocabularyData($entity);
+        break;
+      case 'taxonomy_term':
+        $terms =$this->entityTypeManager->getStorage('taxonomy_term')->loadTree($entity->bundle(), $entity->id(), 1, true);
+        $data['children'] = [];
+        foreach ($terms as $term) {
+          $data['children'] []= $this->normalize($term, $format);
+        }
         break;
     }
 
@@ -134,8 +155,8 @@ class ContentEntityNormalizer extends NormalizerBase {
   /**
    * {@inheritdoc}
    */
-  public function supportsNormalization($data, $format = NULL) {
-    if(in_array($format, $this->format) && parent::supportsNormalization($data, $format)) {
+  public function supportsNormalization($data, string $format = NULL, array $context = []): bool {
+    if(in_array($format, $this->format) && parent::supportsNormalization($data, $format, $context)) {
       return TRUE;
     }
     return FALSE;

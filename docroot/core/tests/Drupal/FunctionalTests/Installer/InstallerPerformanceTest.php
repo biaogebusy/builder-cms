@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalTests\Installer;
 
 use Drupal\Core\Routing\RoutingEvents;
@@ -34,7 +36,7 @@ class InstallerPerformanceTest extends BrowserTestBase {
   /**
    * Ensures that the user page is available after installation.
    */
-  public function testInstaller() {
+  public function testInstaller(): void {
     // Ensures that router is not rebuilt unnecessarily during the install.
     // Currently it is built once during the install in install_finished().
     $this->assertSame(1, \Drupal::service('core.performance.test.recorder')->getCount('event', RoutingEvents::FINISHED));

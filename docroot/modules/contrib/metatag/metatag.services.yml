@@ -25,6 +25,7 @@ services:
       - '@current_route_match'
       - '@request_stack'
       - '@language_manager'
+      - '@config.factory'
 
   metatag.trimmer:
     class: Drupal\metatag\MetatagTrimmer

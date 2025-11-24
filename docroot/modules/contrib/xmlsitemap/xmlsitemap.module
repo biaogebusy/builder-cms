@@ -23,6 +23,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\RevisionableInterface;
 use Drupal\Core\Entity\TranslatableInterface;
+use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
@@ -30,7 +31,7 @@ use Drupal\Core\Link;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\Url;
-use Drupal\xmlsitemap\Controller\XmlSitemapController;
+use Drupal\Core\Utility\Error;
 use Drupal\xmlsitemap\Entity\XmlSitemap;
 use Drupal\xmlsitemap\XmlSitemapInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -484,7 +485,7 @@ function xmlsitemap_sitemap_uri(XmlSitemapInterface $sitemap) {
 /**
  * @} End of "defgroup xmlsitemap_api"
  */
-function xmlsitemap_get_directory(XmlSitemapInterface $sitemap = NULL, $directory = NULL) {
+function xmlsitemap_get_directory(?XmlSitemapInterface $sitemap = NULL, $directory = NULL) {
   if (!isset($directory)) {
     $directory = \Drupal::config('xmlsitemap.settings')->get('path') ?: 'xmlsitemap';
   }
@@ -501,7 +502,7 @@ function xmlsitemap_get_directory(XmlSitemapInterface $sitemap = NULL, $director
 /**
  * Check that the sitemap files directory exists and is writable.
  */
-function xmlsitemap_check_directory(XmlSitemapInterface $sitemap = NULL) {
+function xmlsitemap_check_directory(?XmlSitemapInterface $sitemap = NULL) {
   $directory = xmlsitemap_get_directory($sitemap);
   /** @var \Drupal\Core\File\FileSystemInterface $filesystem */
   $filesystem = \Drupal::service('file_system');
@@ -551,7 +552,7 @@ function xmlsitemap_check_all_directories() {
  * @return bool
  *   Returns TRUE is operation was successful, FALSE otherwise.
  */
-function xmlsitemap_clear_directory(XmlSitemapInterface $sitemap = NULL, $delete = FALSE) {
+function xmlsitemap_clear_directory(?XmlSitemapInterface $sitemap = NULL, $delete = FALSE) {
   $directory = xmlsitemap_get_directory($sitemap);
   return _xmlsitemap_delete_recursive($directory, $delete);
 }
@@ -570,7 +571,7 @@ function xmlsitemap_clear_directory(XmlSitemapInterface $sitemap = NULL, $delete
  * @return bool
  *   TRUE if the directory was moved successfully. FALSE otherwise.
  */
-function xmlsitemap_directory_move($old_dir, $new_dir, $replace = FileSystemInterface::EXISTS_REPLACE) {
+function xmlsitemap_directory_move($old_dir, $new_dir, $replace = FileExists::Replace) {
   /** @var \Drupal\Core\File\FileSystemInterface $filesystem */
   $filesystem = \Drupal::service('file_system');
 
@@ -943,47 +944,9 @@ function xmlsitemap_link_bundle_load($entity, $bundle, $load_bundle_info = TRUE)
  *   Bundle id.
  */
 function xmlsitemap_link_bundle_delete($entity, $bundle) {
-  \Drupal::configFactory()->getEditable("xmlsitemap.settings.{$entity}.{$bundle}")->delete();
-}
-
-/**
- * Checks access for a bundle.
- *
- * @param string $entity
- *   Entity type id.
- * @param string $bundle
- *   Bundle id.
- *
- * @return bool
- *   If TRUE, access is allowed, FALSE otherwise.
- *
- * @deprecated in xmlsitemap:8.x-1.1 and is removed from xmlsitemap:2.0.0.
- *
- * @see https://www.drupal.org/project/xmlsitemap/issues/3156088
- */
-function xmlsitemap_link_bundle_access($entity, $bundle = NULL) {
-  @trigger_error(__FUNCTION__ . ' is deprecated in xmlsitemap:8.x-1.1 and will be removed in xmlsitemap:2.0.0. See https://www.drupal.org/project/xmlsitemap/issues/3156088', E_USER_DEPRECATED);
-  return FALSE;
-}
-
-/**
- * Get path of a bundle.
- *
- * @param string $entity
- *   Entity type id.
- * @param string $bundle
- *   Bundle id.
- *
- * @return mixed
- *   Path of bundle, or FALSE if it does not exist.
- *
- * @deprecated in xmlsitemap:8.x-1.1 and is removed from xmlsitemap:2.0.0.
- *
- * @see https://www.drupal.org/project/xmlsitemap/issues/3156088
- */
-function xmlsitemap_get_bundle_path($entity, $bundle) {
-  @trigger_error(__FUNCTION__ . ' is deprecated in xmlsitemap:8.x-1.1 and will be removed in xmlsitemap:2.0.0. See https://www.drupal.org/project/xmlsitemap/issues/3156088', E_USER_DEPRECATED);
-  return FALSE;
+  \Drupal::configFactory()
+    ->getEditable("xmlsitemap.settings.{$entity}.{$bundle}")
+    ->delete();
 }
 
 /**
@@ -1564,7 +1527,7 @@ function xmlsitemap_xmlsitemap_index_links($limit) {
       }
     }
     catch (\Exception $e) {
-      watchdog_exception('xmlsitemap', $e);
+      Error::logException(\Drupal::logger('xmlsitemap'), $e);
     }
   }
 }
@@ -2192,7 +2155,7 @@ function xmlsitemap_get_status_options($default = NULL) {
  * @return int|string
  *   Returns current chunk of the sitemap.
  */
-function xmlsitemap_get_current_chunk(XmlSitemapInterface $sitemap, Request $request = NULL) {
+function xmlsitemap_get_current_chunk(XmlSitemapInterface $sitemap, ?Request $request = NULL) {
   if (!isset($request)) {
     $request = \Drupal::request();
   }
@@ -2211,35 +2174,6 @@ function xmlsitemap_get_current_chunk(XmlSitemapInterface $sitemap, Request $req
   else {
     return (int) $query_page;
   }
-}
-
-/**
- * Creates a response reading the sitemap file and adding content to response.
- *
- * @param \Symfony\Component\HttpFoundation\Response $response
- *   Response object.
- * @param string $file
- *   File uri.
- * @param array $headers
- *   Headers of the response.
- *
- * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
- *   The sitemap response object.
- *
- * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
- *   If the sitemap is not found or the sitemap file is not readable.
- *
- * @deprecated in xmlsitemap:8.x-1.0 and is removed from xmlsitemap:2.0.0. Use
- *   \Drupal\xmlsitemap\Controller\XmlSitemapController::getSitemapResponse()
- *   instead.
- *
- * @see https://www.drupal.org/project/xmlsitemap/issues/2869214
- */
-function xmlsitemap_output_file(Response $response, $file, array $headers = []) {
-  @trigger_error(__FUNCTION__ . ' is deprecated in xmlsitemap:8.x-1.0 and will be removed in xmlsitemap:2.0.0. Use \Drupal\xmlsitemap\Controller\XmlSitemapController::getSitemapResponse. See https://www.drupal.org/project/xmlsitemap/issues/2869214', E_USER_DEPRECATED);
-  /** @var \Drupal\xmlsitemap\Controller\XmlSitemapController $controller */
-  $controller = \Drupal::classResolver(XmlSitemapController::class);
-  return $controller->getSitemapResponse($file, \Drupal::request(), $headers + $response->headers->all());
 }
 
 /**

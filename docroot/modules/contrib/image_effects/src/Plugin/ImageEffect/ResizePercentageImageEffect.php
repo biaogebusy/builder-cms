@@ -1,21 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageEffect;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Image\ImageInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\image\Attribute\ImageEffect;
 use Drupal\image\ConfigurableImageEffectBase;
 use Drupal\image_effects\Component\ImageUtility;
 
 /**
  * Resize an image by percentage.
- *
- * @ImageEffect(
- *   id = "image_effects_resize_percentage",
- *   label = @Translation("Resize percentage"),
- *   description = @Translation("Resize the image by percentage of its width/height. If only a single dimension is specified, the other dimension will be calculated, maintaining the aspect ratio (scale).")
- * )
  */
+#[ImageEffect(
+  id: 'image_effects_resize_percentage',
+  label: new TranslatableMarkup('Resize percentage'),
+  description: new TranslatableMarkup('Resize the image by percentage of its width/height. If only a single dimension is specified, the other dimension will be calculated, maintaining the aspect ratio (scale).'),
+)]
 class ResizePercentageImageEffect extends ConfigurableImageEffectBase {
 
   /**
@@ -89,9 +92,9 @@ class ResizePercentageImageEffect extends ConfigurableImageEffectBase {
    * {@inheritdoc}
    */
   public function transformDimensions(array &$dimensions, $uri) {
-    $d = ImageUtility::resizeDimensions($dimensions['width'], $dimensions['height'], $this->configuration['width'], $this->configuration['height']);
-    $dimensions['width'] = $d['width'];
-    $dimensions['height'] = $d['height'];
+    $dimensions['width'] = $dimensions['width'] ? (int) $dimensions['width'] : NULL;
+    $dimensions['height'] = $dimensions['height'] ? (int) $dimensions['height'] : NULL;
+    ['width' => $dimensions['width'], 'height' => $dimensions['height']] = ImageUtility::resizeDimensions($dimensions['width'], $dimensions['height'], $this->configuration['width'], $this->configuration['height']);
   }
 
   /**

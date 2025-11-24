@@ -2,23 +2,24 @@
 
 namespace Drupal\charts_blocks\Plugin\Block;
 
-use Drupal\charts\Element\Chart;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Component\Uuid\UuidInterface;
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\charts\Element\Chart;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Provides a 'ChartsBlock' block.
- *
- * @Block(
- *  id = "charts_block",
- *  admin_label = @Translation("Charts block"),
- * )
+ * The 'ChartsBlock' chart type attribute.
  */
+#[Block(
+  id: "charts_block",
+  admin_label: new TranslatableMarkup("Charts block")
+)]
 class ChartsBlock extends BlockBase implements ContainerFactoryPluginInterface {
 
   /**

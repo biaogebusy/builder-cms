@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.iservice.cognitive.image.route.query request
  *
  * @author auto create
- * @since 1.0, 2023-08-20 18:08:40
+ * @since 1.0, 2025-08-13 14:52:41
  */
 class AlipayIserviceCognitiveImageRouteQueryRequest
 {

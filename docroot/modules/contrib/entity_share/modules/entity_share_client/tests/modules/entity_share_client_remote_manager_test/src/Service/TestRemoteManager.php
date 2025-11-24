@@ -9,8 +9,6 @@ use GuzzleHttp\ClientInterface;
 
 /**
  * Service that allows to emulate another website in tests.
- *
- * @package Drupal\entity_share_client_remote_manager_test\Service
  */
 class TestRemoteManager extends RemoteManager {
 

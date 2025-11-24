@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Component\DependencyInjection;
 
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -14,6 +16,8 @@ class PhpArrayContainerTest extends ContainerTest {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    parent::setUp();
+
     $this->machineFormat = FALSE;
     $this->containerClass = '\Drupal\Component\DependencyInjection\PhpArrayContainer';
     $this->containerDefinition = $this->getMockContainerDefinition();
@@ -23,7 +27,7 @@ class PhpArrayContainerTest extends ContainerTest {
   /**
    * Helper function to return a service definition.
    */
-  protected function getServiceCall($id, $invalid_behavior = ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE) {
+  protected function getServiceCall($id, $invalid_behavior = ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE): string {
     if ($invalid_behavior !== ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE) {
       return sprintf('@?%s', $id);
     }
@@ -34,7 +38,7 @@ class PhpArrayContainerTest extends ContainerTest {
   /**
    * Helper function to return a service definition.
    */
-  protected function getParameterCall($name) {
+  protected function getParameterCall($name): string {
     return '%' . $name . '%';
   }
 

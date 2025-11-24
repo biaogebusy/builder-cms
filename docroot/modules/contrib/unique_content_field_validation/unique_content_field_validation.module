@@ -9,8 +9,8 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
-use Drupal\node\NodeTypeInterface;
 use Drupal\field\Entity\FieldConfig;
+use Drupal\node\NodeTypeInterface;
 use Drupal\unique_content_field_validation\UniqueContentFieldValidationInterface;
 
 /**
@@ -265,7 +265,7 @@ function unique_content_field_validation_validate_unique($element, FormStateInte
       $items_msg = implode(',', $items);
       if (!empty($element['#unique_field_settings']['message'])) {
         $message = str_replace(["%label", "%value"], [$field_label, $items_msg], $element['#unique_field_settings']['message']);
-        $form_state->setErrorByName($field_name, t($message));
+        $form_state->setErrorByName($field_name, $message);
       }
       else {
         $form_state->setErrorByName($field_name, t('%label must be unique but "%value" already exists!', [
@@ -286,10 +286,9 @@ function unique_content_field_validation_unique_multivalue($element, FormStateIn
   $field_name = $element['#unique_multi_field_settings']['field_name'];
   $field_definition = $element['#unique_multi_field_settings']['field_definition'];
   $field_label = $field_definition->label();
-  $message_item = !empty($element['#unique_multi_field_settings']['message']) ? $element['#unique_multi_field_settings']['message'] : '%value is already set and each value needs to be unique.';
 
   // Check again if the field is multiple in case that
-  // the config is enabled but the field config was set back to non multiple.
+  // the config is enabled, but the field config was set back to non-multiple.
   if ($field_definition->getFieldStorageDefinition()->isMultiple() && $form_state->getValue($field_name)) {
     $items = [];
     foreach ($form_state->getValue($field_name) as $key => $values) {
@@ -299,7 +298,7 @@ function unique_content_field_validation_unique_multivalue($element, FormStateIn
             if ($value && in_array($value, $items)) {
               if (!empty($element['#unique_multi_field_settings']['message'])) {
                 $message = str_replace(["%label", "%value"], [$field_label, $value], $element['#unique_multi_field_settings']['message']);
-                $form_state->setErrorByName($field_name, t($message));
+                $form_state->setErrorByName($field_name, $message);
               }
               else {
                 $form_state->setErrorByName($field_name, t('%value is already set and each value needs to be unique.', [
@@ -377,10 +376,11 @@ function unique_content_field_validation_entity_base_field_info_alter(&$fields, 
  * Implements hook_entity_bundle_field_info_alter().
  */
 function unique_content_field_validation_entity_bundle_field_info_alter(&$fields, EntityTypeInterface $entity_type, $bundle) {
-  /* This is necessary for content types where the title label is changed from the default "Title" to something else.
-   * In this case, the title field is considered a bundle field and the constraint must be added here.
-   * This is expected (not a Drupal bug); there is some info here: https://www.drupal.org/project/drupal/issues/3193351
-   */
+  // This is necessary for content types where the title label is changed from
+  // the default "Title" to something else.  In this case, the title field is
+  // considered a bundle field and the constraint must be added here.
+  // This is expected (not a Drupal bug); there is some info here:
+  // https://www.drupal.org/project/drupal/issues/3193351
   if ($entity_type->id() === 'node' && isset($fields['title']) && $fields['title']) {
     $fields['title']->addConstraint('UniqueContentTitle', []);
   }

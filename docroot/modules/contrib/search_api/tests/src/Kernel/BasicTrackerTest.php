@@ -4,10 +4,12 @@ namespace Drupal\Tests\search_api\Kernel;
 
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Transaction;
+use Drupal\Core\Database\Transaction\TransactionManagerBase;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Utility\Utility;
 use Psr\Log\LoggerInterface;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the "default" tracker plugin.
@@ -16,6 +18,7 @@ use Psr\Log\LoggerInterface;
  *
  * @coversDefaultClass \Drupal\search_api\Plugin\search_api\tracker\Basic
  */
+#[RunTestsInSeparateProcesses]
 class BasicTrackerTest extends KernelTestBase {
 
   /**
@@ -277,7 +280,7 @@ class BasicTrackerTest extends KernelTestBase {
    *
    * @see \Drupal\Tests\search_api\Kernel\BasicTrackerTest::testTracking()
    */
-  public function trackingDataProvider() {
+  public static function trackingDataProvider() {
     return [
       'FIFO' => ['fifo'],
       'LIFO' => ['lifo'],
@@ -295,7 +298,6 @@ class BasicTrackerTest extends KernelTestBase {
    * @dataProvider exceptionHandlingDataProvider
    */
   public function testExceptionHandling($tracker_method, array $args = []) {
-    /** @var \PHPUnit\Framework\MockObject\MockObject|\Drupal\Core\Database\Connection $connection */
     $connection = $this->getMockBuilder(Connection::class)
       ->disableOriginalConstructor()
       ->getMock();
@@ -303,7 +305,7 @@ class BasicTrackerTest extends KernelTestBase {
       $connection->method($method)->willThrowException(new \Exception());
     }
     $transaction = $this->getMockBuilder(Transaction::class)
-      ->disableOriginalConstructor()
+      ->setConstructorArgs([$connection, '', ''])
       ->getMock();
     $rolled_back = FALSE;
     $rollback = function () use (&$rolled_back) {
@@ -313,7 +315,18 @@ class BasicTrackerTest extends KernelTestBase {
     $connection->method('startTransaction')->willReturn($transaction);
     $this->tracker->setDatabaseConnection($connection);
 
-    /** @var \PHPUnit\Framework\MockObject\MockObject|\Psr\Log\LoggerInterface $logger */
+    // Mock the transactionManager() method since otherwise the destructor of
+    // $transaction might lead to a fatal error.
+    $transaction_manager = $this->createMock(TransactionManagerBase::class);
+    $connection->method('transactionManager')->willReturn($transaction_manager);
+    // This will keep PHPUnit from resetting the invocation handler of the
+    // $connection mock object, otherwise the above two lines are useless
+    // since $transaction will not be destroyed until after the test is
+    // finished.
+    // @see \PHPUnit\Framework\TestCase::shouldInvocationMockerBeReset()
+    // @todo Remove once we can depend on the fix for #3398767.
+    $this->setDependencyInput([$connection]);
+
     $logger = $this->createMock(LoggerInterface::class);
     $log = [];
     $logger->method('log')->willReturnCallback(function () use (&$log) {
@@ -337,7 +350,7 @@ class BasicTrackerTest extends KernelTestBase {
    *
    * @see \Drupal\Tests\search_api\Kernel\BasicTrackerTest::testExceptionHandling()
    */
-  public function exceptionHandlingDataProvider() {
+  public static function exceptionHandlingDataProvider() {
     return [
       'trackItemsInserted()' => ['trackItemsInserted', [['']]],
       'trackItemsUpdated()' => ['trackItemsUpdated', [['']]],

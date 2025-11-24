@@ -1,0 +1,23 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"AH",
+		"Bozhou Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Lixin Xian": {
+			"local_name": "利辛县"
+		},
+		"Mengcheng Xian": {
+			"local_name": "蒙城县"
+		},
+		"Qiaocheng Qu": {
+			"local_name": "谯城区"
+		},
+		"Guoyang Xian": {
+			"local_name": "涡阳县"
+		}
+	}
+}

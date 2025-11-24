@@ -2,22 +2,23 @@
 
 namespace Drupal\commerce_checkout\Plugin\Block;
 
-use Drupal\commerce_checkout\CheckoutOrderManagerInterface;
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Link;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce_checkout\CheckoutOrderManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a checkout progress block.
- *
- * @Block(
- *   id = "commerce_checkout_progress",
- *   admin_label = @Translation("Checkout progress"),
- *   category = @Translation("Commerce")
- * )
  */
+#[Block(
+  id: "commerce_checkout_progress",
+  admin_label: new TranslatableMarkup('Checkout progress'),
+  category: new TranslatableMarkup('Commerce'),
+)]
 class CheckoutProgressBlock extends BlockBase implements ContainerFactoryPluginInterface {
 
   /**

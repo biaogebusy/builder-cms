@@ -4,6 +4,7 @@ namespace Drupal\commerce_tax\Plugin\Commerce\TaxType;
 
 use CommerceGuys\Addressing\Address;
 use CommerceGuys\Addressing\AddressInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\commerce_order\Adjustment;
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_order\Entity\OrderItemInterface;
@@ -11,9 +12,9 @@ use Drupal\commerce_price\RounderInterface;
 use Drupal\commerce_store\Entity\StoreInterface;
 use Drupal\commerce_tax\Event\BuildZonesEvent;
 use Drupal\commerce_tax\Event\TaxEvents;
-use Drupal\commerce_tax\TaxZone;
 use Drupal\commerce_tax\Resolver\ChainTaxRateResolverInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\commerce_tax\TaxZone;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\profile\Entity\ProfileInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -94,6 +95,38 @@ abstract class LocalTaxTypeBase extends TaxTypeBase implements LocalTaxTypeInter
   /**
    * {@inheritdoc}
    */
+  public function defaultConfiguration() {
+    return [
+      'display_tax_rate_in_label' => TRUE,
+    ] + parent::defaultConfiguration();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+    $form = parent::buildConfigurationForm($form, $form_state);
+    $form['display_tax_rate_in_label'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Display tax rate in the adjustment label'),
+      '#default_value' => $this->configuration['display_tax_rate_in_label'],
+      '#description' => $this->t('Displays the tax rate percentage next to the adjustment label ("VAT (20%)").'),
+    ];
+    return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
+    parent::submitConfigurationForm($form, $form_state);
+    $values = $form_state->getValue($form['#parents']);
+    $this->configuration['display_tax_rate_in_label'] = $values['display_tax_rate_in_label'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function shouldRound() {
     return TRUE;
   }
@@ -124,6 +157,11 @@ abstract class LocalTaxTypeBase extends TaxTypeBase implements LocalTaxTypeInter
       foreach ($rates as $zone_id => $rate) {
         $zone = $zones[$zone_id];
         $percentage = $rate->getPercentage($calculation_date);
+        // @todo figure out what to do when this happens as this potentially
+        // means no tax rate applied likely due to misconfiguration.
+        if (!$percentage) {
+          continue;
+        }
         // Stores are allowed to enter prices without tax even if they're
         // going to be displayed with tax, and vice-versa.
         // Now that the rates are known, use them to determine the final

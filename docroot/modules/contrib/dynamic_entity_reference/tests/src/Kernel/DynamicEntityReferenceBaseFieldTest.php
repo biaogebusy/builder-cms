@@ -8,6 +8,7 @@ use Drupal\entity_test\Entity\EntityTest;
 use Drupal\entity_test\Entity\EntityTestMul;
 use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
 use Drupal\Tests\SchemaCheckTestTrait;
+use Prophecy\PhpUnit\ProphecyTrait;
 
 /**
  * Tests for the dynamic entity reference base field.
@@ -16,6 +17,7 @@ use Drupal\Tests\SchemaCheckTestTrait;
  */
 class DynamicEntityReferenceBaseFieldTest extends EntityKernelTestBase {
 
+  use ProphecyTrait;
   use SchemaCheckTestTrait;
 
   /**
@@ -217,7 +219,7 @@ class DynamicEntityReferenceBaseFieldTest extends EntityKernelTestBase {
     $this->installEntitySchema('entity_test_mul');
     // Update entity_test schema.
     $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
-    $mock_entity_type = $this->prophesize(EntityTypeInterface::class);
+    $mock_entity_type = $this->getProphet()->prophesize(EntityTypeInterface::class);
     $mock_entity_type->id()->willReturn('entity_test');
     $field_storage_definitions = dynamic_entity_reference_entity_test_entity_base_field_info($mock_entity_type->reveal());
     foreach ($field_storage_definitions as $field_name => $field_storage_definition) {

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Element;
 
 use Drupal\Core\Form\FormInterface;
@@ -26,9 +28,7 @@ class PathElementFormTest extends KernelTestBase implements FormInterface {
   protected $testUser;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['system', 'user'];
 
@@ -37,7 +37,6 @@ class PathElementFormTest extends KernelTestBase implements FormInterface {
    */
   protected function setUp(): void {
     parent::setUp();
-    $this->installSchema('system', ['sequences']);
     $this->installEntitySchema('user');
     /** @var \Drupal\user\RoleInterface $role */
     $role = Role::create([
@@ -50,8 +49,7 @@ class PathElementFormTest extends KernelTestBase implements FormInterface {
       'name' => 'foobar',
       'mail' => 'foobar@example.com',
     ]);
-    $this->testUser->addRole($role->id());
-    $this->testUser->save();
+    $this->testUser->addRole($role->id())->save();
     \Drupal::service('current_user')->setAccount($this->testUser);
   }
 
@@ -92,10 +90,10 @@ class PathElementFormTest extends KernelTestBase implements FormInterface {
     ];
 
     // A non required converted path.
-    $form['optional_validate'] = [
+    $form['optional_validate_route'] = [
       '#type' => 'path',
       '#required' => FALSE,
-      '#title' => 'optional_validate',
+      '#title' => 'optional_validate_route',
       '#convert_path' => PathElement::CONVERT_ROUTE,
     ];
 
@@ -140,13 +138,15 @@ class PathElementFormTest extends KernelTestBase implements FormInterface {
   /**
    * Tests that default handlers are added even if custom are specified.
    */
-  public function testPathElement() {
+  public function testPathElement(): void {
     $form_state = (new FormState())
       ->setValues([
         'required_validate' => 'user/' . $this->testUser->id(),
         'required_non_validate' => 'magic-ponies',
         'required_validate_route' => 'user/' . $this->testUser->id(),
         'required_validate_url' => 'user/' . $this->testUser->id(),
+        'optional_validate' => 'user/' . $this->testUser->id(),
+        'optional_validate_route' => 'user/' . $this->testUser->id(),
       ]);
     $form_builder = $this->container->get('form_builder');
     $form_builder->submitForm($this, $form_state);
@@ -159,6 +159,12 @@ class PathElementFormTest extends KernelTestBase implements FormInterface {
     $this->assertInstanceOf(Url::class, $url);
     $this->assertEquals('entity.user.canonical', $url->getRouteName());
     $this->assertEquals(['user' => $this->testUser->id()], $url->getRouteParameters());
+    $this->assertEquals($form_state->getValue('optional_validate_route'), [
+      'route_name' => 'entity.user.canonical',
+      'route_parameters' => [
+        'user' => $this->testUser->id(),
+      ],
+    ]);
 
     // Test #required.
     $form_state = (new FormState())
@@ -171,13 +177,12 @@ class PathElementFormTest extends KernelTestBase implements FormInterface {
     $errors = $form_state->getErrors();
     // Should be missing 'required_validate' field.
     $this->assertCount(1, $errors);
-    $this->assertEquals(['required_validate' => t('@name field is required.', ['@name' => 'required_validate'])], $errors);
+    $this->assertEquals(['required_validate' => 'required_validate field is required.'], $errors);
 
-    // Test invalid parameters.
+    // Test invalid required parameters.
     $form_state = (new FormState())
       ->setValues([
         'required_validate' => 'user/74',
-        'required_non_validate' => 'magic-ponies',
         'required_validate_route' => 'user/74',
         'required_validate_url' => 'user/74',
       ]);
@@ -186,8 +191,33 @@ class PathElementFormTest extends KernelTestBase implements FormInterface {
 
     // Valid form state.
     $errors = $form_state->getErrors();
-    $this->assertCount(3, $errors);
-    $this->assertEquals(['required_validate' => t('This path does not exist or you do not have permission to link to %path.', ['%path' => 'user/74']), 'required_validate_route' => t('This path does not exist or you do not have permission to link to %path.', ['%path' => 'user/74']), 'required_validate_url' => t('This path does not exist or you do not have permission to link to %path.', ['%path' => 'user/74'])], $errors);
+    $this->assertCount(4, $errors);
+    $this->assertEquals([
+      'required_validate' => 'This path does not exist or you do not have permission to link to user/74.',
+      'required_validate_route' => 'This path does not exist or you do not have permission to link to user/74.',
+      'required_validate_url' => 'This path does not exist or you do not have permission to link to user/74.',
+      'required_non_validate' => 'required_non_validate field is required.',
+    ], $errors);
+
+    // Test invalid optional parameters.
+    $form_state = (new FormState())->setValues([
+      'required_validate' => 'user/' . $this->testUser->id(),
+      'required_non_validate' => 'magic-ponies',
+      'required_validate_route' => 'user/' . $this->testUser->id(),
+      'required_validate_url' => 'user/' . $this->testUser->id(),
+      // Set invalid optional parameters should cause an error.
+      'optional_validate' => 'user/74',
+      'optional_validate_route' => 'user/74',
+    ]);
+    $form_builder = $this->container->get('form_builder');
+    $form_builder->submitForm($this, $form_state);
+    // Valid form state.
+    $errors = $form_state->getErrors();
+    $this->assertEquals(count($errors), 2);
+    $this->assertEquals($errors, [
+      'optional_validate' => 'This path does not exist or you do not have permission to link to user/74.',
+      'optional_validate_route' => 'This path does not exist or you do not have permission to link to user/74.',
+    ]);
   }
 
 }

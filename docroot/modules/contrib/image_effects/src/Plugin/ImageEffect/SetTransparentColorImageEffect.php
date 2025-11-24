@@ -1,21 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageEffect;
 
-use Drupal\Core\Image\ImageInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Image\ImageInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\image\Attribute\ImageEffect;
 use Drupal\image\ConfigurableImageEffectBase;
 
 /**
  * Set the image transparent color for GIF images.
- *
- * @ImageEffect(
- *   id = "image_effects_set_transparent_color",
- *   label = @Translation("Set transparent color"),
- *   description = @Translation("Set the image transparent color for GIF images.")
- * )
  */
+#[ImageEffect(
+  id: 'image_effects_set_transparent_color',
+  label: new TranslatableMarkup('Set transparent color'),
+  description: new TranslatableMarkup('Set the image transparent color for GIF images.'),
+)]
 class SetTransparentColorImageEffect extends ConfigurableImageEffectBase implements ContainerFactoryPluginInterface {
 
   /**

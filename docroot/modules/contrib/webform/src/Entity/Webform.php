@@ -498,13 +498,6 @@ class Webform extends ConfigEntityBundleBase implements WebformInterface {
   protected $hasAnonymousSubmissionTrackingHandler;
 
   /**
-   * Track if the webform has message handler.
-   *
-   * @var bool
-   */
-  private $hasMessagehandler;
-
-  /**
    * {@inheritdoc}
    */
   public function getLangcode() {
@@ -2471,7 +2464,7 @@ class Webform extends ConfigEntityBundleBase implements WebformInterface {
     }
 
     $path_alias_storage = \Drupal::entityTypeManager()->getStorage('path_alias');
-    $query = $path_alias_storage->getQuery('OR')->accessCheck();
+    $query = $path_alias_storage->getQuery('OR')->accessCheck(TRUE);
 
     // Delete webform base, confirmation, submissions and drafts paths.
     $path_suffixes = ['', '/confirmation', '/submissions', '/drafts'];
@@ -2553,20 +2546,20 @@ class Webform extends ConfigEntityBundleBase implements WebformInterface {
    * {@inheritdoc}
    */
   public function hasMessageHandler() {
-    if (isset($this->hasMessagehandler)) {
-      $this->hasMessagehandler;
+    if (isset($this->hasMessageHandler)) {
+      $this->hasMessageHandler;
     }
 
-    $this->hasMessagehandler = FALSE;
+    $this->hasMessageHandler = FALSE;
     $handlers = $this->getHandlers();
     foreach ($handlers as $handler) {
       if ($handler instanceof WebformHandlerMessageInterface) {
-        $this->hasMessagehandler = TRUE;
+        $this->hasMessageHandler = TRUE;
         break;
       }
     }
 
-    return $this->hasMessagehandler;
+    return $this->hasMessageHandler;
   }
 
   /**

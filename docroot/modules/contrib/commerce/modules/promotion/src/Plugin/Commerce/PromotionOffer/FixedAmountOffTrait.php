@@ -2,8 +2,8 @@
 
 namespace Drupal\commerce_promotion\Plugin\Commerce\PromotionOffer;
 
-use Drupal\commerce_price\Price;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\commerce_price\Price;
 
 /**
  * Provides common configuration for fixed amount off offers.

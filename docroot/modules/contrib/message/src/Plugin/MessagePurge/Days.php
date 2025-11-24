@@ -19,7 +19,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
  *   description = @Translation("Delete messages older than a given amount of days."),
  * )
  */
-class Days extends MessagePurgeBase {
+final class Days extends MessagePurgeBase {
 
   /**
    * The request stack.
@@ -47,13 +47,17 @@ class Days extends MessagePurgeBase {
   public function __construct(array $configuration, $plugin_id, $plugin_definition, QueryInterface $message_query, QueueInterface $queue, RequestStack $request_stack) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $message_query, $queue);
     $this->requestStack = $request_stack;
+    $this->messageQuery = $message_query;
+    $this->queue = $queue;
+
+    $this->setConfiguration($configuration);
   }
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
+    return new self(
       $configuration,
       $plugin_id,
       $plugin_definition,

@@ -71,7 +71,7 @@ final class SmsFrameworkGatewayAdminTest extends SmsFrameworkBrowserTestBase {
     // Test initial fallback gateway.
     $sms_gateway_fallback = SmsGateway::load($this->config('sms.settings')->get('fallback_gateway'));
 
-    $this->assertEquals($sms_gateway_fallback->id(), LogGateway::PLUGIN_ID, 'Initial fallback gateway is "log".');
+    static::assertEquals($sms_gateway_fallback->id(), LogGateway::PLUGIN_ID, 'Initial fallback gateway is "log".');
 
     $this->drupalLogin($this->drupalCreateUser(['administer smsframework']));
 
@@ -83,7 +83,7 @@ final class SmsFrameworkGatewayAdminTest extends SmsFrameworkBrowserTestBase {
     $this->assertSession()->statusCodeEquals(200);
 
     $sms_gateway_fallback = SmsGateway::load($this->config('sms.settings')->get('fallback_gateway'));
-    $this->assertEquals($sms_gateway_fallback->id(), $test_gateway->id(), 'Fallback gateway changed.');
+    static::assertEquals($sms_gateway_fallback->id(), $test_gateway->id(), 'Fallback gateway changed.');
   }
 
   /**
@@ -155,14 +155,14 @@ final class SmsFrameworkGatewayAdminTest extends SmsFrameworkBrowserTestBase {
       ->load($test_gateway->id());
 
     // Gateway settings.
-    $this->assertEquals(TRUE, $test_gateway->getSkipQueue());
-    $this->assertEquals('3600', $test_gateway->getRetentionDuration(Direction::INCOMING));
-    $this->assertEquals('-1', $test_gateway->getRetentionDuration(Direction::OUTGOING));
+    static::assertEquals(TRUE, $test_gateway->getSkipQueue());
+    static::assertEquals('3600', $test_gateway->getRetentionDuration(Direction::INCOMING));
+    static::assertEquals('-1', $test_gateway->getRetentionDuration(Direction::OUTGOING));
 
     // Plugin form.
     $config = $test_gateway->getPlugin()
       ->getConfiguration();
-    $this->assertEquals($widget, $config['widget'], 'Plugin configuration changed.');
+    static::assertEquals($widget, $config['widget'], 'Plugin configuration changed.');
   }
 
   /**
@@ -232,7 +232,7 @@ final class SmsFrameworkGatewayAdminTest extends SmsFrameworkBrowserTestBase {
 
     // Reload the gateway, check properties modified.
     $gateway = SmsGateway::load($gateway->id());
-    $this->assertEquals($incoming_route, $gateway->getPushIncomingPath());
+    static::assertEquals($incoming_route, $gateway->getPushIncomingPath());
   }
 
   /**

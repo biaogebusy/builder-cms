@@ -6,21 +6,13 @@ use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
-use Drupal\Core\Config\ImmutableConfig;
-use Drupal\Core\Config\TypedConfigManagerInterface;
-use Drupal\Core\Entity\EntityFieldManager;
 use Drupal\Core\Entity\EntityForm;
-use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
-use Drupal\Core\Entity\EntityTypeRepositoryInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\jsonapi\ResourceType\ResourceType;
-use Drupal\jsonapi\ResourceType\ResourceTypeRepositoryInterface;
 use Drupal\jsonapi_extras\Entity\JsonapiResourceConfig;
-use Drupal\jsonapi_extras\Plugin\ResourceFieldEnhancerManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Base form for jsonapi_resource_config.
@@ -84,50 +76,28 @@ class JsonapiResourceConfigForm extends EntityForm {
   protected $typedConfigManager;
 
   /**
-   * JsonapiResourceConfigForm constructor.
+   * A logger instance.
    *
-   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $bundle_info
-   *   Bundle information service.
-   * @param \Drupal\jsonapi\ResourceType\ResourceTypeRepositoryInterface $resource_type_repository
-   *   The JSON:API resource type repository.
-   * @param \Drupal\Core\Entity\EntityFieldManager $field_manager
-   *   The entity field manager.
-   * @param \Drupal\Core\Entity\EntityTypeRepositoryInterface $entity_type_repository
-   *   The entity type repository.
-   * @param \Drupal\jsonapi_extras\Plugin\ResourceFieldEnhancerManager $enhancer_manager
-   *   The plugin manager for the resource field enhancer.
-   * @param \Drupal\Core\Config\ImmutableConfig $config
-   *   The config instance.
-   * @param \Symfony\Component\HttpFoundation\Request $request
-   *   The HTTP request.
-   * @param \Drupal\Core\Config\TypedConfigManagerInterface $typed_config_manager
-   *   The typed config manager.
+   * @var \Psr\Log\LoggerInterface
    */
-  public function __construct(EntityTypeBundleInfoInterface $bundle_info, ResourceTypeRepositoryInterface $resource_type_repository, EntityFieldManager $field_manager, EntityTypeRepositoryInterface $entity_type_repository, ResourceFieldEnhancerManager $enhancer_manager, ImmutableConfig $config, Request $request, TypedConfigManagerInterface $typed_config_manager) {
-    $this->bundleInfo = $bundle_info;
-    $this->resourceTypeRepository = $resource_type_repository;
-    $this->fieldManager = $field_manager;
-    $this->entityTypeRepository = $entity_type_repository;
-    $this->enhancerManager = $enhancer_manager;
-    $this->config = $config;
-    $this->request = $request;
-    $this->typedConfigManager = $typed_config_manager;
-  }
+  protected $logger;
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('entity_type.bundle.info'),
-      $container->get('jsonapi.resource_type.repository'),
-      $container->get('entity_field.manager'),
-      $container->get('entity_type.repository'),
-      $container->get('plugin.manager.resource_field_enhancer'),
-      $container->get('config.factory')->get('jsonapi_extras.settings'),
-      $container->get('request_stack')->getCurrentRequest(),
-      $container->get('config.typed')
-    );
+    $instance = parent::create($container);
+
+    $instance->bundleInfo = $container->get('entity_type.bundle.info');
+    $instance->resourceTypeRepository = $container->get('jsonapi.resource_type.repository');
+    $instance->fieldManager = $container->get('entity_field.manager');
+    $instance->entityTypeRepository = $container->get('entity_type.repository');
+    $instance->enhancerManager = $container->get('plugin.manager.resource_field_enhancer');
+    $instance->config = $container->get('config.factory')->get('jsonapi_extras.settings');
+    $instance->request = $container->get('request_stack')->getCurrentRequest();
+    $instance->typedConfigManager = $container->get('config.typed');
+    $instance->logger = $container->get('logger.channel.jsonapi_extras');
+    return $instance;
   }
 
   /**
@@ -169,8 +139,7 @@ class JsonapiResourceConfigForm extends EntityForm {
         $form['bundle_wrapper']['fields_wrapper'] = $fields_wrapper;
       }
       catch (PluginNotFoundException $exception) {
-        // Log the exception and continue.
-        watchdog_exception('jsonapi_extras', $exception);
+        $this->logger->error($exception);
       }
       $form['id'] = ['#type' => 'hidden', '#value' => $resource_config_id];
     }
@@ -203,17 +172,18 @@ class JsonapiResourceConfigForm extends EntityForm {
   public function save(array $form, FormStateInterface $form_state) {
     $resource_config = $this->entity;
     $status = $resource_config->save();
+    $type = $resource_config->get('resourceType') ?? '';
 
     switch ($status) {
       case SAVED_NEW:
-        $this->messenger()->addStatus($this->t('Created the %label JSON:API Resource overwrites.', [
-          '%label' => $resource_config->id(),
+        $this->messenger()->addStatus($this->t('Created the %type JSON:API Resource overwrites.', [
+          '%type' => $type,
         ]));
         break;
 
       default:
-        $this->messenger()->addStatus($this->t('Saved the %label JSON:API Resource overwrites.', [
-          '%label' => $resource_config->id(),
+        $this->messenger()->addStatus($this->t('Saved the %type JSON:API Resource overwrites.', [
+          '%type' => $type,
         ]));
     }
     $form_state->setRedirectUrl($resource_config->toUrl('collection'));
@@ -340,7 +310,7 @@ class JsonapiResourceConfigForm extends EntityForm {
       }
       catch (PluginException $exception) {
         // Log exception and continue.
-        watchdog_exception('jsonapi_extras', $exception);
+        $this->logger->error($exception);
         continue;
       }
       NestedArray::setValue(

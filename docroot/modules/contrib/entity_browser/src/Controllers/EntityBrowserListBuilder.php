@@ -30,7 +30,7 @@ class EntityBrowserListBuilder extends EntityListBuilder {
    * {@inheritdoc}
    */
   public function buildRow(EntityInterface $entity) {
-    /* @var $entity \Drupal\entity_browser\Entity\EntityBrowser */
+    /** @var \Drupal\entity_browser\Entity\EntityBrowser $entity */
     $row['id'] = $entity->id();
     $row['name'] = $entity->label();
     return $row + parent::buildRow($entity);

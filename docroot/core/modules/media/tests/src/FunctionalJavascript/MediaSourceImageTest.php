@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\media\FunctionalJavascript;
 
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
@@ -26,7 +28,7 @@ class MediaSourceImageTest extends MediaSourceTestBase {
   /**
    * Tests the image media source.
    */
-  public function testMediaImageSource() {
+  public function testMediaImageSource(): void {
     $media_type_id = 'test_media_image_type';
     $source_field_id = 'field_media_image';
     $provided_fields = [
@@ -77,7 +79,7 @@ class MediaSourceImageTest extends MediaSourceTestBase {
     $image_element = $field->find('css', 'img');
     /** @var \Drupal\Core\File\FileUrlGeneratorInterface $file_url_generator */
     $file_url_generator = \Drupal::service('file_url_generator');
-    $expected_image_src = $file_url_generator->generateString(\Drupal::token()->replace('public://styles/large/public/[date:custom:Y]-[date:custom:m]/example_1.jpeg'));
+    $expected_image_src = $file_url_generator->generate(\Drupal::token()->replace('public://styles/large/public/[date:custom:Y]-[date:custom:m]/example_1.jpeg'))->toString();
     $this->assertStringContainsString($expected_image_src, $image_element->getAttribute('src'));
     $assert_session->elementNotExists('css', 'a', $field);
 
@@ -109,13 +111,13 @@ class MediaSourceImageTest extends MediaSourceTestBase {
     // Instead, add a warning on the 'Status report' page.
     ImageStyle::load('large')->delete();
     $this->drupalGet('admin/structure/media/add');
-    $page->fillField('label', 'Madame Bonacieux');
-    $this->assertNotEmpty($assert_session->waitForText('Machine name: madame_bonacieux'));
+    $page->fillField('label', 'Ada Lovelace');
+    $this->assertNotEmpty($assert_session->waitForText('Machine name: ada_lovelace'));
     $page->selectFieldOption('source', 'image');
     // Wait for the form to complete with AJAX.
     $this->assertNotEmpty($assert_session->waitForText('Field mapping'));
     $page->pressButton('Save');
-    $this->assertViewDisplayConfigured('madame_bonacieux');
+    $this->assertViewDisplayConfigured('ada_lovelace');
 
     // Create user without the 'administer media display' permission.
     $this->drupalLogin($this->drupalCreateUser([
@@ -132,9 +134,9 @@ class MediaSourceImageTest extends MediaSourceTestBase {
     $this->drupalGet('/admin/reports/status');
     // The image style warning should not include an action link when the
     // current user lacks the permission 'administer media display'.
-    $assert_session->pageTextContains('The default display for the Madame Bonacieux media type is not currently using an image style on the Image field. Not using an image style can lead to much larger file downloads.');
+    $assert_session->pageTextContains('The default display for the Ada Lovelace media type is not currently using an image style on the Image field. Not using an image style can lead to much larger file downloads.');
     $assert_session->linkNotExists('add an image style to the Image field');
-    $assert_session->linkByHrefNotExists('/admin/structure/media/manage/madame_bonacieux/display');
+    $assert_session->linkByHrefNotExists('/admin/structure/media/manage/ada_lovelace/display');
 
     // The image style warning should include an action link when the current
     // user has the permission 'administer media display'.
@@ -142,17 +144,17 @@ class MediaSourceImageTest extends MediaSourceTestBase {
       ->grantPermission('administer media display')
       ->save();
     $this->drupalGet('/admin/reports/status');
-    $assert_session->pageTextContains('The default display for the Madame Bonacieux media type is not currently using an image style on the Image field. Not using an image style can lead to much larger file downloads. If you would like to change this, add an image style to the Image field.');
+    $assert_session->pageTextContains('The default display for the Ada Lovelace media type is not currently using an image style on the Image field. Not using an image style can lead to much larger file downloads. If you would like to change this, add an image style to the Image field.');
     $assert_session->linkExists('add an image style to the Image field');
-    $assert_session->linkByHrefExists('/admin/structure/media/manage/madame_bonacieux/display');
+    $assert_session->linkByHrefExists('/admin/structure/media/manage/ada_lovelace/display');
 
     // The image style warning should not include an action link when the
     // Field UI module is uninstalled.
     $this->container->get('module_installer')->uninstall(['field_ui']);
     $this->drupalGet('/admin/reports/status');
-    $assert_session->pageTextContains('The default display for the Madame Bonacieux media type is not currently using an image style on the Image field. Not using an image style can lead to much larger file downloads.');
+    $assert_session->pageTextContains('The default display for the Ada Lovelace media type is not currently using an image style on the Image field. Not using an image style can lead to much larger file downloads.');
     $assert_session->linkNotExists('add an image style to the Image field');
-    $assert_session->linkByHrefNotExists('/admin/structure/media/manage/madame_bonacieux/display');
+    $assert_session->linkByHrefNotExists('/admin/structure/media/manage/ada_lovelace/display');
   }
 
   /**

@@ -12,6 +12,7 @@ entity_browser.edit_form:
     parameters:
       entity:
         type: entity:{entity_type}
+        load_latest_revision: 1
 
 entity.entity_browser.add_form:
   path: '/admin/config/content/entity_browser/add'

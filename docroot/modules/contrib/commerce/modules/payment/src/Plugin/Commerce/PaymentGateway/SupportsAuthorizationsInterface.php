@@ -34,6 +34,6 @@ interface SupportsAuthorizationsInterface extends SupportsVoidsInterface {
    * @throws \Drupal\commerce_payment\Exception\PaymentGatewayException
    *   Thrown when the transaction fails for any reason.
    */
-  public function capturePayment(PaymentInterface $payment, Price $amount = NULL);
+  public function capturePayment(PaymentInterface $payment, ?Price $amount = NULL);
 
 }

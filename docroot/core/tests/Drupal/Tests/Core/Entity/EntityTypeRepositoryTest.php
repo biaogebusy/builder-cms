@@ -1,9 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Entity;
 
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
+use Drupal\Core\Entity\EntityBase;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityTypeRepository;
@@ -33,14 +37,22 @@ class EntityTypeRepositoryTest extends UnitTestCase {
   protected $entityTypeManager;
 
   /**
+   * The entity type bundle info service.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeBundleInfoInterface|\Prophecy\Prophecy\ProphecyInterface
+   */
+  protected $entityTypeBundleInfo;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
     parent::setUp();
 
     $this->entityTypeManager = $this->prophesize(EntityTypeManagerInterface::class);
+    $this->entityTypeBundleInfo = $this->prophesize(EntityTypeBundleInfoInterface::class);
 
-    $this->entityTypeRepository = new EntityTypeRepository($this->entityTypeManager->reveal());
+    $this->entityTypeRepository = new EntityTypeRepository($this->entityTypeManager->reveal(), $this->entityTypeBundleInfo->reveal());
   }
 
   /**
@@ -77,6 +89,7 @@ class EntityTypeRepositoryTest extends UnitTestCase {
         }
       });
     $this->entityTypeManager->getDefinitions()->willReturn($definitions);
+    $this->entityTypeBundleInfo->getAllBundleInfo()->willReturn([]);
   }
 
   /**
@@ -84,7 +97,7 @@ class EntityTypeRepositoryTest extends UnitTestCase {
    *
    * @covers ::getEntityTypeLabels
    */
-  public function testGetEntityTypeLabels() {
+  public function testGetEntityTypeLabels(): void {
     $apple = $this->prophesize(EntityTypeInterface::class);
     $apple->getLabel()->willReturn('Apple');
     $apple->getBundleOf()->willReturn(NULL);
@@ -108,7 +121,7 @@ class EntityTypeRepositoryTest extends UnitTestCase {
   /**
    * @covers ::getEntityTypeFromClass
    */
-  public function testGetEntityTypeFromClass() {
+  public function testGetEntityTypeFromClass(): void {
     $apple = $this->prophesize(EntityTypeInterface::class);
     $banana = $this->prophesize(EntityTypeInterface::class);
 
@@ -134,7 +147,7 @@ class EntityTypeRepositoryTest extends UnitTestCase {
   /**
    * @covers ::getEntityTypeFromClass
    */
-  public function testGetEntityTypeFromClassNoMatch() {
+  public function testGetEntityTypeFromClassNoMatch(): void {
     $apple = $this->prophesize(EntityTypeInterface::class);
     $banana = $this->prophesize(EntityTypeInterface::class);
 
@@ -154,17 +167,17 @@ class EntityTypeRepositoryTest extends UnitTestCase {
   /**
    * @covers ::getEntityTypeFromClass
    */
-  public function testGetEntityTypeFromClassAmbiguous() {
-    $boskoop = $this->prophesize(EntityTypeInterface::class);
-    $boskoop->getOriginalClass()->willReturn('\Drupal\apple\Entity\Apple');
-    $boskoop->id()->willReturn('boskop');
+  public function testGetEntityTypeFromClassAmbiguous(): void {
+    $jazz = $this->prophesize(EntityTypeInterface::class);
+    $jazz->getOriginalClass()->willReturn('\Drupal\apple\Entity\Apple');
+    $jazz->id()->willReturn('jazz');
 
     $gala = $this->prophesize(EntityTypeInterface::class);
     $gala->getOriginalClass()->willReturn('\Drupal\apple\Entity\Apple');
     $gala->id()->willReturn('gala');
 
     $this->setUpEntityTypeDefinitions([
-      'boskoop' => $boskoop,
+      'jazz' => $jazz,
       'gala' => $gala,
     ]);
 
@@ -173,4 +186,47 @@ class EntityTypeRepositoryTest extends UnitTestCase {
     $this->entityTypeRepository->getEntityTypeFromClass('\Drupal\apple\Entity\Apple');
   }
 
+  /**
+   * @covers ::getEntityTypeFromClass
+   */
+  public function testGetEntityTypeFromClassAmbiguousBundleClass(): void {
+    $blackcurrant = $this->prophesize(EntityTypeInterface::class);
+    $blackcurrant->getOriginalClass()->willReturn(Apple::class);
+    $blackcurrant->getClass()->willReturn(Blackcurrant::class);
+    $blackcurrant->id()->willReturn('blackcurrant');
+
+    $gala = $this->prophesize(EntityTypeInterface::class);
+    $gala->getOriginalClass()->willReturn(Apple::class);
+    $gala->getClass()->willReturn(RoyalGala::class);
+    $gala->id()->willReturn('gala');
+
+    $this->setUpEntityTypeDefinitions([
+      'blackcurrant' => $blackcurrant,
+      'gala' => $gala,
+    ]);
+
+    $this->entityTypeBundleInfo->getAllBundleInfo()->willReturn([
+      'gala' => [
+        'royal_gala' => [
+          'label' => 'Royal Gala',
+          'class' => RoyalGala::class,
+        ],
+      ],
+    ]);
+
+    $this->assertSame('gala', $this->entityTypeRepository->getEntityTypeFromClass(RoyalGala::class));
+  }
+
+}
+
+class Fruit extends EntityBase {
+}
+
+class Apple extends Fruit {
+}
+
+class RoyalGala extends Apple {
+}
+
+class Blackcurrant extends Fruit {
 }

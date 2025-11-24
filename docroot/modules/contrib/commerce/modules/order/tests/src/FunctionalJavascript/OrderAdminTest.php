@@ -2,11 +2,11 @@
 
 namespace Drupal\Tests\commerce_order\FunctionalJavascript;
 
+use Drupal\Core\Test\AssertMailTrait;
 use Drupal\commerce_order\Adjustment;
 use Drupal\commerce_order\Entity\Order;
 use Drupal\commerce_order\Entity\OrderItem;
 use Drupal\commerce_price\Price;
-use Drupal\Core\Test\AssertMailTrait;
 use Drupal\profile\Entity\Profile;
 
 /**
@@ -84,7 +84,7 @@ class OrderAdminTest extends OrderWebDriverTestBase {
     // Create an order through the add form.
     $this->drupalGet('/admin/commerce/orders');
     $this->getSession()->getPage()->clickLink('Create a new order');
-    $user = $this->loggedInUser->getAccountName() . ' (' . $this->loggedInUser->id() . ')';
+    $user = "{$this->loggedInUser->getAccountName()} <{$this->loggedInUser->getEmail()}> ({$this->loggedInUser->id()})";
     $this->getSession()->getPage()->fillField('uid', $user);
     $this->assertSession()->assertWaitOnAjaxRequest();
     $edit = [
@@ -105,46 +105,47 @@ class OrderAdminTest extends OrderWebDriverTestBase {
     // Test creating order items.
     $page = $this->getSession()->getPage();
 
-    $page->pressButton('Add new order item');
-    $this->assertSession()->assertWaitOnAjaxRequest();
-    // First item with overriding the price.
-    $this->getSession()->getPage()->checkField('Override the unit price');
-    $purchased_entity_field = $this->assertSession()->waitForElement('css', '[name="order_items[form][0][purchased_entity][0][target_id]"].ui-autocomplete-input');
-    $purchased_entity_field->setValue(substr($this->variation->getSku(), 0, 4));
-    $this->getSession()->getDriver()->keyDown($purchased_entity_field->getXpath(), ' ');
+    $page->fillField('order_items[add_new_item][entity_selector][purchasable_entity]', $this->variation->getSku());
     $this->assertSession()->waitOnAutocomplete();
     $this->assertSession()->pageTextContains($this->variation->getSku());
     $this->assertCount(1, $this->getSession()->getPage()->findAll('css', '.ui-autocomplete li'));
     $this->getSession()->getPage()->find('css', '.ui-autocomplete li:first-child a')->click();
-    $this->assertSession()->fieldValueEquals('order_items[form][0][purchased_entity][0][target_id]', $this->variation->getSku() . ': ' . $this->variation->label() . ' (' . $this->variation->id() . ')');
+    $page->pressButton('Add new order item');
+    $this->assertSession()->assertWaitOnAjaxRequest();
+    // First item with overriding the price.
+    $this->getSession()->getPage()->checkField('Override the unit price');
+    $this->assertSession()->fieldValueEquals('order_items[form][0][purchased_entity][0][target_id]', sprintf('%s (%s)', $this->variation->label(), $this->variation->id()));
 
     $page->fillField('order_items[form][0][quantity][0][value]', '1');
-    $this->getSession()->getPage()->pressButton('Create order item');
-    $this->assertSession()->assertWaitOnAjaxRequest();
-    $this->assertSession()->pageTextContainsOnce('Unit price must be a number.');
     $page->fillField('order_items[form][0][unit_price][0][amount][number]', '9.99');
     $this->getSession()->getPage()->pressButton('Create order item');
     $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->assertSession()->pageTextContains($this->variation->label());
     $this->assertSession()->pageTextContains('9.99');
+    $this->assertSession()->pageTextContains($this->variation->getSku());
 
     // Second item without overriding the price.
-    $entity2 = $this->secondVariation->getSku() . ' (' . $this->secondVariation->id() . ')';
-    $this->assertSession()->assertWaitOnAjaxRequest();
+    $page->fillField('order_items[add_new_item][entity_selector][purchasable_entity]', $this->secondVariation->getSku());
+    $this->assertSession()->waitOnAutocomplete();
+    $this->assertSession()->pageTextContains($this->variation->getSku());
+    $this->assertCount(1, $this->getSession()->getPage()->findAll('css', '.ui-autocomplete li'));
+    $this->getSession()->getPage()->find('css', '.ui-autocomplete li:first-child a')->click();
     $this->getSession()->getPage()->pressButton('Add new order item');
     $this->assertSession()->assertWaitOnAjaxRequest();
-    $page->fillField('order_items[form][1][purchased_entity][0][target_id]', $entity2);
     $page->fillField('order_items[form][1][quantity][0][value]', '1');
     $this->getSession()->getPage()->pressButton('Create order item');
     $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->assertSession()->pageTextContains($this->secondVariation->label());
     $this->assertSession()->pageTextContains('5.55');
+    $this->assertSession()->pageTextContains($this->secondVariation->getSku());
 
     // Test editing an order item.
     $edit_buttons = $this->xpath('//div[@data-drupal-selector="edit-order-items-wrapper"]//input[@value="Edit"]');
     $edit_button = reset($edit_buttons);
     $edit_button->click();
     $this->assertSession()->assertWaitOnAjaxRequest();
-    $page->fillField('order_items[form][inline_entity_form][entities][0][form][quantity][0][value]', '3');
-    $page->fillField('order_items[form][inline_entity_form][entities][0][form][unit_price][0][amount][number]', '1.11');
+    $page->fillField('order_items[form][order_item_inline_form][0][form][quantity][0][value]', '3');
+    $page->fillField('order_items[form][order_item_inline_form][0][form][unit_price][0][amount][number]', '1.11');
     $this->getSession()->getPage()->pressButton('Update order item');
     $this->assertSession()->assertWaitOnAjaxRequest();
     $this->assertSession()->pageTextContains('1.11');
@@ -152,6 +153,8 @@ class OrderAdminTest extends OrderWebDriverTestBase {
     // There is no adjustment - the order should save successfully.
     $this->submitForm([], 'Save');
     $this->assertSession()->pageTextContains('Draft 1 saved.');
+    $this->assertSession()->pageTextContains('Subtotal $8.88');
+    $this->assertSession()->pageTextContains('Total $8.88');
     $order = Order::load(1);
     $this->assertNull($order->getBillingProfile());
 
@@ -169,6 +172,9 @@ class OrderAdminTest extends OrderWebDriverTestBase {
     $edit['adjustments[0][definition][label]'] = 'Test fee';
     $this->submitForm($edit, 'Save');
     $this->assertSession()->pageTextContains('Draft 1 saved.');
+    $this->assertSession()->pageTextContains('Subtotal $8.88');
+    $this->assertSession()->pageTextContains('Test fee $2.00');
+    $this->assertSession()->pageTextContains('Total $10.88');
 
     $this->drupalGet('/admin/commerce/orders');
     $order_number = $this->getSession()->getPage()->findAll('css', 'tr td.views-field-order-number');
@@ -333,7 +339,7 @@ class OrderAdminTest extends OrderWebDriverTestBase {
       '@label' => $order->label(),
     ]));
     $this->assertSession()->pageTextContains('This action cannot be undone.');
-    $this->submitForm([], $this->t('Delete'));
+    $this->submitForm([], (string) $this->t('Delete'));
 
     $this->container->get('entity_type.manager')->getStorage('commerce_order')->resetCache([$order->id()]);
     $order_exists = (bool) Order::load($order->id());
@@ -356,7 +362,7 @@ class OrderAdminTest extends OrderWebDriverTestBase {
     $this->assertSession()->pageTextContains($this->t('Are you sure you want to unlock @label?', [
       '@label' => $order->label(),
     ]));
-    $this->submitForm([], $this->t('Unlock'));
+    $this->submitForm([], (string) $this->t('Unlock'));
     $this->assertSession()->pageTextContains($this->t('The @label has been unlocked.', [
       '@label' => $order->label(),
     ]));
@@ -400,7 +406,7 @@ class OrderAdminTest extends OrderWebDriverTestBase {
     $this->assertSession()->pageTextContains($this->t('Are you sure you want to resend the receipt for @label?', [
       '@label' => $order->label(),
     ]));
-    $this->submitForm([], $this->t('Resend receipt'));
+    $this->submitForm([], (string) $this->t('Resend receipt'));
 
     $emails = $this->getMails();
     $this->assertEquals(2, count($emails));
@@ -488,7 +494,7 @@ class OrderAdminTest extends OrderWebDriverTestBase {
       'customer_type' => 'new',
       'mail' => $email,
     ];
-    $this->submitForm($edit, $this->t('Create'));
+    $this->submitForm($edit, (string) $this->t('Create'));
     $this->assertSession()->pageTextContains('The email address guest@example.com is already taken.');
   }
 

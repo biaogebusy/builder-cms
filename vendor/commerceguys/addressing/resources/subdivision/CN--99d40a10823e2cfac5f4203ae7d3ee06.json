@@ -1,0 +1,29 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"GX",
+		"Yulin Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Beiliu Shi": {
+			"local_name": "北流市"
+		},
+		"Bobai Xian": {
+			"local_name": "博白县"
+		},
+		"Luchuan Xian": {
+			"local_name": "陆川县"
+		},
+		"Rong Xian": {
+			"local_name": "容县"
+		},
+		"Xingye Xian": {
+			"local_name": "兴业县"
+		},
+		"Yuzhou Qu": {
+			"local_name": "玉州区"
+		}
+	}
+}

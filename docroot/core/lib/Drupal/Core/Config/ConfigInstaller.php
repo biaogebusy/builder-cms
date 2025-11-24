@@ -3,6 +3,7 @@
 namespace Drupal\Core\Config;
 
 use Drupal\Component\Utility\Crypt;
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Config\Entity\ConfigDependencyManager;
 use Drupal\Core\Extension\ExtensionPathResolver;
 use Drupal\Core\Installer\InstallerKernel;
@@ -62,7 +63,7 @@ class ConfigInstaller implements ConfigInstallerInterface {
   /**
    * The name of the currently active installation profile.
    *
-   * @var string
+   * @var string|false|null
    */
   protected $installProfile;
 
@@ -91,17 +92,13 @@ class ConfigInstaller implements ConfigInstallerInterface {
    * @param \Drupal\Core\Extension\ExtensionPathResolver $extension_path_resolver
    *   The extension path resolver.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, StorageInterface $active_storage, TypedConfigManagerInterface $typed_config, ConfigManagerInterface $config_manager, EventDispatcherInterface $event_dispatcher, $install_profile, ExtensionPathResolver $extension_path_resolver = NULL) {
+  public function __construct(ConfigFactoryInterface $config_factory, StorageInterface $active_storage, TypedConfigManagerInterface $typed_config, ConfigManagerInterface $config_manager, EventDispatcherInterface $event_dispatcher, $install_profile, ExtensionPathResolver $extension_path_resolver) {
     $this->configFactory = $config_factory;
     $this->activeStorages[$active_storage->getCollectionName()] = $active_storage;
     $this->typedConfig = $typed_config;
     $this->configManager = $config_manager;
     $this->eventDispatcher = $event_dispatcher;
     $this->installProfile = $install_profile;
-    if (!$extension_path_resolver) {
-      @trigger_error('Calling ConfigInstaller::__construct() without the $extension_path_resolver argument is deprecated in drupal:9.3.0 and is removed from drupal:10.0.0. See https://www.drupal.org/node/2940438', E_USER_DEPRECATED);
-      $extension_path_resolver = \Drupal::service('extension.path.resolver');
-    }
     $this->extensionPathResolver = $extension_path_resolver;
   }
 
@@ -180,7 +177,7 @@ class ConfigInstaller implements ConfigInstallerInterface {
   /**
    * {@inheritdoc}
    */
-  public function installOptionalConfig(StorageInterface $storage = NULL, $dependency = []) {
+  public function installOptionalConfig(?StorageInterface $storage = NULL, $dependency = []) {
     $profile = $this->drupalGetProfile();
     $enabled_extensions = $this->getEnabledExtensions();
     $existing_config = $this->getActiveStorages()->listAll();
@@ -260,7 +257,7 @@ class ConfigInstaller implements ConfigInstallerInterface {
 
     // Create the optional configuration if there is any left after filtering.
     if (!empty($config_to_create)) {
-      $this->createConfiguration(StorageInterface::DEFAULT_COLLECTION, $config_to_create, TRUE);
+      $this->createConfiguration(StorageInterface::DEFAULT_COLLECTION, $config_to_create);
     }
   }
 
@@ -624,7 +621,7 @@ class ConfigInstaller implements ConfigInstallerInterface {
 
       // Ensure enforced dependencies are included.
       if (isset($all_dependencies['enforced'])) {
-        $all_dependencies = array_merge($all_dependencies, $data['dependencies']['enforced']);
+        $all_dependencies = NestedArray::mergeDeep($all_dependencies, $data['dependencies']['enforced']);
         unset($all_dependencies['enforced']);
       }
       // Ensure the configuration entity type provider is in the list of
@@ -714,30 +711,6 @@ class ConfigInstaller implements ConfigInstallerInterface {
    */
   protected function getDefaultConfigDirectory($type, $name) {
     return $this->extensionPathResolver->getPath($type, $name) . '/' . InstallStorage::CONFIG_INSTALL_DIRECTORY;
-  }
-
-  /**
-   * Wrapper for drupal_get_path().
-   *
-   * @param $type
-   *   The type of the item; one of 'core', 'profile', 'module', 'theme', or
-   *   'theme_engine'.
-   * @param $name
-   *   The name of the item for which the path is requested. Ignored for
-   *   $type 'core'.
-   *
-   * @return string
-   *   The path to the requested item or an empty string if the item is not
-   *   found.
-   *
-   * @deprecated in drupal:9.3.0 and is removed from drupal:10.0.0. Use
-   *   \Drupal\Core\Extension\ExtensionList::getPath() instead.
-   *
-   * @see https://www.drupal.org/node/2940438
-   */
-  protected function drupalGetPath($type, $name) {
-    @trigger_error(__METHOD__ . ' is deprecated in drupal:9.3.0 and is removed from drupal:10.0.0. Use \Drupal\Core\Extension\ExtensionPathResolver::getPath() instead. See https://www.drupal.org/node/2940438', E_USER_DEPRECATED);
-    return $this->extensionPathResolver->getPath($type, $name);
   }
 
   /**

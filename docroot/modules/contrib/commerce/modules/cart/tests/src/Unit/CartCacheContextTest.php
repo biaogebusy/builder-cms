@@ -2,11 +2,11 @@
 
 namespace Drupal\Tests\commerce_cart\Unit;
 
-use Drupal\commerce_cart\Cache\Context\CartCacheContext;
-use Drupal\commerce_cart\CartProviderInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Tests\Core\Render\TestCacheableDependency;
 use Drupal\Tests\UnitTestCase;
+use Drupal\commerce_cart\Cache\Context\CartCacheContext;
+use Drupal\commerce_cart\CartProviderInterface;
 
 /**
  * @coversDefaultClass \Drupal\commerce_cart\Cache\Context\CartCacheContext

@@ -11,6 +11,9 @@ entity_share_client.remote.*:
     url:
       type: string
       label: 'URL'
+    login_path:
+      type: string
+      label: 'Login form path'
     auth:
       type: mapping
       mapping:

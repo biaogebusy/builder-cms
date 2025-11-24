@@ -2,14 +2,14 @@
 
 namespace Drupal\commerce_log\Form;
 
-use Drupal\commerce_log\LogStorageInterface;
-use Drupal\commerce_log\LogTemplateManagerInterface;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\commerce_log\LogStorageInterface;
+use Drupal\commerce_log\LogTemplateManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class LogCommentForm extends FormBase {

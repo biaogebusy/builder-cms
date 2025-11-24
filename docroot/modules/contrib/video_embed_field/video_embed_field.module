@@ -28,7 +28,7 @@ function video_embed_field_theme() {
 }
 
 /**
- *  Implements hook_help().
+ * Implements hook_help().
  */
 function video_embed_field_help($route_name, RouteMatchInterface $route_match) {
   if ($route_name !== 'help.page.video_embed_field') {
@@ -44,4 +44,13 @@ function video_embed_field_help($route_name, RouteMatchInterface $route_match) {
   $output .= '<h3>' . t('About') . '</h3>';
   $output .= '<p>' . t('The Video Embed Field module provides a simple field type you can use to embed videos and their preview thumbnails from YouTube, Vimeo and other providers. See the <a href=":field_help">Field module help</a> and the <a href=":field_ui_help">Field UI help</a> pages for general information on fields and how to create and manage them. For more Video Embed Field help, see the <a href=":video_embed_field_docs">online community documentation</a> or the <a href=":project_page">module project page</a>.', $links) . '</p>';
   return $output;
+}
+
+/**
+ * Implements hook_preprocess_form_element__new_storage_type().
+ */
+function video_embed_field_preprocess_form_element__new_storage_type(&$variables) {
+  if (($variables['element']['#return_value'] ?? NULL) === 'video_embed_field') {
+    $variables['#attached']['library'][] = 'video_embed_field/field-type-icon';
+  }
 }

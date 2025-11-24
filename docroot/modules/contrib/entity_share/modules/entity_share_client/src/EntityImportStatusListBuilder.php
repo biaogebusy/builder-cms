@@ -26,7 +26,7 @@ class EntityImportStatusListBuilder extends EntityListBuilder {
    *
    * Long format, with seconds.
    */
-  const IMPORT_DATE_FORMAT = 'F j, Y - H:i:s';
+  public const IMPORT_DATE_FORMAT = 'F j, Y - H:i:s';
 
   /**
    * The date formatter service.

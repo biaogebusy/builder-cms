@@ -1,0 +1,29 @@
+parameters:
+	ignoreErrors:
+		-
+			message: """
+				#^Call to deprecated method renderPlain\\(\\) of interface Drupal\\\\Core\\\\Render\\\\RendererInterface\\:
+				in drupal\\:10\\.3\\.0 and is removed from drupal\\:12\\.0\\.0\\. Use
+				  \\\\Drupal\\\\Core\\\\Render\\\\RendererInterface\\:\\:renderInIsolation\\(\\) instead\\.$#
+			"""
+			count: 1
+			path: src/Form/StateTransitionConfirmForm.php
+
+		-
+			message: "#^Method Drupal\\\\state_machine\\\\Plugin\\\\Field\\\\FieldType\\\\StateItem\\:\\:postSave\\(\\) should return bool but return statement is missing\\.$#"
+			count: 1
+			path: src/Plugin/Field/FieldType/StateItem.php
+
+		-
+			message: "#^\\\\Drupal calls should be avoided in classes, use dependency injection instead$#"
+			count: 1
+			path: src/WorkflowManager.php
+
+		-
+			message: """
+				#^Call to deprecated method renderPlain\\(\\) of interface Drupal\\\\Core\\\\Render\\\\RendererInterface\\:
+				in drupal\\:10\\.3\\.0 and is removed from drupal\\:12\\.0\\.0\\. Use
+				  \\\\Drupal\\\\Core\\\\Render\\\\RendererInterface\\:\\:renderInIsolation\\(\\) instead\\.$#
+			"""
+			count: 1
+			path: src/Plugin/diff/Field/StateFieldBuilder.php

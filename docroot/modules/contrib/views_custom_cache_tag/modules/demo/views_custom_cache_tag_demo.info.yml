@@ -1,18 +1,18 @@
 description: Demo module for views custom cache tags.
-core_version_requirement: ^8.7.7 || ^9 || ^10
+core_version_requirement: ^8.7.7 || ^9 || ^10 || ^11
 dependencies:
-  - views_custom_cache_tag
-  - node
-  - menu_ui
-  - views
-  - rest
-  - serialization
+  - views_custom_cache_tag:views_custom_cache_tag
+  - drupal:node
+  - drupal:menu_ui
+  - drupal:views
+  - drupal:rest
+  - drupal:serialization
 hidden: false
 name: Views custom cache tags demo
 package: views_custom_cache_tag
 type: module
 
-# Information added by Drupal.org packaging script on 2022-12-21
-version: '8.x-1.3'
+# Information added by Drupal.org packaging script on 2025-02-08
+version: '8.x-1.4'
 project: 'views_custom_cache_tag'
-datestamp: 1671650420
+datestamp: 1739000547

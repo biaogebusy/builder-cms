@@ -1,0 +1,40 @@
+ckeditor_templates.ckeditor_templates.*:
+  type: config_entity
+  label: CKEditor Template
+  mapping:
+    id:
+      type: string
+      label: ID
+    label:
+      type: label
+      label: Title
+    status:
+      type: boolean
+      label: Enabled
+    description:
+      type: text
+      label: Description
+    thumb:
+      type: sequence
+      label: Icon/Image
+    code:
+      type: text_format
+      label: HTML Code
+    formats:
+      type: sequence
+      label: Available for
+    weight:
+      type: integer
+      label: Weight
+    uuid:
+      type: string
+
+ckeditor5.plugin.ckeditor_templates_plugin:
+  type: mapping
+  label: Replace Content
+  mapping:
+    replace_content:
+      type: boolean
+      label: 'Replace content'
+      constraints:
+        NotNull: []

@@ -2,10 +2,11 @@
 
 namespace Drupal\commerce_payment;
 
+use Drupal\commerce_payment\Entity\PaymentMethodInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\commerce\CommerceContentEntityStorage;
 use Drupal\commerce_payment\Entity\PaymentGatewayInterface;
 use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\SupportsStoredPaymentMethodsInterface;
-use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\profile\Entity\ProfileInterface;
 use Drupal\user\UserInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -44,6 +45,7 @@ class PaymentMethodStorage extends CommerceContentEntityStorage implements Payme
     }
 
     $query = $this->getQuery();
+    $query->accessCheck(FALSE);
     $query
       ->condition('uid', $account->id())
       ->condition('payment_gateway', $payment_gateway->id())
@@ -52,7 +54,6 @@ class PaymentMethodStorage extends CommerceContentEntityStorage implements Payme
       ->condition($query->orConditionGroup()
         ->condition('expires', $this->time->getRequestTime(), '>')
         ->condition('expires', 0))
-      ->accessCheck(FALSE)
       ->sort('method_id', 'DESC');
     $result = $query->execute();
     if (empty($result)) {
@@ -84,13 +85,41 @@ class PaymentMethodStorage extends CommerceContentEntityStorage implements Payme
   /**
    * {@inheritdoc}
    */
-  public function createForCustomer($payment_method_type, $payment_gateway_id, $customer_id, ProfileInterface $billing_profile = NULL) {
+  public function createForCustomer($payment_method_type, $payment_gateway_id, $customer_id, ?ProfileInterface $billing_profile = NULL) {
     return $this->create([
       'type' => $payment_method_type,
       'payment_gateway' => $payment_gateway_id,
       'uid' => $customer_id,
       'billing_profile' => $billing_profile,
     ]);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function loadDefaultByUser(UserInterface $account, bool $allow_expired = FALSE): ?PaymentMethodInterface {
+    // Anonymous users cannot have reusable payment methods.
+    if ($account->isAnonymous()) {
+      return NULL;
+    }
+
+    $query = $this->getQuery();
+    $query->accessCheck(FALSE);
+    $query
+      ->condition('uid', $account->id())
+      ->condition('reusable', TRUE)
+      ->condition('is_default', TRUE);
+    if (!$allow_expired) {
+      $query
+        ->condition($query->orConditionGroup()
+          ->condition('expires', $this->time->getRequestTime(), '>')
+          ->condition('expires', 0));
+    }
+    $result = $query->execute();
+    if (empty($result)) {
+      return NULL;
+    }
+    return $this->load(reset($result));
   }
 
 }

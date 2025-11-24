@@ -10,8 +10,12 @@ use Drupal\Core\Field\FieldStorageDefinitionInterface;
  * @FieldType(
  *   id = "range_integer",
  *   label = @Translation("Range (integer)"),
- *   description = @Translation("This field stores an integer range in the database."),
- *   category = @Translation("Numeric range"),
+ *   description = {
+ *     @Translation("Numeric range without decimals"),
+ *     @Translation("For example, 14-60"),
+ *   },
+ *   category = "range",
+ *   weight = -50,
  *   default_widget = "range",
  *   default_formatter = "range_integer",
  *   constraints = {"RangeBothValuesRequired" = {}, "RangeFromGreaterTo" = {}}

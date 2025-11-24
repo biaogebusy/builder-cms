@@ -3,6 +3,7 @@
 namespace Drupal\filter\Plugin\migrate\process\d6;
 
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\migrate\Attribute\MigrateProcess;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\MigrateLookupInterface;
 use Drupal\migrate\Plugin\MigrationInterface;
@@ -13,17 +14,37 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Migrate filter format serial to string id in permission name.
  *
- * @MigrateProcessPlugin(
- *   id = "filter_format_permission",
- *   handle_multiples = TRUE
- * )
+ * The filter_format_permission plugin is used to get the filter formats for a
+ * role and convert it to a permission name.
+ *
+ *  Available configuration keys:
+ *  - migration: (optional) The filter migration. Defaults to
+ *  'd6_filter_format'.
+ *
+ *  Examples:
+ *
+ * @code
+ *  process:
+ *    result:
+ *      plugin: filter_format_permission
+ *      migration: d6_filter_format
+ * @endcode
+ *
+ *  This will use the 'd6_filter_format' migration to lookup the destination
+ *  filter formats for a role.
+ *
+ * @see \Drupal\migrate\Plugin\MigrateProcessInterface
  */
+#[MigrateProcess(
+  id: "filter_format_permission",
+  handle_multiples: TRUE,
+)]
 class FilterFormatPermission extends ProcessPluginBase implements ContainerFactoryPluginInterface {
 
   /**
    * The current migration.
    */
-  protected $migration;
+  protected MigrationInterface $migration;
 
   /**
    * The migrate lookup service.
@@ -55,7 +76,7 @@ class FilterFormatPermission extends ProcessPluginBase implements ContainerFacto
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration = NULL) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, ?MigrationInterface $migration = NULL) {
     return new static(
       $configuration,
       $plugin_id,

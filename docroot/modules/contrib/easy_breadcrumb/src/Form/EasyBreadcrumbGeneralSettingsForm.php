@@ -2,15 +2,41 @@
 
 namespace Drupal\easy_breadcrumb\Form;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\easy_breadcrumb\EasyBreadcrumbConstants;
-use Drupal\system\Entity\Menu;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Build Easy Breadcrumb settings form.
  */
 class EasyBreadcrumbGeneralSettingsForm extends ConfigFormBase {
+  use StringTranslationTrait;
+
+  /**
+   * The entity manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(EntityTypeManagerInterface $entityTypeManager) {
+    $this->entityTypeManager = $entityTypeManager;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('entity_type.manager')
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -127,23 +153,23 @@ class EasyBreadcrumbGeneralSettingsForm extends ConfigFormBase {
 
     $menu_list = array_map(function ($menu) {
       return $menu->label();
-    }, Menu::loadMultiple());
+    }, $this->entityTypeManager->getStorage('menu')->loadMultiple());
     asort($menu_list);
     $details_general[EasyBreadcrumbConstants::MENU_TITLE_PREFERRED_MENU] = [
       '#type' => 'select',
       '#title' => $this->t('Preferred menu'),
       '#options' => $menu_list,
-      '#empty_option' => t('- None -'),
+      '#empty_option' => $this->t('- None -'),
       '#empty_value' => '',
       '#description' => $this->t('Preferred menu to use as menu title source. Useful if menu links with identical paths exist in multiple menus.'),
       '#default_value' => $config->get(EasyBreadcrumbConstants::MENU_TITLE_PREFERRED_MENU),
       '#states' => [
         'disabled' => [
-          ':input[name="' . EasyBreadcrumbConstants::USE_MENU_TITLE_AS_FALLBACK . '"]' 
+          ':input[name="' . EasyBreadcrumbConstants::USE_MENU_TITLE_AS_FALLBACK . '"]'
           => ['checked' => FALSE],
         ],
         'invisible' => [
-          ':input[name="' . EasyBreadcrumbConstants::USE_MENU_TITLE_AS_FALLBACK . '"]' 
+          ':input[name="' . EasyBreadcrumbConstants::USE_MENU_TITLE_AS_FALLBACK . '"]'
           => ['checked' => FALSE],
         ],
       ],
@@ -195,7 +221,7 @@ class EasyBreadcrumbGeneralSettingsForm extends ConfigFormBase {
       '#type' => 'textarea',
       '#title' => $this->t('Paths to be excluded while generating segments'),
       '#description' => $this->t('Enter a line separated list of paths to be excluded while generating the segments.
-			Paths may use simple regex, i.e.: report/2[0-9][0-9][0-9].'),
+      Slashes must be escaped i.e.: ( foo/bar should be foo\/bar ) Paths may use simple regex, i.e.: report\/2[0-9][0-9][0-9].'),
       '#default_value' => $excluded_paths,
     ];
 
@@ -211,6 +237,13 @@ class EasyBreadcrumbGeneralSettingsForm extends ConfigFormBase {
       '#title' => $this->t('Breadcrumb segment count'),
       '#description' => $this->t('Number of breadcrumb trail segments to display'),
       '#default_value' => $config->get(EasyBreadcrumbConstants::SEGMENT_DISPLAY_LIMIT),
+    ];
+
+    $details_general[EasyBreadcrumbConstants::SEGMENT_DISPLAY_MINIMUM] = [
+      '#type' => 'number',
+      '#title' => $this->t('Breadcrumb segment minimum count'),
+      '#description' => $this->t('Minimum number of breadcrumb trail segments needed to display the breadcrumbs.'),
+      '#default_value' => $config->get(EasyBreadcrumbConstants::SEGMENT_DISPLAY_MINIMUM),
     ];
 
     // Formats the excluded paths array as line separated list of paths
@@ -232,7 +265,7 @@ class EasyBreadcrumbGeneralSettingsForm extends ConfigFormBase {
     $details_advanced[EasyBreadcrumbConstants::CUSTOM_PATHS] = [
       '#type' => 'textarea',
       '#title' => $this->t('Paths to replace with custom breadcrumbs'),
-      '#description' => $this->t('Enter a line separated list of internal paths followed by breadcrumb pattern. Separate crumbs from their path with a vertical bar ("|"). Separate crumbs with double-colon ("::"). Omit the URL to display an unlinked crumb. Fields will be trimmed to remove extra start/end spaces, so you can use them to help format your input, if desired. Replaced Titles will not be processed on custom paths. Excluded paths listed here will have breadcrumbs added. Examples (with and without extra spacing):<br><code>/news/archive/site_launched  ::  News | /news  ::  Archive | /news/archive  ::  Site Launched<br>/your/path::LinkedCrumb1|url1::LinkedCrumb2|url2::UnlinkedCrumb3</code><br><p>It is also possible to express the path to be matched as a <a href="https://www.php.net/manual/en/book.pcre.php" target="_blank">regex expression</a>. "regex!" must be added to the start of the path to match in order for it to be interpreted as regex:<br><code>regex!/news/archive/\d{4} ::  News | /news  ::  Archive | /news/archive</code><p>Expressions can even include matching groups which can be referenced in the path of a segment path:<br><code>regex!/groups/([^/]*)/info :: Groups | /groups :: Group | /groups/$1</code></p><p>To use the current page title as a title component, use <code>&lt;title&gt;</code></p>'),
+      '#description' => $this->t('Enter a line separated list of internal paths followed by breadcrumb pattern. Separate crumbs from their path with a vertical bar ("|"). Separate crumbs with double-colon ("::"). Omit the URL to display an unlinked crumb. Fields will be trimmed to remove extra start/end spaces, so you can use them to help format your input, if desired. Replaced Titles will not be processed on custom paths. Excluded paths listed here will have breadcrumbs added. Examples (with and without extra spacing):<br><code>/news/archive/site_launched  ::  News | /news  ::  Archive | /news/archive  ::  Site Launched<br>/your/path::LinkedCrumb1|url1::LinkedCrumb2|url2::UnlinkedCrumb3</code><br><p>It is also possible to express the path to be matched as a <a href="https://www.php.net/manual/en/book.pcre.php" target="_blank">regex expression</a>. "regex!" must be added to the start of the path to match in order for it to be interpreted as regex:<br><code>regex!/news/archive/\d{4} ::  News | /news  ::  Archive | /news/archive</code><p>Expressions can even include matching groups which can be referenced in the path of a segment path:<br><code>regex!/groups/([^/]*)/info :: Groups | /groups :: Group | /groups/$1</code></p><p>To use the current page title as a title component, use <code>&lt;title&gt;</code> (Must have <strong>"Use the real page title when available"</strong> enabled)</p>'),
       '#default_value' => $custom_paths,
     ];
 
@@ -279,7 +312,7 @@ class EasyBreadcrumbGeneralSettingsForm extends ConfigFormBase {
     $details_advanced[EasyBreadcrumbConstants::HIDE_SINGLE_HOME_ITEM] = [
       '#type' => 'checkbox',
       '#title' => $this->t("Hide link to home page if it's the only breadcrumb item"),
-      '#description' => $this->t('Hide the breadcrumb when it only links to the home page and nothing more. <br> <strong>Note: If the homepage path is a "/" then this feature has an uncertain behavior.</strong>'),
+      '#description' => $this->t('Hide the breadcrumb when it only links to the home page and nothing more.'),
       '#default_value' => $config->get(EasyBreadcrumbConstants::HIDE_SINGLE_HOME_ITEM),
     ];
 
@@ -378,7 +411,7 @@ class EasyBreadcrumbGeneralSettingsForm extends ConfigFormBase {
     $details_advanced[EasyBreadcrumbConstants::TRUNCATOR_MODE] = [
       '#type' => 'checkbox',
       '#title' => $this->t("Truncate the page's title to a maximum number."),
-      '#description' => t("Example: if you set it to 10, from <em>Long page title</em> will be <em>Long pa...</em>"),
+      '#description' => $this->t("Example: if you set it to 10, from <em>Long page title</em> will be <em>Long pa...</em>"),
       '#default_value' => $config->get(EasyBreadcrumbConstants::TRUNCATOR_MODE),
     ];
 

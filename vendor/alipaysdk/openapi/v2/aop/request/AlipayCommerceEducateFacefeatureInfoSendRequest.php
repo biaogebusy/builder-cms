@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.commerce.educate.facefeature.info.send request
  *
  * @author auto create
- * @since 1.0, 2024-03-04 14:59:56
+ * @since 1.0, 2025-08-13 14:47:40
  */
 class AlipayCommerceEducateFacefeatureInfoSendRequest
 {

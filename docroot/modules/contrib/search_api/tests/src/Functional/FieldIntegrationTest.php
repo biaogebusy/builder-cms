@@ -2,14 +2,16 @@
 
 namespace Drupal\Tests\search_api\Functional;
 
-use Drupal\Core\Serialization\Yaml;
+use Drupal\Component\Serialization\Yaml;
 use Drupal\search_api\Entity\Index;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests field validation on index creation.
  *
  * @group search_api
  */
+#[RunTestsInSeparateProcesses]
 class FieldIntegrationTest extends SearchApiBrowserTestBase {
 
   /**

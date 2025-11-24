@@ -4,8 +4,8 @@ namespace Drupal\video_embed_field\Plugin\Field\FieldFormatter;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Field\FieldDefinitionInterface;
-use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountInterface;
@@ -98,7 +98,13 @@ class Video extends FormatterBase implements ContainerFactoryPluginInterface {
       }
       else {
         $autoplay = $this->currentUser->hasPermission('never autoplay videos') ? FALSE : $this->getSetting('autoplay');
-        $element[$delta] = $provider->renderEmbedCode($this->getSetting('width'), $this->getSetting('height'), $autoplay);
+        $element[$delta] = $provider->renderEmbedCode(
+          $this->getSetting('width'),
+          $this->getSetting('height'),
+          $autoplay,
+          $this->getSetting('title_format'),
+          $this->getSetting('title_fallback')
+        );
         $element[$delta]['#cache']['contexts'][] = 'user.permissions';
 
         $element[$delta] = [
@@ -127,6 +133,8 @@ class Video extends FormatterBase implements ContainerFactoryPluginInterface {
       'width' => '854',
       'height' => '480',
       'autoplay' => TRUE,
+      'title_format' => '@provider | @title',
+      'title_fallback' => TRUE,
     ];
   }
 
@@ -174,6 +182,19 @@ class Video extends FormatterBase implements ContainerFactoryPluginInterface {
       '#size' => 20,
       '#states' => $responsive_checked_state,
     ];
+    $elements['title_format'] = [
+      '#title' => $this->t('Title format'),
+      '#description' => $this->t('The title will be used in an attribute; include the tokens @title and/or @provider.'),
+      '#type' => 'textfield',
+      '#default_value' => $this->getSetting('title_format'),
+      '#required' => TRUE,
+    ];
+    $elements['title_fallback'] = [
+      '#title' => $this->t('Use a fallback title'),
+      '#description' => $this->t('If the title could not be retrieved from the provider, use a fallback (often its ID). Otherwise the title will be omitted altogether.'),
+      '#type' => 'checkbox',
+      '#default_value' => $this->getSetting('title_fallback'),
+    ];
     return $elements;
   }
 
@@ -181,7 +202,8 @@ class Video extends FormatterBase implements ContainerFactoryPluginInterface {
    * {@inheritdoc}
    */
   public function settingsSummary() {
-    $dimensions = $this->getSetting('responsive') ? $this->t('Responsive') : $this->t('@widthx@height', ['@width' => $this->getSetting('width'), '@height' => $this->getSetting('height')]);
+    $dimensions = $this->getSetting('responsive') ? $this->t('Responsive') : $this->t('@widthx@height',
+      ['@width' => $this->getSetting('width'), '@height' => $this->getSetting('height')]);
     $summary[] = $this->t('Embedded Video (@dimensions@autoplay).', [
       '@dimensions' => $dimensions,
       '@autoplay' => $this->getSetting('autoplay') ? $this->t(', autoplaying') : '',

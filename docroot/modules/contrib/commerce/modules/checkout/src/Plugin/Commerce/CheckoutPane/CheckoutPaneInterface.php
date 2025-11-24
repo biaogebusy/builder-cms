@@ -2,13 +2,13 @@
 
 namespace Drupal\commerce_checkout\Plugin\Commerce\CheckoutPane;
 
-use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\Component\Plugin\ConfigurableInterface;
 use Drupal\Component\Plugin\DependentPluginInterface;
 use Drupal\Component\Plugin\DerivativeInspectionInterface;
 use Drupal\Component\Plugin\PluginInspectionInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
+use Drupal\commerce_order\Entity\OrderInterface;
 
 /**
  * Defines the interface for checkout panes.
@@ -57,6 +57,17 @@ interface CheckoutPaneInterface extends ConfigurableInterface, DependentPluginIn
    *   The pane display label.
    */
   public function getDisplayLabel();
+
+  /**
+   * Gets the pane admin description.
+   *
+   * This description is admin-facing and optional to provide details
+   * about the pane.
+   *
+   * @return string|null
+   *   The pane admin description, NULL if not set.
+   */
+  public function getAdminDescription(): ?string;
 
   /**
    * Gets the pane wrapper element.

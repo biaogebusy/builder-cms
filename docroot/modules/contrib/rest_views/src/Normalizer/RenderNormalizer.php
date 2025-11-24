@@ -14,18 +14,11 @@ use Drupal\serialization\Normalizer\NormalizerBase;
 class RenderNormalizer extends NormalizerBase {
 
   /**
-   * The interface or class that this Normalizer supports.
-   *
-   * @var array
-   */
-  protected $supportedInterfaceOrClass = [RenderableData::class];
-
-  /**
    * The renderer service.
    *
    * @var \Drupal\Core\Render\RendererInterface
    */
-  protected $renderer;
+  protected RendererInterface $renderer;
 
   /**
    * DataNormalizer constructor.
@@ -39,10 +32,19 @@ class RenderNormalizer extends NormalizerBase {
 
   /**
    * {@inheritdoc}
+   */
+  public function getSupportedTypes(?string $format): array {
+    return [
+      RenderableData::class => TRUE,
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
    *
    * @throws \Exception
    */
-  public function normalize($object, $format = NULL, array $context = []) {
+  public function normalize($object, $format = NULL, array $context = []): float|int|bool|\ArrayObject|array|string|null {
     /** @var \Drupal\rest_views\SerializedData $object */
     /** @var \Symfony\Component\Serializer\Normalizer\NormalizerInterface $normalizer */
     $normalizer = $this->serializer;

@@ -8,6 +8,7 @@ use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\metatag\MetatagDefaultsInterface;
 use Drupal\metatag\MetatagManager;
 use Drupal\metatag\MetatagManagerInterface;
@@ -22,6 +23,13 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @package Drupal\metatag\Form
  */
 class MetatagDefaultsForm extends EntityForm {
+
+  /**
+   * The Metatag defaults object being reverted.
+   *
+   * @var \Drupal\metatag\Entity\MetatagDefaults
+   */
+  protected $entity;
 
   /**
    * The entity type bundle info service.
@@ -98,6 +106,7 @@ class MetatagDefaultsForm extends EntityForm {
    */
   public function form(array $form, FormStateInterface $form_state) {
     $form = parent::form($form, $form_state);
+    /** @var \Drupal\Core\Config\Entity\ConfigEntityInterface $metatag_defaults */
     $metatag_defaults = $this->entity;
 
     $form['#ajax_wrapper_id'] = 'metatag-defaults-form-ajax-wrapper';
@@ -189,17 +198,9 @@ class MetatagDefaultsForm extends EntityForm {
   }
 
   /**
-   * Ajax form submit handler that will return the whole rebuilt form.
-   *
-   * @param array $form
-   *   An associative array containing the structure of the form.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The current state of the form.
-   *
-   * @return array
-   *   The form structure.
+   * {@inheritdoc}
    */
-  public function rebuildForm(array &$form, FormStateInterface $form_state) {
+  public function rebuildForm(array &$form, FormStateInterface $form_state): array {
     return $form;
   }
 
@@ -316,7 +317,7 @@ class MetatagDefaultsForm extends EntityForm {
    * @return array
    *   A list of available bundles as $id => $label.
    */
-  protected function getAvailableBundles() {
+  protected function getAvailableBundles(): array {
     $options = [];
     $entity_types = static::getSupportedEntityTypes();
     $metatags_defaults_manager = $this->entityTypeManager->getStorage('metatag_defaults');
@@ -343,7 +344,7 @@ class MetatagDefaultsForm extends EntityForm {
    * @return array
    *   A list of available entity types as $machine_name => $label.
    */
-  public static function getSupportedEntityTypes() {
+  public static function getSupportedEntityTypes(): array {
     $entity_types = [];
 
     /** @var \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager */
@@ -353,15 +354,33 @@ class MetatagDefaultsForm extends EntityForm {
     $unsupported_types = [
       // Custom blocks.
       'block_content',
-      // Comments.
-      'comment',
       // Contact messages are the messages submitted on individual contact forms
       // so obviously shouldn't get meta tags.
       'contact_message',
       // Menu items.
       'menu_link_content',
+      // Path aliases.
+      'path_alias',
       // Shortcut items.
       'shortcut',
+      // From contributed modules:
+      // Various Commerce entities.
+      'commerce_order',
+      'commerce_payment',
+      'commerce_payment_method',
+      'commerce_promotion',
+      'commerce_promotion_coupon',
+      'commerce_shipment',
+      'commerce_shipping_method',
+      'commerce_stock_location',
+      // LinkChecker.
+      'linkcheckerlink',
+      // Redirect.
+      'redirect',
+      // Salesforce.
+      'salesforce_mapped_object',
+      // Webform.
+      'webform_submission',
     ];
 
     // Make a list of supported content types.
@@ -394,7 +413,7 @@ class MetatagDefaultsForm extends EntityForm {
    * @return string
    *   A label.
    */
-  public static function getEntityTypeLabel(EntityTypeInterface $entityType) {
+  public static function getEntityTypeLabel(EntityTypeInterface $entityType): string {
     $label = $entityType->getLabel();
 
     if (is_a($label, 'Drupal\Core\StringTranslation\TranslatableMarkup')) {
@@ -414,7 +433,7 @@ class MetatagDefaultsForm extends EntityForm {
    * @return \Drupal\Core\StringTranslation\TranslatableMarkup
    *   Translated route title.
    */
-  public function getTitle(MetatagDefaultsInterface $metatag_defaults) {
+  public function getTitle(MetatagDefaultsInterface $metatag_defaults): TranslatableMarkup {
     return $this->t('Edit default meta tags for @path', [
       '@path' => $metatag_defaults->label(),
     ]);

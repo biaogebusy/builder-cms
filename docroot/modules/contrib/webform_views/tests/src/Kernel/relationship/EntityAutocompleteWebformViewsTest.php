@@ -9,8 +9,14 @@ namespace Drupal\Tests\webform_views\Kernel\relationship;
  */
 class EntityAutocompleteWebformViewsTest extends WebformViewsRelationshipTestBase {
 
+  /**
+   * {@inheritdoc}
+   */
   protected $target_entity_type = 'user';
 
+  /**
+   * {@inheritdoc}
+   */
   protected $webform_submissions_data = [
     ['element' => 1],
   ];
@@ -18,7 +24,7 @@ class EntityAutocompleteWebformViewsTest extends WebformViewsRelationshipTestBas
   /**
    * {@inheritdoc}
    */
-  public function setUp() {
+  public function setUp(): void {
     parent::setUp();
 
     $this->webform_elements = [

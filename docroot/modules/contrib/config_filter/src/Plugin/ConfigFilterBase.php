@@ -2,8 +2,8 @@
 
 namespace Drupal\config_filter\Plugin;
 
-use Drupal\config_filter\Config\TransparentStorageFilterTrait;
 use Drupal\Core\Plugin\PluginBase;
+use Drupal\config_filter\Config\TransparentStorageFilterTrait;
 
 /**
  * Base class for Config filter plugin plugins.

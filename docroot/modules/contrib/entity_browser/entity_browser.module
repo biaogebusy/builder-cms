@@ -135,6 +135,9 @@ function entity_browser_preprocess_page__entity_browser__modal(&$variables) {
  *
  * @return array
  *   See file_validate_image_resolution()
+ *
+ * @deprecated in entity_browser:8.x-2.11 and is removed from
+ *   entity_browser:2.0.0. Use EntityBrowserImageDimensions constraint instead.
  */
 function entity_browser_file_validate_image_resolution(FileInterface $file, $maximum_dimensions = 0, $minimum_dimensions = 0) {
   $errors = [];
@@ -145,7 +148,7 @@ function entity_browser_file_validate_image_resolution(FileInterface $file, $max
   if ($image->isValid()) {
     if ($maximum_dimensions) {
       // Check that it is smaller than the given dimensions.
-      list($width, $height) = explode('x', $maximum_dimensions);
+      [$width, $height] = explode('x', $maximum_dimensions);
       if ($image->getWidth() > $width || $image->getHeight() > $height) {
         // Try to resize the image to fit the dimensions.
         // This $file->isPermanent() check is the only part of the function
@@ -163,7 +166,7 @@ function entity_browser_file_validate_image_resolution(FileInterface $file, $max
 
     if ($minimum_dimensions) {
       // Check that it is larger than the given dimensions.
-      list($width, $height) = explode('x', $minimum_dimensions);
+      [$width, $height] = explode('x', $minimum_dimensions);
       if ($image->getWidth() < $width || $image->getHeight() < $height) {
         $errors[] = t('The image is too small; the minimum dimensions are %dimensions pixels.', ['%dimensions' => $minimum_dimensions]);
       }

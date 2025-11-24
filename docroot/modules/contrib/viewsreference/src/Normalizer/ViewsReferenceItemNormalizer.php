@@ -5,23 +5,27 @@ namespace Drupal\viewsreference\Normalizer;
 use Drupal\hal\Normalizer\EntityReferenceItemNormalizer;
 use Drupal\viewsreference\Plugin\Field\FieldType\ViewsReferenceItem;
 
-/**
- * Defines a class for normalizing ViewsReferenceItems.
- */
-class ViewsReferenceItemNormalizer extends EntityReferenceItemNormalizer {
+if (class_exists('Drupal\hal\Normalizer\EntityReferenceItemNormalizer')) {
 
   /**
-   * The interface or class that this Normalizer supports.
-   *
-   * @var string
+   * Defines a class for normalizing ViewsReferenceItems.
    */
-  protected $supportedInterfaceOrClass = ViewsReferenceItem::class;
+  class ViewsReferenceItemNormalizer extends EntityReferenceItemNormalizer {
 
-  /**
-   * {@inheritdoc}
-   */
-  protected function constructValue($data, $context) {
-    return $data;
+    /**
+     * The interface or class that this Normalizer supports.
+     *
+     * @var string
+     */
+    protected $supportedInterfaceOrClass = ViewsReferenceItem::class;
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function constructValue($data, $context) {
+      return $data;
+    }
+
   }
 
 }

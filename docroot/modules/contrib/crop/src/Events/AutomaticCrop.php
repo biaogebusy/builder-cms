@@ -2,10 +2,10 @@
 
 namespace Drupal\crop\Events;
 
+use Drupal\Component\EventDispatcher\Event;
 use Drupal\Core\Image\ImageInterface;
 use Drupal\crop\CropInterface;
 use Drupal\crop\Entity\CropType;
-use Drupal\Component\EventDispatcher\Event;
 
 /**
  * Represents automatic crop action as event.
@@ -45,8 +45,11 @@ class AutomaticCrop extends Event {
    * Constructs a EntitySelectionEvent object.
    *
    * @param \Drupal\Core\Image\ImageInterface $image
+   *   An image object.
    * @param \Drupal\crop\Entity\CropType $cropType
-   * @param $configuration
+   *   A crop_type object.
+   * @param array $configuration
+   *   An array of configurations.
    */
   public function __construct(ImageInterface $image, CropType $cropType, array $configuration) {
     $this->image = $image;

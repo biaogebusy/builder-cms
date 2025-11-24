@@ -4,13 +4,13 @@
  .
  */
 
-@import "../base/variables.pcss.css";
+@import "../base/media-queries.pcss.css";
 
 .social-bar {
   @media (--nav) {
     flex-shrink: 0;
     width: var(--content-left);
-    background-color: var(--color--gray-95);
+    background-color: var(--color--gray-100);
   }
 }
 
@@ -23,7 +23,7 @@
   @media (--nav) {
     position: relative;
     width: var(--content-left);
-    padding-block: calc(5 * var(--sp));
+    padding-block: var(--sp5);
     padding-inline-start: 0;
     padding-inline-end: 0;
 
@@ -31,7 +31,7 @@
       position: fixed;
       inset-block-start: var(--sp6);
       inset-inline-start: 0;
-      height: calc(100vh - 6 * var(--sp));
+      height: calc(100vh - var(--sp6));
     }
   }
 }
@@ -58,7 +58,19 @@
       transform-origin: top left; /* LTR */
 
       & .trigger {
-        float: inline-start;
+        float: left; /* LTR */
+
+        /**
+         * Chromium and Webkit do not yet support flow relative logical properties,
+         * such as float: inline-end. However, PostCSS Logical does not compile this
+         * value, so we accommodate by not using these.
+         *
+         * @see https://caniuse.com/mdn-css_properties_clear_flow_relative_values
+         * @see https://github.com/csstools/postcss-plugins/issues/632
+         */
+        &:dir(rtl) {
+          float: right;
+        }
       }
     }
   }

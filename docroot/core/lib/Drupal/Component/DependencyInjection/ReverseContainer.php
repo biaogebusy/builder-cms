@@ -13,25 +13,18 @@ use Symfony\Component\DependencyInjection\ContainerInterface as SymfonyContainer
 final class ReverseContainer {
 
   /**
-   * The service container.
-   *
-   * @var \Drupal\Component\DependencyInjection\Container|\Symfony\Component\DependencyInjection\Container
-   */
-  private $serviceContainer;
-
-  /**
    * A closure on the container that can search for services.
    *
    * @var \Closure
    */
-  private $getServiceId;
+  private \Closure $getServiceId;
 
   /**
    * A static map of services to a hash.
    *
    * @var array
    */
-  private static $recordedServices = [];
+  private static array $recordedServices = [];
 
   /**
    * Constructs a ReverseContainer object.
@@ -39,11 +32,7 @@ final class ReverseContainer {
    * @param \Drupal\Component\DependencyInjection\Container|\Symfony\Component\DependencyInjection\Container $serviceContainer
    *   The service container.
    */
-  public function __construct($serviceContainer) {
-    if (!($serviceContainer instanceof Container || $serviceContainer instanceof SymfonyContainer)) {
-      throw new \InvalidArgumentException('The container must be an instance of \Drupal\Component\DependencyInjection\Container or \Symfony\Component\DependencyInjection\Container');
-    }
-    $this->serviceContainer = $serviceContainer;
+  public function __construct(private readonly Container|SymfonyContainer $serviceContainer) {
     $this->getServiceId = \Closure::bind(function ($service): ?string {
       return array_search($service, $this->services, TRUE) ?: NULL;
     }, $serviceContainer, $serviceContainer);
@@ -57,7 +46,7 @@ final class ReverseContainer {
    * @param object $service
    *   The service to find the ID for.
    */
-  public function getId($service): ?string {
+  public function getId(object $service): ?string {
     if ($this->serviceContainer === $service || $service instanceof SymfonyContainerInterface) {
       return 'service_container';
     }
@@ -81,7 +70,7 @@ final class ReverseContainer {
    */
   public function recordContainer(): void {
     $service_recorder = \Closure::bind(function () : array {
-      return array_filter($this->services, 'is_object');
+      return $this->services;
     }, $this->serviceContainer, $this->serviceContainer);
     self::$recordedServices = array_merge(self::$recordedServices, array_flip(array_map([$this, 'generateServiceIdHash'], $service_recorder())));
   }

@@ -7,4 +7,4 @@ drupal.autologout:
     - core/drupal.dialog
     - core/drupal.ajax
     - core/drupalSettings
-    - core/js-cookie
+    - js_cookie/js-cookie

@@ -3,7 +3,7 @@
  * ALIPAY API: ant.merchant.expand.frontcategory.security.query request
  *
  * @author auto create
- * @since 1.0, 2023-09-04 01:49:45
+ * @since 1.0, 2025-08-13 16:12:42
  */
 class AntMerchantExpandFrontcategorySecurityQueryRequest
 {

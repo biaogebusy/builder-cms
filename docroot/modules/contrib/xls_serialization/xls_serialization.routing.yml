@@ -1,0 +1,9 @@
+xls_serialization.configuration:
+  path: '/admin/config/user-interface/xls_serialization'
+  defaults:
+    _form: 'Drupal\xls_serialization\Form\XlsSerializationConfigurationForm'
+    _title: 'Xls Serialization configuration'
+  requirements:
+    _permission: 'administer xls serialization configuration'
+  options:
+    _admin_route: TRUE

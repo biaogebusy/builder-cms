@@ -224,7 +224,7 @@ class AceFormatter extends FormatterBase implements ContainerFactoryPluginInterf
           'readonly' => 'readonly',
         ],
         '#prefix' => '<div class="ace_formatter">',
-        '#suffix' => '<div>',
+        '#suffix' => '</div>',
       ];
     }
     return $elements;

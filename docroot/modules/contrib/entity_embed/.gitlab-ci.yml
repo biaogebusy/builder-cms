@@ -16,3 +16,8 @@ variables:
   OPT_IN_TEST_PREVIOUS_MINOR: 1
   OPT_IN_TEST_NEXT_MINOR: 1
   OPT_IN_TEST_MAX_PHP: 1
+  _PHPUNIT_CONCURRENT: 1
+
+composer (previous major):
+  before_script:
+    - composer require --dev drupal/ckeditor --no-update

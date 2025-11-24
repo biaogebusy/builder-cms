@@ -2,6 +2,7 @@
 
 namespace Drupal\system\Form;
 
+use Drupal\Core\Config\TypedConfigManagerInterface;
 use Drupal\Core\Extension\ThemeHandlerInterface;
 use Drupal\Core\File\Exception\FileException;
 use Drupal\Core\File\FileSystemInterface;
@@ -15,7 +16,6 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Theme\ThemeManagerInterface;
-use Symfony\Component\Mime\MimeTypeGuesserInterface;
 
 // cspell:ignore apng
 
@@ -73,6 +73,8 @@ class ThemeSettingsForm extends ConfigFormBase {
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The factory for configuration objects.
+   * @param \Drupal\Core\Config\TypedConfigManagerInterface $typedConfigManager
+   *   The typed config manager.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler instance to use.
    * @param \Drupal\Core\Extension\ThemeHandlerInterface $theme_handler
@@ -84,8 +86,8 @@ class ThemeSettingsForm extends ConfigFormBase {
    * @param \Drupal\Core\File\FileSystemInterface $file_system
    *   The file system.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, ModuleHandlerInterface $module_handler, ThemeHandlerInterface $theme_handler, $mime_type_guesser, ThemeManagerInterface $theme_manager, FileSystemInterface $file_system) {
-    parent::__construct($config_factory);
+  public function __construct(ConfigFactoryInterface $config_factory, TypedConfigManagerInterface $typedConfigManager, ModuleHandlerInterface $module_handler, ThemeHandlerInterface $theme_handler, $mime_type_guesser, ThemeManagerInterface $theme_manager, FileSystemInterface $file_system) {
+    parent::__construct($config_factory, $typedConfigManager);
 
     $this->moduleHandler = $module_handler;
     $this->themeHandler = $theme_handler;
@@ -100,6 +102,7 @@ class ThemeSettingsForm extends ConfigFormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('config.factory'),
+      $container->get('config.typed'),
       $container->get('module_handler'),
       $container->get('theme_handler'),
       $container->get('file.mime_type.guesser'),
@@ -237,7 +240,9 @@ class ThemeSettingsForm extends ConfigFormBase {
         '#title' => $this->t('Upload logo image'),
         '#description' => $this->t("If you don't have direct file access to the server, use this field to upload your logo."),
         '#upload_validators' => [
-          'file_validate_is_image' => [],
+          'FileExtension' => [
+            'extensions' => 'png gif jpg jpeg apng svg',
+          ],
         ],
       ];
     }
@@ -280,8 +285,8 @@ class ThemeSettingsForm extends ConfigFormBase {
         '#title' => $this->t('Upload favicon image'),
         '#description' => $this->t("If you don't have direct file access to the server, use this field to upload your shortcut icon."),
         '#upload_validators' => [
-          'file_validate_extensions' => [
-            'ico png gif jpg jpeg apng svg',
+          'FileExtension' => [
+            'extensions' => 'ico png gif jpg jpeg apng svg webp',
           ],
         ],
       ];
@@ -499,13 +504,7 @@ class ThemeSettingsForm extends ConfigFormBase {
     }
 
     if (empty($values['default_favicon']) && !empty($values['favicon_path'])) {
-      if ($this->mimeTypeGuesser instanceof MimeTypeGuesserInterface) {
-        $values['favicon_mimetype'] = $this->mimeTypeGuesser->guessMimeType($values['favicon_path']);
-      }
-      else {
-        $values['favicon_mimetype'] = $this->mimeTypeGuesser->guess($values['favicon_path']);
-        @trigger_error('\Symfony\Component\HttpFoundation\File\MimeType\MimeTypeGuesserInterface is deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. Implement \Symfony\Component\Mime\MimeTypeGuesserInterface instead. See https://www.drupal.org/node/3133341', E_USER_DEPRECATED);
-      }
+      $values['favicon_mimetype'] = $this->mimeTypeGuesser->guessMimeType($values['favicon_path']);
     }
 
     theme_settings_convert_to_config($values, $config)->save();

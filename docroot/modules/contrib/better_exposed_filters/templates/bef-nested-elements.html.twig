@@ -12,28 +12,26 @@
     - loop: The loop variable from the iterator that calls this template.
       Requires the loop.first and loop.last elements.
 #}
-{% apply spaceless %}
-  {% set delta = (current_nesting_level - new_nesting_level) | abs %}
-  {% if loop.first %}
-    <ul>
-  {% else %}
-    {% if delta %}
-      {% for i in 1..delta %}
-        {% if new_nesting_level > current_nesting_level  %}
-          <ul>
-        {% else %}
-          </ul>
-        {% endif %}
-      {% endfor %}
-    {% endif %}
-  {% endif %}
-
-  <li>{{ item }}
-
-  {% if loop.last %}
-    {# Close any remaining <li> tags #}
-    {% for i in new_nesting_level..0 %}
-      </li></ul>
+{% set delta = (current_nesting_level - new_nesting_level) | abs %}
+{% if loop.first %}
+  <ul>
+{% else %}
+  {% if delta %}
+    {% for i in 1..delta %}
+      {% if new_nesting_level > current_nesting_level  %}
+        <ul>
+      {% else %}
+        </ul>
+      {% endif %}
     {% endfor %}
   {% endif %}
-{% endapply %}
+{% endif %}
+
+<li>{{ item }}
+
+{% if loop.last %}
+  {# Close any remaining <li> tags #}
+  {% for i in new_nesting_level..0 %}
+    </li></ul>
+  {% endfor %}
+{% endif %}

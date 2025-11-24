@@ -81,13 +81,13 @@ final class SmsFrameworkDeliveryReportUpdateTest extends KernelTestBase {
     $this->defaultSmsProvider->queue($sms_message);
     $this->container->get('cron')->run();
     $saved_reports = SmsDeliveryReport::loadMultiple();
-    $this->assertCount(2, $saved_reports);
-    $this->assertEquals(SmsMessageReportStatus::QUEUED, $saved_reports[1]->getStatus());
-    $this->assertEquals(SmsMessageReportStatus::QUEUED, $saved_reports[2]->getStatus());
+    static::assertCount(2, $saved_reports);
+    static::assertEquals(SmsMessageReportStatus::QUEUED, $saved_reports[1]->getStatus());
+    static::assertEquals(SmsMessageReportStatus::QUEUED, $saved_reports[2]->getStatus());
 
     /** @var \Drupal\sms\Message\SmsDeliveryReportInterface $first_report */
     $first_report = reset($saved_reports);
-    $this->assertEquals($request_time, $first_report->getStatusTime());
+    static::assertEquals($request_time, $first_report->getStatusTime());
 
     $message_id = $first_report->getMessageId();
     $status_time = $request_time + 100;
@@ -97,9 +97,9 @@ final class SmsFrameworkDeliveryReportUpdateTest extends KernelTestBase {
     $this->defaultSmsProvider->processDeliveryReport($request, $test_gateway);
     $this->container->get('entity_type.manager')->getStorage('sms_report')->resetCache();
     $updated_report = SmsDeliveryReport::load($first_report->id());
-    $this->assertEquals('pending', $updated_report->getStatus());
-    $this->assertEquals($status_time, $updated_report->getStatusTime());
-    $this->assertNull($updated_report->getTimeDelivered());
+    static::assertEquals('pending', $updated_report->getStatus());
+    static::assertEquals($status_time, $updated_report->getStatusTime());
+    static::assertNull($updated_report->getTimeDelivered());
 
     // Simulate push delivery report.
     $status_time = $request_time + 500;
@@ -107,9 +107,9 @@ final class SmsFrameworkDeliveryReportUpdateTest extends KernelTestBase {
     $this->defaultSmsProvider->processDeliveryReport($request, $test_gateway);
     $this->container->get('entity_type.manager')->getStorage('sms_report')->resetCache();
     $updated_report = SmsDeliveryReport::load($first_report->id());
-    $this->assertEquals(SmsMessageReportStatus::DELIVERED, $updated_report->getStatus());
-    $this->assertEquals($status_time, $updated_report->getStatusTime());
-    $this->assertEquals($status_time, $updated_report->getTimeDelivered());
+    static::assertEquals(SmsMessageReportStatus::DELIVERED, $updated_report->getStatus());
+    static::assertEquals($status_time, $updated_report->getStatusTime());
+    static::assertEquals($status_time, $updated_report->getTimeDelivered());
   }
 
   /**

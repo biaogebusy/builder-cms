@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\FunctionalJavascript;
 
 use Drupal\Core\Url;
@@ -80,7 +82,7 @@ class GlossaryViewTest extends WebDriverTestBase {
   /**
    * Tests the AJAX callbacks for the glossary view.
    */
-  public function testGlossaryDefault() {
+  public function testGlossaryDefault(): void {
     // Visit the default Glossary page.
     $url = Url::fromRoute('view.test_glossary.page_1');
     $this->drupalGet($url);
@@ -102,7 +104,7 @@ class GlossaryViewTest extends WebDriverTestBase {
   /**
    * Tests that the glossary also works on a language prefixed URL.
    */
-  public function testGlossaryLanguagePrefix() {
+  public function testGlossaryLanguagePrefix(): void {
     ConfigurableLanguage::createFromLangcode('nl')->save();
 
     $config = $this->config('language.negotiation');

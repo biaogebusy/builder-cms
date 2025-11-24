@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Kernel\Migrate\d6;
 
 use Drupal\Core\Field\Entity\BaseFieldOverride;
@@ -31,6 +33,7 @@ class MigrateNodeBundleSettingsTest extends MigrateDrupal6TestBase {
       'field_name' => 'promote',
       'entity_type' => 'node',
       'bundle' => 'page',
+      'label' => 'Promoted to front page',
     ])->save();
 
     $this->executeMigrations([
@@ -43,7 +46,7 @@ class MigrateNodeBundleSettingsTest extends MigrateDrupal6TestBase {
   /**
    * Tests Drupal 6 node type settings to Drupal 8 migration.
    */
-  public function testNodeBundleSettings() {
+  public function testNodeBundleSettings(): void {
     // Test settings on test_page bundle.
     $node = Node::create(['type' => 'test_page']);
     $this->assertSame(1, $node->status->value);

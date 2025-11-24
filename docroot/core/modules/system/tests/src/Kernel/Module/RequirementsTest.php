@@ -1,12 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Kernel\Module;
 
 use Drupal\KernelTests\KernelTestBase;
 
 /**
- * @covers \hook_requirements
- * @covers \hook_requirements_alter
+ * Covers hook_requirements and hook_requirements_alter.
  * @group Module
  */
 class RequirementsTest extends KernelTestBase {

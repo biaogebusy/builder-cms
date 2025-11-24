@@ -11,12 +11,14 @@ use Drupal\language\Entity\ConfigurableLanguage;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Utility\Utility;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests translation handling of the content entity datasource.
  *
  * @group search_api
  */
+#[RunTestsInSeparateProcesses]
 class LanguageKernelTest extends KernelTestBase {
 
   /**
@@ -238,7 +240,7 @@ class LanguageKernelTest extends KernelTestBase {
 
     foreach ($datasource->loadMultiple($datasource_item_ids) as $id => $object) {
       // Test whether the item reports the correct language.
-      list($entity_id, $langcode) = explode(':', $id, 2);
+      [$entity_id, $langcode] = explode(':', $id, 2);
       $item = \Drupal::getContainer()
         ->get('search_api.fields_helper')
         ->createItemFromObject($this->index, $object, NULL, $datasource);

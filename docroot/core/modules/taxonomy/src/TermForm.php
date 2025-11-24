@@ -68,6 +68,12 @@ class TermForm extends ContentEntityForm {
       $parent = [0];
     }
 
+    if ($this->getRequest()->query->has('parent')) {
+      $parent = array_values(array_intersect(
+        array_keys($options),
+        (array) $this->getRequest()->query->all()['parent'],
+      ));
+    }
     $form['relations']['parent'] = [
       '#type' => 'select',
       '#title' => $this->t('Parent terms'),
@@ -195,12 +201,12 @@ class TermForm extends ContentEntityForm {
     switch ($result) {
       case SAVED_NEW:
         $this->messenger()->addStatus($this->t('Created new term %term.', ['%term' => $view_link]));
-        $this->logger('taxonomy')->notice('Created new term %term.', ['%term' => $term->getName(), 'link' => $edit_link]);
+        $this->logger('taxonomy')->info('Created new term %term.', ['%term' => $term->getName(), 'link' => $edit_link]);
         break;
 
       case SAVED_UPDATED:
         $this->messenger()->addStatus($this->t('Updated term %term.', ['%term' => $view_link]));
-        $this->logger('taxonomy')->notice('Updated term %term.', ['%term' => $term->getName(), 'link' => $edit_link]);
+        $this->logger('taxonomy')->info('Updated term %term.', ['%term' => $term->getName(), 'link' => $edit_link]);
         $form_state->setRedirect('entity.taxonomy_term.canonical', ['taxonomy_term' => $term->id()]);
         break;
     }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\File;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
@@ -11,9 +13,7 @@ use Drupal\KernelTests\KernelTestBase;
 abstract class FileTestBase extends KernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['system'];
 
@@ -34,7 +34,7 @@ abstract class FileTestBase extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
     // \Drupal\KernelTests\KernelTestBase::bootKernel() sets a global override
     // for the default scheme because core relies on it in
@@ -65,8 +65,6 @@ abstract class FileTestBase extends KernelTestBase {
   protected function setUpFilesystem() {
     $public_file_directory = $this->siteDirectory . '/files';
     $private_file_directory = $this->siteDirectory . '/private';
-
-    require_once 'core/includes/file.inc';
 
     mkdir($this->siteDirectory, 0775);
     mkdir($this->siteDirectory . '/files', 0775);
@@ -100,7 +98,7 @@ abstract class FileTestBase extends KernelTestBase {
     // read/write/execute bits. On Windows, chmod() ignores the "group" and
     // "other" bits, and fileperms() returns the "user" bits in all three
     // positions. $expected_mode is updated to reflect this.
-    if (substr(PHP_OS, 0, 3) == 'WIN') {
+    if (str_starts_with(PHP_OS, 'WIN')) {
       // Reset the "group" and "other" bits.
       $expected_mode = $expected_mode & 0700;
       // Shift the "user" bits to the "group" and "other" positions also.
@@ -108,7 +106,7 @@ abstract class FileTestBase extends KernelTestBase {
     }
 
     if (!isset($message)) {
-      $message = t('Expected file permission to be %expected, actually were %actual.', ['%actual' => decoct($actual_mode), '%expected' => decoct($expected_mode)]);
+      $message = sprintf('Expected file permission to be %s, actually were %s.', decoct($actual_mode), decoct($expected_mode));
     }
     $this->assertEquals($expected_mode, $actual_mode, $message);
   }
@@ -136,7 +134,7 @@ abstract class FileTestBase extends KernelTestBase {
     // read/write/execute bits. On Windows, chmod() ignores the "group" and
     // "other" bits, and fileperms() returns the "user" bits in all three
     // positions. $expected_mode is updated to reflect this.
-    if (substr(PHP_OS, 0, 3) == 'WIN') {
+    if (str_starts_with(PHP_OS, 'WIN')) {
       // Reset the "group" and "other" bits.
       $expected_mode = $expected_mode & 0700;
       // Shift the "user" bits to the "group" and "other" positions also.
@@ -144,7 +142,7 @@ abstract class FileTestBase extends KernelTestBase {
     }
 
     if (!isset($message)) {
-      $message = t('Expected directory permission to be %expected, actually were %actual.', ['%actual' => decoct($actual_mode), '%expected' => decoct($expected_mode)]);
+      $message = sprintf('Expected directory permission to be %s, actually were %s.', decoct($expected_mode), decoct($actual_mode));
     }
     $this->assertEquals($expected_mode, $actual_mode, $message);
   }

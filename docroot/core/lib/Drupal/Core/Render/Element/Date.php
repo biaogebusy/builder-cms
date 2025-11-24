@@ -2,7 +2,7 @@
 
 namespace Drupal\Core\Render\Element;
 
-use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Render\Element;
 
 /**
@@ -19,10 +19,9 @@ use Drupal\Core\Render\Element;
  *   '#default_value' => '2020-02-05',
  * ];
  * @endcode
- *
- * @FormElement("date")
  */
-class Date extends FormElement {
+#[FormElement('date')]
+class Date extends FormElementBase {
 
   /**
    * {@inheritdoc}
@@ -34,45 +33,12 @@ class Date extends FormElement {
       '#theme' => 'input__date',
       '#process' => [
         [$class, 'processAjaxForm'],
-        [$class, 'processDate'],
       ],
       '#pre_render' => [[$class, 'preRenderDate']],
       '#theme_wrappers' => ['form_element'],
       '#attributes' => ['type' => 'date'],
       '#date_date_format' => 'Y-m-d',
     ];
-  }
-
-  /**
-   * Processes a date form element.
-   *
-   * @param array $element
-   *   The form element to process. Properties used:
-   *   - #attributes: An associative array containing:
-   *     - type: The type of date field rendered.
-   *   - #date_date_format: The date format used in PHP formats.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The current state of the form.
-   * @param array $complete_form
-   *   The complete form structure.
-   *
-   * @return array
-   *   The processed element.
-   *
-   * @deprecated in drupal:9.4.0 and is removed from drupal:10.0.0. There is
-   *   no replacement.
-   *
-   * @see https://www.drupal.org/node/3258267
-   */
-  public static function processDate(&$element, FormStateInterface $form_state, &$complete_form) {
-    @trigger_error('Drupal\Core\Render\Element\Date::processDate() is deprecated in drupal:9.4.0 and is removed from drupal:10.0.0. There is no replacement. See https://www.drupal.org/node/3258267', E_USER_DEPRECATED);
-    // Attach JS support for the date field, if we can determine which date
-    // format should be used.
-    if ($element['#attributes']['type'] == 'date' && !empty($element['#date_date_format'])) {
-      $element['#attached']['library'][] = 'core/drupal.date';
-      $element['#attributes']['data-drupal-date-format'] = [$element['#date_date_format']];
-    }
-    return $element;
   }
 
   /**

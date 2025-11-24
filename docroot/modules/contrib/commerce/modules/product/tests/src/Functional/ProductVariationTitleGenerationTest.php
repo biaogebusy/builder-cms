@@ -2,10 +2,10 @@
 
 namespace Drupal\Tests\commerce_product\Functional;
 
-use Drupal\commerce_product\Entity\ProductVariationType;
-use Drupal\commerce_product\Entity\ProductVariation;
 use Drupal\Tests\commerce_cart\Traits\CartBrowserTestTrait;
 use Drupal\Tests\commerce_product\Traits\ProductAttributeTestTrait;
+use Drupal\commerce_product\Entity\ProductVariation;
+use Drupal\commerce_product\Entity\ProductVariationType;
 
 /**
  * Tests the product variation title generation.

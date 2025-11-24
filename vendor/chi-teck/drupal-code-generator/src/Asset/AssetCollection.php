@@ -1,18 +1,16 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace DrupalCodeGenerator\Asset;
 
 /**
  * Asset collection.
+ *
+ * @template-implements \ArrayAccess<string,\DrupalCodeGenerator\Asset\Asset>
+ * @template-implements \IteratorAggregate<string,\DrupalCodeGenerator\Asset\Asset>
  */
-final class AssetCollection implements \ArrayAccess, \IteratorAggregate, \Countable {
-
-  /**
-   * Assets.
-   *
-   * @var \DrupalCodeGenerator\Asset\Asset[]
-   */
-  private array $assets;
+final class AssetCollection implements \ArrayAccess, \IteratorAggregate, \Countable, \Stringable {
 
   /**
    * AssetCollection constructor.
@@ -20,45 +18,95 @@ final class AssetCollection implements \ArrayAccess, \IteratorAggregate, \Counta
    * @param \DrupalCodeGenerator\Asset\Asset[] $assets
    *   Assets.
    */
-  public function __construct(array $assets = []) {
-    $this->assets = $assets;
+  public function __construct(private array $assets = []) {}
+
+  /**
+   * Creates a directory asset.
+   */
+  public function addDirectory(string $path): Directory {
+    $directory = new Directory($path);
+    $this->assets[] = $directory;
+    return $directory;
+  }
+
+  /**
+   * Creates a file asset.
+   */
+  public function addFile(string $path, ?string $template = NULL): File {
+    $file = new File($path);
+    if ($template) {
+      $file->template($template);
+    }
+    $this->assets[] = $file;
+    return $file;
+  }
+
+  /**
+   * Creates a symlink asset.
+   *
+   * @noinspection PhpUnused
+   */
+  public function addSymlink(string $path, string $target): Symlink {
+    $symlink = new Symlink($path, $target);
+    $this->assets[] = $symlink;
+    return $symlink;
+  }
+
+  /**
+   * Adds an asset for configuration schema file.
+   */
+  public function addSchemaFile(string $path = 'config/schema/{machine_name}.schema.yml'): File {
+    return $this->addFile($path)
+      ->appendIfExists();
+  }
+
+  /**
+   * Adds an asset for service file.
+   */
+  public function addServicesFile(string $path = '{machine_name}.services.yml'): File {
+    return $this->addFile($path)
+      ->appendIfExists(1);
   }
 
   /**
    * {@inheritdoc}
+   *
+   * @psalm-param \DrupalCodeGenerator\Asset\Asset $value
    */
-  #[\ReturnTypeWillChange]
-  public function offsetSet($key, $value) {
-    if ($key === NULL) {
+  public function offsetSet(mixed $offset, mixed $value): void {
+    match (TRUE) {
+      $value instanceof Directory,
+      $value instanceof File,
+      $value instanceof Symlink => NULL,
+      default => throw new \InvalidArgumentException('Unsupported asset type.'),
+    };
+    if ($offset === NULL) {
       $this->assets[] = $value;
     }
     else {
-      $this->assets[$key] = $value;
+      $this->assets[$offset] = $value;
     }
   }
 
   /**
    * {@inheritdoc}
    */
-  #[\ReturnTypeWillChange]
-  public function offsetGet($key) {
-    if (isset($this->assets[$key])) {
-      return $this->assets[$key];
-    }
+  public function offsetGet(mixed $offset): ?Asset {
+    return $this->assets[$offset] ?? NULL;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function offsetUnset($key): void {
-    unset($this->assets[$key]);
+  public function offsetUnset(mixed $offset): void {
+    unset($this->assets[$offset]);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function offsetExists($key): bool {
-    return isset($this->assets[$key]);
+  public function offsetExists(mixed $offset): bool {
+    return isset($this->assets[$offset]);
   }
 
   /**
@@ -70,6 +118,8 @@ final class AssetCollection implements \ArrayAccess, \IteratorAggregate, \Counta
 
   /**
    * {@inheritdoc}
+   *
+   * @psalm-return int<0, max>
    */
   public function count(): int {
     return \count($this->assets);
@@ -79,33 +129,27 @@ final class AssetCollection implements \ArrayAccess, \IteratorAggregate, \Counta
    * Returns a collection of directory assets.
    */
   public function getDirectories(): self {
-    $assets = \array_filter(
-      $this->assets,
-      static fn ($asset): bool => $asset instanceof Directory,
+    return $this->getFiltered(
+      static fn (Asset $asset): bool => $asset instanceof Directory,
     );
-    return new self($assets);
   }
 
   /**
    * Returns a collection of file assets.
    */
   public function getFiles(): self {
-    $assets = \array_filter(
-      $this->assets,
-      static fn ($asset): bool => $asset instanceof File,
+    return $this->getFiltered(
+      static fn (Asset $asset): bool => $asset instanceof File,
     );
-    return new self($assets);
   }
 
   /**
    * Returns a collection of symlink assets.
    */
   public function getSymlinks(): self {
-    $assets = \array_filter(
-      $this->assets,
-      static fn ($asset): bool => $asset instanceof Symlink,
+    return $this->getFiltered(
+      static fn (Asset $asset): bool => $asset instanceof Symlink,
     );
-    return new self($assets);
   }
 
   /**
@@ -127,6 +171,28 @@ final class AssetCollection implements \ArrayAccess, \IteratorAggregate, \Counta
     $assets = $this->assets;
     \usort($assets, $sorter);
     return new self($assets);
+  }
+
+  /**
+   * Filters the asset collection.
+   */
+  public function getFiltered(callable $filter): self {
+    $iterator = new \CallbackFilterIterator($this->getIterator(), $filter);
+    $assets = \iterator_to_array($iterator);
+    $str_keys = \array_filter(\array_keys($assets), 'is_string');
+    // Reindex if it's not an associative array.
+    return new self(\count($str_keys) > 0 ? $assets : \array_values($assets));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __toString(): string {
+    $output = '';
+    foreach ($this->getSorted() as $asset) {
+      $output .= '• ' . $asset . \PHP_EOL;
+    }
+    return $output;
   }
 
 }

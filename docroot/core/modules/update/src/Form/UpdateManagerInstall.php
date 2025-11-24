@@ -4,7 +4,7 @@ namespace Drupal\update\Form;
 
 use Drupal\Core\Archiver\ArchiverManager;
 use Drupal\Core\Extension\ModuleHandlerInterface;
-use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\File\FileExists;
 use Drupal\Core\FileTransfer\Local;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -14,6 +14,10 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Configure update settings for this site.
+ *
+ * @deprecated in drupal:10.4.0 and is removed from drupal:11.1.0. There is no replacement.
+ *
+ * @see https://www.drupal.org/node/3461934
  *
  * @internal
  */
@@ -60,6 +64,7 @@ class UpdateManagerInstall extends FormBase {
    *   The archiver plugin manager service.
    */
   public function __construct($root, ModuleHandlerInterface $module_handler, $site_path, ArchiverManager $archiver_manager) {
+    @trigger_error('The UpdateManagerInstall form is deprecated in drupal:10.4.0 and will be removed in drupal:11.1.0. There is no replacement. See https://www.drupal.org/node/3461934');
     $this->root = $root;
     $this->moduleHandler = $module_handler;
     $this->sitePath = $site_path;
@@ -167,8 +172,8 @@ class UpdateManagerInstall extends FormBase {
       }
     }
     elseif (!empty($all_files['project_upload']) && $this->moduleHandler->moduleExists('file')) {
-      $validators = ['file_validate_extensions' => [$this->archiverManager->getExtensions()]];
-      if (!($finfo = file_save_upload('project_upload', $validators, NULL, 0, FileSystemInterface::EXISTS_REPLACE))) {
+      $validators = ['FileExtension' => ['extensions' => $this->archiverManager->getExtensions()]];
+      if (!($finfo = file_save_upload('project_upload', $validators, NULL, 0, FileExists::Replace))) {
         // Failed to upload the file. file_save_upload() calls
         // \Drupal\Core\Messenger\MessengerInterface::addError() on failure.
         return;
@@ -199,8 +204,8 @@ class UpdateManagerInstall extends FormBase {
     $archive_errors = $this->moduleHandler->invokeAll('verify_update_archive', [$project, $local_cache, $directory]);
     if (!empty($archive_errors)) {
       $this->messenger()->addError(array_shift($archive_errors));
-      // @todo: Fix me in D8: We need a way to set multiple errors on the same
-      // form element and have all of them appear!
+      // @todo Fix me in D8: We need a way to set multiple errors on the same
+      //   form element and have all of them appear!
       if (!empty($archive_errors)) {
         foreach ($archive_errors as $error) {
           $this->messenger()->addError($error);

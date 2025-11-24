@@ -2,7 +2,7 @@ name: 'Views Data Export'
 type: module
 description: 'Plugin to export views data into various file formats.'
 package: 'Views'
-core_version_requirement: ^9 || ^10
+core_version_requirement: ^9 || ^10 || ^11
 dependencies:
   - drupal:rest
   - drupal:views
@@ -11,7 +11,7 @@ test_dependencies:
   - xls_serialization:xls_serialization
   - search_api:search_api
 
-# Information added by Drupal.org packaging script on 2023-11-02
-version: '8.x-1.4'
+# Information added by Drupal.org packaging script on 2025-10-24
+version: '8.x-1.8'
 project: 'views_data_export'
-datestamp: 1698948993
+datestamp: 1761320261

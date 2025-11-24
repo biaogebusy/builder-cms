@@ -1,0 +1,29 @@
+<?php
+
+/**
+ * @file
+ * Provides a field type for exporting a search API field.
+ */
+
+/**
+ * Implements hook_views_data_alter().
+ */
+function rest_views_search_api_views_data_alter(array &$data): void {
+  foreach ($data as $table_alias => $fields) {
+    /** @var array[] $fields */
+    foreach ($fields as $field_alias => $field) {
+      // Find all handlers that use the search api Field plugin.
+      if (isset($field['field']['id']) && $field['field']['id'] === 'search_api_field') {
+        // Add a second handler that uses the Rest Field plugin.
+        if (isset($field['title'])) {
+          $field['title'] = t('@field (serializable)', ['@field' => $field['title']]);
+        }
+        $field['field']['id'] = 'search_api_field_export';
+
+        // Only expose the field handler as the others are redundant.
+        unset($field['argument'], $field['filter'], $field['sort']);
+        $data[$table_alias]["{$field_alias}_export"] = $field;
+      }
+    }
+  }
+}

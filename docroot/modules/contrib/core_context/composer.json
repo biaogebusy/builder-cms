@@ -3,9 +3,10 @@
     "type": "drupal-module",
     "description": "Allows context values to be attached to entities in a field.",
     "require": {
-        "drupal/ctools": "^3.11"
+        "drupal/ctools": "^3.15 || ^4.1"
     },
     "require-dev": {
+        "drupal/layout_library": "^1",
         "drupal/page_manager": "^4.0-beta6"
     },
     "conflict": {

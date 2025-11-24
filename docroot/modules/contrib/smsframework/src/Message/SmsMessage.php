@@ -16,85 +16,87 @@ class SmsMessage implements SmsMessageInterface {
    *
    * @var string
    */
-  protected $uuid;
+  protected string $uuid;
 
   /**
    * The sender's name.
    *
    * @var string|null
    */
-  protected $senderName;
+  protected ?string $senderName = NULL;
 
   /**
    * The senders' phone number.
    *
-   * @var string
+   * @var string|null
    */
-  protected $senderPhoneNumber;
+  protected ?string $senderPhoneNumber;
 
   /**
    * The recipients of the message.
    *
-   * @var array
+   * @var string[]
    */
-  protected $recipients = [];
+  protected array $recipients = [];
 
   /**
    * The content of the message to be sent.
    *
    * @var string
    */
-  protected $message;
+  protected string $message;
 
   /**
    * The gateway for this message.
    *
-   * @var \Drupal\sms\Entity\SmsGatewayInterface
+   * @var \Drupal\sms\Entity\SmsGatewayInterface|null
    */
-  protected $gateway;
+  protected ?SmsGatewayInterface $gateway = NULL;
 
   /**
    * The direction of the message.
    *
    * See \Drupal\sms\Direction constants for potential values.
    *
-   * @var int
+   * Since direction is not a part of the constructor, it needs to be nullable.
+   *
+   * @var int|null
    * @see \Drupal\sms\Direction
    */
-  protected $direction;
+  protected ?int $direction = NULL;
 
   /**
    * Other options to be used for the SMS.
    *
-   * @var string
+   * @var array<mixed>
    */
-  protected $options = [];
+  protected array $options = [];
 
   /**
    * The result associated with this SMS message.
    *
    * @var \Drupal\sms\Message\SmsMessageResultInterface|null
    */
-  protected $result;
+  protected ?SmsMessageResultInterface $result = NULL;
 
   /**
    * The UID of the creator of the SMS message.
    *
-   * @var int
+   * @var int|null
    */
-  protected $uid;
+  protected ?int $uid = NULL;
 
   /**
    * Whether this message was generated automatically.
    *
    * @var bool
    */
-  protected $automated = TRUE;
+  protected bool $automated = TRUE;
 
   /**
    * Creates a new instance of an SMS message.
    *
-   * @param string $sender_phone_number
+   * @param string|null $sender_phone_number
    *   (optional) The senders' phone number.
    * @param array $recipients
    *   (optional) The list of recipient phone numbers for the message.
@@ -102,14 +104,13 @@ class SmsMessage implements SmsMessageInterface {
    *   (optional) The actual SMS message to be sent.
    * @param array $options
    *   (optional) Additional options.
-   * @param int $uid
+   * @param int|null $uid
    *   (optional) The user who created the SMS message.
    */
-  public function __construct($sender_phone_number = NULL, array $recipients = [], $message = '', array $options = [], $uid = NULL) {
+  public function __construct(?string $sender_phone_number = NULL, array $recipients = [], string $message = '', array $options = [], ?int $uid = NULL) {
     $this->setSenderNumber($sender_phone_number);
     $this->addRecipients($recipients);
     $this->setMessage($message);
-    $this->message = $message;
     $this->options = $options;
     $this->setUid($uid);
     $this->uuid = $this->uuidGenerator()->generate();
@@ -171,7 +172,7 @@ class SmsMessage implements SmsMessageInterface {
    * {@inheritdoc}
    */
   public function addRecipient($recipient) {
-    if (!in_array($recipient, $this->recipients)) {
+    if (!in_array($recipient, $this->recipients, TRUE)) {
       $this->recipients[] = $recipient;
     }
     return $this;
@@ -276,7 +277,7 @@ class SmsMessage implements SmsMessageInterface {
   /**
    * {@inheritdoc}
    */
-  public function setResult(SmsMessageResultInterface $result = NULL) {
+  public function setResult(?SmsMessageResultInterface $result = NULL) {
     $this->result = $result;
     return $this;
   }
@@ -354,7 +355,7 @@ class SmsMessage implements SmsMessageInterface {
    * {@inheritdoc}
    */
   public function getReport($recipient) {
-    return $this->result ? $this->result->getReport($recipient) : NULL;
+    return $this->result?->getReport($recipient);
   }
 
   /**

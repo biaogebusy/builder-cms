@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\flag\Functional;
 
 /**
@@ -106,9 +108,9 @@ class AdminUITest extends FlagTestBase {
     $this->drupalGet('admin/structure/flags/add');
     $this->submitForm([], 'Continue');
     // Check for fieldset titles.
-    $this->assertSession()->pageTextContains(t('Messages'));
-    $this->assertSession()->pageTextContains(t('Flag access'));
-    $this->assertSession()->pageTextContains(t('Display options'));
+    $this->assertSession()->pageTextContains('Messages');
+    $this->assertSession()->pageTextContains('Flag access');
+    $this->assertSession()->pageTextContains('Display options');
 
     $edit = [
       'label' => $this->label,
@@ -119,7 +121,7 @@ class AdminUITest extends FlagTestBase {
     ];
     $this->submitForm($edit, 'Create Flag');
 
-    $this->assertSession()->pageTextContains(t('Flag @this_label has been added.', ['@this_label' => $this->label]));
+    $this->assertSession()->pageTextContains("Flag $this->label has been added.");
 
     $this->flag = $this->flagService->getFlagById($this->flagId);
 
@@ -142,14 +144,14 @@ class AdminUITest extends FlagTestBase {
    */
   public function doFlagDisable() {
     $this->drupalGet('admin/structure/flags');
-    $this->assertSession()->pageTextContains(t('Enabled'));
+    $this->assertSession()->pageTextContains('Enabled');
 
     $this->drupalGet('admin/structure/flags/manage/' . $this->flagId . '/disable');
     $this->submitForm([], 'Disable');
     $this->assertSession()->statusCodeEquals(200);
 
     $this->drupalGet('admin/structure/flags');
-    $this->assertSession()->pageTextContains(t('Disabled'));
+    $this->assertSession()->pageTextContains('Disabled');
 
     $this->drupalGet('node/' . $this->nodeId);
     $this->assertSession()->pageTextNotContains($this->flagShortText);
@@ -160,14 +162,14 @@ class AdminUITest extends FlagTestBase {
    */
   public function doFlagEnable() {
     $this->drupalGet('admin/structure/flags');
-    $this->assertSession()->pageTextContains(t('Disabled'));
+    $this->assertSession()->pageTextContains('Disabled');
 
     $this->drupalGet('admin/structure/flags/manage/' . $this->flagId . '/enable');
     $this->submitForm([], 'Enable');
     $this->assertSession()->statusCodeEquals(200);
 
     $this->drupalGet('admin/structure/flags');
-    $this->assertSession()->pageTextContains(t('Enabled'));
+    $this->assertSession()->pageTextContains('Enabled');
 
     $this->drupalGet('node/' . $this->nodeId);
     $this->assertSession()->pageTextContains($this->flagShortText);
@@ -180,28 +182,28 @@ class AdminUITest extends FlagTestBase {
     // Flag the node.
     $this->flagService->flag($this->flag, $this->node, $this->adminUser);
 
-    $query_before = $this->entityTypeManager->getStorage('flagging')->getQuery();
-    $query_before->accessCheck()
+    $ids_before = $this->entityTypeManager->getStorage('flagging')->getQuery()
+      ->accessCheck()
       ->condition('flag_id', $this->flag->id())
       ->condition('entity_type', 'node')
-      ->condition('entity_id', $this->node->id());
-    $ids_before = $query_before->execute();
+      ->condition('entity_id', $this->node->id())
+      ->execute();
 
     $this->assertCount(1, $ids_before, "The flag has one flagging.");
 
     // Go to the reset form for the flag.
     $this->drupalGet('admin/structure/flags/manage/' . $this->flag->id() . '/reset');
 
-    $this->assertSession()->pageTextContains($this->t('Are you sure you want to reset the Flag'));
+    $this->assertSession()->pageTextContains('Are you sure you want to reset the Flag');
 
     $this->submitForm([], 'Reset');
 
-    $query_after = $this->entityTypeManager->getStorage('flagging')->getQuery();
-    $query_after->accessCheck()
+    $ids_after = $this->entityTypeManager->getStorage('flagging')->getQuery()
+      ->accessCheck()
       ->condition('flag_id', $this->flag->id())
       ->condition('entity_type', 'node')
-      ->condition('entity_id', $this->node->id());
-    $ids_after = $query_after->execute();
+      ->condition('entity_id', $this->node->id())
+      ->execute();
 
     $this->assertCount(0, $ids_after, "The flag has no flaggings after being reset.");
   }
@@ -230,6 +232,7 @@ class AdminUITest extends FlagTestBase {
     $this->submitForm($edit, 'Save');
 
     // Load the all the flags.
+    /** @var \Drupal\flag\FlagInterface[] $all_flags */
     $all_flags = $this->container
       ->get('entity_type.manager')
       ->getStorage('flag')
@@ -237,7 +240,7 @@ class AdminUITest extends FlagTestBase {
 
     // Check that the weights for each flag are saved in the database correctly.
     foreach ($all_flags as $id => $flag) {
-      $this->assertEquals($flag_weights_to_set[$id], $all_flags[$id]->get('weight'), 'The flag weight was changed.');
+      $this->assertEquals($flag_weights_to_set[$id], $all_flags[$id]->getWeight(), 'The flag weight was changed.');
     }
   }
 
@@ -251,7 +254,7 @@ class AdminUITest extends FlagTestBase {
     // Go to the delete form for the flag.
     $this->drupalGet('admin/structure/flags/manage/' . $this->flag->id() . '/delete');
 
-    $this->assertSession()->pageTextContains($this->t('Are you sure you want to delete the flag @this_label?', ['@this_label' => $this->label]));
+    $this->assertSession()->pageTextContains("Are you sure you want to delete the flag $this->label?");
 
     $this->submitForm([], 'Delete');
 

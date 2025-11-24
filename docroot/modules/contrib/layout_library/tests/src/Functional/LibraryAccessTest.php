@@ -24,6 +24,11 @@ class LibraryAccessTest extends BrowserTestBase {
   protected static $modules = ['layout_library'];
 
   /**
+   * Stores user created with permission.
+   */
+  protected $layoutAdmin;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {

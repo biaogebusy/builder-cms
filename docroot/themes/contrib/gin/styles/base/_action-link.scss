@@ -75,19 +75,17 @@
 a.button.button--danger {
   color: var(--gin-color-danger);
   box-shadow: 0 1px 2px var(--gin-color-danger-lightest);
+  min-height: 0;
+
+  &::before {
+    display: none;
+  }
 
   &,
   &:hover,
   &:focus,
   &:active {
-    // border-color: transparent !important;
     border-color: var(--gin-color-danger) !important;
-
-    &:before {
-      background-image: none;
-      background-color: var(--gin-color-danger) !important;
-      mask-image: icon('trash');
-    }
   }
 
   &:hover,
@@ -95,16 +93,13 @@ a.button.button--danger {
   &:active {
     color: var(--gin-bg-layer);
     background-color: var(--gin-color-danger);
-
-    &:before {
-      background-color: var(--gin-bg-layer) !important;
-    }
   }
 }
 
 // Primary danger button
 .button--primary.button--danger,
-a.button--primary.button--danger {
+a.button--primary.button--danger,
+#edit-submit.button.button--danger {
   color: var(--gin-bg-layer);
   background-color: var(--gin-color-danger);
 }

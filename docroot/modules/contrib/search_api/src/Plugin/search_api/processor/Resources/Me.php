@@ -12,10 +12,12 @@ class Me implements UnicodeCharacterPropertyInterface {
    */
   public static function getRegularExpression() {
     // phpcs:disable
+    // cspell:disable
     return
       '\x{0488}\x{0489}\x{20DD}\x{20DE}\x{20DF}\x{20E0}\x{20E2}' .
       '\x{20E3}\x{20E4}\x{A670}\x{A671}\x{A672}';
     // phpcs:enable
+    // cspell:enable
   }
 
 }

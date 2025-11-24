@@ -69,11 +69,11 @@ For the support requests, a screenshot of the output and Slick form are helpful.
 Shortly, you should kindly help the maintainers with detailed info to help you.
 
 ## <a name="issues"></a> CONSTRUCTIVE VS. NON-CONSTRUCTIVE PROJECT ISSUES
-1. We appreciate constructive, or at least normal/ minor, project issues:  
+1. We appreciate constructive, or at least normal/ minor, project issues:
    + `Support/ Feature` requests,
    + `Bug` reports,
-   + `Meta`, `Task` or `Plan`.  
-2. If your issue were directed to this page, feel free to re-open it after:   
+   + `Meta`, `Task` or `Plan`.
+2. If your issue were directed to this page, feel free to re-open it after:
    + You prove we identified it incorrectly, and in such a case we are sorry.
    + You have redacted it accordingly, and or provide the required data.
 
@@ -83,7 +83,7 @@ In fact, your name will be credited where credit's due with gratitude and
 respect at CHANGELOG.txt or
 [here](https://www.drupal.org/node/2232779/committers).
 
-Offhanded negative posts without data are mere useless gossips we never welcome!
+Offhanded toxic posts without data are mere useless gossips we never welcome!
 
 We are well aware, defects, bugs, flaws etc. are there as proven by bug fixes.
 We believe constructive criticism, positive suggestions, corrections, patches,
@@ -95,5 +95,6 @@ issues as outlined above so to have a mutual respect before submitting an issue.
 
 In plain English, as the biker who sounded like talking about Newton Law III aka
 karma, said: Treat me good, I'll treat you better...
+We perfectly understand this naive statement, yet this is a good boundary.
 
 Thank you for your positive consideration, cooperation, and kind contribution!

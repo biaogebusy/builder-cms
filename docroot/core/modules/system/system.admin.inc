@@ -6,8 +6,10 @@
  */
 
 use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility\Xss;
 use Drupal\Core\Link;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\Template\Attribute;
 use Drupal\Core\Url;
 
@@ -29,7 +31,7 @@ function template_preprocess_admin_block_content(&$variables) {
     $variables['compact'] = system_admin_compact_mode();
     foreach ($variables['content'] as $key => $item) {
       $variables['content'][$key]['link'] = Link::fromTextAndUrl($item['title'], $item['url'])->toString();
-      if (!$variables['compact'] && isset($item['description'])) {
+      if (!$variables['compact'] && !empty($item['description'])) {
         $variables['content'][$key]['description'] = ['#markup' => $item['description']];
       }
       else {
@@ -296,7 +298,7 @@ function template_preprocess_system_themes_page(&$variables) {
       }
 
       // Localize the theme description.
-      $current_theme['description'] = t($theme->info['description']);
+      $current_theme['description'] = Markup::create(Xss::filterAdmin(t($theme->info['description'])));
 
       $current_theme['attributes'] = new Attribute();
       $current_theme['name'] = $theme->info['name'];
@@ -336,11 +338,11 @@ function template_preprocess_system_themes_page(&$variables) {
       }
       elseif (!empty($theme->module_dependencies_disabled)) {
         if (!empty($theme->insufficient_module_permissions)) {
-          $current_theme['incompatible'] = t('This theme requires the listed modules to operate correctly. They must first be enabled by a user with permissions to do so.');
+          $current_theme['incompatible'] = t('This theme requires the listed modules to operate correctly. They must first be installed by a user with permissions to do so.');
         }
         else {
           $modules_url = (string) Url::fromRoute('system.modules_list')->toString();
-          $current_theme['incompatible'] = t('This theme requires the listed modules to operate correctly. They must first be enabled via the <a href=":modules_url">Extend page</a>.', [
+          $current_theme['incompatible'] = t('This theme requires the listed modules to operate correctly. They must first be installed via the <a href=":modules_url">Extend page</a>.', [
             ':modules_url' => $modules_url,
           ]);
         }

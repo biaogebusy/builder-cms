@@ -12,6 +12,8 @@ use Drupal\Core\Routing\EnhancerInterface;
 trait RouteEnhancerCollectorTrait {
 
   /**
+   * List of enhancers.
+   *
    * @var \Drupal\Core\Routing\EnhancerInterface[]
    */
   protected $enhancers = [];
@@ -24,14 +26,15 @@ trait RouteEnhancerCollectorTrait {
   protected $sortedEnhancers = [];
 
   /**
-   * Add route enhancers to the router to let them generate information on
-   * matched routes.
+   * Add route enhancers to the router.
    *
    * The order of the enhancers is determined by the priority, the higher the
    * value, the earlier the enhancer is run.
    *
    * @param \Drupal\Core\Routing\EnhancerInterface $enhancer
+   *   Route Enhancer.
    * @param int $priority
+   *   Priority Number.
    *
    * @return $this
    */

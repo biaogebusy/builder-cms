@@ -7,6 +7,9 @@ use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 
+/**
+ * Configure Page Variants form.
+ */
 class PageVariantConfigureForm extends FormBase {
 
   /**
@@ -63,7 +66,7 @@ class PageVariantConfigureForm extends FormBase {
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     $cached_values = $form_state->getTemporaryValue('wizard');
-    /** @var $page_variant \Drupal\page_manager\Entity\PageVariant */
+    /** @var \Drupal\page_manager\Entity\PageVariant $page_variant */
     $page_variant = $cached_values['page_variant'];
 
     $variant_plugin = $page_variant->getVariantPlugin();
@@ -75,9 +78,9 @@ class PageVariantConfigureForm extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $cached_values = $form_state->getTemporaryValue('wizard');
-    /** @var $page \Drupal\page_manager\Entity\Page */
+    /** @var \Drupal\page_manager\Entity\Page $page */
     $page = $cached_values['page'];
-    /** @var $page_variant \Drupal\page_manager\Entity\PageVariant */
+    /** @var \Drupal\page_manager\Entity\PageVariant $page_variant */
     $page_variant = $cached_values['page_variant'];
     $variant_plugin = $page_variant->getVariantPlugin();
     $variant_plugin->submitConfigurationForm($form['variant_settings'], (new FormState())->setValues($form_state->getValue('variant_settings', [])));

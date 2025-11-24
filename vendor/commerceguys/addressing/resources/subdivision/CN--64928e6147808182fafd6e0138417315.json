@@ -1,0 +1,39 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"ZJ",
+		"Lishui Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Jinyun Xian": {
+			"local_name": "缙云县"
+		},
+		"Jingning Xian": {
+			"local_code": "景宁畲族自治县",
+			"local_name": "景宁县"
+		},
+		"Liandu Qu": {
+			"local_name": "莲都区"
+		},
+		"Longquan Shi": {
+			"local_name": "龙泉市"
+		},
+		"Qingtian Xian": {
+			"local_name": "青田县"
+		},
+		"Qingyuan Xian": {
+			"local_name": "庆元县"
+		},
+		"Songyang Xian": {
+			"local_name": "松阳县"
+		},
+		"Suichang Xian": {
+			"local_name": "遂昌县"
+		},
+		"Yunhe Xian": {
+			"local_name": "云和县"
+		}
+	}
+}

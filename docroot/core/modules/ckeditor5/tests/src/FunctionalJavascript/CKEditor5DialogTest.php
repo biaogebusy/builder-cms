@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\ckeditor5\FunctionalJavascript;
 
 use Drupal\ckeditor5\Plugin\Editor\CKEditor5;
@@ -31,7 +33,7 @@ class CKEditor5DialogTest extends CKEditor5TestBase {
   /**
    * Tests if CKEditor 5 tooltips can be interacted with in dialogs.
    */
-  public function testCKEditor5FocusInTooltipsInDialog() {
+  public function testCKEditor5FocusInTooltipsInDialog(): void {
     FilterFormat::create([
       'format' => 'test_format',
       'name' => 'CKEditor 5 with link',
@@ -76,7 +78,7 @@ class CKEditor5DialogTest extends CKEditor5TestBase {
     // Make sure the input field can have focus and we can type into it.
     $input->setValue($link_url);
     // Save the new link.
-    $page->find('css', '.ck-balloon-panel .ck-button-save')->click();
+    $page->find('xpath', "//button[span[text()='Insert']]")->click();
     // Make sure something was added to the text.
     $this->assertNotEmpty($content_area->getText());
   }

@@ -1,0 +1,10 @@
+name: Acquia Connector subscription data test
+type: module
+package: Testing
+description: Provides test integration for AcquiaConnectorEvents::GET_SUBSCRIPTION.
+hidden: true
+
+# Information added by Drupal.org packaging script on 2025-08-26
+version: '4.1.1'
+project: 'acquia_connector'
+datestamp: 1756224606

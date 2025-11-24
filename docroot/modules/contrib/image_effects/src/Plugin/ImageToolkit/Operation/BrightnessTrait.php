@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageToolkit\Operation;
 
 /**
@@ -14,6 +16,7 @@ trait BrightnessTrait {
     return [
       'level' => [
         'description' => 'The brightness level.',
+        'type' => 'int',
       ],
     ];
   }
@@ -22,10 +25,13 @@ trait BrightnessTrait {
    * {@inheritdoc}
    */
   protected function validateArguments(array $arguments) {
+    $arguments = ArgumentsTypeValidator::validate($this->arguments(), $arguments);
+
     // Assure brightness level is valid.
-    if (!is_numeric($arguments['level']) || !is_int($arguments['level'] + 5) || $arguments['level'] < -100 || $arguments['level'] > 100) {
+    if ($arguments['level'] < -100 || $arguments['level'] > 100) {
       throw new \InvalidArgumentException("Invalid level ('{$arguments['level']}') specified for the image 'brightness' operation");
     }
+
     return $arguments;
   }
 

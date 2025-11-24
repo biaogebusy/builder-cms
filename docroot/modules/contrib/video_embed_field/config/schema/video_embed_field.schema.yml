@@ -25,6 +25,12 @@ field.formatter.settings.video_embed_field_video:
     height:
       type: integer
       label: 'Height'
+    title_format:
+      type: label
+      label: 'Title format'
+    title_fallback:
+      type: boolean
+      label: 'Use a fallback title'
 
 field.formatter.settings.video_embed_hybrid:
   type: mapping
@@ -51,6 +57,12 @@ field.formatter.settings.video_embed_hybrid:
     modal_max_width:
       type: integer
       label: 'Modal max width'
+    title_format:
+      type: label
+      label: 'Title format'
+    title_fallback:
+      type: boolean
+      label: 'Use a fallback title'
 
 field.formatter.settings.video_embed_field_lazyload:
   type: field.formatter.settings.video_embed_hybrid

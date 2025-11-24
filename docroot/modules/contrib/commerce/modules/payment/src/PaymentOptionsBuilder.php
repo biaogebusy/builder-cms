@@ -2,34 +2,39 @@
 
 namespace Drupal\commerce_payment;
 
-use Drupal\commerce\EntityHelper;
-use Drupal\commerce_order\Entity\OrderInterface;
-use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\SupportsStoredPaymentMethodsInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
+use Drupal\commerce\EntityHelper;
+use Drupal\commerce_order\Entity\OrderInterface;
+use Drupal\commerce_payment\Event\FilterPaymentOptionsEvent;
+use Drupal\commerce_payment\Event\PaymentEvents;
+use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\SupportsCreatingPaymentMethodsInterface;
+use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\SupportsStoredPaymentMethodsInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
+/**
+ * Builds payment options for an order.
+ */
 class PaymentOptionsBuilder implements PaymentOptionsBuilderInterface {
 
   use StringTranslationTrait;
 
   /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
    * Constructs a new PaymentOptionsBuilder object.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
    *   The string translation.
+   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $eventDispatcher
+   *   The event dispatcher.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, TranslationInterface $string_translation) {
-    $this->entityTypeManager = $entity_type_manager;
+  public function __construct(
+    protected EntityTypeManagerInterface $entityTypeManager,
+    TranslationInterface $string_translation,
+    protected EventDispatcherInterface $eventDispatcher,
+  ) {
     $this->stringTranslation = $string_translation;
   }
 
@@ -73,7 +78,7 @@ class PaymentOptionsBuilder implements PaymentOptionsBuilderInterface {
     // 2) Add the order's payment method if it was not included above.
     /** @var \Drupal\commerce_payment\Entity\PaymentMethodInterface $order_payment_method */
     $order_payment_method = $order->get('payment_method')->entity;
-    if ($order_payment_method) {
+    if ($order_payment_method && !$order_payment_method->isExpired()) {
       $order_payment_method_id = $order_payment_method->id();
       // Make sure that the payment method's gateway is still available.
       $payment_gateway_id = $order_payment_method->getPaymentGatewayId();
@@ -106,9 +111,12 @@ class PaymentOptionsBuilder implements PaymentOptionsBuilderInterface {
     }
 
     foreach ($payment_gateways as $payment_gateway_id => $payment_gateway) {
+      $payment_gateway_plugin = $payment_gateway->getPlugin();
       // 3) Add options to create new stored payment methods of supported types.
-      if (isset($payment_gateways_with_payment_methods[$payment_gateway_id])) {
-        $payment_gateway_plugin = $payment_gateway->getPlugin();
+      // Offsite gateways are handled below as they do not require
+      // per-payment methods forms.
+      if (isset($payment_gateways_with_payment_methods[$payment_gateway_id]) &&
+        $payment_gateway_plugin instanceof SupportsCreatingPaymentMethodsInterface) {
         $payment_method_types = $payment_gateway_plugin->getPaymentMethodTypes();
 
         foreach ($payment_method_types as $payment_method_type_id => $payment_method_type) {
@@ -135,13 +143,15 @@ class PaymentOptionsBuilder implements PaymentOptionsBuilderInterface {
       else {
         $options[$payment_gateway_id] = new PaymentOption([
           'id' => $payment_gateway_id,
-          'label' => $payment_gateway->getPlugin()->getDisplayLabel(),
+          'label' => $payment_gateway_plugin->getDisplayLabel(),
           'payment_gateway_id' => $payment_gateway_id,
         ]);
       }
     }
 
-    return $options;
+    $event = new FilterPaymentOptionsEvent($options, $order);
+    $this->eventDispatcher->dispatch($event, PaymentEvents::FILTER_PAYMENT_OPTIONS);
+    return $event->getPaymentOptions();
   }
 
   /**
@@ -160,12 +170,28 @@ class PaymentOptionsBuilder implements PaymentOptionsBuilderInterface {
     elseif ($order_payment_gateway && !($order_payment_gateway instanceof SupportsStoredPaymentMethodsInterface)) {
       $default_option_id = $order_payment_gateway->id();
     }
-    // The order doesn't have a payment method/gateway specified, or it has, but it is no longer available.
+
+    // The order doesn't have a payment method/gateway specified, or it has,
+    // but it is no longer available.
+    if (!$default_option_id || !isset($options[$default_option_id])) {
+      // Use customer's default payment method if available.
+      $customer = $order->getCustomer();
+      if (!$customer->isAnonymous()) {
+        /** @var \Drupal\commerce_payment\PaymentMethodStorageInterface $payment_method_storage */
+        $payment_method_storage = $this->entityTypeManager->getStorage('commerce_payment_method');
+        $default_payment_method = $payment_method_storage->loadDefaultByUser($customer);
+        if ($default_payment_method && isset($options[$default_payment_method->id()])) {
+          $default_option_id = $default_payment_method->id();
+        }
+      }
+    }
+
+    // The user doesn't have a default payment method/gateway specified, or it
+    // has, but it is no longer available.
     if (!$default_option_id || !isset($options[$default_option_id])) {
       $option_ids = array_keys($options);
       $default_option_id = reset($option_ids);
     }
-
     return $options[$default_option_id];
   }
 

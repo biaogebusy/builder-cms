@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Path;
 
 use Drupal\Core\Path\PathMatcher;
@@ -22,6 +24,8 @@ class PathMatcherTest extends UnitTestCase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    parent::setUp();
+
     // Create a stub config factory with all config settings that will be
     // checked during this test.
     $config_factory_stub = $this->getConfigFactoryStub(
@@ -40,7 +44,7 @@ class PathMatcherTest extends UnitTestCase {
    *
    * @dataProvider getMatchPathData
    */
-  public function testMatchPath($patterns, $paths) {
+  public function testMatchPath($patterns, $paths): void {
     foreach ($paths as $path => $expected_result) {
       $actual_result = $this->pathMatcher->matchPath($path, $patterns);
       $this->assertEquals($actual_result, $expected_result, "Tried matching the path '$path' to the pattern '$patterns'.");
@@ -53,7 +57,7 @@ class PathMatcherTest extends UnitTestCase {
    * @return array
    *   A nested array of pattern arrays and path arrays.
    */
-  public function getMatchPathData() {
+  public static function getMatchPathData() {
     return [
       [
         // Single absolute paths.

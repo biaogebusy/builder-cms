@@ -2,12 +2,12 @@
 
 namespace Drupal\charts;
 
+use Drupal\Component\Serialization\Yaml;
 use Drupal\Component\Utility\Color;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Core\Extension\ModuleHandlerInterface;
-use Drupal\Core\Serialization\Yaml;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**

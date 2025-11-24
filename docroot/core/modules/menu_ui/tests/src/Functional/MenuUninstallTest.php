@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\menu_ui\Functional;
 
 use Drupal\Tests\BrowserTestBase;
@@ -13,9 +15,7 @@ use Drupal\system\Entity\Menu;
 class MenuUninstallTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['menu_ui'];
 
@@ -27,7 +27,7 @@ class MenuUninstallTest extends BrowserTestBase {
   /**
    * Tests Menu uninstall.
    */
-  public function testMenuUninstall() {
+  public function testMenuUninstall(): void {
     \Drupal::service('module_installer')->uninstall(['menu_ui']);
 
     \Drupal::entityTypeManager()->getStorage('menu')->resetCache(['admin']);

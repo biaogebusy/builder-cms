@@ -2,6 +2,7 @@
 
 namespace Drupal\shortcut\Plugin\migrate\destination;
 
+use Drupal\migrate\Attribute\MigrateDestination;
 use Drupal\shortcut\ShortcutSetStorageInterface;
 use Drupal\user\Entity\User;
 use Drupal\migrate\Plugin\MigrationInterface;
@@ -11,10 +12,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 
 /**
- * @MigrateDestination(
- *   id = "shortcut_set_users"
- * )
+ * Migration destination for shortcut_set_users.
  */
+#[MigrateDestination('shortcut_set_users')]
 class ShortcutSetUsers extends DestinationBase implements ContainerFactoryPluginInterface {
 
   /**
@@ -30,7 +30,7 @@ class ShortcutSetUsers extends DestinationBase implements ContainerFactoryPlugin
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\migrate\Plugin\MigrationInterface $migration
@@ -46,7 +46,7 @@ class ShortcutSetUsers extends DestinationBase implements ContainerFactoryPlugin
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration = NULL) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, ?MigrationInterface $migration = NULL) {
     return new static(
       $configuration,
       $plugin_id,

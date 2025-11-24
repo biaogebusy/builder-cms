@@ -2,7 +2,6 @@
 
 namespace Drupal\Tests\page_manager\Unit;
 
-use Prophecy\PhpUnit\ProphecyTrait;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -14,6 +13,7 @@ use Drupal\page_manager\Event\PageManagerEvents;
 use Drupal\page_manager\PageVariantInterface;
 use Drupal\Tests\UnitTestCase;
 use Prophecy\Argument;
+use Prophecy\PhpUnit\ProphecyTrait;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
@@ -26,7 +26,10 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 class PageTest extends UnitTestCase {
 
   use ProphecyTrait;
+
   /**
+   * The Page entity.
+   *
    * @var \Drupal\page_manager\Entity\Page
    */
   protected $page;

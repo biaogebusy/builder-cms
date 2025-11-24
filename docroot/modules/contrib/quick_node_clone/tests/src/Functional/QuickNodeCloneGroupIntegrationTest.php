@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\quick_node_clone\Functional;
 
+use Drupal\Tests\BrowserTestBase;
+use Drupal\Tests\node\Traits\NodeCreationTrait;
 use Drupal\group\Entity\Group;
 use Drupal\group\Entity\GroupContent;
 use Drupal\group\Entity\GroupRelationship;
@@ -10,8 +12,6 @@ use Drupal\group\Entity\GroupType;
 use Drupal\group\Entity\Storage\GroupContentTypeStorageInterface;
 use Drupal\group\Entity\Storage\GroupRelationshipTypeStorageInterface;
 use Drupal\group\PermissionScopeInterface;
-use Drupal\Tests\BrowserTestBase;
-use Drupal\Tests\node\Traits\NodeCreationTrait;
 
 /**
  * Tests node cloning with groups.
@@ -136,8 +136,8 @@ class QuickNodeCloneGroupIntegrationTest extends BrowserTestBase {
     // Determine the relation type entity ID
     // for the installed version of the group module (v2 or v3).
     $relation_type_id = $this->entityTypeManager->getDefinition('group_content_type', FALSE)
-      ? 'group_content_type'
-      : 'group_relationship_type';
+    ? 'group_content_type'
+    : 'group_relationship_type';
     $relation_type_storage = $this->entityTypeManager->getStorage($relation_type_id);
     assert($relation_type_storage instanceof GroupRelationshipTypeStorageInterface);
     $node_type = 'page';

@@ -1,30 +1,33 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\diff\Plugin\diff\Field;
 
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\diff\Attribute\FieldDiffBuilder;
 use Drupal\diff\FieldDiffBuilderBase;
 
 /**
  * Plugin to diff list fields.
- *
- * @FieldDiffBuilder(
- *   id = "list_field_diff_builder",
- *   label = @Translation("List Field Diff"),
- *   field_types = {
- *     "list_string",
- *     "list_integer",
- *     "list_float"
- *   },
- * )
  */
+#[FieldDiffBuilder(
+  id: 'list_field_diff_builder',
+  label: new TranslatableMarkup('List Field Diff'),
+  field_types: [
+    'list_string',
+    'list_integer',
+    'list_float',
+  ],
+)]
 class ListFieldBuilder extends FieldDiffBuilderBase {
 
   /**
    * {@inheritdoc}
    */
-  public function build(FieldItemListInterface $field_items) {
+  public function build(FieldItemListInterface $field_items): mixed {
     $result = [];
 
     // Every item from $field_items is of type FieldItemInterface.
@@ -34,19 +37,11 @@ class ListFieldBuilder extends FieldDiffBuilderBase {
         $possible_options = $field_item->getPossibleOptions();
         $values = $field_item->getValue();
         if ($this->configuration['compare']) {
-          switch ($this->configuration['compare']) {
-            case 'both':
-              $result[$field_key][] = $possible_options[$values['value']] . ' (' . $values['value'] . ')';
-              break;
-
-            case 'label':
-              $result[$field_key][] = $possible_options[$values['value']];
-              break;
-
-            default:
-              $result[$field_key][] = $values['value'];
-              break;
-          }
+          $result[$field_key][] = match ($this->configuration['compare']) {
+            'both' => $possible_options[$values['value']] . ' (' . $values['value'] . ')',
+            'label' => $possible_options[$values['value']],
+            default => $values['value'],
+          };
         }
       }
     }
@@ -57,7 +52,7 @@ class ListFieldBuilder extends FieldDiffBuilderBase {
   /**
    * {@inheritdoc}
    */
-  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
     $form['compare'] = [
       '#type' => 'radios',
       '#title' => $this->t('Comparison method'),
@@ -75,7 +70,7 @@ class ListFieldBuilder extends FieldDiffBuilderBase {
   /**
    * {@inheritdoc}
    */
-  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
+  public function submitConfigurationForm(array &$form, FormStateInterface $form_state): void {
     $this->configuration['compare'] = $form_state->getValue('compare');
 
     parent::submitConfigurationForm($form, $form_state);
@@ -84,7 +79,7 @@ class ListFieldBuilder extends FieldDiffBuilderBase {
   /**
    * {@inheritdoc}
    */
-  public function defaultConfiguration() {
+  public function defaultConfiguration(): array {
     $default_configuration = [
       'compare' => 'key',
     ];

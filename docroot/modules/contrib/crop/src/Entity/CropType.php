@@ -16,7 +16,8 @@ use Symfony\Component\Validator\ConstraintViolationList;
  *     "form" = {
  *       "add" = "Drupal\crop\Form\CropTypeForm",
  *       "edit" = "Drupal\crop\Form\CropTypeForm",
- *       "delete" = "Drupal\crop\Form\CropTypeDeleteForm"
+ *       "delete" = "Drupal\crop\Form\CropTypeDeleteForm",
+ *       "flush" = "Drupal\crop\Form\CropTypeFlushForm",
  *     },
  *     "list_builder" = "Drupal\crop\CropTypeListBuilder",
  *   },
@@ -30,6 +31,7 @@ use Symfony\Component\Validator\ConstraintViolationList;
  *   links = {
  *     "edit-form" = "/admin/config/media/crop/manage/{crop_type}",
  *     "delete-form" = "/admin/config/media/crop/manage/{crop_type}/delete",
+ *     "flush-form" = "/admin/config/media/crop/manage/{crop_type}/flush",
  *   },
  *   constraints = {
  *     "CropTypeMachineNameValidation" = {},

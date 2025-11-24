@@ -10,7 +10,7 @@ use Drupal\recently_read\Entity\RecentlyReadType;
 /**
  * Implements hook_views_data_alter().
  */
-function recently_read_views_data_alter(array &$data) {
+function recently_read_views_data_alter(array &$data): void {
   $recently_read_types = RecentlyReadType::loadMultiple();
   $entity_type_manager = \Drupal::entityTypeManager();
   foreach ($recently_read_types as $type) {

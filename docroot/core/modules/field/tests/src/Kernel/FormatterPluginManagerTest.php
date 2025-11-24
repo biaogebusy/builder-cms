@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Kernel;
 
 use Drupal\Core\Field\BaseFieldDefinition;
@@ -16,7 +18,7 @@ class FormatterPluginManagerTest extends FieldKernelTestBase {
    *
    * @see \Drupal\field\Tests\WidgetPluginManagerTest::testNotApplicableFallback()
    */
-  public function testNotApplicableFallback() {
+  public function testNotApplicableFallback(): void {
     /** @var \Drupal\Core\Field\FormatterPluginManager $formatter_plugin_manager */
     $formatter_plugin_manager = \Drupal::service('plugin.manager.field.formatter');
 

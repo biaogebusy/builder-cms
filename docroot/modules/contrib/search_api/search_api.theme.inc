@@ -7,7 +7,9 @@
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility\Xss;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
 use Drupal\search_api\Query\QueryInterface;
 use Drupal\search_api\SearchApiException;
@@ -125,30 +127,6 @@ function template_preprocess_search_api_admin_data_type_table(array &$variables)
 }
 
 /**
- * Prepares variables for search_api_form_item_list form templates.
- *
- * Default template: search-api-form-item-list.html.twig.
- *
- * @param array &$variables
- *   Associative array of template variables, with the following structure:
- *   - element: The element to be rendered, as an array, potentially containing
- *     a "#title" key, plus the list items as its children.
- */
-function template_preprocess_search_api_form_item_list(array &$variables) {
-  $element = $variables['element'];
-
-  $variables['items'] = [
-    '#theme' => 'item_list',
-  ];
-  if (!empty($element['#title'])) {
-    $variables['items']['#title'] = $element['#title'];
-  }
-  foreach (Element::children($element) as $key) {
-    $variables['items']['#items'][$key] = $element[$key];
-  }
-}
-
-/**
  * Prepares variables for search_api_server form templates.
  *
  * Default template: search-api-server.html.twig.
@@ -164,7 +142,7 @@ function template_preprocess_search_api_server(array &$variables) {
 
   if (($description = $server->getDescription())) {
     // Sanitize the description and append to the output.
-    $variables['description'] = $description;
+    $variables['description'] = Markup::create(Xss::filterAdmin($description));
   }
 
   // Initialize the $rows variable which will hold the different parts of server
@@ -191,6 +169,7 @@ function template_preprocess_search_api_server(array &$variables) {
   }
   else {
     $classes[] = 'warning';
+    $classes[] = 'color-warning';
     $info = t('disabled (<a href=":url">enable</a>)', [':url' => $server->toUrl('enable')->toString()]);
   }
   // Append the row and reset variables.
@@ -200,12 +179,13 @@ function template_preprocess_search_api_server(array &$variables) {
   $classes = [];
 
   // Check if the backend used by the server is valid and get its label.
-  if ($server->hasValidBackend()) {
-    $backend = $server->getBackend();
+  $backend = $server->getBackendIfAvailable();
+  if ($backend) {
     $info = Html::escape($backend->label());
   }
   else {
     $classes[] = 'error';
+    $classes[] = 'color-error';
     $info = t('Invalid or missing backend plugin: %backend_id', ['%backend_id' => $server->getBackendId()]);
   }
 
@@ -244,6 +224,7 @@ function template_preprocess_search_api_server(array &$variables) {
     $info = $information['info'];
     if (!empty($information['status'])) {
       $classes[] = $information['status'];
+      $classes[] = 'color-' . $information['status'];
     }
     $rows[] = Utility::deepCopy($row);
     $classes = [];
@@ -274,12 +255,12 @@ function template_preprocess_search_api_index(array &$variables) {
   // Get the index.
   /** @var \Drupal\search_api\IndexInterface $index */
   $index = $variables['index'];
-  $server = $index->hasValidServer() ? $index->getServerInstance() : NULL;
-  $tracker = $index->hasValidTracker() ? $index->getTrackerInstance() : NULL;
+  $server = $index->getServerInstanceIfAvailable();
+  $tracker = $index->getTrackerInstanceIfAvailable();
 
   if (($description = $index->getDescription())) {
     // Sanitize the description and append to the output.
-    $variables['description'] = $description;
+    $variables['description'] = Markup::create(Xss::filterAdmin($description));
   }
 
   // Initialize the $rows variable which will hold the different parts of server
@@ -319,10 +300,12 @@ function template_preprocess_search_api_index(array &$variables) {
   // Check if a server is available and enabled.
   elseif ($server && $server->status()) {
     $classes[] = 'warning';
+    $classes[] = 'color-warning';
     $info = t('disabled (<a href=":url">enable</a>)', [':url' => $index->toUrl('enable')->toString()]);
   }
   else {
     $classes[] = 'warning';
+    $classes[] = 'color-warning';
     $info = t('disabled');
   }
   // Append the row and reset variables.
@@ -330,6 +313,16 @@ function template_preprocess_search_api_index(array &$variables) {
   $classes[] = 'search-api-index-summary--status';
   $rows[] = Utility::deepCopy($row);
   $classes = [];
+
+  // Show hint if index is read-only.
+  if ($index->status() && $index->isReadOnly()) {
+    $classes[] = 'color-warning';
+    $classes[] = 'search-api-index-summary--read-only';
+    $label = t('Read-only');
+    $info = t('This index is currently read-only. No items will be indexed.');
+    $rows[] = Utility::deepCopy($row);
+    $classes = [];
+  }
 
   foreach ($index->getDatasourceIds() as $datasource_id) {
     // Check if the datasource is valid.
@@ -350,6 +343,7 @@ function template_preprocess_search_api_index(array &$variables) {
     }
     else {
       $classes[] = 'error';
+      $classes[] = 'color-error';
       $info = t('Invalid or missing datasource plugin: %datasource_id', ['%datasource_id' => $datasource_id]);
     }
     // Append the row and reset variables.
@@ -365,6 +359,7 @@ function template_preprocess_search_api_index(array &$variables) {
   }
   else {
     $classes[] = 'error';
+    $classes[] = 'color-error';
     $info = t('Invalid or missing tracker plugin: %tracker_id', ['%tracker_id' => $index->getTrackerId()]);
   }
   // Append the row and reset variables.
@@ -382,6 +377,7 @@ function template_preprocess_search_api_index(array &$variables) {
   }
   elseif ($index->getServerId()) {
     $classes[] = 'error';
+    $classes[] = 'color-error';
     $label = t('Server');
     $info = t('Unknown server set for index: %server_id', ['%server_id' => $index->getServerId()]);
     $rows[] = Utility::deepCopy($row);
@@ -400,41 +396,58 @@ function template_preprocess_search_api_index(array &$variables) {
       $args = ['@message' => $variables['server_count_error']];
       $info = t('Error while checking server index status: @message', $args);
       $classes[] = 'error';
+      $classes[] = 'color-error';
     }
     $classes[] = 'search-api-index-summary--server-index-status';
     $rows[] = Utility::deepCopy($row);
     $classes = [];
 
-    $cron_limit = $index->getOption('cron_limit', \Drupal::config('search_api.settings')->get('default_cron_limit'));
-    // Check if the cron limit is higher than zero.
-    if ($cron_limit != 0) {
-      $classes[] = 'ok';
-      if ($cron_limit > 0) {
-        $info = \Drupal::translation()->formatPlural($cron_limit, 'During cron runs, 1 item will be indexed per batch.', 'During cron runs, @count items will be indexed per batch.');
+    if (!$index->isReadOnly()) {
+      $default = \Drupal::config('search_api.settings')
+        ->get('default_cron_limit');
+      $cron_limit = $index->getOption('cron_limit', $default);
+      // Check if the cron limit is higher than zero.
+      if ($cron_limit != 0) {
+        $classes[] = 'ok';
+        if ($cron_limit > 0) {
+          $info = \Drupal::translation()->formatPlural(
+            $cron_limit,
+            'During cron runs, 1 item will be indexed per batch.',
+            'During cron runs, @count items will be indexed per batch.',
+          );
+        }
+        else {
+          $info = t('All items will be indexed at once during cron runs.');
+        }
       }
       else {
-        $info = t('All items will be indexed at once during cron runs.');
+        $classes[] = 'warning';
+        $classes[] = 'color-warning';
+        $info = t('No items will be indexed during cron runs.');
       }
+      // Append the row and reset variables.
+      $label = t('Cron batch size');
+      $classes[] = 'search-api-index-summary--cron-batch-size';
+      $rows[] = Utility::deepCopy($row);
+      $classes = [];
     }
-    else {
-      $classes[] = 'warning';
-      $info = t('No items will be indexed during cron runs.');
-    }
-    // Append the row and reset variables.
-    $label = t('Cron batch size');
-    $classes[] = 'search-api-index-summary--cron-batch-size';
-    $rows[] = Utility::deepCopy($row);
-    $classes = [];
 
     // Add the indexing progress bar.
     if ($tracker) {
       $indexed_count = $tracker->getIndexedItemsCount();
       $total_count = $tracker->getTotalItemsCount();
 
+      $vars = ['@indexed' => $indexed_count, '@total' => $total_count];
+      if (!$index->isReadOnly()) {
+        $message = t('@indexed/@total indexed', $vars);
+      }
+      else {
+        $message = t('@indexed/@total indexed (read-only)', $vars);
+      }
       $variables['index_progress'] = [
         '#theme' => 'progress_bar',
         '#percent' => $total_count ? (int) (100 * $indexed_count / $total_count) : 100,
-        '#message' => t('@indexed/@total indexed', ['@indexed' => $indexed_count, '@total' => $total_count]),
+        '#message' => $message,
       ];
     }
   }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Component\Utility;
 
 use Drupal\Component\Utility\Timer;
@@ -21,7 +23,7 @@ class TimerTest extends TestCase {
    * @covers ::stop
    * @covers ::read
    */
-  public function testTimer() {
+  public function testTimer(): void {
     Timer::start('test');
     usleep(5000);
     $value = Timer::read('test');

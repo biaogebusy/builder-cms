@@ -65,6 +65,9 @@ The primary features include:
 This version requires Drupal 9.4 or newer and is compatible with Drupal 10. That
 said, it is always recommended to keep Drupal core installations up to date.
 
+The module requires PHP 8.0 or newer, as of Metatag v2.0.0 it will not work with
+PHP 7.
+
 This module requires the following modules:
 
 - [Token](https://www.drupal.org/project/token): Provides a popup browser to
@@ -159,52 +162,6 @@ On the settings page (`/admin/config/search/metatag/settings`) are options to
 control which meta tag groups are available for each entity bundle. This allows
 e.g. the Favicon meta tags to be available for global configurations but to hide
 them on entity forms.
-
-
-## Indexing meta tags with Search API
-
-The Search API integration allows indexing the meta tag values from a meta tag
-field on an entity bundle.
-
-
-### Limitations
-
-- Each meta tag must be specified individually, there isn't (currently) a way to
-  add all of them at once.
-- This may not work with values stored in Schema.org data structures from the
-  Schema.org Metatag module.
-- Changing the global Metatag defaults will not trigger a reindex of the content
-  so this will need to be done separately.
-- By default meta tags will be added as "string" fields, which will not include
-  them in the keyword search index; their "Type" selection must be specifically
-  set to "Fulltext" in order for the meta tags to be included in the keyword
-  search index, otherwise they will only be useful for doing facets or filters.
-
-
-### Setup
-
-To add meta tags to the Search API:
-
-- Make sure that a Metatag field is present on the entity bundle(s) that are
-  being indexed.
-- In the index configuration, modify the Fields section.
-- Click the "Add fields" button.
-- In the "Add fields to index [indexname]" popup, scroll down to find the
-  Metatag field; it will have the name defined in the field's settings.
-- Click the plus `(+)` button beside the field to see which meta tags are
-  available.
-- Click the "Add" button for the meta tags that are needed.
-- Click "Done" when all of the meta tags are added.
-- Look for the meta tag fields added to the index, change their "type" selector
-  to "Fulltext"; adjust the "Boost" value if desired.
-- Click "Save changes" at the bottom of the Fields admin page.
-- Reindex the content with the new settings.
-
-
-### Note: this is deprecated!
-
-Note that this specific Search API integration has been deprecated in release
-8.x-1.23 and a replacement will be added separately to a future release.
 
 
 ## Advanced usage
@@ -402,6 +359,16 @@ the page check, to see if the html.html.twig instead contains this:
     {{ page.content }}
 
 To fix this, simply change that line back to `{{ page }}` and it should work.
+
+
+## Contributing
+
+The `composer.json` file should be kept normalized using
+`ergebnis/composer-normalize`:
+
+* `composer require --dev ergebnis/composer-normalize`
+* `composer normalize modules/contrib/metatag/composer.json`
+
 
 
 ## Maintainers / credits / contact

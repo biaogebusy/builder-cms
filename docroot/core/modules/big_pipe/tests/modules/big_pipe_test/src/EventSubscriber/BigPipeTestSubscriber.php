@@ -36,7 +36,7 @@ class BigPipeTestSubscriber implements EventSubscriberInterface {
 
     $attachments = $response->getAttachments();
     if (!isset($attachments['big_pipe_placeholders']) && !isset($attachments['big_pipe_nojs_placeholders'])) {
-      if (strpos($response->getContent(), static::CONTENT_TRIGGER_EXCEPTION) !== FALSE) {
+      if (str_contains($response->getContent(), static::CONTENT_TRIGGER_EXCEPTION)) {
         throw new \Exception('Oh noes!');
       }
     }
@@ -71,7 +71,7 @@ class BigPipeTestSubscriber implements EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     // Run just before \Drupal\big_pipe\EventSubscriber\HtmlResponseBigPipeSubscriber::onRespond().
     $events[KernelEvents::RESPONSE][] = ['onRespondSetBigPipeDebugPlaceholderHeaders', -9999];
 

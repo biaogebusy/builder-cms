@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Test\RunTests;
 
 use Drupal\Core\Test\RunTests\TestFileParser;
@@ -12,7 +14,7 @@ use Drupal\Tests\UnitTestCase;
  */
 class TestFileParserTest extends UnitTestCase {
 
-  public function provideTestFileContents() {
+  public static function provideTestFileContents() {
     return [
       'empty' => [[], ''],
       'no-namespace' => [['ConcreteClass'],
@@ -67,11 +69,10 @@ COMPOUND
    * @covers ::parseContents
    * @dataProvider provideTestFileContents
    */
-  public function testParseContents($expected, $contents) {
+  public function testParseContents($expected, $contents): void {
     $parser = new TestFileParser();
 
     $ref_parse = new \ReflectionMethod($parser, 'parseContents');
-    $ref_parse->setAccessible(TRUE);
 
     $this->assertSame($expected, $ref_parse->invoke($parser, $contents));
   }
@@ -79,7 +80,7 @@ COMPOUND
   /**
    * @covers ::getTestListFromFile
    */
-  public function testGetTestListFromFile() {
+  public function testGetTestListFromFile(): void {
     $parser = new TestFileParser();
     $this->assertEquals(
       ['Drupal\Tests\Core\Test\RunTests\TestFileParserTest'],
@@ -88,10 +89,6 @@ COMPOUND
     $this->assertEquals(
       ['Drupal\KernelTests\Core\Datetime\Element\TimezoneTest'],
       $parser->getTestListFromFile(__DIR__ . '/../../../../KernelTests/Core/Datetime/Element/TimezoneTest.php')
-    );
-    // Not a test.
-    $this->assertEmpty(
-      $parser->getTestListFromFile(__DIR__ . '/../../../AssertHelperTrait.php')
     );
   }
 

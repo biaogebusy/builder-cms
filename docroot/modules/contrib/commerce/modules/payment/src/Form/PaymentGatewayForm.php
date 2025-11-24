@@ -2,11 +2,12 @@
 
 namespace Drupal\commerce_payment\Form;
 
-use Drupal\commerce\InlineFormManager;
-use Drupal\commerce_payment\PaymentGatewayManager;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\commerce\InlineFormManager;
+use Drupal\commerce_payment\Entity\PaymentGateway;
+use Drupal\commerce_payment\PaymentGatewayManager;
 use Drupal\entity\Form\EntityDuplicateFormTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -102,7 +103,7 @@ class PaymentGatewayForm extends EntityForm {
       '#type' => 'machine_name',
       '#default_value' => $gateway->id(),
       '#machine_name' => [
-        'exists' => '\Drupal\commerce_payment\Entity\PaymentGateway::load',
+        'exists' => [PaymentGateway::class, 'load'],
       ],
       '#disabled' => !$gateway->isNew(),
     ];
@@ -114,7 +115,7 @@ class PaymentGatewayForm extends EntityForm {
       '#required' => TRUE,
       '#disabled' => !$gateway->isNew(),
       '#ajax' => [
-        'callback' => '::ajaxRefresh',
+        'callback' => [static::class, 'ajaxRefresh'],
         'wrapper' => $wrapper_id,
       ],
     ];
@@ -180,10 +181,12 @@ class PaymentGatewayForm extends EntityForm {
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
-    $this->entity->save();
+    $status = $this->entity->save();
     $this->postSave($this->entity, $this->operation);
     $this->messenger()->addMessage($this->t('Saved the %label payment gateway.', ['%label' => $this->entity->label()]));
     $form_state->setRedirect('entity.commerce_payment_gateway.collection');
+
+    return $status;
   }
 
 }

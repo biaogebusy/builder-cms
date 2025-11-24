@@ -73,10 +73,10 @@ class DiffFormatter extends CoreDiffFormatter {
       return $output;
     }
     $markup = $output[1]['data']['#markup'];
-    $trimmed_markup = ltrim($markup);
-    $diff_length = strlen($markup) - strlen($trimmed_markup);
+    $trimmed_markup = \ltrim($markup);
+    $diff_length = \strlen($markup) - \strlen($trimmed_markup);
     if ($diff_length > 0) {
-      $output[1]['data']['#markup'] = str_repeat('&nbsp;', $diff_length) . $trimmed_markup;
+      $output[1]['data']['#markup'] = \str_repeat('&nbsp;', $diff_length) . $trimmed_markup;
     }
     return $output;
   }

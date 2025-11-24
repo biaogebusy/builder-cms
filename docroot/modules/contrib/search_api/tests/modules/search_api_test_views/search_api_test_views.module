@@ -116,7 +116,8 @@ function search_api_test_views_node_view_alter(array &$build) {
  * "search_api_test_views.throw_exception" state key is set.
  */
 function search_api_test_views_search_api_db_query_alter(SelectInterface &$db_query, QueryInterface $query) {
-  $throw_exception = \Drupal::state()->get('search_api_test_views.throw_exception', FALSE);
+  $throw_exception = \Drupal::keyValue('search_api_test_views')
+    ->get('throw_exception', FALSE);
   if ($throw_exception) {
     if ($query instanceof RefinableCacheableDependencyInterface) {
       $query->mergeCacheMaxAge(0);

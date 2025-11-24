@@ -1,0 +1,10 @@
+plugin.plugin_configuration.elasticsearch_connector.standard:
+  type: config_object
+  label: 'Elasticsearch standard connector settings'
+  mapping:
+    url:
+      type: string
+      label: 'The URL to the Elasticsearch cluster.'
+    enable_debug_logging:
+      type: boolean
+      label: 'Enable debugging mode: log ElasticSearch network traffic'

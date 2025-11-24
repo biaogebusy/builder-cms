@@ -2,13 +2,14 @@
 
 namespace Drupal\flag\Plugin\views\field;
 
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Drupal\flag\FlaggingInterface;
 use Drupal\flag\FlagLinkBuilderInterface;
+use Drupal\flag\FlaggingInterface;
 use Drupal\views\Plugin\views\field\FieldPluginBase;
 use Drupal\views\ResultRow;
-use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Entity\EntityInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -43,6 +44,32 @@ class FlagViewsLinkField extends FieldPluginBase implements ContainerFactoryPlug
   protected $flagLinkBuilder;
 
   /**
+   * Constructs a FlagViewsLinkField object.
+   *
+   * @param array $configuration
+   *   A configuration array containing information about the plugin instance.
+   * @param string $plugin_id
+   *   The plugin_id for the plugin instance.
+   * @param mixed $plugin_definition
+   *   The plugin implementation definition.
+   * @param \Drupal\flag\FlagLinkBuilderInterface $flag_link_builder
+   *   Tha flag link builder.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
+   */
+  public function __construct(
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+    FlagLinkBuilderInterface $flag_link_builder,
+    EntityTypeManagerInterface $entity_type_manager,
+  ) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+    $this->flagLinkBuilder = $flag_link_builder;
+    $this->entityTypeManager = $entity_type_manager;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
@@ -50,16 +77,9 @@ class FlagViewsLinkField extends FieldPluginBase implements ContainerFactoryPlug
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get('flag.link_builder')
+      $container->get('flag.link_builder'),
+      $container->get('entity_type.manager'),
     );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, FlagLinkBuilderInterface $flag_link_builder) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
-    $this->flagLinkBuilder = $flag_link_builder;
   }
 
   /**
@@ -76,6 +96,7 @@ class FlagViewsLinkField extends FieldPluginBase implements ContainerFactoryPlug
     // error or to later recreate it), so we have to guard against a missing
     // one.
     elseif (isset($this->view->relationship[$this->options['relationship']])) {
+      // @phpstan-ignore-next-line
       return $this->view->relationship[$this->options['relationship']]->getFlag();
     }
 
@@ -122,7 +143,7 @@ class FlagViewsLinkField extends FieldPluginBase implements ContainerFactoryPlug
     if ($values->_entity instanceof FlaggingInterface) {
       $entity_type = $values->_entity->getFlaggableType();
       $entity_id = $values->_entity->getFlaggableId();
-      $entity = $this->getEntityTypeManager()
+      $entity = $this->entityTypeManager
         ->getStorage($entity_type)
         ->load($entity_id);
       $this->flag = $values->_entity->getFlag();
@@ -145,7 +166,7 @@ class FlagViewsLinkField extends FieldPluginBase implements ContainerFactoryPlug
    * @param \Drupal\views\ResultRow $values
    *   The current result row.
    *
-   * @return \Drupal\Core\Entity\EntityInterface
+   * @return \Drupal\Core\Entity\EntityInterface|null
    *   The parent entity.
    */
   protected function getParentRelationshipEntity(ResultRow $values) {
@@ -159,6 +180,7 @@ class FlagViewsLinkField extends FieldPluginBase implements ContainerFactoryPlug
     elseif (isset($values->_relationship_entities[$parent_relationship_id])) {
       return $values->_relationship_entities[$parent_relationship_id];
     }
+    return NULL;
   }
 
   /**
@@ -176,27 +198,13 @@ class FlagViewsLinkField extends FieldPluginBase implements ContainerFactoryPlug
     // Output nothing as there is no flag.
     // For an 'empty text' option use the default 'No results behavior'
     // option provided by Views.
-    if (empty($entity)) {
+    if ($entity === NULL) {
       return '';
     }
 
     return $this->flagLinkBuilder->build(
-      $entity->getEntityTypeId(), $entity->id(), $this->getFlag()->id()
+      $entity->getEntityTypeId(), $entity->id(), $this->getFlag()->id(), 'default'
     );
-  }
-
-  /**
-   * Returns the entity type manager.
-   *
-   * @return \Drupal\Core\Entity\EntityTypeManagerInterface
-   *   The entity type manager service.
-   */
-  protected function getEntityTypeManager() {
-    if (!isset($this->entityTypeManager)) {
-      $this->entityTypeManager = \Drupal::service('entity_type.manager');
-    }
-
-    return $this->entityTypeManager;
   }
 
 }

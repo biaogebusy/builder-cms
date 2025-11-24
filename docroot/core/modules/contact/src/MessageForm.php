@@ -72,7 +72,7 @@ class MessageForm extends ContentEntityForm {
    * @param \Drupal\Component\Datetime\TimeInterface $time
    *   The time service.
    */
-  public function __construct(EntityRepositoryInterface $entity_repository, FloodInterface $flood, LanguageManagerInterface $language_manager, MailHandlerInterface $mail_handler, DateFormatterInterface $date_formatter, EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL, TimeInterface $time = NULL) {
+  public function __construct(EntityRepositoryInterface $entity_repository, FloodInterface $flood, LanguageManagerInterface $language_manager, MailHandlerInterface $mail_handler, DateFormatterInterface $date_formatter, ?EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL, ?TimeInterface $time = NULL) {
     parent::__construct($entity_repository, $entity_type_bundle_info, $time);
     $this->flood = $flood;
     $this->languageManager = $language_manager;
@@ -101,7 +101,7 @@ class MessageForm extends ContentEntityForm {
   public function form(array $form, FormStateInterface $form_state) {
     $user = $this->currentUser();
     $message = $this->entity;
-    $form = parent::form($form, $form_state, $message);
+    $form = parent::form($form, $form_state);
     $form['#attributes']['class'][] = 'contact-form';
 
     if (!empty($message->preview)) {

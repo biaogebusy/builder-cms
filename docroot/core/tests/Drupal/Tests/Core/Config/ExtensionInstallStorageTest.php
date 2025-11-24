@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Config;
 
 use Drupal\Core\Config\ExtensionInstallStorage;
@@ -17,7 +19,7 @@ class ExtensionInstallStorageTest extends UnitTestCase {
   /**
    * @covers ::createCollection
    */
-  public function testCreateCollection() {
+  public function testCreateCollection(): void {
     $memory = new MemoryStorage();
     $include_profile = FALSE;
     $profile = $this->randomMachineName();

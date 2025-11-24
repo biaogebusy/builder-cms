@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\flag\Functional;
 
-use Drupal\Core\Template\Attribute;
-use Drupal\node\Entity\Node;
-use Drupal\flag\FlagInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Template\Attribute;
+use Drupal\flag\FlagInterface;
+use Drupal\node\Entity\Node;
 
 /**
  * Tests the Flag link is output in various locations.
@@ -25,7 +27,7 @@ class LinkOutputLocationTest extends FlagTestBase {
   /**
    * {@inheritdoc}
    */
-  protected $defaultTheme = 'classy';
+  protected $defaultTheme = 'stark';
 
   /**
    * The flag.
@@ -87,13 +89,11 @@ class LinkOutputLocationTest extends FlagTestBase {
     // Check the full node shows no flag link.
     $this->drupalGet('node/' . $this->node->id());
     $this->assertNoPseudofield($this->flag, $this->node);
-    // TODO: check no entity link.
-
+    // @todo check no entity link.
     // Check the teaser view mode for the node shows no flag link.
     $this->drupalGet('node');
     $this->assertNoPseudofield($this->flag, $this->node);
-    // TODO: check no entity link.
-
+    // @todo check no entity link.
     // Turn on 'show as field'.
     // By default, this will be visible on the field display configuration.
     $flag_config = $this->flag->getFlagTypePlugin()->getConfiguration();
@@ -105,13 +105,11 @@ class LinkOutputLocationTest extends FlagTestBase {
     // Check the full node shows the flag link as a field.
     $this->drupalGet('node/' . $this->node->id());
     $this->assertPseudofield($this->flag, $this->node);
-    // TODO: check no entity link.
-
+    // @todo check no entity link.
     // Check the teaser view mode shows the flag link as a field.
     $this->drupalGet('node');
     $this->assertPseudofield($this->flag, $this->node);
-    // TODO: check no entity link.
-
+    // @todo check no entity link.
     // Hide the flag field on teaser view mode.
     $edit = [
       'fields[flag_' . $this->flag->id() . '][region]' => 'hidden',
@@ -124,18 +122,15 @@ class LinkOutputLocationTest extends FlagTestBase {
     // Check the full node still shows the flag link as a field.
     $this->drupalGet('node/' . $this->node->id());
     $this->assertPseudofield($this->flag, $this->node);
-    // TODO: check no entity link.
-
+    // @todo check no entity link.
     // Check the teaser view mode does not show the flag link as a field.
     $this->drupalGet('node');
     $this->assertNoPseudofield($this->flag, $this->node);
-    // TODO: check no entity link.
-
-    // TODO:
-    // Turn on the entity link, and turn off the field.
-    // Check the full and teaser view modes.
-    // Turn off the entity link for one view mode.
-    // Check both view modes are as expected.
+    // @todo check no entity link.
+    // @todo Turn on the entity link, and turn off the field.
+    // @todo Check the full and teaser view modes.
+    // @todo Turn off the entity link for one view mode.
+    // @todo Check both view modes are as expected.
   }
 
   /**
@@ -158,8 +153,7 @@ class LinkOutputLocationTest extends FlagTestBase {
     $this->drupalGet('node/' . $this->node->id());
     $this->assertNoPseudofield($this->flag, $this->node);
     $this->assertNoContextualLinkPlaceHolder($contextual_links_id);
-    // TODO: check no entity field link.
-
+    // @todo check no entity field link.
     $this->drupalGet('node/' . $this->node->id() . '/edit');
     $this->assertSession()->fieldNotExists('flag[' . $this->flag->id() . ']');
     $this->assertNoContextualLinkPlaceholder($contextual_links_id);
@@ -208,7 +202,7 @@ class LinkOutputLocationTest extends FlagTestBase {
    *   TRUE if the flag link should exist, FALSE if it should not exist.
    */
   protected function assertPseudofieldHelper(FlagInterface $flag, EntityInterface $entity, $message, $exists) {
-    $xpath = $this->xpath("//*[contains(@class, 'node__content')]//div[contains(@class, :id)]", [
+    $xpath = $this->xpath("//*[contains(@class, 'layout-content')]//div[contains(@class, :id)]", [
       ':id' => 'flag-' . $flag->id() . '-' . $entity->id(),
     ]);
     $this->assertTrue(count($xpath) == ($exists ? 1 : 0), $message);
@@ -219,15 +213,12 @@ class LinkOutputLocationTest extends FlagTestBase {
    *
    * @param string $id
    *   A contextual link id.
-   *
-   * @return bool
-   *   The result of the assertion.
    */
-  protected function assertNoContextualLinkPlaceholder($id) {
-    return $this->assertSession()->responseNotContains('<div' . new Attribute(['data-contextual-id' => $id]) . '></div>');
+  protected function assertNoContextualLinkPlaceholder($id): void {
+    $this->assertSession()->responseNotContains('<div' . new Attribute(['data-contextual-id' => $id]) . '></div>');
   }
 
-  // TODO: add assertions:
+  // @todo add assertions:
   // assertEntityLink
-  // assertNoEntityLink
+  // assertNoEntityLink.
 }

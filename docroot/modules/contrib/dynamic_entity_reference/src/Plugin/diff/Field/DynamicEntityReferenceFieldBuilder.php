@@ -3,8 +3,8 @@
 namespace Drupal\dynamic_entity_reference\Plugin\diff\Field;
 
 use Drupal\Core\Field\FieldItemListInterface;
-use const Drupal\diff\Plugin\diff\Field\COMPARE_ENTITY_REFERENCE_LABEL;
 use Drupal\diff\Plugin\diff\Field\EntityReferenceFieldBuilder;
+use const Drupal\diff\Plugin\diff\Field\COMPARE_ENTITY_REFERENCE_LABEL;
 
 /**
  * Plugin to diff dynamic entity reference fields.

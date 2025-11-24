@@ -1,8 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\config_translation\Kernel\Plugin\migrate\source\d6;
 
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
+
+// cspell:ignore objectid
 
 /**
  * Tests the i18nProfileField source plugin.
@@ -20,7 +24,7 @@ class ProfileFieldTranslationTest extends MigrateSqlSourceTestBase {
   /**
    * {@inheritdoc}
    */
-  public function providerSource() {
+  public static function providerSource() {
     $test = [];
     $test[0]['source_data'] = [
       'profile_fields' => [
@@ -58,27 +62,27 @@ class ProfileFieldTranslationTest extends MigrateSqlSourceTestBase {
       'locales_target' => [
         [
           'lid' => 10,
-          'translation' => "J'aime les migrations.",
+          'translation' => "fr - I love migration.",
           'language' => 'fr',
         ],
         [
           'lid' => 11,
-          'translation' => 'Si vous cochez cette case, vous aimez les migrations.',
+          'translation' => 'fr - If you check this box, you like migrations.',
           'language' => 'fr',
         ],
       ],
     ];
-    $test[0]['expected_results'] = [
+    $test[0]['expected_data'] = [
       [
         'property' => 'title',
-        'translation' => "J'aime les migrations.",
+        'translation' => "fr - I love migration.",
         'language' => 'fr',
         'fid' => '42',
         'name' => 'profile_love_migrations',
       ],
       [
         'property' => 'explanation',
-        'translation' => 'Si vous cochez cette case, vous aimez les migrations.',
+        'translation' => 'fr - If you check this box, you like migrations.',
         'language' => 'fr',
         'fid' => '42',
         'name' => 'profile_love_migrations',

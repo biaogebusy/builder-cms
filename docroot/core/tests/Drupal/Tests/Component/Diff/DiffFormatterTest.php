@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Component\Diff;
 
 use Drupal\Component\Diff\Diff;
@@ -21,7 +23,7 @@ class DiffFormatterTest extends TestCase {
    *   - First array of text to diff.
    *   - Second array of text to diff.
    */
-  public function provideTestDiff() {
+  public static function provideTestDiff() {
     return [
       'empty' => ['', [], []],
       'add' => [
@@ -48,7 +50,7 @@ class DiffFormatterTest extends TestCase {
    * @covers ::format
    * @dataProvider provideTestDiff
    */
-  public function testDiff($expected, $from, $to) {
+  public function testDiff($expected, $from, $to): void {
     $diff = new Diff($from, $to);
     $formatter = new DiffFormatter();
     $output = $formatter->format($diff);

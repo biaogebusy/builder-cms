@@ -49,8 +49,7 @@ class FlagResetForm extends ConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state,
-                            FlagInterface $flag = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?FlagInterface $flag = NULL) {
     $this->flag = $flag;
     return parent::buildForm($form, $form_state);
   }

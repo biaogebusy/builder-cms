@@ -5,11 +5,11 @@
  * Install, update and uninstall functions for the Product module.
  */
 
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\commerce\CommerceContentEntityStorageSchema;
 use Drupal\commerce_product\Entity\Product;
 use Drupal\commerce_product\Entity\ProductVariation;
-use Drupal\Core\Field\BaseFieldDefinition;
-use Drupal\Core\Session\AccountInterface;
 
 /**
  * Implements hook_install().
@@ -183,7 +183,7 @@ function commerce_product_update_8208() {
   $configuration_to_delete[] = 'field.storage.commerce_product.stores';
   $configuration_to_delete[] = 'field.storage.commerce_product.variations';
 
-  $dependents = $config_manager->findConfigEntityDependents('config', $configuration_to_delete);
+  $dependents = $config_manager->findConfigEntityDependencies('config', $configuration_to_delete);
   /** @var \Drupal\Core\Config\Entity\ConfigEntityInterface $config_entity */
   foreach ($dependents as $config_name => $config_entity) {
     $config_entity = $config_factory->getEditable($config_name);
@@ -291,4 +291,31 @@ function commerce_product_update_8211() {
 function commerce_product_update_8212() {
   $definition_update_manager = \Drupal::service('entity.definition_update_manager');
   $definition_update_manager->updateFieldStorageDefinition($definition_update_manager->getFieldStorageDefinition('sku', 'commerce_product_variation'));
+}
+
+/**
+ * Moves 'variationType' setting to the 'variationTypes'.
+ */
+function commerce_product_update_10301():void {
+  /** @var \Drupal\commerce_product\Entity\ProductTypeInterface[] $product_types */
+  $product_types = \Drupal::entityTypeManager()
+    ->getStorage('commerce_product_type')
+    ->loadMultiple();
+
+  $config_factory = \Drupal::configFactory();
+  $config_prefix = 'commerce_product.commerce_product_type';
+
+  foreach ($product_types as $product_type) {
+    $variation_type = $product_type->get('variationType');
+    $variation_types_raw = $product_type->get('variationTypes');
+    if (empty($variation_types_raw) && !empty($variation_type)) {
+      $product_type->setVariationTypeIds([$variation_type]);
+      $product_type->save();
+    }
+    // Remove the 'variationType' key from all product type configurations.
+    $config_name = sprintf('%s.%s', $config_prefix, $product_type->id());
+    $config_factory->getEditable($config_name)
+      ->clear('variationType')
+      ->save();
+  }
 }

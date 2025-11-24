@@ -42,6 +42,7 @@ class FlagViewsSortFlagged extends SortPluginBase {
   public function query() {
     $this->ensureMyTable();
 
+    // @phpstan-ignore-next-line
     $this->query->addOrderBy(NULL, "$this->tableAlias.uid", $this->options['order']);
   }
 

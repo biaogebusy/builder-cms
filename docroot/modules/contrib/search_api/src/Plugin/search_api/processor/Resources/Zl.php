@@ -12,9 +12,11 @@ class Zl implements UnicodeCharacterPropertyInterface {
    */
   public static function getRegularExpression() {
     // phpcs:disable
+    // cspell:disable
     return
       '\x{2028}';
     // phpcs:enable
+    // cspell:enable
   }
 
 }

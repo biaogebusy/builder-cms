@@ -5,6 +5,7 @@ namespace Drupal\Core\Render\Element;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\Core\Render\Attribute\FormElement;
 
 /**
  * Provides a machine name render element.
@@ -32,7 +33,7 @@ use Drupal\Core\Language\LanguageInterface;
  *     stored in form state so AJAX forms can be reliably validated.
  *   - source: (optional) The #array_parents of the form element containing the
  *     human-readable name (i.e., as contained in the $form structure) to use as
- *     source for the machine name. Defaults to array('label').
+ *     source for the machine name. Defaults to ['label'].
  *   - label: (optional) Text to display as label for the machine name value
  *     after the human-readable name form element. Defaults to t('Machine name').
  *   - replace_pattern: (optional) A regular expression (without delimiters)
@@ -54,22 +55,21 @@ use Drupal\Core\Language\LanguageInterface;
  *
  * Usage example:
  * @code
- * $form['id'] = array(
+ * $form['id'] = [
  *   '#type' => 'machine_name',
  *   '#default_value' => $this->entity->id(),
  *   '#disabled' => !$this->entity->isNew(),
  *   '#maxlength' => 64,
  *   '#description' => $this->t('A unique name for this item. It must only contain lowercase letters, numbers, and underscores.'),
- *   '#machine_name' => array(
- *     'exists' => array($this, 'exists'),
- *   ),
- * );
+ *   '#machine_name' => [
+ *     'exists' => [$this, 'exists'],
+ *   ],
+ * ];
  * @endcode
  *
  * @see \Drupal\Core\Render\Element\Textfield
- *
- * @FormElement("machine_name")
  */
+#[FormElement('machine_name')]
 class MachineName extends Textfield {
 
   /**
@@ -170,7 +170,7 @@ class MachineName extends Textfield {
     }
     $element['#attributes'] += ['dir' => LanguageInterface::DIRECTION_LTR];
 
-    // The source element defaults to array('name'), but may have been overridden.
+    // The source element defaults to ['name'], but may have been overridden.
     if (empty($element['#machine_name']['source'])) {
       return $element;
     }
@@ -226,6 +226,7 @@ class MachineName extends Textfield {
 
     $element['#attached']['drupalSettings']['machineName']['#' . $source['#id']] = array_intersect_key($element['#machine_name'], array_flip($options));
     $element['#attached']['drupalSettings']['langcode'] = $language->getId();
+    $element['#attached']['drupalSettings']['transliteration_language_overrides'] = static::getTransliterationLanguageOverrides($language);
 
     return $element;
   }
@@ -276,6 +277,34 @@ class MachineName extends Textfield {
         $form_state->setError($element, t('The machine-readable name is already in use. It must be unique.'));
       }
     }
+  }
+
+  /**
+   * Gets transliteration language overrides for a language.
+   *
+   * This is duplicating
+   * \Drupal\Core\Transliteration\PhpTransliteration::readLanguageOverrides().
+   *
+   * @see \Drupal\Core\Transliteration\PhpTransliteration::readLanguageOverrides()
+   */
+  private static function getTransliterationLanguageOverrides(LanguageInterface $language) {
+    $overrides = &drupal_static(__CLASS__ . '_' . __METHOD__, []);
+    $langcode = $language->getId();
+
+    if (isset($overrides[$langcode])) {
+      return $overrides[$langcode];
+    }
+
+    $file = dirname(__DIR__, 3) . '/Component/Transliteration/data' . '/' . preg_replace('/[^a-zA-Z\-]/', '', $langcode) . '.php';
+
+    $overrides[$langcode] = [];
+    if (is_file($file)) {
+      include $file;
+    }
+
+    \Drupal::moduleHandler()->alter('transliteration_overrides', $overrides[$langcode], $langcode);
+
+    return [$langcode => $overrides[$langcode]];
   }
 
 }

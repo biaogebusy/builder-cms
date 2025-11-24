@@ -67,18 +67,18 @@ final class SmsFrameworkIncomingBrowserTest extends SmsFrameworkBrowserTestBase 
       ],
     ];
 
-    $this->assertTrue(TRUE, sprintf('POST request to %s', $url));
+    static::assertTrue(TRUE, sprintf('POST request to %s', $url));
     $response = $this->httpClient
       ->post($url, $options);
 
-    $this->assertEquals(204, $response->getStatusCode(), 'HTTP code is 204');
-    $this->assertEmpty((string) $response->getBody(), 'Response body is empty.');
+    static::assertEquals(204, $response->getStatusCode(), 'HTTP code is 204');
+    static::assertEmpty((string) $response->getBody(), 'Response body is empty.');
 
     $incoming_messages = $this->getIncomingMessages($this->incomingGateway);
-    $this->assertCount(count($messages), $incoming_messages, 'There are 2 messages');
+    static::assertCount(count($messages), $incoming_messages, 'There are 2 messages');
     foreach ($messages as $i => $message) {
-      $this->assertEquals($message['message'], $incoming_messages[$i]->getMessage(), "Message $i contents are same.");
-      $this->assertEquals($message['recipients'], $incoming_messages[$i]->getRecipients(), "Message $i recipients are same.");
+      static::assertEquals($message['message'], $incoming_messages[$i]->getMessage(), "Message $i contents are same.");
+      static::assertEquals($message['recipients'], $incoming_messages[$i]->getRecipients(), "Message $i recipients are same.");
     }
   }
 

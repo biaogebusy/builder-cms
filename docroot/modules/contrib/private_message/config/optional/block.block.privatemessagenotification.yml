@@ -17,4 +17,4 @@ settings:
   provider: private_message
   label_display: '0'
   ajax_refresh_rate: 15
-visibility: {  }
+visibility: {}

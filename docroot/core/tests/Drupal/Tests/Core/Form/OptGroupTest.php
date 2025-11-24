@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Form;
 
 use Drupal\Tests\UnitTestCase;
@@ -16,7 +18,7 @@ class OptGroupTest extends UnitTestCase {
    *
    * @dataProvider providerTestFlattenOptions
    */
-  public function testFlattenOptions($options) {
+  public function testFlattenOptions($options): void {
     $this->assertSame(['foo' => 'foo'], OptGroup::flattenOptions($options));
   }
 
@@ -25,7 +27,7 @@ class OptGroupTest extends UnitTestCase {
    *
    * @return array
    */
-  public function providerTestFlattenOptions() {
+  public static function providerTestFlattenOptions() {
     $object1 = new \stdClass();
     $object1->option = ['foo' => 'foo'];
     $object2 = new \stdClass();

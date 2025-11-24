@@ -55,7 +55,7 @@ interface WebformElementAttachmentInterface {
   /**
    * Determine if the element type has export attachments.
    *
-   * @return boolearn
+   * @return bool
    *   TRUE if the element type has export attachments.
    */
   public function hasExportAttachments();

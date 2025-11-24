@@ -50,37 +50,37 @@ class EntityImportStatus extends ContentEntityBase implements EntityImportStatus
 
     // The fields used to relate to the imported entity.
     $fields['entity_id'] = BaseFieldDefinition::create('string')
-      ->setLabel(t('Entity ID'))
-      ->setDescription(t('The identifier of imported entity on Client.'));
+      ->setLabel(\t('Entity ID'))
+      ->setDescription(\t('The identifier of imported entity on Client.'));
 
     $fields['entity_uuid'] = BaseFieldDefinition::create('string')
-      ->setLabel(t('Entity UUID'))
-      ->setDescription(t('The UUID of imported entity.'));
+      ->setLabel(\t('Entity UUID'))
+      ->setDescription(\t('The UUID of imported entity.'));
 
     $fields['entity_type_id'] = BaseFieldDefinition::create('string')
-      ->setLabel(t('Entity type'))
-      ->setDescription(t('The identifier of entity type of imported entity.'));
+      ->setLabel(\t('Entity type'))
+      ->setDescription(\t('The identifier of entity type of imported entity.'));
 
     $fields['entity_bundle'] = BaseFieldDefinition::create('string')
-      ->setLabel(t('Entity bundle'))
-      ->setDescription(t('The bundle of imported entity.'));
+      ->setLabel(\t('Entity bundle'))
+      ->setDescription(\t('The bundle of imported entity.'));
 
     $fields['remote_website'] = BaseFieldDefinition::create('string')
-      ->setLabel(t('Remote website'))
-      ->setDescription(t('The identifier of the remote website.'));
+      ->setLabel(\t('Remote website'))
+      ->setDescription(\t('The identifier of the remote website.'));
 
     $fields['channel_id'] = BaseFieldDefinition::create('string')
-      ->setLabel(t('Channel'))
-      ->setDescription(t('The identifier of the import channel.'));
+      ->setLabel(\t('Channel'))
+      ->setDescription(\t('The identifier of the import channel.'));
 
     // The fields containing the actual information about import.
     $fields['last_import'] = BaseFieldDefinition::create('timestamp')
-      ->setLabel(t('Last import'))
-      ->setDescription(t('The time of last import of imported entity.'));
+      ->setLabel(\t('Last import'))
+      ->setDescription(\t('The time of last import of imported entity.'));
 
     $fields['policy'] = BaseFieldDefinition::create('string')
-      ->setLabel(t('Policy'))
-      ->setDescription(t('The import policy.'))
+      ->setLabel(\t('Policy'))
+      ->setDescription(\t('The import policy.'))
       ->setDefaultValue(EntityImportStatusInterface::IMPORT_POLICY_DEFAULT);
 
     return $fields;

@@ -2,11 +2,11 @@
 
 namespace Drupal\better_exposed_filters\Plugin\better_exposed_filters\sort;
 
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\better_exposed_filters\BetterExposedFiltersHelper;
 use Drupal\better_exposed_filters\Plugin\BetterExposedFiltersWidgetBase;
 use Drupal\better_exposed_filters\Plugin\BetterExposedFiltersWidgetInterface;
-use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\StringTranslation\StringTranslationTrait;
 
 /**
  * Base class for Better exposed pager widget plugins.
@@ -20,7 +20,7 @@ abstract class SortWidgetBase extends BetterExposedFiltersWidgetBase implements 
    *
    * @var array
    */
-  protected $sortElements = [
+  protected array $sortElements = [
     'sort_bef_combine',
     'sort_by',
     'sort_order',
@@ -29,7 +29,7 @@ abstract class SortWidgetBase extends BetterExposedFiltersWidgetBase implements 
   /**
    * {@inheritdoc}
    */
-  public function defaultConfiguration() {
+  public function defaultConfiguration(): array {
     return parent::defaultConfiguration() + [
       'advanced' => [
         'collapsible' => FALSE,
@@ -46,14 +46,14 @@ abstract class SortWidgetBase extends BetterExposedFiltersWidgetBase implements 
   /**
    * {@inheritdoc}
    */
-  public static function isApplicable($handler = NULL, array $options = []) {
+  public static function isApplicable(mixed $handler = NULL, array $options = []): bool {
     return TRUE;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
     $form = [];
 
     $form['advanced'] = [
@@ -154,7 +154,7 @@ Title Desc|Z -> A</pre> Leave the replacement text blank to remove an option alt
   /**
    * {@inheritdoc}
    */
-  public function exposedFormAlter(array &$form, FormStateInterface $form_state) {
+  public function exposedFormAlter(array &$form, FormStateInterface $form_state): void {
     $is_collapsible = $this->configuration['advanced']['collapsible']
       && !empty($this->configuration['advanced']['collapsible_label']);
     $is_secondary = !empty($form['secondary']) && $this->configuration['advanced']['is_secondary'];
@@ -221,7 +221,7 @@ Title Desc|Z -> A</pre> Leave the replacement text blank to remove an option alt
     }
 
     // If selected, collect all sort-related form elements and put them in a
-    // details element.
+    // details' element.
     if ($is_collapsible) {
       $form['bef_sort_options'] = [
         '#type' => 'details',
@@ -263,7 +263,7 @@ Title Desc|Z -> A</pre> Leave the replacement text blank to remove an option alt
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The current state of the form.
    */
-  public function sortCombineSubmitForm(array $form, FormStateInterface $form_state) {
+  public function sortCombineSubmitForm(array $form, FormStateInterface $form_state): void {
     $sort_by = $sort_order = '';
     $combined = $form_state->getValue('sort_bef_combine');
     if (!empty($combined)) {

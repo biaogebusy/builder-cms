@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Kernel\Plugin;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
 use Drupal\views\Views;
 use Drupal\views_test_data\Plugin\views\row\RowTest;
@@ -26,7 +29,7 @@ class StyleTest extends ViewsKernelTestBase {
   /**
    * Tests the general rendering of styles.
    */
-  public function testStyle() {
+  public function testStyle(): void {
     $renderer = $this->container->get('renderer');
 
     // This run use the test row plugin and render with it.
@@ -75,7 +78,7 @@ class StyleTest extends ViewsKernelTestBase {
   /**
    * Tests the grouping features of styles.
    */
-  public function testGrouping() {
+  public function testGrouping(): void {
     $this->doTestGrouping(FALSE);
     $this->doTestGrouping(TRUE);
   }
@@ -275,7 +278,7 @@ class StyleTest extends ViewsKernelTestBase {
   /**
    * Tests custom CSS row classes.
    */
-  public function testCustomRowClasses() {
+  public function testCustomRowClasses(): void {
     $view = Views::getView('test_view');
     $view->setDisplay();
 
@@ -285,7 +288,7 @@ class StyleTest extends ViewsKernelTestBase {
     $view->style_plugin->options['row_class'] = $random_name . " test-token-{{ name }}";
 
     $output = $view->preview();
-    $html_dom = $this->getHtmlDom($this->container->get('renderer')->renderRoot($output));
+    $html_dom = $this->getHtmlDom((string) $this->container->get('renderer')->renderRoot($output));
 
     $rows = $html_dom->body->div->div;
     $count = 0;
@@ -309,8 +312,7 @@ class StyleTest extends ViewsKernelTestBase {
    *   The HTML DOM.
    */
   protected function getHtmlDom($output) {
-    $html_dom = new \DOMDocument();
-    @$html_dom->loadHTML($output);
+    $html_dom = Html::load($output);
     if ($html_dom) {
       // It's much easier to work with simplexml than DOM, luckily enough
       // we can just simply import our DOM tree.

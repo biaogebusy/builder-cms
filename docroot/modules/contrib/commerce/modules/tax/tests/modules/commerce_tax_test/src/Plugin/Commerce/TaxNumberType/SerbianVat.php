@@ -2,6 +2,8 @@
 
 namespace Drupal\commerce_tax_test\Plugin\Commerce\TaxNumberType;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce_tax\Attribute\CommerceTaxNumberType;
 use Drupal\commerce_tax\Plugin\Commerce\TaxNumberType\TaxNumberTypeWithVerificationBase;
 use Drupal\commerce_tax\Plugin\Commerce\TaxNumberType\VerificationResult;
 
@@ -9,14 +11,13 @@ use Drupal\commerce_tax\Plugin\Commerce\TaxNumberType\VerificationResult;
  * Provides the Serbian VAT tax number type.
  *
  * Used for testing purposes, none of the rules are real.
- *
- * @CommerceTaxNumberType(
- *   id = "serbian_vat",
- *   label = "Serbian VAT",
- *   countries = {"RS"},
- *   examples = {"901"}
- * )
  */
+#[CommerceTaxNumberType(
+  id: "serbian_vat",
+  label: new TranslatableMarkup("Serbian VAT"),
+  countries: ["RS"],
+  examples: ["901"],
+)]
 class SerbianVat extends TaxNumberTypeWithVerificationBase {
 
   /**

@@ -63,7 +63,10 @@ interface FieldsHelperInterface {
    * @param string[][] $required_properties
    *   The properties that should be extracted, keyed by datasource ID and
    *   property path, with the values being the IDs that the values should be
-   *   put under in the return value.
+   *   put under in the return value. Property paths passed here can have an
+   *   optional "|FIELD_ID" suffix (the pipe "|" character followed by the field
+   *   ID) to specify, especially for configurable properties, which field
+   *   should be used to obtain the effective configuration.
    * @param bool $load
    *   (optional) If FALSE, only field values already present will be returned.
    *   Otherwise, fields will be extracted (and underlying objects loaded) if
@@ -173,7 +176,7 @@ interface FieldsHelperInterface {
    * @return \Drupal\search_api\Item\ItemInterface
    *   A search item with the given values.
    */
-  public function createItem(IndexInterface $index, $id, DatasourceInterface $datasource = NULL);
+  public function createItem(IndexInterface $index, $id, ?DatasourceInterface $datasource = NULL);
 
   /**
    * Creates a search item object by wrapping an existing complex data object.
@@ -196,7 +199,7 @@ interface FieldsHelperInterface {
    * @throws \InvalidArgumentException
    *   Thrown if both $datasource and $id are NULL.
    */
-  public function createItemFromObject(IndexInterface $index, ComplexDataInterface $originalObject, $id = NULL, DatasourceInterface $datasource = NULL);
+  public function createItemFromObject(IndexInterface $index, ComplexDataInterface $originalObject, $id = NULL, ?DatasourceInterface $datasource = NULL);
 
   /**
    * Creates a new field object wrapping a field of the given index.

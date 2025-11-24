@@ -8,12 +8,10 @@
  * a cached page are instead located in bootstrap.inc.
  */
 
-use Drupal\Component\Utility\Bytes;
-use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\SortArray;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\DrupalKernel;
-use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\StringTranslation\ByteSizeMarkup;
 
 /**
  * @defgroup php_wrappers PHP wrapper functions
@@ -133,48 +131,16 @@ const JS_THEME = 100;
  *
  * @return \Drupal\Core\StringTranslation\TranslatableMarkup
  *   A translated string representation of the size.
+ *
+ * @deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. Use
+ *   \Drupal\Core\StringTranslation\ByteSizeMarkup::create($size, $langcode)
+ *   instead.
+ *
+ * @see https://www.drupal.org/node/2999981
  */
 function format_size($size, $langcode = NULL) {
-  $absolute_size = abs($size);
-  if ($absolute_size < Bytes::KILOBYTE) {
-    return \Drupal::translation()->formatPlural($size, '1 byte', '@count bytes', [], ['langcode' => $langcode]);
-  }
-  // Create a multiplier to preserve the sign of $size.
-  $sign = $absolute_size / $size;
-  foreach (['KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'] as $unit) {
-    $absolute_size /= Bytes::KILOBYTE;
-    $rounded_size = round($absolute_size, 2);
-    if ($rounded_size < Bytes::KILOBYTE) {
-      break;
-    }
-  }
-  $args = ['@size' => $rounded_size * $sign];
-  $options = ['langcode' => $langcode];
-  switch ($unit) {
-    case 'KB':
-      return new TranslatableMarkup('@size KB', $args, $options);
-
-    case 'MB':
-      return new TranslatableMarkup('@size MB', $args, $options);
-
-    case 'GB':
-      return new TranslatableMarkup('@size GB', $args, $options);
-
-    case 'TB':
-      return new TranslatableMarkup('@size TB', $args, $options);
-
-    case 'PB':
-      return new TranslatableMarkup('@size PB', $args, $options);
-
-    case 'EB':
-      return new TranslatableMarkup('@size EB', $args, $options);
-
-    case 'ZB':
-      return new TranslatableMarkup('@size ZB', $args, $options);
-
-    case 'YB':
-      return new TranslatableMarkup('@size YB', $args, $options);
-  }
+  @trigger_error('format_size() is deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. Use \Drupal\Core\StringTranslation\ByteSizeMarkup::create($size, $langcode) instead. See https://www.drupal.org/node/2999981', E_USER_DEPRECATED);
+  return ByteSizeMarkup::create($size ?? 0, $langcode);
 }
 
 /**
@@ -196,33 +162,6 @@ function base_path() {
 }
 
 /**
- * Constructs an array of the defaults that are used for JavaScript assets.
- *
- * @param $data
- *   (optional) The default data parameter for the JavaScript asset array.
- *
- * @deprecated in drupal:9.4.0 and is removed from drupal:10.0.0. No direct
- *   replacement is provided.
- *
- * @see https://www.drupal.org/node/3197679
- */
-function drupal_js_defaults($data = NULL) {
-  @trigger_error('drupal_js_defaults() is deprecated in drupal:9.4.0 and is removed from drupal:10.0.0. No direct replacement is provided. See https://www.drupal.org/node/3197679', E_USER_DEPRECATED);
-  return [
-    'type' => 'file',
-    'group' => JS_DEFAULT,
-    'weight' => 0,
-    'scope' => 'header',
-    'cache' => TRUE,
-    'preprocess' => TRUE,
-    'attributes' => [],
-    'version' => NULL,
-    'data' => $data,
-    'browsers' => [],
-  ];
-}
-
-/**
  * Assists in attaching the tableDrag JavaScript behavior to a themed table.
  *
  * Draggable tables should be used wherever an outline or list of sortable items
@@ -234,14 +173,14 @@ function drupal_js_defaults($data = NULL) {
  * into a table. The table must have an ID attribute set and it
  * may be set as follows:
  * @code
- * $table = array(
+ * $table = [
  *   '#type' => 'table',
  *   '#header' => $header,
  *   '#rows' => $rows,
- *   '#attributes' => array(
+ *   '#attributes' => [
  *     'id' => 'my-module-table',
- *   ),
- * );
+ *   ],
+ * ];
  * return \Drupal::service('renderer')->render($table);
  * @endcode
  *
@@ -251,17 +190,17 @@ function drupal_js_defaults($data = NULL) {
  * In a situation where a single weight column is being sorted in the table, the
  * classes could be added like this (in the theme function):
  * @code
- * $form['my_elements'][$delta]['weight']['#attributes']['class'] = array('my-elements-weight');
+ * $form['my_elements'][$delta]['weight']['#attributes']['class'] = ['my-elements-weight'];
  * @endcode
  *
  * Each row of the table must also have a class of "draggable" in order to
  * enable the drag handles:
  * @code
- * $row = array(...);
- * $rows[] = array(
+ * $row = [...];
+ * $rows[] = [
  *   'data' => $row,
- *   'class' => array('draggable'),
- * );
+ *   'class' => ['draggable'],
+ * ];
  * @endcode
  *
  * When tree relationships are present, the two additional classes
@@ -271,18 +210,18 @@ function drupal_js_defaults($data = NULL) {
  *
  * Calling drupal_attach_tabledrag() would then be written as such:
  * @code
- * drupal_attach_tabledrag('my-module-table', array(
+ * drupal_attach_tabledrag('my-module-table', [
  *   'action' => 'order',
  *   'relationship' => 'sibling',
  *   'group' => 'my-elements-weight',
- * );
+ * ];
  * @endcode
  *
  * In a more complex case where there are several groups in one column (such as
  * the block regions on the admin/structure/block page), a separate subgroup
  * class must also be added to differentiate the groups.
  * @code
- * $form['my_elements'][$region][$delta]['weight']['#attributes']['class'] = array('my-elements-weight', 'my-elements-weight-' . $region);
+ * $form['my_elements'][$region][$delta]['weight']['#attributes']['class'] = ['my-elements-weight', 'my-elements-weight-' . $region];
  * @endcode
  *
  * The 'group' option is still 'my-element-weight', and the additional
@@ -292,12 +231,12 @@ function drupal_js_defaults($data = NULL) {
  *
  * @code
  * foreach ($regions as $region) {
- *   drupal_attach_tabledrag('my-module-table', array(
+ *   drupal_attach_tabledrag('my-module-table', [
  *     'action' => 'order',
  *     'relationship' => 'sibling',
  *     'group' => 'my-elements-weight',
  *     'subgroup' => 'my-elements-weight-' . $region,
- *   ));
+ *   ]);
  * }
  * @endcode
  *
@@ -371,47 +310,6 @@ function drupal_attach_tabledrag(&$element, array $options) {
   ];
 
   $element['#attached']['library'][] = 'core/drupal.tabledrag';
-}
-
-/**
- * Renders an element.
- *
- * This function renders an element. The top level element is shown with show()
- * before rendering, so it will always be rendered even if hide() had been
- * previously used on it.
- *
- * @param $element
- *   The element to be rendered.
- *
- * @return \Drupal\Component\Render\MarkupInterface|null
- *   The rendered element.
- *
- * @deprecated in drupal:9.3.0 and is removed from drupal:10.0.0. Use
- *   \Drupal\Core\Render\RendererInterface::render() instead.
- *
- * @see https://www.drupal.org/node/2939099
- * @see \Drupal\Core\Render\RendererInterface
- * @see show()
- * @see hide()
- */
-function render(&$element) {
-  @trigger_error('The render() function is deprecated in drupal:9.3.0 and is removed from drupal:10.0.0. Use \Drupal\Core\Render\RendererInterface::render() instead. See https://www.drupal.org/node/2939099', E_USER_DEPRECATED);
-  if (!$element && $element !== 0) {
-    return NULL;
-  }
-  if (is_array($element)) {
-    // Early return if this element was pre-rendered (no need to re-render).
-    if (isset($element['#printed']) && $element['#printed'] == TRUE && isset($element['#markup']) && strlen($element['#markup']) > 0) {
-      return $element['#markup'];
-    }
-    show($element);
-    return \Drupal::service('renderer')->render($element);
-  }
-  else {
-    // Safe-guard for inappropriate use of render() on flat variables: return
-    // the variable as-is.
-    return $element;
-  }
 }
 
 /**
@@ -550,7 +448,7 @@ function drupal_flush_all_caches($kernel = NULL) {
   // Flush asset file caches.
   \Drupal::service('asset.css.collection_optimizer')->deleteAll();
   \Drupal::service('asset.js.collection_optimizer')->deleteAll();
-  _drupal_flush_css_js();
+  \Drupal::service('asset.query_string')->reset();
 
   // Reset all static caches.
   drupal_static_reset();
@@ -600,41 +498,15 @@ function drupal_flush_all_caches($kernel = NULL) {
  *
  * Changing the dummy query string appended to CSS and JavaScript files forces
  * all browsers to reload fresh files.
+ *
+ * @deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. Use
+ *   Use \Drupal\Core\Asset\AssetQueryStringInterface::reset() instead.
+ *
+ * @see https://www.drupal.org/node/3358337
  */
 function _drupal_flush_css_js() {
-  // The timestamp is converted to base 36 in order to make it more compact.
-  Drupal::state()->set('system.css_js_query_string', base_convert(\Drupal::time()->getRequestTime(), 10, 36));
-}
-
-/**
- * Outputs debug information.
- *
- * The debug information is passed on to trigger_error() after being converted
- * to a string using print_r() or var_export().
- *
- * @param $data
- *   Data to be output.
- * @param $label
- *   Label to prefix the data.
- * @param $print_r
- *   Flag to switch between print_r() and var_export() for data conversion to
- *   string. Set $print_r to FALSE to use var_export() instead of print_r().
- *   Passing recursive data structures to var_export() will generate an error.
- *
- * @deprecated in drupal:9.2.0 and is removed from drupal:10.0.0. Use dump()
- *   instead.
- *
- * @see https://www.drupal.org/node/3192283
- */
-function debug($data, $label = NULL, $print_r = TRUE) {
-  @trigger_error('debug() is deprecated in drupal:9.2.0 and is removed from drupal:10.0.0. Use dump() instead. See https://www.drupal.org/node/3192283', E_USER_DEPRECATED);
-  // Print $data contents to string.
-  $string = Html::escape($print_r ? print_r($data, TRUE) : var_export($data, TRUE));
-
-  // Display values with pre-formatting to increase readability.
-  $string = '<pre>' . $string . '</pre>';
-
-  trigger_error(trim($label ? "$label: $string" : $string));
+  @trigger_error('_drupal_flush_css_js is deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. Use \Drupal\Core\Asset\AssetQueryStringInterface::reset() instead. See https://www.drupal.org/node/3358337', E_USER_DEPRECATED);
+  \Drupal::service('asset.query_string')->reset();
 }
 
 /**

@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\sms\Kernel;
 
+use Drupal\Core\Datetime\Entity\DateFormat;
 use Drupal\sms\Entity\SmsGatewayInterface;
 use Drupal\sms\Provider\SmsProviderInterface;
 use Drupal\Tests\sms\Functional\SmsFrameworkTestTrait;
@@ -57,7 +58,7 @@ final class SmsFrameworkViewsTest extends ViewsKernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp($import_test_views = TRUE) {
+  protected function setUp($import_test_views = TRUE): void {
     parent::setUp($import_test_views);
 
     $this->installEntitySchema('user');
@@ -70,11 +71,14 @@ final class SmsFrameworkViewsTest extends ViewsKernelTestBase {
     $this->gateway = $this->createMemoryGateway();
     $this->setFallbackGateway($this->gateway);
 
-    ViewTestData::createTestViews(get_class($this), ['sms_test_views']);
+    ViewTestData::createTestViews($this::class, ['sms_test_views']);
+    DateFormat::load('medium')?->setPattern('D, j M Y - H:i')->save();
   }
 
   /**
    * Tests view of SMS entities with join to recipient table.
+   *
+   * @covers \Drupal\sms\Plugin\views\field\SmsMessageDirection
    */
   public function testSms(): void {
     // Create a role and user which has permission to view the entity links
@@ -129,142 +133,142 @@ final class SmsFrameworkViewsTest extends ViewsKernelTestBase {
     $view->setDisplay('default');
     $this->executeView($view);
 
-    $this->assertEquals(2, $view->total_rows);
+    static::assertEquals(2, $view->total_rows);
 
     $cols = [
       'direction_1', 'sender_phone_number', 'recipient_phone_number',
       'message', 'created', 'gateway', 'sender_entity__target_id',
       'recipient_entity__target_id', 'automated', 'processed', 'queued',
     ];
-    $this->assertEquals($cols, array_keys($view->field));
+    static::assertEquals($cols, array_keys($view->field));
 
     /** @var \Drupal\Core\Render\RendererInterface $renderer */
     $renderer = \Drupal::service('renderer');
 
     // direction_1.
-    $render = $renderer->executeInRenderContext(new RenderContext(), function () use ($view, $message1) {
+    $render = $renderer->executeInRenderContext(new RenderContext(), static function () use ($view) {
       return $view->field['direction_1']->advancedRender($view->result[0]);
     });
-    $this->assertEquals('Outgoing', $render);
+    static::assertEquals('Outgoing', $render);
 
-    $render = $renderer->executeInRenderContext(new RenderContext(), function () use ($view, $message2) {
+    $render = $renderer->executeInRenderContext(new RenderContext(), static function () use ($view) {
       return $view->field['direction_1']->advancedRender($view->result[1]);
     });
-    $this->assertEquals('Incoming', $render);
+    static::assertEquals('Incoming', $render);
 
     // sender_phone_number.
-    $render = $renderer->executeInRenderContext(new RenderContext(), function () use ($view, $message1) {
+    $render = $renderer->executeInRenderContext(new RenderContext(), static function () use ($view) {
       return $view->field['sender_phone_number']->advancedRender($view->result[0]);
     });
-    $this->assertEquals($message1->getSenderNumber(), $render);
+    static::assertEquals($message1->getSenderNumber(), $render);
 
-    $render = $renderer->executeInRenderContext(new RenderContext(), function () use ($view, $message2) {
+    $render = $renderer->executeInRenderContext(new RenderContext(), static function () use ($view) {
       return $view->field['sender_phone_number']->advancedRender($view->result[1]);
     });
-    $this->assertEquals('', $render);
+    static::assertEquals('', $render);
 
     // recipient_phone_number.
-    $render = $renderer->executeInRenderContext(new RenderContext(), function () use ($view, $message1) {
+    $render = $renderer->executeInRenderContext(new RenderContext(), static function () use ($view) {
       return $view->field['recipient_phone_number']->advancedRender($view->result[0]);
     });
 
     $number1 = $message1->getRecipients()[0];
     $number2 = $message1->getRecipients()[1];
-    $this->assertEquals('<a href="tel:' . urlencode($number1) . '">' . $number1 . '</a>, <a href="tel:' . urlencode($number2) . '">' . $number2 . '</a>', $render);
+    static::assertEquals('<a href="tel:' . urlencode($number1) . '">' . $number1 . '</a>, <a href="tel:' . urlencode($number2) . '">' . $number2 . '</a>', (string) $render);
 
     $number1 = $message2->getRecipients()[0];
-    $render = $renderer->executeInRenderContext(new RenderContext(), function () use ($view, $message2) {
+    $render = $renderer->executeInRenderContext(new RenderContext(), static function () use ($view) {
       return $view->field['recipient_phone_number']->advancedRender($view->result[1]);
     });
-    $this->assertEquals('<a href="tel:' . urlencode($number1) . '">' . $number1 . '</a>', $render);
+    static::assertEquals('<a href="tel:' . urlencode($number1) . '">' . $number1 . '</a>', (string) $render);
 
     // message.
-    $render = $renderer->executeInRenderContext(new RenderContext(), function () use ($view, $message1) {
+    $render = $renderer->executeInRenderContext(new RenderContext(), static function () use ($view) {
       return $view->field['message']->advancedRender($view->result[0]);
     });
-    $this->assertEquals($message1->getMessage(), $render);
+    static::assertEquals($message1->getMessage(), $render);
 
-    $render = $renderer->executeInRenderContext(new RenderContext(), function () use ($view, $message2) {
+    $render = $renderer->executeInRenderContext(new RenderContext(), static function () use ($view) {
       return $view->field['message']->advancedRender($view->result[1]);
     });
-    $this->assertEquals($message2->getMessage(), $render);
+    static::assertEquals($message2->getMessage(), $render);
 
     // created.
-    $render = $renderer->executeInRenderContext(new RenderContext(), function () use ($view, $message1) {
+    $render = $renderer->executeInRenderContext(new RenderContext(), static function () use ($view) {
       return $view->field['created']->advancedRender($view->result[0]);
     });
-    $this->assertEquals('Fri, 04/17/1998 - 23:08', $render);
+    static::assertStringContainsString('Fri, 17 Apr 1998 - 23:08', (string) $render);
 
-    $render = $renderer->executeInRenderContext(new RenderContext(), function () use ($view, $message2) {
+    $render = $renderer->executeInRenderContext(new RenderContext(), static function () use ($view) {
       return $view->field['created']->advancedRender($view->result[1]);
     });
-    $this->assertEquals('Wed, 10/30/1985 - 13:43', $render);
+    static::assertStringContainsString('Wed, 30 Oct 1985 - 13:43', (string) $render);
 
     // gateway.
-    $render = $renderer->executeInRenderContext(new RenderContext(), function () use ($view, $message1) {
+    $render = $renderer->executeInRenderContext(new RenderContext(), static function () use ($view) {
       return $view->field['gateway']->advancedRender($view->result[0]);
     });
-    $this->assertEquals($this->gateway->toLink(NULL, 'edit-form')->toString(), $render);
+    static::assertEquals($this->gateway->toLink(NULL, 'edit-form')->toString(), $render);
 
-    $render = $renderer->executeInRenderContext(new RenderContext(), function () use ($view, $message2) {
+    $render = $renderer->executeInRenderContext(new RenderContext(), static function () use ($view) {
       return $view->field['gateway']->advancedRender($view->result[1]);
     });
-    $this->assertEquals($this->gateway->toLink(NULL, 'edit-form')->toString(), $render);
+    static::assertEquals($this->gateway->toLink(NULL, 'edit-form')->toString(), $render);
 
     // sender_entity__target_id.
-    $render = $renderer->executeInRenderContext(new RenderContext(), function () use ($view, $message1) {
+    $render = $renderer->executeInRenderContext(new RenderContext(), static function () use ($view) {
       return $view->field['sender_entity__target_id']->advancedRender($view->result[0]);
     });
-    $this->assertEquals($user1->toLink()->toString(), $render);
+    static::assertEquals($user1->toLink()->toString(), $render);
 
-    $render = $renderer->executeInRenderContext(new RenderContext(), function () use ($view, $message2) {
+    $render = $renderer->executeInRenderContext(new RenderContext(), static function () use ($view) {
       return $view->field['sender_entity__target_id']->advancedRender($view->result[1]);
     });
-    $this->assertEquals($user2->toLink()->toString(), $render);
+    static::assertEquals($user2->toLink()->toString(), $render);
 
     // recipient_entity__target_id.
-    $render = $renderer->executeInRenderContext(new RenderContext(), function () use ($view, $message1) {
+    $render = $renderer->executeInRenderContext(new RenderContext(), static function () use ($view) {
       return $view->field['recipient_entity__target_id']->advancedRender($view->result[0]);
     });
-    $this->assertEquals('None', $render);
+    static::assertEquals('None', $render);
 
-    $render = $renderer->executeInRenderContext(new RenderContext(), function () use ($view, $message2) {
+    $render = $renderer->executeInRenderContext(new RenderContext(), static function () use ($view) {
       return $view->field['recipient_entity__target_id']->advancedRender($view->result[1]);
     });
-    $this->assertEquals($user1->toLink()->toString(), $render);
+    static::assertEquals($user1->toLink()->toString(), $render);
 
     // automated.
-    $render = $renderer->executeInRenderContext(new RenderContext(), function () use ($view, $message1) {
+    $render = $renderer->executeInRenderContext(new RenderContext(), static function () use ($view) {
       return $view->field['automated']->advancedRender($view->result[0]);
     });
-    $this->assertEquals('Automated', $render);
+    static::assertEquals('Automated', $render);
 
-    $render = $renderer->executeInRenderContext(new RenderContext(), function () use ($view, $message2) {
+    $render = $renderer->executeInRenderContext(new RenderContext(), static function () use ($view) {
       return $view->field['automated']->advancedRender($view->result[1]);
     });
-    $this->assertEquals('Not automated', $render);
+    static::assertEquals('Not automated', $render);
 
     // processed.
-    $render = $renderer->executeInRenderContext(new RenderContext(), function () use ($view, $message1) {
+    $render = $renderer->executeInRenderContext(new RenderContext(), static function () use ($view) {
       return $view->field['processed']->advancedRender($view->result[0]);
     });
-    $this->assertEquals('', $render);
+    static::assertEquals('', $render);
 
-    $render = $renderer->executeInRenderContext(new RenderContext(), function () use ($view, $message2) {
+    $render = $renderer->executeInRenderContext(new RenderContext(), static function () use ($view) {
       return $view->field['processed']->advancedRender($view->result[1]);
     });
-    $this->assertEquals('Wed, 10/30/1985 - 13:44', $render);
+    static::assertStringContainsString('Wed, 30 Oct 1985 - 13:44', (string) $render);
 
     // queued.
-    $render = $renderer->executeInRenderContext(new RenderContext(), function () use ($view, $message1) {
+    $render = $renderer->executeInRenderContext(new RenderContext(), static function () use ($view) {
       return $view->field['queued']->advancedRender($view->result[0]);
     });
-    $this->assertEquals('Queued', $render);
+    static::assertEquals('Queued', $render);
 
-    $render = $renderer->executeInRenderContext(new RenderContext(), function () use ($view, $message2) {
+    $render = $renderer->executeInRenderContext(new RenderContext(), static function () use ($view) {
       return $view->field['queued']->advancedRender($view->result[1]);
     });
-    $this->assertEquals('Not queued', $render);
+    static::assertEquals('Not queued', $render);
   }
 
 }

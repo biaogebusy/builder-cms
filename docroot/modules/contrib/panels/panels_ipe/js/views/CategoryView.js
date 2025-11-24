@@ -310,7 +310,7 @@
         // Setup the Drupal.Ajax instance.
         var ajax = Drupal.ajax({
           url: info.url,
-          submit: {js: true}
+          submit: {js: true, currentPath: drupalSettings.path.currentPath}
         });
 
         // Remove our throbber on load.

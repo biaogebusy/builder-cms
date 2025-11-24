@@ -77,7 +77,7 @@ class WebformTable extends WebformElementBase {
   }
 
   /**
-   * Prepare webform talble header for rendering.
+   * Prepare webform table header for rendering.
    *
    * @param array &$element
    *   A webform table element.

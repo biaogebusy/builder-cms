@@ -17,6 +17,8 @@ class FulfillmentGuard implements GuardInterface {
     if ($transition->getId() == 'cancel' && $entity->field_state->first()->value == 'fulfillment') {
       return FALSE;
     }
+
+    return TRUE;
   }
 
 }

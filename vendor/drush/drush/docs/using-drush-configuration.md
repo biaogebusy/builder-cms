@@ -4,7 +4,7 @@ Drush configuration is useful to cut down on typing out lengthy and repetitive c
 options, and to avoid mistakes.
 
 #### Directories and Discovery
-drush.yml files are discovered as below, in order of precedence:
+`drush.yml` files are discovered as below, in order of precedence:
 
 1.  Drupal site folder (e.g. `sites/{example.com}/drush.yml`).
 2.  `sites/all/drush`, `WEBROOT/drush`, or `PROJECTROOT/drush`.
@@ -19,13 +19,17 @@ to see all discovered config files.
 #### Environment variables
 
 Your Drush config file may reference environment variables using a syntax like `${env.HOME}`.
-For example see the `drush.paths` examples below.
+For example, see `drush.paths` below.
 
 An alternative way to populate Drush configuration is to define environment variables that
 correspond to config keys. For example, to populate the `options.uri` config item,
-create an environment variable `DRUSH_OPTIONS_URI=http://example.com`.
-As you can see, variable names should be uppercased, prefixed with `DRUSH_`, and periods
-replaced with dashes.
+create an environment variable `DRUSH_OPTIONS_URI=http://example.com`. This instructs Drush to use your domain name instead of `http://default`. As you can see, variable names should be uppercased, prefixed with `DRUSH_`, and periods replaced with underscores.
+
+!!! note
+    For `uri` you need to use a global config location, not a site-specific one, since it's used by Drupal to select which multi-site gets bootstrapped. Thats why the `DRUSH_OPTIONS_URI` approach is recommended.
+
+!!! tip
+    To handle multiple Drupal installations on the same server, https://direnv.net/ can help, by varying your environment variables, depending on the directory you are in, when you issue a command line request. Use this to define a site URI for each code base.
 
 ### Config examples
 
@@ -90,8 +94,8 @@ options:
   # Specify the base_url that should be used when generating links.
   uri: 'http://example.com/subdir'
   
-  # Specify your Drupal core base directory (useful if you use symlinks).
-  root: '/home/USER/workspace/drupal'
+  # Load Drush config from a non-standard location
+  config: '/home/USER/workspace/drupal'
   
   # Enable verbose mode.
   verbose: true
@@ -171,12 +175,12 @@ notify:
   duration: 30
   # Specify a command to run. Defaults to Notification Center (OSX) or libnotify (Linux)
   cmd: /path/to/program
-  # See https://github.com/drush-ops/drush/blob/11.x/src/Commands/core/NotifyCommands.php for more settings.
+  # See https://github.com/drush-ops/drush/blob/13.x/src/Commands/core/NotifyCommands.php for more settings.
 
 xh:
   # Start profiling via xhprof/tideways and show a link to the run report.
   link: http://xhprof.local
-  # See https://github.com/drush-ops/drush/blob/11.x/src/Commands/core/XhprofCommands.php for more settings.
+  # See https://github.com/drush-ops/drush/blob/13.x/src/Commands/core/XhprofCommands.php for more settings.
   profile-builtins: true
   profile-cpu: false
   profile-memory: false

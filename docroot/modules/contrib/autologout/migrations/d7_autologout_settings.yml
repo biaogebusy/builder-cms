@@ -24,7 +24,7 @@ process:
   max_timeout: autologout_max_timeout
   padding: autologout_padding
   role_logout: autologout_role_logout
-  redirect_url: '/{{autologout_redirect_url}}'
+  redirect_url: autologout_redirect_url
   no_dialog: autologout_no_dialog
   message: autologout_message
   inactivity_message: autologout_inactivity_message

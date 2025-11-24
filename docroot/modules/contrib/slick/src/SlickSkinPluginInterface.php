@@ -2,10 +2,13 @@
 
 namespace Drupal\slick;
 
+// @todo use Drupal\blazy\Plugin\SkinPluginInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 
 /**
  * Provides an interface defining Slick skins.
+ *
+ * @todo extends SkinPluginInterface;
  */
 interface SlickSkinPluginInterface extends ContainerFactoryPluginInterface {
 
@@ -37,7 +40,7 @@ interface SlickSkinPluginInterface extends ContainerFactoryPluginInterface {
    * - css: An array of CSS files to attach.
    * - js: An array of JS files to attach, e.g.: image zoomer, reflection, etc.
    * - group: A string grouping the current skin: main, thumbnail, arrows, dots.
-   * - dependencies: SImilar to how core library dependencies constructed.
+   * - dependencies: Similar to how core library dependencies constructed.
    * - provider: A module name registering the skins.
    * - options: Extra JavaScript (Slicebox, 3d carousel, etc) options merged
    *     into existing [data-slick] attribute to be consumed by custom JS.

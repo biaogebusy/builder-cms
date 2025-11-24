@@ -1,0 +1,354 @@
+// --------------------------------------------------
+// Toolbar Variables
+// --------------------------------------------------
+:root {
+  --gin-toolbar-height: 48px;
+  --gin-toolbar-secondary-height: 48px;
+  --gin-scroll-offset: 72px;
+  --gin-toolbar-y-offset: var(--gin-toolbar-height);
+  --gin-toolbar-x-offset: 0px; // Needs px to work in calc() functions.
+  --gin-sticky-offset: 0px; // Needs px to work in calc() functions.
+  --gin-icon-size-toolbar: 20px;
+
+  @include mq(medium) {
+    --gin-toolbar-height: 0px; // Needs px to work in calc() functions.
+    --gin-toolbar-secondary-height: 52px;
+    --gin-toolbar-x-offset: var(--drupal-displace-offset-left, 64px);
+    --gin-scroll-offset: 130px;
+    --gin-sticky-offset: var(--gin-height-sticky);
+  }
+}
+
+html.admin-toolbar-expanded {
+  @include mq(medium) {
+    --gin-toolbar-x-offset: var(--drupal-displace-offset-left, 264px);
+  }
+}
+
+// --------------------------------------------------
+// Map CSS3 variables
+// --------------------------------------------------
+body.gin--core-navigation {
+  --admin-toolbar-sidebar-width: #{rem(64px)};
+
+  [data-admin-toolbar='expanded'] & {
+    --admin-toolbar-sidebar-width: #{rem(264px)};
+
+    @media (--admin-toolbar-tablet) {
+      --admin-toolbar-sidebar-width: calc(16.5 * var(--admin-toolbar-rem));
+    }
+  }
+}
+
+// This applies to both the sidebar and the control bar on small screens.
+[data-drupal-admin-styles] {
+  --admin-toolbar-font-family: var(--gin-font);
+  --admin-toolbar-color-white: var(--gin-bg-layer);
+  --admin-toolbar-color-gray-050: var(--gin-bg-layer2);
+  --admin-toolbar-color-gray-100: var(--gin-border-color-layer);
+  --admin-toolbar-color-gray-200: var(--gin-border-color-layer2);
+  --admin-toolbar-color-gray-800: var(--gin-color-text);
+  --admin-toolbar-color-gray-990: var(--gin-color-primary-active);
+}
+
+// --------------------------------------------------
+// Custom overrides
+// --------------------------------------------------
+
+.gin--core-navigation .top-bar,
+.gin--core-navigation .admin-toolbar-control-bar {
+  position: sticky;
+  inset-block-start: 0;
+}
+
+// Core currently hard codes this as 'white' rather than a custom property, so
+// we need to fix that to correctly apply dark colours.
+.gin--core-navigation .admin-toolbar-control-bar {
+  background-color: var(--admin-toolbar-color-white);
+}
+
+.gin--core-navigation .gin-secondary-toolbar:not(.gin-secondary-toolbar--frontend) {
+  margin-block-end: var(--gin-spacing-xxs);
+}
+
+.gin--core-navigation .gin-secondary-toolbar--frontend {
+  z-index: 102;
+  margin-inline-start: var(--gin-toolbar-x-offset);
+}
+
+.toolbar-menu__link:hover::before {
+  inline-size: var(--gin-spacing-xxs);
+}
+
+.admin-toolbar {
+  top: 0;
+  height: 100%;
+}
+
+.admin-toolbar__header {
+  padding-block-start: var(--gin-spacing-xs);
+
+  @include mq(large) {
+    padding-block-start: 0;
+  }
+}
+
+.admin-toolbar__content {
+  padding: var(--admin-toolbar-sidebar-header) var(--gin-spacing-s) var(--gin-spacing-s) var(--gin-spacing-s);
+  margin-block-start: calc(var(--gin-spacing-xxs) * -1);
+
+  @include mq(large) {
+    padding: var(--gin-spacing-s);
+    margin-block-start: 0;
+  }
+}
+
+.admin-toolbar__footer {
+  padding: var(--gin-spacing-s);
+}
+
+.admin-toolbar__footer,
+.admin-toolbar__content .toolbar-block:nth-last-child(n+2)::after {
+  border-block-start-color: var(--gin-border-color-secondary);
+}
+
+// --------------------------------------------------
+// Remove anti-flicker
+// --------------------------------------------------
+.toolbar-anti-flicker.toolbar-loading.toolbar-fixed body.gin--core-navigation,
+body.gin--core-navigation {
+  padding-block-start: unset !important;
+  margin-inline-start: auto !important;
+}
+
+// --------------------------------------------------
+// Logo override
+// --------------------------------------------------
+.admin-toolbar__logo {
+  line-height: 0;
+  border-radius: 10px;
+
+  svg rect {
+    fill: var(--gin-color-primary);
+  }
+
+  svg path {
+    fill: var(--gin-bg-app);
+  }
+
+  &:hover svg rect {
+    fill: var(--gin-color-primary-hover);
+  }
+
+  &:active svg rect,
+  &:focus svg rect {
+    fill: var(--gin-color-primary-active);
+  }
+}
+
+// --------------------------------------------------
+// Button style overrides
+// --------------------------------------------------
+#navigation-link-navigationcreate {
+  margin-block-start: var(--gin-spacing-xxs);
+}
+
+.toolbar-block__list {
+  gap: 0;
+}
+
+.toolbar-button {
+  padding-inline: 10px;
+  padding-block: calc(var(--gin-spacing-xs) + 1px);
+  margin-block-end: var(--gin-spacing-xxxs);
+}
+
+.toolbar-button,
+.toolbar-menu__link {
+  color: var(--gin-color-text);
+  font-weight: var(--gin-font-weight-normal);
+  font-variation-settings: unset;
+
+  &,
+  &:hover,
+  &:active {
+    outline: none;
+    box-shadow: none;
+  }
+
+  &:hover {
+    color: var(--gin-color-primary);
+    background-color: var(--gin-bg-item-hover);
+  }
+
+  &:active,
+  &:focus,
+  &:hover:focus {
+    color: var(--gin-color-primary-hover);
+    background-color: var(--gin-color-primary-light);
+  }
+}
+
+.toolbar-button--large {
+  font-weight: var(--gin-font-weight-bold);
+}
+
+// --------------------------------------------------
+// Focus style overrides
+// --------------------------------------------------
+.admin-toolbar__logo:focus,
+.toolbar-button:focus,
+.admin-toolbar__expand-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 1px var(--gin-color-focus-border), 0 0 0 4px var(--gin-color-focus);
+}
+
+.toolbar-menu__link:focus {
+  outline: none;
+  box-shadow: inset 0 0 0 1px var(--gin-color-focus-border), inset 0 0 0 3px var(--gin-color-focus);
+}
+
+// --------------------------------------------------
+// Active style overrides
+// --------------------------------------------------
+.toolbar-button.current {
+  background-color: var(--gin-bg-item-hover);
+
+  &:hover {
+    background-color: var(--gin-color-primary-light);
+  }
+
+  &:active,
+  &:focus,
+  &:hover:focus {
+    background-color: var(--gin-color-primary-light);
+  }
+}
+
+.toolbar-button.current.is-active,
+.toolbar-button:has(+ .toolbar-popover__wrapper .is-active) {
+  color: var(--gin-color-primary);
+  background-color: var(--gin-color-primary-light);
+
+  &::before {
+    background: var(--gin-color-primary);
+  }
+}
+
+// --------------------------------------------------
+// Icon overrides
+// --------------------------------------------------
+[class*="toolbar-button--icon"] {
+  --icon: #{icon('fallback')}; /* Default icon, aka --basic */
+
+  &::before {
+    width: var(--gin-icon-size-toolbar);
+    height: var(--gin-icon-size-toolbar);
+    background-color: var(--gin-icon-color);
+    mask-size: 100% 100%;
+    mask-image: var(--icon);
+  }
+
+  &:hover::before,
+  &:focus::before {
+    background-color: var(--gin-color-primary);
+  }
+}
+
+@import "../helpers/toolbar-icons";
+
+// --------------------------------------------------
+// Create menu: Separate if first item
+// --------------------------------------------------
+#navigation-link-navigationcreate:first-child {
+  margin-block-end: var(--admin-toolbar-space-8);
+
+  &::after {
+    content: "";
+    display: block;
+    margin-block-start: var(--admin-toolbar-space-12);
+    border-block-end: 1px solid var(--gin-border-color-secondary);
+  }
+}
+
+// --------------------------------------------------
+// Expand button
+// --------------------------------------------------
+.admin-toolbar__expand-button {
+  margin-block-start: calc(var(--gin-spacing-xs) * -1);
+
+  &,
+  &:hover {
+    color: var(--gin-color-text-light);
+    border-color: var(--gin-border-color);
+  }
+}
+
+// --------------------------------------------------
+// Popover
+// --------------------------------------------------
+.toolbar-popover--expanded {
+  background-color: transparent;
+
+  > .toolbar-button {
+    background-color: var(--gin-bg-item-hover);
+  }
+}
+
+.gin--dark-mode .toolbar-popover__wrapper {
+  border-inline-start: 2px solid var(--gin-border-color-secondary);
+}
+
+// --------------------------------------------------
+// Tooltips
+// --------------------------------------------------
+.admin-toolbar__tooltip {
+  font-size: var(--gin-font-size-xs);
+  color: #fff;
+  background-color: var(--gin-tooltip-bg);
+}
+
+// --------------------------------------------------
+// Hide links from Admin Toolbar Extra module
+// --------------------------------------------------
+.toolbar-block__list-item[id*="navigation-link-admin-toolbar-toolsextra-links"] {
+  display: none;
+}
+
+// --------------------------------------------------
+// Hide Shortcuts & Announcements in primary nav
+// --------------------------------------------------
+#toolbar-item-shortcuts,
+#toolbar-item-announcement
+{
+  display: none;
+}
+
+// --------------------------------------------------
+// Hide duplicated Gin secondary items
+// --------------------------------------------------
+.gin-secondary-toolbar {
+  .toolbar-id--toolbar-icon-user {
+    display: none !important;
+  }
+
+  .toolbar-menu {
+    gap: 0;
+  }
+
+  // Fixes quirks when the toolbar
+  // module is still active
+  .toolbar-menu__trigger {
+    display: none;
+  }
+
+  .toolbar-tray .menu-item + .menu-item {
+    border-inline-start: none;
+  }
+}
+
+// Fix weird shortcuts menu flickering.
+.toolbar-loading #toolbar-item-shortcuts-tray,
+.toolbar-loading #toolbar-item-shortcuts {
+  visibility: hidden;
+}

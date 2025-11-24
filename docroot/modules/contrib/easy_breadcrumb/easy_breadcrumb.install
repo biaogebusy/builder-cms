@@ -42,7 +42,7 @@ function easy_breadcrumb_update_8002() {
 /**
  * Implements hook_update().
  *
- * Force an update because we updated the depedency injection which requires a
+ * Force an update because we updated the dependency injection which requires a
  * cache clear.
  */
 function easy_breadcrumb_update_8003() {
@@ -141,12 +141,13 @@ function easy_breadcrumb_update_8008() {
 }
 
 /**
- * Implements hook_install().
- *
- * Help users get started with the module.
+ * Set default value for breadcrumb segment minimum count.
  */
-function easy_breadcrumb_install() {
-  $messenger = \Drupal::messenger();
-  $help_url = 'https://www.drupal.org/docs/8/modules/easy-breadcrumb';
-  $messenger->addMessage("Easy Breadcrumb documentation is found in the help module or at $help_url.");
+function easy_breadcrumb_update_8009() {
+  $config = \Drupal::configFactory()->getEditable(EasyBreadcrumbConstants::MODULE_SETTINGS);
+  if (is_null($config->get(EasyBreadcrumbConstants::SEGMENT_DISPLAY_MINIMUM))) {
+    $config->set(EasyBreadcrumbConstants::SEGMENT_DISPLAY_MINIMUM, 1);
+    $config->save(TRUE);
+    return t('Breadcrumb segment minimum count has been set to 1 to maintain the existing behavior when rendering breadcrumbs.');
+  }
 }

@@ -112,7 +112,7 @@ interface BlazyAdminInterface extends BlazyAdminInteropInterface {
     array $target_bundles = [],
     array $allowed_field_types = [],
     $entity_type = 'media',
-    $target_type = ''
+    $target_type = '',
   ): array;
 
   /**
@@ -155,6 +155,24 @@ interface BlazyAdminInterface extends BlazyAdminInteropInterface {
   public function isAdminCss(): bool;
 
   /**
+   * Returns TRUE if a Layout Builder admin page.
+   *
+   * @return bool
+   *   TRUE if Layout Builder admin page.
+   */
+  public function isAdminLb(): bool;
+
+  /**
+   * Provides horizontal tabs menu for nested details elements.
+   */
+  public function tabify(array &$form, $form_id, $region): void;
+
+  /**
+   * Provides compact description due to small estates in modal.
+   */
+  public function themeDescription(array &$form, array $parents = []): void;
+
+  /**
    * Returns escaped options.
    *
    * @return array
@@ -172,5 +190,40 @@ interface BlazyAdminInterface extends BlazyAdminInteropInterface {
    *   The BlazySettings object.
    */
   public function toScopes(array &$definition): BlazySettings;
+
+  /**
+   * Returns native grid description.
+   */
+  public function nativeGridDescription();
+
+  /**
+   * Returns base descriptions.
+   */
+  public function baseDescriptions(): array;
+
+  /**
+   * Returns grid descriptions.
+   */
+  public function gridDescriptions(): array;
+
+  /**
+   * Returns grid header description.
+   */
+  public function gridHeaderDescription();
+
+  /**
+   * Returns opening descriptions.
+   */
+  public function openingDescriptions(): array;
+
+  /**
+   * Returns SVG description, from SVG image field to support it in Blazy.
+   */
+  public function svgDescriptions(): array;
+
+  /**
+   * Returns closing form descriptions.
+   */
+  public function closingDescriptions(): array;
 
 }

@@ -2,13 +2,12 @@
 
 namespace Drupal\commerce_promotion\Plugin\Commerce\PromotionOffer;
 
-use Drupal\commerce_price\RounderInterface;
-use Drupal\commerce_promotion\Entity\PromotionInterface;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
+use Drupal\commerce_promotion\Entity\PromotionInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -24,34 +23,14 @@ abstract class PromotionOfferBase extends PluginBase implements PromotionOfferIn
   protected $rounder;
 
   /**
-   * Constructs a new PromotionOfferBase object.
-   *
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The pluginId for the plugin instance.
-   * @param mixed $plugin_definition
-   *   The plugin implementation definition.
-   * @param \Drupal\commerce_price\RounderInterface $rounder
-   *   The rounder.
-   */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, RounderInterface $rounder) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
-
-    $this->setConfiguration($configuration);
-    $this->rounder = $rounder;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('commerce_price.rounder')
-    );
+    $instance = new static($configuration, $plugin_id, $plugin_definition);
+    $instance->setConfiguration($configuration);
+    $instance->rounder = $container->get('commerce_price.rounder');
+
+    return $instance;
   }
 
   /**

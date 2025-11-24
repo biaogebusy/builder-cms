@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.data.aiservice.cloudbus.historygeo.query request
  *
  * @author auto create
- * @since 1.0, 2023-05-31 00:57:04
+ * @since 1.0, 2025-08-13 14:57:43
  */
 class AlipayDataAiserviceCloudbusHistorygeoQueryRequest
 {

@@ -32,7 +32,7 @@ function webform_example_element_properties_webform_element_translatable_propert
 function webform_example_element_properties_webform_element_configuration_form_alter(&$form, FormStateInterface $form_state) {
   // If you want add element properties to specific element type, you can use
   // the below code to the current element's type and more.
-  /** @var Drupal\webform_ui\Form\WebformUiElementEditForm $form_object */
+  /** @var \Drupal\webform_ui\Form\WebformUiElementEditForm $form_object */
   $form_object = $form_state->getFormObject();
   $element_plugin = $form_object->getWebformElementPlugin();
   $element_label = $element_plugin->getPluginLabel();

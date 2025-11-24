@@ -74,7 +74,7 @@ class EntityShareEmbeddedEntitiesEnhancer extends ResourceFieldEnhancerBase impl
       return $data;
     }
 
-    $data['value'] = preg_replace_callback(
+    $data['value'] = \preg_replace_callback(
       '#(<.*data-entity-type="(.*)".*data-entity-uuid="(.*)".*)(/?)>#U',
       [self::class, 'addEntityJsonapiUrl'],
       $data['value']
@@ -93,10 +93,10 @@ class EntityShareEmbeddedEntitiesEnhancer extends ResourceFieldEnhancerBase impl
     }
 
     // Remove data-entity-jsonapi-url HTML attribute.
-    $value['value'] = preg_replace('# data-entity-jsonapi-url="(.*)"#U', '', $value['value']);
+    $value['value'] = \preg_replace('# data-entity-jsonapi-url="(.*)"#U', '', $value['value']);
 
     // For img tag, update the src attribute.
-    $value['value'] = preg_replace_callback(
+    $value['value'] = \preg_replace_callback(
       '#(<img.*data-entity-type="(.*)".*data-entity-uuid="(.*)".*)(/?)>#U',
       [self::class, 'updateImgSrc'],
       $value['value']
@@ -124,8 +124,8 @@ class EntityShareEmbeddedEntitiesEnhancer extends ResourceFieldEnhancerBase impl
    *   The replacement.
    */
   protected function addEntityJsonapiUrl(array $matches) {
-    $entity_type = $matches[2];
-    $entity_uuid = $matches[3];
+    $entity_type = $matches[(int) 2];
+    $entity_uuid = $matches[(int) 3];
 
     if (empty($entity_type) || empty($entity_uuid)) {
       return $matches[0];
@@ -134,9 +134,9 @@ class EntityShareEmbeddedEntitiesEnhancer extends ResourceFieldEnhancerBase impl
     $entities = $this->entityTypeManager->getStorage($entity_type)
       ->loadByProperties(['uuid' => $entity_uuid]);
     if (!empty($entities)) {
-      $entity = array_shift($entities);
+      $entity = \array_shift($entities);
       // Add URL for import.
-      $route_name = sprintf('jsonapi.%s--%s.individual', $entity_type, $entity->bundle());
+      $route_name = \sprintf('jsonapi.%s--%s.individual', $entity_type, $entity->bundle());
       try {
         $content_url = Url::fromRoute($route_name, [
           'entity' => $entity->uuid(),
@@ -145,7 +145,7 @@ class EntityShareEmbeddedEntitiesEnhancer extends ResourceFieldEnhancerBase impl
           ->setOption('absolute', TRUE);
 
         // For img tag.
-        $closing_slash = $matches[4];
+        $closing_slash = $matches[(int) 4];
         return $matches[1] . ' data-entity-jsonapi-url="' . $content_url->toString() . '"' . $closing_slash . '>';
       }
       catch (\Exception $exception) {
@@ -165,8 +165,8 @@ class EntityShareEmbeddedEntitiesEnhancer extends ResourceFieldEnhancerBase impl
    *   The replacement.
    */
   protected function updateImgSrc(array $matches) {
-    $entity_type = $matches[2];
-    $entity_uuid = $matches[3];
+    $entity_type = $matches[(int) 2];
+    $entity_uuid = $matches[(int) 3];
 
     if ($entity_type != 'file') {
       return $matches[0];
@@ -176,11 +176,11 @@ class EntityShareEmbeddedEntitiesEnhancer extends ResourceFieldEnhancerBase impl
       ->loadByProperties(['uuid' => $entity_uuid]);
     if (!empty($entities)) {
       /** @var \Drupal\file\FileInterface $entity */
-      $entity = array_shift($entities);
+      $entity = \array_shift($entities);
       $new_src = $entity->createFileUrl();
 
       // Insert new src attribute.
-      return preg_replace('#src="(.*)"#U', 'src="' . $new_src . '"', $matches[0]);
+      return \preg_replace('#src="(.*)"#U', 'src="' . $new_src . '"', $matches[0]);
     }
 
     return $matches[0];

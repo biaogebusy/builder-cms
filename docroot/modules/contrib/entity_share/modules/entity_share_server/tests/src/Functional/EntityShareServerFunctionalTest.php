@@ -94,7 +94,7 @@ class EntityShareServerFunctionalTest extends EntityShareServerFunctionalTestBas
     // Test that the channel URL uuid contains only changed timestamp.
     $response = $this->request('GET', Url::fromUri($entity_share_endpoint_response['data']['channels']['es_test_en']['url_uuid']), $this->getAuthenticationRequestOptions($this->channelUser));
     $es_test_en_channel_url_uuid_response = Json::decode((string) $response->getBody());
-    $this->assertEquals(1, count($es_test_en_channel_url_uuid_response['data'][0]['attributes']), 'There is only one attribute.');
+    $this->assertEquals(1, \count($es_test_en_channel_url_uuid_response['data'][0]['attributes']), 'There is only one attribute.');
     $this->assertTrue(isset($es_test_en_channel_url_uuid_response['data'][0]['attributes']['changed']), 'The only attribute is changed.');
 
     // Test the French channel info.
@@ -811,10 +811,10 @@ class EntityShareServerFunctionalTest extends EntityShareServerFunctionalTestBas
    * Test limiting number of entities displayed on channel.
    */
   public function testChannelMaxSize() {
-    for ($i = 1; $i <= 60; $i++) {
+    for ($i = 1; $i <= 60; ++$i) {
       $this->createNode([
         'type' => 'es_test',
-        'title' => "Entity share test $i en",
+        'title' => "Entity share test {$i} en",
         'status' => NodeInterface::PUBLISHED,
       ]);
     }
@@ -833,7 +833,7 @@ class EntityShareServerFunctionalTest extends EntityShareServerFunctionalTestBas
     $channel_storage = $this->entityTypeManager->getStorage('channel');
 
     $es_test_en_channel = $channel_storage->load('es_test_en');
-    if (is_null($es_test_en_channel)) {
+    if ($es_test_en_channel === NULL) {
       $es_test_en_channel = $channel_storage->create([
         'id' => 'es_test_en',
         'label' => 'Entity share test en',
@@ -863,7 +863,7 @@ class EntityShareServerFunctionalTest extends EntityShareServerFunctionalTestBas
     $channel_url_response = Json::decode((string) $response->getBody());
     $channel_url_data = EntityShareUtility::prepareData($channel_url_response['data']);
 
-    $this->assertEquals($maxSize, count($channel_url_data));
+    $this->assertEquals($maxSize, \count($channel_url_data));
   }
 
   /**

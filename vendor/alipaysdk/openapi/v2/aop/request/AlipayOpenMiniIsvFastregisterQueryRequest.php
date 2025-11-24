@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.open.mini.isv.fastregister.query request
  *
  * @author auto create
- * @since 1.0, 2024-01-19 14:55:59
+ * @since 1.0, 2025-08-13 17:22:41
  */
 class AlipayOpenMiniIsvFastregisterQueryRequest
 {

@@ -2,11 +2,11 @@
 
 namespace Drupal\Tests\commerce_number_pattern\Kernel\Plugin\Commerce\NumberPattern;
 
+use Drupal\Core\Datetime\DrupalDateTime;
+use Drupal\Tests\commerce_number_pattern\Kernel\NumberPatternKernelTestBase;
 use Drupal\commerce\Interval;
 use Drupal\commerce_number_pattern\Entity\NumberPattern;
 use Drupal\commerce_number_pattern_test\Entity\EntityTestWithStore;
-use Drupal\Core\Datetime\DrupalDateTime;
-use Drupal\Tests\commerce_number_pattern\Kernel\NumberPatternKernelTestBase;
 
 /**
  * Tests the monthly number pattern.

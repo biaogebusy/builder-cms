@@ -90,7 +90,7 @@ class EntityShareMetatagEnhancer extends ResourceFieldEnhancerBase implements Co
         }
         $data = [];
         foreach ($metatags_for_entity as $metatag_key => $metatag_for_entity) {
-          $data[$metatag_key] = PlainTextOutput::renderFromHtml(htmlspecialchars_decode($this->token->replace($metatag_for_entity, $token_replacements, $replacements_options)));
+          $data[$metatag_key] = PlainTextOutput::renderFromHtml(\htmlspecialchars_decode($this->token->replace($metatag_for_entity, $token_replacements, $replacements_options)));
 
           if (empty($data[$metatag_key])) {
             unset($data[$metatag_key]);

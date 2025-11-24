@@ -40,7 +40,7 @@ abstract class WidgetSelectorBase extends PluginBase implements WidgetSelectorIn
   public function __construct($configuration, $plugin_id, $plugin_definition) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->setConfiguration($configuration);
-    $this->widget_ids = isset($this->configuration['widget_ids']) ? $this->configuration['widget_ids'] : [];
+    $this->widget_ids = $this->configuration['widget_ids'] ?? [];
   }
 
   /**
@@ -106,6 +106,8 @@ abstract class WidgetSelectorBase extends PluginBase implements WidgetSelectorIn
   /**
    * {@inheritdoc}
    */
-  public function submit(array &$form, FormStateInterface $form_state) {}
+  public function submit(array &$form, FormStateInterface $form_state) {
+    return '';
+  }
 
 }

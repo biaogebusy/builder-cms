@@ -5,12 +5,12 @@
   --gin-color-focus: rgba(0, 125, 250, .6);
   --gin-color-focus-border: rgba(0, 0, 0, .2);
   --gin-color-focus-neutral-rgb: rgba(0, 0, 0, .4);
-  --gin-color-disabled: #8d8d8d;
+  --gin-color-disabled: #767676;
   --gin-color-disabled-bg: #eaeaea;
   --gin-color-disabled-border: #c2c2c2;
   --gin-color-warning: #d8b234;
   --gin-color-warning-light: #efcf64;
-  --gin-bg-warning: #605328;
+  --gin-bg-warning: #483e1e;
   --gin-bg-warning-light: rgba(226, 151, 0, .08);
   --gin-color-danger: #cc3d3d;
   --gin-color-danger-lightest: #fdd9d9;
@@ -25,6 +25,14 @@
   --gin-color-info: #082538;
   --gin-color-info-light: #589ac5;
   --gin-bg-info: #122b3c;
+  --gin-status-text: #626262;
+  --gin-status-bg: #eee;
+  --gin-status-success-text: #1d6844;
+  --gin-status-success-bg: #26a76930;
+  --gin-status-warning-text: #826b1f;
+  --gin-status-warning-bg: rgba(226, 151, 0, .15);
+  --gin-status-danger-text: #cc3d3d;
+  --gin-status-danger-bg: rgba(222, 117, 96, .15);
   --gin-color-contextual: var(--gin-color-text);
   --gin-color-contextual-text: #eee;
   --gin-bg-input: #fff;
@@ -79,7 +87,7 @@
   --gin-border-color-layer: rgba(0, 0, 0, .08);
   --gin-border-color-layer2: #d4d4d8;
   --gin-border-color-table: rgba(0, 0, 0, .1);
-  --gin-border-color-table-header: rgba(0, 0, 0, .2);
+  --gin-border-color-table-header: rgba(0, 0, 0, .3);
   --gin-border-color-form-element: #8e929c;
   --size-summary-border-radius: calc(var(--gin-border-m) - 1px);
   --gin-easing: cubic-bezier(.19, 1, .22, 1);
@@ -98,7 +106,10 @@
   --gin-toolbar-x-offset: 0px;
   --gin-scroll-offset: 0px;
   --gin-sticky-offset: 0px;
+  --gin-sidebar-small-width: 320px;
+  --gin-sidebar-min-width: 240px;
   --gin-sidebar-width: 320px;
+  --gin-sidebar-max-width: 560px;
   --gin-sidebar-offset: var(--gin-sidebar-width);
   --gin-switch: #26a769;
   --gin-shadow-button: #00000033;
@@ -110,6 +121,7 @@
   --input-line-height: var(--gin-spacing-l);
   --input-padding-horizontal: var(--gin-spacing-s);
   --input-padding-vertical: var(--gin-spacing-xs);
+  --gin-tooltip-bg: #232429;
   --jui-dialog-z-index: 1260;
 }
 
@@ -186,7 +198,7 @@
   --gin-color-focus: rgb(81, 168, 255);
   --gin-color-focus-border: rgba(0, 0, 0, .8);
   --gin-color-focus-neutral-rgb: rgba(255, 255, 255, .8);
-  --gin-color-disabled: #646464;
+  --gin-color-disabled: #919191;
   --gin-color-disabled-border: #646464;
   --gin-color-disabled-bg: #47474c;
   --gin-color-warning: #dec15f;
@@ -209,14 +221,39 @@
   --gin-border-color-layer: rgba(0, 0, 0, .05);
   --gin-border-color-layer2: #76777b;
   --gin-border-color-table: #43454a;
-  --gin-border-color-table-header: rgba(255, 255, 255, .12);
+  --gin-border-color-table-header: rgba(255, 255, 255, .4);
   --gin-border-color-form-element: var(--gin-border-color-layer2);
   --gin-bg-header: #1b1b1d;
   --gin-switch: var(--gin-color-primary);
+  --gin-status-text: #c3cbd0;
+  --gin-status-bg: rgba(255, 255, 255, .12);
+  --gin-status-success-text: #8bd3b1;
+  --gin-status-success-bg: #26a76940;
+  --gin-status-warning-text: #e8d185;
+  --gin-status-warning-bg: rgba(226, 151, 0, .15);
+  --gin-status-danger-text: #e69e9e;
+  --gin-status-danger-bg: rgba(222, 117, 96, .15);
   --gin-shadow-l1: 0 1px 2px rgb(0 0 0 / 2%), 0 3px 4px rgb(0 0 0 / 3%), 0 5px 8px rgb(0 0 0 / 4%);
   --gin-shadow-l2: 0 1px 2px rgb(0 0 0 / 2%), 0 3px 4px rgb(0 0 0 / 3%), 0 5px 8px rgb(0 0 0 / 4%), 0 20px 24px rgb(0 0 0 / 12%);
   --gin-icon-color: #888;
   --gin-pattern-fallback: var(--gin-bg-layer2);
   --gin-pattern: var(--gin-border-color);
+  --gin-tooltip-bg: var(--gin-bg-layer3);
+}
+
+@media (forced-colors: active) {
+  :root {
+    --gin-icon-color: CanvasText;
+  }
+}
+
+.entity-meta {
+  --entity-meta-color-bg: transparent;
+  --entity-meta-border-color: var(--gin-border-color);
+}
+
+.accordion {
+  --accordion-bg-color: transparent;
+  --accordion-border-color: var(--gin-border-color);
 }
 

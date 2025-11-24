@@ -65,7 +65,7 @@ class ServerStatusForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, ServerInterface $server = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?ServerInterface $server = NULL) {
     $form['#server'] = $server;
 
     $pending_tasks = $this->getServerTaskManager()->getCount($server);

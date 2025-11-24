@@ -18,6 +18,9 @@ use Drupal\Core\Url;
 use Drupal\eck\ArrayDeprecationWrapper;
 use Drupal\eck\Entity\EckEntity;
 use Drupal\eck\Entity\EckEntityType;
+use Drupal\field\Plugin\migrate\source\d7\Field;
+use Drupal\field\Plugin\migrate\source\d7\FieldInstance;
+use Drupal\migrate_drupal\Plugin\migrate\FieldMigration;
 
 /**
  * Defines the online documentation url of the ECK module.
@@ -93,6 +96,7 @@ function eck_entity_type_build(array &$entity_types) {
         'label' => 'title',
         'uuid' => 'uuid',
         'langcode' => 'langcode',
+        'published' => 'status',
       ],
       'translatable' => TRUE,
       'provider' => 'eck',
@@ -242,11 +246,6 @@ function eck_theme() {
     'render element' => 'elements',
   ];
 
-  $templates['eck_content_add_list'] = [
-    'variables' => ['content' => NULL, 'entity_type' => NULL],
-    'file' => 'eck.pages.inc',
-  ];
-
   return $templates;
 }
 
@@ -277,15 +276,13 @@ function template_preprocess_eck_entity(&$variables) {
 
   $variables['entity_type'] = $variables['eck_entity']->getEntityTypeId();
   $variables['bundle'] = $variables['eck_entity']->bundle();
+  $variables['view_mode'] = $variables['elements']['#view_mode'];
 
   // Build the $content variable for templates.
   $variables += ['content' => []];
   foreach (Element::children($variables['elements']) as $key) {
     $variables['content'][$key] = $variables['elements'][$key];
   }
-
-  $deprecationWarning = "You are using the 'entity' variable in your eck-entity template. You should use 'content' instead. The 'entity' variable will be removed before the release of 8.x-1.0-beta1";
-  $variables['entity'] = new ArrayDeprecationWrapper($variables['content'], $deprecationWarning);
 }
 
 /**
@@ -335,4 +332,37 @@ function eck_jsonapi_entity_filter_access(ContentEntityType $entity_type, Accoun
   }
 
   return $result;
+}
+
+/**
+ * Implements hook_migration_plugins_alter().
+ */
+function eck_migration_plugins_alter(array &$migrations) {
+  foreach ($migrations as $key => &$migration) {
+    // Do not alter a migration that is already configured.
+    if (strstr($key, 'migration_config_deriver:')) {
+      continue;
+    }
+
+    /** @var \Drupal\migrate\Plugin\MigrationPluginManager $migration_plugin_manager */
+    $migration_plugin_manager = \Drupal::service('plugin.manager.migration');
+    $migration_stub = $migration_plugin_manager->createStubMigration($migration);
+    /** @var \Drupal\migrate\Plugin\MigrateSourcePluginManager $source_plugin_manager */
+    $source_plugin_manager = \Drupal::service('plugin.manager.migrate.source');
+    $source = NULL;
+    $configuration = $migration['source'];
+    $source = $source_plugin_manager->createInstance($migration['source']['plugin'], $configuration, $migration_stub);
+    if ($source) {
+      if ((is_a($migration['class'], FieldMigration::class, TRUE))) {
+        // Field storage.
+        if (is_a($source, Field::class)) {
+          $migration['migration_dependencies']['required'][] = 'd7_eck_type';
+        }
+        // Field instance.
+        if (get_class($source) === FieldInstance::class) {
+          $migration['migration_dependencies']['required'][] = 'd7_eck_bundle';
+        }
+      }
+    }
+  }
 }

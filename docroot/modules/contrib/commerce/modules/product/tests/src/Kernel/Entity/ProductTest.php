@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\commerce_product\Kernel\Entity;
 
-use Drupal\commerce_product\Entity\ProductVariation;
-use Drupal\commerce_product\Entity\Product;
 use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
+use Drupal\commerce_product\Entity\Product;
+use Drupal\commerce_product\Entity\ProductVariation;
 use Drupal\user\UserInterface;
 
 /**
@@ -43,7 +43,7 @@ class ProductTest extends CommerceKernelTestBase {
     $this->installEntitySchema('commerce_product');
     $this->installConfig(['commerce_product']);
 
-    $user = $this->createUser([], ['administer commerce_product']);
+    $user = $this->createUser(['administer commerce_product']);
     $this->user = $this->reloadEntity($user);
     $this->container->get('current_user')->setAccount($user);
   }
@@ -177,11 +177,9 @@ class ProductTest extends CommerceKernelTestBase {
 
     // Confirm that postDelete() deletes the variations.
     $product->delete();
-    $variation1 = $this->reloadEntity($variation1);
-    /** @var \Drupal\commerce_product\Entity\ProductVariationInterface $variation2 */
-    $variation2 = $this->reloadEntity($variation2);
-    $this->assertNull($variation1);
-    $this->assertNull($variation2);
+    $variation_storage = $this->entityTypeManager->getStorage('commerce_product_variation');
+    $this->assertNull($variation_storage->load($variation1->id()));
+    $this->assertNull($variation_storage->load($variation2->id()));
   }
 
   /**

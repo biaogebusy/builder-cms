@@ -68,7 +68,9 @@ class TermViewsData extends EntityViewsData {
     $data['taxonomy_term_field_data']['vid']['help'] = $this->t('Filter the results of "Taxonomy: Term" to a particular vocabulary.');
     $data['taxonomy_term_field_data']['vid']['field']['help'] = t('The vocabulary name.');
     $data['taxonomy_term_field_data']['vid']['argument']['id'] = 'vocabulary_vid';
-    unset($data['taxonomy_term_field_data']['vid']['sort']);
+
+    $data['taxonomy_term_field_data']['vid']['sort']['title'] = t('Vocabulary ID');
+    $data['taxonomy_term_field_data']['vid']['sort']['help'] = t('The raw vocabulary ID.');
 
     $data['taxonomy_term_field_data']['name']['field']['id'] = 'term_name';
     $data['taxonomy_term_field_data']['name']['argument']['many to one'] = TRUE;
@@ -137,12 +139,12 @@ class TermViewsData extends EntityViewsData {
 
     $data['taxonomy_index']['table']['join'] = [
       'taxonomy_term_field_data' => [
-        // links directly to taxonomy_term_field_data via tid
+        // Links directly to taxonomy_term_field_data via tid
         'left_field' => 'tid',
         'field' => 'tid',
       ],
       'node_field_data' => [
-        // links directly to node via nid
+        // Links directly to node via nid
         'left_field' => 'nid',
         'field' => 'nid',
       ],

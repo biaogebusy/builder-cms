@@ -51,40 +51,24 @@ class ParagraphsEntityReferenceWarningTest extends WebDriverTestBase {
 
     $this->drupalGet('admin/structure/types/manage/example/fields/add-field');
     $page = $this->getSession()->getPage();
-    if ($this->coreVersion('10.2')) {
-      $page->find('css', "[name='new_storage_type'][value='reference']")->getParent()->click();
-      $this->assertSession()->assertWaitOnAjaxRequest();
-      $page->fillField('label', 'unsupported field');
-      $page->find('css', "[name='group_field_options_wrapper'][value='entity_reference']")->getParent()->click();
-      $this->assertSession()->assertWaitOnAjaxRequest();
+    $page->find('css', "[name='new_storage_type'][value='reference']")->getParent()->click();
+    if ($this->coreVersion('10.3')) {
       $page->pressButton('Continue');
-
-      $this->assertSession()->pageTextNotContains('Note: Regular paragraph fields should use the revision based reference fields, entity reference fields should only be used for cases when an existing paragraph is referenced from somewhere else.');
-      $page->selectFieldOption('field_storage[subform][settings][target_type]', 'paragraph');
-
-      $this->assertSession()->pageTextContains('Note: Regular paragraph fields should use the revision based reference fields, entity reference fields should only be used for cases when an existing paragraph is referenced from somewhere else.');
     }
     else {
-      $page->selectFieldOption('new_storage_type', 'entity_reference');
       $this->assertSession()->assertWaitOnAjaxRequest();
-      $page->fillField('label', 'unsupported field');
-      $this->assertSession()->waitForElement('css', 'button.link');
-      sleep(1);
-
-      $page->pressButton('Save and continue');
-      if ($this->htmlOutputEnabled && !$this->isTestUsingGuzzleClient()) {
-        $html_output = 'GET request to: ' . $this->getUrl() .
-          '<hr />Ending URL: ' . $this->getSession()->getCurrentUrl();
-        $html_output .= '<hr />' . $this->getSession()->getPage()->getContent();
-        $html_output .= $this->getHtmlOutputHeaders();
-        $this->htmlOutput($html_output);
-      }
-
-      $this->assertSession()->pageTextNotContains('Note: Regular paragraph fields should use the revision based reference fields, entity reference fields should only be used for cases when an existing paragraph is referenced from somewhere else.');
-      $page->selectFieldOption('settings[target_type]', 'paragraph');
-
-      $this->assertSession()->pageTextContains('Note: Regular paragraph fields should use the revision based reference fields, entity reference fields should only be used for cases when an existing paragraph is referenced from somewhere else.');
     }
+    $page->fillField('label', 'unsupported field');
+    $page->find('css', "[name='group_field_options_wrapper'][value='entity_reference']")->getParent()->click();
+    if (!$this->coreVersion('10.3')) {
+      $this->assertSession()->assertWaitOnAjaxRequest();
+    }
+    $page->pressButton('Continue');
+
+    $this->assertSession()->pageTextNotContains('Note: Regular paragraph fields should use the revision based reference fields, entity reference fields should only be used for cases when an existing paragraph is referenced from somewhere else.');
+    $page->selectFieldOption('field_storage[subform][settings][target_type]', 'paragraph');
+
+    $this->assertSession()->pageTextContains('Note: Regular paragraph fields should use the revision based reference fields, entity reference fields should only be used for cases when an existing paragraph is referenced from somewhere else.');
 
   }
 

@@ -8,6 +8,7 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\crop\CropInterface;
 use Drupal\crop\EntityProviderNotFoundException;
+use Drupal\image\Controller\ImageStyleDownloadController;
 use Drupal\image\Entity\ImageStyle;
 use Drupal\image\ImageStyleInterface;
 
@@ -27,7 +28,8 @@ use Drupal\image\ImageStyleInterface;
  *       "default" = "Drupal\Core\Entity\ContentEntityForm",
  *       "delete" = "Drupal\Core\Entity\ContentEntityConfirmFormBase",
  *       "edit" = "Drupal\Core\Entity\ContentEntityForm"
- *     }
+ *     },
+ *     "workspace" = "Drupal\workspaces\Entity\Handler\IgnoredWorkspaceHandler",
  *   },
  *   base_table = "crop",
  *   data_table = "crop_field_data",
@@ -121,7 +123,7 @@ class Crop extends ContentEntityBase implements CropInterface {
     $plugin_manager = \Drupal::service('plugin.manager.crop.entity_provider');
 
     if (!$plugin_manager->hasDefinition($this->entity_type->value)) {
-      throw new EntityProviderNotFoundException(t('Entity provider @id not found.', ['@id' => $this->entity_type->value]));
+      throw new EntityProviderNotFoundException(sprintf('Entity provider %s not found.', $this->entity_type->value));
     }
 
     return $plugin_manager->createInstance($this->entity_type->value);
@@ -133,7 +135,8 @@ class Crop extends ContentEntityBase implements CropInterface {
   public static function cropExists($uri, $type = NULL) {
     $query = \Drupal::entityQuery('crop')
       ->accessCheck(TRUE)
-      ->condition('uri', $uri);
+      ->condition('uri', $uri)
+      ->range(0, 1);
     if ($type) {
       $query->condition('type', $type);
     }
@@ -151,6 +154,7 @@ class Crop extends ContentEntityBase implements CropInterface {
    * {@inheritdoc}
    */
   public static function getCropFromImageStyle($uri, ImageStyleInterface $image_style) {
+    //phpcs:ignore Drupal.Semantics.FunctionTriggerError.TriggerErrorTextLayoutRelaxed
     @trigger_error('Crop::getCropFromImageStyle() is deprecated, use Crop::getCropFromImageStyleId() instead.', E_USER_DEPRECATED);
     return static::getCropFromImageStyleId($uri, $image_style->id());
   }
@@ -161,6 +165,12 @@ class Crop extends ContentEntityBase implements CropInterface {
   public static function getCropFromImageStyleId($uri, $image_style_id) {
     $crop = NULL;
     $effects = self::getEffectsFromImageStyleId($image_style_id);
+
+    // If the image style converts the image to a different format, use the
+    // original URI to find the appropriate crop.
+    if (isset($effects['image_convert'])) {
+      $uri = ImageStyleDownloadController::getUriWithoutConvertedExtension($uri);
+    }
 
     if (isset($effects['crop_crop']['type'])) {
       $crop = self::findCrop($uri, $effects['crop_crop']['type']);
@@ -196,7 +206,7 @@ class Crop extends ContentEntityBase implements CropInterface {
     if (!isset(static::$effectsByImageStyle[$image_style_id])) {
       $image_style = ImageStyle::load($image_style_id);
       if ($image_style === NULL) {
-        return [];
+        return static::$effectsByImageStyle[$image_style_id] = [];
       }
 
       $effects = [];
@@ -268,7 +278,7 @@ class Crop extends ContentEntityBase implements CropInterface {
     // case, set this configuration variable to false.
     $flush_derivative_images = \Drupal::config('crop.settings')->get('flush_derivative_images');
     if ($flush_derivative_images) {
-      image_path_flush($this->uri->value);
+      $this->imageStylePathFlush();
     }
   }
 
@@ -321,8 +331,8 @@ class Crop extends ContentEntityBase implements CropInterface {
 
     // Denormalized information, which is calculated in storage plugin for a
     // given entity type. Saved here for performance reasons in image effects.
-    // ---
-    // TODO - we are not enforcing uniqueness on this as we want to support more
+    // ---.
+    // @todo we are not enforcing uniqueness on this as we want to support more
     // crops per same image/image_style combination. However, image effect
     // operates with image URI only, which means we have no mechanism to
     // distinguish between multiple crops in there. If we really want to
@@ -388,6 +398,33 @@ class Crop extends ContentEntityBase implements CropInterface {
       ->setTranslatable(TRUE);
 
     return $fields;
+  }
+
+  /**
+   * Flushes cached versions (related to the current crop type) of a file.
+   *
+   * @see image_path_flush
+   */
+  protected function imageStylePathFlush(): void {
+    $styles = $this->entityTypeManager()
+      ->getStorage('image_style')
+      ->loadByProperties([
+        'effects.*.data.crop_type' => $this->bundle(),
+      ]);
+
+    foreach ($styles as $style) {
+      $style->flush($this->uri->value);
+    }
+  }
+
+  /**
+   * Returns a short hash representation of this crop.
+   *
+   * @return string
+   *   A short, hashed representation of this crop.
+   */
+  public function getShortHash(): string {
+    return substr(md5(implode($this->position()) . implode($this->anchor())), 0, 8);
   }
 
 }

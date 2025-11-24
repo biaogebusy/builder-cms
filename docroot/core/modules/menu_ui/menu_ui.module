@@ -8,6 +8,8 @@
  * used for navigation.
  */
 
+use Drupal\block\BlockInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Url;
 use Drupal\Core\Breadcrumb\Breadcrumb;
 use Drupal\Core\Cache\CacheableMetadata;
@@ -29,14 +31,14 @@ function menu_ui_help($route_name, RouteMatchInterface $route_match) {
   switch ($route_name) {
     case 'help.page.menu_ui':
       $output = '';
-      $output .= '<h3>' . t('About') . '</h3>';
-      $output .= '<p>' . t('The Menu UI module provides an interface for managing menus. A menu is a hierarchical collection of links, which can be within or external to the site, generally used for navigation. For more information, see the <a href=":menu">online documentation for the Menu UI module</a>.', [':menu' => 'https://www.drupal.org/documentation/modules/menu/']) . '</p>';
-      $output .= '<h3>' . t('Uses') . '</h3>';
+      $output .= '<h2>' . t('About') . '</h2>';
+      $output .= '<p>' . t('The Menu UI module provides an interface for managing menus. A menu is a hierarchical collection of links, which can be within or external to the site, generally used for navigation. For more information, see the <a href=":menu">online documentation for the Menu UI module</a>.', [':menu' => 'https://www.drupal.org/docs/core-modules-and-themes/core-modules/menu-ui-module']) . '</p>';
+      $output .= '<h2>' . t('Uses') . '</h2>';
       $output .= '<dl>';
       $output .= '<dt>' . t('Managing menus') . '</dt>';
       $output .= '<dd>' . t('Users with the <em>Administer menus and menu links</em> permission can add, edit, and delete custom menus on the <a href=":menu">Menus page</a>. Custom menus can be special site menus, menus of external links, or any combination of internal and external links. You may create an unlimited number of additional menus, each of which will automatically have an associated block (if you have the <a href=":block_help">Block module</a> installed). By selecting <em>Edit menu</em>, you can add, edit, or delete links for a given menu. The links listing page provides a drag-and-drop interface for controlling the order of links, and creating a hierarchy within the menu.', [':block_help' => (\Drupal::moduleHandler()->moduleExists('block')) ? Url::fromRoute('help.page', ['name' => 'block'])->toString() : '#', ':menu' => Url::fromRoute('entity.menu.collection')->toString()]) . '</dd>';
       $output .= '<dt>' . t('Displaying menus') . '</dt>';
-      $output .= '<dd>' . t('If you have the Block module enabled, then each menu that you create is rendered in a block that you enable and position on the <a href=":blocks">Block layout page</a>. In some <a href=":themes">themes</a>, the main menu and possibly the secondary menu will be output automatically; you may be able to disable this behavior on the <a href=":themes">theme\'s settings page</a>.', [':blocks' => (\Drupal::moduleHandler()->moduleExists('block')) ? Url::fromRoute('block.admin_display')->toString() : '#', ':themes' => Url::fromRoute('system.themes_page')->toString(), ':theme_settings' => Url::fromRoute('system.theme_settings')->toString()]) . '</dd>';
+      $output .= '<dd>' . t('If you have the Block module installed, then each menu that you create is rendered in a block that you enable and position on the <a href=":blocks">Block layout page</a>. In some <a href=":themes">themes</a>, the main menu and possibly the secondary menu will be output automatically; you may be able to disable this behavior on the <a href=":themes">theme\'s settings page</a>.', [':blocks' => (\Drupal::moduleHandler()->moduleExists('block')) ? Url::fromRoute('block.admin_display')->toString() : '#', ':themes' => Url::fromRoute('system.themes_page')->toString(), ':theme_settings' => Url::fromRoute('system.theme_settings')->toString()]) . '</dd>';
       $output .= '</dl>';
       return $output;
   }
@@ -93,13 +95,18 @@ function _menu_ui_node_save(NodeInterface $node, array $values) {
   /** @var \Drupal\menu_link_content\MenuLinkContentInterface $entity */
   if (!empty($values['entity_id'])) {
     $entity = MenuLinkContent::load($values['entity_id']);
-    if ($entity->isTranslatable()) {
+    if ($entity->isTranslatable() && $node->isTranslatable()) {
       if (!$entity->hasTranslation($node->language()->getId())) {
         $entity = $entity->addTranslation($node->language()->getId(), $entity->toArray());
       }
       else {
         $entity = $entity->getTranslation($node->language()->getId());
       }
+    }
+    else {
+      // Ensure the entity matches the node language.
+      $entity = $entity->getUntranslated();
+      $entity->set($entity->getEntityType()->getKey('langcode'), $node->language()->getId());
     }
   }
   else {
@@ -141,7 +148,7 @@ function menu_ui_get_menu_link_defaults(NodeInterface $node) {
     if (in_array($menu_name, $type_menus)) {
       $query = \Drupal::entityQuery('menu_link_content')
         ->accessCheck(TRUE)
-        ->condition('link.uri', 'node/' . $node->id())
+        ->condition('link.uri', 'entity:node/' . $node->id())
         ->condition('menu_name', $menu_name)
         ->sort('id', 'ASC')
         ->range(0, 1);
@@ -327,7 +334,11 @@ function menu_ui_form_node_form_submit($form, FormStateInterface $form_state) {
         $entity->delete();
       }
     }
-    elseif (trim($values['title'])) {
+    else {
+      // In case the menu title was left empty, fall back to the node title.
+      if (empty(trim($values['title']))) {
+        $values['title'] = $node->label();
+      }
       // Decompose the selected menu parent option into 'menu_name' and 'parent',
       // if the form used the default parent selection widget.
       if (!empty($values['menu_parent'])) {
@@ -370,7 +381,7 @@ function menu_ui_form_node_type_form_alter(&$form, FormStateInterface $form_stat
     '#title' => t('Available menus'),
     '#default_value' => $type->getThirdPartySetting('menu_ui', 'available_menus', ['main']),
     '#options' => $menu_options,
-    '#description' => t('The menus available to place links in for this content type.'),
+    '#description' => t('Content of this type can be placed in the selected menus.'),
   ];
   // @todo See if we can avoid pre-loading all options by changing the form or
   //   using a #process callback. https://www.drupal.org/node/2310319
@@ -424,36 +435,6 @@ function menu_ui_form_node_type_form_builder($entity_type, NodeTypeInterface $ty
 }
 
 /**
- * Return an associative array of the custom menus names.
- *
- * @param bool $all
- *   (optional) If FALSE return only user-added menus, or if TRUE also include
- *   the menus defined by the system. Defaults to TRUE.
- *
- * @return array
- *   An array with the machine-readable names as the keys, and human-readable
- *   titles as the values.
- *
- * @deprecated in drupal:9.3.0 and is removed from drupal:10.0.0. Use
- *   \Drupal\system\Entity\Menu::loadMultiple() instead.
- *
- * @see https://www.drupal.org/node/3027453
- */
-function menu_ui_get_menus($all = TRUE) {
-  @trigger_error(__FUNCTION__ . '() is deprecated in drupal:9.3.0 and is removed from drupal:10.0.0. Use \Drupal\system\Entity\Menu::loadMultiple() instead. See https://www.drupal.org/node/3027453', E_USER_DEPRECATED);
-  if ($custom_menus = Menu::loadMultiple()) {
-    if (!$all) {
-      $custom_menus = array_diff_key($custom_menus, menu_list_system_menus());
-    }
-    foreach ($custom_menus as $menu_name => $menu) {
-      $custom_menus[$menu_name] = $menu->label();
-    }
-    asort($custom_menus);
-  }
-  return $custom_menus;
-}
-
-/**
  * Implements hook_preprocess_HOOK() for block templates.
  */
 function menu_ui_preprocess_block(&$variables) {
@@ -475,4 +456,37 @@ function menu_ui_system_breadcrumb_alter(Breadcrumb $breadcrumb, RouteMatchInter
       $breadcrumb->addLink(Link::createFromRoute($menu->label(), 'entity.menu.edit_form', ['menu' => $menu->id()]));
     }
   }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function menu_ui_theme(): array {
+  return [
+    'menu_link_form' => [
+      'render element' => 'form',
+    ],
+  ];
+}
+
+/**
+ * Implements hook_entity_operation().
+ */
+function menu_ui_entity_operation(EntityInterface $entity): array {
+  $operations = [];
+  if ($entity instanceof BlockInterface) {
+    $plugin = $entity->getPlugin();
+    if ($plugin->getBaseId() === 'system_menu_block') {
+      $menu = Menu::load($plugin->getDerivativeId());
+      if ($menu && $menu->access('edit')) {
+        $operations['menu-edit'] = [
+          'title' => t('Edit menu'),
+          'url' => $menu->toUrl('edit-form'),
+          'weight' => 50,
+        ];
+      }
+    }
+  }
+
+  return $operations;
 }

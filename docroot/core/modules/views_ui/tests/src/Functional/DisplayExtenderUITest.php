@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views_ui\Functional;
 
 use Drupal\views\Views;
@@ -26,7 +28,7 @@ class DisplayExtenderUITest extends UITestBase {
   /**
    * Tests the display extender UI.
    */
-  public function testDisplayExtenderUI() {
+  public function testDisplayExtenderUI(): void {
     $this->config('views.settings')->set('display_extenders', ['display_extender_test'])->save();
 
     $view = Views::getView('test_view');

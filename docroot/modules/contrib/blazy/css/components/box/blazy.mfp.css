@@ -3,8 +3,13 @@
  * Provides Magnific Popup integration.
  */
 
+.mfp-title {
+  padding-left: 15px;
+}
+
 .mfp-title h2 {
-  font-size: 1.6rem;
+  color: #f3f3f3;
+  font-size: 1rem;
 }
 
 .mfp-title h2,
@@ -13,43 +18,30 @@
   line-height: 1.25rem;
 }
 
-.mfp-counter {
-  padding: 5px;
-  color: #777;
-}
-
-.mfp-title {
-  padding-left: 15px;
-  color: #333;
+.mfp-figure > figure,
+.mfp-figure > figure figcaption {
+  background: none;
 }
 
 .mfp-content .mfp-figure figcaption {
-  padding: 0;
-}
-
-.mfp-content .mfp-figure figcaption {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  width: 100%;
-  margin-top: -30px;
-  cursor: auto;
-}
-
-.mfp-content .mfp-figure .mfp-bottom-bar {
-  position: relative;
-  top: 0;
   margin: 0;
-  opacity: 1;
+  padding: 0;
+  /* Overrides embedded-media.css */
+  padding-inline-start: 0;
+  padding-inline-end: 0;
+  cursor: auto;
+  padding-block: 0;
+}
+
+/* HTML content other than IMG: Picture/Responsive image, SVG, Video,
+Remote video, Pinterest, Twitter, Instagram, etc. */
+.mfp-html {
+  pointer-events: none;
 }
 
 .mfp-content .media,
 .mfp-content .mfp-html {
   margin: auto;
-}
-
-.mfp-html {
-  pointer-events: none;
 }
 
 .mfp-content .mfp-html {
@@ -76,19 +68,13 @@
   pointer-events: auto;
 }
 
-.mfp-inner > img,
-.mfp-inner > picture img {
-  display: block;
-  height: auto;
-  max-height: 92vh;
-  margin: auto;
+.mfp-bottom-bar {
+  min-height: 46px;
 }
 
 .mfp-html .mfp-bottom-bar {
-  min-height: 46px;
-  margin-top: -46px;
-  padding: 5px 15px;
-  background: rgba(0, 0, 0, 0.6);
+  position: relative;
+  margin-top:0;
 }
 
 .mfp-html .mfp-counter,
@@ -106,28 +92,13 @@
   width: 100%;
 }
 
-.mfp-bottom-bar {
-  opacity: 0;
-}
-
-.is-mfp .mfp-bottom-bar {
-  opacity: 1;
-}
-
-.mfp-html .mfp-close {
-  color: #eee;
-}
-
 /* Zoom effect */
 .mfp-with-zoom .mfp-container,
 .mfp-with-zoom.mfp-bg {
   /* ideally, transition speed should match zoom duration */
-  -webkit-transition: all 0.3s ease-out;
-  -moz-transition: all 0.3s ease-out;
-  -o-transition: all 0.3s ease-out;
   transition: all 0.3s ease-out;
   opacity: 0;
-  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 .mfp-with-zoom.mfp-ready .mfp-container {

@@ -12,14 +12,14 @@ content:
   members:
     weight: -100
     region: content
-    settings: {  }
-    third_party_settings: {  }
+    settings: {}
+    third_party_settings: {}
   message:
     type: text_textarea
     settings:
       rows: 5
       placeholder: Message
     region: content
-    third_party_settings: {  }
+    third_party_settings: {}
     weight: null
-hidden: {  }
+hidden: {}

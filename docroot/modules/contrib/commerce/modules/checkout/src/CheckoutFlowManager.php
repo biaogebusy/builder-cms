@@ -6,6 +6,8 @@ use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
+use Drupal\commerce_checkout\Attribute\CommerceCheckoutFlow;
+use Drupal\commerce_checkout\Plugin\Commerce\CheckoutFlow\CheckoutFlowInterface;
 
 /**
  * Manages checkout flow plugins.
@@ -34,7 +36,14 @@ class CheckoutFlowManager extends DefaultPluginManager {
    *   The module handler.
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
-    parent::__construct('Plugin/Commerce/CheckoutFlow', $namespaces, $module_handler, 'Drupal\commerce_checkout\Plugin\Commerce\CheckoutFlow\CheckoutFlowInterface', 'Drupal\commerce_checkout\Annotation\CommerceCheckoutFlow');
+    parent::__construct(
+      'Plugin/Commerce/CheckoutFlow',
+      $namespaces,
+      $module_handler,
+      CheckoutFlowInterface::class,
+      CommerceCheckoutFlow::class,
+      'Drupal\commerce_checkout\Annotation\CommerceCheckoutFlow',
+    );
 
     $this->alterInfo('commerce_checkout_flow_info');
     $this->setCacheBackend($cache_backend, 'commerce_checkout_flow_plugins');

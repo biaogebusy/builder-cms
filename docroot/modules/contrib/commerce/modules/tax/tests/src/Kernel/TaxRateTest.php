@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\commerce_tax\Kernel;
 
-use Drupal\commerce_tax\TaxRate;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
+use Drupal\commerce_tax\TaxRate;
 
 /**
  * @coversDefaultClass \Drupal\commerce_tax\TaxRate

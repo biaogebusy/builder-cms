@@ -68,9 +68,25 @@ class EntityTestAccessControlHandler extends EntityAccessControlHandler {
       return $access;
     }
 
+    // Access to revisions is based on labels, so access can vary by individual
+    // revisions, since the 'name' field can vary by revision.
+    $labels = explode(',', $entity->label());
+    $labels = array_map('trim', $labels);
+    if (in_array($operation, [
+      'view all revisions',
+      'view revision',
+    ], TRUE)) {
+      return AccessResult::allowedIf(in_array($operation, $labels, TRUE));
+    }
+    elseif ($operation === 'revert') {
+      return AccessResult::allowedIf(in_array('revert', $labels, TRUE));
+    }
+    elseif ($operation === 'delete revision') {
+      return AccessResult::allowedIf(in_array('delete revision', $labels, TRUE));
+    }
+
     // No opinion.
     return AccessResult::neutral();
-
   }
 
   /**
@@ -82,6 +98,16 @@ class EntityTestAccessControlHandler extends EntityAccessControlHandler {
       'administer entity_test_with_bundle content',
       'create ' . $entity_bundle . ' entity_test_with_bundle entities',
     ], 'OR');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function buildCreateAccessCid(array $context, ?string $entity_bundle): string {
+    $cid = parent::buildCreateAccessCid([], $entity_bundle);
+    $cid .= isset($context['context_var1']) ? ":{$context['context_var1']}" : '';
+    $cid .= isset($context['context_var2']) ? ":{$context['context_var2']}" : '';
+    return $cid;
   }
 
 }

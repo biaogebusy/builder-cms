@@ -2,28 +2,27 @@
 
 namespace Drupal\commerce_order\Plugin\Field\FieldWidget;
 
-use Drupal\commerce\InlineFormManager;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Field\Attribute\FieldWidget;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce\InlineFormManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Plugin implementation of 'commerce_billing_profile'.
- *
- * @FieldWidget(
- *   id = "commerce_billing_profile",
- *   label = @Translation("Billing information"),
- *   field_types = {
- *     "entity_reference_revisions"
- *   }
- * )
  */
+#[FieldWidget(
+  id: "commerce_billing_profile",
+  label: new TranslatableMarkup("Billing information"),
+  field_types: ["entity_reference_revisions"],
+)]
 class BillingProfileWidget extends WidgetBase implements ContainerFactoryPluginInterface {
 
   /**

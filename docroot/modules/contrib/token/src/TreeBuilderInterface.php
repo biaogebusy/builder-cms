@@ -10,7 +10,7 @@ interface TreeBuilderInterface {
   const MAX_DEPTH = 9;
 
   /**
-   * Build a tree array of tokens used for themeing or information.
+   * Build a tree array of tokens used for theming or information.
    *
    * @param string $token_type
    *   The token type.
@@ -55,7 +55,7 @@ interface TreeBuilderInterface {
    *   - 'show_restricted' (defaults to FALSE): Show restricted tokens in the
    *     tree.
    *   - 'show_nested' (defaults to FALSE): If this token is nested and should
-   *     therefor not show on the token browser as a top level token.
+   *     therefore not show on the token browser as a top level token.
    *   - 'recursion_limit' (defaults to 3): Only show tokens up to the specified
    *     depth.
    *

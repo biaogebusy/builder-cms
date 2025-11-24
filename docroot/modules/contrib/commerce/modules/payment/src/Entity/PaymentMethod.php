@@ -2,13 +2,14 @@
 
 namespace Drupal\commerce_payment\Entity;
 
-use Drupal\commerce\EntityOwnerTrait;
+use Drupal\commerce_payment\PaymentMethodStorageInterface;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityMalformedException;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\commerce\EntityOwnerTrait;
 use Drupal\profile\Entity\ProfileInterface;
 
 /**
@@ -57,6 +58,7 @@ use Drupal\profile\Entity\ProfileInterface;
  *     "collection" = "/user/{user}/payment-methods",
  *     "edit-form" = "/user/{user}/payment-methods/{commerce_payment_method}/edit",
  *     "delete-form" = "/user/{user}/payment-methods/{commerce_payment_method}/delete",
+ *     "set-default" = "/user/{user}/payment-methods/{commerce_payment_method}/set-default",
  *   },
  * )
  */
@@ -182,7 +184,7 @@ class PaymentMethod extends ContentEntityBase implements PaymentMethodInterface 
    * {@inheritdoc}
    */
   public function getExpiresTime() {
-    return $this->get('expires')->value;
+    return (int) $this->get('expires')->value;
   }
 
   /**
@@ -197,7 +199,7 @@ class PaymentMethod extends ContentEntityBase implements PaymentMethodInterface 
    * {@inheritdoc}
    */
   public function getCreatedTime() {
-    return $this->get('created')->value;
+    return (int) $this->get('created')->value;
   }
 
   /**
@@ -206,6 +208,39 @@ class PaymentMethod extends ContentEntityBase implements PaymentMethodInterface 
   public function setCreatedTime($timestamp) {
     $this->set('created', $timestamp);
     return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function postSave(EntityStorageInterface $storage, $update = TRUE) {
+    /** @var \Drupal\commerce_payment\PaymentMethodStorageInterface $storage */
+    parent::postSave($storage, $update);
+
+    // Payment Methods for anonymous users are excluded from the default payment
+    // method logic.
+    if ($this->getOwner()->isAnonymous()) {
+      return;
+    }
+
+    // Check if this payment method is, or became default.
+    if ($this->isDefault()) {
+      /** @var \Drupal\commerce_payment\Entity\PaymentMethodInterface[] $payment_methods */
+      $payment_methods = $storage->loadByProperties([
+        'uid' => $this->getOwnerId(),
+        'is_default' => TRUE,
+      ]);
+
+      // Ensure that all other payment methods are set to not default.
+      foreach ($payment_methods as $payment_method) {
+        if ($payment_method->id() === $this->id()) {
+          continue;
+        }
+        $payment_method->setDefault(FALSE);
+        $payment_method->setSyncing($this->isSyncing());
+        $payment_method->save();
+      }
+    }
   }
 
   /**
@@ -227,6 +262,18 @@ class PaymentMethod extends ContentEntityBase implements PaymentMethodInterface 
     if ($billing_profile && $billing_profile->getOwnerId()) {
       $billing_profile->setOwnerId(0);
       $billing_profile->save();
+    }
+
+    assert($storage instanceof PaymentMethodStorageInterface);
+    $payment_method_owner = $this->getOwner();
+    // Set this payment method as the default one, if there is no default
+    // payment method.
+    if (!$payment_method_owner->isAnonymous() &&
+      !$this->isDefault() &&
+      !$this->isExpired() &&
+      $this->isReusable() &&
+      !$storage->loadDefaultByUser($payment_method_owner)) {
+      $this->setDefault(TRUE);
     }
   }
 

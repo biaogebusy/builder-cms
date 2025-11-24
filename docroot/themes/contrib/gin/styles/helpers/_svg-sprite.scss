@@ -6,6 +6,7 @@ $sprites: (
     'trash': "../../media/sprite.svg#trash-view",
     'asterisk': "../../media/sprite.svg#asterisk-view",
     'checked': "../../media/sprite.svg#checked-view",
+    'toggle-unchecked': "../../media/sprite.svg#toggle-unchecked-view",
     'add': "../../media/sprite.svg#add-view",
     'calendar': "../../media/sprite.svg#calendar-view",
     'circle': "../../media/sprite.svg#circle-view",
@@ -14,6 +15,7 @@ $sprites: (
     'drupal': "../../media/sprite.svg#drupal-view",
     'gin': "../../media/sprite.svg#gin-view",
     'handle': "../../media/sprite.svg#handle-view",
+    'loader': "../../media/sprite.svg#loader-view",
     'more': "../../media/sprite.svg#more-view",
     'sidebar': "../../media/sprite.svg#sidebar-view",
     'tool': "../../media/sprite.svg#tool-view",
@@ -45,6 +47,8 @@ $sprites: (
     'php': "../../media/sprite.svg#php-view",
     'server': "../../media/sprite.svg#server-view",
     'drag-dots': "../../media/sprite.svg#drag-dots-view",
+    'drag-x': "../../media/sprite.svg#drag-x-view",
+    'drag-y': "../../media/sprite.svg#drag-y-view",
     'drag': "../../media/sprite.svg#drag-view",
     'sort-asc': "../../media/sprite.svg#sort-asc-view",
     'sort-desc': "../../media/sprite.svg#sort-desc-view",
@@ -59,7 +63,6 @@ $sprites: (
     'user': "../../media/sprite.svg#user-view",
     'appearance': "../../media/sprite.svg#appearance-view",
     'bat': "../../media/sprite.svg#bat-view",
-    'commerce-inbox': "../../media/sprite.svg#commerce-inbox-view",
     'commerce': "../../media/sprite.svg#commerce-view",
     'config': "../../media/sprite.svg#config-view",
     'content': "../../media/sprite.svg#content-view",
@@ -76,6 +79,7 @@ $sprites: (
     'reports': "../../media/sprite.svg#reports-view",
     'structure': "../../media/sprite.svg#structure-view",
     'tmgmt': "../../media/sprite.svg#tmgmt-view",
+    'trash-module': "../../media/sprite.svg#trash-module-view",
     'webform': "../../media/sprite.svg#webform-view"
 );
 
@@ -108,6 +112,10 @@ $sizes: (
         'width': 24px,
         'height': 24px
     ),
+    'toggle-unchecked': (
+        'width': 24px,
+        'height': 24px
+    ),
     'add': (
         'width': 24px,
         'height': 24px
@@ -137,6 +145,10 @@ $sizes: (
         'height': 24px
     ),
     'handle': (
+        'width': 24px,
+        'height': 24px
+    ),
+    'loader': (
         'width': 24px,
         'height': 24px
     ),
@@ -264,6 +276,14 @@ $sizes: (
         'width': 24px,
         'height': 24px
     ),
+    'drag-x': (
+        'width': 24px,
+        'height': 24px
+    ),
+    'drag-y': (
+        'width': 24px,
+        'height': 24px
+    ),
     'drag': (
         'width': 24px,
         'height': 24px
@@ -317,10 +337,6 @@ $sizes: (
         'height': 24px
     ),
     'bat': (
-        'width': 24px,
-        'height': 24px
-    ),
-    'commerce-inbox': (
         'width': 24px,
         'height': 24px
     ),
@@ -385,6 +401,10 @@ $sizes: (
         'height': 24px
     ),
     'tmgmt': (
+        'width': 24px,
+        'height': 24px
+    ),
+    'trash-module': (
         'width': 24px,
         'height': 24px
     ),

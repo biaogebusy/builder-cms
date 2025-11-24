@@ -3,15 +3,24 @@
 namespace Drupal\redis\Cache;
 
 use Drupal\Core\Cache\CacheTagsChecksumInterface;
+use Drupal\Core\Cache\CacheTagsChecksumPreloadInterface;
 use Drupal\Core\Cache\CacheTagsChecksumTrait;
 use Drupal\Core\Cache\CacheTagsInvalidatorInterface;
 use Drupal\redis\ClientFactory;
+use Drupal\redis\ClientInterface;
 use Drupal\redis\RedisPrefixTrait;
+
+// BC for Drupal 11.1 and earlier.
+interface RedisCacheTagsChecksumPreloadInterface {}
+if (!interface_exists(CacheTagsChecksumPreloadInterface::class)) {
+  // @phpstan-ignore-next-line
+  class_alias(RedisCacheTagsChecksumPreloadInterface::class, CacheTagsChecksumPreloadInterface::class);
+}
 
 /**
  * Cache tags invalidations checksum implementation that uses redis.
  */
-class RedisCacheTagsChecksum implements CacheTagsChecksumInterface, CacheTagsInvalidatorInterface {
+class RedisCacheTagsChecksum implements CacheTagsChecksumInterface, CacheTagsInvalidatorInterface, CacheTagsChecksumPreloadInterface {
 
   use RedisPrefixTrait;
   use CacheTagsChecksumTrait;
@@ -35,7 +44,7 @@ class RedisCacheTagsChecksum implements CacheTagsChecksumInterface, CacheTagsInv
   /**
    * {@inheritdoc}
    */
-  protected $client;
+  protected ClientInterface $client;
 
   /**
    * @var string
@@ -55,23 +64,11 @@ class RedisCacheTagsChecksum implements CacheTagsChecksumInterface, CacheTagsInv
    */
   public function doInvalidateTags(array $tags) {
     $keys = array_map([$this, 'getTagKey'], $tags);
-
-    // We want to differentiate between PhpRedis, Relay and Predis clients.
-    if ($this->clientType === 'PhpRedis' || $this->clientType === 'Relay') {
-      $multi = $this->client->multi();
-      foreach ($keys as $key) {
-        $multi->incr($key);
-      }
-      $multi->exec();
+    $this->client->pipeline();
+    foreach ($keys as $key) {
+      $this->client->incr($key);
     }
-    elseif ($this->clientType === 'Predis') {
-
-      $pipe = $this->client->pipeline();
-      foreach ($keys as $key) {
-        $pipe->incr($key);
-      }
-      $pipe->execute();
-    }
+    $this->client->exec();
   }
 
   /**
@@ -112,6 +109,7 @@ class RedisCacheTagsChecksum implements CacheTagsChecksumInterface, CacheTagsInv
   protected function getDatabaseConnection() {
     // This is not injected to avoid a dependency on the database in the
     // critical path. It is only needed during cache tag invalidations.
+    // @phpstan-ignore-next-line
     return \Drupal::database();
   }
 

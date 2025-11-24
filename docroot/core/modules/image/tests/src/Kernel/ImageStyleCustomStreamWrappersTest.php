@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image\Kernel;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
@@ -20,9 +22,7 @@ use Drupal\KernelTests\KernelTestBase;
 class ImageStyleCustomStreamWrappersTest extends KernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var string[]
+   * {@inheritdoc}
    */
   protected static $modules = ['system', 'image'];
 
@@ -47,7 +47,10 @@ class ImageStyleCustomStreamWrappersTest extends KernelTestBase {
     parent::setUp();
     $this->fileSystem = $this->container->get('file_system');
     $this->config('system.file')->set('default_scheme', 'public')->save();
-    $this->imageStyle = ImageStyle::create(['name' => 'test']);
+    $this->imageStyle = ImageStyle::create([
+      'name' => 'test',
+      'label' => 'Test',
+    ]);
     $this->imageStyle->save();
   }
 
@@ -74,7 +77,7 @@ class ImageStyleCustomStreamWrappersTest extends KernelTestBase {
    * @param string $expected_scheme
    *   The derivative expected stream wrapper scheme.
    */
-  public function testCustomStreamWrappers($source_scheme, $expected_scheme) {
+  public function testCustomStreamWrappers($source_scheme, $expected_scheme): void {
     $derivative_uri = $this->imageStyle->buildUri("$source_scheme://some/path/image.png");
     $derivative_scheme = StreamWrapperManager::getScheme($derivative_uri);
 
@@ -99,7 +102,7 @@ class ImageStyleCustomStreamWrappersTest extends KernelTestBase {
    *   - The derivative expected stream wrapper scheme.
    *   - The stream wrapper service class.
    */
-  public function providerTestCustomStreamWrappers() {
+  public static function providerTestCustomStreamWrappers() {
     return [
       ['public', 'public', PublicStream::class],
       ['private', 'private', PrivateStream::class],

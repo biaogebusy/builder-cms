@@ -5,10 +5,10 @@ responsive_image.styles.*:
   label: 'Responsive image style'
   mapping:
     id:
-      type: string
+      type: machine_name
       label: 'Machine-readable name'
     label:
-      type: label
+      type: required_label
       label: 'Label'
     image_style_mappings:
       type: sequence
@@ -46,7 +46,7 @@ responsive_image.image_mapping_type.sizes:
   type: mapping
   mapping:
     # The value for the sizes attribute as described in the spec:
-    # http://www.w3.org/html/wg/drafts/html/master/embedded-content.html#attr-img-sizes
+    # https://www.w3.org/html/wg/drafts/html/master/embedded-content.html#attr-img-sizes
     sizes:
       type: string
       label: 'Sizes attribute'
@@ -67,3 +67,10 @@ field.formatter.settings.responsive_image:
     image_link:
       type: string
       label: 'Link image to'
+    image_loading:
+      type: mapping
+      label: 'Image loading settings'
+      mapping:
+        attribute:
+          type: string
+          label: 'Loading attribute'

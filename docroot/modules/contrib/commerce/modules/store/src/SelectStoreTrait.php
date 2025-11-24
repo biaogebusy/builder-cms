@@ -50,6 +50,11 @@ trait SelectStoreTrait {
         throw new \Exception("The given entity can't be purchased from the current store.");
       }
     }
+    // @todo check if throwing an exception is the right thing to do and whether
+    // we should improve the error message otherwise.
+    if (!$store->isPublished()) {
+      throw new \Exception("The given entity can't be purchased from the current store.");
+    }
 
     return $store;
   }

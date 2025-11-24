@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\block\Functional;
 
 use Drupal\Component\Utility\Crypt;
@@ -13,9 +15,7 @@ use Drupal\Tests\BrowserTestBase;
 class BlockFormInBlockTest extends BrowserTestBase {
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['block', 'block_test', 'test_page_test'];
 
@@ -37,7 +37,7 @@ class BlockFormInBlockTest extends BrowserTestBase {
   /**
    * Tests to see if form in block's redirect isn't cached.
    */
-  public function testCachePerPage() {
+  public function testCachePerPage(): void {
     $form_values = ['email' => 'test@example.com'];
 
     // Go to "test-page" and test if the block is enabled.
@@ -67,7 +67,7 @@ class BlockFormInBlockTest extends BrowserTestBase {
   /**
    * Tests the actual placeholders.
    */
-  public function testPlaceholders() {
+  public function testPlaceholders(): void {
     $this->drupalGet('test-multiple-forms');
 
     $placeholder = 'form_action_' . Crypt::hashBase64('Drupal\Core\Form\FormBuilder::prepareForm');

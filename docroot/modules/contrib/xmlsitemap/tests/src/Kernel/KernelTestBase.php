@@ -43,7 +43,6 @@ abstract class KernelTestBase extends CoreKernelTestBase {
     parent::setUp();
 
     $this->installSchema('xmlsitemap', ['xmlsitemap']);
-    $this->installSchema('system', ['sequences']);
     $this->installConfig('xmlsitemap');
 
     // Install hooks are not run with kernel tests.

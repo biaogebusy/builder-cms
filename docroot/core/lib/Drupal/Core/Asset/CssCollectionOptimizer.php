@@ -2,11 +2,18 @@
 
 namespace Drupal\Core\Asset;
 
+@trigger_error('The ' . __NAMESPACE__ . '\CssCollectionOptimizer is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Instead, use ' . __NAMESPACE__ . '\CssCollectionOptimizerLazy. See https://www.drupal.org/node/2888767', E_USER_DEPRECATED);
+
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\State\StateInterface;
 
 /**
  * Optimizes CSS assets.
+ *
+ *  @deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Instead, use
+ *    \Drupal\Core\Asset\CssCollectionOptimizerLazy.
+ *
+ * @see https://www.drupal.org/node/2888767
  */
 class CssCollectionOptimizer implements AssetCollectionOptimizerInterface {
 
@@ -81,7 +88,7 @@ class CssCollectionOptimizer implements AssetCollectionOptimizerInterface {
    * configurable period (@code system.performance.stale_file_threshold @endcode)
    * to ensure that files referenced by a cached page will still be available.
    */
-  public function optimize(array $css_assets) {
+  public function optimize(array $css_assets, array $libraries) {
     // Group the assets.
     $css_groups = $this->grouper->group($css_assets);
 
@@ -117,7 +124,14 @@ class CssCollectionOptimizer implements AssetCollectionOptimizerInterface {
             if (empty($uri) || !file_exists($uri)) {
               // Optimize each asset within the group.
               $data = '';
+              $current_license = FALSE;
               foreach ($css_group['items'] as $css_asset) {
+                // Ensure license information is available as a comment after
+                // optimization.
+                if ($css_asset['license'] !== $current_license) {
+                  $data .= "/* @license " . $css_asset['license']['name'] . " " . $css_asset['license']['url'] . " */\n";
+                }
+                $current_license = $css_asset['license'];
                 $data .= $this->optimizer->optimize($css_asset);
               }
               // Per the W3C specification at
@@ -131,7 +145,7 @@ class CssCollectionOptimizer implements AssetCollectionOptimizerInterface {
 REGEXP;
               preg_match_all($regexp, $data, $matches);
               $data = preg_replace($regexp, '', $data);
-              $data = implode('', $matches[0]) . $data;
+              $data = implode('', $matches[0]) . (!empty($matches[0]) ? "\n" : '') . $data;
               // Dump the optimized CSS for this group into an aggregate file.
               $uri = $this->dumper->dump($data, 'css');
               // Set the URI for this group's aggregate file.
@@ -192,12 +206,12 @@ REGEXP;
 
     $delete_stale = function ($uri) {
       // Default stale file threshold is 30 days.
-      if (REQUEST_TIME - filemtime($uri) > \Drupal::config('system.performance')->get('stale_file_threshold')) {
+      if (\Drupal::time()->getRequestTime() - filemtime($uri) > \Drupal::config('system.performance')->get('stale_file_threshold')) {
         $this->fileSystem->delete($uri);
       }
     };
-    if (is_dir('public://css')) {
-      $this->fileSystem->scanDirectory('public://css', '/.*/', ['callback' => $delete_stale]);
+    if (is_dir('assets://css')) {
+      $this->fileSystem->scanDirectory('assets://css', '/.*/', ['callback' => $delete_stale]);
     }
   }
 

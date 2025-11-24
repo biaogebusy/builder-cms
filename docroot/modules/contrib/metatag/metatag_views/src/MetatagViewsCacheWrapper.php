@@ -42,6 +42,25 @@ class MetatagViewsCacheWrapper extends CachePluginBase {
   }
 
   /**
+   * Create a new object.
+   *
+   * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
+   *   The container object.
+   * @param array $configuration
+   *   The configuration passed in.
+   * @param string $plugin_id
+   *   The ID the new plugin instance.
+   * @param string $plugin_definition
+   *   The configuration used on this plugin instance.
+   *
+   * @return \Drupal\metatag_views\MetatagViewsCacheWrapper
+   *   An instance of this class.
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return CachePluginBase::create($container, $configuration, $plugin_id, $plugin_definition);
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function cacheSet($type) {
@@ -71,7 +90,7 @@ class MetatagViewsCacheWrapper extends CachePluginBase {
     switch ($type) {
       case self::RESULTS:
         $cutoff = $this->plugin->cacheExpire($type);
-        // Values to set: $view->result, $view->total_rows, $view->execute_time,
+        // Values to set: $view->result, $view->total_rows,
         // $view->current_page and pass row tokens to metatag display extender.
         if ($cache = \Drupal::cache($this->plugin->resultsBin)->get($this->plugin->generateResultsKey())) {
           if (!$cutoff || $cache->created > $cutoff) {
@@ -80,10 +99,10 @@ class MetatagViewsCacheWrapper extends CachePluginBase {
             // Load entities for each result.
             $view->query->loadEntities($view->result);
             $view->total_rows = $cache->data['total_rows'];
-            $view->setCurrentPage($cache->data['current_page'], TRUE);
-            $view->execute_time = 0;
+            $view->setCurrentPage($cache->data['current_page']);
             $extenders = $view->getDisplay()->getExtenders();
             if (isset($extenders['metatag_display_extender'])) {
+              /** @var \Drupal\metatag_views\Plugin\views\display_extender\MetatagDisplayExtender $extenders['metatag_display_extender'] */
               $extenders['metatag_display_extender']->setFirstRowTokens($cache->data['first_row_tokens']);
             }
             return TRUE;
@@ -176,14 +195,7 @@ class MetatagViewsCacheWrapper extends CachePluginBase {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    CachePluginBase::create($container, $configuration, $plugin_id, $plugin_definition);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function init(ViewExecutable $view, DisplayPluginBase $display, array &$options = NULL) {
+  public function init(ViewExecutable $view, DisplayPluginBase $display, ?array &$options = NULL) {
     $this->plugin->init($view, $display, $options);
   }
 
@@ -218,8 +230,8 @@ class MetatagViewsCacheWrapper extends CachePluginBase {
   /**
    * {@inheritdoc}
    */
-  public static function trustedCallbacks() {
-    CachePluginBase::trustedCallbacks();
+  public static function trustedCallbacks(): array|string {
+    return CachePluginBase::trustedCallbacks();
   }
 
   /**
@@ -295,15 +307,15 @@ class MetatagViewsCacheWrapper extends CachePluginBase {
   /**
    * {@inheritdoc}
    */
-  public static function preRenderAddFieldsetMarkup(array $form) {
-    CachePluginBase::preRenderAddFieldsetMarkup($form);
+  public static function preRenderAddFieldsetMarkup(array $form): array {
+    return CachePluginBase::preRenderAddFieldsetMarkup($form);
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function preRenderFlattenData($form) {
-    CachePluginBase::preRenderFlattenData($form);
+  public static function preRenderFlattenData($form): array {
+    return CachePluginBase::preRenderFlattenData($form);
   }
 
   /**
@@ -323,8 +335,8 @@ class MetatagViewsCacheWrapper extends CachePluginBase {
   /**
    * {@inheritdoc}
    */
-  public static function queryLanguageSubstitutions() {
-    CachePluginBase::queryLanguageSubstitutions();
+  public static function queryLanguageSubstitutions(): array {
+    return CachePluginBase::queryLanguageSubstitutions();
   }
 
   /**
@@ -372,7 +384,7 @@ class MetatagViewsCacheWrapper extends CachePluginBase {
   /**
    * {@inheritdoc}
    */
-  public function setMessenger(MessengerInterface $messenger) {
+  public function setMessenger(MessengerInterface $messenger): MessengerInterface {
     $this->plugin->setMessenger($messenger);
   }
 
@@ -380,7 +392,7 @@ class MetatagViewsCacheWrapper extends CachePluginBase {
    * {@inheritdoc}
    */
   public function messenger() {
-    $this->plugin->messenger();
+    return $this->plugin->messenger();
   }
 
   /**

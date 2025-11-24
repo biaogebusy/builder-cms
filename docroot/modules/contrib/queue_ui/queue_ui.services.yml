@@ -10,3 +10,4 @@ services:
       - '@module_handler'
       - '@messenger'
       - '@queue'
+      - '@logger.factory'

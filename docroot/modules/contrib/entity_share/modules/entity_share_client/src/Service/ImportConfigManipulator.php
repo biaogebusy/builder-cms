@@ -12,8 +12,6 @@ use Drupal\entity_share_client\ImportProcessor\ImportProcessorPluginManager;
  * Class ImportConfigManipulator.
  *
  * Instantiate import processor plugins from an import config entity type.
- *
- * @package Drupal\entity_share_client\Service
  */
 class ImportConfigManipulator implements ImportConfigManipulatorInterface {
 
@@ -47,15 +45,15 @@ class ImportConfigManipulator implements ImportConfigManipulatorInterface {
    *   Missing configurations are either taken from the index's stored settings,
    *   if they are present there, or default to an empty array.
    *
-   * @return \Drupal\entity_share_client\ImportProcessor\ImportProcessorInterface[]
-   *   The created plugin objects.
-   *
    * @throws \Exception
    *   Thrown if an unknown $type or plugin ID is given.
+   *
+   * @return \Drupal\entity_share_client\ImportProcessor\ImportProcessorInterface[]
+   *   The created plugin objects.
    */
-  protected function createImportProcessorPlugins(ImportConfigInterface $import_config, array $plugin_ids = NULL, array $configurations = []) {
+  protected function createImportProcessorPlugins(ImportConfigInterface $import_config, ?array $plugin_ids = NULL, array $configurations = []) {
     if ($plugin_ids === NULL) {
-      $plugin_ids = array_keys($this->importProcessorPluginManager->getDefinitions());
+      $plugin_ids = \array_keys($this->importProcessorPluginManager->getDefinitions());
     }
 
     $plugins = [];
@@ -73,7 +71,7 @@ class ImportConfigManipulator implements ImportConfigManipulatorInterface {
         $plugins[$plugin_id] = $this->importProcessorPluginManager->createInstance($plugin_id, $configuration);
       }
       catch (PluginException $exception) {
-        throw new \Exception("Unknown import processor plugin with ID '$plugin_id'");
+        throw new \Exception("Unknown import processor plugin with ID '{$plugin_id}'");
       }
     }
 
@@ -106,7 +104,7 @@ class ImportConfigManipulator implements ImportConfigManipulatorInterface {
 
     if (empty($processors[$processor_id])) {
       $import_config_label = $import_config->label();
-      throw new \Exception("The import processor with ID '$processor_id' could not be retrieved for import config '$import_config_label'.");
+      throw new \Exception("The import processor with ID '{$processor_id}' could not be retrieved for import config '{$import_config_label}'.");
     }
 
     return $processors[$processor_id];
@@ -117,9 +115,10 @@ class ImportConfigManipulator implements ImportConfigManipulatorInterface {
    */
   public function getImportProcessorsByStages(ImportConfigInterface $import_config, array $overrides = []) {
     $return_processors = [];
+    $processors = $this->getImportProcessors($import_config);
     $stages = $this->importProcessorPluginManager->getProcessingStages();
-    foreach (array_keys($stages) as $stage) {
-      $return_processors[$stage] = $this->getImportProcessorsByStage($import_config, $stage, $overrides);
+    foreach (\array_keys($stages) as $stage) {
+      $return_processors[$stage] = $this->getImportProcessorsByStage($import_config, $stage, $overrides, $processors);
     }
 
     return $return_processors;
@@ -128,14 +127,14 @@ class ImportConfigManipulator implements ImportConfigManipulatorInterface {
   /**
    * {@inheritdoc}
    */
-  public function getImportProcessorsByStage(ImportConfigInterface $import_config, $stage, array $overrides = []) {
+  public function getImportProcessorsByStage(ImportConfigInterface $import_config, $stage, array $overrides = [], $processors = []) {
     // Get a list of all import processors which support this stage, along with
     // their weights.
-    $processors = $this->getImportProcessors($import_config);
+    $processors = $processors ?: $this->getImportProcessors($import_config);
     $processor_weights = [];
-    foreach ($processors as $name => $processor) {
+    foreach ($processors as $processor_id => $processor) {
       if ($processor->supportsStage($stage)) {
-        $processor_weights[$name] = $processor->getWeight($stage);
+        $processor_weights[$processor_id] = $processor->getWeight($stage);
       }
     }
 
@@ -155,10 +154,10 @@ class ImportConfigManipulator implements ImportConfigManipulatorInterface {
     }
 
     // Sort requested import processors by weight.
-    asort($processor_weights);
+    \asort($processor_weights);
 
     $return_processors = [];
-    foreach (array_keys($processor_weights) as $name) {
+    foreach (\array_keys($processor_weights) as $name) {
       $return_processors[$name] = $processors[$name];
     }
 

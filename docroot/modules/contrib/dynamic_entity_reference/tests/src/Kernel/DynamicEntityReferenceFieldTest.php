@@ -99,12 +99,18 @@ class DynamicEntityReferenceFieldTest extends EntityKernelTestBase {
     // Test a valid reference.
     $referenced_entity = $entity_type_manager
       ->getStorage($this->referencedEntityType)
-      ->create(['type' => $this->bundle]);
+      ->create([
+        'name' => $this->randomMachineName(),
+        'type' => $this->bundle,
+      ]);
     $referenced_entity->save();
 
     $entity = $entity_type_manager
       ->getStorage($this->entityType)
-      ->create(['type' => $this->bundle]);
+      ->create([
+        'name' => $this->randomMachineName(),
+        'type' => $this->bundle,
+      ]);
     $entity->{$this->fieldName}->target_type = $referenced_entity->getEntityTypeId();
     $entity->{$this->fieldName}->target_id = $referenced_entity->id();
     $violations = $entity->{$this->fieldName}->validate();
@@ -112,7 +118,10 @@ class DynamicEntityReferenceFieldTest extends EntityKernelTestBase {
 
     $entity = $entity_type_manager
       ->getStorage($this->entityType)
-      ->create(['type' => $this->bundle]);
+      ->create([
+        'name' => $this->randomMachineName(),
+        'type' => $this->bundle,
+      ]);
     $entity->{$this->fieldName}->entity = $referenced_entity;
     $violations = $entity->{$this->fieldName}->validate();
     $this->assertEquals($violations->count(), 0, 'Validation passes.');
@@ -120,7 +129,10 @@ class DynamicEntityReferenceFieldTest extends EntityKernelTestBase {
     // Test an invalid reference.
     $entity = $entity_type_manager
       ->getStorage($this->entityType)
-      ->create(['type' => $this->bundle]);
+      ->create([
+        'name' => $this->randomMachineName(),
+        'type' => $this->bundle,
+      ]);
     $entity->{$this->fieldName}->target_type = $referenced_entity->getEntityTypeId();
     $entity->{$this->fieldName}->target_id = 9999;
     $violations = $entity->{$this->fieldName}->validate();
@@ -133,7 +145,10 @@ class DynamicEntityReferenceFieldTest extends EntityKernelTestBase {
     // Test an invalid target_type.
     $entity = $entity_type_manager
       ->getStorage($this->entityType)
-      ->create(['type' => $this->bundle]);
+      ->create([
+        'name' => $this->randomMachineName(),
+        'type' => $this->bundle,
+      ]);
     $entity->{$this->fieldName}->target_type = $entity->getEntityTypeId();
     $entity->{$this->fieldName}->target_id = $referenced_entity->id();
     $violations = $entity->{$this->fieldName}->validate();
@@ -143,7 +158,10 @@ class DynamicEntityReferenceFieldTest extends EntityKernelTestBase {
     // Test an invalid entity.
     $entity = $entity_type_manager
       ->getStorage($this->entityType)
-      ->create(['type' => $this->bundle]);
+      ->create([
+        'name' => $this->randomMachineName(),
+        'type' => $this->bundle,
+      ]);
     $entity->{$this->fieldName}->entity = $entity;
     $violations = $entity->{$this->fieldName}->validate();
     $this->assertEquals($violations->count(), 1, 'Validation throws a violation.');
@@ -166,7 +184,10 @@ class DynamicEntityReferenceFieldTest extends EntityKernelTestBase {
 
     $entity = $entity_type_manager
       ->getStorage($this->entityType)
-      ->create(['type' => $this->bundle]);
+      ->create([
+        'name' => $this->randomMachineName(),
+        'type' => $this->bundle,
+      ]);
     $entity->{$this->fieldName}->target_type = $referenced_entity->getEntityTypeId();
     $entity->{$this->fieldName}->target_id = $referenced_entity->id();
     $violations = $entity->{$this->fieldName}->validate();
@@ -195,7 +216,10 @@ class DynamicEntityReferenceFieldTest extends EntityKernelTestBase {
 
     $entity = $entity_type_manager
       ->getStorage($this->entityType)
-      ->create(['type' => $this->bundle]);
+      ->create([
+        'name' => $this->randomMachineName(),
+        'type' => $this->bundle,
+      ]);
     $entity->{$this->fieldName}->target_type = $referenced_entity->getEntityTypeId();
     $entity->{$this->fieldName}->target_id = $referenced_entity->id();
     $violations = $entity->{$this->fieldName}->validate();
@@ -214,7 +238,10 @@ class DynamicEntityReferenceFieldTest extends EntityKernelTestBase {
     // Create the parent entity.
     $entity = $entity_type_manager
       ->getStorage($this->entityType)
-      ->create(['type' => $this->bundle]);
+      ->create([
+        'name' => $this->randomMachineName(),
+        'type' => $this->bundle,
+      ]);
 
     // Create three target entities and attach them to parent field.
     $target_entities = [];
@@ -222,7 +249,10 @@ class DynamicEntityReferenceFieldTest extends EntityKernelTestBase {
     for ($i = 0; $i < 3; $i++) {
       $target_entity = $entity_type_manager
         ->getStorage($this->referencedEntityType)
-        ->create(['type' => $this->bundle]);
+        ->create([
+          'name' => $this->randomMachineName(),
+          'type' => $this->bundle,
+        ]);
       $target_entity->save();
       $target_entities[] = $target_entity;
       $reference_field[] = [
@@ -258,7 +288,10 @@ class DynamicEntityReferenceFieldTest extends EntityKernelTestBase {
     // "autocreate" feature.
     $target_entity_unsaved = $entity_type_manager
       ->getStorage($this->referencedEntityType)
-      ->create(['type' => $this->bundle, 'name' => $this->randomString()]);
+      ->create([
+        'name' => $this->randomMachineName(),
+        'type' => $this->bundle,
+      ]);
     $reference_field[8]['entity'] = $target_entity_unsaved;
     $target_entities[8] = $target_entity_unsaved;
 

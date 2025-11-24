@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Kernel;
 
 use Drupal\Core\Field\FieldItemInterface;
@@ -16,9 +18,7 @@ use Drupal\field\Entity\FieldStorageConfig;
 class ShapeItemTest extends FieldKernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['field_test'];
 
@@ -51,7 +51,7 @@ class ShapeItemTest extends FieldKernelTestBase {
   /**
    * Tests using entity fields of the shape field type.
    */
-  public function testShapeItem() {
+  public function testShapeItem(): void {
     // Verify entity creation.
     $entity = EntityTest::create();
     $shape = 'cube';

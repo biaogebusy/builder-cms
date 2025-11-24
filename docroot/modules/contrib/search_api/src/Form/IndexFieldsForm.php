@@ -10,6 +10,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Render\RendererInterface;
+use Drupal\Core\TempStore\SharedTempStoreFactory;
 use Drupal\Core\Url;
 use Drupal\search_api\DataType\DataTypePluginManager;
 use Drupal\search_api\Processor\ConfigurablePropertyInterface;
@@ -17,7 +18,6 @@ use Drupal\search_api\SearchApiException;
 use Drupal\search_api\UnsavedConfigurationInterface;
 use Drupal\search_api\Utility\DataTypeHelperInterface;
 use Drupal\search_api\Utility\FieldsHelperInterface;
-use Drupal\Core\TempStore\SharedTempStoreFactory;
 use Drupal\search_api\Utility\Utility;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -163,7 +163,7 @@ class IndexFieldsForm extends EntityForm {
         ],
         'data-dialog-type' => 'modal',
         'data-dialog-options' => Json::encode([
-          'width' => 700,
+          'width' => '90%',
         ]),
       ],
     ];
@@ -357,7 +357,7 @@ class IndexFieldsForm extends EntityForm {
           ];
         }
       }
-      catch (SearchApiException $e) {
+      catch (SearchApiException) {
         // Could not retrieve data definition. Since this almost certainly means
         // that the property isn't configurable, we can just ignore it here.
       }
@@ -465,7 +465,7 @@ class IndexFieldsForm extends EntityForm {
       try {
         $field->setType($new_settings['type']);
       }
-      catch (SearchApiException $e) {
+      catch (SearchApiException) {
         $args = [
           '%field_id' => $field_id,
           '%field' => $field->getLabel(),

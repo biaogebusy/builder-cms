@@ -2,24 +2,23 @@
 
 namespace Drupal\commerce_order\Plugin\Field\FieldFormatter;
 
-use Drupal\commerce_order\OrderTotalSummaryInterface;
+use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce_order\OrderTotalSummaryInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Plugin implementation of the 'commerce_order_total_summary' formatter.
- *
- * @FieldFormatter(
- *   id = "commerce_order_total_summary",
- *   label = @Translation("Order total summary"),
- *   field_types = {
- *     "commerce_price",
- *   },
- * )
  */
+#[FieldFormatter(
+  id: "commerce_order_total_summary",
+  label: new TranslatableMarkup("Order total summary"),
+  field_types: ["commerce_price"],
+)]
 class OrderTotalSummary extends FormatterBase implements ContainerFactoryPluginInterface {
 
   /**

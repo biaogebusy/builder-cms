@@ -1,0 +1,9 @@
+# Schema for the configuration files of the Xls Serialization module.
+
+xls_serialization.configuration:
+  type: config_object
+  label: 'Xls Serialization settings'
+  mapping:
+    xls_serialization_autosize:
+      type: boolean
+      label: 'Disable AutoSize of columns'

@@ -1,8 +1,27 @@
 [[release-notes]]
 == Release notes
 
-* <<rn-7-17-2>>
-* <<rn-7-17-1>>
+* <<rn-8-19-0>>
+* <<rn-8-18-0>>
+* <<rn-8-17-0>>
+* <<rn-8-16-0>>
+* <<rn-8-15-0>>
+* <<rn-8-14-0>>
+* <<rn-8-13-0>>
+* <<rn-8-12-0>>
+* <<rn-8-11-0>>
+* <<rn-8-10-0>>
+* <<rn-8-9-0>>
+* <<rn-8-8-0>>
+* <<rn-8-7-0>>
+* <<rn-8-6-1>>
+* <<rn-8-5-0>>
+* <<rn-8-4-0>>
+* <<rn-8-3-0>>
+* <<rn-8-2-0>>
+* <<rn-8-1-0>>
+* <<rn-8-0-1>>
+* <<rn-8-0-0>>
 * <<rn-7-17-0>>
 * <<rn-7-16-0>>
 * <<rn-7-15-0>>
@@ -33,27 +52,182 @@
 * <<rn-7-0-0>>
 
 [discrete]
-[[rn-7-17-2]]
-=== 7.17.2
+[[rn-8-19-0]]
+=== 8.19.0
 
-* Added `ELASTIC_CLIENT_URL_PLUS_AS_SPACE` env variable for URL encode
-  https://github.com/elastic/elasticsearch-php/pull/1303[#1303], https://github.com/elastic/elasticsearch-php/commit/b35ec5e777046e687e476624b8a19bab2e31fdb7[b35ec5e]
+* Updated the API endpoints to Elasticserach 8.19.0
+
+[discrete]
+[[rn-8-18-0]]
+=== 8.18.0
+
+* Updated the API endpoints to Elasticserach 8.18.0
+
+[discrete]
+[[rn-8-17-0]]
+=== 8.17.0
+
+* Updated the API endpoints to Elasticserach 8.17.0
+
+[discrete]
+[[rn-8-16-0]]
+=== 8.16.0
+
+* Updated the API endpoints to Elasticserach 8.16.0
+* Added the support of PHP 8.4 https://github.com/elastic/elasticsearch-php/pull/1415[#1415]
 
 
 [discrete]
-[[rn-7-17-1]]
-=== 7.17.1
+[[rn-8-15-0]]
+=== 8.15.0
 
-* Fixed a node selector issue for `StickyRoundRobinSelector`
-  https://github.com/elastic/elasticsearch-php/pull/1253[#1253] 
+* Updated the API endpoints to Elasticserach 8.15.0
+* Added the OpenTelemetry support, for more information
+  you can refer to the https://github.com/elastic/elastic-transport-php?tab=readme-ov-file#opentelemetry[elastic-transport-php]
+  documentation
+
+[discrete]
+[[rn-8-14-0]]
+=== 8.14.0
+
+* Updated the API endpoints to Elasticserach 8.14.0
+
+[discrete]
+[[rn-8-13-0]]
+=== 8.13.0
+
+* Updated the API endpoints to Elasticserach 8.13.0
+* Added the Added the mapTo($class) function to Elasticsearch response for mapping the result
+  of https://www.elastic.co/guide/en/elasticsearch/reference/current/esql.html[ES|QL]
+  query to an object of stdClass or a specific class https://github.com/elastic/elasticsearch-php/issues/1398[#1398]
+
+[discrete]
+[[rn-8-12-0]]
+=== 8.12.0
+
+* Updated the API endpoints to Elasticserach 8.12.0
+* Tested the library with PHP 8.3
+
+[discrete]
+[[rn-8-11-0]]
+=== 8.11.0
+
+* Updated the API endpoints to Elasticserach 8.11.0
+* Fixed path in hosts configuration is ignored
+  https://github.com/elastic/elasticsearch-php/issues/1377[#1377]
+  
+
+[discrete]
+[[rn-8-10-0]]
+=== 8.10.0
+
+* Updated the API endpoints to Elasticserach 8.10.0
+
+[discrete]
+[[rn-8-9-0]]
+=== 8.9.0
+
+* Updated the API endpoints to Elasticserach 8.9.0
+* Fixed issue with psr/http-message, changed PSR-7 versions to 1.1 and 2.0
+  https://github.com/elastic/elasticsearch-php/pull/1344[#1344]
+
+[discrete]
+[[rn-8-8-0]]
+=== 8.8.0
+
+* Updated the API endpoints to Elasticserach 8.8.0
+* Added SearchHitIterators and SearchResponseIterator helpers revised with new version 
+  https://github.com/elastic/elasticsearch-php/pull/1302[#1302]
+
+[discrete]
+[[rn-8-7-0]]
+=== 8.7.0
+
+* Updated the API endpoints to Elasticserach 8.7.0
+* Allow plugin for `php-http/discovery` library
+  https://github.com/elastic/elasticsearch-php/pull/1294[#1294]
+
+[discrete]
+[[rn-8-6-1]]
+=== 8.6.1
+
+* Updated the API endpoints to Elasticserach 8.6.0
+
+[discrete]
+[[rn-8-5-0]]
+=== 8.5.0
+
+* Updated the API endpoints to Elasticserach 8.5.0
+
+[discrete]
+[[rn-8-4-0]]
+=== 8.4.0
+
+* Added a `ClientInterface` to simplify the mock of the Client,
+  this is a fix for https://github.com/elastic/elasticsearch-php/issues/1227[#1227]
+  https://github.com/elastic/elasticsearch-php/pull/1249[#1249]
+* Added the support of Symfony HTTP client, fixing the issue https://github.com/elastic/elasticsearch-php/issues/1241[#1241]
+  https://github.com/elastic/elasticsearch-php/pull/1243[#1243]
+* Added the API compatibility header
+  https://github.com/elastic/elasticsearch-php/pull/1233[#1233]
+* Updated the API endpoints to Elasticserach 8.4.0
+
+[discrete]
+[[rn-8-3-0]]
+=== 8.3.0
+
+* Updated the API endpoints to Elasticserach 8.3.0
+
+[discrete]
+[[rn-8-2-0]]
+=== 8.2.0
+
+* Updated the API endpoints to Elasticserach 8.2.0
+* Added the array support for `text/plain` 
+  https://github.com/elastic/elasticsearch-php/pull/1220[#1220]
+
+[discrete]
+[[rn-8-1-0]]
+=== 8.1.0
+
+* Updated the API endpoints to Elasticserach 8.1.0
+
+[discrete]
+[[rn-8-0-1]]
+=== 8.0.1
+
+* use of `NoNodeAvailableException` exception in endpoints, fixing
+  https://github.com/elastic/elasticsearch-php/issues/1209[#1209]
+  
+
+[discrete]
+[[rn-8-0-0]]
+=== 8.0.0
+
+This new major version of elasticsearch-php contains a brand new implementation
+compared with 7.x. It supports https://www.php-fig.org/psr/psr-7/[PSR-7] for HTTP
+messages and https://www.php-fig.org/psr/psr-18/[PSR-18] for HTTP client
+communications. We used the https://github.com/elastic/elastic-transport-php[elastic-transport-php]
+library for HTTP communications.
+
+We tried to reduce the BC breaks as much as possible with 7.x but there are some
+(big) differences:
+
+* we changed the namespace, now everything is under `Elastic\Elasticsearch`;
+* we changed the Exception model, using the namespace `Elastic\Elasticsearch\Exception`.
+  All the exceptions extends the `ElasticsearchException` interface, as in 7.x;
+* we changed the response type of each endpoints using an Elasticsearch response class.
+  This class wraps a a PSR-7 response allowing the access of the body response
+  as array or object. This means you can access the API response as in 7.x, no BC break here!
+
+You can have a look at the https://github.com/elastic/elasticsearch-php/blob/8.0/BREAKING_CHANGES.md[BREAKING_CHANGES]
+online document for more information.
 
 
 [discrete]
 [[rn-7-17-0]]
 === 7.17.0
 
-* Updated endpoints for Elasticsearch 7.17.0
-  https://github.com/elastic/elasticsearch-php/commit/275de8d9542881c05e944ad786773d441db852bb[275de8d]
 * Allow psr/log v3
   https://github.com/elastic/elasticsearch-php/pull/1184[#1184]
 
@@ -62,8 +236,12 @@
 [[rn-7-16-0]]
 === 7.16.0
 
-* Updated endpoints for Elasticsearch 7.16.0
-  https://github.com/elastic/elasticsearch-php/commit/797699df38a2f66c20defda4560a65c1efc67c83[797699d]
+* Added support of includePortInHostHeader in ClientBuilder::fromConfig
+  https://github.com/elastic/elasticsearch-php/pull/1181[#1181]
+* Fixed UTF-16 issue in SmartSerializer with single unpaired surrogate in unicode escape
+  https://github.com/elastic/elasticsearch-php/pull/1179[#1179]
+* Replace trait with abstract class to avoid Deprecated Functionality issue in PHP 8.1
+  https://github.com/elastic/elasticsearch-php/pull/1175[#1175]
 
 
 [discrete]
@@ -293,7 +471,7 @@
   the phpdoc section (for example, 
   https://github.com/elastic/elasticsearch-php/blob/master/src/Elasticsearch/Client.php[$client->rankEval()]). 
   For more information read the 
-  https://www.elastic.co/guide/en/elasticsearch/client/php-api/current/experimental_and_beta_apis.html[experimental and beta APIs] 
+  https://www.elastic.co/guide/en/elasticsearch/client/php-api/{branch}/experimental_and_beta_apis.html[experimental and beta APIs] 
   section in the documentation. 
   https://github.com/elastic/elasticsearch-php/pull/966[#966]
 * Removed `AlreadyExpiredException` since it has been removed

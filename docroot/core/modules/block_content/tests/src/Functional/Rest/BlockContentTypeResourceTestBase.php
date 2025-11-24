@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\block_content\Functional\Rest;
 
 use Drupal\Tests\rest\Functional\EntityResource\ConfigEntityResourceTestBase;
@@ -26,7 +28,7 @@ abstract class BlockContentTypeResourceTestBase extends ConfigEntityResourceTest
    * {@inheritdoc}
    */
   protected function setUpAuthorization($method) {
-    $this->grantPermissionsToTestedRole(['administer blocks']);
+    $this->grantPermissionsToTestedRole(['administer block types']);
   }
 
   /**
@@ -55,7 +57,7 @@ abstract class BlockContentTypeResourceTestBase extends ConfigEntityResourceTest
       'id' => 'pascal',
       'label' => 'Pascal',
       'langcode' => 'en',
-      'revision' => 0,
+      'revision' => FALSE,
       'status' => TRUE,
       'uuid' => $this->entity->uuid(),
     ];

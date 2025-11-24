@@ -53,7 +53,7 @@ class TermsParseModeTest extends UnitTestCase {
    *
    * @see \Drupal\Tests\search_api\Unit\TermsParseModeTest::testParseInput()
    */
-  public function parseInputTestDataProvider() {
+  public static function parseInputTestDataProvider() {
     return [
       'normal keywords' => [
         'keys' => 'foo bar',

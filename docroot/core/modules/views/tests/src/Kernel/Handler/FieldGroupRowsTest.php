@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Kernel\Handler;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
@@ -39,11 +41,14 @@ class FieldGroupRowsTest extends ViewsKernelTestBase {
   /**
    * Testing the "Grouped rows" functionality.
    */
-  public function testGroupRows() {
+  public function testGroupRows(): void {
     $this->installConfig(['filter']);
     $this->installEntitySchema('node');
     $this->installEntitySchema('user');
-    NodeType::create(['type' => 'page'])->save();
+    NodeType::create([
+      'type' => 'page',
+      'name' => 'Page',
+    ])->save();
 
     // Create a text with unlimited cardinality.
     FieldStorageConfig::create([

@@ -19,7 +19,9 @@ use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\node\NodeInterface;
+use Drupal\search\Attribute\Search;
 use Drupal\search\Plugin\ConfigurableSearchPluginBase;
 use Drupal\search\Plugin\SearchIndexingInterface;
 use Drupal\search\SearchIndexInterface;
@@ -28,12 +30,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Handles searching for node entities using the Search module index.
- *
- * @SearchPlugin(
- *   id = "node_search",
- *   title = @Translation("Content")
- * )
  */
+#[Search(
+  id: 'node_search',
+  title: new TranslatableMarkup('Content'),
+)]
 class NodeSearch extends ConfigurableSearchPluginBase implements AccessibleInterface, SearchIndexingInterface, TrustedCallbackInterface {
 
   /**
@@ -165,7 +166,7 @@ class NodeSearch extends ConfigurableSearchPluginBase implements AccessibleInter
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Database\Connection $database
@@ -208,7 +209,7 @@ class NodeSearch extends ConfigurableSearchPluginBase implements AccessibleInter
   /**
    * {@inheritdoc}
    */
-  public function access($operation = 'view', AccountInterface $account = NULL, $return_as_object = FALSE) {
+  public function access($operation = 'view', ?AccountInterface $account = NULL, $return_as_object = FALSE) {
     $result = AccessResult::allowedIfHasPermission($account, 'access content');
     return $return_as_object ? $result : $result->isAllowed();
   }
@@ -220,7 +221,7 @@ class NodeSearch extends ConfigurableSearchPluginBase implements AccessibleInter
     // Node search is executable if we have keywords or an advanced parameter.
     // At least, we should parse out the parameters and see if there are any
     // keyword matches in that case, rather than just printing out the
-    // "Please enter keywords" message.
+    // "Enter keywords" message.
     return !empty($this->keywords) || (isset($this->searchParameters['f']) && count($this->searchParameters['f']));
   }
 
@@ -368,7 +369,7 @@ class NodeSearch extends ConfigurableSearchPluginBase implements AccessibleInter
       $build['#pre_render'][] = [$this, 'removeSubmittedInfo'];
 
       // Fetch comments for snippet.
-      $rendered = $this->renderer->renderPlain($build);
+      $rendered = $this->renderer->renderInIsolation($build);
       $this->addCacheableDependency(CacheableMetadata::createFromRenderArray($build));
       $rendered .= ' ' . $this->moduleHandler->invoke('comment', 'node_update_index', [$node]);
 
@@ -400,7 +401,7 @@ class NodeSearch extends ConfigurableSearchPluginBase implements AccessibleInter
 
       if ($type->displaySubmitted()) {
         $result += [
-          'user' => $this->renderer->renderPlain($username),
+          'user' => $this->renderer->renderInIsolation($username),
           'date' => $node->getChangedTime(),
         ];
       }
@@ -522,7 +523,7 @@ class NodeSearch extends ConfigurableSearchPluginBase implements AccessibleInter
         '#suffix' => '</h1>',
         '#weight' => -1000,
       ];
-      $text = $this->renderer->renderPlain($build);
+      $text = $this->renderer->renderInIsolation($build);
 
       // Fetch extra data normally not visible.
       $extra = $this->moduleHandler->invokeAll('node_update_index', [$node]);

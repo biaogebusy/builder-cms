@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image_effects\Functional\Effect;
 
 use Drupal\Tests\image_effects\Functional\ImageEffectsTestBase;
@@ -23,7 +25,7 @@ class InvertTest extends ImageEffectsTestBase {
    *
    * @dataProvider providerToolkits
    */
-  public function testInvertEffect($toolkit_id, $toolkit_config, array $toolkit_settings) {
+  public function testInvertEffect(string $toolkit_id, string $toolkit_config, array $toolkit_settings): void {
     $this->changeToolkit($toolkit_id, $toolkit_config, $toolkit_settings);
 
     // Add Invert effect to the test image style.

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Kernel\Entity;
 
 use Drupal\entity_test\Entity\EntityTestMultiValueBasefield;
@@ -35,7 +37,7 @@ class EntityViewsWithMultivalueBasefieldTest extends ViewsKernelTestBase {
   /**
    * Tests entity views with multivalue base fields.
    */
-  public function testView() {
+  public function testView(): void {
     EntityTestMultiValueBasefield::create([
       'name' => 'test',
     ])->save();

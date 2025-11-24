@@ -3,8 +3,8 @@
 namespace Drupal\Tests\devel\Kernel;
 
 use Drupal\Core\Mail\Plugin\Mail\TestMailCollector;
-use Drupal\devel\Plugin\Mail\DevelMailLog;
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\devel\Plugin\Mail\DevelMailLog;
 
 /**
  * Tests sending mails with debug interface.
@@ -16,9 +16,9 @@ class DevelMailLogTest extends KernelTestBase {
   /**
    * Modules to enable.
    *
-   * @var array
+   * @var string[]
    */
-  public static $modules = ['devel', 'devel_test', 'system'];
+  protected static $modules = ['devel', 'devel_test', 'system'];
 
   /**
    * The mail manager.
@@ -30,7 +30,7 @@ class DevelMailLogTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $this->installConfig(['system', 'devel']);
@@ -44,7 +44,7 @@ class DevelMailLogTest extends KernelTestBase {
   /**
    * Tests devel_mail_log plugin as default mail backend.
    */
-  public function testDevelMailLogDefaultBackend() {
+  public function testDevelMailLogDefaultBackend(): void {
     // Configure devel_mail_log as default mail backends.
     $this->setDevelMailLogAsDefaultBackend();
 
@@ -59,7 +59,7 @@ class DevelMailLogTest extends KernelTestBase {
   /**
    * Tests devel_mail_log plugin with multiple mail backend.
    */
-  public function testDevelMailLogMultipleBackend() {
+  public function testDevelMailLogMultipleBackend(): void {
     // Configure test_mail_collector as default mail backend.
     $this->config('system.mail')
       ->set('interface.default', 'test_mail_collector')
@@ -83,7 +83,7 @@ class DevelMailLogTest extends KernelTestBase {
   /**
    * Tests devel_mail_log default settings.
    */
-  public function testDevelMailDefaultSettings() {
+  public function testDevelMailDefaultSettings(): void {
     $config = \Drupal::config('devel.settings');
     $this->assertEquals('temporary://devel-mails', $config->get('debug_mail_directory'));
     $this->assertEquals('%to-%subject-%datetime.mail.txt', $config->get('debug_mail_file_format'));
@@ -92,8 +92,11 @@ class DevelMailLogTest extends KernelTestBase {
   /**
    * Tests devel mail log output.
    */
-  public function testDevelMailLogOutput() {
+  public function testDevelMailLogOutput(): void {
     $config = \Drupal::config('devel.settings');
+
+    /** @var \Drupal\Core\Language\LanguageManagerInterface $language_manager */
+    $language_manager = $this->container->get('language_manager');
 
     // Parameters used for send the email.
     $mail = [
@@ -101,7 +104,7 @@ class DevelMailLogTest extends KernelTestBase {
       'key' => 'devel_mail_log',
       'to' => 'drupal@example.com',
       'reply' => 'replyto@example.com',
-      'lang' => \Drupal::languageManager()->getCurrentLanguage(),
+      'lang' => $language_manager->getCurrentLanguage()->getId(),
     ];
 
     // Parameters used for compose the email in devel_test module.
@@ -164,7 +167,7 @@ EOF;
       ->save();
 
     $result = $this->mailManager->mail($mail['module'], $mail['key'], $mail['to'], $mail['lang'], $params, $mail['reply']);
-    $this->assertSame(TRUE, $result['result']);
+    $this->assertTrue($result['result']);
     $this->assertFileExists($expected_file_path);
     $this->assertStringEqualsFile($expected_file_path, $expected_output);
 
@@ -185,7 +188,7 @@ EOF;
   /**
    * Configure devel_mail_log as default mail backend.
    */
-  private function setDevelMailLogAsDefaultBackend() {
+  private function setDevelMailLogAsDefaultBackend(): void {
     // @todo can this be avoided?
     // KernelTestBase enforce the usage of 'test_mail_collector' plugin for
     // collect the mails. Since we need to test devel mail plugin we manually

@@ -3,9 +3,10 @@
 namespace Drupal\xls_serialization\Plugin\views\style;
 
 use Drupal\Component\Utility\Html;
-use Drupal\Core\Url;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 use Drupal\rest\Plugin\views\style\Serializer;
+use Drupal\xls_serialization\XlsSerializationConstants;
 
 /**
  * A style plugin for Excel export views.
@@ -52,7 +53,9 @@ class ExcelExport extends Serializer {
     $options = parent::defineOptions();
 
     $options['xls_settings']['contains'] = [
-      'xls_format' => ['default' => 'Excel2007'],
+      'xls_format' => ['default' => XlsSerializationConstants::EXCEL_2007_FORMAT],
+      'strip_tags' => ['default' => TRUE],
+      'trim' => ['default' => TRUE],
     ];
 
     $options['xls_settings']['metadata']['contains'] = [
@@ -102,10 +105,22 @@ class ExcelExport extends Serializer {
             '#title' => $this->t('Format'),
             '#options' => [
               // @todo Add all PHPExcel supported formats.
-              'Excel2007' => $this->t('Excel 2007'),
-              'Excel5' => $this->t('Excel 5'),
+              XlsSerializationConstants::EXCEL_2007_FORMAT => $this->t('Excel 2007'),
+              XlsSerializationConstants::EXCEL_5_FORMAT => $this->t('Excel 5'),
             ],
             '#default_value' => $xls_options['xls_format'],
+          ],
+          'strip_tags' => [
+            '#type' => 'checkbox',
+            '#title' => $this->t('Strip HTML'),
+            '#description' => $this->t('Strips HTML tags from CSV cell values.'),
+            '#default_value' => $xls_options['strip_tags'],
+          ],
+          'trim' => [
+            '#type' => 'checkbox',
+            '#title' => $this->t('Trim whitespace'),
+            '#description' => $this->t('Trims whitespace from beginning and end of CSV cell values.'),
+            '#default_value' => $xls_options['trim'],
           ],
         ];
 
@@ -183,7 +198,7 @@ class ExcelExport extends Serializer {
     $this->view->feedIcons[] = [
       '#theme' => 'export_icon',
       '#url' => $url,
-      '#type' => mb_strtoupper($type),
+      '#format' => mb_strtoupper($type),
       '#theme_wrappers' => [
         'container' => [
           '#attributes' => [

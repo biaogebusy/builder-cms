@@ -6,7 +6,7 @@ use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\RevisionableInterface;
-use Drupal\layout_builder\Plugin\Block\InlineBlock;
+use Drupal\Core\Entity\SynchronizableInterface;
 use Drupal\layout_builder\SectionStorage\SectionStorageManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -134,8 +134,6 @@ class InlineBlockEntityOperations implements ContainerInjectionInterface {
    *   The parent entity.
    */
   public function handleEntityDelete(EntityInterface $entity) {
-    // @todo In https://www.drupal.org/node/3008943 call
-    //   \Drupal\layout_builder\LayoutEntityHelperTrait::isLayoutCompatibleEntity().
     $this->usage->removeByLayoutEntity($entity);
   }
 
@@ -146,11 +144,13 @@ class InlineBlockEntityOperations implements ContainerInjectionInterface {
    *   The parent entity.
    */
   public function handlePreSave(EntityInterface $entity) {
-    if (!$this->isLayoutCompatibleEntity($entity)) {
+    if (($entity instanceof SynchronizableInterface && $entity->isSyncing())
+      || !$this->isLayoutCompatibleEntity($entity)
+    ) {
       return;
     }
-    $duplicate_blocks = FALSE;
 
+    $duplicate_blocks = FALSE;
     if ($sections = $this->getEntitySections($entity)) {
       if ($this->originalEntityUsesDefaultStorage($entity)) {
         // This is a new override from a default and the blocks need to be
@@ -166,24 +166,6 @@ class InlineBlockEntityOperations implements ContainerInjectionInterface {
       }
     }
     $this->removeUnusedForEntityOnSave($entity);
-  }
-
-  /**
-   * Gets a block ID for an inline block plugin.
-   *
-   * @param \Drupal\layout_builder\Plugin\Block\InlineBlock $block_plugin
-   *   The inline block plugin.
-   *
-   * @return int
-   *   The block content ID or null none available.
-   */
-  protected function getPluginBlockId(InlineBlock $block_plugin) {
-    $configuration = $block_plugin->getConfiguration();
-    if (!empty($configuration['block_revision_id'])) {
-      $revision_ids = $this->getBlockIdsForRevisionIds([$configuration['block_revision_id']]);
-      return array_pop($revision_ids);
-    }
-    return NULL;
   }
 
   /**
@@ -249,7 +231,7 @@ class InlineBlockEntityOperations implements ContainerInjectionInterface {
     $plugin->saveBlockContent($new_revision, $duplicate_blocks);
     $post_save_configuration = $plugin->getConfiguration();
     if ($duplicate_blocks || (empty($pre_save_configuration['block_revision_id']) && !empty($post_save_configuration['block_revision_id']))) {
-      $this->usage->addUsage($this->getPluginBlockId($plugin), $entity);
+      $this->usage->addUsage($post_save_configuration['block_id'], $entity);
     }
     $component->setConfiguration($post_save_configuration);
   }

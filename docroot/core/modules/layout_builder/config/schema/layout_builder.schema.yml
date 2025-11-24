@@ -20,6 +20,10 @@ layout_builder.section:
     layout_id:
       type: string
       label: 'Layout ID'
+      constraints:
+        PluginExists:
+          manager: plugin.manager.core.layout
+          interface: '\Drupal\Core\Layout\LayoutInterface'
     layout_settings:
       type: layout_plugin.settings.[%parent.layout_id]
       label: 'Layout settings'
@@ -47,7 +51,7 @@ layout_builder.component:
     configuration:
       type: block.settings.[id]
     weight:
-      type: integer
+      type: weight
       label: 'Weight'
     additional:
       type: ignore
@@ -60,6 +64,9 @@ inline_block:
     view_mode:
       type: string
       label: 'View mode'
+    block_id:
+      type: integer
+      label: 'Block ID'
     block_revision_id:
       type: integer
       label: 'Block revision ID'

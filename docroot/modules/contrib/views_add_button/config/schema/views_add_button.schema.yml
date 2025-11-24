@@ -1,0 +1,88 @@
+views.area.views_add_button_area:
+  type: views_area
+  mapping:
+    tokenize:
+      type: boolean
+      label: 'Should replacement tokens be used from the first row'
+    type:
+      type: string
+      label: 'Entity Type'
+    render_plugin:
+      type: string
+      label: 'Custom Rendering Plugin'
+    access_plugin:
+      type: string
+      label: 'Custom Access Plugin'
+    context:
+      type: string
+      label: 'Entity Context'
+    button_text:
+      type: label
+      label: 'Button Text for the add button'
+    query_string:
+      type: string
+      label: 'Query string to append to the add link'
+    button_classes:
+      type: string
+      label: 'Button classes for the add link - usually "button" or "btn," with additional styling classes.'
+    button_attributes:
+      type: string
+      label: 'Additional Button Attributes'
+    button_access_denied:
+      type: text_format
+      label: 'Access Denied HTML'
+    button_prefix:
+      type: text_format
+      label: 'Prefix HTML'
+    button_suffix:
+      type: text_format
+      label: 'Suffix HTML'
+    destination:
+      type: boolean
+      label: 'Include destination parameter?'
+
+views.field.views_add_button_field:
+  type: views_field
+  mapping:
+    tokenize:
+      type: boolean
+      label: 'Should replacement tokens be used from the first row'
+    preserve_tags:
+      type: string
+      label: 'Preserve certain tags'
+    type:
+      type: string
+      label: 'Entity Type'
+    render_plugin:
+      type: string
+      label: 'Custom Rendering Plugin'
+    access_plugin:
+      type: string
+      label: 'Custom Access Plugin'
+    context:
+      type: string
+      label: 'Entity Context'
+    button_text:
+      type: label
+      label: 'Button Text for the add button'
+    query_string:
+      type: string
+      label: 'Query string to append to the add link'
+    button_classes:
+      type: string
+      label: 'Button classes for the add link - usually "button" or "btn," with additional styling classes.'
+    button_attributes:
+      type: string
+      label: 'Additional Button Attributes'
+    button_access_denied:
+      type: text_format
+      label: 'Access Denied HTML'
+    button_prefix:
+      type: text_format
+      label: 'Prefix HTML'
+    button_suffix:
+      type: text_format
+      label: 'Suffix HTML'
+    destination:
+      type: boolean
+      label: 'Include destination parameter?'

@@ -12,13 +12,6 @@ use Drupal\Component\Datetime\TimeInterface;
 final class SmsTestTime implements TimeInterface {
 
   /**
-   * Original time service.
-   *
-   * @var \Drupal\Component\Datetime\TimeInterface
-   */
-  protected TimeInterface $original;
-
-  /**
    * Date for testing.
    *
    * @var \DateTimeInterface
@@ -31,8 +24,7 @@ final class SmsTestTime implements TimeInterface {
    * @param \Drupal\Component\Datetime\TimeInterface $original
    *   Original time service.
    */
-  public function __construct(TimeInterface $original) {
-    $this->original = $original;
+  public function __construct(protected TimeInterface $original) {
     $this->date = new \DateTimeImmutable('2:30pm 17 October 1997', new \DateTimeZone('UTC'));
   }
 

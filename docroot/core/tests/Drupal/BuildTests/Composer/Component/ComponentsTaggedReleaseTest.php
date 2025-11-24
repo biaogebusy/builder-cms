@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\BuildTests\Composer\Component;
 
 use Drupal\BuildTests\Composer\ComposerBuildTestBase;
@@ -13,8 +15,6 @@ use Drupal\Composer\Composer;
  * @group Component
  *
  * @coversNothing
- *
- * @requires externalCommand composer
  */
 class ComponentsTaggedReleaseTest extends ComposerBuildTestBase {
 
@@ -26,7 +26,7 @@ class ComponentsTaggedReleaseTest extends ComposerBuildTestBase {
    *   - Second element is the resulting constraint which should be present in
    *     the component core dependencies.
    */
-  public function providerVersionConstraint(): array {
+  public static function providerVersionConstraint(): array {
     return [
       // [Tag, constraint]
       '1.0.x-dev' => ['1.0.x-dev', '1.0.x-dev'],
@@ -68,7 +68,7 @@ class ComponentsTaggedReleaseTest extends ComposerBuildTestBase {
       );
       // Required packages from drupal/core-* should have our constraint.
       foreach ($requires as $package => $req_constraint) {
-        if (strpos($package, 'drupal/core-') !== FALSE) {
+        if (str_contains($package, 'drupal/core-')) {
           $this->assertEquals($constraint, $req_constraint);
         }
       }

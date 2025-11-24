@@ -56,12 +56,11 @@ class DialogRenderer implements MainContentRendererInterface {
     $main_content['#attached']['library'][] = 'core/drupal.dialog.ajax';
     $response->setAttachments($main_content['#attached']);
 
-    // Determine the title: use the title provided by the main content if any,
-    // otherwise get it from the routing information.
-    $title = $main_content['#title'] ?? $this->titleResolver->getTitle($request, $route_match->getRouteObject());
+    // Determine the title.
+    $title = $this->getTitleAsStringable($main_content, $request, $route_match);
 
     // Determine the dialog options and the target for the OpenDialogCommand.
-    $options = $request->request->get('dialogOptions', []);
+    $options = $this->getDialogOptions($request);
     $target = $this->determineTargetSelector($options, $route_match);
 
     $response->addCommand(new OpenDialogCommand($target, $title, $content, $options));
@@ -86,7 +85,7 @@ class DialogRenderer implements MainContentRendererInterface {
       // If the target was nominated in the incoming options, use that.
       $target = $options['target'];
       // Ensure the target includes the #.
-      if (substr($target, 0, 1) != '#') {
+      if (!str_starts_with($target, '#')) {
         $target = '#' . $target;
       }
       // This shouldn't be passed on to jQuery.ui.dialog.
@@ -98,6 +97,46 @@ class DialogRenderer implements MainContentRendererInterface {
       $target = '#' . Html::getUniqueId("drupal-dialog-$route_name");
     }
     return $target;
+  }
+
+  /**
+   * Returns the dialog options from request.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The HTTP request.
+   *
+   * @return array
+   *   The dialog options used for OpenDialogCommand.
+   */
+  protected function getDialogOptions(Request $request): array {
+    if ($request->getMethod() === 'GET') {
+      return $request->query->all('dialogOptions');
+    }
+    return $request->request->all('dialogOptions');
+  }
+
+  /**
+   * Gets the title as a string or stringable object.
+   *
+   * Uses the title provided by the main content if any, otherwise gets it from
+   * the routing information.
+   *
+   * @param array $main_content
+   *   The main content array.
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The request.
+   * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
+   *   The route match.
+   *
+   * @return \Stringable|string|null
+   *   The title as a string or stringable object.
+   */
+  protected function getTitleAsStringable(array $main_content, Request $request, RouteMatchInterface $route_match): \Stringable|string|null {
+    $title = $main_content['#title'] ?? $this->titleResolver->getTitle($request, $route_match->getRouteObject());
+    if (is_array($title)) {
+      $title = $this->renderer->renderInIsolation($title);
+    }
+    return $title;
   }
 
 }

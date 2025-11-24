@@ -2,64 +2,37 @@
 
 namespace Drupal\commerce;
 
-use Drupal\commerce\Event\CommerceEvents;
-use Drupal\commerce\Event\PostMailSendEvent;
 use Drupal\Core\Language\LanguageDefault;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Mail\MailManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationManager;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Drupal\commerce\Event\CommerceEvents;
+use Drupal\commerce\Event\PostMailSendEvent;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 class MailHandler implements MailHandlerInterface {
 
   use StringTranslationTrait;
 
   /**
-   * The language default.
-   *
-   * @var \Drupal\Core\Language\LanguageDefault
-   */
-  protected $languageDefault;
-
-  /**
-   * The language manager.
-   *
-   * @var \Drupal\Core\Language\LanguageManagerInterface
-   */
-  protected $languageManager;
-
-  /**
-   * The mail manager.
-   *
-   * @var \Drupal\Core\Mail\MailManagerInterface
-   */
-  protected $mailManager;
-
-  /**
-   * The event dispatcher.
-   *
-   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
-   */
-  protected $eventDispatcher;
-
-  /**
    * Constructs a new MailHandler object.
    *
-   * @param \Drupal\Core\Language\LanguageDefault $language_default
+   * @param \Drupal\Core\Language\LanguageDefault $languageDefault
    *   The language default.
-   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   * @param \Drupal\Core\Language\LanguageManagerInterface $languageManager
    *   The language manager.
-   * @param \Drupal\Core\Mail\MailManagerInterface $mail_manager
+   * @param \Drupal\Core\Mail\MailManagerInterface $mailManager
    *   The mail manager.
-   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
+   * @param \Symfony\Contracts\EventDispatcher\EventDispatcherInterface $eventDispatcher
    *   The event dispatcher.
    */
-  public function __construct(LanguageDefault $language_default, LanguageManagerInterface $language_manager, MailManagerInterface $mail_manager, EventDispatcherInterface $event_dispatcher) {
-    $this->languageDefault = $language_default;
-    $this->languageManager = $language_manager;
-    $this->mailManager = $mail_manager;
-    $this->eventDispatcher = $event_dispatcher;
+  public function __construct(
+    protected LanguageDefault $languageDefault,
+    protected LanguageManagerInterface $languageManager,
+    protected MailManagerInterface $mailManager,
+    protected EventDispatcherInterface $eventDispatcher,
+  ) {
   }
 
   /**

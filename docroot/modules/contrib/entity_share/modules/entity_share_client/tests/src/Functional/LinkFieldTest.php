@@ -205,7 +205,7 @@ class LinkFieldTest extends EntityShareClientFunctionalTestBase {
     $this->discoverJsonApiEndpoints($prepared_url);
 
     // Prepare the request on the linked content.
-    $route_name = sprintf('jsonapi.%s--%s.individual', 'node', 'es_test');
+    $route_name = \sprintf('jsonapi.%s--%s.individual', 'node', 'es_test');
     $linked_content_url = Url::fromRoute($route_name, [
       'entity' => 'es_test',
     ])

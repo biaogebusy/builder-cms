@@ -5,13 +5,13 @@ namespace Drupal\Core\Menu;
 /**
  * Provides a value object to model an element in a menu link tree.
  *
- * \Drupal\Core\Menu\MenuLinkTreeElement objects represent a menu link's data.
- * Objects of this class provide complimentary data: the placement in a tree.
+ * \Drupal\Core\Menu\MenuLinkInterface objects represent a menu link's data.
+ * Objects of this class provide complementary data: the placement in a tree.
  * Therefore, we can summarize this split as follows:
  * - Menu link objects contain all information about an individual menu link,
  *   plus what their parent is. But they don't know where exactly in a menu link
  *   tree they live.
- * - Instances of this class are complimentary to those objects, they know:
+ * - Instances of this class are complementary to those objects, they know:
  *   - All additional metadata from {menu_tree}, which contains "materialized"
  *     metadata about a menu link tree, such as whether a link in the tree has
  *     visible children and the depth relative to the root.
@@ -78,6 +78,8 @@ class MenuLinkTreeElement {
    * This is merged (\Drupal\Component\Utility\NestedArray::mergeDeep()) with
    * \Drupal\Core\Menu\MenuLinkInterface::getOptions(), to allow menu link tree
    * manipulators to add or override link options.
+   *
+   * @var string[]
    */
   public $options = [];
 

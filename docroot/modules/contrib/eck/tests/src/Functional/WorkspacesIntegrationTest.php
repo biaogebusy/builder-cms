@@ -3,21 +3,13 @@
 namespace Drupal\Tests\eck\Functional;
 
 use Drupal\eck\Entity\EckEntityType;
-use Drupal\Tests\BrowserTestBase;
 
 /**
  * Class WorkspacesIntegrationTest.
  *
  * @group eck
  */
-class WorkspacesIntegrationTest extends BrowserTestBase {
-
-  protected static $modules = ['eck'];
-
-  /**
-   * {@inheritdoc}
-   */
-  protected $defaultTheme = 'classy';
+class WorkspacesIntegrationTest extends FunctionalTestBase {
 
   /**
    * @test
@@ -58,7 +50,7 @@ class WorkspacesIntegrationTest extends BrowserTestBase {
    * @test
    */
   public function newEntityTypesCanBeCreatedWhenWorkbenchIsEnabled() {
-    $this->assertEquals(0, count(EckEntityType::loadMultiple()));
+    $this->assertEquals(0, \count(EckEntityType::loadMultiple()));
     $this->container->get('module_installer')->install(['workspaces'], TRUE);
 
     $testType = EckEntityType::create([
@@ -67,7 +59,7 @@ class WorkspacesIntegrationTest extends BrowserTestBase {
     ]);
     $testType->save();
 
-    $this->assertEquals(1, count(EckEntityType::loadMultiple()));
+    $this->assertEquals(1, \count(EckEntityType::loadMultiple()));
   }
 
 }

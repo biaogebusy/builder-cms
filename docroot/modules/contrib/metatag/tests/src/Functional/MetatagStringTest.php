@@ -3,7 +3,7 @@
 namespace Drupal\Tests\metatag\Functional;
 
 use Drupal\Tests\BrowserTestBase;
-use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Tests\field_ui\Traits\FieldUiTestTrait;
 
 /**
  * Ensures that the Metatag field works correctly.
@@ -12,7 +12,7 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
  */
 class MetatagStringTest extends BrowserTestBase {
 
-  use StringTranslationTrait;
+  use FieldUiTestTrait;
 
   /**
    * Admin user.
@@ -69,17 +69,7 @@ class MetatagStringTest extends BrowserTestBase {
     ]);
 
     // Add a Metatag field to the content type.
-    $this->drupalGet('admin/structure/types');
-    $this->assertSession()->statusCodeEquals(200);
-    $this->drupalGet('admin/structure/types/manage/page/fields/add-field');
-    $this->assertSession()->statusCodeEquals(200);
-    $edit = [
-      'label' => 'Metatag',
-      'field_name' => 'metatag_field',
-      'new_storage_type' => 'metatag',
-    ];
-    $this->submitForm($edit, $this->t('Save and continue'));
-    $this->submitForm([], $this->t('Save field settings'));
+    $this->fieldUIAddNewField('admin/structure/types/manage/page', 'metatag_field', 'Metatag', 'metatag');
     $this->container->get('entity_field.manager')->clearCachedFieldDefinitions();
   }
 
@@ -107,7 +97,7 @@ class MetatagStringTest extends BrowserTestBase {
   /**
    * Tests that specific strings are not double escaped.
    */
-  public function checkString($string) {
+  public function checkString($string): void {
     $this->checkConfig($string);
     $this->checkNode($string);
     $this->checkEncodedField($string);
@@ -116,7 +106,7 @@ class MetatagStringTest extends BrowserTestBase {
   /**
    * Tests that a specific config string is not double encoded.
    */
-  public function checkConfig($string) {
+  public function checkConfig($string): void {
     // The original strings.
     $title_original = 'Title: ' . $string;
     $desc_original = 'Description: ' . $string;
@@ -172,7 +162,7 @@ class MetatagStringTest extends BrowserTestBase {
     $this->drupalGet('<front>');
     $session->statusCodeEquals(200);
 
-    // Again, with xpath the HTML entities will be parsed automagically.
+    // Again, with xpath the HTML entities will be parsed automatically.
     $xpath_title = current($this->xpath("//title"))->getText();
     $this->assertEquals($xpath_title, $title_original);
     $this->assertNotEquals($xpath_title, $title_encoded);
@@ -185,7 +175,7 @@ class MetatagStringTest extends BrowserTestBase {
     $session->responseNotContains('<title>' . $title_original . '</title>');
     $session->responseNotContains('<title>' . $title_encodeded . '</title>');
 
-    // Again, with xpath the HTML entities will be parsed automagically.
+    // Again, with xpath the HTML entities will be parsed automatically.
     $xpath = $this->xpath("//meta[@name='description']");
     $this->assertEquals($xpath[0]->getAttribute('content'), $desc_original);
     $this->assertNotEquals($xpath[0]->getAttribute('content'), $desc_encoded);
@@ -195,7 +185,7 @@ class MetatagStringTest extends BrowserTestBase {
   /**
    * Tests that a specific node string is not double escaped.
    */
-  public function checkNode($string) {
+  public function checkNode($string): void {
     // The original strings.
     $title_original = 'Title: ' . $string;
     $desc_original = 'Description: ' . $string;
@@ -216,7 +206,7 @@ class MetatagStringTest extends BrowserTestBase {
       'title' => $title_original,
       'description' => $desc_original,
     ];
-    $this->submitForm($edit, $this->t('Save'));
+    $this->submitForm($edit, 'Save');
     $session->statusCodeEquals(200);
 
     // Set up a node without explicit metatag description. This causes the
@@ -236,7 +226,7 @@ class MetatagStringTest extends BrowserTestBase {
     $this->drupalGet('node/1');
     $session->statusCodeEquals(200);
 
-    // Again, with xpath the HTML entities will be parsed automagically.
+    // Again, with xpath the HTML entities will be parsed automatically.
     $xpath_title = current($this->xpath("//title"))->getText();
     $this->assertEquals($xpath_title, $title_original);
     $this->assertNotEquals($xpath_title, $title_encoded);
@@ -246,7 +236,7 @@ class MetatagStringTest extends BrowserTestBase {
     // because assertRaw() checks the raw HTML, not the parsed strings like
     // xpath does.
     $session->responseContains('<title>' . $title_encoded . '</title>');
-    // Again, with xpath the HTML entities will be parsed automagically.
+    // Again, with xpath the HTML entities will be parsed automatically.
     $xpath = $this->xpath("//meta[@name='description']");
     $value = $xpath[0]->getAttribute('content');
     $this->assertEquals($value, $desc_original);
@@ -265,7 +255,7 @@ class MetatagStringTest extends BrowserTestBase {
   /**
    * Tests that fields with encoded HTML entities will not be double-encoded.
    */
-  public function checkEncodedField($string) {
+  public function checkEncodedField($string): void {
     // The original strings.
     $title_original = 'Title: ' . $string;
     $desc_original = 'Description: ' . $string;
@@ -284,7 +274,7 @@ class MetatagStringTest extends BrowserTestBase {
       'title' => $title_original,
       'description' => $desc_original,
     ];
-    $this->submitForm($edit, $this->t('Save'));
+    $this->submitForm($edit, 'Save');
     $session->statusCodeEquals(200);
 
     // Set up a node without explicit metatag description. This causes the
@@ -304,7 +294,7 @@ class MetatagStringTest extends BrowserTestBase {
     $this->drupalGet('node/1');
     $session->statusCodeEquals(200);
 
-    // With xpath the HTML entities will be parsed automagically.
+    // With xpath the HTML entities will be parsed automatically.
     $xpath = $this->xpath("//meta[@name='description']");
     $value = $xpath[0]->getAttribute('content');
     $this->assertEquals($value, $desc_original);

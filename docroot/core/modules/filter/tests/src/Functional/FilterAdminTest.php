@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\filter\Functional;
 
 use Drupal\Component\Utility\Html;
@@ -125,11 +127,11 @@ class FilterAdminTest extends BrowserTestBase {
   /**
    * Tests the format administration functionality.
    */
-  public function testFormatAdmin() {
+  public function testFormatAdmin(): void {
     // Add text format.
     $this->drupalGet('admin/config/content/formats');
     $this->clickLink('Add text format');
-    $format_id = mb_strtolower($this->randomMachineName());
+    $format_id = $this->randomMachineName();
     $name = $this->randomMachineName();
     $edit = [
       'format' => $format_id,
@@ -194,7 +196,7 @@ class FilterAdminTest extends BrowserTestBase {
   /**
    * Tests filter administration functionality.
    */
-  public function testFilterAdmin() {
+  public function testFilterAdmin(): void {
     $first_filter = 'filter_autop';
     $second_filter = 'filter_url';
 
@@ -248,7 +250,7 @@ class FilterAdminTest extends BrowserTestBase {
 
     // Add format.
     $edit = [];
-    $edit['format'] = mb_strtolower($this->randomMachineName());
+    $edit['format'] = $this->randomMachineName();
     $edit['name'] = $this->randomMachineName();
     $edit['roles[' . RoleInterface::AUTHENTICATED_ID . ']'] = 1;
     $edit['filters[' . $second_filter . '][status]'] = TRUE;
@@ -372,7 +374,7 @@ class FilterAdminTest extends BrowserTestBase {
   /**
    * Tests the URL filter settings form is properly validated.
    */
-  public function testUrlFilterAdmin() {
+  public function testUrlFilterAdmin(): void {
     // The form does not save with an invalid filter URL length.
     $edit = [
       'filters[filter_url][settings][filter_url_length]' => $this->randomMachineName(4),
@@ -385,7 +387,7 @@ class FilterAdminTest extends BrowserTestBase {
   /**
    * Tests whether filter tips page is not HTML escaped.
    */
-  public function testFilterTipHtmlEscape() {
+  public function testFilterTipHtmlEscape(): void {
     $this->drupalLogin($this->adminUser);
     global $base_url;
 
@@ -410,16 +412,19 @@ class FilterAdminTest extends BrowserTestBase {
   /**
    * Tests whether a field using a disabled format is rendered.
    */
-  public function testDisabledFormat() {
+  public function testDisabledFormat(): void {
     // Create a node type and add a standard body field.
-    $node_type = NodeType::create(['type' => mb_strtolower($this->randomMachineName())]);
+    $node_type = NodeType::create([
+      'type' => $this->randomMachineName(),
+      'name' => $this->randomString(),
+    ]);
     $node_type->save();
     node_add_body_field($node_type, $this->randomString());
 
     // Create a text format with a filter that returns a static string.
     $format = FilterFormat::create([
       'name' => $this->randomString(),
-      'format' => $format_id = mb_strtolower($this->randomMachineName()),
+      'format' => $format_id = $this->randomMachineName(),
     ]);
     $format->setFilterConfig('filter_static_text', ['status' => TRUE]);
     $format->save();
@@ -470,6 +475,90 @@ class FilterAdminTest extends BrowserTestBase {
     $this->drupalGet('admin/reports/dblog');
     // The missing text format message has been logged.
     $this->assertSession()->pageTextContains(sprintf('Missing text format: %s.', $format_id));
+  }
+
+  /**
+   * Tests enabling and disabling of filters.
+   */
+  public function testFilterEnableAndDisable(): void {
+    $filter_test = FilterFormat::create([
+      'format' => 'filter_test',
+      'name' => 'Filter test',
+      'filters' => [
+        'filter_html' => [
+          'status' => TRUE,
+          'weight' => -10,
+          'settings' => [
+            'allowed_html' => '<p> <br> <strong> <a> <em> <h4>',
+          ],
+        ],
+      ],
+    ]);
+    $filter_test->save();
+
+    // Create a node type and add a standard body field.
+    $node_type = NodeType::create([
+      'type' => $this->randomMachineName(),
+      'name' => $this->randomString(),
+    ]);
+    $node_type->save();
+    node_add_body_field($node_type, $this->randomString());
+
+    // Create a new node of the new node type.
+    $title = $this->randomString();
+    $node = Node::create([
+      'type' => $node_type->id(),
+      'title' => $title,
+    ]);
+    $body_value = 'I belong to a filter that might be shut off!';
+    $node->body->value = $body_value;
+    $node->body->format = 'filter_test';
+    $node->save();
+
+    // Confirm the body field using the filter test is visible.
+    $this->drupalGet($node->toUrl());
+    $this->assertSession()->pageTextContains($title);
+    $this->assertSession()->pageTextContains($body_value);
+
+    $this->drupalGet('admin/config/content/formats');
+
+    // Verify filter_test links.
+    $this->assertSession()->linkByHrefExists('/admin/config/content/formats/manage/filter_test/disable');
+    $this->assertSession()->linkByHrefNotExists('/admin/config/content/formats/manage/filter_test/enable');
+
+    // Test the configure link appears for Filter test.
+    $this->assertSession()->elementExists('xpath', '//a[contains(@href, "/admin/config/content/formats/manage/filter_test") and text()="Configure"]');
+
+    // Disable 'Filter test'.
+    $this->getSession()->getPage()->find('css', '[href*="/admin/config/content/formats/manage/filter_test/disable"]')->click();
+    $this->assertSession()->pageTextContains('Are you sure you want to disable the text format Filter test?');
+    $this->getSession()->getPage()->find('css', '#edit-submit')->click();
+
+    // Verify filter_test links after filter_test is disabled.
+    $this->assertSession()->linkByHrefExists('/admin/config/content/formats/manage/filter_test/enable');
+    $this->assertSession()->linkByHrefNotExists('/admin/config/content/formats/manage/filter_test/disable');
+
+    // Test the configure link doesn't appear for Filter test.
+    $this->assertSession()->elementNotExists('xpath', '//a[contains(@href, "/admin/config/content/formats/manage/filter_test") and text()="Configure"]');
+
+    // Confirm the field using the now-disabled filter is not visible.
+    $this->drupalGet($node->toUrl());
+    $this->assertSession()->statusCodeEquals(200);
+    $this->assertSession()->pageTextContains($title);
+    $this->assertSession()->pageTextNotContains($body_value);
+
+    // Re-enable the filter that we disabled.
+    $this->drupalGet('admin/config/content/formats');
+    $this->getSession()->getPage()->find('css', '[href*="/admin/config/content/formats/manage/filter_test/enable"]')->click();
+    $this->assertSession()->pageTextContains('Are you sure you want to enable the text format Filter test?');
+    $this->getSession()->getPage()->find('css', '#edit-submit')->click();
+
+    // Confirm the presence of enable/disable operations has updated properly.
+    $this->assertSession()->linkByHrefExists('/admin/config/content/formats/manage/filter_test/disable');
+    $this->assertSession()->linkByHrefNotExists('/admin/config/content/formats/manage/filter_test/enable');
+
+    $this->drupalGet($node->toUrl());
+    $this->assertSession()->pageTextContains($body_value);
   }
 
 }

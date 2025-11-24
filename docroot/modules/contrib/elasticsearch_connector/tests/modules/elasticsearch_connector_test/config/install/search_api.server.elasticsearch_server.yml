@@ -1,0 +1,20 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - elasticsearch_connector
+id: elasticsearch_server
+name: elasticsearch_server
+description: 'Local test server'
+backend: elasticsearch
+backend_config:
+  connector: standard
+  connector_config:
+    url: 'http://elasticsearch:9200'
+    enable_debug_logging: false
+  advanced:
+    fuzziness: '0'
+    prefix: ''
+    suffix: ''
+    synonyms:
+      - ''

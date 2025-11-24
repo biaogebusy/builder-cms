@@ -1,13 +1,12 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\Core\Plugin\CategorizingPluginManagerTraitTest.
- */
+declare(strict_types=1);
 
 namespace Drupal\Tests\Core\Plugin;
 
 use Drupal\Component\Plugin\CategorizingPluginManagerInterface;
+use Drupal\Core\Extension\Exception\UnknownExtensionException;
+use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\CategorizingPluginManagerTrait;
 use Drupal\Core\Plugin\DefaultPluginManager;
@@ -16,6 +15,7 @@ use Drupal\Tests\UnitTestCase;
 /**
  * @coversDefaultClass \Drupal\Core\Plugin\CategorizingPluginManagerTrait
  * @group Plugin
+ * @runTestsInSeparateProcesses
  */
 class CategorizingPluginManagerTraitTest extends UnitTestCase {
 
@@ -30,23 +30,29 @@ class CategorizingPluginManagerTraitTest extends UnitTestCase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    parent::setUp();
+
     $module_handler = $this->createMock('Drupal\Core\Extension\ModuleHandlerInterface');
     $module_handler->expects($this->any())
       ->method('getModuleList')
       ->willReturn(['node' => []]);
-    $module_handler->expects($this->any())
+    $module_extension_list = $this->createMock(ModuleExtensionList::class);
+    $module_extension_list->expects($this->any())
       ->method('getName')
-      ->with('node')
-      ->willReturn('Node');
-
-    $this->pluginManager = new CategorizingPluginManager($module_handler);
+      ->willReturnCallback(function ($argument) {
+        if ($argument == 'node') {
+          return 'Node';
+        }
+        throw new UnknownExtensionException();
+      });
+    $this->pluginManager = new CategorizingPluginManager($module_handler, $module_extension_list);
     $this->pluginManager->setStringTranslation($this->getStringTranslationStub());
   }
 
   /**
    * @covers ::getCategories
    */
-  public function testGetCategories() {
+  public function testGetCategories(): void {
     $this->assertSame([
       'fruits',
       'vegetables',
@@ -56,7 +62,7 @@ class CategorizingPluginManagerTraitTest extends UnitTestCase {
   /**
    * @covers ::getSortedDefinitions
    */
-  public function testGetSortedDefinitions() {
+  public function testGetSortedDefinitions(): void {
     $sorted = $this->pluginManager->getSortedDefinitions();
     $this->assertSame(['apple', 'mango', 'cucumber'], array_keys($sorted));
   }
@@ -64,7 +70,7 @@ class CategorizingPluginManagerTraitTest extends UnitTestCase {
   /**
    * @covers ::getGroupedDefinitions
    */
-  public function testGetGroupedDefinitions() {
+  public function testGetGroupedDefinitions(): void {
     $grouped = $this->pluginManager->getGroupedDefinitions();
     $this->assertSame(['fruits', 'vegetables'], array_keys($grouped));
     $this->assertSame(['apple', 'mango'], array_keys($grouped['fruits']));
@@ -74,7 +80,7 @@ class CategorizingPluginManagerTraitTest extends UnitTestCase {
   /**
    * @covers ::processDefinitionCategory
    */
-  public function testProcessDefinitionCategory() {
+  public function testProcessDefinitionCategory(): void {
     // Existing category.
     $definition = [
       'label' => 'some',
@@ -113,11 +119,14 @@ class CategorizingPluginManager extends DefaultPluginManager implements Categori
   /**
    * Replace the constructor so we can instantiate a stub.
    *
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface|\PHPUnit\Framework\MockObject\MockObject $module_handler
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
+   * @param \Drupal\Core\Extension\ModuleExtensionList $module_extension_list
+   *   The module extension list.
    */
-  public function __construct(ModuleHandlerInterface $module_handler) {
+  public function __construct(ModuleHandlerInterface $module_handler, ModuleExtensionList $module_extension_list) {
     $this->moduleHandler = $module_handler;
+    $this->moduleExtensionList = $module_extension_list;
   }
 
   /**

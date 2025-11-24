@@ -1,0 +1,8 @@
+/**
+ * @file
+ * Commerce styling for the field UI.
+ */
+
+.field-icon-commerce {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='238.23 66.289 19.217 18.002' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%2355565b' d='M255.232 82.789a1.5 1.5 0 01-3 0v-1.5h3v1.5zm-9 0a1.54 1.54 0 01-1.5 1.5 1.54 1.54 0 01-1.5-1.5v-1.5h3v1.5zm-2.5-13.5h-1.4l-.2-.1-.9-.9v-.5a1.54 1.54 0 00-1.5-1.5 1.5 1.5 0 000 3h.5l1.1 1v.1l1.9 6.7c.071.289.25.539.5.7l-3.5 2.5 1 1h16.2l-1-2h-13.1l2-1h9a1.69 1.69 0 001.6-1.3l1.5-5.7c.1-.6-.3-2-1.2-2h-12.5zm10.5 2h1v1h-1v-1zm0 2h1v1h-1v-1zm-10 2h1v1h-1v-1zm8-4h1v1h-1v-1zm0 2h1v1h-1v-1zm0 2h1v1h-1v-1zm-2-4h1v1h-1v-1zm0 2h1v1h-1v-1zm0 2h1v1h-1v-1zm-2-4h1v1h-1v-1zm0 2h1v1h-1v-1zm0 2h1v1h-1v-1zm-2-4h1v1h-1v-1zm0 2h1v1h-1v-1zm0 2h1v1h-1v-1zm-1-1h-1v-1h1v1zm0-2h-1v-1h1v1z' /%3E%3C/svg%3E");
+}

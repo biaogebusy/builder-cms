@@ -24,7 +24,7 @@ function search_api_db_update_8101() {
     if (!$database) {
       continue;
     }
-    list($key, $target) = explode(':', $database, 2);
+    [$key, $target] = explode(':', $database, 2);
     $schema = Database::getConnection($target, $key)->schema();
 
     $table = $db_info['index_table'];
@@ -59,14 +59,14 @@ function search_api_db_update_8102() {
     if (!$database) {
       continue;
     }
-    list($key, $target) = explode(':', $database, 2);
+    [$key, $target] = explode(':', $database, 2);
     $schema = Database::getConnection($target, $key)->schema();
 
     $table = $db_info['index_table'];
     try {
       $schema->addPrimaryKey($table, ['item_id']);
     }
-    catch (SchemaObjectExistsException $e) {
+    catch (SchemaObjectExistsException) {
       // Primary key was already added, maybe by a conscientious site admin.
       // Nothing to do here in that case.
     }

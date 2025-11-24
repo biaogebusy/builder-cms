@@ -10,6 +10,10 @@ use Drupal\Core\Url;
 
 /**
  * Class ViewsAddButtonUtilities
+ *
+ * NOTE: this file is now deprecated in favor of \Drupal\views_add_button\ViewsAddButtonService,
+ * and will be removed soon.
+ *
  * @package Drupal\views_add_button
  */
 class ViewsAddButtonUtilities {

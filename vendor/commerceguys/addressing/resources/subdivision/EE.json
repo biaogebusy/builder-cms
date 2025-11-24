@@ -1,0 +1,50 @@
+{
+	"country_code": "EE",
+	"subdivisions": {
+		"37": {
+			"name": "Harjumaa"
+		},
+		"39": {
+			"name": "Hiiumaa"
+		},
+		"45": {
+			"name": "Ida-Virumaa"
+		},
+		"50": {
+			"name": "Jõgevamaa"
+		},
+		"52": {
+			"name": "Järvamaa"
+		},
+		"56": {
+			"name": "Läänemaa"
+		},
+		"60": {
+			"name": "Lääne-Virumaa"
+		},
+		"64": {
+			"name": "Põlvamaa"
+		},
+		"68": {
+			"name": "Pärnumaa"
+		},
+		"71": {
+			"name": "Raplamaa"
+		},
+		"74": {
+			"name": "Saaremaa"
+		},
+		"79": {
+			"name": "Tartumaa"
+		},
+		"81": {
+			"name": "Valgamaa"
+		},
+		"84": {
+			"name": "Viljandimaa"
+		},
+		"87": {
+			"name": "Võrumaa"
+		}
+	}
+}

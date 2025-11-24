@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\migrate_tools\Form;
 
 use Drupal\Core\Entity\EntityConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 
 /**
@@ -21,7 +24,7 @@ class MigrationDeleteForm extends EntityConfirmFormBase {
    * @return string
    *   Translated string.
    */
-  public function getQuestion() {
+  public function getQuestion(): TranslatableMarkup {
     return $this->t('Are you sure you want to delete migration %label?', [
       '%label' => $this->entity->label(),
     ]);
@@ -33,7 +36,7 @@ class MigrationDeleteForm extends EntityConfirmFormBase {
    * @return string
    *   Translated string.
    */
-  public function getConfirmText() {
+  public function getConfirmText(): TranslatableMarkup {
     return $this->t('Delete Migration');
   }
 
@@ -43,7 +46,7 @@ class MigrationDeleteForm extends EntityConfirmFormBase {
    * @return \Drupal\Core\Url
    *   The URL to go to if the user cancels the deletion.
    */
-  public function getCancelUrl() {
+  public function getCancelUrl(): Url {
     return new Url('entity.migration_group.list');
   }
 
@@ -55,7 +58,7 @@ class MigrationDeleteForm extends EntityConfirmFormBase {
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   An associative array containing the current state of the form.
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     // Delete the entity.
     $this->entity->delete();
 

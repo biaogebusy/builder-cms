@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Unit;
 
 use Drupal\Core\StringTranslation\TranslationInterface;
@@ -121,13 +123,6 @@ class TestMigrateExecutable extends MigrateExecutable {
    */
   public function setMemoryThreshold($threshold) {
     $this->memoryThreshold = $threshold;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function formatSize($size) {
-    return $size;
   }
 
 }

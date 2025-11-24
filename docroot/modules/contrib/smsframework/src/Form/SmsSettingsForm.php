@@ -9,6 +9,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\sms\Entity\SmsGateway;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\TypedConfigManagerInterface;
 use Drupal\Core\Routing\RouteBuilderInterface;
 use Drupal\Core\Routing\RequestContext;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -19,35 +20,27 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class SmsSettingsForm extends ConfigFormBase {
 
   /**
-   * The route builder.
-   *
-   * @var \Drupal\Core\Routing\RouteBuilderInterface
-   */
-  protected $routeBuilder;
-
-  /**
-   * The request context.
-   *
-   * @var \Drupal\Core\Routing\RequestContext
-   */
-  protected $requestContext;
-
-  /**
    * Constructs a new SmsSettingsForm.
    *
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
    *   The factory for configuration objects.
-   * @param \Drupal\Core\Routing\RouteBuilderInterface $route_builder
+   * @param \Drupal\Core\Config\TypedConfigManagerInterface $typedConfigManager
+   *   The typed config manager.
+   * @param \Drupal\Core\Routing\RouteBuilderInterface $routeBuilder
    *   The route builder.
-   * @param \Drupal\Core\Routing\RequestContext $request_context
+   * @param \Drupal\Core\Routing\RequestContext $requestContext
    *   The request context.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, RouteBuilderInterface $route_builder, RequestContext $request_context, MessengerInterface $messenger) {
-    parent::__construct($config_factory);
-    $this->routeBuilder = $route_builder;
-    $this->requestContext = $request_context;
+  public function __construct(
+    ConfigFactoryInterface $configFactory,
+    TypedConfigManagerInterface $typedConfigManager,
+    protected RouteBuilderInterface $routeBuilder,
+    protected RequestContext $requestContext,
+    MessengerInterface $messenger,
+  ) {
+    parent::__construct($configFactory, $typedConfigManager);
     $this->setMessenger($messenger);
   }
 
@@ -57,6 +50,7 @@ class SmsSettingsForm extends ConfigFormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('config.factory'),
+      $container->get('config.typed'),
       $container->get('router.builder'),
       $container->get('router.request_context'),
       $container->get('messenger'),

@@ -10,7 +10,7 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 abstract class ConfigFactoryOverrideBase implements EventSubscriberInterface {
 
   /**
-   * Reacts to the ConfigEvents::COLLECTION_INFO event.
+   * Reacts to the ConfigCollectionEvents::COLLECTION_INFO event.
    *
    * @param \Drupal\Core\Config\ConfigCollectionInfo $collection_info
    *   The configuration collection info event.
@@ -44,8 +44,8 @@ abstract class ConfigFactoryOverrideBase implements EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
-    $events[ConfigEvents::COLLECTION_INFO][] = ['addCollections'];
+  public static function getSubscribedEvents(): array {
+    $events[ConfigCollectionEvents::COLLECTION_INFO][] = ['addCollections'];
     $events[ConfigEvents::SAVE][] = ['onConfigSave', 20];
     $events[ConfigEvents::DELETE][] = ['onConfigDelete', 20];
     $events[ConfigEvents::RENAME][] = ['onConfigRename', 20];

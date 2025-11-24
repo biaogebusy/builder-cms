@@ -2,8 +2,8 @@
 
 namespace Drupal\commerce_payment;
 
-use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\Core\Entity\ContentEntityStorageInterface;
+use Drupal\commerce_order\Entity\OrderInterface;
 
 /**
  * Defines the interface for payment storage.

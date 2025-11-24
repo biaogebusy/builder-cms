@@ -2,15 +2,15 @@
 
 namespace Drupal\blazy\Plugin\views\field;
 
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\blazy\Blazy;
 use Drupal\blazy\BlazyDefault;
 use Drupal\blazy\BlazyEntityInterface;
 use Drupal\blazy\BlazyManager;
-use Drupal\blazy\internals\Internals;
 use Drupal\blazy\Theme\BlazyViews;
 use Drupal\blazy\Traits\PluginScopesTrait;
 use Drupal\blazy\Utility\Arrays;
-use Drupal\Core\Form\FormStateInterface;
+use Drupal\blazy\internals\Internals;
 use Drupal\views\Plugin\views\field\FieldPluginBase;
 use Drupal\views\ResultRow;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -68,7 +68,7 @@ abstract class BlazyViewsFieldPluginBase extends FieldPluginBase {
    *
    * @var array
    */
-  protected $mergedSettings = [];
+  public $mergedSettings = [];
 
   /**
    * Constructs a BlazyViewsFieldPluginBase object.
@@ -78,7 +78,7 @@ abstract class BlazyViewsFieldPluginBase extends FieldPluginBase {
     $plugin_id,
     $plugin_definition,
     BlazyManager $blazy_manager,
-    BlazyEntityInterface $blazy_entity
+    BlazyEntityInterface $blazy_entity,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->blazyManager = $blazy_manager;
@@ -93,7 +93,7 @@ abstract class BlazyViewsFieldPluginBase extends FieldPluginBase {
     ContainerInterface $container,
     array $configuration,
     $plugin_id,
-    $plugin_definition
+    $plugin_definition,
   ) {
     return new static(
       $configuration,
@@ -190,8 +190,8 @@ abstract class BlazyViewsFieldPluginBase extends FieldPluginBase {
   /**
    * Merges the settings.
    */
-  public function mergedViewsSettings(array $data = []) {
-    $settings = $this->mergedSettings + BlazyDefault::entitySettings();
+  public function mergedViewsSettings(array $data = [], $entity = NULL) {
+    $settings = BlazyDefault::entitySettings();
     $config   = [];
     $view     = $this->view;
     $style    = $view->style_plugin;
@@ -227,6 +227,7 @@ abstract class BlazyViewsFieldPluginBase extends FieldPluginBase {
     if (!isset($data['defer'])) {
       $this->blazyManager->preSettings($settings);
     }
+
     return $settings;
   }
 

@@ -6,21 +6,23 @@ use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\search_api\Utility\Utility;
-use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\Entity\Server;
 use Drupal\search_api\Item\Field;
 use Drupal\search_api\Processor\ProcessorInterface;
 use Drupal\search_api_test\PluginTestTrait;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the admin UI for processors.
  *
  * @group search_api
  */
+#[RunTestsInSeparateProcesses]
 class ProcessorIntegrationTest extends SearchApiBrowserTestBase {
 
-  use EntityReferenceTestTrait;
+  use EntityReferenceFieldCreationTrait;
   use PluginTestTrait;
 
   /**
@@ -511,9 +513,10 @@ TAGS
       'alt' => FALSE,
       'tags' => [
         'h1' => 10,
+        'h2' => 2.5,
       ],
     ];
-    $form_values['tags'] = 'h1: 10';
+    $form_values['tags'] = "h1: 10\nh2: 2.5";
     $this->editSettingsForm($configuration, 'html_filter', $form_values);
   }
 
@@ -595,7 +598,7 @@ TAGS
     $this->enableProcessor('role_filter');
 
     $configuration = [
-      'default' => 1,
+      'default' => '1',
       'roles' => [
         'anonymous',
       ],
@@ -735,7 +738,6 @@ TAGS
         ],
       ],
     ];
-    unset($configuration['boosts']['parent_reference']);
     $this->editSettingsForm($configuration, 'number_field_boost', $form_values);
   }
 
@@ -796,7 +798,7 @@ TAGS
    *   (optional) If TRUE, the "fields" property will be removed from the
    *   actual configuration prior to comparing with the given configuration.
    */
-  protected function editSettingsForm(array $configuration, $processor_id, array $form_values = NULL, $enable = TRUE, $unset_fields = TRUE) {
+  protected function editSettingsForm(array $configuration, $processor_id, ?array $form_values = NULL, $enable = TRUE, $unset_fields = TRUE) {
     $this->loadProcessorsTab();
 
     $edit = $this->getFormValues($form_values ?? $configuration, "processors[$processor_id][settings]");

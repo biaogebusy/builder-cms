@@ -32,7 +32,7 @@ abstract class SmsFrameworkBrowserTestBase extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected $defaultTheme = 'classy';
+  protected $defaultTheme = 'stark';
 
   /**
    * The gateway manager.

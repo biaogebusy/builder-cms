@@ -2,21 +2,22 @@
 
 namespace Drupal\commerce_promotion\Plugin\Commerce\InlineForm;
 
-use Drupal\commerce\Plugin\Commerce\InlineForm\InlineFormBase;
-use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce\Attribute\CommerceInlineForm;
+use Drupal\commerce\Plugin\Commerce\InlineForm\InlineFormBase;
+use Drupal\commerce_order\Entity\OrderInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides an inline form for redeeming a coupon.
- *
- * @CommerceInlineForm(
- *   id = "coupon_redemption",
- *   label = @Translation("Coupon redemption"),
- * )
  */
+#[CommerceInlineForm(
+  id: "coupon_redemption",
+  label: new TranslatableMarkup("Coupon redemption"),
+)]
 class CouponRedemption extends InlineFormBase {
 
   /**
@@ -178,7 +179,7 @@ class CouponRedemption extends InlineFormBase {
     }
 
     $coupon_code_parents = array_merge($inline_form['#parents'], ['code']);
-    $coupon_code = $form_state->getValue($coupon_code_parents);
+    $coupon_code = trim($form_state->getValue($coupon_code_parents) ?? '');
     $coupon_code_path = implode('][', $coupon_code_parents);
     if (empty($coupon_code)) {
       if ($triggering_element['#name'] == 'apply_coupon') {
@@ -197,9 +198,18 @@ class CouponRedemption extends InlineFormBase {
     $order_storage = $this->entityTypeManager->getStorage('commerce_order');
     /** @var \Drupal\commerce_order\Entity\OrderInterface $order */
     $order = $order_storage->load($this->configuration['order_id']);
-    foreach ($order->get('coupons') as $item) {
-      if ($item->target_id == $coupon->id()) {
+    /** @var \Drupal\commerce_promotion\Entity\CouponInterface $referenced_coupon */
+    foreach ($order->get('coupons')->referencedEntities() as $referenced_coupon) {
+      if ($referenced_coupon->id() == $coupon->id()) {
         // Coupon already applied. Error message not set for UX reasons.
+        return;
+      }
+
+      $promotion = $referenced_coupon->getPromotion();
+      // The promotion might already be applied, make sure we don't apply the
+      // same promotion more than once.
+      if (!$promotion->isMultipleCouponsAllowed() && $referenced_coupon->getPromotionId() == $coupon->getPromotionId()) {
+        $form_state->setErrorByName($coupon_code_path, $this->t('The provided coupon code cannot be applied to your order.'));
         return;
       }
     }
@@ -233,6 +243,7 @@ class CouponRedemption extends InlineFormBase {
       $order = $order_storage->load($inline_form['#configuration']['order_id']);
       $order->get('coupons')->appendItem($inline_form['code']['#coupon_id']);
       $order->save();
+      \Drupal::messenger()->addStatus(new TranslatableMarkup('Coupon successfully redeemed!'));
     }
     $form_state->setRebuild();
   }

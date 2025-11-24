@@ -3,6 +3,7 @@
  * Admin styling.
  */
 
-.interval .form-type-number, .interval .form-type-select {
+.interval .form-type-number,
+.interval .form-type-select {
   display: inline;
 }

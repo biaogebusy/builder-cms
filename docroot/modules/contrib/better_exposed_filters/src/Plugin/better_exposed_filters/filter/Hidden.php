@@ -17,7 +17,7 @@ class Hidden extends FilterWidgetBase {
   /**
    * {@inheritdoc}
    */
-  public function exposedFormAlter(array &$form, FormStateInterface $form_state) {
+  public function exposedFormAlter(array &$form, FormStateInterface $form_state): void {
     $field_id = $this->getExposedFilterFieldId();
 
     parent::exposedFormAlter($form, $form_state);
@@ -40,10 +40,10 @@ class Hidden extends FilterWidgetBase {
   /**
    * {@inheritdoc}
    */
-  public static function isApplicable($filter = NULL, array $filter_options = []) {
-    $is_applicable = parent::isApplicable($filter, $filter_options);
+  public static function isApplicable(mixed $handler = NULL, array $options = []): bool {
+    $is_applicable = parent::isApplicable($handler, $options);
 
-    if ((is_a($filter, 'Drupal\views\Plugin\views\filter\Date') || !empty($filter->date_handler)) && !$filter->isAGroup()) {
+    if ((is_a($handler, 'Drupal\views\Plugin\views\filter\Date') || !empty($handler->date_handler)) && !$handler->isAGroup()) {
       $is_applicable = TRUE;
     }
 

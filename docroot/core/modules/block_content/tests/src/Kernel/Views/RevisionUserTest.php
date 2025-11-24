@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\block_content\Kernel\Views;
 
 use Drupal\block_content\Entity\BlockContent;
@@ -66,7 +68,7 @@ class RevisionUserTest extends ViewsKernelTestBase {
   /**
    * Tests the block_content_revision_user relationship.
    */
-  public function testRevisionUser() {
+  public function testRevisionUser(): void {
     $primary_author = $this->createUser();
     $secondary_author = $this->createUser();
 

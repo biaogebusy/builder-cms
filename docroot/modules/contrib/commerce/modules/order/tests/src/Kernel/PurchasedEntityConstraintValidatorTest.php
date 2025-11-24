@@ -69,7 +69,7 @@ final class PurchasedEntityConstraintValidatorTest extends OrderKernelTestBase {
     $this->assertEquals($expected_check_result, $availability_manager->check($order_item, $context));
     if ($expected_constraint) {
       $this->assertCount(1, $constraints);
-      $this->assertEquals('<em class="placeholder">test product</em> is not available with a quantity of <em class="placeholder">1</em>.', $constraints->offsetGet(0)->getMessage());
+      $this->assertEquals('<em class="placeholder">test product</em> is not available with a quantity of <em class="placeholder">1</em>.', (string) $constraints->offsetGet(0)->getMessage());
     }
     else {
       $this->assertCount(0, $constraints);
@@ -130,7 +130,7 @@ final class PurchasedEntityConstraintValidatorTest extends OrderKernelTestBase {
     $constraints = $order_item->validate();
     $this->assertCount(1, $constraints);
     $constraint_messages = array_map(static function (ConstraintViolationInterface $item) {
-      return $item->getMessage();
+      return (string) $item->getMessage();
     }, \iterator_to_array($constraints->getIterator()));
     $this->assertEquals([
       'The referenced entity (<em class="placeholder">commerce_product_variation</em>: <em class="placeholder">1</em>) does not exist.',
@@ -164,7 +164,7 @@ final class PurchasedEntityConstraintValidatorTest extends OrderKernelTestBase {
     $this->assertCount(1, $constraints);
     $this->assertEquals(
       'The given entity is not assigned to any store.',
-      $constraints->offsetGet(0)->getMessage()
+      (string) $constraints->offsetGet(0)->getMessage()
     );
 
     $new_store1 = $this->createStore(NULL, NULL, 'online', FALSE);
@@ -174,7 +174,7 @@ final class PurchasedEntityConstraintValidatorTest extends OrderKernelTestBase {
     $this->assertCount(1, $constraints);
     $this->assertEquals(
       "The given entity can't be purchased from the current store.",
-      $constraints->offsetGet(0)->getMessage()
+      (string) $constraints->offsetGet(0)->getMessage()
     );
 
     $product_variation->getProduct()->setStoreIds([$this->store->id()])->save();
@@ -188,7 +188,7 @@ final class PurchasedEntityConstraintValidatorTest extends OrderKernelTestBase {
    * @return \Generator
    *   The test data.
    */
-  public function dataProviderCheckerData() {
+  public static function dataProviderCheckerData() {
     yield ['SKU1234', 'draft', AvailabilityResult::neutral(), FALSE];
     yield ['TEST_SKU1234', 'draft', AvailabilityResult::unavailable(), TRUE];
     yield ['SKU1234', 'complete', AvailabilityResult::neutral(), FALSE];

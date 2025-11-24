@@ -5,8 +5,10 @@ namespace Drupal\media\OEmbed;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Cache\CacheBackendInterface;
 use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Exception\TransferException;
 use GuzzleHttp\RequestOptions;
+use Psr\Http\Client\ClientExceptionInterface;
+
+// cspell:ignore nocdata
 
 /**
  * Fetches and caches oEmbed resources.
@@ -14,44 +16,24 @@ use GuzzleHttp\RequestOptions;
 class ResourceFetcher implements ResourceFetcherInterface {
 
   /**
-   * The HTTP client.
-   *
-   * @var \GuzzleHttp\Client
-   */
-  protected $httpClient;
-
-  /**
-   * The oEmbed provider repository service.
-   *
-   * @var \Drupal\media\OEmbed\ProviderRepositoryInterface
-   */
-  protected $providers;
-
-  /**
-   * The cache backend.
-   *
-   * @var \Drupal\Core\Cache\CacheBackendInterface
-   */
-  protected $cacheBackend;
-
-  /**
    * Constructs a ResourceFetcher object.
    *
-   * @param \GuzzleHttp\ClientInterface $http_client
+   * @param \GuzzleHttp\ClientInterface $httpClient
    *   The HTTP client.
    * @param \Drupal\media\OEmbed\ProviderRepositoryInterface $providers
    *   The oEmbed provider repository service.
-   * @param \Drupal\Core\Cache\CacheBackendInterface $cache_backend
+   * @param \Drupal\Core\Cache\CacheBackendInterface $cacheBackend
    *   The cache backend.
+   * @param int $timeout
+   *   The length of time to wait for the request before the request
+   *   should time out.
    */
-  public function __construct(ClientInterface $http_client, ProviderRepositoryInterface $providers, CacheBackendInterface $cache_backend = NULL) {
-    $this->httpClient = $http_client;
-    $this->providers = $providers;
-    if (empty($cache_backend)) {
-      $cache_backend = \Drupal::cache();
-      @trigger_error('Passing NULL as the $cache_backend parameter to ' . __METHOD__ . '() is deprecated in drupal:9.3.0 and is removed from drupal:10.0.0. See https://www.drupal.org/node/3223594', E_USER_DEPRECATED);
-    }
-    $this->cacheBackend = $cache_backend;
+  public function __construct(
+    protected ClientInterface $httpClient,
+    protected ProviderRepositoryInterface $providers,
+    protected CacheBackendInterface $cacheBackend,
+    protected int $timeout = 5,
+  ) {
   }
 
   /**
@@ -67,10 +49,10 @@ class ResourceFetcher implements ResourceFetcherInterface {
 
     try {
       $response = $this->httpClient->request('GET', $url, [
-        RequestOptions::TIMEOUT => 5,
+        RequestOptions::TIMEOUT => $this->timeout,
       ]);
     }
-    catch (TransferException $e) {
+    catch (ClientExceptionInterface $e) {
       throw new ResourceException('Could not retrieve the oEmbed resource.', $url, [], $e);
     }
 

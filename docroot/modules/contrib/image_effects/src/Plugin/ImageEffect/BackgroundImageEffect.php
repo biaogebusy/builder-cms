@@ -1,44 +1,34 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageEffect;
 
-use Drupal\Core\Image\ImageInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Image\ImageFactory;
+use Drupal\Core\Image\ImageInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\image\Attribute\ImageEffect;
 use Drupal\image\ConfigurableImageEffectBase;
 use Drupal\image_effects\Component\ImageUtility;
 use Drupal\image_effects\Plugin\ImageEffectsPluginBaseInterface;
+use Drupal\image_effects\Plugin\ImageSelectorPluginManager;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Image\ImageFactory;
 
 /**
  * Places the source image anywhere over a selected background image.
- *
- * @ImageEffect(
- *   id = "image_effects_background",
- *   label = @Translation("Background"),
- *   description = @Translation("Places the source image anywhere over a selected background image.")
- * )
  */
+#[ImageEffect(
+  id: 'image_effects_background',
+  label: new TranslatableMarkup('Background'),
+  description: new TranslatableMarkup('Places the source image anywhere over a selected background image.'),
+)]
 class BackgroundImageEffect extends ConfigurableImageEffectBase implements ContainerFactoryPluginInterface {
 
   /**
-   * The image factory service.
-   *
-   * @var \Drupal\Core\Image\ImageFactory
-   */
-  protected $imageFactory;
-
-  /**
-   * The image selector plugin.
-   *
-   * @var \Drupal\image_effects\Plugin\ImageEffectsPluginBaseInterface
-   */
-  protected $imageSelector;
-
-  /**
-   * Constructs an BackgroundImageEffect object.
+   * BackgroundImageEffect constructor.
    *
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
@@ -48,15 +38,20 @@ class BackgroundImageEffect extends ConfigurableImageEffectBase implements Conta
    *   The plugin implementation definition.
    * @param \Psr\Log\LoggerInterface $logger
    *   A logger instance.
-   * @param \Drupal\Core\Image\ImageFactory $image_factory
+   * @param \Drupal\Core\Image\ImageFactory $imageFactory
    *   The image factory service.
-   * @param \Drupal\image_effects\Plugin\ImageEffectsPluginBaseInterface $image_selector
+   * @param \Drupal\image_effects\Plugin\ImageEffectsPluginBaseInterface $imageSelector
    *   The image selector plugin.
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, LoggerInterface $logger, ImageFactory $image_factory, ImageEffectsPluginBaseInterface $image_selector) {
+  public function __construct(
+    array $configuration,
+    string $plugin_id,
+    array $plugin_definition,
+    LoggerInterface $logger,
+    protected readonly ImageFactory $imageFactory,
+    protected readonly ImageEffectsPluginBaseInterface $imageSelector,
+  ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $logger);
-    $this->imageFactory = $image_factory;
-    $this->imageSelector = $image_selector;
   }
 
   /**
@@ -69,7 +64,7 @@ class BackgroundImageEffect extends ConfigurableImageEffectBase implements Conta
       $plugin_definition,
       $container->get('logger.factory')->get('image'),
       $container->get('image.factory'),
-      $container->get('plugin.manager.image_effects.image_selector')->getPlugin()
+      $container->get(ImageSelectorPluginManager::class)->getPlugin()
     );
   }
 
@@ -183,10 +178,13 @@ class BackgroundImageEffect extends ConfigurableImageEffectBase implements Conta
   public function applyEffect(ImageInterface $image) {
     $background_image = $this->imageFactory->get($this->configuration['background_image']);
     if (!$background_image->isValid()) {
-      $this->logger->error('Image background failed using the %toolkit toolkit on %path', ['%toolkit' => $image->getToolkitId(), '%path' => $this->configuration['background_image']]);
+      $this->logger->error('Image background failed using the %toolkit toolkit on %path', [
+        '%toolkit' => $image->getToolkitId(),
+        '%path' => $this->configuration['background_image'],
+      ]);
       return FALSE;
     }
-    list($x, $y) = explode('-', $this->configuration['placement']);
+    [$x, $y] = explode('-', $this->configuration['placement']);
     $x_pos = ImageUtility::getKeywordOffset($x, $background_image->getWidth(), $image->getWidth());
     $y_pos = ImageUtility::getKeywordOffset($y, $background_image->getHeight(), $image->getHeight());
     return $image->apply('background', [
@@ -201,8 +199,8 @@ class BackgroundImageEffect extends ConfigurableImageEffectBase implements Conta
    * {@inheritdoc}
    */
   public function transformDimensions(array &$dimensions, $uri) {
-    $dimensions['width'] = $this->configuration['background_image_width'];
-    $dimensions['height'] = $this->configuration['background_image_height'];
+    $dimensions['width'] = (int) $this->configuration['background_image_width'];
+    $dimensions['height'] = (int) $this->configuration['background_image_height'];
   }
 
 }

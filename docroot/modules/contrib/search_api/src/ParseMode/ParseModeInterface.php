@@ -10,7 +10,7 @@ use Drupal\search_api\Plugin\HideablePluginInterface;
 /**
  * Defines an interface for parse mode plugins.
  *
- * @see \Drupal\search_api\Annotation\SearchApiParseMode
+ * @see \Drupal\search_api\Attribute\SearchApiParseMode
  * @see \Drupal\search_api\ParseMode\ParseModePluginManager
  * @see \Drupal\search_api\ParseMode\ParseModePluginBase
  * @see plugin_api

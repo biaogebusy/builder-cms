@@ -1108,7 +1108,7 @@ class WebformSubmissionExporter implements WebformSubmissionExporterInterface {
   }
 
   /**
-   * Determin if the webform c elements with files that can be exported.
+   * Determine if the webform c elements with files that can be exported.
    *
    * @return array
    *   An associative array of attachment elements with files

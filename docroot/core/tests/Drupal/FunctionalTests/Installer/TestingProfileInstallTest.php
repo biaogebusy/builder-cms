@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalTests\Installer;
 
 use Drupal\Tests\BrowserTestBase;
@@ -24,7 +26,7 @@ class TestingProfileInstallTest extends BrowserTestBase {
   /**
    * Ensure the Update module is installed.
    */
-  public function testUpdateModuleInstall() {
+  public function testUpdateModuleInstall(): void {
     $this->assertTrue(\Drupal::moduleHandler()->moduleExists('update'));
   }
 

@@ -1,46 +1,48 @@
-CONTENTS OF THIS FILE
----------------------
-
- * Introduction
- * Requirements
- * Installation
- * Maintainers
-
-
-INTRODUCTION
-------------
+# Fast Permissions Administration
 
 This module is here to alleviate frustration when trying to manage permissions
 in Drupal. By providing a better permissions interface hopefully a few innocent
 keyboards and mice can be saved.
 
- * For the description of the module visit:
-   https://www.drupal.org/project/fpa
+For a full description of the module, visit the
+[project page](https://www.drupal.org/project/fpa).
 
- * To submit bug reports and feature suggestions, or to track changes visit:
-   https://www.drupal.org/project/issues/fpa
+Submit bug reports and feature suggestions, or track changes in the
+[issue queue](https://www.drupal.org/project/issues/fpa).
 
 
-REQUIREMENTS
-------------
+## Table of contents
+
+- Requirements
+- Installation
+- Configuration
+- Maintainers
+
+
+## Requirements
 
 This module requires no modules outside of Drupal core.
 
 
-INSTALLATION
-------------
+## Installation
 
-Install the Fast Permissions Administration module as you would normally install
-a contributed Drupal module. Visit https://www.drupal.org/node/1897420 for
-further information.
+Install as you would normally install a contributed Drupal module. For further
+information, see
+[Installing Drupal Modules](https://www.drupal.org/docs/extending-drupal/installing-drupal-modules).
 
-MAINTAINERS
------------
 
- * @todo
+## Configuration
+
+The module has no menu or modifiable settings. There is no configuration. When
+enabled, the module will prevent the links from appearing. To get the links
+back, disable the module and clear caches.
+
+
+## Maintainers 
+
+- Juan Barba - [HakS](https://www.drupal.org/u/haks)
 
 Supporting organization:
-
- * Rootstack (Original Development) - https://www.drupal.org/rootstack
- * Tomato Elephant Studio (Maintenance from 2021) - https://www.drupal.org/tomato-elephant-studio
- * Knectar (Maintenance from 2021) - https://www.drupal.org/knectar
+- Rootstack - [Original Development](https://www.drupal.org/rootstack)
+- Tomato Elephant Studio - [Maintenance from 2021](https://www.drupal.org/tomato-elephant-studio)
+- Knectar - [Maintenance from 2021](https://www.drupal.org/knectar)

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Kernel;
 
 use Drupal\Core\Access\AccessResult;
@@ -20,9 +22,7 @@ class MenuAccessControlHandlerTest extends KernelTestBase {
   }
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'system',
@@ -41,9 +41,7 @@ class MenuAccessControlHandlerTest extends KernelTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
-    $this->installEntitySchema('menu');
     $this->installEntitySchema('user');
-    $this->installSchema('system', 'sequences');
     $this->accessControlHandler = $this->container->get('entity_type.manager')->getAccessControlHandler('menu');
   }
 
@@ -52,24 +50,13 @@ class MenuAccessControlHandlerTest extends KernelTestBase {
    * @covers ::checkCreateAccess
    * @dataProvider testAccessProvider
    */
-  public function testAccess($which_user, $which_entity, $view_label_access_result, $view_access_result, $update_access_result, $delete_access_result, $create_access_result) {
-    // We must always create user 1, so that a "normal" user has an ID >1.
-    $root_user = $this->drupalCreateUser();
-
-    if ($which_user === 'user1') {
-      $user = $root_user;
-    }
-    else {
-      $permissions = ($which_user === 'admin')
-        ? ['administer menu']
-        : [];
-      $user = $this->drupalCreateUser($permissions);
-    }
+  public function testAccess($permissions, $which_entity, $view_label_access_result, $view_access_result, $update_access_result, $delete_access_result, $create_access_result): void {
+    $user = $this->drupalCreateUser($permissions);
 
     $entity_values = ($which_entity === 'unlocked')
       ? ['locked' => FALSE]
       : ['locked' => TRUE];
-    $entity_values['id'] = 'llama';
+    $entity_values['id'] = $entity_values['label'] = 'llama';
     $entity = Menu::create($entity_values);
     $entity->save();
 
@@ -90,7 +77,7 @@ class MenuAccessControlHandlerTest extends KernelTestBase {
 
     return [
       'permissionless + unlocked' => [
-        'permissionless',
+        [],
         'unlocked',
         AccessResult::allowed(),
         AccessResult::neutral()->addCacheContexts(['user.permissions'])->setReason("The 'administer menu' permission is required."),
@@ -99,7 +86,7 @@ class MenuAccessControlHandlerTest extends KernelTestBase {
         AccessResult::neutral()->addCacheContexts(['user.permissions'])->setReason("The 'administer menu' permission is required."),
       ],
       'permissionless + locked' => [
-        'permissionless',
+        [],
         'locked',
         AccessResult::allowed(),
         AccessResult::neutral()->addCacheContexts(['user.permissions'])->setReason("The 'administer menu' permission is required."),
@@ -108,7 +95,7 @@ class MenuAccessControlHandlerTest extends KernelTestBase {
         AccessResult::neutral()->addCacheContexts(['user.permissions'])->setReason("The 'administer menu' permission is required."),
       ],
       'admin + unlocked' => [
-        'admin',
+        ['administer menu'],
         'unlocked',
         AccessResult::allowed(),
         AccessResult::allowed()->addCacheContexts(['user.permissions']),
@@ -117,25 +104,7 @@ class MenuAccessControlHandlerTest extends KernelTestBase {
         AccessResult::allowed()->addCacheContexts(['user.permissions']),
       ],
       'admin + locked' => [
-        'admin',
-        'locked',
-        AccessResult::allowed(),
-        AccessResult::allowed()->addCacheContexts(['user.permissions']),
-        AccessResult::allowed()->addCacheContexts(['user.permissions']),
-        AccessResult::forbidden()->addCacheTags(['config:system.menu.llama'])->setReason("The Menu config entity is locked."),
-        AccessResult::allowed()->addCacheContexts(['user.permissions']),
-      ],
-      'user1 + unlocked' => [
-        'user1',
-        'unlocked',
-        AccessResult::allowed(),
-        AccessResult::allowed()->addCacheContexts(['user.permissions']),
-        AccessResult::allowed()->addCacheContexts(['user.permissions']),
-        AccessResult::allowed()->addCacheContexts(['user.permissions'])->addCacheTags(['config:system.menu.llama']),
-        AccessResult::allowed()->addCacheContexts(['user.permissions']),
-      ],
-      'user1 + locked' => [
-        'user1',
+        ['administer menu'],
         'locked',
         AccessResult::allowed(),
         AccessResult::allowed()->addCacheContexts(['user.permissions']),

@@ -1,0 +1,10 @@
+name: 'Quick Edit test'
+type: module
+description: 'Support module for the Quick Edit module tests.'
+package: Testing
+core_version_requirement: ">=9"
+
+# Information added by Drupal.org packaging script on 2022-09-13
+version: '1.0.3'
+project: 'quickedit'
+datestamp: 1663069883

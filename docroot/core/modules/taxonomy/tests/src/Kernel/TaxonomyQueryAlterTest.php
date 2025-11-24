@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\taxonomy\Kernel;
 
 use Drupal\Core\Database\Database;
@@ -29,7 +31,7 @@ class TaxonomyQueryAlterTest extends KernelTestBase {
   /**
    * Tests that appropriate tags are added when querying the database.
    */
-  public function testTaxonomyQueryAlter() {
+  public function testTaxonomyQueryAlter(): void {
     $this->installEntitySchema('taxonomy_term');
 
     // Create a new vocabulary and add a few terms to it.

@@ -4,13 +4,22 @@ namespace Drupal\field_group;
 
 use Drupal\Component\Plugin\Factory\DefaultFactory;
 use Drupal\Core\Cache\CacheBackendInterface;
-use Drupal\Core\Plugin\DefaultPluginManager;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Plugin\DefaultPluginManager;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Plugin type manager for all fieldgroup formatters.
  */
 class FieldGroupFormatterPluginManager extends DefaultPluginManager {
+
+  /**
+   * The dependency injection container.
+   *
+   * @var \Symfony\Component\DependencyInjection\ContainerInterface
+   */
+  protected $container;
 
   /**
    * Constructs a new FieldGroupFormatterPluginManager object.
@@ -22,12 +31,26 @@ class FieldGroupFormatterPluginManager extends DefaultPluginManager {
    *   Cache backend instance to use.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler to invoke the alter hook with.
+   * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
+   *   The dependency injection container.
    */
-  public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
-    parent::__construct('Plugin/field_group/FieldGroupFormatter', $namespaces, $module_handler, 'Drupal\field_group\FieldGroupFormatterInterface', 'Drupal\field_group\Annotation\FieldGroupFormatter');
+  public function __construct(
+    \Traversable $namespaces,
+    CacheBackendInterface $cache_backend,
+    ModuleHandlerInterface $module_handler,
+    ContainerInterface $container,
+  ) {
+    parent::__construct(
+      'Plugin/field_group/FieldGroupFormatter',
+      $namespaces,
+      $module_handler,
+      FieldGroupFormatterInterface::class,
+      'Drupal\field_group\Annotation\FieldGroupFormatter'
+    );
 
     $this->alterInfo('field_group_formatter_info');
     $this->setCacheBackend($cache_backend, 'field_group_formatter_info');
+    $this->container = $container;
   }
 
   /**
@@ -38,8 +61,8 @@ class FieldGroupFormatterPluginManager extends DefaultPluginManager {
     $plugin_class = DefaultFactory::getPluginClass($plugin_id, $plugin_definition);
 
     // If the plugin provides a factory method, pass the container to it.
-    if (is_subclass_of($plugin_class, 'Drupal\Core\Plugin\ContainerFactoryPluginInterface')) {
-      return $plugin_class::create(\Drupal::getContainer(), $configuration, $plugin_id, $plugin_definition);
+    if (is_subclass_of($plugin_class, ContainerFactoryPluginInterface::class)) {
+      return $plugin_class::create($this->container, $configuration, $plugin_id, $plugin_definition);
     }
 
     return new $plugin_class($plugin_id, $plugin_definition, $configuration['group'], $configuration['settings'], $configuration['label']);

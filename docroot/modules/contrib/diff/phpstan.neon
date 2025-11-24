@@ -2,12 +2,12 @@ includes:
   - phpstan-baseline.neon
 parameters:
   level: 6
+  reportUnmatchedIgnoredErrors: true
+  treatPhpDocTypesAsCertain: false
   paths:
     - .
-  reportUnmatchedIgnoredErrors: true
-  checkMissingIterableValueType: false
   strictRules:
-     strictCalls: false
+    strictCalls: false
   fileExtensions:
     - php
     - module
@@ -15,6 +15,11 @@ parameters:
     - profile
     - install
     - inc
+  ignoreErrors:
+    - "#^Unsafe usage of new static#"
+    - "#does not call parent constructor#"
+    -
+      identifier: missingType.iterableValue
   excludePaths:
     # We cant improve this directory as its contains Drupal-generic code.
     - vendor

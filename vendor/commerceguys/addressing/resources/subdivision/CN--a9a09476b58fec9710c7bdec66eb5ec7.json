@@ -1,0 +1,29 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"HN",
+		"Yiyang Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Anhua Xian": {
+			"local_name": "安化县"
+		},
+		"Heshan Qu": {
+			"local_name": "赫山区"
+		},
+		"Nan Xian": {
+			"local_name": "南县"
+		},
+		"Taojiang Xian": {
+			"local_name": "桃江县"
+		},
+		"Yuanjiang Shi": {
+			"local_name": "沅江市"
+		},
+		"Ziyang Qu": {
+			"local_name": "资阳区"
+		}
+	}
+}

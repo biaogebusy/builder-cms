@@ -51,8 +51,6 @@ include:
 variables:
   _PHPUNIT_CONCURRENT: '1'
   OPT_IN_TEST_PREVIOUS_MINOR: 1
-  OPT_IN_TEST_NEXT_MINOR: 1
-  OPT_IN_TEST_MAX_PHP: 1
   DROPZONE_VERSION: v5.9.3
 
 .composer-base:

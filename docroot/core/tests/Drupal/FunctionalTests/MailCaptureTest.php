@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalTests;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Core\Test\AssertMailTrait;
 
@@ -27,7 +28,7 @@ class MailCaptureTest extends BrowserTestBase {
   /**
    * Tests to see if the wrapper function is executed correctly.
    */
-  public function testMailSend() {
+  public function testMailSend(): void {
     // Create an email.
     $subject = $this->randomString(64);
     $body = $this->randomString(128);
@@ -44,7 +45,7 @@ class MailCaptureTest extends BrowserTestBase {
     $this->assertCount(0, $captured_emails, 'The captured emails queue is empty.');
 
     // Send the email.
-    \Drupal::service('plugin.manager.mail')->getInstance(['module' => 'simpletest', 'key' => 'drupal_mail_test'])->mail($message);
+    \Drupal::service('plugin.manager.mail')->getInstance(['module' => 'test', 'key' => 'drupal_mail_test'])->mail($message);
 
     // Ensure that there is one email in the captured emails array.
     $captured_emails = $this->drupalGetMails();
@@ -53,7 +54,7 @@ class MailCaptureTest extends BrowserTestBase {
     // Assert that the email was sent by iterating over the message properties
     // and ensuring that they are captured intact.
     foreach ($message as $field => $value) {
-      $this->assertMail($field, $value, new FormattableMarkup('The email was sent and the value for property @field is intact.', ['@field' => $field]), 'Email');
+      $this->assertMail($field, $value, "The email was sent and the value for property $field is intact.");
     }
 
     // Send additional emails so more than one email is captured.

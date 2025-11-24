@@ -3,6 +3,8 @@
 node.settings:
   type: config_object
   label: 'Node settings'
+  constraints:
+    FullyValidatable: ~
   mapping:
     use_admin_theme:
       type: boolean
@@ -11,25 +13,45 @@ node.settings:
 node.type.*:
   type: config_entity
   label: 'Content type'
+  constraints:
+    FullyValidatable: ~
   mapping:
     name:
-      type: label
+      type: required_label
       label: 'Name'
     type:
-      type: string
+      type: machine_name
       label: 'Machine-readable name'
+      constraints:
+        # Node type machine names are specifically limited to 32 characters.
+        # @see \Drupal\node\NodeTypeForm::form()
+        Length:
+          max: 32
     description:
       type: text
       label: 'Description'
+      nullable: true
+      constraints:
+        NotBlank:
+          allowNull: true
     help:
       type: text
       label: 'Explanation or submission guidelines'
+      nullable: true
+      constraints:
+        NotBlank:
+          allowNull: true
     new_revision:
       type: boolean
       label: 'Whether a new revision should be created by default'
     preview_mode:
       type: integer
       label: 'Preview before submitting'
+      constraints:
+        # These are the values of the DRUPAL_DISABLED, DRUPAL_OPTIONAL, and
+        # DRUPAL_REQUIRED constants.
+        # @see \Drupal\node\NodeTypeForm::form()
+        Choice: [0, 1, 2]
     display_submitted:
       type: boolean
       label: 'Display setting for author and date Submitted by post information'
@@ -47,14 +69,6 @@ search.plugin.node_search:
         type: integer
         label: 'Influence'
 
-action.configuration.node_assign_owner_action:
-  type: mapping
-  label: 'Change the author of content configuration'
-  mapping:
-    owner_uid:
-      type: text
-      label: 'Username'
-
 action.configuration.node_unpromote_action:
   type: action_configuration_default
   label: 'Demote selected content from front page configuration'
@@ -71,17 +85,6 @@ action.configuration.node_make_unsticky_action:
   type: action_configuration_default
   label: 'Make selected content unsticky configuration'
 
-action.configuration.node_unpublish_by_keyword_action:
-  type: mapping
-  label: 'Unpublish content containing keyword(s) configuration'
-  mapping:
-    keywords:
-      type: sequence
-      label: 'Keywords'
-      sequence:
-        type: string
-        label: 'Keyword'
-
 block.settings.node_syndicate_block:
   type: block_settings
   label: 'Syndicate block'
@@ -89,12 +92,3 @@ block.settings.node_syndicate_block:
     block_count:
       type: integer
       label: 'Block count'
-
-condition.plugin.node_type:
-  deprecated: "The 'condition.plugin.node_type' config schema is deprecated in drupal:9.3.0 and is removed from drupal 10.0.0. Use the 'entity_bundle:node_type' key instead to define a node type condition. See https://www.drupal.org/node/2983299."
-  type: condition.plugin
-  mapping:
-    bundles:
-      type: sequence
-      sequence:
-        type: string

@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Functional;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\node\Entity\NodeType;
 use Drupal\taxonomy\Entity\Vocabulary;
-use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
 
 /**
  * Tests behavior of the node access subsystem if the base table is not node.
@@ -15,12 +17,10 @@ use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
  */
 class NodeAccessBaseTableTest extends NodeTestBase {
 
-  use EntityReferenceTestTrait;
+  use EntityReferenceFieldCreationTrait;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'node_access_test',
@@ -57,6 +57,8 @@ class NodeAccessBaseTableTest extends NodeTestBase {
 
   /**
    * A web user.
+   *
+   * @var \Drupal\user\Entity\User|false
    */
   protected $webUser;
 
@@ -120,7 +122,7 @@ class NodeAccessBaseTableTest extends NodeTestBase {
    * - Test that user 4 can view all content created above.
    * - Test that user 4 can view all content on taxonomy listing.
    */
-  public function testNodeAccessBasic() {
+  public function testNodeAccessBasic(): void {
     $num_simple_users = 2;
     $simple_users = [];
 

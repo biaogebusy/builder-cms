@@ -356,7 +356,8 @@ class WebformMessageManager implements WebformMessageManagerInterface {
     $webform_settings = ($this->webform) ? $this->webform->getSettings() : [];
     if (!empty($webform_settings[$key])) {
       $value = $webform_settings[$key];
-      if ($value === '[none]' || $value === (string) $this->t('[none]')) {
+      $none_value = trim(strip_tags($value));
+      if ($none_value === '[none]' || $none_value === (string) $this->t('[none]')) {
         return FALSE;
       }
       else {

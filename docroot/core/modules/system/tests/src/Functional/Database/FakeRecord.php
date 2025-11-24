@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Database;
 
 /**
@@ -17,6 +19,24 @@ class FakeRecord {
    * @var int
    */
   public $fakeArg;
+
+  /**
+   * The property used in tests.
+   *
+   * @see \Drupal\KernelTests\Core\Database\FetchTest
+   *
+   * @var string
+   */
+  public string $name;
+
+  /**
+   * The property used in tests.
+   *
+   * @see \Drupal\KernelTests\Core\Database\DatabaseTestBase
+   *
+   * @var string
+   */
+  public string $job;
 
   /**
    * Constructs a FakeRecord object with an optional constructor argument.

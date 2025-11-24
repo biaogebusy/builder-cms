@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\recently_read\Functional;
 
+use Drupal\Core\Url;
+use Drupal\node\NodeInterface;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\node\Traits\NodeCreationTrait;
 
@@ -16,33 +18,26 @@ class RecentlyReadBlockTest extends BrowserTestBase {
   use NodeCreationTrait;
 
   /**
-   * {@inheritdoc}.
+   * {@inheritdoc}
    */
-  protected $defaultTheme = 'bartik';
-
-  /**
-   * Modules to enable.
-   *
-   * @var array
-   */
-  public static $modules = [
-    'node',
-    'block',
-    'user',
-    'recently_read',
-    'views',
-    'taxonomy',
-  ];
+  protected $defaultTheme = 'stark';
 
   /**
    * {@inheritdoc}
    */
-  private $user;
+  protected static $modules = [
+    'node',
+    'block',
+    'user',
+    'views',
+    'taxonomy',
+    'recently_read',
+  ];
 
   /**
    * Initial set up for test.
    */
-  protected function setUp() {
+  protected function setUp(): void {
     // Always call the parent setUp().
     parent::setUp();
     $this->drupalCreateContentType(['type' => 'foo']);
@@ -53,7 +48,15 @@ class RecentlyReadBlockTest extends BrowserTestBase {
       ->set('types', ['foo', 'baz'])
       ->save();
 
-    $this->drupalPlaceBlock('views_block:recently_read_content-block_1', ['id' => 'recently_read_content', 'items_per_page' => 4]);
+    $this->drupalPlaceBlock(
+      'views_block:recently_read_content-block_1',
+      [
+        'id' => 'recently_read_content',
+        'items_per_page' => 4,
+        'theme' => 'stark',
+        'region' => 'content',
+      ]
+    );
   }
 
   /**
@@ -62,37 +65,42 @@ class RecentlyReadBlockTest extends BrowserTestBase {
    * @throws \Behat\Mink\Exception\ExpectationException
    * @throws \Behat\Mink\Exception\ResponseTextException
    * @throws \Drupal\Core\Entity\EntityMalformedException
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function testRecentlyReadBlock() {
+  public function testRecentlyReadBlock(): void {
     // 0. create user & login
     // 1. visit few nodes.
     // 2. check recently read content block.
     // $this->fail('Recently read has failed you.');.
-    $this->user = $this->DrupalCreateUser(['access content']);
-    $this->drupalLogin($this->user);
+    $user = $this->DrupalCreateUser(['access content']);
+    $this->drupalGet(Url::fromRoute('user.login'));
+    $this->submitForm([
+      'name' => $user->getAccountName(),
+      'pass' => $user->passRaw,
+    ], 'Log in');
     $node1 = $this->recentlyReadNodeCreate([
-      'title' => t('TestNode1'),
+      'title' => 'TestNode1',
       'type' => 'foo',
     ]);
     $node2 = $this->recentlyReadNodeCreate([
-      'title' => t('TestNode2'),
+      'title' => 'TestNode2',
       'type' => 'foo',
     ]);
 
     $node3 = $this->recentlyReadNodeCreate([
-      'title' => t('TestNode3'),
+      'title' => 'TestNode3',
       'type' => 'bar',
     ]);
     $node4 = $this->recentlyReadNodeCreate([
-      'title' => t('TestNode4'),
+      'title' => 'TestNode4',
       'type' => 'bar',
     ]);
     $node5 = $this->recentlyReadNodeCreate([
-      'title' => t('TestNode5'),
+      'title' => 'TestNode5',
       'type' => 'baz',
     ]);
     $node6 = $this->recentlyReadNodeCreate([
-      'title' => t('TestNode6'),
+      'title' => 'TestNode6',
       'type' => 'baz',
     ]);
 
@@ -105,29 +113,26 @@ class RecentlyReadBlockTest extends BrowserTestBase {
 
     $this->drupalGet('/user');
 
-    $session = $this->assertSession();
-
-    $session->pageTextContains('Recently read content');
-    $session->pageTextNotContains('TestNode3');
-    $session->linkExists('TestNode6');
+    $this->assertSession()->pageTextContains('Recently read content');
+    $this->assertSession()->pageTextNotContains('TestNode3');
+    $this->assertSession()->linkExists('TestNode6');
 
     // Check if recently read content gets replaced by new content.
     $node7 = $this->recentlyReadNodeCreate([
-      'title' => t('TestNode7'),
+      'title' => 'TestNode7',
       'type' => 'foo',
     ]);
     $node8 = $this->recentlyReadNodeCreate([
-      'title' => t('TestNode8'),
+      'title' => 'TestNode8',
       'type' => 'foo',
     ]);
 
     $this->drupalGet($node7->toUrl());
     $this->drupalGet($node8->toUrl());
 
-    $session->linkExists('TestNode8');
-
+    $this->assertSession()->statusCodeEquals(200);
     $this->drupalLogout();
-    $session->pageTextNotContains('TestNode5');
+    $this->assertSession()->pageTextNotContains('TestNode5');
 
     // Anonymous user.
     $this->drupalGet($node1->toUrl());
@@ -139,21 +144,20 @@ class RecentlyReadBlockTest extends BrowserTestBase {
 
     $this->drupalGet('/user');
 
-    $session->pageTextContains('Recently read content');
-    $session->pageTextNotContains('TestNode3');
-    $session->linkExists('TestNode6');
+    $this->assertSession()->pageTextContains('Recently read content');
+    $this->assertSession()->pageTextNotContains('TestNode3');
+    $this->assertSession()->linkExists('TestNode6');
 
     $this->drupalGet($node7->toUrl());
     $this->drupalGet($node8->toUrl());
 
-    $session->linkExists('TestNode8');
-
+    $this->assertSession()->statusCodeEquals(200);
   }
 
   /**
    * Helper method for creating nodes.
    */
-  protected function recentlyReadNodeCreate($settings) {
+  protected function recentlyReadNodeCreate(array $settings): ?NodeInterface {
     $this->drupalCreateNode($settings);
     if (isset($settings['title'])) {
       return $this->drupalGetNodeByTitle($settings['title']);

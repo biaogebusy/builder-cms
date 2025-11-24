@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\flag\Functional;
 
 /**
@@ -22,8 +24,6 @@ class LinkOwnershipAccessTest extends FlagTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    $this->entityTypeManager = $this->container->get('entity_type.manager');
-
     // Create a node to flag.
     $this->node = $this->drupalCreateNode(['type' => $this->nodeType]);
   }
@@ -36,6 +36,9 @@ class LinkOwnershipAccessTest extends FlagTestBase {
     $this->doGlobalFlagOwnershipAccessTest();
   }
 
+  /**
+   * Do Flag Ownership Access Test.
+   */
   public function doFlagOwnershipAccessTest() {
     // Create a non-global flag.
     $flag = $this->createFlag();
@@ -62,6 +65,9 @@ class LinkOwnershipAccessTest extends FlagTestBase {
 
   }
 
+  /**
+   * Do Global Flag Ownership Access Test.
+   */
   public function doGlobalFlagOwnershipAccessTest() {
     // Create a global flag.
     $flag = $this->createGlobalFlag();

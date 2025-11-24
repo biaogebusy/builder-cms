@@ -40,6 +40,36 @@
         digits: 2,
         digitsOptional: false,
         clearMaskOnLostFocus: false
+      },
+      decimal: {
+        prefix: '',
+        groupSeparator: ',',
+        alias: 'numeric',
+        placeholder: '0',
+        autoGroup: true,
+        digits: 3,
+        digitsOptional: true,
+        clearMaskOnLostFocus: false
+      },
+      decimal_negative: {
+        prefix: '',
+        groupSeparator: ',',
+        alias: 'numeric',
+        placeholder: '0',
+        autoGroup: true,
+        digits: 3,
+        digitsOptional: true,
+        clearMaskOnLostFocus: false
+      },
+      decimal_positive_negative: {
+        prefix: '',
+        groupSeparator: ',',
+        alias: 'numeric',
+        placeholder: '0',
+        autoGroup: true,
+        digits: 3,
+        digitsOptional: true,
+        clearMaskOnLostFocus: false
       }
     });
   }

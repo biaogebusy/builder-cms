@@ -13,5 +13,5 @@ use Drupal\node\NodeInterface;
  */
 function views_custom_cache_tag_demo_node_presave(NodeInterface $node) {
   $cache_tag = 'node:type:' . $node->getType();
-  Cache::invalidateTags(array($cache_tag));
+  Cache::invalidateTags([$cache_tag]);
 }

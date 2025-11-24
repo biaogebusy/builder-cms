@@ -1,8 +1,0 @@
-services:
-  yunke_pay.pay.wechat:
-    class: \Drupal\yunke_pay\Pay\Wechat
-    arguments: ['@config.factory', '@logger.factory']
-  yunke_pay.pay.alipay:
-    class: \Drupal\yunke_pay\Pay\Alipay
-    arguments: ['@config.factory', '@logger.factory']
-

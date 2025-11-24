@@ -1,0 +1,47 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"HN",
+		"Hengyang Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Changning Shi": {
+			"local_name": "常宁市"
+		},
+		"Hengdong Xian": {
+			"local_name": "衡东县"
+		},
+		"Hengnan Xian": {
+			"local_name": "衡南县"
+		},
+		"Hengshan Xian": {
+			"local_name": "衡山县"
+		},
+		"Hengyang Xian": {
+			"local_name": "衡阳县"
+		},
+		"Leiyang Shi": {
+			"local_name": "耒阳市"
+		},
+		"Nanyue Qu": {
+			"local_name": "南岳区"
+		},
+		"Qidong Xian": {
+			"local_name": "祁东县"
+		},
+		"Shigu Qu": {
+			"local_name": "石鼓区"
+		},
+		"Yanfeng Qu": {
+			"local_name": "雁峰区"
+		},
+		"Zhengxiang Qu": {
+			"local_name": "蒸湘区"
+		},
+		"Zhuhui Qu": {
+			"local_name": "珠晖区"
+		}
+	}
+}

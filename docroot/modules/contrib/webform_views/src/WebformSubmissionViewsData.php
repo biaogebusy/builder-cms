@@ -4,9 +4,11 @@ namespace Drupal\webform_views;
 
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\ContentEntityTypeInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Sql\SqlEntityStorageInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\StringTranslation\TranslationInterface;
@@ -14,7 +16,6 @@ use Drupal\webform\Plugin\WebformElementManagerInterface;
 use Drupal\webform\WebformInterface;
 use Drupal\webform\WebformSubmissionViewsData as WebformSubmissionViewsDataBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Entity\EntityFieldManagerInterface;
 
 /**
  * Views data for 'webform_submission' entity type.
@@ -42,16 +43,36 @@ class WebformSubmissionViewsData extends WebformSubmissionViewsDataBase {
       $container->get('module_handler'),
       $container->get('string_translation'),
       $container->get('entity_field.manager'),
+      $container->get('entity_type.bundle.info'),
       $container->get('plugin.manager.webform.element'),
       $container->get('entity_type.manager')->getStorage('webform')
     );
   }
 
   /**
-   * WebformSubmissionViewsData constructor.
+   * Constructs a new WebformSubmissionViewsData object.
+   *
+   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
+   *   The entity type definition.
+   * @param \Drupal\Core\Entity\Sql\SqlEntityStorageInterface $storage_controller
+   *   The database storage controller.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_manager
+   *   The entity type manager.
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   *   The module handler.
+   * @param \Drupal\Core\StringTranslation\TranslationInterface $translation_manager
+   *   The translation manager.
+   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
+   *   The entity field manager.
+   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
+   *   The entity type bundle info.
+   * @param \Drupal\webform\WebformElementManagerInterface $webform_element_manager
+   *   The webform element manager.
+   * @param \Drupal\Core\Entity\EntityStorageInterface $webform_storage
+   *   The webform entity storage.
    */
-  public function __construct(EntityTypeInterface $entity_type, SqlEntityStorageInterface $storage_controller, EntityTypeManagerInterface $entity_manager, ModuleHandlerInterface $module_handler, TranslationInterface $translation_manager, EntityFieldManagerInterface $entity_field_manager, WebformElementManagerInterface $webform_element_manager, EntityStorageInterface $webform_storage) {
-    parent::__construct($entity_type, $storage_controller, $entity_manager, $module_handler, $translation_manager, $entity_field_manager);
+  public function __construct(EntityTypeInterface $entity_type, SqlEntityStorageInterface $storage_controller, EntityTypeManagerInterface $entity_manager, ModuleHandlerInterface $module_handler, TranslationInterface $translation_manager, EntityFieldManagerInterface $entity_field_manager, EntityTypeBundleInfoInterface $entity_type_bundle_info, WebformElementManagerInterface $webform_element_manager, EntityStorageInterface $webform_storage) {
+    parent::__construct($entity_type, $storage_controller, $entity_manager, $module_handler, $translation_manager, $entity_field_manager, $entity_type_bundle_info);
 
     $this->webformElementManager = $webform_element_manager;
     $this->webformStorage = $webform_storage;

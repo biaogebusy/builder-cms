@@ -3,3 +3,7 @@ services:
     class: Drupal\commerce_payment_test\EventSubscriber\FilterPaymentGatewaysSubscriber
     tags:
       - { name: event_subscriber }
+  commerce_payment_test.require_payment_method_subscriber:
+    class: Drupal\commerce_payment_test\EventSubscriber\RequirePaymentMethodSubscriber
+    tags:
+      - { name: event_subscriber }

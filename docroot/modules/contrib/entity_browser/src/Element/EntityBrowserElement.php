@@ -8,6 +8,7 @@ use Drupal\Core\Render\Element\FormElement;
 use Drupal\entity_browser\Entity\EntityBrowser;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Component\Utility\Crypt;
 
 /**
  * Provides an Entity Browser form element.
@@ -184,7 +185,7 @@ class EntityBrowserElement extends FormElement {
     // Display entity_browser.
     else {
       $display = $entity_browser->getDisplay();
-      $display->setUuid(sha1(implode('-', array_merge([$complete_form['#build_id']], $element['#parents']))));
+      $display->setUuid(Crypt::hashBase64(implode('-', array_merge([$complete_form['#build_id']], $element['#parents']))));
       $element['entity_browser'] = [
         '#eb_parents' => array_merge($element['#parents'], ['entity_browser']),
       ];
@@ -254,7 +255,7 @@ class EntityBrowserElement extends FormElement {
 
     return array_map(
       function ($item) {
-        list($entity_type, $entity_id) = explode(':', $item);
+        [$entity_type, $entity_id] = explode(':', $item);
         $entity = \Drupal::entityTypeManager()->getStorage($entity_type)->load($entity_id);
         return \Drupal::service('entity.repository')->getTranslationFromContext($entity);
       },

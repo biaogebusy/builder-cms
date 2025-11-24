@@ -4,18 +4,22 @@ namespace Drupal\Core\Entity\Plugin\EntityReferenceSelection;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Database\Query\AlterableInterface;
+use Drupal\Core\Entity\Attribute\EntityReferenceSelection;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityReferenceSelection\SelectionPluginBase;
 use Drupal\Core\Entity\EntityReferenceSelection\SelectionWithAutocreateInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Entity\Exception\UnsupportedEntityTypeDefinitionException;
 use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Entity\Plugin\Derivative\DefaultSelectionDeriver;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Field\Plugin\Field\FieldType\EntityReferenceItem;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\user\EntityOwnerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -30,15 +34,14 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @see \Drupal\Core\Entity\EntityReferenceSelection\SelectionInterface
  * @see \Drupal\Core\Entity\Plugin\Derivative\DefaultSelectionDeriver
  * @see plugin_api
- *
- * @EntityReferenceSelection(
- *   id = "default",
- *   label = @Translation("Default"),
- *   group = "default",
- *   weight = 0,
- *   deriver = "Drupal\Core\Entity\Plugin\Derivative\DefaultSelectionDeriver"
- * )
  */
+#[EntityReferenceSelection(
+  id: "default",
+  label: new TranslatableMarkup("Default"),
+  group: "default",
+  weight: 0,
+  deriver: DefaultSelectionDeriver::class,
+)]
 class DefaultSelection extends SelectionPluginBase implements ContainerFactoryPluginInterface, SelectionWithAutocreateInterface {
 
   /**
@@ -89,7 +92,7 @@ class DefaultSelection extends SelectionPluginBase implements ContainerFactoryPl
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -105,7 +108,7 @@ class DefaultSelection extends SelectionPluginBase implements ContainerFactoryPl
    * @param \Drupal\Core\Entity\EntityRepositoryInterface $entity_repository
    *   The entity repository.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, ModuleHandlerInterface $module_handler, AccountInterface $current_user, EntityFieldManagerInterface $entity_field_manager, EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL, EntityRepositoryInterface $entity_repository) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, ModuleHandlerInterface $module_handler, AccountInterface $current_user, EntityFieldManagerInterface $entity_field_manager, EntityTypeBundleInfoInterface $entity_type_bundle_info, EntityRepositoryInterface $entity_repository) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     $this->entityTypeManager = $entity_type_manager;
@@ -161,6 +164,7 @@ class DefaultSelection extends SelectionPluginBase implements ContainerFactoryPl
     $entity_type_id = $configuration['target_type'];
     $entity_type = $this->entityTypeManager->getDefinition($entity_type_id);
     $bundles = $this->entityTypeBundleInfo->getBundleInfo($entity_type_id);
+    $selected_bundles = [];
 
     if ($entity_type->hasKey('bundle')) {
       $bundle_options = [];
@@ -182,6 +186,9 @@ class DefaultSelection extends SelectionPluginBase implements ContainerFactoryPl
         '#size' => 6,
         '#multiple' => TRUE,
         '#element_validate' => [[static::class, 'elementValidateFilter']],
+        // Use a form process callback to build #ajax property properly and also
+        // to avoid code duplication.
+        // @see \Drupal\Core\Field\Plugin\Field\FieldType\EntityReferenceItem::fieldSettingsAjaxProcess()
         '#ajax' => TRUE,
         '#limit_validation_errors' => [],
       ];
@@ -194,6 +201,7 @@ class DefaultSelection extends SelectionPluginBase implements ContainerFactoryPl
           'class' => ['js-hide'],
         ],
         '#submit' => [[EntityReferenceItem::class, 'settingsAjaxSubmit']],
+        '#element_validate' => [[static::class, 'validateTargetBundlesUpdate']],
       ];
     }
     else {
@@ -202,6 +210,7 @@ class DefaultSelection extends SelectionPluginBase implements ContainerFactoryPl
         '#value' => [],
       ];
     }
+    $form['target_bundles']['#element_validate'][] = [static::class, 'validateTargetBundles'];
 
     if ($entity_type->entityClassImplements(FieldableEntityInterface::class)) {
       $options = $entity_type->hasKey('bundle') ? $selected_bundles : $bundles;
@@ -215,10 +224,14 @@ class DefaultSelection extends SelectionPluginBase implements ContainerFactoryPl
           $columns = $field_definition->getFieldStorageDefinition()->getColumns();
           // If there is more than one column, display them all, otherwise just
           // display the field label.
-          // @todo: Use property labels instead of the column name.
+          // @todo Use property labels instead of the column name.
           if (count($columns) > 1) {
             foreach ($columns as $column_name => $column_info) {
-              $fields[$field_name . '.' . $column_name] = $this->t('@label (@column)', ['@label' => $field_definition->getLabel(), '@column' => $column_name]);
+              $fields[$field_name . '.' . $column_name] = $this->t('@label (@column)',
+               [
+                 '@label' => $field_definition->getLabel(),
+                 '@column' => $column_name,
+               ]);
             }
           }
           else {
@@ -231,6 +244,9 @@ class DefaultSelection extends SelectionPluginBase implements ContainerFactoryPl
         '#type' => 'select',
         '#title' => $this->t('Sort by'),
         '#options' => $fields,
+        // Use a form process callback to build #ajax property properly and also
+        // to avoid code duplication.
+        // @see \Drupal\Core\Field\Plugin\Field\FieldType\EntityReferenceItem::fieldSettingsAjaxProcess()
         '#ajax' => TRUE,
         '#empty_value' => '_none',
         '#sort_options' => TRUE,
@@ -305,22 +321,25 @@ class DefaultSelection extends SelectionPluginBase implements ContainerFactoryPl
   }
 
   /**
-   * {@inheritdoc}
+   * Validates a target_bundles element.
    */
-  public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
-    parent::validateConfigurationForm($form, $form_state);
-
+  public static function validateTargetBundles($element, FormStateInterface $form_state, $form) {
     // If no checkboxes were checked for 'target_bundles', store NULL ("all
     // bundles are referenceable") rather than empty array ("no bundle is
     // referenceable" - typically happens when all referenceable bundles have
     // been deleted).
-    if ($form_state->getValue(['settings', 'handler_settings', 'target_bundles']) === []) {
-      $form_state->setValue(['settings', 'handler_settings', 'target_bundles'], NULL);
+    if ($form_state->getValue($element['#parents']) === []) {
+      $form_state->setValueForElement($element, NULL);
     }
+  }
 
+  /**
+   * Validates a target_bundles_update element.
+   */
+  public static function validateTargetBundlesUpdate($element, FormStateInterface $form_state, $form) {
     // Don't store the 'target_bundles_update' button value into the field
     // config settings.
-    $form_state->unsetValue(['settings', 'handler_settings', 'target_bundles_update']);
+    $form_state->unsetValue($element['#parents']);
   }
 
   /**
@@ -332,7 +351,7 @@ class DefaultSelection extends SelectionPluginBase implements ContainerFactoryPl
   }
 
   /**
-   * {@inheritdoc}
+   * Validates a target_bundles element.
    */
   public function getReferenceableEntities($match = NULL, $match_operator = 'CONTAINS', $limit = 0) {
     $target_type = $this->getConfiguration()['target_type'];
@@ -451,8 +470,17 @@ class DefaultSelection extends SelectionPluginBase implements ContainerFactoryPl
         $query->condition($entity_type->getKey('id'), NULL, '=');
         return $query;
       }
-      else {
+      elseif ($entity_type->hasKey('bundle')) {
         $query->condition($entity_type->getKey('bundle'), $configuration['target_bundles'], 'IN');
+      }
+      else {
+        // If 'target_bundle' is set and entity type doesn't support bundles
+        // something is wrong.
+        $message = \sprintf(
+          "Trying to use non-empty 'target_bundle' configuration on entity type '%s' without bundle support.",
+          $entity_type->id(),
+        );
+        throw new UnsupportedEntityTypeDefinitionException($message);
       }
     }
 

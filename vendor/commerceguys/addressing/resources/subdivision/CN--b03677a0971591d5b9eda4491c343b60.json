@@ -1,0 +1,53 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"NM",
+		"Hulun Buir Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Arun Qi": {
+			"local_name": "阿荣旗"
+		},
+		"Chen Barag Qi": {
+			"local_name": "陈巴尔虎旗"
+		},
+		"Ergun Shi": {
+			"local_name": "额尔古纳市"
+		},
+		"Oroqen Qi": {
+			"local_code": "鄂伦春自治旗",
+			"local_name": "鄂伦春旗"
+		},
+		"Ewenkizu Qi": {
+			"local_code": "鄂温克族自治旗",
+			"local_name": "鄂温克族旗"
+		},
+		"Genhe Shi": {
+			"local_name": "根河市"
+		},
+		"Hailar Qu": {
+			"local_name": "海拉尔区"
+		},
+		"Manzhouli Shi": {
+			"local_name": "满洲里市"
+		},
+		"Morin Dawa Qi": {
+			"local_code": "莫力达瓦达斡尔族自治旗",
+			"local_name": "莫力达瓦旗"
+		},
+		"Xin Barag Youqi": {
+			"local_name": "新巴尔虎右旗"
+		},
+		"Xin Barag Zuoqi": {
+			"local_name": "新巴尔虎左旗"
+		},
+		"Yakeshi Shi": {
+			"local_name": "牙克石市"
+		},
+		"Zhalantun Shi": {
+			"local_name": "扎兰屯市"
+		}
+	}
+}

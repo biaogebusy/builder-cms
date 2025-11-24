@@ -7,6 +7,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Routing\RouteProviderInterface;
 use Drupal\Core\Routing\RouteSubscriberBase;
 use Drupal\Core\Routing\RoutingEvents;
+use Drupal\devel\Controller\EntityDebugController;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 
@@ -20,17 +21,13 @@ class RouteSubscriber extends RouteSubscriberBase {
 
   /**
    * The entity type manager service.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected $entityTypeManager;
+  protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
    * The router service.
-   *
-   * @var \Symfony\Component\Routing\RouterInterface
    */
-  protected $routeProvider;
+  protected RouteProviderInterface $routeProvider;
 
   /**
    * Constructs a new RouteSubscriber object.
@@ -48,16 +45,31 @@ class RouteSubscriber extends RouteSubscriberBase {
   /**
    * {@inheritdoc}
    */
-  protected function alterRoutes(RouteCollection $collection) {
+  protected function alterRoutes(RouteCollection $collection): void {
     foreach ($this->entityTypeManager->getDefinitions() as $entity_type_id => $entity_type) {
-      if ($route = $this->getEntityLoadRoute($entity_type)) {
-        $collection->add("entity.$entity_type_id.devel_load", $route);
+      $route = $this->getEntityLoadRoute($entity_type);
+      if ($route instanceof Route) {
+        $collection->add(sprintf('entity.%s.devel_load', $entity_type_id), $route);
       }
-      if ($route = $this->getEntityRenderRoute($entity_type)) {
-        $collection->add("entity.$entity_type_id.devel_render", $route);
+
+      $route = $this->getEntityLoadWithReferencesRoute($entity_type);
+      if ($route instanceof Route) {
+        $collection->add(sprintf('entity.%s.devel_load_with_references', $entity_type_id), $route);
       }
-      if ($route = $this->getEntityTypeDefinitionRoute($entity_type)) {
-        $collection->add("entity.$entity_type_id.devel_definition", $route);
+
+      $route = $this->getEntityRenderRoute($entity_type);
+      if ($route instanceof Route) {
+        $collection->add(sprintf('entity.%s.devel_render', $entity_type_id), $route);
+      }
+
+      $route = $this->getEntityTypeDefinitionRoute($entity_type);
+      if ($route instanceof Route) {
+        $collection->add(sprintf('entity.%s.devel_definition', $entity_type_id), $route);
+      }
+
+      $route = $this->getPathAliasesRoute($entity_type);
+      if ($route instanceof Route) {
+        $collection->add(sprintf('entity.%s.devel_path_alias', $entity_type_id), $route);
       }
     }
   }
@@ -71,11 +83,11 @@ class RouteSubscriber extends RouteSubscriberBase {
    * @return \Symfony\Component\Routing\Route|null
    *   The generated route, if available.
    */
-  protected function getEntityLoadRoute(EntityTypeInterface $entity_type) {
+  protected function getEntityLoadRoute(EntityTypeInterface $entity_type): ?Route {
     if ($devel_load = $entity_type->getLinkTemplate('devel-load')) {
       $route = (new Route($devel_load))
         ->addDefaults([
-          '_controller' => '\Drupal\devel\Controller\EntityDebugController::entityLoad',
+          '_controller' => EntityDebugController::class . '::entityLoad',
           '_title' => 'Devel Load',
         ])
         ->addRequirements([
@@ -84,13 +96,52 @@ class RouteSubscriber extends RouteSubscriberBase {
         ->setOption('_admin_route', TRUE)
         ->setOption('_devel_entity_type_id', $entity_type->id());
 
-      if ($parameters = $this->getRouteParameters($entity_type, 'edit-form')) {
-        $route->setOption('parameters', $parameters);
-      }
+      // Set the parameters of the new route using the existing 'edit-form'
+      // route parameters. If there are none (for example, where Devel creates
+      // a link for entities with no edit-form) then we need to set the basic
+      // parameter [entity_type_id => [type => 'entity:entity_type_id']].
+      // @see https://gitlab.com/drupalspoons/devel/-/issues/377
+      $parameters = $this->getRouteParameters($entity_type, 'edit-form') !== [] ? $this->getRouteParameters($entity_type, 'edit-form') : [$entity_type->id() => ['type' => 'entity:' . $entity_type->id()]];
+      $route->setOption('parameters', $parameters);
 
       return $route;
     }
+
     return NULL;
+  }
+
+  /**
+   * Gets the entity load route.
+   *
+   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
+   *   The entity type.
+   *
+   * @return \Symfony\Component\Routing\Route|null
+   *   The generated route, if available.
+   */
+  protected function getEntityLoadWithReferencesRoute(EntityTypeInterface $entity_type): Route|null {
+    $devel_load = $entity_type->getLinkTemplate('devel-load-with-references');
+    if ($devel_load === FALSE) {
+      return NULL;
+    }
+
+    $entity_type_id = $entity_type->id();
+    $route = new Route($devel_load);
+    $route
+      ->addDefaults([
+        '_controller' => EntityDebugController::class . '::entityLoadWithReferences',
+        '_title' => 'Devel Load (with references)',
+      ])
+      ->addRequirements([
+        '_permission' => 'access devel information',
+      ])
+      ->setOption('_admin_route', TRUE)
+      ->setOption('_devel_entity_type_id', $entity_type_id)
+      ->setOption('parameters', [
+        $entity_type_id => ['type' => 'entity:' . $entity_type_id],
+      ]);
+
+    return $route;
   }
 
   /**
@@ -102,11 +153,11 @@ class RouteSubscriber extends RouteSubscriberBase {
    * @return \Symfony\Component\Routing\Route|null
    *   The generated route, if available.
    */
-  protected function getEntityRenderRoute(EntityTypeInterface $entity_type) {
+  protected function getEntityRenderRoute(EntityTypeInterface $entity_type): ?Route {
     if ($devel_render = $entity_type->getLinkTemplate('devel-render')) {
       $route = (new Route($devel_render))
         ->addDefaults([
-          '_controller' => '\Drupal\devel\Controller\EntityDebugController::entityRender',
+          '_controller' => EntityDebugController::class . '::entityRender',
           '_title' => 'Devel Render',
         ])
         ->addRequirements([
@@ -115,12 +166,13 @@ class RouteSubscriber extends RouteSubscriberBase {
         ->setOption('_admin_route', TRUE)
         ->setOption('_devel_entity_type_id', $entity_type->id());
 
-      if ($parameters = $this->getRouteParameters($entity_type, 'canonical')) {
+      if (($parameters = $this->getRouteParameters($entity_type, 'canonical')) !== []) {
         $route->setOption('parameters', $parameters);
       }
 
       return $route;
     }
+
     return NULL;
   }
 
@@ -133,11 +185,11 @@ class RouteSubscriber extends RouteSubscriberBase {
    * @return \Symfony\Component\Routing\Route|null
    *   The generated route, if available.
    */
-  protected function getEntityTypeDefinitionRoute(EntityTypeInterface $entity_type) {
+  protected function getEntityTypeDefinitionRoute(EntityTypeInterface $entity_type): ?Route {
     if ($devel_definition = $entity_type->getLinkTemplate('devel-definition')) {
       $route = (new Route($devel_definition))
         ->addDefaults([
-          '_controller' => '\Drupal\devel\Controller\EntityDebugController::entityTypeDefinition',
+          '_controller' => EntityDebugController::class . '::entityTypeDefinition',
           '_title' => 'Entity type definition',
         ])
         ->addRequirements([
@@ -147,12 +199,50 @@ class RouteSubscriber extends RouteSubscriberBase {
         ->setOption('_devel_entity_type_id', $entity_type->id());
 
       $link_template = $entity_type->getLinkTemplate('edit-form') ? 'edit-form' : 'canonical';
-      if ($parameters = $this->getRouteParameters($entity_type, $link_template)) {
+      if (($parameters = $this->getRouteParameters($entity_type, $link_template)) !== []) {
         $route->setOption('parameters', $parameters);
       }
 
       return $route;
     }
+
+    return NULL;
+  }
+
+  /**
+   * Gets the path aliases route.
+   *
+   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
+   *   The entity type.
+   *
+   * @return \Symfony\Component\Routing\Route|null
+   *   The generated route, if available.
+   */
+  protected function getPathAliasesRoute(EntityTypeInterface $entity_type): ?Route {
+    $path_alias_definition = $entity_type->getLinkTemplate('devel-path-alias');
+    if ($path_alias_definition === FALSE) {
+      return NULL;
+    }
+
+    $route = new Route($path_alias_definition);
+    $route
+      ->addDefaults([
+        '_controller' => EntityDebugController::class . '::pathAliases',
+        '_title' => 'Path aliases',
+      ])
+      ->addRequirements([
+        '_permission' => 'access devel information',
+      ])
+      ->setOption('_admin_route', TRUE)
+      ->setOption('_devel_entity_type_id', $entity_type->id());
+
+    $link_template = $entity_type->getLinkTemplate('edit-form') ? 'edit-form' : 'canonical';
+    $parameters = $this->getRouteParameters($entity_type, $link_template);
+    if ($parameters !== []) {
+      $route->setOption('parameters', $parameters);
+    }
+
+    return $route;
   }
 
   /**
@@ -184,6 +274,7 @@ class RouteSubscriber extends RouteSubscriberBase {
         $iterator->rewind();
         $original_route = $iterator->current();
       }
+
       $original_route_parameters = $original_route->getOption('parameters') ?? [];
     }
 
@@ -196,7 +287,7 @@ class RouteSubscriber extends RouteSubscriberBase {
         }
         // It could be an entity type?
         elseif ($this->entityTypeManager->hasDefinition($match)) {
-          $parameters[$match] = ['type' => "entity:$match"];
+          $parameters[$match] = ['type' => 'entity:' . $match];
         }
       }
     }
@@ -207,7 +298,7 @@ class RouteSubscriber extends RouteSubscriberBase {
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     $events = parent::getSubscribedEvents();
     $events[RoutingEvents::ALTER] = ['onAlterRoutes', 100];
     return $events;

@@ -8,8 +8,8 @@
 }
 .credit-card-form__expiration .form-item {
   display: inline-block;
-  margin-bottom: 0;
   margin-top: 0;
+  margin-bottom: 0;
   vertical-align: middle;
 }
 .credit-card-form__divider {

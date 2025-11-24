@@ -1,4 +1,11 @@
-vendor
-composer.lock
-.idea
-tests/src/Behat/behat.local.yml
+/.idea
+/composer.lock
+
+# Added when using ddev/ddev-drupal-contrib add-on.
+/.ddev/
+/.editorconfig
+/.gitattributes
+/phpcs.xml.dist
+/recipes/
+/vendor/
+/web/

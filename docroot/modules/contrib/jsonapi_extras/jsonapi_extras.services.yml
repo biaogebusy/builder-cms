@@ -65,3 +65,16 @@ services:
       - '@config.factory'
     tags:
       - { name: event_subscriber }
+
+  jsonapi_extras.config_import_validate_subscriber:
+    arguments:
+      - '@config.manager'
+      - '@entity_type.manager'
+      - '@jsonapi_extras.resource_type.repository'
+    class: Drupal\jsonapi_extras\EventSubscriber\FieldConfigIntegrityValidation
+    tags:
+      - { name: event_subscriber }
+
+  logger.channel.jsonapi_extras:
+    parent: logger.channel_base
+    arguments: ['jsonapi_extras']

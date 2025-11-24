@@ -2,11 +2,13 @@
 
 namespace Drupal\views\Plugin\views\argument;
 
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\node\NodeInterface;
+use Drupal\views\Attribute\ViewsArgument;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -22,9 +24,10 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @see \Drupal\views\ManyToOneHelper
  *
  * @ingroup views_argument_handlers
- *
- * @ViewsArgument("date")
  */
+#[ViewsArgument(
+  id: 'date',
+)]
 class Date extends Formula implements ContainerFactoryPluginInterface {
 
   /**
@@ -41,6 +44,7 @@ class Date extends Formula implements ContainerFactoryPluginInterface {
    */
   protected $argFormat = 'Y-m-d';
 
+  // phpcs:ignore Drupal.NamingConventions.ValidVariableName.LowerCamelName
   public $option_name = 'default_argument_date';
 
   /**
@@ -63,19 +67,32 @@ class Date extends Formula implements ContainerFactoryPluginInterface {
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
    *   The route match.
    * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
    *   The date formatter service.
+   * @param \Drupal\Component\Datetime\TimeInterface|null $time
+   *   The time service.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, RouteMatchInterface $route_match, DateFormatterInterface $date_formatter) {
+  public function __construct(
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+    RouteMatchInterface $route_match,
+    DateFormatterInterface $date_formatter,
+    protected ?TimeInterface $time = NULL,
+  ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     $this->routeMatch = $route_match;
     $this->dateFormatter = $date_formatter;
+    if (!$time) {
+      @trigger_error('Calling ' . __METHOD__ . ' without the $time argument is deprecated in drupal:10.3.0 and it will be required in drupal:11.0.0. See https://www.drupal.org/node/3395991', E_USER_DEPRECATED);
+      $this->time = \Drupal::service('datetime.time');
+    }
   }
 
   /**
@@ -87,7 +104,8 @@ class Date extends Formula implements ContainerFactoryPluginInterface {
       $plugin_id,
       $plugin_definition,
       $container->get('current_route_match'),
-      $container->get('date.formatter')
+      $container->get('date.formatter'),
+      $container->get('datetime.time'),
     );
   }
 
@@ -106,7 +124,7 @@ class Date extends Formula implements ContainerFactoryPluginInterface {
    */
   public function getDefaultArgument($raw = FALSE) {
     if (!$raw && $this->options['default_argument_type'] == 'date') {
-      return date($this->argFormat, REQUEST_TIME);
+      return date($this->argFormat, $this->time->getRequestTime());
     }
     elseif (!$raw && in_array($this->options['default_argument_type'], ['node_created', 'node_changed'])) {
       $node = $this->routeMatch->getParameter('node');
@@ -122,7 +140,7 @@ class Date extends Formula implements ContainerFactoryPluginInterface {
       }
     }
 
-    return parent::getDefaultArgument($raw);
+    return parent::getDefaultArgument();
   }
 
   /**

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Asset;
 
 use Drupal\Core\Asset\LibrariesDirectoryFileFinder;
@@ -16,7 +18,7 @@ class LibrariesDirectoryFileFinderTest extends UnitTestCase {
   /**
    * @covers ::find
    */
-  public function testFind() {
+  public function testFind(): void {
     // Place a library file in all the possible locations.
     $structure = [
       'sites' => [

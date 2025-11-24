@@ -38,7 +38,7 @@ class OrderTypeTest extends OrderBrowserTestBase {
       'refresh_mode' => 'always',
       'refresh_frequency' => 60,
     ];
-    $this->submitForm($edit, $this->t('Save'));
+    $this->submitForm($edit, (string) $this->t('Save'));
     $this->assertSession()->pageTextContains('Saved the Foo order type.');
 
     $order_type = OrderType::load('foo');
@@ -80,7 +80,7 @@ class OrderTypeTest extends OrderBrowserTestBase {
       'label' => 'Default2',
       'id' => 'default2',
     ];
-    $this->submitForm($edit, $this->t('Save'));
+    $this->submitForm($edit, (string) $this->t('Save'));
     $this->assertSession()->pageTextContains('Saved the Default2 order type.');
 
     // Confirm that the original order type is unchanged.
@@ -130,7 +130,7 @@ class OrderTypeTest extends OrderBrowserTestBase {
     $this->drupalGet($order_type->toUrl('delete-form'));
     $this->assertSession()->pageTextContains($this->t('Are you sure you want to delete the order type @label?', ['@label' => $order_type->label()]));
     $this->assertSession()->pageTextContains($this->t('This action cannot be undone.'));
-    $this->submitForm([], $this->t('Delete'));
+    $this->submitForm([], (string) $this->t('Delete'));
     $order_type_exists = (bool) OrderType::load($order_type->id());
     $this->assertEmpty($order_type_exists);
   }
@@ -140,7 +140,7 @@ class OrderTypeTest extends OrderBrowserTestBase {
    */
   public function testOrderTypeDependencies() {
     $this->drupalGet('admin/commerce/config/order-types/default/edit');
-    $this->submitForm(['workflow' => 'test_workflow'], $this->t('Save'));
+    $this->submitForm(['workflow' => 'test_workflow'], (string) $this->t('Save'));
 
     $order_type = OrderType::load('default');
     $this->assertEquals('test_workflow', $order_type->getWorkflowId());

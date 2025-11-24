@@ -13,7 +13,7 @@ final class DeterminingServerFeaturesEvent extends Event {
   /**
    * Reference to the features supported by the server's backend.
    *
-   * @var array
+   * @var string[]
    */
   protected $features;
 
@@ -27,7 +27,7 @@ final class DeterminingServerFeaturesEvent extends Event {
   /**
    * Constructs a new class instance.
    *
-   * @param array $features
+   * @param string[] $features
    *   Reference to the features supported by the server's backend.
    * @param \Drupal\search_api\ServerInterface $server
    *   The search server in question.
@@ -40,7 +40,7 @@ final class DeterminingServerFeaturesEvent extends Event {
   /**
    * Retrieves a reference to the features supported by the server's backend.
    *
-   * @return array
+   * @return string[]
    *   Reference to the features supported by the server's backend.
    */
   public function &getFeatures(): array {

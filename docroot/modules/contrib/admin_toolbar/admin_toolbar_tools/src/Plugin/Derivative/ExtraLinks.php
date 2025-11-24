@@ -3,11 +3,13 @@
 namespace Drupal\admin_toolbar_tools\Plugin\Derivative;
 
 use Drupal\Component\Plugin\Derivative\DeriverBase;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Extension\ThemeHandlerInterface;
 use Drupal\Core\Plugin\Discovery\ContainerDeriverInterface;
 use Drupal\Core\Routing\RouteProviderInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\system\Entity\Menu;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -18,8 +20,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class ExtraLinks extends DeriverBase implements ContainerDeriverInterface {
 
   use StringTranslationTrait;
-
-  const MAX_BUNDLE_NUMBER = 10;
 
   /**
    * The entity type manager.
@@ -50,13 +50,29 @@ class ExtraLinks extends DeriverBase implements ContainerDeriverInterface {
   protected $themeHandler;
 
   /**
+   * The configuration factory service.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
+  protected $configFactory;
+
+  /**
+   * The current user.
+   *
+   * @var \Drupal\Core\Session\AccountInterface
+   */
+  protected $currentUser;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, ModuleHandlerInterface $module_handler, RouteProviderInterface $route_provider, ThemeHandlerInterface $theme_handler) {
+  final public function __construct(EntityTypeManagerInterface $entity_type_manager, ModuleHandlerInterface $module_handler, RouteProviderInterface $route_provider, ThemeHandlerInterface $theme_handler, ConfigFactoryInterface $config_factory, AccountInterface $current_user) {
     $this->entityTypeManager = $entity_type_manager;
     $this->moduleHandler = $module_handler;
     $this->routeProvider = $route_provider;
     $this->themeHandler = $theme_handler;
+    $this->configFactory = $config_factory;
+    $this->currentUser = $current_user;
   }
 
   /**
@@ -67,15 +83,25 @@ class ExtraLinks extends DeriverBase implements ContainerDeriverInterface {
       $container->get('entity_type.manager'),
       $container->get('module_handler'),
       $container->get('router.route_provider'),
-      $container->get('theme_handler')
+      $container->get('theme_handler'),
+      $container->get('config.factory'),
+      $container->get('current_user')
     );
   }
 
   /**
    * {@inheritdoc}
+   *
+   * @param array<mixed> $base_plugin_definition
+   *   The base plugin definition.
+   *
+   * @return array<mixed>
+   *   An array of menu links plugin definitions.
    */
   public function getDerivativeDefinitions($base_plugin_definition) {
     $links = [];
+    $admin_toolbar_tools_settings = $this->configFactory->get('admin_toolbar_tools.settings');
+    $max_bundle_number = $admin_toolbar_tools_settings->get('max_bundle_number');
     $entity_types = $this->entityTypeManager->getDefinitions();
     $content_entities = [];
     foreach ($entity_types as $key => $entity_type) {
@@ -91,16 +117,21 @@ class ExtraLinks extends DeriverBase implements ContainerDeriverInterface {
     foreach ($content_entities as $entities) {
       $content_entity_bundle = $entities['content_entity_bundle'];
       $content_entity = $entities['content_entity'];
-      // We do not display more than 10 different bundles per entity type.
       $content_entity_bundle_storage = $this->entityTypeManager->getStorage($content_entity_bundle);
-      $bundles_ids = $content_entity_bundle_storage->getQuery()->pager(self::MAX_BUNDLE_NUMBER)->execute();
+      $bundles_ids = $content_entity_bundle_storage->getQuery()
+        ->sort('weight')
+        ->sort($this->entityTypeManager->getDefinition($content_entity_bundle)->getKey('label') ?: '')
+        ->pager($max_bundle_number)
+        ->accessCheck()
+        ->execute();
+      /** @var \Drupal\Core\Config\Entity\ConfigEntityInterface[] $bundles */
       $bundles = $this->entityTypeManager->getStorage($content_entity_bundle)->loadMultiple($bundles_ids);
-      if (count($bundles) == self::MAX_BUNDLE_NUMBER && $this->routeExists('entity.' . $content_entity_bundle . '.collection')) {
+      if (count($bundles) == $max_bundle_number && $this->routeExists('entity.' . $content_entity_bundle . '.collection')) {
         $links[$content_entity_bundle . '.collection'] = [
           'title' => $this->t('All types'),
           'route_name' => 'entity.' . $content_entity_bundle . '.collection',
           'parent' => 'entity.' . $content_entity_bundle . '.collection',
-          'weight' => -1,
+          'weight' => -999,
         ] + $base_plugin_definition;
       }
       foreach ($bundles as $machine_name => $bundle) {
@@ -111,22 +142,37 @@ class ExtraLinks extends DeriverBase implements ContainerDeriverInterface {
           // link.
           $content_entity_bundle_root = 'entity.' . $content_entity_bundle . '.overview_form.' . $machine_name;
           $links[$content_entity_bundle_root] = [
-            'title' => $this->t('@label', ['@label' => $bundle->label()]),
             'route_name' => 'entity.' . $content_entity_bundle . '.overview_form',
             'parent' => 'entity.' . $content_entity_bundle . '.collection',
             'route_parameters' => [$content_entity_bundle => $machine_name],
+            'class' => 'Drupal\admin_toolbar_tools\Plugin\Menu\MenuLinkEntity',
+            'metadata' => [
+              'entity_type' => $bundle->getEntityTypeId(),
+              'entity_id' => $bundle->id(),
+            ],
           ] + $base_plugin_definition;
+          $weight = $bundles[$machine_name]->get('weight');
+          if (isset($weight) && is_numeric($weight)) {
+            $links[$content_entity_bundle_root]['weight'] = $weight;
+          }
         }
         if ($this->routeExists('entity.' . $content_entity_bundle . '.edit_form')) {
           $key = 'entity.' . $content_entity_bundle . '.edit_form.' . $machine_name;
           $links[$key] = [
-            'title' => $this->t('@label', ['@label' => $bundle->label()]),
             'route_name' => 'entity.' . $content_entity_bundle . '.edit_form',
             'parent' => 'entity.' . $content_entity_bundle . '.collection',
             'route_parameters' => [$content_entity_bundle => $machine_name],
           ] + $base_plugin_definition;
           if (empty($content_entity_bundle_root)) {
             $content_entity_bundle_root = $key;
+            $links[$key]['parent'] = 'entity.' . $content_entity_bundle . '.collection';
+
+            // When not grouped by bundle, use bundle name as title.
+            $links[$key]['class'] = 'Drupal\admin_toolbar_tools\Plugin\Menu\MenuLinkEntity';
+            $links[$key]['metadata'] = [
+              'entity_type' => $bundle->getEntityTypeId(),
+              'entity_id' => $bundle->id(),
+            ];
           }
           else {
             $links[$key]['parent'] = $base_plugin_definition['id'] . ':' . $content_entity_bundle_root;
@@ -158,6 +204,17 @@ class ExtraLinks extends DeriverBase implements ContainerDeriverInterface {
               'route_name' => 'entity.entity_view_display.' . $content_entity . '.default',
               'parent' => $base_plugin_definition['id'] . ':' . $content_entity_bundle_root,
               'route_parameters' => [$content_entity_bundle => $machine_name],
+              'weight' => 3,
+            ] + $base_plugin_definition;
+          }
+          if ($this->routeExists('entity.' . $bundle->getEntityTypeId() . '.entity_permissions_form')) {
+            $links['entity.entity_permissions_form.' . $content_entity . '.default.' . $machine_name] = [
+              'title' => $this->t('Manage permissions'),
+              'route_name' => 'entity.' . $bundle->getEntityTypeId() . '.entity_permissions_form',
+              'parent' => $base_plugin_definition['id'] . ':' . $content_entity_bundle_root,
+              'route_parameters' => [
+                $bundle->getEntityTypeId() => $machine_name,
+              ],
               'weight' => 3,
             ] + $base_plugin_definition;
           }
@@ -209,7 +266,7 @@ class ExtraLinks extends DeriverBase implements ContainerDeriverInterface {
       'title' => $this->t('Add role'),
       'route_name' => 'user.role_add',
       'parent' => $base_plugin_definition['id'] . ':entity.user_role.collection',
-      'weight' => -5,
+      'weight' => -50,
     ] + $base_plugin_definition;
     // Adds sub-links to Account settings link.
     if ($this->moduleHandler->moduleExists('field_ui')) {
@@ -235,10 +292,15 @@ class ExtraLinks extends DeriverBase implements ContainerDeriverInterface {
 
     foreach ($this->entityTypeManager->getStorage('user_role')->loadMultiple() as $role) {
       $links['entity.user_role.edit_form.' . $role->id()] = [
-        'title' => $this->t('@label', ['@label' => $role->label()]),
         'route_name' => 'entity.user_role.edit_form',
         'parent' => $base_plugin_definition['id'] . ':entity.user_role.collection',
+        'weight' => $role->getWeight(),
         'route_parameters' => ['user_role' => $role->id()],
+        'class' => 'Drupal\admin_toolbar_tools\Plugin\Menu\MenuLinkEntity',
+        'metadata' => [
+          'entity_type' => $role->getEntityTypeId(),
+          'entity_id' => $role->id(),
+        ],
       ] + $base_plugin_definition;
       $links['entity.user_role.edit_permissions_form.' . $role->id()] = [
         'title' => $this->t('Edit permissions'),
@@ -279,10 +341,14 @@ class ExtraLinks extends DeriverBase implements ContainerDeriverInterface {
       // Adds node links for each content type.
       foreach ($this->entityTypeManager->getStorage('node_type')->loadMultiple() as $type) {
         $links['node.add.' . $type->id()] = [
-          'title' => $this->t('@label', ['@label' => $type->label()]),
           'route_name' => 'node.add',
           'parent' => $base_plugin_definition['id'] . ':node.add',
           'route_parameters' => ['node_type' => $type->id()],
+          'class' => 'Drupal\admin_toolbar_tools\Plugin\Menu\MenuLinkEntity',
+          'metadata' => [
+            'entity_type' => $type->getEntityTypeId(),
+            'entity_id' => $type->id(),
+          ],
         ] + $base_plugin_definition;
       }
     }
@@ -305,7 +371,7 @@ class ExtraLinks extends DeriverBase implements ContainerDeriverInterface {
         'title' => $this->t('Add vocabulary'),
         'route_name' => 'entity.taxonomy_vocabulary.add_form',
         'parent' => 'entity.taxonomy_vocabulary.collection',
-        'weight' => -5,
+        'weight' => -998,
       ] + $base_plugin_definition;
     }
 
@@ -317,11 +383,10 @@ class ExtraLinks extends DeriverBase implements ContainerDeriverInterface {
         'weight' => -2,
       ] + $base_plugin_definition;
       // Adds links to /admin/structure/menu.
-      // We do not display more than 10 different menus.
       $menus = $this->entityTypeManager->getStorage('menu')->loadMultiple();
       uasort($menus, [Menu::class, 'sort']);
-      $menus = array_slice($menus, 0, self::MAX_BUNDLE_NUMBER);
-      if (count($menus) == self::MAX_BUNDLE_NUMBER) {
+      $menus = array_slice($menus, 0, $max_bundle_number);
+      if (count($menus) == $max_bundle_number) {
         $links['entity.menu.collection'] = [
           'title' => $this->t('All menus'),
           'route_name' => 'entity.menu.collection',
@@ -332,11 +397,15 @@ class ExtraLinks extends DeriverBase implements ContainerDeriverInterface {
       $weight = 0;
       foreach ($menus as $menu_id => $menu) {
         $links['entity.menu.edit_form.' . $menu_id] = [
-          'title' => $menu->label(),
           'route_name' => 'entity.menu.edit_form',
           'parent' => 'entity.menu.collection',
           'route_parameters' => ['menu' => $menu_id],
           'weight' => $weight,
+          'class' => 'Drupal\admin_toolbar_tools\Plugin\Menu\MenuLinkEntity',
+          'metadata' => [
+            'entity_type' => $menu->getEntityTypeId(),
+            'entity_id' => $menu->id(),
+          ],
         ] + $base_plugin_definition;
         $links['entity.menu.add_link_form.' . $menu_id] = [
           'title' => $this->t('Add link'),
@@ -345,8 +414,15 @@ class ExtraLinks extends DeriverBase implements ContainerDeriverInterface {
           'route_parameters' => ['menu' => $menu_id],
         ] + $base_plugin_definition;
         // Un-deletable menus.
-        $menus = ['admin', 'devel', 'footer', 'main', 'tools', 'account'];
-        if (!in_array($menu_id, $menus)) {
+        $un_deletable_menus = [
+          'admin',
+          'devel',
+          'footer',
+          'main',
+          'tools',
+          'account',
+        ];
+        if (!in_array($menu_id, $un_deletable_menus)) {
           $links['entity.menu.delete_form.' . $menu_id] = [
             'title' => $this->t('Delete'),
             'route_name' => 'entity.menu.delete_form',
@@ -368,21 +444,42 @@ class ExtraLinks extends DeriverBase implements ContainerDeriverInterface {
 
     // If module block_content is enabled.
     if ($this->moduleHandler->moduleExists('block_content')) {
-      $links['block_content.add_page'] = [
-        'title' => $this->t('Add custom block'),
-        'route_name' => 'block_content.add_page',
-        'parent' => 'block.admin_display',
-      ] + $base_plugin_definition;
-      $links['entity.block_content.collection'] = [
-        'title' => $this->t('Custom block library'),
+
+      // Add the custom blocks management under Content.
+      $links['block_content_page'] = [
+        'title' => $this->t('Blocks'),
         'route_name' => 'entity.block_content.collection',
-        'parent' => 'block.admin_display',
+        'parent' => 'system.admin_content',
       ] + $base_plugin_definition;
-      $links['entity.block_content_type.collection'] = [
-        'title' => $this->t('Block types'),
-        'route_name' => 'entity.block_content_type.collection',
-        'parent' => 'block.admin_display',
+
+      $links['add_block'] = [
+        'title' => $this->t('Add content block'),
+        'route_name' => 'block_content.add_page',
+        'parent' => $base_plugin_definition['id'] . ':block_content_page',
       ] + $base_plugin_definition;
+
+      // Adds links for each block_content type.
+      foreach ($this->entityTypeManager->getStorage('block_content_type')->loadMultiple() as $type) {
+        $links['block_content.add.' . $type->id()] = [
+          'route_name' => 'block_content.add_form',
+          'parent' => $base_plugin_definition['id'] . ':add_block',
+          'route_parameters' => ['block_content_type' => $type->id()],
+          'class' => 'Drupal\admin_toolbar_tools\Plugin\Menu\MenuLinkEntity',
+          'metadata' => [
+            'entity_type' => $type->getEntityTypeId(),
+            'entity_id' => $type->id(),
+          ],
+        ] + $base_plugin_definition;
+      }
+
+      if (version_compare(\Drupal::VERSION, '10.1', '<')) {
+        // Add custom block types management under Structure.
+        $links['entity.block_content_type.collection'] = [
+          'title' => $this->t('Block types'),
+          'route_name' => 'entity.block_content_type.collection',
+          'parent' => 'block.admin_display',
+        ] + $base_plugin_definition;
+      }
     }
 
     // If module Contact is enabled.
@@ -395,28 +492,42 @@ class ExtraLinks extends DeriverBase implements ContainerDeriverInterface {
       ] + $base_plugin_definition;
     }
 
-    // If module Update Manager is enabled.
-    if ($this->moduleHandler->moduleExists('update')) {
-      $links['update.module_install'] = [
-        'title' => $this->t('Install new module'),
-        'route_name' => 'update.module_install',
-        'parent' => 'system.modules_list',
-      ] + $base_plugin_definition;
-      $links['update.module_update'] = [
-        'title' => $this->t('Update'),
-        'route_name' => 'update.module_update',
-        'parent' => 'system.modules_list',
-      ] + $base_plugin_definition;
-      $links['update.theme_install'] = [
-        'title' => $this->t('Install new theme'),
-        'route_name' => 'update.theme_install',
-        'parent' => 'system.themes_page',
-      ] + $base_plugin_definition;
-      $links['update.theme_update'] = [
-        'title' => $this->t('Update'),
-        'route_name' => 'update.theme_update',
-        'parent' => 'system.themes_page',
-      ] + $base_plugin_definition;
+    // Core Update module: Add extra menu links for the update and
+    // install routes. Support for these routes is dropped for core versions
+    // above 11.2 (update) or 10.4 (install).
+    if ($this->moduleHandler->moduleExists('update') && version_compare(\Drupal::VERSION, '11.2.0', '<')) {
+      if ($this->routeExists('update.module_update')) {
+        $links['update.module_update'] = [
+          'title' => $this->t('Update'),
+          'route_name' => 'update.module_update',
+          'parent' => 'system.modules_list',
+        ] + $base_plugin_definition;
+      }
+      if ($this->routeExists('update.theme_update')) {
+        $links['update.theme_update'] = [
+          'title' => $this->t('Update'),
+          'route_name' => 'update.theme_update',
+          'parent' => 'system.themes_page',
+        ] + $base_plugin_definition;
+      }
+
+      // Support for 'install' routes is dropped for core versions above 10.4.
+      if (version_compare(\Drupal::VERSION, '10.4.0', '<')) {
+        if ($this->routeExists('update.module_install')) {
+          $links['update.module_install'] = [
+            'title' => $this->t('Install new module'),
+            'route_name' => 'update.module_install',
+            'parent' => 'system.modules_list',
+          ] + $base_plugin_definition;
+        }
+        if ($this->routeExists('update.theme_install')) {
+          $links['update.theme_install'] = [
+            'title' => $this->t('Install new theme'),
+            'route_name' => 'update.theme_install',
+            'parent' => 'system.themes_page',
+          ] + $base_plugin_definition;
+        }
+      }
     }
 
     // If module Devel is enabled.
@@ -503,6 +614,15 @@ class ExtraLinks extends DeriverBase implements ContainerDeriverInterface {
         'parent' => 'entity.view.collection',
         'weight' => -5,
       ] + $base_plugin_definition;
+      $views = $this->entityTypeManager->getStorage('view')->loadByProperties(['status' => TRUE]);
+      foreach ($views as $view) {
+        $links['views_ui.' . $view->id()] = [
+          'title' => $view->label(),
+          'route_name' => 'entity.view.edit_form',
+          'route_parameters' => ['view' => $view->id()],
+          'parent' => 'entity.view.collection',
+        ] + $base_plugin_definition;
+      }
       $links['views_ui.field_list'] = [
         'title' => $this->t('Used in views'),
         'route_name' => 'views_ui.reports_fields',
@@ -554,6 +674,13 @@ class ExtraLinks extends DeriverBase implements ContainerDeriverInterface {
         'route_name' => 'entity.media.collection',
         'parent' => 'system.admin_content',
       ] + $base_plugin_definition;
+      if ($this->moduleHandler->moduleExists('media_library') && $this->routeExists('view.media_library.page')) {
+        $links['media_library'] = [
+          'title' => $this->t('Media library'),
+          'route_name' => 'view.media_library.page',
+          'parent' => $base_plugin_definition['id'] . ':media_page',
+        ] + $base_plugin_definition;
+      }
       $links['add_media'] = [
         'title' => $this->t('Add media'),
         'route_name' => 'entity.media.add_page',
@@ -562,10 +689,14 @@ class ExtraLinks extends DeriverBase implements ContainerDeriverInterface {
       // Adds links for each media type.
       foreach ($this->entityTypeManager->getStorage('media_type')->loadMultiple() as $type) {
         $links['media.add.' . $type->id()] = [
-          'title' => $type->label(),
           'route_name' => 'entity.media.add_form',
           'parent' => $base_plugin_definition['id'] . ':add_media',
           'route_parameters' => ['media_type' => $type->id()],
+          'class' => 'Drupal\admin_toolbar_tools\Plugin\Menu\MenuLinkEntity',
+          'metadata' => [
+            'entity_type' => $type->getEntityTypeId(),
+            'entity_id' => $type->id(),
+          ],
         ] + $base_plugin_definition;
       }
     }
@@ -603,6 +734,32 @@ class ExtraLinks extends DeriverBase implements ContainerDeriverInterface {
       }
     }
 
+    if ($this->moduleHandler->moduleExists('project_browser')) {
+      if ($this->routeExists('project_browser.browse')) {
+        $project_browser_admin_settings = $this->configFactory->get('project_browser.admin_settings');
+        // Get the enabled project browser sources.
+        $project_browser_enabled_sources = $project_browser_admin_settings->get('enabled_sources');
+        if (!empty($project_browser_enabled_sources)) {
+          // Build a menu link for each enabled project browser source.
+          foreach ($project_browser_enabled_sources as $key => $source_id) {
+            $links['project_browser.browse.' . $source_id] = [
+              'route_name' => 'project_browser.browse',
+              'parent' => 'system.modules_list',
+              // Menu items are ordered by the enabled sources.
+              'weight' => -10 + $key,
+              'route_parameters' => ['source' => $source_id],
+              'class' => 'Drupal\admin_toolbar_tools\Plugin\Menu\MenuLinkPlugin',
+              'metadata' => [
+                'plugin_manager' => 'Drupal\project_browser\Plugin\ProjectBrowserSourceManager',
+                'plugin_id' => $source_id,
+                'label_pattern' => $this->t('Browse @label'),
+              ],
+            ] + $base_plugin_definition;
+          }
+        }
+      }
+    }
+
     return $links;
   }
 
@@ -622,8 +779,9 @@ class ExtraLinks extends DeriverBase implements ContainerDeriverInterface {
   /**
    * Lists all installed themes.
    *
-   * @return array
-   *   The list of installed themes.
+   * @return array<string, string>
+   *   The list of installed themes: an associative array of theme machine names
+   *   and their human-readable names.
    */
   public function installedThemes() {
     $themeHandler = $this->themeHandler;

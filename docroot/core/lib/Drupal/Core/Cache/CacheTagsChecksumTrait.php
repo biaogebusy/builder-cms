@@ -51,7 +51,6 @@ trait CacheTagsChecksumTrait {
    * Implements \Drupal\Core\Cache\CacheTagsInvalidatorInterface::invalidateTags()
    */
   public function invalidateTags(array $tags) {
-    // Only invalidate tags once per request unless they are written again.
     foreach ($tags as $key => $tag) {
       if (isset($this->invalidatedTags[$tag])) {
         unset($tags[$key]);
@@ -68,7 +67,15 @@ trait CacheTagsChecksumTrait {
     $in_transaction = $this->getDatabaseConnection()->inTransaction();
     if ($in_transaction) {
       if (empty($this->delayedTags)) {
-        $this->getDatabaseConnection()->addRootTransactionEndCallback([$this, 'rootTransactionEndCallback']);
+        // @todo in drupal:11.0.0, remove the conditional and only call the
+        //   TransactionManager().
+        if ($this->getDatabaseConnection()->transactionManager()) {
+          $this->getDatabaseConnection()->transactionManager()->addPostTransactionCallback([$this, 'rootTransactionEndCallback']);
+        }
+        else {
+          // @phpstan-ignore method.deprecated
+          $this->getDatabaseConnection()->addRootTransactionEndCallback([$this, 'rootTransactionEndCallback']);
+        }
       }
       $this->delayedTags = Cache::mergeTags($this->delayedTags, $tags);
     }
@@ -103,6 +110,11 @@ trait CacheTagsChecksumTrait {
    * Implements \Drupal\Core\Cache\CacheTagsChecksumInterface::isValid()
    */
   public function isValid($checksum, array $tags) {
+    // If there are no cache tags, then there is no cache tag to validate,
+    // hence it's always valid.
+    if (empty($tags)) {
+      return TRUE;
+    }
     // Any cache reads in this request involving cache tags whose invalidation
     // has been delayed due to an in-progress transaction are not allowed to use
     // data stored in cache; it must be assumed to be stale. This forces those
@@ -127,6 +139,11 @@ trait CacheTagsChecksumTrait {
    */
   protected function calculateChecksum(array $tags) {
     $checksum = 0;
+    // If there are no cache tags, then there is no cache tag to checksum,
+    // so return early..
+    if (empty($tags)) {
+      return $checksum;
+    }
 
     $query_tags = array_diff($tags, array_keys($this->tagCache));
     if ($query_tags) {

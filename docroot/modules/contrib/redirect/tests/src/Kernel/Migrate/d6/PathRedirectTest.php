@@ -1,10 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\redirect\Kernel\Migrate\d6;
 
 use Drupal\redirect\Entity\Redirect;
 use Drupal\Tests\migrate_drupal\Kernel\MigrateDrupalTestBase;
-
 
 /**
  * Tests the d6_path_redirect source plugin.
@@ -24,7 +25,8 @@ class PathRedirectTest extends MigrateDrupalTestBase {
   protected function setUp(): void {
     parent::setUp();
     $this->installEntitySchema('redirect');
-    $this->loadFixture( __DIR__ . '/../../../../../tests/fixtures/drupal6.php');
+    $this->installEntitySchema('path_alias');
+    $this->loadFixture(__DIR__ . '/../../../../../tests/fixtures/drupal6.php');
 
     $this->executeMigrations(['d6_path_redirect']);
   }
@@ -34,7 +36,7 @@ class PathRedirectTest extends MigrateDrupalTestBase {
    */
   public function testPathRedirect() {
 
-    /** @var Redirect $redirect */
+    /** @var \Drupal\redirect\Entity\Redirect $redirect */
     $redirect = Redirect::load(5);
     $this->assertSame($this->getMigration('d6_path_redirect')
       ->getIdMap()
@@ -46,4 +48,5 @@ class PathRedirectTest extends MigrateDrupalTestBase {
     $this->assertSame("/test/source/url2", $redirect->getSourceUrl());
     $this->assertSame("http://test/external/redirect/url?foo=bar&biz=buz", $redirect->getRedirectUrl()->toUriString());
   }
+
 }

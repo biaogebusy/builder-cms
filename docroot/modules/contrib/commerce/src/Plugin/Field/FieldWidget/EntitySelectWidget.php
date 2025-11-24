@@ -2,22 +2,21 @@
 
 namespace Drupal\commerce\Plugin\Field\FieldWidget;
 
+use Drupal\Core\Field\Attribute\FieldWidget;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Plugin implementation of the 'commerce_entity_select' widget.
- *
- * @FieldWidget(
- *   id = "commerce_entity_select",
- *   label = @Translation("Entity select"),
- *   field_types = {
- *     "entity_reference"
- *   },
- *   multiple_values = TRUE
- * )
  */
+#[FieldWidget(
+  id: "commerce_entity_select",
+  label: new TranslatableMarkup("Entity select"),
+  field_types: ["entity_reference"],
+  multiple_values: TRUE,
+)]
 class EntitySelectWidget extends WidgetBase {
 
   /**

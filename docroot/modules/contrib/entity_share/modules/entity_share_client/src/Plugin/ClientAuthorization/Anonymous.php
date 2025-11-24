@@ -27,7 +27,7 @@ class Anonymous extends ClientAuthorizationPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function getClient($url) {
+  public function getClient($url, $login_path) {
     $options = [
       'base_uri' => $url . '/',
       'cookies' => TRUE,

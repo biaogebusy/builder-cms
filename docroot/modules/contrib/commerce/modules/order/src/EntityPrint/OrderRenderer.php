@@ -2,12 +2,12 @@
 
 namespace Drupal\commerce_order\EntityPrint;
 
-use Drupal\commerce_order\Entity\OrderInterface;
-use Drupal\commerce_order\OrderTotalSummaryInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Render\RendererInterface as CoreRendererInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\commerce_order\Entity\OrderInterface;
+use Drupal\commerce_order\OrderTotalSummaryInterface;
 use Drupal\entity_print\Asset\AssetRendererInterface;
 use Drupal\entity_print\FilenameGeneratorInterface;
 use Drupal\entity_print\Renderer\ContentEntityRenderer;
@@ -91,11 +91,9 @@ class OrderRenderer extends ContentEntityRenderer {
    * {@inheritdoc}
    */
   public function getFilename(array $entities) {
-    $entities_label = $this->filenameGenerator->generateFilename($entities, static function (OrderInterface $order) {
-      return $order->id();
-    });
-    return $this->t('Order @id @receipt', [
-      '@id' => $entities_label,
+    $entities_label = $this->filenameGenerator->generateFilename($entities);
+    return $this->t('@label @receipt', [
+      '@label' => $entities_label,
       '@receipt' => $this->formatPlural(count($entities), 'receipt', 'receipts'),
     ]);
   }

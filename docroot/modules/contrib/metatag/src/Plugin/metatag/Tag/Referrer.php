@@ -29,7 +29,7 @@ class Referrer extends MetaNameBase {
   /**
    * {@inheritdoc}
    */
-  public function form(array $element = []) {
+  public function form(array $element = []): array {
     $form = [
       '#type' => 'select',
       '#title' => $this->label(),
@@ -51,7 +51,7 @@ class Referrer extends MetaNameBase {
    * @return array
    *   A list of values available for this select tag.
    */
-  protected function formValues() {
+  protected function formValues(): array {
     return [
       'no-referrer' => $this->t('No Referrer'),
       'no-referrer-when-downgrade' => $this->t('No Referrer When Downgrade'),
@@ -62,6 +62,24 @@ class Referrer extends MetaNameBase {
       'strict-origin-when-cross-origin' => $this->t('Strict Origin When Cross-Origin'),
       'unsafe-url' => $this->t('Unsafe URL'),
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTestFormXpath(): array {
+    return [
+      // @todo This should work but it results in the following error:
+      // DOMXPath::query(): Invalid predicate.
+      // "//select[@name='{$this->id}'",
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTestFormData(): array {
+    return [$this->id => 'no-referrer'];
   }
 
 }

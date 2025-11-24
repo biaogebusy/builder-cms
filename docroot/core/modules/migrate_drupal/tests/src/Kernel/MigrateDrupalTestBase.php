@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate_drupal\Kernel;
 
 use Drupal\Core\Database\Database;
@@ -11,9 +13,7 @@ use Drupal\Tests\migrate\Kernel\MigrateTestBase;
 abstract class MigrateDrupalTestBase extends MigrateTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'system',
@@ -27,7 +27,7 @@ abstract class MigrateDrupalTestBase extends MigrateTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $module_handler = \Drupal::moduleHandler();
@@ -57,7 +57,7 @@ abstract class MigrateDrupalTestBase extends MigrateTestBase {
     $default_db = Database::getConnection()->getKey();
     Database::setActiveConnection($this->sourceDatabase->getKey());
 
-    if (substr($path, -3) == '.gz') {
+    if (str_ends_with($path, '.gz')) {
       $path = 'compress.zlib://' . $path;
     }
     require $path;

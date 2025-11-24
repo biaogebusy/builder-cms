@@ -38,7 +38,7 @@ class WebformCardsConvertForm extends FormBase {
       '#markup' => '<p>' . $this->t('Cards provide an almost identical user experience to wizard pages, but moving between cards is much faster. Cards use JavaScript for pagination and client-side validation. Cards also support auto-forwarding with conditional logic.') . '</p>' .
         '<p><em>' . $this->t('Please note: More complex webform elements may still require server-side validation.') . '</em></p>',
     ];
-    $form['hr'] = ['#markup' => '<p><hr/></p>'];
+    $form['hr'] = ['#markup' => '<hr class="webform-hr"/>'];
     $form['confirm'] = [
       '#type' => 'checkbox',
       '#title' => $this->t("Please confirm that you want to convert this webform's wizard pages to cards"),

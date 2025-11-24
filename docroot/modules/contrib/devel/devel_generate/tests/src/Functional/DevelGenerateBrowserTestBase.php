@@ -18,12 +18,13 @@ abstract class DevelGenerateBrowserTestBase extends BrowserTestBase {
   /**
    * Modules to enable.
    *
-   * @var array
+   * @var string[]
    */
-  public static $modules = [
+  protected static $modules = [
     'content_translation',
     'devel',
     'devel_generate',
+    'devel_generate_fields',
     'language',
     'menu_ui',
     'node',
@@ -40,7 +41,7 @@ abstract class DevelGenerateBrowserTestBase extends BrowserTestBase {
   /**
    * Prepares the testing environment.
    */
-  public function setUp() {
+  public function setUp(): void {
     parent::setUp();
     $this->setUpData();
   }

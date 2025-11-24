@@ -4,16 +4,17 @@ namespace Drupal\commerce_checkout\Plugin\Commerce\CheckoutPane;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce_checkout\Attribute\CommerceCheckoutPane;
 
 /**
  * Provides the review pane.
- *
- * @CommerceCheckoutPane(
- *   id = "review",
- *   label = @Translation("Review"),
- *   default_step = "review",
- * )
  */
+#[CommerceCheckoutPane(
+  id: "review",
+  label: new TranslatableMarkup("Review"),
+  default_step: "review",
+)]
 class Review extends CheckoutPaneBase implements CheckoutPaneInterface {
 
   /**
@@ -39,7 +40,7 @@ class Review extends CheckoutPaneBase implements CheckoutPaneInterface {
             'commerce_order' => $this->order->id(),
             'step' => $pane->getStepId(),
           ]);
-          $label .= ' (' . $edit_link->toString() . ')';
+          $label .= '<span class="checkout-review-edit-link">' . $edit_link->toString() . '</span>';
         }
         $pane_form[$pane_id] = [
           '#type' => 'fieldset',

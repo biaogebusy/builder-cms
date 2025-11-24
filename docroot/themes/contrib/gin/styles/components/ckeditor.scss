@@ -19,7 +19,7 @@
 
   .cke_top {
     background: var(--gin-bg-layer);
-    border-bottom: 1px solid var(--gin-border-color);
+    border-block-end: 1px solid var(--gin-border-color);
     border-radius: calc(var(--gin-border-m) - 1px) calc(var(--gin-border-m) - 1px) 0 0;
 
     .gin--dark-mode & {
@@ -33,8 +33,7 @@
   }
 
   .cke_contents {
-    padding-left: var(--gin-spacing-xs);
-    padding-right: var(--gin-spacing-xs);
+    padding-inline: var(--gin-spacing-xs);
   }
 
   .cke_path_empty:only-child::after {
@@ -43,7 +42,7 @@
 
   .cke_combo {
     &::after {
-      border-right: 1px solid var(--gin-border-color);
+      border-inline-end: 1px solid var(--gin-border-color);
     }
   }
 
@@ -110,7 +109,7 @@
 .cke:hover .cke_top {
   &,
   .gin--dark-mode & {
-    border-bottom-color: var(--gin-border-color);
+    border-block-end-color: var(--gin-border-color);
   }
 }
 
@@ -130,7 +129,7 @@
 .cke.cke_focus .cke_top,
 .error + .cke.cke_focus .cke_top,
 .error + .cke.cke_chrome.cke_focus:hover .cke_top {
-  border-bottom: 1px solid var(--gin-border-color);
+  border-block-end: 1px solid var(--gin-border-color);
 }
 
 .cke textarea.cke_source {
@@ -152,8 +151,8 @@ body .cke_notification_info {
   }
 
   .cke_notification_close {
-    top: var(--gin-spacing-xxs);
-    right: var(--gin-spacing-xxs);
+    inset-block-start: var(--gin-spacing-xxs);
+    inset-inline-end: var(--gin-spacing-xxs);
     background: var(--gin-color-text);
     mask-image: icon('close');
     mask-position: center center;

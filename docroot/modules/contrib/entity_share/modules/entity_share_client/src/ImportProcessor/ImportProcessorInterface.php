@@ -18,35 +18,35 @@ interface ImportProcessorInterface extends ConfigurableInterface {
    *
    * @see \Drupal\entity_share_client\ImportProcessor\ImportProcessorInterface::prepareEntityData()
    */
-  const STAGE_PREPARE_ENTITY_DATA = 'prepare_entity_data';
+  public const STAGE_PREPARE_ENTITY_DATA = 'prepare_entity_data';
 
   /**
    * Processing stage: is entity importable.
    *
    * @see \Drupal\entity_share_client\ImportProcessor\ImportProcessorInterface::isEntityImportable()
    */
-  const STAGE_IS_ENTITY_IMPORTABLE = 'is_entity_importable';
+  public const STAGE_IS_ENTITY_IMPORTABLE = 'is_entity_importable';
 
   /**
    * Processing stage: prepare importable entity data.
    *
    * @see \Drupal\entity_share_client\ImportProcessor\ImportProcessorInterface::prepareImportableEntityData()
    */
-  const STAGE_PREPARE_IMPORTABLE_ENTITY_DATA = 'prepare_importable_entity_data';
+  public const STAGE_PREPARE_IMPORTABLE_ENTITY_DATA = 'prepare_importable_entity_data';
 
   /**
    * Processing stage: process entity.
    *
    * @see \Drupal\entity_share_client\ImportProcessor\ImportProcessorInterface::processEntity()
    */
-  const STAGE_PROCESS_ENTITY = 'process_entity';
+  public const STAGE_PROCESS_ENTITY = 'process_entity';
 
   /**
    * Processing stage: post entity save.
    *
    * @see \Drupal\entity_share_client\ImportProcessor\ImportProcessorInterface::postEntitySave()
    */
-  const STAGE_POST_ENTITY_SAVE = 'post_entity_save';
+  public const STAGE_POST_ENTITY_SAVE = 'post_entity_save';
 
   /**
    * Returns the label for use on the administration pages.

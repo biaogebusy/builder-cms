@@ -2,18 +2,12 @@
 
 namespace Drupal\commerce_product;
 
-use Drupal\commerce_product\Entity\ProductVariationInterface;
+use Drupal\commerce_product\Entity\ProductAttributeInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\commerce_product\Entity\ProductVariationInterface;
 
 class ProductVariationAttributeMapper implements ProductVariationAttributeMapperInterface {
-
-  /**
-   * The attribute field manager.
-   *
-   * @var \Drupal\commerce_product\ProductAttributeFieldManagerInterface
-   */
-  protected $attributeFieldManager;
 
   /**
    * The product attribute storage.
@@ -23,26 +17,21 @@ class ProductVariationAttributeMapper implements ProductVariationAttributeMapper
   protected $attributeStorage;
 
   /**
-   * The entity repository.
-   *
-   * @var \Drupal\Core\Entity\EntityRepositoryInterface
-   */
-  protected $entityRepository;
-
-  /**
    * Constructs a new ProductVariationAttributeMapper object.
    *
-   * @param \Drupal\commerce_product\ProductAttributeFieldManagerInterface $attribute_field_manager
+   * @param \Drupal\commerce_product\ProductAttributeFieldManagerInterface $attributeFieldManager
    *   The attribute field manager.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
-   * @param \Drupal\Core\Entity\EntityRepositoryInterface $entity_repository
+   * @param \Drupal\Core\Entity\EntityRepositoryInterface $entityRepository
    *   The entity repository.
    */
-  public function __construct(ProductAttributeFieldManagerInterface $attribute_field_manager, EntityTypeManagerInterface $entity_type_manager, EntityRepositoryInterface $entity_repository) {
-    $this->attributeFieldManager = $attribute_field_manager;
-    $this->attributeStorage = $entity_type_manager->getStorage('commerce_product_attribute');
-    $this->entityRepository = $entity_repository;
+  public function __construct(
+    protected ProductAttributeFieldManagerInterface $attributeFieldManager,
+    EntityTypeManagerInterface $entityTypeManager,
+    protected EntityRepositoryInterface $entityRepository,
+  ) {
+    $this->attributeStorage = $entityTypeManager->getStorage('commerce_product_attribute');
   }
 
   /**
@@ -85,6 +74,9 @@ class ProductVariationAttributeMapper implements ProductVariationAttributeMapper
       $field = $field_definitions[$field_name];
       /** @var \Drupal\commerce_product\Entity\ProductAttributeInterface $attribute */
       $attribute = $this->attributeStorage->load($attribute_ids[$index]);
+      if (!$attribute instanceof ProductAttributeInterface) {
+        continue;
+      }
       // Make sure we have translation for attribute.
       $attribute = $this->entityRepository->getTranslationFromContext($attribute, $selected_variation->language()->getId());
 
@@ -140,7 +132,7 @@ class ProductVariationAttributeMapper implements ProductVariationAttributeMapper
    * @return array[]
    *   The attribute values, keyed by attribute ID.
    */
-  protected function getAttributeValues(array $variations, $field_name, callable $callback = NULL) {
+  protected function getAttributeValues(array $variations, $field_name, ?callable $callback = NULL) {
     $values = [];
     foreach ($variations as $variation) {
       if (!$variation->hasField($field_name)) {

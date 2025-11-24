@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.data.mda.digitalpayoffline.query request
  *
  * @author auto create
- * @since 1.0, 2023-06-13 16:56:56
+ * @since 1.0, 2025-08-13 14:27:42
  */
 class AlipayDataMdaDigitalpayofflineQueryRequest
 {

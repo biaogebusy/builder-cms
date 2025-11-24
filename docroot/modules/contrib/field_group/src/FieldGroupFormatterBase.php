@@ -102,6 +102,14 @@ abstract class FieldGroupFormatterBase extends PluginSettingsBase implements Fie
       '#default_value' => $this->getSetting('show_empty_fields'),
     ];
 
+    $form['label_as_html'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Allow HTML in label'),
+      '#default_value' => $this->getSetting('label_as_html'),
+      '#description' => $this->t('Allows using (XSS-filtered) HTML in the label (e.g. icons). Note, that some elements might not have labels by default, but that can differ per theme.'),
+      '#weight' => -2,
+    ];
+
     $form['id'] = [
       '#title' => $this->t('ID'),
       '#type' => 'textfield',
@@ -137,12 +145,18 @@ abstract class FieldGroupFormatterBase extends PluginSettingsBase implements Fie
       $summary[] = $this->t('Show Empty Fields');
     }
 
+    if ($this->getSetting('label_as_html')) {
+      $summary[] = $this->t('Allow HTML in label: @label_as_html', [
+        '@label_as_html' => $this->getSetting('label_as_html'),
+      ]);
+    }
+
     if ($this->getSetting('id')) {
       $summary[] = $this->t('Id: @id', ['@id' => $this->getSetting('id')]);
     }
 
     if ($this->getSetting('classes')) {
-      $summary[] = \Drupal::translation()->translate('Extra CSS classes: @classes', ['@classes' => $this->getSetting('classes')]);
+      $summary[] = $this->t('Extra CSS classes: @classes', ['@classes' => $this->getSetting('classes')]);
     }
 
     return $summary;
@@ -160,6 +174,7 @@ abstract class FieldGroupFormatterBase extends PluginSettingsBase implements Fie
    */
   public static function defaultContextSettings($context) {
     return [
+      'label_as_html' => FALSE,
       'classes' => '',
       'id' => '',
     ];

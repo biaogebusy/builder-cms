@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="SMS Framework">
+  <file>./src</file>
+  <file>./tests</file>
+  <file>./modules</file>
+  <file>./sms.module</file>
+  <file>./sms.install</file>
+  <rule ref="PreviousNextDrupal" />
+  <arg name="report" value="full"/>
+  <rule ref="Drupal.Commenting.FunctionComment.Missing"><severity>0</severity></rule>
+  <rule ref="Drupal.Commenting.DocComment.Empty"><severity>0</severity></rule>
+  <rule ref="Drupal.Commenting.ClassComment.Missing"><severity>0</severity></rule>
+
+  <!-- Temporary, disruptive -->
+  <rule ref="SlevomatCodingStandard.Namespaces.FullyQualifiedGlobalFunctions.NonFullyQualified"><severity>0</severity></rule>
+  <rule ref="SlevomatCodingStandard.TypeHints.ReturnTypeHint.MissingNativeTypeHint"><severity>0</severity></rule>
+  <rule ref="SlevomatCodingStandard.Namespaces.AlphabeticallySortedUses.IncorrectlyOrderedUses"><severity>0</severity></rule>
+  <rule ref="SlevomatCodingStandard.Classes.RequireMultiLineMethodSignature.RequiredMultiLineSignature"><severity>0</severity></rule>
+  <rule ref="SlevomatCodingStandard.TypeHints.DeclareStrictTypes.IncorrectStrictTypesFormat"><severity>0</severity></rule>
+  <rule ref="SlevomatCodingStandard.Commenting.UselessInheritDocComment.UselessInheritDocComment"><severity>0</severity></rule>
+  <rule ref="SlevomatCodingStandard.TypeHints.ReturnTypeHint.MissingAnyTypeHint"><severity>0</severity></rule>
+<!--  <rule ref="SlevomatCodingStandard.TypeHints.DeclareStrictTypes.IncorrectStrictTypesFormat"><severity>0</severity></rule>-->
+</ruleset>

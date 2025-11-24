@@ -11,10 +11,7 @@ use Symfony\Component\Validator\ConstraintViolationList;
  */
 class ContextDefinition implements ContextDefinitionInterface {
 
-  use DependencySerializationTrait {
-    __sleep as traitSleep;
-  }
-
+  use DependencySerializationTrait;
   use TypedDataTrait;
 
   /**
@@ -81,7 +78,7 @@ class ContextDefinition implements ContextDefinitionInterface {
    *   The created context definition object.
    */
   public static function create($data_type = 'any') {
-    if (strpos($data_type, 'entity:') === 0) {
+    if (str_starts_with($data_type, 'entity:')) {
       return new EntityContextDefinition($data_type);
     }
     return new static(
@@ -94,7 +91,7 @@ class ContextDefinition implements ContextDefinitionInterface {
    *
    * @param string $data_type
    *   The required data type.
-   * @param string|null $label
+   * @param string|null|\Stringable $label
    *   The label of this context definition for the UI.
    * @param bool $required
    *   Whether the context definition is required.
@@ -104,16 +101,22 @@ class ContextDefinition implements ContextDefinitionInterface {
    *   The description of this context definition for the UI.
    * @param mixed $default_value
    *   The default value of this definition.
+   * @param array $constraints
+   *   An array of constraints keyed by the constraint name and a value of an
+   *   array constraint options or a NULL.
    */
-  public function __construct($data_type = 'any', $label = NULL, $required = TRUE, $multiple = FALSE, $description = NULL, $default_value = NULL) {
+  public function __construct($data_type = 'any', $label = NULL, $required = TRUE, $multiple = FALSE, $description = NULL, $default_value = NULL, array $constraints = []) {
     $this->dataType = $data_type;
     $this->label = $label;
     $this->isRequired = $required;
     $this->isMultiple = $multiple;
     $this->description = $description;
     $this->defaultValue = $default_value;
+    foreach ($constraints as $constraint_name => $options) {
+      $this->addConstraint($constraint_name, $options);
+    }
 
-    assert(strpos($data_type, 'entity:') !== 0 || $this instanceof EntityContextDefinition);
+    assert(!str_starts_with($data_type, 'entity:') || $this instanceof EntityContextDefinition);
   }
 
   /**
@@ -280,7 +283,7 @@ class ContextDefinition implements ContextDefinitionInterface {
       // Allow a more generic data type like 'entity' to be fulfilled by a more
       // specific data type like 'entity:user'. However, if this type is more
       // specific, do not consider a more generic type to be a match.
-      strpos($that_type, "$this_type:") === 0
+      str_starts_with($that_type, "$this_type:")
     );
   }
 

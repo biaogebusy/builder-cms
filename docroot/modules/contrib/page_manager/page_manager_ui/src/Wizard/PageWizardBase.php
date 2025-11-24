@@ -6,12 +6,18 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\ctools\Wizard\EntityFormWizardBase;
 use Drupal\page_manager_ui\Access\PageManagerPluginAccess;
+use Drupal\page_manager_ui\Form\PageAccessForm;
 use Drupal\page_manager_ui\Form\PageGeneralForm;
 use Drupal\page_manager_ui\Form\PageParametersForm;
-use Drupal\page_manager_ui\Form\PageAccessForm;
 
+/**
+ * Base Class for Wizards to extend.
+ */
 class PageWizardBase extends EntityFormWizardBase {
 
+  /**
+   * Initialize the wizard values.
+   */
   public function initValues() {
     $cached_values = parent::initValues();
     $cached_values['access'] = new PageManagerPluginAccess();
@@ -55,7 +61,7 @@ class PageWizardBase extends EntityFormWizardBase {
       'title' => $this->t('Page information'),
       'form' => PageGeneralForm::class,
     ];
-    /** @var $page \Drupal\page_manager\Entity\Page */
+    /** @var \Drupal\page_manager\Entity\Page $page */
     $page = $cached_values['page'];
 
     if ($page && $page->getPath()) {
@@ -93,7 +99,9 @@ class PageWizardBase extends EntityFormWizardBase {
     }
   }
 
-
+  /**
+   * Finish the wizard processing.
+   */
   public function finish(array &$form, FormStateInterface $form_state) {
     parent::finish($form, $form_state);
 

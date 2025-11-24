@@ -1,0 +1,98 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"TW",
+		"New Taipei City"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Bali District": {
+			"local_name": "八里區"
+		},
+		"Banqiao District": {
+			"local_name": "板橋區"
+		},
+		"Tamsui District": {
+			"local_name": "淡水區"
+		},
+		"Gongliao District": {
+			"local_name": "貢寮區"
+		},
+		"Jinshan District": {
+			"local_name": "金山區"
+		},
+		"Linkou District": {
+			"local_name": "林口區"
+		},
+		"Luzhou District": {
+			"local_name": "蘆洲區"
+		},
+		"Pingxi District": {
+			"local_name": "平溪區"
+		},
+		"Pinglin District": {
+			"local_name": "坪林區"
+		},
+		"Ruifang District": {
+			"local_name": "瑞芳區"
+		},
+		"Sanxia District": {
+			"local_name": "三峽區"
+		},
+		"Sanzhi District": {
+			"local_name": "三芝區"
+		},
+		"Sanchong District": {
+			"local_name": "三重區"
+		},
+		"Shenkeng District": {
+			"local_name": "深坑區"
+		},
+		"Shiding District": {
+			"local_name": "石碇區"
+		},
+		"Shimen District": {
+			"local_name": "石門區"
+		},
+		"Shulin District": {
+			"local_name": "樹林區"
+		},
+		"Shuangxi District": {
+			"local_name": "雙溪區"
+		},
+		"Taishan District": {
+			"local_name": "泰山區"
+		},
+		"Tucheng District": {
+			"local_name": "土城區"
+		},
+		"Wanli District": {
+			"local_name": "萬里區"
+		},
+		"Wulai District": {
+			"local_name": "烏來區"
+		},
+		"Wugu District": {
+			"local_name": "五股區"
+		},
+		"Xizhi District": {
+			"local_name": "汐止區"
+		},
+		"Xindian District": {
+			"local_name": "新店區"
+		},
+		"Xinzhuang District": {
+			"local_name": "新莊區"
+		},
+		"Yingge District": {
+			"local_name": "鶯歌區"
+		},
+		"Yonghe District": {
+			"local_name": "永和區"
+		},
+		"Zhonghe District": {
+			"local_name": "中和區"
+		}
+	}
+}

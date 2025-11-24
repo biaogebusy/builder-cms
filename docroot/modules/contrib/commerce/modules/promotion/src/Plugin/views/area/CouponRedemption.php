@@ -2,15 +2,16 @@
 
 namespace Drupal\commerce_promotion\Plugin\views\area;
 
-use Drupal\commerce\InlineFormManager;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\InsertCommand;
 use Drupal\Core\Ajax\PrependCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Ajax\AjaxResponse;
-use Drupal\Core\Ajax\InsertCommand;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\commerce\InlineFormManager;
+use Drupal\views\Attribute\ViewsArea;
 use Drupal\views\Plugin\views\area\AreaPluginBase;
 use Drupal\views\Plugin\views\argument\NumericArgument;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -22,9 +23,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * View.
  *
  * @ingroup views_area_handlers
- *
- * @ViewsArea("commerce_coupon_redemption")
  */
+#[ViewsArea("commerce_coupon_redemption")]
 class CouponRedemption extends AreaPluginBase {
 
   /**
@@ -103,6 +103,7 @@ class CouponRedemption extends AreaPluginBase {
    * {@inheritdoc}
    */
   public function render($empty = FALSE) {
+    return [];
   }
 
   /**
@@ -195,9 +196,7 @@ class CouponRedemption extends AreaPluginBase {
     $order_total['#suffix'] = '</div>';
 
     $response = new AjaxResponse();
-    if (isset($order_total)) {
-      $response->addCommand(new ReplaceCommand('[data-drupal-selector="order-total-summary"]', $order_total));
-    }
+    $response->addCommand(new ReplaceCommand('[data-drupal-selector="order-total-summary"]', $order_total));
     $response->addCommand(new InsertCommand('[data-drupal-selector="' . $inline_form['#attributes']['data-drupal-selector'] . '"]', $inline_form));
     $response->addCommand(new PrependCommand('[data-drupal-selector="' . $inline_form['#attributes']['data-drupal-selector'] . '"]', ['#type' => 'status_messages']));
 

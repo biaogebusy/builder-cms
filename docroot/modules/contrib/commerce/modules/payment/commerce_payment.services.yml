@@ -1,8 +1,14 @@
 services:
+  _defaults:
+    autowire: true
   access_check.commerce_payment.operation:
     class: Drupal\commerce_payment\Access\PaymentOperationAccessCheck
     tags:
       - { name: access_check, applies_to: _commerce_payment_operation_access }
+  access_check.commerce_payment.create:
+    class: Drupal\commerce_payment\Access\PaymentCreateAccessCheck
+    tags:
+      - { name: access_check, applies_to: _commerce_payment_create_access }
 
   logger.channel.commerce_payment:
     class: Drupal\Core\Logger\LoggerChannel
@@ -12,14 +18,17 @@ services:
   plugin.manager.commerce_payment_gateway:
     class: Drupal\commerce_payment\PaymentGatewayManager
     parent: default_plugin_manager
+  Drupal\commerce_payment\PaymentGatewayManager: '@plugin.manager.commerce_payment_gateway'
 
   plugin.manager.commerce_payment_method_type:
     class: Drupal\commerce_payment\PaymentMethodTypeManager
     parent: default_plugin_manager
+  Drupal\commerce_payment\PaymentMethodTypeManager: '@plugin.manager.commerce_payment_method_type'
 
   plugin.manager.commerce_payment_type:
     class: Drupal\commerce_payment\PaymentTypeManager
     parent: default_plugin_manager
+  Drupal\commerce_payment\PaymentTypeManager: '@plugin.manager.commerce_payment_type'
 
   commerce_payment.filter_conditions_subscriber:
     class: Drupal\commerce_payment\EventSubscriber\FilterConditionsEventSubscriber
@@ -28,27 +37,31 @@ services:
 
   commerce_payment.order_assign_subscriber:
     class: Drupal\commerce_payment\EventSubscriber\OrderAssignSubscriber
-    arguments: ['@commerce_order.address_book']
+    autowire: true
     tags:
-    - { name: event_subscriber }
+      - { name: event_subscriber }
 
   commerce_payment.order_paid_subscriber:
     class: Drupal\commerce_payment\EventSubscriber\OrderPaidSubscriber
     tags:
-    - { name: event_subscriber }
+      - { name: event_subscriber }
+
+  commerce_payment.zero_balance_order_subscriber:
+    class: Drupal\commerce_payment\EventSubscriber\ZeroBalanceOrderSubscriber
+    tags:
+      - { name: event_subscriber }
 
   commerce_payment.options_builder:
     class: Drupal\commerce_payment\PaymentOptionsBuilder
-    arguments: ['@entity_type.manager', '@string_translation']
+  Drupal\commerce_payment\PaymentOptionsBuilderInterface: '@commerce_payment.options_builder'
 
   commerce_payment.order_processor:
     class: Drupal\commerce_payment\PaymentOrderProcessor
-    arguments: ['@commerce_payment.order_updater']
     tags:
-    - { name: commerce_order.order_processor, priority: 400, adjustment_type: tax }
+      - { name: commerce_order.order_processor, priority: 400, adjustment_type: tax }
 
   commerce_payment.order_updater:
     class: Drupal\commerce_payment\PaymentOrderUpdater
-    arguments: ['@entity_type.manager']
     tags:
       - { name: needs_destruction }
+  Drupal\commerce_payment\PaymentOrderUpdaterInterface: '@commerce_payment.order_updater'

@@ -89,7 +89,7 @@ class DynamicEntityReferenceFieldDefaultValueTest extends BrowserTestBase {
       ],
     ]);
     $field_storage->save();
-    FieldConfig::create([
+    $field_config = FieldConfig::create([
       'field_storage' => $field_storage,
       'bundle' => 'reference_content',
       'settings' => [
@@ -107,20 +107,29 @@ class DynamicEntityReferenceFieldDefaultValueTest extends BrowserTestBase {
           ],
         ],
       ],
-    ])->save();
+    ]);
+    $field_config->save();
+    $this->assertEmpty($field_config->getDefaultValueLiteral());
 
     // Set created node as default_value.
     $field_edit = [
+      'set_default_value' => '1',
       'default_value_input[' . $field_name . '][0][target_type]' => $referenced_node->getEntityTypeId(),
       'default_value_input[' . $field_name . '][0][target_id]' => $referenced_node->getTitle() . ' (' . $referenced_node->id() . ')',
     ];
     $this->drupalGet('admin/structure/types/manage/reference_content/fields/node.reference_content.' . $field_name);
-    $this->submitForm($field_edit, t('Save settings'));
+    $this->submitForm($field_edit, 'Save settings');
+    $field_config = \Drupal::entityTypeManager()->getStorage('field_config')->loadUnchanged($field_config->id());
+    $default_value = $field_config->getDefaultValueLiteral();
+    $this->assertNotEmpty($default_value);
+    $this->assertEquals('node', $default_value[0]['target_type']);
+    $this->assertEquals($referenced_node->uuid(), $default_value[0]['target_uuid']);
 
     // Check that default value is selected in default value form.
     $this->drupalGet('admin/structure/types/manage/reference_content/fields/node.reference_content.' . $field_name);
     $assert_session->optionExists("default_value_input[$field_name][0][target_type]", $referenced_node->getEntityTypeId());
-    $assert_session->responseContains('name="default_value_input[' . $field_name . '][0][target_id]" value="' . $referenced_node->getTitle() . ' (' . $referenced_node->id() . ')');
+    $input = $assert_session->fieldExists('default_value_input[' . $field_name . '][0][target_id]');
+    $this->assertEquals($referenced_node->getTitle() . ' (' . $referenced_node->id() . ')', $input->getValue());
 
     // Check if the ID has been converted to UUID in config entity.
     $config_entity = $this->config('field.field.node.reference_content.' . $field_name)->get();

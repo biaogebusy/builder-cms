@@ -1,0 +1,58 @@
+{
+	"country_code": "KR",
+	"parents": [
+		"KR",
+		"26"
+	],
+	"locale": "ko",
+	"subdivisions": {
+		"Gangseo-gu": {
+			"local_name": "강서구"
+		},
+		"Geumjeong-gu": {
+			"local_name": "금정구"
+		},
+		"Gijang-gun": {
+			"local_name": "기장군"
+		},
+		"Nam-gu": {
+			"local_name": "남구"
+		},
+		"Dong-gu": {
+			"local_name": "동구"
+		},
+		"Dongnae-gu": {
+			"local_name": "동래구"
+		},
+		"Busanjin-gu": {
+			"local_name": "부산진구"
+		},
+		"Buk-gu": {
+			"local_name": "북구"
+		},
+		"Sasang-gu": {
+			"local_name": "사상구"
+		},
+		"Saha-gu": {
+			"local_name": "사하구"
+		},
+		"Seo-gu": {
+			"local_name": "서구"
+		},
+		"Suyeong-gu": {
+			"local_name": "수영구"
+		},
+		"Yeonje-gu": {
+			"local_name": "연제구"
+		},
+		"Yeongdo-gu": {
+			"local_name": "영도구"
+		},
+		"Jung-gu": {
+			"local_name": "중구"
+		},
+		"Haeundae-gu": {
+			"local_name": "해운대구"
+		}
+	}
+}

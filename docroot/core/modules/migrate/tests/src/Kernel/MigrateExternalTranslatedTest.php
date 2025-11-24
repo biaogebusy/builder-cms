@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Kernel;
 
 use Drupal\language\Entity\ConfigurableLanguage;
@@ -31,9 +33,8 @@ class MigrateExternalTranslatedTest extends MigrateTestBase {
   /**
    * {@inheritdoc}
    */
-  public function setUp(): void {
+  protected function setUp(): void {
     parent::setUp();
-    $this->installSchema('system', ['sequences']);
     $this->installSchema('node', ['node_access']);
     $this->installEntitySchema('user');
     $this->installEntitySchema('node');
@@ -53,7 +54,7 @@ class MigrateExternalTranslatedTest extends MigrateTestBase {
   /**
    * Tests importing and rolling back our data.
    */
-  public function testMigrations() {
+  public function testMigrations(): void {
     /** @var \Drupal\Core\Entity\ContentEntityStorageInterface $storage */
     $storage = $this->container->get('entity_type.manager')->getStorage('node');
     $this->assertCount(0, $storage->loadMultiple());
@@ -67,12 +68,12 @@ class MigrateExternalTranslatedTest extends MigrateTestBase {
     $this->assertEquals('en', $node->language()->getId());
     $this->assertEquals('Cat', $node->title->value);
     $this->assertEquals('Chat', $node->getTranslation('fr')->title->value);
-    $this->assertEquals('Gato', $node->getTranslation('es')->title->value);
+    $this->assertEquals('es - Cat', $node->getTranslation('es')->title->value);
 
     $node = $storage->load(2);
     $this->assertEquals('en', $node->language()->getId());
     $this->assertEquals('Dog', $node->title->value);
-    $this->assertEquals('Chien', $node->getTranslation('fr')->title->value);
+    $this->assertEquals('fr - Dog', $node->getTranslation('fr')->title->value);
     $this->assertFalse($node->hasTranslation('es'), "No spanish translation for node 2");
 
     $node = $storage->load(3);

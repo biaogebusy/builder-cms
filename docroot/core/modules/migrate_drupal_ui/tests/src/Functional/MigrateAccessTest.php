@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate_drupal_ui\Functional;
 
 use Drupal\Tests\BrowserTestBase;
@@ -12,9 +14,7 @@ use Drupal\Tests\BrowserTestBase;
 class MigrateAccessTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['migrate_drupal_ui'];
 
@@ -26,7 +26,7 @@ class MigrateAccessTest extends BrowserTestBase {
   /**
    * Tests that only user 1 can access the migrate UI.
    */
-  public function testAccess() {
+  public function testAccess(): void {
     $this->drupalLogin($this->rootUser);
     $this->drupalGet('upgrade');
     $this->assertSession()->statusCodeEquals(200);

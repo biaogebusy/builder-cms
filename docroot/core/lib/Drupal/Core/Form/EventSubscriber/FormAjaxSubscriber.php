@@ -10,6 +10,7 @@ use Drupal\Core\Form\FormAjaxException;
 use Drupal\Core\Form\FormAjaxResponseBuilderInterface;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\StringTranslation\ByteSizeMarkup;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -86,7 +87,9 @@ class FormAjaxSubscriber implements EventSubscriberInterface {
     // Render a nice error message in case we have a file upload which exceeds
     // the configured upload limit.
     if ($exception instanceof BrokenPostRequestException && $request->query->has(FormBuilderInterface::AJAX_FORM_REQUEST)) {
-      $this->messenger->addError($this->t('An unrecoverable error occurred. The uploaded file likely exceeded the maximum file size (@size) that this server supports.', ['@size' => $this->formatSize($exception->getSize())]));
+      $this->messenger->addError($this->t('An unrecoverable error occurred. The uploaded file likely exceeded the maximum file size (@size) that this server supports.', [
+        '@size' => ByteSizeMarkup::create((int) $exception->getSize()),
+      ]));
       $response = new AjaxResponse(NULL, 200);
       $status_messages = ['#type' => 'status_messages'];
       $response->addCommand(new PrependCommand(NULL, $status_messages));
@@ -124,13 +127,13 @@ class FormAjaxSubscriber implements EventSubscriberInterface {
   /**
    * Extracts a form AJAX exception.
    *
-   * @param \Exception $e
+   * @param \Throwable $e
    *   A generic exception that might contain a form AJAX exception.
    *
    * @return \Drupal\Core\Form\FormAjaxException|null
    *   Either the form AJAX exception, or NULL if none could be found.
    */
-  protected function getFormAjaxException(\Exception $e) {
+  protected function getFormAjaxException(\Throwable $e) {
     $exception = NULL;
     while ($e) {
       if ($e instanceof FormAjaxException) {
@@ -148,15 +151,21 @@ class FormAjaxSubscriber implements EventSubscriberInterface {
    *
    * @return string
    *   The formatted size.
+   *
+   * @deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. Use
+   *   \Drupal\Core\StringTranslation\ByteSizeMarkup::create() instead.
+   *
+   * @see https://www.drupal.org/node/2999981
    */
   protected function formatSize($size) {
+    @trigger_error(__METHOD__ . '() is deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. Use \Drupal\Core\StringTranslation\ByteSizeMarkup::create() instead. See https://www.drupal.org/node/2999981', E_USER_DEPRECATED);
     return format_size($size);
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     // Run before exception.logger.
     $events[KernelEvents::EXCEPTION] = ['onException', 51];
     // Run before main_content_view_subscriber.

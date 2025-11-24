@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\blazy\Kernel;
 
-use Drupal\blazy\Blazy;
 // @todo use Drupal\Core\Render\Element;
 use Drupal\Core\Form\FormState;
+use Drupal\blazy\Blazy;
 use GuzzleHttp\Exception\GuzzleException;
 
 /**
@@ -60,6 +60,7 @@ class BlazyFormatterTest extends BlazyKernelTestBase {
     $this->assertInstanceOf('\Drupal\blazy\BlazyManagerInterface', $this->formatterInstance->blazyManager(), 'BlazyManager implements interface.');
 
     // Tests cache tags matching entity ::getCacheTags().
+    /* @phpstan-ignore-next-line */
     $item = $entity->get($this->testFieldName);
     $field = $build[$this->testFieldName];
 
@@ -132,6 +133,7 @@ class BlazyFormatterTest extends BlazyKernelTestBase {
     // 1. Tests formatter settings.
     $build = $this->display->build($this->entity);
 
+    /* @phpstan-ignore-next-line */
     $result = $this->entity->get($this->testFieldName)
       ->view(['type' => 'blazy']);
 
@@ -265,7 +267,7 @@ class BlazyFormatterTest extends BlazyKernelTestBase {
    * @return array
    *   An array of tested data.
    */
-  public function providerTestBlazyMedia() {
+  public static function providerTestBlazyMedia() {
     return [
       ['', TRUE],
       ['https://xyz123.com/x/123', FALSE],

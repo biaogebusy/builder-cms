@@ -36,6 +36,20 @@ abstract class FieldItemBase extends Map implements FieldItemInterface {
   /**
    * {@inheritdoc}
    */
+  public static function storageSettingsSummary(FieldStorageDefinitionInterface $storage_definition): array {
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function fieldSettingsSummary(FieldDefinitionInterface $field_definition): array {
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public static function mainPropertyName() {
     return 'value';
   }
@@ -43,7 +57,7 @@ abstract class FieldItemBase extends Map implements FieldItemInterface {
   /**
    * {@inheritdoc}
    */
-  public function __construct(ComplexDataDefinitionInterface $definition, $name = NULL, TypedDataInterface $parent = NULL) {
+  public function __construct(ComplexDataDefinitionInterface $definition, $name = NULL, ?TypedDataInterface $parent = NULL) {
     parent::__construct($definition, $name, $parent);
     // Initialize computed properties by default, such that they get cloned
     // with the whole item.

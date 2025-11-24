@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image_effects\Functional\Effect;
 
 use Drupal\Tests\image_effects\Functional\ImageEffectsTestBase;
@@ -23,7 +25,7 @@ class ScaleAndSmartCropTest extends ImageEffectsTestBase {
    *
    * @dataProvider providerToolkits
    */
-  public function testScaleAndSmartCrop($toolkit_id, $toolkit_config, array $toolkit_settings) {
+  public function testScaleAndSmartCrop(string $toolkit_id, string $toolkit_config, array $toolkit_settings): void {
     $this->changeToolkit($toolkit_id, $toolkit_config, $toolkit_settings);
 
     $test_data = [
@@ -75,7 +77,7 @@ class ScaleAndSmartCropTest extends ImageEffectsTestBase {
       }
 
       // Remove effect.
-      $uuid = $this->removeEffectFromTestStyle($uuid);
+      $this->removeEffectFromTestStyle($uuid);
     }
   }
 
@@ -91,7 +93,7 @@ class ScaleAndSmartCropTest extends ImageEffectsTestBase {
    *
    * @dataProvider providerToolkits
    */
-  public function testScaleAndSmartCropUpscale($toolkit_id, $toolkit_config, array $toolkit_settings) {
+  public function testScaleAndSmartCropUpscale(string $toolkit_id, string $toolkit_config, array $toolkit_settings): void {
     $this->changeToolkit($toolkit_id, $toolkit_config, $toolkit_settings);
 
     $test_data = [
@@ -144,7 +146,7 @@ class ScaleAndSmartCropTest extends ImageEffectsTestBase {
       }
 
       // Remove effect.
-      $uuid = $this->removeEffectFromTestStyle($uuid);
+      $this->removeEffectFromTestStyle($uuid);
     }
   }
 

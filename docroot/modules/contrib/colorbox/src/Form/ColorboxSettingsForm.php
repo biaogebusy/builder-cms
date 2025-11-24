@@ -4,14 +4,16 @@ namespace Drupal\colorbox\Form;
 
 use Drupal\Core\Asset\LibraryDiscoveryInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\TypedConfigManagerInterface;
+use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Extension\ModuleExtensionList;
 
+// cspell:ignore slideshowauto slideshowspeed
 /**
- * General configuration form for controlling the colorbox behaviour..
+ * General configuration form for controlling the colorbox behavior.
  */
 class ColorboxSettingsForm extends ConfigFormBase {
 
@@ -25,7 +27,7 @@ class ColorboxSettingsForm extends ConfigFormBase {
   /**
    * Library discovery service.
    *
-   * @var LibraryDiscoveryInterface
+   * @var Drupal\Core\Asset\LibraryDiscoveryInterface
    */
   protected $libraryDiscovery;
 
@@ -51,6 +53,8 @@ class ColorboxSettingsForm extends ConfigFormBase {
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The Configuration Factory.
+   * @param \Drupal\Core\Config\TypedConfigManagerInterface $typedConfigManager
+   *   The typed configuration manager service.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $moduleHandler
    *   The module handler service.
    * @param \Drupal\Core\Extension\ModuleExtensionList $extension_list_module
@@ -58,11 +62,14 @@ class ColorboxSettingsForm extends ConfigFormBase {
    * @param \Drupal\Core\Asset\LibraryDiscoveryInterface $libraryDiscovery
    *   The library discovery service.
    */
-  public function __construct(ConfigFactoryInterface $config_factory,
-                              ModuleHandlerInterface $moduleHandler,
-                              ModuleExtensionList $extension_list_module,
-                              LibraryDiscoveryInterface $libraryDiscovery) {
-    parent::__construct($config_factory);
+  public function __construct(
+    ConfigFactoryInterface $config_factory,
+    TypedConfigManagerInterface $typedConfigManager,
+    ModuleHandlerInterface $moduleHandler,
+    ModuleExtensionList $extension_list_module,
+    LibraryDiscoveryInterface $libraryDiscovery,
+  ) {
+    parent::__construct($config_factory, $typedConfigManager);
     $this->moduleHandler = $moduleHandler;
     $this->extensionListModule = $extension_list_module;
     $this->libraryDiscovery = $libraryDiscovery;
@@ -74,6 +81,7 @@ class ColorboxSettingsForm extends ConfigFormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('config.factory'),
+      $container->get('config.typed'),
       $container->get('module_handler'),
       $container->get('extension.list.module'),
       $container->get('library.discovery')
@@ -116,30 +124,24 @@ class ColorboxSettingsForm extends ConfigFormBase {
       '#open' => TRUE,
     ];
     $dompurify_message = $dompurify_exists ?
-      $this->t('The DOMPurify library is installed. ' .
-        'This library will sanitize HTML in Colorbox captions.') :
-      $this->t('The <a href="@dompurify_link">DOMPurify</a> ' .
-        'library is not installed. ' .
-        'This library is necessary if you want to use HTML in Colorbox captions. ' .
-        'Without it, all captions will be treated as plain text.',
+      $this->t('The DOMPurify library is installed. This library will sanitize HTML in Colorbox captions.') :
+      $this->t('The <a href="@dompurify_link">DOMPurify</a> library is not installed. This library is necessary if you want to use HTML in Colorbox captions. Without it, all captions will be treated as plain text.',
         [
-          '@dompurify_link' => 'https://github.com/cure53/DOMPurify/archive/main.zip'
+          '@dompurify_link' => 'https://github.com/cure53/DOMPurify/archive/main.zip',
         ]);
-    $form['colorbox_dompurify']['dompurify_message'] = array(
+    $form['colorbox_dompurify']['dompurify_message'] = [
       '#type' => 'markup',
       '#prefix' => '<p>',
       '#suffix' => '</p>',
       '#markup' => $dompurify_message,
-    );
+    ];
     if (!$dompurify_exists) {
-      $form['colorbox_dompurify']['dompurify_hide_warning'] = array(
+      $form['colorbox_dompurify']['dompurify_hide_warning'] = [
         '#type' => 'checkbox',
-        '#title' => t('Don\'t show warning on status report'),
+        '#title' => $this->t("Don't show warning on status report"),
         '#default_value' => $config->get('dompurify_hide_warning'),
-        '#description' => t('By default, a warning appears on Drupal\'s ' .
-          'status report if this library is missing. Check this box to ' .
-          'suppress the warning.'),
-      );
+        '#description' => $this->t("By default, a warning appears on Drupal's status report if this library is missing. Check this box to suppress the warning."),
+      ];
     }
 
     $form['colorbox_custom_settings'] = [
@@ -348,7 +350,7 @@ class ColorboxSettingsForm extends ConfigFormBase {
       '#title' => $this->t('Unique per-request gallery token'),
       '#options' => [1 => $this->t('On'), 0 => $this->t('Off')],
       '#default_value' => $config->get('advanced.unique_token'),
-      '#description' => $this->t('If On (default), Colorbox will add a unique per-request token to the gallery id to avoid images being added manually to galleries. The token was added as a security fix but some see the old behavoiur as an feature and this settings makes it possible to remove the token.'),
+      '#description' => $this->t('If On (default), Colorbox will add a unique per-request token to the gallery id to avoid images being added manually to galleries. The token was added as a security fix but some see the old behavior as an feature and this settings makes it possible to remove the token.'),
     ];
     $form['colorbox_advanced_settings']['colorbox_mobile_detect'] = [
       '#type' => 'radios',

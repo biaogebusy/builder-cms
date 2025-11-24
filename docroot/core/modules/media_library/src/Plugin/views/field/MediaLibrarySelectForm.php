@@ -2,11 +2,15 @@
 
 namespace Drupal\media_library\Plugin\views\field;
 
+use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\CloseDialogCommand;
+use Drupal\Core\Ajax\MessageCommand;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Form\WorkspaceSafeFormInterface;
 use Drupal\Core\Url;
 use Drupal\media_library\MediaLibraryState;
+use Drupal\views\Attribute\ViewsField;
 use Drupal\views\Plugin\views\field\FieldPluginBase;
 use Drupal\views\Render\ViewsRenderPipelineMarkup;
 use Drupal\views\ResultRow;
@@ -15,18 +19,44 @@ use Symfony\Component\HttpFoundation\Request;
 /**
  * Defines a field that outputs a checkbox and form for selecting media.
  *
- * @ViewsField("media_library_select_form")
- *
  * @internal
  *   Plugin classes are internal.
  */
-class MediaLibrarySelectForm extends FieldPluginBase {
+#[ViewsField("media_library_select_form")]
+class MediaLibrarySelectForm extends FieldPluginBase implements WorkspaceSafeFormInterface {
 
   /**
    * {@inheritdoc}
    */
   public function getValue(ResultRow $row, $field = NULL) {
-    return '<!--form-item-' . $this->options['id'] . '--' . $row->index . '-->';
+    return '<!--form-item-' . $this->options['id'] . '--' . $row->mid . '-->';
+  }
+
+  /**
+   * Return the name of a form field.
+   *
+   * @see \Drupal\views\Form\ViewsFormMainForm
+   *
+   * @return string
+   *   The form field name.
+   */
+  public function form_element_name(): string {
+    return $this->field;
+  }
+
+  /**
+   * Return a media entity ID from a views result row.
+   *
+   * @see \Drupal\views\Form\ViewsFormMainForm
+   *
+   * @param int $row_id
+   *   The index of a views result row.
+   *
+   * @return string
+   *   The ID of a media entity.
+   */
+  public function form_element_row_id(int $row_id): string {
+    return $this->view->result[$row_id]->mid;
   }
 
   /**
@@ -46,6 +76,14 @@ class MediaLibrarySelectForm extends FieldPluginBase {
    */
   public function viewsForm(array &$form, FormStateInterface $form_state) {
     $form['#attributes']['class'] = ['js-media-library-views-form'];
+    // Add target for AJAX messages.
+    $form['media_library_messages'] = [
+      '#type' => 'container',
+      '#attributes' => [
+        'id' => 'media-library-messages',
+      ],
+      '#weight' => -10,
+    ];
 
     // Add an attribute that identifies the media type displayed in the form.
     if (isset($this->view->args[0])) {
@@ -56,7 +94,11 @@ class MediaLibrarySelectForm extends FieldPluginBase {
     $form[$this->options['id']]['#tree'] = TRUE;
     foreach ($this->view->result as $row_index => $row) {
       $entity = $this->getEntity($row);
-      $form[$this->options['id']][$row_index] = [
+      if (!$entity) {
+        $form[$this->options['id']][$row_index] = [];
+        continue;
+      }
+      $form[$this->options['id']][$row->mid] = [
         '#type' => 'checkbox',
         '#title' => $this->t('Select @label', [
           '@label' => $entity->label(),
@@ -90,9 +132,6 @@ class MediaLibrarySelectForm extends FieldPluginBase {
         'query' => $query,
       ],
       'callback' => [static::class, 'updateWidget'],
-      // The AJAX system automatically moves focus to the first tabbable
-      // element of the modal, so we need to disable refocus on the button.
-      'disable-refocus' => TRUE,
     ];
 
     $form['actions']['submit']['#value'] = $this->t('Insert selected');
@@ -120,6 +159,19 @@ class MediaLibrarySelectForm extends FieldPluginBase {
 
     // Allow the opener service to handle the selection.
     $state = MediaLibraryState::fromRequest($request);
+
+    $current_selection = $form_state->getValue('media_library_select_form_selection');
+    $available_slots = $state->getAvailableSlots();
+    $selected_count = count(explode(',', $current_selection));
+    if ($available_slots > 0 && $selected_count > $available_slots) {
+      $response = new AjaxResponse();
+      $error = \Drupal::translation()->formatPlural($selected_count - $available_slots, 'There are currently @total items selected. The maximum number of items for the field is @max. Remove @count item from the selection.', 'There are currently @total items selected. The maximum number of items for the field is @max. Remove @count items from the selection.', [
+        '@total' => $selected_count,
+        '@max' => $available_slots,
+      ]);
+      $response->addCommand(new MessageCommand($error, '#media-library-messages', ['type' => 'error']));
+      return $response;
+    }
 
     return \Drupal::service('media_library.opener_resolver')
       ->get($state)

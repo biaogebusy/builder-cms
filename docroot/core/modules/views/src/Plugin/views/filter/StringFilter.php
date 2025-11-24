@@ -4,6 +4,7 @@ namespace Drupal\views\Plugin\views\filter;
 
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\views\Attribute\ViewsFilter;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -12,10 +13,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Including equality, like, not like, etc.
  *
  * @ingroup views_filter_handlers
- *
- * @ViewsFilter("string")
  */
-class StringFilter extends FilterPluginBase {
+#[ViewsFilter("string")]
+class StringFilter extends FilterPluginBase implements FilterOperatorsInterface {
 
   /**
    * All words separated by spaces or sentences encapsulated by double quotes.
@@ -42,7 +42,7 @@ class StringFilter extends FilterPluginBase {
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Database\Connection $connection
@@ -97,11 +97,7 @@ class StringFilter extends FilterPluginBase {
   }
 
   /**
-   * Get the operators.
-   *
-   * This kind of construct makes it relatively easy for a child class
-   * to add or remove functionality by overriding this function and
-   * adding/removing items from this array.
+   * {@inheritdoc}
    */
   public function operators() {
     $operators = [
@@ -183,8 +179,14 @@ class StringFilter extends FilterPluginBase {
         'method' => 'opRegex',
         'values' => 1,
       ],
+      'not_regular_expression' => [
+        'title' => $this->t('Negated regular expression'),
+        'short' => $this->t('not regex'),
+        'method' => 'opNotRegex',
+        'values' => 1,
+      ],
     ];
-    // if the definition allows for the empty operator, add it.
+    // If the definition allows for the empty operator, add it.
     if (!empty($this->definition['allow empty'])) {
       $operators += [
         'empty' => [
@@ -263,7 +265,7 @@ class StringFilter extends FilterPluginBase {
       $identifier = $this->options['expose']['identifier'];
 
       if (empty($this->options['expose']['use_operator']) || empty($this->options['expose']['operator_id'])) {
-        // exposed and locked.
+        // Exposed and locked.
         $which = in_array($this->operator, $this->operatorValues(1)) ? 'value' : 'none';
       }
       else {
@@ -352,7 +354,7 @@ class StringFilter extends FilterPluginBase {
    * Adds a where clause for the operation, 'equals'.
    */
   public function opEqual($field) {
-    $this->query->addWhere($this->options['group'], $field, $this->value, $this->operator());
+    $this->query->addWhere($this->options['group'], $field, $this->connection->escapeLike($this->value), $this->operator());
   }
 
   protected function opContains($field) {
@@ -388,7 +390,7 @@ class StringFilter extends FilterPluginBase {
       return;
     }
 
-    // previously this was a call_user_func_array but that's unnecessary
+    // Previously this was a call_user_func_array but that's unnecessary
     // as views will unpack an array that is a single arg.
     $this->query->addWhere($this->options['group'], $where);
   }
@@ -440,6 +442,16 @@ class StringFilter extends FilterPluginBase {
    */
   protected function opRegex($field) {
     $this->query->addWhere($this->options['group'], $field, $this->value, 'REGEXP');
+  }
+
+  /**
+   * Filters by a negated regular expression.
+   *
+   * @param string $field
+   *   The expression pointing to the queries field, for example "foo.bar".
+   */
+  protected function opNotRegex($field) {
+    $this->query->addWhere($this->options['group'], $field, $this->value, 'NOT REGEXP');
   }
 
   protected function opEmpty($field) {

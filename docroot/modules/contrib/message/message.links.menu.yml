@@ -21,4 +21,4 @@ message.admin_content:
   title: 'Messages'
   description: 'Display all messages.'
   parent: 'system.admin_content'
-  route_name: message.messages
+  route_name: view.message.page_1

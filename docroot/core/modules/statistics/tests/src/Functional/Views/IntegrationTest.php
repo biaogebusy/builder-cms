@@ -1,13 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\statistics\Functional\Views;
 
 use Drupal\Tests\views\Functional\ViewTestBase;
+use Drupal\user\Entity\User;
 
 /**
  * Tests basic integration of views data from the statistics module.
  *
  * @group statistics
+ * @group legacy
  * @see
  */
 class IntegrationTest extends ViewTestBase {
@@ -37,7 +41,7 @@ class IntegrationTest extends ViewTestBase {
    *
    * @var \Drupal\user\Entity\User
    */
-  protected $deniedUser;
+  protected User $deniedUser;
 
   /**
    * Stores the node object which is used by the test.
@@ -81,7 +85,7 @@ class IntegrationTest extends ViewTestBase {
   /**
    * Tests the integration of the {node_counter} table in views.
    */
-  public function testNodeCounterIntegration() {
+  public function testNodeCounterIntegration(): void {
     $this->drupalLogin($this->webUser);
 
     $this->drupalGet('node/' . $this->node->id());

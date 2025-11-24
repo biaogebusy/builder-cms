@@ -14,6 +14,9 @@ use Drupal\webform\WebformInterface;
  */
 abstract class WebformViewsTestBase extends KernelTestBase {
 
+  /**
+   * {@inheritdoc}
+   */
   protected static $modules = ['system', 'user', 'views', 'webform', 'webform_views', 'webform_views_test'];
 
   /**
@@ -77,7 +80,7 @@ abstract class WebformViewsTestBase extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public function setUp() {
+  public function setUp(): void {
     parent::setUp();
 
     $this->installSchema('system', ['sequences']);

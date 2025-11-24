@@ -2,6 +2,8 @@
 
 namespace Drupal\Component\Utility;
 
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
+
 /**
  * Provides helper methods for byte conversions.
  */
@@ -61,25 +63,6 @@ class Bytes {
   /**
    * Parses a given byte size.
    *
-   * @param mixed $size
-   *   An integer or string size expressed as a number of bytes with optional SI
-   *   or IEC binary unit prefix (e.g. 2, 3K, 5MB, 10G, 6GiB, 8 bytes, 9mbytes).
-   *
-   * @return int
-   *   An integer representation of the size in bytes.
-   *
-   * @deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. Use \Drupal\Component\Utility\Bytes::toNumber() instead
-   *
-   * @see https://www.drupal.org/node/3162663
-   */
-  public static function toInt($size) {
-    @trigger_error('\Drupal\Component\Utility\Bytes::toInt() is deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. Use \Drupal\Component\Utility\Bytes::toNumber() instead. See https://www.drupal.org/node/3162663', E_USER_DEPRECATED);
-    return self::toNumber($size);
-  }
-
-  /**
-   * Parses a given byte size.
-   *
    * @param int|float|string $size
    *   An integer, float, or string size expressed as a number of bytes with
    *   optional SI or IEC binary unit prefix (e.g. 2, 2.4, 3K, 5MB, 10G, 6GiB,
@@ -126,6 +109,32 @@ class Bytes {
     $string = trim($string);
 
     return in_array(strtolower($string), self::ALLOWED_SUFFIXES);
+  }
+
+  /**
+   * Validates a string is a representation of a number of bytes.
+   *
+   * To be used with the `Callback` constraint.
+   *
+   * @param string|int|float|null $value
+   *   The string, integer or float to validate.
+   * @param \Symfony\Component\Validator\Context\ExecutionContextInterface $context
+   *   The validation execution context.
+   *
+   * @see \Symfony\Component\Validator\Constraints\CallbackValidator
+   * @see core/config/schema/core.data_types.schema.yml
+   */
+  public static function validateConstraint(string|int|float|null $value, ExecutionContextInterface $context): void {
+    // Ignore NULL values (i.e. support `nullable: true`).
+    if ($value === NULL) {
+      return;
+    }
+
+    if (!self::validate((string) $value)) {
+      $context->addViolation('This value must be a number of bytes, optionally with a unit such as "MB" or "megabytes". %value does not represent a number of bytes.', [
+        '%value' => $value,
+      ]);
+    }
   }
 
 }

@@ -1,27 +1,32 @@
 services:
+  _defaults:
+    autowire: true
   commerce_store.current_store:
     class: Drupal\commerce_store\CurrentStore
-    arguments: ['@request_stack', '@commerce_store.chain_store_resolver']
+  Drupal\commerce_store\CurrentStoreInterface: '@commerce_store.current_store'
 
   commerce_store.chain_store_resolver:
     class: Drupal\commerce_store\Resolver\ChainStoreResolver
     tags:
       - { name: service_collector, call: addResolver, tag: commerce_store.store_resolver }
+  Drupal\commerce_store\Resolver\ChainStoreResolverInterface: '@commerce_store.chain_store_resolver'
 
   commerce_store.default_store_resolver:
     class: Drupal\commerce_store\Resolver\DefaultStoreResolver
-    arguments: ['@entity_type.manager']
     tags:
       - { name: commerce_store.store_resolver, priority: -100 }
 
   commerce_store.store_country_resolver:
     class: Drupal\commerce_store\Resolver\StoreCountryResolver
-    arguments: ['@commerce_store.current_store']
     tags:
       - { name: commerce.country_resolver, priority: -90 }
 
+  commerce_store.store_currency_resolver:
+    class: Drupal\commerce_store\Resolver\StoreCurrencyResolver
+    tags:
+      - { name: commerce_price.currency_resolver, priority: -100 }
+
   cache_context.store:
     class: Drupal\commerce_store\Cache\Context\StoreCacheContext
-    arguments: ['@commerce_store.current_store']
     tags:
       - { name: cache.context}

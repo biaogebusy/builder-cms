@@ -1,0 +1,23 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"HI",
+		"Haikou Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Longhua Qu": {
+			"local_name": "龙华区"
+		},
+		"Meilan Qu": {
+			"local_name": "美兰区"
+		},
+		"Qiongshan Qu": {
+			"local_name": "琼山区"
+		},
+		"Xiuying Qu": {
+			"local_name": "秀英区"
+		}
+	}
+}

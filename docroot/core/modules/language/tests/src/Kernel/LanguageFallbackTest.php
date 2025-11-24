@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\language\Kernel;
 
 use Drupal\Core\Language\LanguageInterface;
@@ -29,7 +31,7 @@ class LanguageFallbackTest extends LanguageTestBase {
   /**
    * Tests language fallback candidates.
    */
-  public function testCandidates() {
+  public function testCandidates(): void {
     $language_list = $this->languageManager->getLanguages();
     $expected = array_keys($language_list + [LanguageInterface::LANGCODE_NOT_SPECIFIED => NULL]);
 

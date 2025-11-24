@@ -12,7 +12,7 @@ label: 'Private Message'
 description: ''
 required: true
 translatable: false
-default_value: {  }
+default_value: {}
 default_value_callback: ''
 settings:
   handler: 'default:private_message'

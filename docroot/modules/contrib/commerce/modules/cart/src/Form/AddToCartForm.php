@@ -2,22 +2,13 @@
 
 namespace Drupal\commerce_cart\Form;
 
-use Drupal\commerce\Context;
-use Drupal\commerce_cart\CartManagerInterface;
-use Drupal\commerce_cart\CartProviderInterface;
-use Drupal\commerce_order\Entity\OrderItemInterface;
-use Drupal\commerce_order\Resolver\OrderTypeResolverInterface;
-use Drupal\commerce_price\Resolver\ChainPriceResolverInterface;
-use Drupal\commerce_store\CurrentStoreInterface;
-use Drupal\commerce_store\SelectStoreTrait;
-use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Entity\Display\EntityFormDisplayInterface;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
-use Drupal\Core\Entity\EntityRepositoryInterface;
-use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Session\AccountInterface;
+use Drupal\commerce\Context;
+use Drupal\commerce_order\Entity\OrderItemInterface;
+use Drupal\commerce_store\SelectStoreTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -77,53 +68,17 @@ class AddToCartForm extends ContentEntityForm implements AddToCartFormInterface 
   protected $formId;
 
   /**
-   * Constructs a new AddToCartForm object.
-   *
-   * @param \Drupal\Core\Entity\EntityRepositoryInterface $entity_repository
-   *   The entity repository.
-   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
-   *   The entity type bundle info.
-   * @param \Drupal\Component\Datetime\TimeInterface $time
-   *   The time.
-   * @param \Drupal\commerce_cart\CartManagerInterface $cart_manager
-   *   The cart manager.
-   * @param \Drupal\commerce_cart\CartProviderInterface $cart_provider
-   *   The cart provider.
-   * @param \Drupal\commerce_order\Resolver\OrderTypeResolverInterface $order_type_resolver
-   *   The order type resolver.
-   * @param \Drupal\commerce_store\CurrentStoreInterface $current_store
-   *   The current store.
-   * @param \Drupal\commerce_price\Resolver\ChainPriceResolverInterface $chain_price_resolver
-   *   The chain base price resolver.
-   * @param \Drupal\Core\Session\AccountInterface $current_user
-   *   The current user.
-   */
-  public function __construct(EntityRepositoryInterface $entity_repository, EntityTypeBundleInfoInterface $entity_type_bundle_info, TimeInterface $time, CartManagerInterface $cart_manager, CartProviderInterface $cart_provider, OrderTypeResolverInterface $order_type_resolver, CurrentStoreInterface $current_store, ChainPriceResolverInterface $chain_price_resolver, AccountInterface $current_user) {
-    parent::__construct($entity_repository, $entity_type_bundle_info, $time);
-
-    $this->cartManager = $cart_manager;
-    $this->cartProvider = $cart_provider;
-    $this->orderTypeResolver = $order_type_resolver;
-    $this->currentStore = $current_store;
-    $this->chainPriceResolver = $chain_price_resolver;
-    $this->currentUser = $current_user;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('entity.repository'),
-      $container->get('entity_type.bundle.info'),
-      $container->get('datetime.time'),
-      $container->get('commerce_cart.cart_manager'),
-      $container->get('commerce_cart.cart_provider'),
-      $container->get('commerce_order.chain_order_type_resolver'),
-      $container->get('commerce_store.current_store'),
-      $container->get('commerce_price.chain_price_resolver'),
-      $container->get('current_user')
-    );
+    $instance = parent::create($container);
+    $instance->cartManager = $container->get('commerce_cart.cart_manager');
+    $instance->cartProvider = $container->get('commerce_cart.cart_provider');
+    $instance->orderTypeResolver = $container->get('commerce_order.chain_order_type_resolver');
+    $instance->currentStore = $container->get('commerce_store.current_store');
+    $instance->chainPriceResolver = $container->get('commerce_price.chain_price_resolver');
+    $instance->currentUser = $container->get('current_user');
+    return $instance;
   }
 
   /**

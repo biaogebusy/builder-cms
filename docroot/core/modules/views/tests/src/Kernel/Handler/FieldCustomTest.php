@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Kernel\Handler;
 
 use Drupal\Component\Utility\Xss;
@@ -32,7 +34,7 @@ class FieldCustomTest extends ViewsKernelTestBase {
   /**
    * Ensure that custom fields work and doesn't escape unnecessary markup.
    */
-  public function testFieldCustom() {
+  public function testFieldCustom(): void {
     $view = Views::getView('test_view');
     $view->setDisplay();
 
@@ -52,13 +54,13 @@ class FieldCustomTest extends ViewsKernelTestBase {
 
     $this->executeView($view);
 
-    $this->assertEquals($random, $view->style_plugin->getField(0, 'name'));
+    $this->assertSame($random, (string) $view->style_plugin->getField(0, 'name'));
   }
 
   /**
    * Ensure that custom fields can use tokens.
    */
-  public function testFieldCustomTokens() {
+  public function testFieldCustomTokens(): void {
     $view = Views::getView('test_view');
     $view->setDisplay();
 
@@ -92,7 +94,7 @@ class FieldCustomTest extends ViewsKernelTestBase {
   /**
    * Ensure that custom field content is XSS filtered.
    */
-  public function testCustomFieldXss() {
+  public function testCustomFieldXss(): void {
     $view = Views::getView('test_view');
     $view->setDisplay();
 

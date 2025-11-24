@@ -3,6 +3,7 @@
 namespace Drupal\user\Form;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Form\WorkspaceSafeFormInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Url;
@@ -14,7 +15,7 @@ use Drupal\Core\Url;
  *
  * @internal
  */
-class UserPasswordResetForm extends FormBase {
+class UserPasswordResetForm extends FormBase implements WorkspaceSafeFormInterface {
 
   /**
    * {@inheritdoc}
@@ -40,7 +41,7 @@ class UserPasswordResetForm extends FormBase {
    * @param string $hash
    *   Login link hash.
    */
-  public function buildForm(array $form, FormStateInterface $form_state, AccountInterface $user = NULL, $expiration_date = NULL, $timestamp = NULL, $hash = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?AccountInterface $user = NULL, $expiration_date = NULL, $timestamp = NULL, $hash = NULL) {
     if ($expiration_date) {
       $form['message'] = ['#markup' => $this->t('<p>This is a one-time login for %user_name and will expire on %expiration_date.</p><p>Click on this button to log in to the site and change your password.</p>', ['%user_name' => $user->getAccountName(), '%expiration_date' => $expiration_date])];
       $form['#title'] = $this->t('Reset password');

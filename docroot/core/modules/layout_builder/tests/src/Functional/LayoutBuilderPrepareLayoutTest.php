@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\layout_builder\Functional;
 
 use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
@@ -73,7 +75,7 @@ class LayoutBuilderPrepareLayoutTest extends BrowserTestBase {
    *
    * @see \Drupal\layout_builder_element_test\EventSubscriber\TestPrepareLayout;
    */
-  public function testAlterPrepareLayout() {
+  public function testAlterPrepareLayout(): void {
     $assert_session = $this->assertSession();
     $page = $this->getSession()->getPage();
 

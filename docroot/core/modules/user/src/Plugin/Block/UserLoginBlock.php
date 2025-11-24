@@ -4,25 +4,28 @@ namespace Drupal\user\Plugin\Block;
 
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\Core\Routing\RedirectDestinationTrait;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Block\BlockBase;
+use Drupal\Core\Form\FormBuilderInterface;
+use Drupal\user\Form\UserLoginForm;
 use Drupal\user\UserInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a 'User login' block.
- *
- * @Block(
- *   id = "user_login_block",
- *   admin_label = @Translation("User login"),
- *   category = @Translation("Forms")
- * )
  */
+#[Block(
+  id: "user_login_block",
+  admin_label: new TranslatableMarkup("User login"),
+  category: new TranslatableMarkup("Forms")
+)]
 class UserLoginBlock extends BlockBase implements ContainerFactoryPluginInterface, TrustedCallbackInterface {
 
   use RedirectDestinationTrait;
@@ -43,16 +46,28 @@ class UserLoginBlock extends BlockBase implements ContainerFactoryPluginInterfac
    *   initialize the defined contexts by setting it to an array of context
    *   values keyed by context names.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
    *   The route match.
+   * @param \Drupal\Core\Form\FormBuilderInterface $formBuilder
+   *   The form builder.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, RouteMatchInterface $route_match) {
+  public function __construct(
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+    RouteMatchInterface $route_match,
+    protected ?FormBuilderInterface $formBuilder = NULL,
+  ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     $this->routeMatch = $route_match;
+    if (!$formBuilder) {
+      @trigger_error('Calling ' . __METHOD__ . ' without the $formBuilder argument is deprecated in drupal:10.3.0 and it will be required in drupal:11.0.0. See https://www.drupal.org/node/3159776', E_USER_DEPRECATED);
+      $this->formBuilder = \Drupal::service('form_builder');
+    }
   }
 
   /**
@@ -63,7 +78,8 @@ class UserLoginBlock extends BlockBase implements ContainerFactoryPluginInterfac
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get('current_route_match')
+      $container->get('current_route_match'),
+      $container->get('form_builder')
     );
   }
 
@@ -83,15 +99,8 @@ class UserLoginBlock extends BlockBase implements ContainerFactoryPluginInterfac
    * {@inheritdoc}
    */
   public function build() {
-    $form = \Drupal::formBuilder()->getForm('Drupal\user\Form\UserLoginForm');
+    $form = $this->formBuilder->getForm(UserLoginForm::class);
     unset($form['name']['#attributes']['autofocus']);
-    // When unsetting field descriptions, also unset aria-describedby attributes
-    // to avoid introducing an accessibility bug.
-    // @todo Do this automatically in https://www.drupal.org/node/2547063.
-    unset($form['name']['#description']);
-    unset($form['name']['#attributes']['aria-describedby']);
-    unset($form['pass']['#description']);
-    unset($form['pass']['#attributes']['aria-describedby']);
     $form['name']['#size'] = 15;
     $form['pass']['#size'] = 15;
 
@@ -105,6 +114,7 @@ class UserLoginBlock extends BlockBase implements ContainerFactoryPluginInterfac
     // This is based on the implementation in
     // \Drupal\Core\Form\FormBuilder::prepareForm(), but the user login block
     // requires different behavior for the destination query argument.
+    // cspell:disable-next-line
     $placeholder = 'form_action_p_4r8ITd22yaUvXM6SzwrSe9rnQWe48hz9k1Sxto3pBvE';
 
     $form['#attached']['placeholders'][$placeholder] = [

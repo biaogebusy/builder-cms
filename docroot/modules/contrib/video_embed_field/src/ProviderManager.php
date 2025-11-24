@@ -17,6 +17,7 @@ class ProviderManager extends DefaultPluginManager implements ProviderManagerInt
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
     parent::__construct('Plugin/video_embed_field/Provider', $namespaces, $module_handler, 'Drupal\video_embed_field\ProviderPluginInterface', 'Drupal\video_embed_field\Annotation\VideoEmbedProvider');
+    $this->setCacheBackend($cache_backend, 'video_embed_field_provider_plugins');
     $this->alterInfo('video_embed_field_provider_info');
   }
 

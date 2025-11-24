@@ -32,7 +32,7 @@ const ENTITY_TEST_TYPES_REVISABLE = 1;
 const ENTITY_TEST_TYPES_MULTILINGUAL = 2;
 
 /**
- * Filter that limits test entity list to routeable ones.
+ * Filter that limits test entity list to ones that can be routed.
  */
 const ENTITY_TEST_TYPES_ROUTING = 3;
 
@@ -71,6 +71,7 @@ function entity_test_entity_types($filter = NULL) {
   if ($filter === ENTITY_TEST_TYPES_ROUTING) {
     $types[] = 'entity_test_base_field_display';
     $types[] = 'entity_test_string_id';
+    $types[] = 'entity_test_uuid_id';
     $types[] = 'entity_test_no_id';
     $types[] = 'entity_test_mul_with_bundle';
   }
@@ -295,6 +296,15 @@ function entity_test_entity_form_mode_info_alter(&$form_modes) {
 }
 
 /**
+ * Implements hook_ENTITY_TYPE_view_mode_alter().
+ */
+function entity_test_entity_test_view_mode_alter(string &$view_mode, EntityInterface $entity): void {
+  if ($view_mode == 'entity_test.vm_alter_test') {
+    $view_mode = 'entity_test.vm_alter_full';
+  }
+}
+
+/**
  * Implements hook_entity_extra_field_info().
  */
 function entity_test_entity_extra_field_info() {
@@ -392,7 +402,7 @@ function entity_test_entity_update(EntityInterface $entity) {
  *
  * @see \Drupal\system\Tests\Entity\FieldAccessTest::testFieldAccess()
  */
-function entity_test_entity_field_access($operation, FieldDefinitionInterface $field_definition, AccountInterface $account, FieldItemListInterface $items = NULL) {
+function entity_test_entity_field_access($operation, FieldDefinitionInterface $field_definition, AccountInterface $account, ?FieldItemListInterface $items = NULL) {
   if ($field_definition->getName() == 'field_test_text') {
     if ($items) {
       if ($items->value == 'no access value') {
@@ -808,5 +818,14 @@ function entity_test_query_entity_test_access_alter(AlterableInterface $query) {
   /** @var \Drupal\Core\Database\Query\Select|\Drupal\Core\Database\Query\AlterableInterface $query */
   if (!\Drupal::currentUser()->hasPermission('view all entity_test_query_access entities')) {
     $query->condition('entity_test_query_access.name', 'published entity');
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_form_mode_alter().
+ */
+function entity_test_entity_test_form_mode_alter(&$form_mode, EntityInterface $entity): void {
+  if ($entity->getEntityTypeId() === 'entity_test' && $entity->get('name')->value === 'test_entity_type_form_mode_alter') {
+    $form_mode = 'compact';
   }
 }

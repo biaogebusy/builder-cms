@@ -34,9 +34,11 @@ class RoleListBuilder extends DraggableListBuilder {
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger.
    */
-  public function __construct(EntityTypeInterface $entityType,
-                              EntityStorageInterface $storage,
-                              MessengerInterface $messenger) {
+  public function __construct(
+    EntityTypeInterface $entityType,
+    EntityStorageInterface $storage,
+    MessengerInterface $messenger,
+  ) {
     parent::__construct($entityType, $storage);
     $this->messenger = $messenger;
   }
@@ -63,7 +65,7 @@ class RoleListBuilder extends DraggableListBuilder {
    * {@inheritdoc}
    */
   public function buildHeader() {
-    $header['label'] = t('Name');
+    $header['label'] = $this->t('Name');
     return $header + parent::buildHeader();
   }
 
@@ -83,7 +85,7 @@ class RoleListBuilder extends DraggableListBuilder {
 
     if ($entity->hasLinkTemplate('edit-permissions-form')) {
       $operations['permissions'] = [
-        'title' => t('Edit permissions'),
+        'title' => $this->t('Edit permissions'),
         'weight' => 20,
         'url' => $entity->toUrl('edit-permissions-form'),
       ];

@@ -41,9 +41,9 @@ class WebformElementCounterTest extends WebformElementBrowserTestBase {
       'counter_words_max' => 'one two three four five six seven eight nine ten eleven',
     ];
     $this->submitForm($edit, 'Submit');
-    $assert_session->responseContains('counter_characters_min (5) must be longer than <em class="placeholder">5</em> characters but is currently <em class="placeholder">3</em> characters long.');
+    $assert_session->responseContains('counter_characters_min (5) must be at least <em class="placeholder">5</em> characters but is currently <em class="placeholder">3</em> characters long.');
     $assert_session->responseContains('counter_characters_max (10) cannot be longer than <em class="placeholder">10</em> characters but is currently <em class="placeholder">13</em> characters long.');
-    $assert_session->responseContains('counter_words_min (5) must be longer than <em class="placeholder">5</em> words but is currently <em class="placeholder">3</em> words long.');
+    $assert_session->responseContains('counter_words_min (5) must be at least <em class="placeholder">5</em> words but is currently <em class="placeholder">3</em> words long.');
     $assert_session->responseContains('counter_words_max (10) cannot be longer than <em class="placeholder">10</em> words but is currently <em class="placeholder">11</em> words long.');
 
     // Check counter validation passes (min: 5 / max: 10).
@@ -55,9 +55,9 @@ class WebformElementCounterTest extends WebformElementBrowserTestBase {
       'counter_words_max' => 'one two three four five six seven eight nine ten',
     ];
     $this->submitForm($edit, 'Submit');
-    $assert_session->responseNotContains('counter_characters_min (5) must be longer than <em class="placeholder">5</em> characters');
+    $assert_session->responseNotContains('counter_characters_min (5) must be at least <em class="placeholder">5</em> characters');
     $assert_session->responseNotContains('counter_characters_max (10) cannot be longer than <em class="placeholder">10</em> characters');
-    $assert_session->responseNotContains('counter_words_min (5) must be longer than <em class="placeholder">5</em> words');
+    $assert_session->responseNotContains('counter_words_min (5) must be at least <em class="placeholder">5</em> words');
     $assert_session->responseNotContains('counter_words_max (10) cannot be longer than <em class="placeholder">10</em> words');
   }
 

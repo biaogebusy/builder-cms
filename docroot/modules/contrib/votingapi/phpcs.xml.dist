@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="typed_data">
+  <description>Default PHP CodeSniffer configuration for IP-based determination of Country</description>
+  <file>.</file>
+
+  <arg name="extensions" value="inc,install,module,php,profile,txt,yml"/>
+  <!-- Use 's' to print the full sniff name in the report. -->
+  <arg value="s"/>
+  <arg value="-colors"/>
+
+  <!-- Ignore all files that match these patterns. By default the full file  -->
+  <!-- path is checked, unless type=relative is used. There is an implied * -->
+  <!-- wildcard at each end and periods and slashes must be escaped using \ -->
+  <exclude-pattern>vendor</exclude-pattern>
+  <exclude-pattern>\/_+ignore</exclude-pattern>
+  <exclude-pattern>interdif</exclude-pattern>
+
+  <!-- Include all Drupal and DrupalPractice sniffs by default, then adjust. -->
+  <rule ref="Drupal"/>
+  <rule ref="DrupalPractice"/>
+
+  <!-- Ignore specific sniffs in all files. The following are either not
+       relevant for Typed Data or we have decided not to adhere to them. -->
+  <!-- Don't require strict alphabetical ordering of use statements. -->
+  <rule ref="SlevomatCodingStandard.Namespaces.AlphabeticallySortedUses.IncorrectlyOrderedUses"><severity>0</severity></rule>
+
+</ruleset>

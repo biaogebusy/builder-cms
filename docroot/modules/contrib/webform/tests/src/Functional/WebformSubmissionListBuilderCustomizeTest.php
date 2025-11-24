@@ -339,7 +339,7 @@ class WebformSubmissionListBuilderCustomizeTest extends WebformBrowserTestBase {
     $this->drupalLogin($own_submission_user);
 
     // Check view own submissions.
-    $this->drupalget('/webform/test_submissions/submissions');
+    $this->drupalGet('/webform/test_submissions/submissions');
     $assert_session->responseContains('<th specifier="serial">');
     $assert_session->responseContains('<th specifier="created" class="priority-medium is-active" aria-sort="descending">');
     $assert_session->responseContains('<th specifier="remote_addr" class="priority-low">');
@@ -349,7 +349,7 @@ class WebformSubmissionListBuilderCustomizeTest extends WebformBrowserTestBase {
       ->save();
 
     // Check view own submissions only include first name and last name.
-    $this->drupalget('/webform/test_submissions/submissions');
+    $this->drupalGet('/webform/test_submissions/submissions');
     $assert_session->responseNotContains('<th specifier="serial">');
     $assert_session->responseNotContains('<th specifier="created" class="priority-medium is-active" aria-sort="descending">');
     $assert_session->responseNotContains('<th specifier="remote_addr" class="priority-low">');

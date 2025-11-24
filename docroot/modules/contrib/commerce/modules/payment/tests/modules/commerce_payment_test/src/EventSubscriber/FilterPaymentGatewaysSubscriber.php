@@ -11,7 +11,7 @@ class FilterPaymentGatewaysSubscriber implements EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     return [
       PaymentEvents::FILTER_PAYMENT_GATEWAYS => 'onFilter',
     ];

@@ -43,17 +43,13 @@ class OrderAddForm extends FormBase {
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
-   * @param \Drupal\Core\Password\PasswordGeneratorInterface|null $password_generator
+   * @param \Drupal\Core\Password\PasswordGeneratorInterface $password_generator
    *   The password generator.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, PasswordGeneratorInterface $password_generator = NULL) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, PasswordGeneratorInterface $password_generator) {
     $this->orderStorage = $entity_type_manager->getStorage('commerce_order');
     $this->storeStorage = $entity_type_manager->getStorage('commerce_store');
     $this->userStorage = $entity_type_manager->getStorage('user');
-    if (!$password_generator) {
-      @trigger_error('Calling ' . __METHOD__ . '() without the $password_generator argument is deprecated in commerce:8.x-2.34 and is removed from commerce:3.x.');
-      $password_generator = \Drupal::service('password_generator');
-    }
     $this->passwordGenerator = $password_generator;
   }
 

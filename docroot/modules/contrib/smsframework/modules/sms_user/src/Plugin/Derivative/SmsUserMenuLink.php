@@ -17,20 +17,14 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class SmsUserMenuLink extends DeriverBase implements ContainerDeriverInterface {
 
   /**
-   * The phone number verification service.
-   *
-   * @var \Drupal\sms\Provider\PhoneNumberVerificationInterface
-   */
-  protected $phoneNumberVerification;
-
-  /**
    * Constructs a \Drupal\sms_user\Plugin\Derivative\SmsUserMenuLink instance.
    *
-   * @param \Drupal\sms\Provider\PhoneNumberVerificationInterface $phone_number_verification
+   * @param \Drupal\sms\Provider\PhoneNumberVerificationInterface $phoneNumberVerification
    *   The phone number verification service.
    */
-  public function __construct(PhoneNumberVerificationInterface $phone_number_verification) {
-    $this->phoneNumberVerification = $phone_number_verification;
+  public function __construct(
+    protected PhoneNumberVerificationInterface $phoneNumberVerification,
+  ) {
   }
 
   /**
@@ -38,7 +32,7 @@ class SmsUserMenuLink extends DeriverBase implements ContainerDeriverInterface {
    */
   public static function create(ContainerInterface $container, $base_plugin_id) {
     return new static(
-      $container->get('sms.phone_number.verification')
+      $container->get('sms.phone_number.verification'),
     );
   }
 

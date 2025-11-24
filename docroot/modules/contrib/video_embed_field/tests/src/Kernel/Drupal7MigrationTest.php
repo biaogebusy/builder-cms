@@ -14,7 +14,9 @@ class Drupal7MigrationTest extends MigrateDrupal7TestBase {
   use EntityLoadTrait;
 
   /**
-   * @var bool
+   * {@inheritdoc}
+   *
+   * phpcs:disable DrupalPractice.Objects.StrictSchemaDisabled.StrictConfigSchema
    */
   protected $strictConfigSchema = FALSE;
 

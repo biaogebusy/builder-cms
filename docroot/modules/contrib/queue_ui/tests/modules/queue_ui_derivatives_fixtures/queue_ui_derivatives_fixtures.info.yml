@@ -1,0 +1,11 @@
+name: Queue UI Derivative Queue
+type: module
+description: 'Provides testing definitions for Queue UI Derivative Queue'
+package: Testing
+dependencies:
+  - queue_ui:queue_ui
+
+# Information added by Drupal.org packaging script on 2025-08-06
+version: '3.2.2'
+project: 'queue_ui'
+datestamp: 1754517518

@@ -1,8 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Utility;
 
 use Drupal\Component\Render\MarkupInterface;
+use Drupal\Component\Utility\Html;
+use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\GeneratedButton;
 use Drupal\Core\GeneratedNoLink;
 use Drupal\Core\GeneratedUrl;
@@ -12,7 +16,6 @@ use Drupal\Core\Render\Markup;
 use Drupal\Core\Url;
 use Drupal\Core\Utility\LinkGenerator;
 use Drupal\Tests\UnitTestCase;
-use Drupal\Core\DependencyInjection\ContainerBuilder;
 
 /**
  * @coversDefaultClass \Drupal\Core\Utility\LinkGenerator
@@ -88,7 +91,7 @@ class LinkGeneratorTest extends UnitTestCase {
    * @return array
    *   Returns some test data.
    */
-  public function providerTestGenerateHrefs() {
+  public static function providerTestGenerateHrefs() {
     return [
       // Test that the URL returned by the URL generator is used.
       ['test_route_1', [], FALSE, '/test-route-1'],
@@ -107,7 +110,7 @@ class LinkGeneratorTest extends UnitTestCase {
    *
    * @dataProvider providerTestGenerateHrefs
    */
-  public function testGenerateHrefs($route_name, array $parameters, $absolute, $expected_url) {
+  public function testGenerateHrefs($route_name, array $parameters, $absolute, $expected_url): void {
     $this->urlGenerator->expects($this->once())
       ->method('generateFromRoute')
       ->with($route_name, $parameters, ['absolute' => $absolute] + $this->defaultOptions)
@@ -128,7 +131,7 @@ class LinkGeneratorTest extends UnitTestCase {
    *
    * @covers ::generate
    */
-  public function testGenerate() {
+  public function testGenerate(): void {
     $this->urlGenerator->expects($this->once())
       ->method('generateFromRoute')
       ->with('test_route_1', [], ['fragment' => 'the-fragment'] + $this->defaultOptions)
@@ -158,7 +161,7 @@ class LinkGeneratorTest extends UnitTestCase {
    *
    * @covers ::generate
    */
-  public function testGenerateNoLink() {
+  public function testGenerateNoLink(): void {
     $this->urlGenerator->expects($this->never())
       ->method('generateFromRoute');
     $this->moduleHandler->expects($this->exactly(2))
@@ -190,7 +193,7 @@ class LinkGeneratorTest extends UnitTestCase {
    *
    * @covers ::generate
    */
-  public function testGenerateNone() {
+  public function testGenerateNone(): void {
     $this->urlGenerator->expects($this->once())
       ->method('generateFromRoute')
       ->with('<none>', [], ['set_active_class' => TRUE] + $this->defaultOptions)
@@ -213,7 +216,7 @@ class LinkGeneratorTest extends UnitTestCase {
    *
    * @covers ::generate
    */
-  public function testGenerateButton() {
+  public function testGenerateButton(): void {
     $this->urlGenerator->expects($this->never())
       ->method('generateFromRoute');
     $this->moduleHandler->expects($this->exactly(2))
@@ -244,11 +247,11 @@ class LinkGeneratorTest extends UnitTestCase {
    *
    * @covers ::generate
    */
-  public function testGenerateExternal() {
+  public function testGenerateExternal(): void {
     $this->urlAssembler->expects($this->once())
       ->method('assemble')
       ->with('https://www.drupal.org', ['set_active_class' => TRUE, 'external' => TRUE] + $this->defaultOptions)
-      ->will($this->returnArgument(0));
+      ->willReturnArgument(0);
 
     $this->moduleHandler->expects($this->once())
       ->method('alter')
@@ -278,7 +281,7 @@ class LinkGeneratorTest extends UnitTestCase {
    *
    * @covers ::generate
    */
-  public function testGenerateUrlWithQuotes() {
+  public function testGenerateUrlWithQuotes(): void {
     $this->urlAssembler->expects($this->once())
       ->method('assemble')
       ->with('base:example', ['query' => ['foo' => '"bar"', 'zoo' => 'baz']] + $this->defaultOptions)
@@ -309,7 +312,7 @@ class LinkGeneratorTest extends UnitTestCase {
    *
    * @see \Drupal\Core\Utility\LinkGenerator::generate()
    */
-  public function testGenerateAttributes() {
+  public function testGenerateAttributes(): void {
     $this->urlGenerator->expects($this->once())
       ->method('generateFromRoute')
       ->with('test_route_1', [], $this->defaultOptions)
@@ -334,7 +337,7 @@ class LinkGeneratorTest extends UnitTestCase {
    *
    * @see \Drupal\Core\Utility\LinkGenerator::generate()
    */
-  public function testGenerateQuery() {
+  public function testGenerateQuery(): void {
     $this->urlGenerator->expects($this->once())
       ->method('generateFromRoute')
       ->with('test_route_1', [], ['query' => ['test' => 'value']] + $this->defaultOptions)
@@ -357,7 +360,7 @@ class LinkGeneratorTest extends UnitTestCase {
    *
    * @see \Drupal\Core\Utility\LinkGenerator::generate()
    */
-  public function testGenerateParametersAsQuery() {
+  public function testGenerateParametersAsQuery(): void {
     $this->urlGenerator->expects($this->once())
       ->method('generateFromRoute')
       ->with('test_route_1', ['test' => 'value'], $this->defaultOptions)
@@ -378,7 +381,7 @@ class LinkGeneratorTest extends UnitTestCase {
    *
    * @see \Drupal\Core\Utility\LinkGenerator::generate()
    */
-  public function testGenerateOptions() {
+  public function testGenerateOptions(): void {
     $this->urlGenerator->expects($this->once())
       ->method('generateFromRoute')
       ->with('test_route_1', [], ['key' => 'value'] + $this->defaultOptions)
@@ -400,7 +403,7 @@ class LinkGeneratorTest extends UnitTestCase {
    *
    * @see \Drupal\Core\Utility\LinkGenerator::generate()
    */
-  public function testGenerateXss() {
+  public function testGenerateXss(): void {
     $this->urlGenerator->expects($this->once())
       ->method('generateFromRoute')
       ->with('test_route_4', [], $this->defaultOptions)
@@ -410,7 +413,7 @@ class LinkGeneratorTest extends UnitTestCase {
     $url = new Url('test_route_4');
     $url->setUrlGenerator($this->urlGenerator);
     $result = $this->linkGenerator->generate("<script>alert('XSS!')</script>", $url);
-    $this->assertNoXPathResults('//a[@href="/test-route-4"]/script', $result);
+    $this->assertNoXPathResults('//a[@href="/test-route-4"]/script', (string) $result);
   }
 
   /**
@@ -418,7 +421,7 @@ class LinkGeneratorTest extends UnitTestCase {
    *
    * @see \Drupal\Core\Utility\LinkGenerator::generate()
    */
-  public function testGenerateWithHtml() {
+  public function testGenerateWithHtml(): void {
     $this->urlGenerator->expects($this->exactly(2))
       ->method('generateFromRoute')
       ->with('test_route_5', [], $this->defaultOptions)
@@ -449,7 +452,7 @@ class LinkGeneratorTest extends UnitTestCase {
         'tag' => 'em',
       ],
     ], $result);
-    $this->assertStringContainsString('<em>HTML output</em>', $result);
+    $this->assertStringContainsString('<em>HTML output</em>', (string) $result);
   }
 
   /**
@@ -457,7 +460,7 @@ class LinkGeneratorTest extends UnitTestCase {
    *
    * @see \Drupal\Core\Utility\LinkGenerator::generate()
    */
-  public function testGenerateActive() {
+  public function testGenerateActive(): void {
     $this->urlGenerator->expects($this->exactly(5))
       ->method('generateFromRoute')
       ->willReturnCallback(function ($name, $parameters = [], $options = [], $collect_bubbleable_metadata = FALSE) {
@@ -498,7 +501,7 @@ class LinkGeneratorTest extends UnitTestCase {
     $url = new Url('test_route_1', [], ['set_active_class' => FALSE]);
     $url->setUrlGenerator($this->urlGenerator);
     $result = $this->linkGenerator->generate('Test', $url);
-    $this->assertNoXPathResults('//a[@data-drupal-link-system-path="test-route-1"]', $result);
+    $this->assertNoXPathResults('//a[@data-drupal-link-system-path="test-route-1"]', (string) $result);
 
     // Render a link with an associated language.
     $url = new Url('test_route_1', [], [
@@ -548,8 +551,10 @@ class LinkGeneratorTest extends UnitTestCase {
    *
    * @see \Drupal\Core\Utility\LinkGenerator::generate()
    * @see \Drupal\Core\Utility\LinkGenerator::generateFromLink()
+   *
+   * @group legacy
    */
-  public function testGenerateBubbleableMetadata() {
+  public function testGenerateBubbleableMetadata(): void {
     $options = ['query' => [], 'language' => NULL, 'set_active_class' => FALSE, 'absolute' => FALSE];
     $this->urlGenerator->expects($this->any())
       ->method('generateFromRoute')
@@ -574,6 +579,7 @@ class LinkGeneratorTest extends UnitTestCase {
     $this->assertInstanceOf('\Drupal\Core\Render\BubbleableMetadata', $generated_link);
 
     // Test ::generateFromLink().
+    $this->expectDeprecation('\Drupal\Core\Utility\LinkGeneratorInterface::generateFromLink() is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use \Drupal\Core\Utility\LinkGeneratorInterface::generate() instead. See https://www.drupal.org/node/3342992');
     $link = new Link('Test', $url);
     $this->assertSame($expected_link_markup, (string) $this->linkGenerator->generateFromLink($link));
     $generated_link = $this->linkGenerator->generateFromLink($link);
@@ -586,7 +592,7 @@ class LinkGeneratorTest extends UnitTestCase {
    *
    * @covers ::generate
    */
-  public function testGenerateWithAlterHook() {
+  public function testGenerateWithAlterHook(): void {
     $options = ['query' => [], 'language' => NULL, 'set_active_class' => FALSE, 'absolute' => FALSE];
     $this->urlGenerator->expects($this->any())
       ->method('generateFromRoute')
@@ -625,7 +631,7 @@ class LinkGeneratorTest extends UnitTestCase {
    *
    * This is a regression test for https://www.drupal.org/node/2842399.
    */
-  public function testGenerateTwice() {
+  public function testGenerateTwice(): void {
     $this->urlGenerator->expects($this->any())
       ->method('generateFromRoute')
       ->willReturn((new GeneratedUrl())->setGeneratedUrl('/'));
@@ -673,8 +679,7 @@ class LinkGeneratorTest extends UnitTestCase {
     }
 
     // Execute the query.
-    $document = new \DOMDocument();
-    $document->loadHTML($html);
+    $document = Html::load($html);
     $xpath = new \DOMXPath($document);
 
     self::assertEquals($count, $xpath->query($query)->length);
@@ -691,8 +696,7 @@ class LinkGeneratorTest extends UnitTestCase {
    * @internal
    */
   protected function assertNoXPathResults(string $query, string $html): void {
-    $document = new \DOMDocument();
-    $document->loadHTML($html);
+    $document = Html::load($html);
     $xpath = new \DOMXPath($document);
 
     self::assertFalse((bool) $xpath->query($query)->length);

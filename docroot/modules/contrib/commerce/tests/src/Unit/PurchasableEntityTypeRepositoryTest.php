@@ -2,11 +2,11 @@
 
 namespace Drupal\Tests\commerce\Unit;
 
-use Drupal\commerce\PurchasableEntityInterface;
-use Drupal\commerce\PurchasableEntityTypeRepository;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Tests\UnitTestCase;
+use Drupal\commerce\PurchasableEntityInterface;
+use Drupal\commerce\PurchasableEntityTypeRepository;
 
 /**
  * @coversDefaultClass \Drupal\commerce\PurchasableEntityTypeRepository

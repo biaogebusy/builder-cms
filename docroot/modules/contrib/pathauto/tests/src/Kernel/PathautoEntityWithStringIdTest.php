@@ -111,19 +111,19 @@ class PathautoEntityWithStringIdTest extends KernelTestBase {
   public function entityWithStringIdProvider() {
     return [
       'ascii with less or equal 128 chars' => [
-        str_repeat('a', 128), str_repeat('a', 128)
+        str_repeat('a', 128), str_repeat('a', 128),
       ],
       'ascii with over 128 chars' => [
-        str_repeat('a', 191), Crypt::hashBase64(str_repeat('a', 191))
+        str_repeat('a', 191), Crypt::hashBase64(str_repeat('a', 191)),
       ],
       'non-ascii with less or equal 128 chars' => [
-        str_repeat('社', 128), Crypt::hashBase64(str_repeat('社', 128))
+        str_repeat('社', 128), Crypt::hashBase64(str_repeat('社', 128)),
       ],
       'non-ascii with over 128 chars' => [
-        str_repeat('社', 191), Crypt::hashBase64(str_repeat('社', 191))
+        str_repeat('社', 191), Crypt::hashBase64(str_repeat('社', 191)),
       ],
       'simulating an integer id' => [
-        123, '123'
+        123, '123',
       ],
     ];
   }

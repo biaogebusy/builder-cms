@@ -35,7 +35,9 @@
       top: 0 - offset,
       left: 0 - offset,
       bottom: size.height + offset,
-      right: size.width + offset
+      right: size.width + offset,
+      width: size.width,
+      height: size.height
     };
   }
 
@@ -96,11 +98,13 @@
     },
 
     ww: 0,
+    opts: {},
 
     init: function (opts) {
       var me = this;
+      me.opts = opts || {};
 
-      me.vp = info(opts.offset);
+      me.vp = info(me.opts.offset);
 
       return me.vp;
     },
@@ -120,12 +124,14 @@
       }
 
       var el = real(e);
-      return $.isIo && 'isIntersecting' in e ? (e.isIntersecting || e.intersectionRatio > 0) : isVisible(el, vp);
+      return $.isIo && 'isIntersecting' in e
+        ? (e.isIntersecting || e.intersectionRatio > 0)
+        : isVisible(el, vp);
     },
 
     onresizing: function (scope, winData) {
       var elms = scope.elms;
-      var opts = scope.options;
+      var opts = scope.options || {};
 
       // Provides a way to fix dynamic aspect ratio, etc.
       if ($.isFun(opts.resizing)) {
@@ -134,11 +140,14 @@
     },
 
     update: function (opts) {
-      var me = this;
-      var offset = opts.offset;
+      opts = opts || me.opts;
 
-      me.vp.bottom = (_win.innerHeight || _doc.documentElement.clientHeight) + offset;
-      me.vp.right = (_win.innerWidth || _doc.documentElement.clientWidth) + offset;
+      var me = this;
+      var offset = opts.offset || 0;
+      var html = _doc.documentElement;
+
+      me.vp.bottom = (_win.innerHeight || html.clientHeight) + offset;
+      me.vp.right = (_win.innerWidth || html.clientWidth) + offset;
 
       return me.windowData(opts);
     },
@@ -147,8 +156,10 @@
 
     // Must be called after init and update.
     windowData: function (opts, init) {
+      opts = opts || me.opts;
+
       var me = this;
-      var offset = opts.offset || 100;
+      var offset = opts.offset || 0;
       var mobileFirst = opts.mobileFirst || false;
 
       if (init) {

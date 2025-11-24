@@ -10,7 +10,7 @@ namespace Drupal\sms\Message;
  * Usually setting a status on a result indicates something went wrong with the
  * entire transaction.
  */
-class SmsMessageResultStatus extends SmsMessageStatus {
+final class SmsMessageResultStatus extends SmsMessageStatus {
 
   /**
    * Account error.
@@ -18,31 +18,31 @@ class SmsMessageResultStatus extends SmsMessageStatus {
    * Some configuration is required that can only be resolved on the gateway
    * end.
    */
-  const ACCOUNT_ERROR = 'account_error';
+  public const ACCOUNT_ERROR = 'account_error';
 
   /**
    * Too many requests.
    */
-  const EXCESSIVE_REQUESTS = 'flooded';
+  public const EXCESSIVE_REQUESTS = 'flooded';
 
   /**
    * Message could not be processed due to low credit.
    */
-  const NO_CREDIT = 'no_credit';
+  public const NO_CREDIT = 'no_credit';
 
   /**
    * Indicates the sender ID is invalid.
    */
-  const INVALID_SENDER = 'invalid_sender';
+  public const INVALID_SENDER = 'invalid_sender';
 
   /**
    * Failed to authenticate with gateway.
    */
-  const AUTHENTICATION = 'authentication';
+  public const AUTHENTICATION = 'authentication';
 
   /**
    * Invalid or missing request parameters.
    */
-  const PARAMETERS = 'parameters';
+  public const PARAMETERS = 'parameters';
 
 }

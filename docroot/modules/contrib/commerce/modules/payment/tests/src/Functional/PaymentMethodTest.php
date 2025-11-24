@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\commerce_payment\Functional;
 
-use Drupal\commerce_payment\Entity\PaymentMethod;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Tests\commerce\Functional\CommerceBrowserTestBase;
+use Drupal\commerce_payment\Entity\PaymentMethod;
 use Drupal\user\Entity\Role;
 
 /**
@@ -27,6 +27,13 @@ class PaymentMethodTest extends CommerceBrowserTestBase {
    * @var string
    */
   protected $collectionUrl;
+
+  /**
+   * Payment method entity storage.
+   *
+   * @var \Drupal\commerce_payment\PaymentMethodStorageInterface
+   */
+  public $paymentMethodStorage;
 
   /**
    * An on-site payment gateway.
@@ -66,6 +73,8 @@ class PaymentMethodTest extends CommerceBrowserTestBase {
       'label' => 'Example',
       'plugin' => 'example_onsite',
     ]);
+    $this->paymentMethodStorage = $this->container->get('entity_type.manager')
+      ->getStorage('commerce_payment_method');
   }
 
   /**
@@ -153,7 +162,7 @@ class PaymentMethodTest extends CommerceBrowserTestBase {
 
     $form_values = [
       'payment_method[payment_details][expiration][month]' => '02',
-      'payment_method[payment_details][expiration][year]' => '2026',
+      'payment_method[payment_details][expiration][year]' => $this->futureYear(),
       'payment_method[billing_information][address][0][address][given_name]' => 'Johnny',
       'payment_method[billing_information][address][0][address][family_name]' => 'Appleseed',
       'payment_method[billing_information][address][0][address][address_line1]' => '123 New York Drive',
@@ -163,12 +172,12 @@ class PaymentMethodTest extends CommerceBrowserTestBase {
     ];
     $this->submitForm($form_values, 'Save');
     $this->assertSession()->addressEquals($this->collectionUrl);
-    $this->assertSession()->pageTextContains('2/2026');
+    $this->assertSession()->pageTextContains('2/' . $this->futureYear());
 
     \Drupal::entityTypeManager()->getStorage('commerce_payment_method')->resetCache([1]);
     \Drupal::entityTypeManager()->getStorage('profile')->resetCache([2]);
     $payment_method = PaymentMethod::load(1);
-    $this->assertEquals('2026', $payment_method->get('card_exp_year')->value);
+    $this->assertEquals($this->futureYear(), $payment_method->get('card_exp_year')->value);
     /** @var \Drupal\profile\Entity\ProfileInterface $billing_profile */
     $billing_profile = $payment_method->getBillingProfile();
     $this->assertEquals($this->user->id(), $payment_method->getOwnerId());
@@ -210,16 +219,16 @@ class PaymentMethodTest extends CommerceBrowserTestBase {
     $this->assertSession()->pageTextNotContains('Country');
     $form_values = [
       'payment_method[payment_details][expiration][month]' => '02',
-      'payment_method[payment_details][expiration][year]' => '2026',
+      'payment_method[payment_details][expiration][year]' => $this->futureYear(),
     ];
     $this->submitForm($form_values, 'Save');
     $this->assertSession()->addressEquals($this->collectionUrl);
 
-    $this->assertSession()->pageTextContains('2/2026');
+    $this->assertSession()->pageTextContains('2/' . $this->futureYear());
 
     \Drupal::entityTypeManager()->getStorage('commerce_payment_method')->resetCache([1]);
     $payment_method = PaymentMethod::load(1);
-    $this->assertEquals('2026', $payment_method->get('card_exp_year')->value);
+    $this->assertEquals($this->futureYear(), $payment_method->get('card_exp_year')->value);
     $this->assertNull($payment_method->getBillingProfile());
   }
 
@@ -263,7 +272,7 @@ class PaymentMethodTest extends CommerceBrowserTestBase {
     $details = [
       'type' => 'visa',
       'number' => '4111111111111111',
-      'expiration' => ['month' => '01', 'year' => date("Y") + 1],
+      'expiration' => ['month' => '01', 'year' => $this->futureYear()],
     ];
     $this->paymentGateway->getPlugin()->createPaymentMethod($payment_method, $details);
     $this->paymentGateway->save();
@@ -273,8 +282,8 @@ class PaymentMethodTest extends CommerceBrowserTestBase {
     $this->getSession()->getPage()->pressButton('Delete');
     $this->assertSession()->addressEquals($this->collectionUrl);
 
-    $payment_gateway = PaymentMethod::load($payment_method->id());
-    $this->assertNull($payment_gateway);
+    $payment_method = $this->reloadEntity($payment_method);
+    $this->assertNull($payment_method);
   }
 
   /**
@@ -289,17 +298,64 @@ class PaymentMethodTest extends CommerceBrowserTestBase {
     $details = [
       'type' => 'visa',
       'number' => '4111111111111111',
-      'expiration' => ['month' => '01', 'year' => date("Y") + 1],
+      'expiration' => ['month' => '01', 'year' => $this->futureYear()],
     ];
     $this->paymentGateway->getPlugin()->createPaymentMethod($payment_method, $details);
     $this->paymentGateway->delete();
 
     $this->drupalGet($this->collectionUrl . '/' . $payment_method->id() . '/delete');
+
     $this->getSession()->getPage()->pressButton('Delete');
     $this->assertSession()->addressEquals($this->collectionUrl);
 
-    $payment_gateway = PaymentMethod::load($payment_method->id());
-    $this->assertNull($payment_gateway);
+    $payment_method = $this->reloadEntity($payment_method);
+    $this->assertNull($payment_method);
+  }
+
+  /**
+   * Tests setting a payment method as default.
+   */
+  public function testPaymentMethodSetDefault() {
+    /** @var \Drupal\commerce_payment\Entity\PaymentMethodInterface $payment_method */
+    $payment_method = $this->createEntity('commerce_payment_method', [
+      'uid' => $this->user->id(),
+      'type' => 'credit_card',
+      'payment_gateway' => 'example',
+    ]);
+    $details = [
+      'type' => 'visa',
+      'number' => '4111111111111111',
+      'expiration' => ['month' => '01', 'year' => date("Y") + 1],
+    ];
+    $this->paymentGateway->getPlugin()->createPaymentMethod($payment_method, $details);
+    $payment_method = $this->paymentMethodStorage->loadUnchanged($payment_method->id());
+    // The first payment method should be set as default.
+    $this->assertTrue($payment_method->isDefault());
+    $this->drupalGet($this->collectionUrl);
+    $this->assertSession()->pageTextNotContains('Mark as default');
+    // Add a second payment method and test the 'Mark as default' operation.
+    /** @var \Drupal\commerce_payment\Entity\PaymentMethodInterface $payment_method2 */
+    $payment_method2 = $this->createEntity('commerce_payment_method', [
+      'uid' => $this->user->id(),
+      'type' => 'credit_card',
+      'payment_gateway' => 'example',
+    ]);
+    $details = [
+      'type' => 'mastercard',
+      'number' => '5555555555554444',
+      'expiration' => ['month' => '01', 'year' => date("Y") + 1],
+    ];
+    $this->paymentGateway->getPlugin()->createPaymentMethod($payment_method2, $details);
+    $this->assertFalse($payment_method2->isDefault());
+    $this->drupalGet($this->collectionUrl);
+    $this->getSession()->getPage()->clickLink('Mark as default');
+    $this->assertSession()->addressEquals($this->collectionUrl);
+    $this->assertSession()->pageTextContains(t('The @label payment method has been marked as default.', ['@label' => $payment_method2->label()]));
+    // Test the updated payment methods.
+    $payment_method = $this->paymentMethodStorage->loadUnchanged($payment_method->id());
+    $payment_method2 = $this->paymentMethodStorage->loadUnchanged($payment_method2->id());
+    $this->assertTrue($payment_method2->isDefault());
+    $this->assertFalse($payment_method->isDefault());
   }
 
 }

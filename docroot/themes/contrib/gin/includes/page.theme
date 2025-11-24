@@ -5,8 +5,8 @@
  * page.theme
  */
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\gin\GinContentFormHelper;
 use Drupal\gin\GinSettings;
 use Drupal\node\Entity\Node;
 
@@ -17,6 +17,7 @@ function gin_preprocess_page(&$variables) {
   // Required for allowing subtheming Gin.
   $activeThemeName = \Drupal::theme()->getActiveTheme()->getName();
   $variables['active_admin_theme'] = $activeThemeName;
+  $variables['active_navigation_top_bar'] = _gin_module_is_active('navigation_top_bar');
 
   /** @var \Drupal\gin\GinSettings $settings */
   $settings = \Drupal::classResolver(GinSettings::class);
@@ -30,29 +31,21 @@ function gin_preprocess_page(&$variables) {
   if (preg_match('#entity\.(?<entity_type_id>.+)\.canonical#', $variables['route_name'], $matches)) {
     $entity = \Drupal::request()->attributes->get($matches['entity_type_id']);
 
-    if ($entity instanceof EntityInterface && $entity->hasLinkTemplate('edit-form')) {
+    if ($entity instanceof EntityInterface && $entity->hasLinkTemplate('edit-form') && $entity->access('update')) {
       $variables['entity_title'] = $entity->label();
       $variables['entity_edit_url'] = $entity->toUrl('edit-form');
     }
   }
-}
 
-/**
- * Implements hook_preprocess_HOOK() for page_alter.
- */
-function gin_theme_suggestions_page_alter(&$suggestions, $variables) {
-  $path = \Drupal::requestStack()->getCurrentRequest()->getPathInfo();
-
-  if ($path != '/') {
-    $path = trim($path, '/');
-    $arg = str_replace(["/", '-'], ['_', '_'], $path);
-    $suggestions[] = 'page__' . $arg;
-  }
-
-  // The node page template is required to use the node content form.
-  if (\Drupal::classResolver(GinContentFormHelper::class)->isContentForm()
-    && !in_array('page__node', $suggestions)) {
-    $suggestions[] = 'page__node';
+  // Get form actions.
+  if ($form_actions = _gin_form_actions()) {
+    if (_gin_module_is_active('navigation_top_bar')) {
+      $variables['gin_form_actions'] = '';
+    }
+    else {
+      $variables['gin_form_actions'] = $form_actions;
+    }
+    $variables['gin_form_actions_class'] = 'gin-sticky-form-actions--preprocessed';
   }
 }
 
@@ -99,12 +92,26 @@ function gin_page_attachments_alter(&$page) {
     $page['#attached']['drupalSettings']['gin']['highcontrastmode'] = $settings->get('high_contrast_mode');
     $page['#attached']['drupalSettings']['gin']['highcontrastmode_class'] = 'gin--high-contrast-mode';
     $page['#attached']['drupalSettings']['gin']['toolbar_variant'] = $settings->get('classic_toolbar');
+    $page['#attached']['drupalSettings']['gin']['show_user_theme_settings'] = $settings->get('show_user_theme_settings');
 
     // Expose stylesheets to JS.
     $basethemeurl = '/' . \Drupal::service('extension.list.theme')->getPath('gin');
     $page['#attached']['drupalSettings']['gin']['variables_css_path'] = $basethemeurl . '/dist/css/theme/variables.css';
     $page['#attached']['drupalSettings']['gin']['accent_css_path'] = $basethemeurl . '/dist/css/theme/accent.css';
     $page['#attached']['drupalSettings']['gin']['ckeditor_css_path'] = $basethemeurl . '/dist/css/theme/ckeditor.css';
+
+    $page['#attached']['html_head'][] = [
+      [
+        '#tag' => 'script',
+        '#attributes' => [
+          'type' => 'application/json',
+          'id' => 'gin-setting-darkmode',
+        ],
+        '#value' => new FormattableMarkup('{ "ginDarkmode": "@value" }', ['@value' => $settings->get('enable_darkmode') ?? 'unknown']),
+      ],
+      'gin_darkmode',
+    ];
+
   }
 }
 

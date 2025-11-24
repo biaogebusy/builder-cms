@@ -2,11 +2,12 @@
 
 namespace Drupal\charts\Plugin\views\field;
 
-use Drupal\charts\ChartViewsFieldInterface;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\charts\ChartViewsFieldInterface;
+use Drupal\views\Attribute\ViewsField;
 use Drupal\views\Plugin\views\field\FieldPluginBase;
 use Drupal\views\ResultRow;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -15,13 +16,10 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @file
  * Defines Drupal\charts\Plugin\views\field\BubbleField.
  */
-
 /**
- * Field handler to provide x, y, and z values for a bubble chart.
- *
- * @ingroup views_field_handlers
- * @ViewsField("field_charts_fields_bubble")
+* Defines a Views field for bubble chart data.
  */
+#[ViewsField("field_charts_fields_bubble")]
 class BubbleField extends FieldPluginBase implements ContainerFactoryPluginInterface, ChartViewsFieldInterface {
 
   /**

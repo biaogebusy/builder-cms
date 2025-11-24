@@ -36,6 +36,7 @@ use Drupal\entity_share_client\ClientAuthorization\ClientAuthorizationInterface;
  *     "id",
  *     "label",
  *     "url",
+ *     "login_path",
  *     "auth",
  *   },
  *   links = {
@@ -46,6 +47,8 @@ use Drupal\entity_share_client\ClientAuthorization\ClientAuthorizationInterface;
  *     "collection" = "/admin/config/services/entity_share/remote"
  *   }
  * )
+ *
+ * @SuppressWarnings(PHPMD.CamelCasePropertyName)
  */
 class Remote extends ConfigEntityBase implements RemoteInterface {
 
@@ -71,6 +74,13 @@ class Remote extends ConfigEntityBase implements RemoteInterface {
   protected $url;
 
   /**
+   * The login form path.
+   *
+   * @var string
+   */
+  protected $login_path;
+
+  /**
    * An associative array of the authorization plugin data.
    *
    * @var array
@@ -86,8 +96,14 @@ class Remote extends ConfigEntityBase implements RemoteInterface {
     // Ensure no trailing slash at the end of the remote URL.
     $remote_url = $this->get('url');
     $matches = [];
-    if (!empty($remote_url) && preg_match('/(.*)\/$/', $remote_url, $matches)) {
+    if (!empty($remote_url) && \preg_match('/(.*)\/$/', $remote_url, $matches)) {
       $this->set('url', $matches[1]);
+    }
+    // Ensure no slash at the beginning of the login path.
+    $login_path = $this->get('login_path');
+    $matches = [];
+    if (!empty($login_path) && \preg_match('/^\/(.*)/', $login_path, $matches)) {
+      $this->set('login_path', $matches[1]);
     }
   }
 
@@ -125,7 +141,7 @@ class Remote extends ConfigEntityBase implements RemoteInterface {
     if ($json) {
       return $plugin->getJsonApiClient($this->url);
     }
-    return $plugin->getClient($this->url);
+    return $plugin->getClient($this->url, $this->login_path);
   }
 
 }

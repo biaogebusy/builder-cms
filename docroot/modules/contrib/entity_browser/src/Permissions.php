@@ -53,6 +53,11 @@ class Permissions implements ContainerInjectionInterface {
         $permissions['access ' . $browser->id() . ' entity browser pages'] = [
           'title' => $this->t('Access @name pages', ['@name' => $browser->label()]),
           'description' => $this->t('Access pages that %browser uses to operate.', ['%browser' => $browser->label()]),
+          'dependencies' => [
+            $browser->getConfigDependencyKey() => [
+              $browser->getConfigDependencyName(),
+            ],
+          ],
         ];
       }
     }

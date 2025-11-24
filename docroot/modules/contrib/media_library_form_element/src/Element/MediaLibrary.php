@@ -13,7 +13,7 @@ use Drupal\media\Entity\Media;
 use Drupal\media\MediaInterface;
 use Drupal\media_library\MediaLibraryState;
 use Drupal\media_library\MediaLibraryUiBuilder;
-
+use Drupal\Core\Render\Element\FormElementBase;
 /**
  * Provides a Media library form element.
  *
@@ -32,7 +32,7 @@ use Drupal\media_library\MediaLibraryUiBuilder;
  *     '#cardinality' => -1|1,
  *   ];
  */
-class MediaLibrary extends FormElement {
+class MediaLibrary extends FormElementBase {
 
   /**
    * Expand the media_library_element into it's required sub-elements.
@@ -61,20 +61,23 @@ class MediaLibrary extends FormElement {
     if (!empty($default_value['media_selection_id'])) {
       $entity_ids = [$default_value['media_selection_id']];
     }
-    else {
-      $entity_ids = array_filter(explode(',', $default_value ?? ''));
+    elseif (is_array($default_value)) {
+      $entity_ids = array_filter($default_value, fn ($id) => is_int($id) || ctype_digit($id));
+    }
+    elseif (is_string($default_value)) {
+      $entity_ids = array_filter(explode(',', $default_value));
+    }
+    elseif (is_int($default_value)) {
+      $entity_ids = [$default_value];
     }
 
     if (!empty($entity_ids)) {
-      foreach ($entity_ids as $entity_id) {
-        $entity = \Drupal::entityTypeManager()
-          ->getStorage('media')
-          ->load($entity_id);
-        // EntityStorageInterface::load can return null.
-        // @see https://www.drupal.org/project/media_library_form_element/issues/3243411
-        if ($entity instanceof MediaInterface) {
-          $referenced_entities[] = $entity;
-        }
+      $referenced_entities = \Drupal::entityTypeManager()
+        ->getStorage('media')
+        ->loadMultiple($entity_ids);
+
+      if (!empty($referenced_entities)) {
+        $referenced_entities = array_values($referenced_entities);
       }
     }
 
@@ -84,6 +87,7 @@ class MediaLibrary extends FormElement {
     $parents = $element['#parents'];
     $field_name = array_pop($parents);
     $attributes = $element['#attributes'] ?? [];
+    $wrapper_attributes = $element['#wrapper_attributes'] ?? [];
     // Create an ID suffix from the parents to make sure each widget is unique.
     $id_suffix = $parents ? '-' . implode('-', $parents) : '';
     $field_widget_id = implode('', array_filter([$field_name, $id_suffix]));
@@ -95,10 +99,10 @@ class MediaLibrary extends FormElement {
       [
         '#target_bundles' => !empty($allowed_media_type_ids) ? $allowed_media_type_ids : FALSE,
         '#cardinality' => $element['#cardinality'] ?? 1,
-        '#attributes' => [
+        '#attributes' => array_merge_recursive($wrapper_attributes, [
           'id' => $wrapper_id,
           'class' => ['media-library-form-element'],
-        ],
+        ]),
         '#modal_selector' => '#modal-media-library',
         '#attached' => [
           'library' => [
@@ -234,10 +238,20 @@ class MediaLibrary extends FormElement {
 
       // Add a line break between the field message and the cardinality message.
       if (!empty($element['#description'])) {
-        $element['#description'] .= '<br />' . $cardinality_message;
+        if (is_array($element['#description'])) {
+          $element['#description']['#markup'] .= '<br />' . $cardinality_message;
+        }
+        else {
+          $element['#description'] .= '<br />' . $cardinality_message;
+        }
       }
       else {
-        $element['#description'] = $cardinality_message;
+        if (isset($element['#description']) && is_array($element['#description'])) {
+          $element['#description']['#markup'] = $cardinality_message;
+        }
+        else {
+          $element['#description'] = $cardinality_message;
+        }
       }
     }
 

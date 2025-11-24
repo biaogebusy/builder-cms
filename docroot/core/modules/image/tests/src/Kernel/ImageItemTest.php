@@ -1,18 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image\Kernel;
 
-use Drupal\Core\Entity\EntityStorageException;
+use Drupal\Core\Database\Database;
+use Drupal\Core\Entity\ContentEntityForm;
+use Drupal\Core\Entity\Entity\EntityFormDisplay;
+use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\Core\Form\FormBuilderInterface;
+use Drupal\Core\Form\FormState;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\field\Entity\FieldConfig;
-use Drupal\Tests\field\Kernel\FieldKernelTestBase;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\file\Entity\File;
+use Drupal\Tests\field\Kernel\FieldKernelTestBase;
+use Drupal\image\Plugin\Field\FieldType\ImageItem;
 use Drupal\user\Entity\Role;
-use PHPUnit\Framework\Error\Warning;
 
 /**
  * Tests using entity fields of the image field type.
@@ -22,9 +31,7 @@ use PHPUnit\Framework\Error\Warning;
 class ImageItemTest extends FieldKernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['file', 'image'];
 
@@ -63,6 +70,13 @@ class ImageItemTest extends FieldKernelTestBase {
       'type' => 'image',
       'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
     ])->save();
+    FieldStorageConfig::create([
+      'entity_type' => 'entity_test',
+      'field_name' => 'image_test_generation',
+      'type' => 'image',
+      'cardinality' => FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED,
+    ])->save();
+
     FieldConfig::create([
       'entity_type' => 'entity_test',
       'field_name' => 'image_test',
@@ -71,18 +85,30 @@ class ImageItemTest extends FieldKernelTestBase {
         'file_extensions' => 'jpg',
       ],
     ])->save();
+    FieldConfig::create([
+      'entity_type' => 'entity_test',
+      'field_name' => 'image_test_generation',
+      'bundle' => 'entity_test',
+      'settings' => [
+        'min_resolution' => '800x800',
+      ],
+    ])->save();
+
     \Drupal::service('file_system')->copy($this->root . '/core/misc/druplicon.png', 'public://example.jpg');
     $this->image = File::create([
       'uri' => 'public://example.jpg',
     ]);
     $this->image->save();
     $this->imageFactory = $this->container->get('image.factory');
+    $this->container->get(EntityDisplayRepositoryInterface::class)
+      ->getFormDisplay('entity_test', 'entity_test')
+      ->setComponent('image_test', ['type' => 'image_image'])->save();
   }
 
   /**
    * Tests using entity fields of the image field type.
    */
-  public function testImageItem() {
+  public function testImageItem(): void {
     // Create a test entity with the image field set.
     $entity = EntityTest::create();
     $entity->image_test->target_id = $this->image->id();
@@ -128,7 +154,7 @@ class ImageItemTest extends FieldKernelTestBase {
 
     // Delete the image and try to save the entity again.
     $this->image->delete();
-    $entity = EntityTest::create(['mame' => $this->randomMachineName()]);
+    $entity = EntityTest::create(['name' => $this->randomMachineName()]);
     $entity->save();
 
     // Test image item properties.
@@ -136,33 +162,109 @@ class ImageItemTest extends FieldKernelTestBase {
     $properties = $entity->getFieldDefinition('image_test')->getFieldStorageDefinition()->getPropertyDefinitions();
     $this->assertEquals($expected, array_keys($properties));
 
-    // Test the generateSampleValue() method.
+  }
+
+  /**
+   * Tests generateSampleItems() method under different dimensions.
+   */
+  public function testImageItemSampleValueGeneration(): void {
+
+    // Default behavior. No dimensions configuration.
     $entity = EntityTest::create();
     $entity->image_test->generateSampleItems();
     $this->entityValidateAndSave($entity);
     $this->assertEquals('image/jpeg', $entity->image_test->entity->get('filemime')->value);
+
+    // Max dimensions bigger than 600x600.
+    $entity->image_test_generation->generateSampleItems();
+    $this->entityValidateAndSave($entity);
+    $imageItem = $entity->image_test_generation->first()->getValue();
+    $this->assertEquals('800', $imageItem['width']);
+    $this->assertEquals('800', $imageItem['height']);
   }
 
   /**
    * Tests a malformed image.
    */
-  public function testImageItemMalformed() {
+  public function testImageItemMalformed(): void {
+    \Drupal::service('module_installer')->install(['dblog']);
+
     // Validate entity is an image and don't gather dimensions if it is not.
     $entity = EntityTest::create();
     $entity->image_test = NULL;
     $entity->image_test->target_id = 9999;
-    // PHPUnit re-throws E_USER_WARNING as an exception.
-    try {
-      $entity->save();
-      $this->fail('Exception did not fail');
-    }
-    catch (EntityStorageException $exception) {
-      $this->assertInstanceOf(Warning::class, $exception->getPrevious());
-      $this->assertEquals('Missing file with ID 9999.', $exception->getMessage());
-      $this->assertEmpty($entity->image_test->width);
-      $this->assertEmpty($entity->image_test->height);
-    }
+    $entity->save();
+    // Check that the proper warning has been logged.
+    $arguments = [
+      '%id' => 9999,
+    ];
+    $logged = Database::getConnection()->select('watchdog')
+      ->fields('watchdog', ['variables'])
+      ->condition('type', 'image')
+      ->condition('message', "Missing file with ID %id.")
+      ->execute()
+      ->fetchField();
+    $this->assertEquals(serialize($arguments), $logged);
+    $this->assertEmpty($entity->image_test->width);
+    $this->assertEmpty($entity->image_test->height);
+  }
 
+  /**
+   * Tests image URIs for empty and custom directories.
+   */
+  public function testImageUriDirectories(): void {
+    $this->validateImageUriForDirectory('', 'public://');
+    $this->validateImageUriForDirectory('custom_directory/subdir', 'public://custom_directory/subdir/');
+  }
+
+  /**
+   * Tests display_default.
+   */
+  public function testDisplayDefaultValue(): void {
+    $entity = EntityTest::create([
+      'name' => $this->randomMachineName(),
+    ]);
+    $form_object = $this->container->get(EntityTypeManagerInterface::class)->getFormObject('entity_test', 'default');
+    \assert($form_object instanceof ContentEntityForm);
+    $form_object->setEntity($entity);
+    $form_display = EntityFormDisplay::collectRenderDisplay($entity, 'default');
+    \assert($form_display instanceof EntityFormDisplay);
+    $form_state = new FormState();
+    $form_object->setFormDisplay($form_display, $form_state);
+    $this->container->get(FormBuilderInterface::class)->buildForm($form_object, $form_state);
+    self::assertEquals(1, $form_state->getValue(['image_test', 0, 'display']));
+  }
+
+  /**
+   * Validates the image file URI generated for a given file directory.
+   *
+   * @param string $file_directory
+   *   The file directory to test (e.g., empty or 'custom_directory/subdir').
+   * @param string $expected_start
+   *   The expected starting string of the file URI (e.g., 'public://').
+   */
+  private function validateImageUriForDirectory(string $file_directory, string $expected_start): void {
+    // Mock the field definition with the specified file directory.
+    $definition = $this->createMock(FieldDefinitionInterface::class);
+    $definition->expects($this->any())
+      ->method('getSettings')
+      ->willReturn([
+        'file_extensions' => 'jpg',
+        'file_directory' => $file_directory,
+        'uri_scheme' => 'public',
+      ]);
+    // Generate sample value and check the URI format.
+    $value = ImageItem::generateSampleValue($definition);
+    $this->assertNotEmpty($value);
+
+    // Load the file entity and get its URI.
+    $fid = $value['target_id'];
+    $file = File::load($fid);
+    $fileUri = $file->getFileUri();
+
+    // Verify the file URI starts with the expected protocol and structure.
+    $this->assertStringStartsWith($expected_start, $fileUri);
+    $this->assertMatchesRegularExpression('#^' . preg_quote($expected_start, '#') . '[^/]+#', $fileUri);
   }
 
 }

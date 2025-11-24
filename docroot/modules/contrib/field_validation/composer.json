@@ -1,0 +1,14 @@
+{
+    "name": "drupal/field_validation",
+    "type": "drupal-module",
+    "description": "Field validation allow you add constraint to field by UI.",
+    "homepage": "https://drupal.org/project/field_validation",
+    "license": "GPL-2.0-or-later",
+    "require": {
+        "php": "^8.0",
+        "drupal/core": "^10.2 || ^11",
+        "symfony/expression-language": "^6.3",
+        "symfony/intl": "^6.3"
+    },
+    "minimum-stability": "dev"
+}

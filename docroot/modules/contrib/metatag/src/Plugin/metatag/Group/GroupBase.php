@@ -51,7 +51,7 @@ abstract class GroupBase extends PluginBase {
    * @return string
    *   This group's ID.
    */
-  public function id() {
+  public function id(): string {
     return $this->id;
   }
 
@@ -61,7 +61,7 @@ abstract class GroupBase extends PluginBase {
    * @return string
    *   This group's human-friendly name.
    */
-  public function label() {
+  public function label(): string {
     return $this->label;
   }
 
@@ -71,7 +71,7 @@ abstract class GroupBase extends PluginBase {
    * @return string
    *   This group's ID.
    */
-  public function description() {
+  public function description(): string {
     return $this->description;
   }
 
@@ -81,7 +81,7 @@ abstract class GroupBase extends PluginBase {
    * @return bool
    *   Whether this group has been enabled.
    */
-  public function isActive() {
+  public function isActive(): bool {
     return TRUE;
   }
 

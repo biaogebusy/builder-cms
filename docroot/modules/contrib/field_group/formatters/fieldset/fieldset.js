@@ -3,10 +3,7 @@
  * Provides the processing logic for fieldsets.
  */
 
-(function ($) {
-
-  'use strict';
-
+(($) => {
   Drupal.FieldGroup = Drupal.FieldGroup || {};
   Drupal.FieldGroup.Effects = Drupal.FieldGroup.Effects || {};
 
@@ -14,16 +11,20 @@
    * This script adds the required and error classes to the fieldset wrapper.
    */
   Drupal.behaviors.fieldGroupFieldset = {
-    attach: function (context) {
+    attach(context) {
+      $(once('field-group-fieldset', '.field-group-fieldset', context)).each(
+        (index, element) => {
+          const $this = $(element);
 
-      $(once('field-group-fieldset', '.field-group-fieldset', context)).each(function () {
-        var $this = $(this);
-
-        if ($this.is('.required-fields') && ($this.find('[required]').length > 0 || $this.find('.form-required').length > 0)) {
-          $('legend', $this).first().addClass('form-required');
-        }
-      });
-    }
+          if (
+            element.matches('.required-fields') &&
+            ($this.find('[required]').length > 0 ||
+              $this.find('.form-required').length > 0)
+          ) {
+            $('legend', $this).first().addClass('form-required');
+          }
+        },
+      );
+    },
   };
-
 })(jQuery);

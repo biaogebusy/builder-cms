@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Kernel\Plugin\migrate\source;
 
 use Drupal\Tests\migrate\Kernel\MigrateSqlSourceTestBase;
@@ -20,7 +22,7 @@ class ExtensionTest extends MigrateSqlSourceTestBase {
   /**
    * {@inheritdoc}
    */
-  public function providerSource() {
+  public static function providerSource() {
     $test = [];
 
     $test[0]['source_data']['system'] = [
@@ -51,7 +53,7 @@ class ExtensionTest extends MigrateSqlSourceTestBase {
     ];
 
     $info = unserialize('a:9:{s:4:"name";s:12:"Variable API";s:11:"description";s:12:"Variable API";s:4:"core";s:3:"6.x";s:7:"version";s:14:"6.x-1.0-alpha1";s:7:"project";s:8:"variable";s:9:"datestamp";s:10:"1414059742";s:12:"dependencies";a:0:{}s:10:"dependents";a:0:{}s:3:"php";s:5:"4.3.5";}');
-    $test[0]['expected_results'] = [
+    $test[0]['expected_data'] = [
       [
         'filename' => 'sites/all/modules/variable/variable.module ',
         'name' => 'variable',

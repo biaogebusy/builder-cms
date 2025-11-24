@@ -91,7 +91,7 @@ class TaxonomyTermArgumentTest extends UnitTestCase {
     $this->entityRepository->expects($this->any())
       ->method('getTranslationFromContext')
       ->with($term)
-      ->will($this->returnValue($term));
+      ->willReturn($term);
 
     $plugin->value = [$term->id()];
     $this->assertEquals($term->label(), $plugin->title());

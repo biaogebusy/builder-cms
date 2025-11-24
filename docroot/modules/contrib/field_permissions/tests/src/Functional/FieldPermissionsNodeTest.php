@@ -34,7 +34,7 @@ class FieldPermissionsNodeTest extends FieldPermissionsTestBase {
     $this->checkPermissionPage();
     $this->checkFieldPermissionConfigurationEdit();
     $this->checkInitAddNode();
-    $this->checkChengeToPrivateField();
+    $this->checkChangeToPrivateField();
     $this->checkViewOwnField();
     $this->checkViewEditOwnField();
     $this->checkViewEditAllField();
@@ -169,7 +169,7 @@ class FieldPermissionsNodeTest extends FieldPermissionsTestBase {
   /**
    * Test PUBLIC - PRIVATE EDIT - VIEW.
    */
-  protected function checkChengeToPrivateField() {
+  protected function checkChangeToPrivateField() {
     $this->drupalLogin($this->webUser);
 
     $this->assertNodeFieldVisible();
@@ -191,13 +191,13 @@ class FieldPermissionsNodeTest extends FieldPermissionsTestBase {
     $permission = $this->grantCustomPermissions($this->limitUserRole, ['view own body'], $permission);
     $this->setNodeFieldPermissions(FieldPermissionTypeInterface::ACCESS_CUSTOM, $permission);
 
-    // Login width author node.
+    // Login with author node.
     $this->drupalLogin($this->limitedUser);
     $this->assertNodeFieldVisible();
     $this->assertNodeFieldEditNoAccess();
     $this->drupalLogout();
 
-    // Login webuser.
+    // Login the web user.
     $this->drupalLogin($this->webUser);
     $this->assertNodeFieldHidden();
     $this->assertNodeFieldEditNoAccess();
@@ -212,18 +212,17 @@ class FieldPermissionsNodeTest extends FieldPermissionsTestBase {
     $permission = $this->grantCustomPermissions($this->limitUserRole, ['view own body', 'edit own body'], $permission);
     $this->setNodeFieldPermissions(FieldPermissionTypeInterface::ACCESS_CUSTOM, $permission);
 
-    // Login width author node.
+    // Login with author node.
     $this->drupalLogin($this->limitedUser);
     $this->assertNodeFieldVisible();
     $this->assertNodeFieldEditAccess();
     $this->drupalLogout();
 
-    // Login webuser.
+    // Login the web user.
     $this->drupalLogin($this->webUser);
     $this->assertNodeFieldHidden();
     $this->assertNodeFieldEditNoAccess();
     $this->drupalLogout();
-
   }
 
   /**

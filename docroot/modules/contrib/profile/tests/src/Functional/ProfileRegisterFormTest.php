@@ -4,6 +4,7 @@ namespace Drupal\Tests\profile\Functional;
 
 use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Test\AssertMailTrait;
 use Drupal\user\UserInterface;
 
 /**
@@ -12,6 +13,32 @@ use Drupal\user\UserInterface;
  * @group profile
  */
 class ProfileRegisterFormTest extends ProfileTestBase {
+
+  use AssertMailTrait;
+
+  /**
+   * {@inheritdoc}
+   */
+  protected static $modules = [
+    'token',
+  ];
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUp(): void {
+    parent::setUp();
+
+    // Set welcome emails message to contain profile token.
+    $config = $this->container->get('config.factory')->getEditable('user.mail');
+    $body = $config->get('register_no_approval_required.body');
+    $body = str_replace(
+      '[user:display-name]',
+      sprintf('[user:%s:%s:value]', $this->type->id(), $this->field->getName()),
+      $body
+    );
+    $config->set('register_no_approval_required.body', $body)->save();
+  }
 
   /**
    * Test user registration integration.
@@ -49,9 +76,15 @@ class ProfileRegisterFormTest extends ProfileTestBase {
 
     // Verify that we can register.
     $edit['mail'] = $this->randomMachineName() . '@example.com';
-    $edit[$id . "_profiles[0][entity][$field_name][0][value]"] = $this->randomMachineName();
+    $full_name = 'John Doe';
+    $edit[$id . "_profiles[0][entity][$field_name][0][value]"] = $full_name;
     $this->submitForm($edit, 'Create new account');
     $this->assertSession()->pageTextContains(new FormattableMarkup('Registration successful. You are now logged in.', []));
+
+    // Confirm that registration emails is sent and contains data from profile.
+    $mails = $this->getMails(['key' => 'register_no_approval_required']);
+    $this->assertEquals(1, count($mails));
+    $this->assertMailString('body', $full_name, 1);
 
     $new_user = user_load_by_name($name);
     $this->assertTrue($new_user->isActive(), 'New account is active after registration.');

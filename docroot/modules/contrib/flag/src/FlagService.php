@@ -6,14 +6,14 @@ use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Flag service.
+ *
  *  - Handles search requests for flags and flaggings.
- *  - Performs flagging and unflaging operations.
+ *  - Performs flagging and unflagging operations.
  */
 class FlagService implements FlagServiceInterface {
 
@@ -24,7 +24,9 @@ class FlagService implements FlagServiceInterface {
    */
   protected $currentUser;
 
-  /*
+  /**
+   * The Entity Type Manager.
+   *
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
   protected $entityTypeManager;
@@ -39,28 +41,27 @@ class FlagService implements FlagServiceInterface {
   /**
    * The anonymous session ID.
    *
-   * @var string|NULL
+   * @var string|null
    */
   protected $anonymousSessionId;
 
   /**
    * Constructor.
    *
-   * @param AccountInterface $current_user
+   * @param \Drupal\Core\Session\AccountInterface $current_user
    *   The current user.
-   * @param EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
-   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
+   * @param \Symfony\Component\HttpFoundation\RequestStack|null $request_stack
    *   Te request stack.
    */
-  public function __construct(AccountInterface $current_user,
-                              EntityTypeManagerInterface $entity_type_manager,
-                              $request_stack = NULL) {
+  public function __construct(
+    AccountInterface $current_user,
+    EntityTypeManagerInterface $entity_type_manager,
+    ?RequestStack $request_stack = NULL,
+  ) {
     $this->currentUser = $current_user;
     $this->entityTypeManager = $entity_type_manager;
-    if (!$request_stack instanceof RequestStack) {
-      $request_stack = \Drupal::requestStack();
-    }
     $this->requestStack = $request_stack;
   }
 
@@ -90,7 +91,7 @@ class FlagService implements FlagServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function getFlagging(FlagInterface $flag, EntityInterface $entity, AccountInterface $account = NULL, $session_id = NULL) {
+  public function getFlagging(FlagInterface $flag, EntityInterface $entity, ?AccountInterface $account = NULL, $session_id = NULL) {
     $this->populateFlaggerDefaults($account, $session_id);
 
     $flaggings = $this->getEntityFlaggings($flag, $entity, $account, $session_id);
@@ -111,8 +112,8 @@ class FlagService implements FlagServiceInterface {
     }
 
     $request = $this->requestStack->getCurrentRequest();
-    $session_id = $request->hasSession()
-      ? $request->getSession()->get('flag.session_id')
+    $session_id = $request?->getSession()->isStarted()
+      ? $request?->getSession()->get('flag.session_id')
       : NULL;
     if (empty($session_id)) {
       $session_id = Crypt::randomBytesBase64();
@@ -134,16 +135,7 @@ class FlagService implements FlagServiceInterface {
     }
 
     $request = $this->requestStack->getCurrentRequest();
-    // @todo when https://www.drupal.org/node/2865991 is resolved,
-    // use force start session API.
-    if (!$request->hasSession()) {
-      /** @var \Symfony\Component\HttpFoundation\Session\SessionInterface $session */
-      $session = \Drupal::service('session');
-      $request->setSession($session);
-      $session->start();
-    }
-
-    $session = $request->getSession();
+    $session = $request?->getSession();
     if (!$session->has('flag.session_id')) {
       $session->set('flag.session_id', $this->getAnonymousSessionId());
     }
@@ -152,12 +144,11 @@ class FlagService implements FlagServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function populateFlaggerDefaults(AccountInterface &$account = NULL, &$session_id = NULL) {
+  public function populateFlaggerDefaults(?AccountInterface &$account = NULL, &$session_id = NULL) {
     // Note that the $account parameter must be explicitly set to be passed by
     // reference for the case when the variable is NULL rather than an object;
     // also, it must be optional to allow a variable that is NULL to pass the
     // type-hint check.
-
     if (!isset($account)) {
       // If there isn't an account, set it to the current user.
       $account = $this->currentUser;
@@ -176,7 +167,7 @@ class FlagService implements FlagServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function getEntityFlaggings(FlagInterface $flag, EntityInterface $entity, AccountInterface $account = NULL, $session_id = NULL) {
+  public function getEntityFlaggings(FlagInterface $flag, EntityInterface $entity, ?AccountInterface $account = NULL, $session_id = NULL) {
     $query = $this->entityTypeManager->getStorage('flagging')->getQuery();
     $query->accessCheck();
     $query->condition('flag_id', $flag->id());
@@ -208,7 +199,7 @@ class FlagService implements FlagServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function getAllEntityFlaggings(EntityInterface $entity, AccountInterface $account = NULL, $session_id = NULL) {
+  public function getAllEntityFlaggings(EntityInterface $entity, ?AccountInterface $account = NULL, $session_id = NULL) {
     $query = $this->entityTypeManager->getStorage('flagging')->getQuery();
     $query->accessCheck();
     if (!empty($account)) {
@@ -253,7 +244,7 @@ class FlagService implements FlagServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function getFlaggingUsers(EntityInterface $entity, FlagInterface $flag = NULL) {
+  public function getFlaggingUsers(EntityInterface $entity, ?FlagInterface $flag = NULL) {
     $query = $this->entityTypeManager->getStorage('flagging')->getQuery();
     $query->accessCheck()
       ->condition('entity_type', $entity->getEntityTypeId())
@@ -263,7 +254,7 @@ class FlagService implements FlagServiceInterface {
       $query->condition('flag_id', $flag->id());
     }
 
-    $ids = $query->execute();
+    $ids = $query->accessCheck(FALSE)->execute();
     // Load the flaggings.
     $flaggings = $this->getFlaggingsByIds($ids);
 
@@ -279,7 +270,7 @@ class FlagService implements FlagServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function flag(FlagInterface $flag, EntityInterface $entity, AccountInterface $account = NULL, $session_id = NULL) {
+  public function flag(FlagInterface $flag, EntityInterface $entity, ?AccountInterface $account = NULL, $session_id = NULL) {
     $bundles = $flag->getBundles();
 
     $this->ensureSession();
@@ -318,7 +309,7 @@ class FlagService implements FlagServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function unflag(FlagInterface $flag, EntityInterface $entity, AccountInterface $account = NULL, $session_id = NULL) {
+  public function unflag(FlagInterface $flag, EntityInterface $entity, ?AccountInterface $account = NULL, $session_id = NULL) {
     $bundles = $flag->getBundles();
 
     $this->populateFlaggerDefaults($account, $session_id);
@@ -369,7 +360,7 @@ class FlagService implements FlagServiceInterface {
       ->condition('entity_type', $entity->getEntityTypeId())
       ->condition('entity_id', $entity->id());
 
-    $ids = $query->execute();
+    $ids = $query->accessCheck(FALSE)->execute();
 
     $flaggings = $this->getFlaggingsByIds($ids);
 

@@ -9,12 +9,12 @@ use Drupal\search_api\Query\ResultSetInterface;
 
 /**
  * Implements hook_search_api_results_alter().
+ *
+ * @see \Drupal\Tests\search_api\Functional\ExcerptFieldTest::testSearchExcerptField()
  */
 function search_api_test_excerpt_field_search_api_results_alter(ResultSetInterface &$results) {
-  $excerptTemplate = 'Item {{item_id}} test excerpt';
-  $excerptTemplate = \Drupal::state()
-    ->get('search_api_test_excerpt_field', $excerptTemplate);
+  $excerptTemplate = \Drupal::keyValue('search_api_test')->get('excerpt_template', 'Item {{item_id}} test excerpt');
   foreach ($results->getResultItems() as $itemId => $item) {
-    $item->setExcerpt(str_replace('{{item_id}}', $itemId, $excerptTemplate));
+    $item->setExcerpt(str_replace('{{item_id}}', $itemId, (string) $excerptTemplate));
   }
 }

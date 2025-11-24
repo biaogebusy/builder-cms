@@ -2,9 +2,12 @@
 
 namespace Drupal\message\Plugin\MessagePurge;
 
+use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Queue\QueueInterface;
 use Drupal\message\MessagePurgeBase;
 use Drupal\message\MessageTemplateInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Maximal (approximate) amount of messages.
@@ -16,6 +19,41 @@ use Drupal\message\MessageTemplateInterface;
  * )
  */
 class Quota extends MessagePurgeBase {
+
+  /**
+   * Constructs a MessagePurgeBase object.
+   *
+   * @param array $configuration
+   *   A configuration array containing information about the plugin instance.
+   * @param string $plugin_id
+   *   The plugin ID for the plugin instance.
+   * @param mixed $plugin_definition
+   *   The plugin implementation definition.
+   * @param \Drupal\Core\Entity\Query\QueryInterface $message_query
+   *   The entity query object for message items.
+   * @param \Drupal\Core\Queue\QueueInterface $queue
+   *   The message deletion queue.
+   */
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, QueryInterface $message_query, QueueInterface $queue) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+    $this->messageQuery = $message_query;
+    $this->queue = $queue;
+
+    $this->setConfiguration($configuration);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new self(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('entity_type.manager')->getStorage('message')->getQuery(),
+      $container->get('queue')->get('message_delete')
+    );
+  }
 
   /**
    * {@inheritdoc}

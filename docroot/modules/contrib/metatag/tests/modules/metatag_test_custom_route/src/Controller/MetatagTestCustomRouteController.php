@@ -14,7 +14,7 @@ class MetatagTestCustomRouteController extends ControllerBase {
    */
   public function test() {
     $render = [
-      '#markup' => $this->t('<p>Hello world!</p>'),
+      '#markup' => '<p>Hello world!</p>',
     ];
 
     return $render;

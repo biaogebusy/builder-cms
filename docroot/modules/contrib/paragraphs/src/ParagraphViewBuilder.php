@@ -5,6 +5,7 @@ namespace Drupal\paragraphs;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\Core\Entity\EntityViewBuilder;
 use Drupal\Core\Render\Element;
+use Drupal\paragraphs\Entity\ParagraphsType;
 
 /**
  * Render controller for paragraphs.
@@ -22,6 +23,9 @@ class ParagraphViewBuilder extends EntityViewBuilder {
       $build = $build_list[$key];
       $display = EntityViewDisplay::load('paragraph.' . $build['#paragraph']->bundle() . '.' . $build['#view_mode']) ?: EntityViewDisplay::load('paragraph.' . $build['#paragraph']->bundle() . '.default');
       $paragraph_type = $build['#paragraph']->getParagraphType();
+      if (!$paragraph_type) {
+        $paragraph_type = ParagraphsType::create(['id' => $build['#paragraph']->bundle()]);
+      }
 
       // In case we use paragraphs type with no fields the EntityViewDisplay
       // might not be available yet.

@@ -1,0 +1,18 @@
+video_embed_wysiwyg_video_embed:
+  provider: video_embed_wysiwyg
+  ckeditor5:
+    plugins:
+      - videoEmbed.VideoEmbed
+  drupal:
+    label: Video Embed WYSIWYG
+    library: video_embed_wysiwyg/video_embed
+    admin_library: video_embed_wysiwyg/admin.video_embed
+    toolbar_items:
+      videoEmbed:
+        label: Video embed
+    elements:
+      - <iframe>
+      - <iframe width height frameborder allowfullscreen title loading src>
+    conditions:
+      filter: video_embed_wysiwyg
+    class: Drupal\video_embed_wysiwyg\Plugin\CKEditor5Plugin\VideoEmbedWysiwyg

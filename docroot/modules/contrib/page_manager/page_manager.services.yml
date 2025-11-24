@@ -38,5 +38,7 @@ services:
     arguments: ['@current_route_match']
   page_manager.page_access_check:
     class: Drupal\page_manager\Entity\PageAccessCheck
+    arguments:
+      - '@entity_type.manager'
     tags:
       - { name: access_check, applies_to: _page_access }

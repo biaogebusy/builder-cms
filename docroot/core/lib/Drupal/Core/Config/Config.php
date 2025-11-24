@@ -209,6 +209,8 @@ class Config extends StorableConfigBase {
         // Ensure that the schema wrapper has the latest data.
         $this->schemaWrapper = NULL;
         $this->data = $this->castValue(NULL, $this->data);
+        // Reclaim the memory used by the schema wrapper.
+        $this->schemaWrapper = NULL;
       }
       else {
         foreach ($this->data as $key => $value) {
@@ -226,7 +228,8 @@ class Config extends StorableConfigBase {
       Cache::invalidateTags($this->getCacheTags());
     }
     $this->isNew = FALSE;
-    $this->eventDispatcher->dispatch(new ConfigCrudEvent($this), ConfigEvents::SAVE);
+    $event_name = $this->getStorage()->getCollectionName() === StorageInterface::DEFAULT_COLLECTION ? ConfigEvents::SAVE : ConfigCollectionEvents::SAVE_IN_COLLECTION;
+    $this->eventDispatcher->dispatch(new ConfigCrudEvent($this), $event_name);
     $this->originalData = $this->data;
     return $this;
   }
@@ -243,19 +246,10 @@ class Config extends StorableConfigBase {
     Cache::invalidateTags($this->getCacheTags());
     $this->isNew = TRUE;
     $this->resetOverriddenData();
-    $this->eventDispatcher->dispatch(new ConfigCrudEvent($this), ConfigEvents::DELETE);
+    $event_name = $this->getStorage()->getCollectionName() === StorageInterface::DEFAULT_COLLECTION ? ConfigEvents::DELETE : ConfigCollectionEvents::DELETE_IN_COLLECTION;
+    $this->eventDispatcher->dispatch(new ConfigCrudEvent($this), $event_name);
     $this->originalData = $this->data;
     return $this;
-  }
-
-  /**
-   * Gets the raw data without overrides.
-   *
-   * @return array
-   *   The raw data.
-   */
-  public function getRawData() {
-    return $this->data;
   }
 
   /**
@@ -309,14 +303,14 @@ class Config extends StorableConfigBase {
    *   (optional) A string that maps to a key within the configuration data.
    *   For instance in the following configuration array:
    *   @code
-   *   array(
-   *     'foo' => array(
+   *   [
+   *     'foo' => [
    *       'bar' => 'baz',
-   *     ),
-   *   );
+   *     ],
+   *   ];
    *   @endcode
    *   A key of 'foo.bar' would map to the string 'baz'. However, a key of 'foo'
-   *   would map to the array('bar' => 'baz').
+   *   would map to the ['bar' => 'baz'].
    *   If not supplied TRUE will be returned if there are any overrides at all
    *   for this configuration object.
    *

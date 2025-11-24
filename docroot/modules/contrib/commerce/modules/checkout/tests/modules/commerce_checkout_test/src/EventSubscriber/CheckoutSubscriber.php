@@ -12,7 +12,7 @@ class CheckoutSubscriber implements EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     $events[CheckoutEvents::COMPLETION][] = 'onCompletion';
     $events[CheckoutEvents::COMPLETION_REGISTER][] = 'onRegister';
     return $events;

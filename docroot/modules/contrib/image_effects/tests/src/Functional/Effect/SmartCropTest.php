@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image_effects\Functional\Effect;
 
 use Drupal\Tests\image_effects\Functional\ImageEffectsTestBase;
@@ -23,7 +25,7 @@ class SmartCropTest extends ImageEffectsTestBase {
    *
    * @dataProvider providerToolkits
    */
-  public function testSmartCrop($toolkit_id, $toolkit_config, array $toolkit_settings) {
+  public function testSmartCrop(string $toolkit_id, string $toolkit_config, array $toolkit_settings): void {
     $this->changeToolkit($toolkit_id, $toolkit_config, $toolkit_settings);
 
     $original_uri = $this->getTestImageCopyUri('/tests/images/quarter.png', 'image_effects');
@@ -84,7 +86,7 @@ class SmartCropTest extends ImageEffectsTestBase {
       $this->assertImagesAreEqual($expected_image, $actual_image);
 
       // Remove effect.
-      $uuid = $this->removeEffectFromTestStyle($uuid);
+      $this->removeEffectFromTestStyle($uuid);
     }
   }
 

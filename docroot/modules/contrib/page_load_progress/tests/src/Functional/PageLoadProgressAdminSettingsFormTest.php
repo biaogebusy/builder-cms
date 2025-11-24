@@ -23,7 +23,7 @@ class PageLoadProgressAdminSettingsFormTest extends BrowserTestBase {
    *
    * @var array
    */
-  public static $modules = ['page_load_progress'];
+  protected static $modules = ['page_load_progress'];
 
   /**
    * The installation profile to use with this test.
@@ -46,7 +46,7 @@ class PageLoadProgressAdminSettingsFormTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
     // Privileged user should only have the page_load_progress permissions.
     $this->privilegedUser = $this->drupalCreateUser(['administer page load progress']);
@@ -97,7 +97,8 @@ class PageLoadProgressAdminSettingsFormTest extends BrowserTestBase {
       'page_load_progress_internal_links' => TRUE,
       'page_load_progress_esc_key' => FALSE,
     ];
-    $this->drupalPostForm(Url::fromRoute('page_load_progress.admin_settings'), $edit, 'Save configuration');
+    $this->drupalGet(Url::fromRoute('page_load_progress.admin_settings'));
+    $this->submitForm($edit, 'Save configuration');
 
     // Load settings form page and test for new values.
     $this->drupalGet(Url::fromRoute('page_load_progress.admin_settings'));

@@ -1,32 +1,34 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\ckeditor5\Controller;
 
+use Drupal\ckeditor5\Plugin\CKEditor5PluginManagerInterface;
 use Drupal\Component\Utility\Bytes;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Component\Utility\Environment;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Controller\ControllerBase;
-use Drupal\Core\Entity\Plugin\DataType\EntityAdapter;
-use Drupal\Core\File\Event\FileUploadSanitizeNameEvent;
 use Drupal\Core\File\Exception\FileException;
+use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\editor\Entity\Editor;
-use Drupal\Core\Validation\DrupalTranslator;
-use Drupal\file\Entity\File;
-use Drupal\file\FileInterface;
+use Drupal\file\Upload\FileUploadHandler;
+use Drupal\file\Upload\FormUploadedFile;
+use Drupal\file\Validation\FileValidatorInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
-use Symfony\Component\Mime\MimeTypeGuesserInterface;
-use Symfony\Component\Validator\ConstraintViolation;
-use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
+use Symfony\Component\Lock\Exception\LockAcquiringException;
+use Symfony\Component\Mime\MimeTypes;
+use Symfony\Component\Mime\MimeTypeGuesserInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Returns response for CKEditor 5 Simple image upload adapter.
@@ -37,60 +39,80 @@ use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 class CKEditor5ImageController extends ControllerBase {
 
   /**
+   * The default allowed image extensions.
+   *
+   * @deprecated in drupal:10.3.0 and is removed from drupal:11.0.0 without replacement.
+   *
+   * @see https://www.drupal.org/node/3384728
+   */
+  const DEFAULT_IMAGE_EXTENSIONS = 'gif png jpg jpeg';
+
+  /**
    * The file system service.
-   *
-   * @var \Drupal\Core\File\FileSystem
    */
-  protected $fileSystem;
+  protected FileSystemInterface $fileSystem;
 
   /**
-   * The currently authenticated user.
-   *
-   * @var \Drupal\Core\Session\AccountInterface
+   * The lock.
    */
-  protected $currentUser;
+  protected LockBackendInterface $lock;
 
   /**
-   * The MIME type guesser.
-   *
-   * @var \Symfony\Component\Mime\MimeTypeGuesserInterface
+   * The file upload handler.
    */
-  protected $mimeTypeGuesser;
+  protected FileUploadHandler $fileUploadHandler;
 
   /**
-   * The lock service.
-   *
-   * @var \Drupal\Core\Lock\LockBackendInterface
+   * The CKEditor 5 plugin manager.
    */
-  protected $lock;
-
-  /**
-   * The event dispatcher.
-   *
-   * @var \Symfony\Contracts\EventDispatcher\EventDispatcherInterface
-   */
-  protected $eventDispatcher;
+  protected CKEditor5PluginManagerInterface $pluginManager;
 
   /**
    * Constructs a new CKEditor5ImageController.
    *
-   * @param \Drupal\Core\File\FileSystemInterface $file_system
+   * @param \Drupal\Core\File\FileSystemInterface $fileSystem
    *   The file system service.
-   * @param \Drupal\Core\Session\AccountInterface $current_user
-   *   The currently authenticated user.
-   * @param \Symfony\Component\Mime\MimeTypeGuesserInterface $mime_type_guesser
-   *   The MIME type guesser.
-   * @param \Drupal\Core\Lock\LockBackendInterface $lock
+   * @param \Drupal\Core\Session\AccountInterface|\Drupal\file\Upload\FileUploadHandler $fileUploadHandler
+   *   The file upload handler.
+   * @param \Symfony\Component\Mime\MimeTypeGuesserInterface|\Drupal\Core\Lock\LockBackendInterface $mime_type_guesser
    *   The lock service.
-   * @param \Symfony\Contracts\EventDispatcher\EventDispatcherInterface $event_dispatcher
+   * @param \Drupal\Core\Lock\LockBackendInterface|\Drupal\ckeditor5\Plugin\CKEditor5PluginManagerInterface $pluginManager
+   *   The CKEditor 5 plugin manager.
+   * @param \Symfony\Contracts\EventDispatcher\EventDispatcherInterface|null $event_dispatcher
    *   The event dispatcher.
+   * @param \Drupal\file\Validation\FileValidatorInterface|null $file_validator
+   *   The file validator.
    */
-  public function __construct(FileSystemInterface $file_system, AccountInterface $current_user, MimeTypeGuesserInterface $mime_type_guesser, LockBackendInterface $lock, EventDispatcherInterface $event_dispatcher) {
-    $this->fileSystem = $file_system;
-    $this->currentUser = $current_user;
-    $this->mimeTypeGuesser = $mime_type_guesser;
-    $this->lock = $lock;
-    $this->eventDispatcher = $event_dispatcher;
+  public function __construct(
+    FileSystemInterface $fileSystem,
+    AccountInterface | FileUploadHandler $fileUploadHandler,
+    MimeTypeGuesserInterface | LockBackendInterface $mime_type_guesser,
+    LockBackendInterface | CKEditor5PluginManagerInterface $pluginManager,
+    ?EventDispatcherInterface $event_dispatcher = NULL,
+    ?FileValidatorInterface $file_validator = NULL,
+  ) {
+    $this->fileSystem = $fileSystem;
+    if ($fileUploadHandler instanceof AccountInterface) {
+      @trigger_error('Calling ' . __METHOD__ . '() with the $current_user argument is deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. See https://www.drupal.org/node/3388990', E_USER_DEPRECATED);
+      $fileUploadHandler = \Drupal::service('file.upload_handler');
+    }
+    $this->fileUploadHandler = $fileUploadHandler;
+    if ($mime_type_guesser instanceof MimeTypeGuesserInterface) {
+      @trigger_error('Calling ' . __METHOD__ . '() with the $mime_type_guesser argument is deprecated in drupal:10.3.0 and is replaced with $lock from drupal:11.0.0. See https://www.drupal.org/node/3388990', E_USER_DEPRECATED);
+      $mime_type_guesser = \Drupal::service('lock');
+    }
+    $this->lock = $mime_type_guesser;
+    if ($pluginManager instanceof LockBackendInterface) {
+      @trigger_error('Calling ' . __METHOD__ . '() with the $lock argument in position 4 is deprecated in drupal:10.3.0 and is required in drupal:11.0.0. See https://www.drupal.org/node/3384728', E_USER_DEPRECATED);
+      $pluginManager = \Drupal::service('plugin.manager.ckeditor5.plugin');
+    }
+    $this->pluginManager = $pluginManager;
+    if ($event_dispatcher) {
+      @trigger_error('Calling ' . __METHOD__ . '() with the $event_dispatcher argument is deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. See https://www.drupal.org/node/3388990', E_USER_DEPRECATED);
+    }
+    if ($file_validator) {
+      @trigger_error('Calling ' . __METHOD__ . '() with the $file_validator argument is deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. See https://www.drupal.org/node/3388990', E_USER_DEPRECATED);
+    }
   }
 
   /**
@@ -99,10 +121,9 @@ class CKEditor5ImageController extends ControllerBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('file_system'),
-      $container->get('current_user'),
-      $container->get('file.mime_type.guesser'),
+      $container->get('file.upload_handler'),
       $container->get('lock'),
-      $container->get('event_dispatcher'),
+      $container->get('plugin.manager.ckeditor5.plugin')
     );
   }
 
@@ -113,52 +134,36 @@ class CKEditor5ImageController extends ControllerBase {
    *   The current request object.
    *
    * @return \Symfony\Component\HttpFoundation\JsonResponse
-   *   A JSON object including the file url.
+   *   A JSON object including the file URL.
    *
    * @throws \Symfony\Component\HttpKernel\Exception\HttpException
    *   Thrown when file system errors occur.
    * @throws \Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException
    *   Thrown when validation errors occur.
-   * @throws \Drupal\Core\Entity\EntityStorageException
-   *   Thrown when file entity could not be saved.
    */
-  public function upload(Request $request) {
+  public function upload(Request $request): Response {
     // Getting the UploadedFile directly from the request.
+    /** @var \Symfony\Component\HttpFoundation\File\UploadedFile|null $upload */
     $upload = $request->files->get('upload');
+    if ($upload === NULL || !$upload->isValid()) {
+      throw new HttpException(500, $upload?->getErrorMessage() ?: 'Invalid file upload');
+    }
     $filename = $upload->getClientOriginalName();
 
+    /** @var \Drupal\editor\EditorInterface $editor */
     $editor = $request->attributes->get('editor');
-    $image_upload = $editor->getImageUploadSettings();
-    $destination = $image_upload['scheme'] . '://' . $image_upload['directory'];
+    $settings = $editor->getImageUploadSettings();
+    $destination = $settings['scheme'] . '://' . $settings['directory'];
 
     // Check the destination file path is writable.
     if (!$this->fileSystem->prepareDirectory($destination, FileSystemInterface::CREATE_DIRECTORY)) {
       throw new HttpException(500, 'Destination file path is not writable');
     }
 
-    $max_filesize = min(Bytes::toNumber($image_upload['max_size']), Environment::getUploadMaxSize());
-    if (!empty($image_upload['max_dimensions']['width']) || !empty($image_upload['max_dimensions']['height'])) {
-      $max_dimensions = $image_upload['max_dimensions']['width'] . 'x' . $image_upload['max_dimensions']['height'];
-    }
-    else {
-      $max_dimensions = 0;
-    }
+    $validators = $this->getImageUploadValidators($settings);
 
-    $validators = [
-      'file_validate_extensions' => ['gif png jpg jpeg'],
-      'file_validate_size' => [$max_filesize],
-      'file_validate_image_resolution' => [$max_dimensions],
-    ];
-
-    $prepared_filename = $this->prepareFilename($filename, $validators);
-
-    // Create the file.
-    $file_uri = "{$destination}/{$prepared_filename}";
-
-    // Using the UploadedFile method instead of streamUploadData.
-    $temp_file_path = $upload->getRealPath();
-
-    $file_uri = $this->fileSystem->getDestinationFilename($file_uri, FileSystemInterface::EXISTS_RENAME);
+    $file_uri = "{$destination}/{$filename}";
+    $file_uri = $this->fileSystem->getDestinationFilename($file_uri, FileExists::Rename);
 
     // Lock based on the prepared file URI.
     $lock_id = $this->generateLockIdFromFileUri($file_uri);
@@ -167,42 +172,60 @@ class CKEditor5ImageController extends ControllerBase {
       throw new HttpException(503, sprintf('File "%s" is already locked for writing.', $file_uri), NULL, ['Retry-After' => 1]);
     }
 
-    // Begin building file entity.
-    $file = File::create([]);
-    $file->setOwnerId($this->currentUser->id());
-    $file->setFilename($prepared_filename);
-    if ($this->mimeTypeGuesser instanceof MimeTypeGuesserInterface) {
-      $file->setMimeType($this->mimeTypeGuesser->guessMimeType($prepared_filename));
-    }
-    else {
-      $file->setMimeType($this->mimeTypeGuesser->guess($prepared_filename));
-      @trigger_error('\Symfony\Component\HttpFoundation\File\MimeType\MimeTypeGuesserInterface is deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. Implement \Symfony\Component\Mime\MimeTypeGuesserInterface instead. See https://www.drupal.org/node/3133341', E_USER_DEPRECATED);
-    }
-
-    $file->setFileUri($file_uri);
-    $file->setSize(@filesize($temp_file_path));
-
-    $violations = $this->validate($file, $validators);
-    if ($violations->count() > 0) {
-      throw new UnprocessableEntityHttpException($violations->__toString());
-    }
-
     try {
-      $this->fileSystem->move($temp_file_path, $file_uri, FileSystemInterface::EXISTS_ERROR);
+      $uploadedFile = new FormUploadedFile($upload);
+      $uploadResult = $this->fileUploadHandler->handleFileUpload($uploadedFile, $validators, $destination, FileExists::Rename, FALSE);
+      if ($uploadResult->hasViolations()) {
+        throw new UnprocessableEntityHttpException((string) $uploadResult->getViolations());
+      }
     }
     catch (FileException $e) {
-      throw new HttpException(500, 'Temporary file could not be moved to file location');
+      throw new HttpException(500, 'File could not be saved');
     }
-
-    $file->save();
+    catch (LockAcquiringException $e) {
+      throw new HttpException(503, sprintf('File "%s" is already locked for writing.', $upload->getClientOriginalName()), NULL, ['Retry-After' => 1]);
+    }
 
     $this->lock->release($lock_id);
 
+    $file = $uploadResult->getFile();
     return new JsonResponse([
       'url' => $file->createFileUrl(),
       'uuid' => $file->uuid(),
       'entity_type' => $file->getEntityTypeId(),
     ], 201);
+  }
+
+  /**
+   * Gets the image upload validators.
+   */
+  protected function getImageUploadValidators(array $settings): array {
+    $max_filesize = $settings['max_size']
+      ? Bytes::toNumber($settings['max_size'])
+      : Environment::getUploadMaxSize();
+    $max_dimensions = 0;
+    if (!empty($settings['max_dimensions']['width']) || !empty($settings['max_dimensions']['height'])) {
+      $max_dimensions = $settings['max_dimensions']['width'] . 'x' . $settings['max_dimensions']['height'];
+    }
+
+    $mimetypes = MimeTypes::getDefault();
+    $imageUploadPlugin = $this->pluginManager->getDefinition('ckeditor5_imageUpload')->toArray();
+    $allowed_extensions = [];
+    foreach ($imageUploadPlugin['ckeditor5']['config']['image']['upload']['types'] as $mime_type) {
+      $allowed_extensions = array_merge($allowed_extensions, $mimetypes->getExtensions('image/' . $mime_type));
+    }
+
+    return [
+      'FileExtension' => [
+        'extensions' => implode(' ', $allowed_extensions),
+      ],
+      'FileSizeLimit' => [
+        'fileLimit' => $max_filesize,
+      ],
+      'FileImageDimensions' => [
+        'maxDimensions' => $max_dimensions,
+      ],
+    ];
   }
 
   /**
@@ -223,62 +246,6 @@ class CKEditor5ImageController extends ControllerBase {
     }
 
     return AccessResult::allowed();
-  }
-
-  /**
-   * Validates the file.
-   *
-   * @param \Drupal\file\FileInterface $file
-   *   The file entity to validate.
-   * @param array $validators
-   *   An array of upload validators to pass to file_validate().
-   *
-   * @return \Drupal\Core\Entity\EntityConstraintViolationListInterface
-   *   The list of constraint violations, if any.
-   */
-  protected function validate(FileInterface $file, array $validators) {
-    $violations = $file->validate();
-
-    // Remove violations of inaccessible fields as they cannot stem from our
-    // changes.
-    $violations->filterByFieldAccess();
-
-    // Validate the file based on the field definition configuration.
-    $errors = file_validate($file, $validators);
-    if (!empty($errors)) {
-      $translator = new DrupalTranslator();
-      foreach ($errors as $error) {
-        $violation = new ConstraintViolation($translator->trans($error),
-          (string) $error,
-          [],
-          EntityAdapter::createFromEntity($file),
-          '',
-          NULL
-        );
-        $violations->add($violation);
-      }
-    }
-
-    return $violations;
-  }
-
-  /**
-   * Prepares the filename to strip out any malicious extensions.
-   *
-   * @param string $filename
-   *   The file name.
-   * @param array $validators
-   *   The array of upload validators.
-   *
-   * @return string
-   *   The prepared/munged filename.
-   */
-  protected function prepareFilename($filename, array &$validators) {
-    $extensions = $validators['file_validate_extensions'][0] ?? '';
-    $event = new FileUploadSanitizeNameEvent($filename, $extensions);
-    $this->eventDispatcher->dispatch($event);
-
-    return $event->getFilename();
   }
 
   /**

@@ -9,6 +9,7 @@ use Drupal\node\NodeInterface;
 use Drupal\Tests\search_api\Kernel\ResultsTrait;
 use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the "Role-based access" processor.
@@ -18,6 +19,7 @@ use Drupal\user\Entity\User;
  * @see \Drupal\search_api\Plugin\search_api\processor\RoleAccess
  * @see search_api_test_entity_access()
  */
+#[RunTestsInSeparateProcesses]
 class RoleAccessTest extends ProcessorTestBase {
 
   use ResultsTrait;
@@ -42,7 +44,6 @@ class RoleAccessTest extends ProcessorTestBase {
   public function setUp($processor = NULL): void {
     parent::setUp('role_access');
 
-    $this->installSchema('system', ['sequences']);
     NodeType::create(['type' => 'page', 'name' => 'page'])->save();
 
     // Enable the programmable role-based access controls found in the

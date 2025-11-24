@@ -121,7 +121,7 @@ class EntityReferenceRevisionsOrphanRemovalTest extends BrowserTestBase {
    */
   public function runDeleteForm() {
     $this->drupalGet('admin/config/system/delete-orphans');
-    $this->submitForm([], t('Delete orphaned composite revisions'));
+    $this->submitForm([], 'Delete orphaned composite revisions');
     $this->checkForMetaRefresh();
   }
 

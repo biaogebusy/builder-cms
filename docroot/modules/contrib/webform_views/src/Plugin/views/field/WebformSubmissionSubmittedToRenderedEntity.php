@@ -85,7 +85,7 @@ class WebformSubmissionSubmittedToRenderedEntity extends FieldPluginBase {
       return $build;
     }
 
-    $source_entity = $this->getEntityTranslation($source_entity, $values);
+    $source_entity = $this->getEntityTranslationByRelationship($source_entity, $values);
     $access = $source_entity->access('view', NULL, TRUE);
     $build['#access'] = $access;
     if ($access->isAllowed()) {

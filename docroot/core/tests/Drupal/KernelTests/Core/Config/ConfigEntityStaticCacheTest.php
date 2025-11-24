@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Config;
 
 use Drupal\config_entity_static_cache_test\ConfigOverrider;
@@ -13,9 +15,7 @@ use Drupal\KernelTests\KernelTestBase;
 class ConfigEntityStaticCacheTest extends KernelTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'config_test',
@@ -52,7 +52,7 @@ class ConfigEntityStaticCacheTest extends KernelTestBase {
   /**
    * Tests that the static cache is working.
    */
-  public function testCacheHit() {
+  public function testCacheHit(): void {
     $storage = $this->container->get('entity_type.manager')
       ->getStorage($this->entityTypeId);
     $entity_1 = $storage->load($this->entityId);
@@ -66,7 +66,7 @@ class ConfigEntityStaticCacheTest extends KernelTestBase {
   /**
    * Tests that the static cache is reset on entity save and delete.
    */
-  public function testReset() {
+  public function testReset(): void {
     $storage = $this->container->get('entity_type.manager')
       ->getStorage($this->entityTypeId);
     $entity = $storage->load($this->entityId);
@@ -87,7 +87,7 @@ class ConfigEntityStaticCacheTest extends KernelTestBase {
   /**
    * Tests that the static cache is sensitive to config overrides.
    */
-  public function testConfigOverride() {
+  public function testConfigOverride(): void {
     /** @var \Drupal\Core\Config\Entity\ConfigEntityStorage $storage */
     $storage = \Drupal::entityTypeManager()->getStorage($this->entityTypeId);
     // Prime the cache prior to adding a config override.

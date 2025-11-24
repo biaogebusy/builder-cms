@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drush\Commands\help;
 
 use Consolidation\OutputFormatters\FormatterManager;
@@ -24,18 +26,37 @@ class HelpCLIFormatter implements FormatterInterface
     {
         $formatterManager = new FormatterManager();
 
-        $output->writeln($data['description']);
+        $output->writeln((string)$data['description']);
         if (array_key_exists('help', $data) && $data['help'] != $data['description']) {
             $output->writeln('');
             $output->writeln($data['help']);
         }
 
+        $rows = [];
         if (array_key_exists('examples', $data)) {
+            // Examples come from Annotated commands.
             $output->writeln('');
             $output->writeln('<comment>Examples:</comment>');
             foreach ($data['examples'] as $example) {
                 $rows[] = [' ' . $example['usage'], $example['description']];
             }
+        } elseif (array_key_exists('usages', $data)) {
+            // Usages come from Console commands.
+            // Don't show the last two Usages which come from synopsis and alias. See \Symfony\Component\Console\Descriptor\XmlDescriptor::getCommandDocument.
+            array_pop($data['usages']);
+            array_pop($data['usages']);
+            if ($data['usages']) {
+                $output->writeln('');
+                $output->writeln('<comment>Examples:</comment>');
+                foreach ($data['usages'] as $usage) {
+                    if (!str_starts_with($usage, 'drush')) {
+                        $usage = sprintf('%s %s', 'drush', $usage);
+                    }
+                    $rows[] = [$usage, ''];
+                }
+            }
+        }
+        if ($rows) {
             $formatterManager->write($output, 'table', new RowsOfFields($rows), $options);
         }
 
@@ -70,7 +91,7 @@ class HelpCLIFormatter implements FormatterInterface
             if (!in_array($key, self::OPTIONS_GLOBAL_IMPORTANT)) {
                 continue;
             }
-            $name = $name = '--' . $key;
+            $name = '--' . $key;
             if ($value->getShortcut()) {
                 $name = '-' . $value->getShortcut() . ', ' . $name;
             }
@@ -116,13 +137,11 @@ class HelpCLIFormatter implements FormatterInterface
                 $value = '[' . $value . ']';
             }
         }
-
-        $synopsis = sprintf(
+        return sprintf(
             '%s%s',
-            $option['shortcut']  ? sprintf('-%s, ', $option['shortcut']) : ' ',
+            $option['shortcut']  ? sprintf('-%s, ', $option['shortcut']) : '',
             sprintf('--%s%s', $option['name'], $value)
         );
-        return $synopsis;
     }
 
     public static function formatOptionDescription($option): string
@@ -177,7 +196,7 @@ class HelpCLIFormatter implements FormatterInterface
     {
         $application = Drush::getApplication();
         $def = $application->getDefinition();
-        return array_key_exists($name, $def->getOptions()) || substr($name, 0, 6) == 'notify' || substr($name, 0, 3) == 'xh-' || substr($name, 0, 9) == 'druplicon';
+        return array_key_exists($name, $def->getOptions()) || str_starts_with($name, 'notify') || str_starts_with($name, 'xh-') || str_starts_with($name, 'druplicon');
     }
 
     public function optionRows(OutputInterface $output, array $options, string $title): array
@@ -186,7 +205,12 @@ class HelpCLIFormatter implements FormatterInterface
         $output->writeln('');
         $output->writeln("<comment>$title:</comment>");
         foreach ($options as $option) {
-            if (substr($option['name'], 0, 8) !== '--notify' && substr($option['name'], 0, 5) !== '--xh-' && substr($option['name'], 0, 11) !== '--druplicon') {
+            if (
+                !str_starts_with($option['name'], '--notify') && !str_starts_with(
+                    $option['name'],
+                    '--xh-'
+                ) && !str_starts_with($option['name'], '--druplicon')
+            ) {
                  $rows[] = [$this->formatOptionKeys($option), $this->formatOptionDescription($option)];
             }
         }

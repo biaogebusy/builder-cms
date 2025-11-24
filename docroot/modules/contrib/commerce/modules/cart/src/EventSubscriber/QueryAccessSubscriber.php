@@ -10,36 +10,19 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 class QueryAccessSubscriber implements EventSubscriberInterface {
 
   /**
-   * The cart provider.
-   *
-   * @var \Drupal\commerce_cart\CartProviderInterface
-   */
-  protected $cartProvider;
-
-  /**
-   * The cart session.
-   *
-   * @var \Drupal\commerce_cart\CartSessionInterface
-   */
-  protected $cartSession;
-
-  /**
    * Constructs a new QueryAccessSubscriber object.
    *
-   * @param \Drupal\commerce_cart\CartProviderInterface $cart_provider
+   * @param \Drupal\commerce_cart\CartProviderInterface $cartProvider
    *   The cart provider.
-   * @param \Drupal\commerce_cart\CartSessionInterface $cart_session
+   * @param \Drupal\commerce_cart\CartSessionInterface $cartSession
    *   The cart session.
    */
-  public function __construct(CartProviderInterface $cart_provider, CartSessionInterface $cart_session) {
-    $this->cartProvider = $cart_provider;
-    $this->cartSession = $cart_session;
-  }
+  public function __construct(protected CartProviderInterface $cartProvider, protected CartSessionInterface $cartSession) {}
 
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     return [
       'entity.query_access.commerce_order' => 'onQueryAccess',
     ];

@@ -8,7 +8,6 @@ use Drupal\Core\Extension\ExtensionLifecycle;
 use Drupal\Core\Extension\ModuleDependencyMessageTrait;
 use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Core\Extension\ThemeExtensionList;
-use Drupal\Core\Extension\ThemeHandlerInterface;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Menu\MenuLinkTreeInterface;
@@ -47,13 +46,6 @@ class SystemController extends ControllerBase {
   protected $formBuilder;
 
   /**
-   * The theme handler service.
-   *
-   * @var \Drupal\Core\Extension\ThemeHandlerInterface
-   */
-  protected $themeHandler;
-
-  /**
    * The menu link tree service.
    *
    * @var \Drupal\Core\Menu\MenuLinkTreeInterface
@@ -68,6 +60,13 @@ class SystemController extends ControllerBase {
   protected $moduleExtensionList;
 
   /**
+   * The theme extension list.
+   *
+   * @var \Drupal\Core\Extension\ThemeExtensionList
+   */
+  protected ThemeExtensionList $themeExtensionList;
+
+  /**
    * Constructs a new SystemController.
    *
    * @param \Drupal\system\SystemManager $systemManager
@@ -76,24 +75,20 @@ class SystemController extends ControllerBase {
    *   The theme access checker service.
    * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
    *   The form builder.
-   * @param \Drupal\Core\Extension\ThemeHandlerInterface $theme_handler
-   *   The theme handler.
    * @param \Drupal\Core\Menu\MenuLinkTreeInterface $menu_link_tree
    *   The menu link tree service.
    * @param \Drupal\Core\Extension\ModuleExtensionList $module_extension_list
    *   The module extension list.
+   * @param \Drupal\Core\Extension\ThemeExtensionList $theme_extension_list
+   *   The theme extension list.
    */
-  public function __construct(SystemManager $systemManager, ThemeAccessCheck $theme_access, FormBuilderInterface $form_builder, ThemeHandlerInterface $theme_handler, MenuLinkTreeInterface $menu_link_tree, ModuleExtensionList $module_extension_list = NULL) {
+  public function __construct(SystemManager $systemManager, ThemeAccessCheck $theme_access, FormBuilderInterface $form_builder, MenuLinkTreeInterface $menu_link_tree, ModuleExtensionList $module_extension_list, ThemeExtensionList $theme_extension_list) {
     $this->systemManager = $systemManager;
     $this->themeAccess = $theme_access;
     $this->formBuilder = $form_builder;
-    $this->themeHandler = $theme_handler;
     $this->menuLinkTree = $menu_link_tree;
-    if ($module_extension_list === NULL) {
-      @trigger_error('The extension.list.module service must be passed to ' . __NAMESPACE__ . '\SystemController::__construct. It was added in Drupal 8.9.0 and will be required before Drupal 10.0.0.', E_USER_DEPRECATED);
-      $module_extension_list = \Drupal::service('extension.list.module');
-    }
     $this->moduleExtensionList = $module_extension_list;
+    $this->themeExtensionList = $theme_extension_list;
   }
 
   /**
@@ -104,14 +99,17 @@ class SystemController extends ControllerBase {
       $container->get('system.manager'),
       $container->get('access_check.theme'),
       $container->get('form_builder'),
-      $container->get('theme_handler'),
       $container->get('menu.link_tree'),
-      $container->get('extension.list.module')
+      $container->get('extension.list.module'),
+      $container->get('extension.list.theme'),
     );
   }
 
   /**
    * Provide the administration overview page.
+   *
+   * This will render child links two levels below the specified link ID,
+   * grouped by the child links one level below.
    *
    * @param string $link_id
    *   The ID of the administrative path link for which to display child links.
@@ -205,7 +203,7 @@ class SystemController extends ControllerBase {
   public function themesPage() {
     $config = $this->config('system.theme');
     // Get all available themes.
-    $themes = $this->themeHandler->rebuildThemeData();
+    $themes = $this->themeExtensionList->reset()->getList();
 
     // Remove obsolete themes.
     $themes = array_filter($themes, function ($theme) {
@@ -336,7 +334,7 @@ class SystemController extends ControllerBase {
               'attributes' => ['title' => $this->t('Set @theme as default theme', ['@theme' => $theme->info['name']])],
             ];
           }
-          $admin_theme_options[$theme->getName()] = $theme->info['name'] . ($theme->isExperimental() ? ' (' . t('Experimental') . ')' : '');
+          $admin_theme_options[$theme->getName()] = $theme->info['name'] . ($theme->isExperimental() ? ' (' . $this->t('Experimental') . ')' : '');
         }
         else {
           $theme->operations[] = [

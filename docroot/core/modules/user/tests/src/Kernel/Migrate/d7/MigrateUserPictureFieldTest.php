@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Kernel\Migrate\d7;
 
 use Drupal\field\Entity\FieldStorageConfig;
@@ -13,6 +15,9 @@ use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
  */
 class MigrateUserPictureFieldTest extends MigrateDrupal7TestBase {
 
+  /**
+   * {@inheritdoc}
+   */
   protected static $modules = ['image', 'file'];
 
   /**
@@ -26,7 +31,7 @@ class MigrateUserPictureFieldTest extends MigrateDrupal7TestBase {
   /**
    * Tests the user picture field migration.
    */
-  public function testUserPictureField() {
+  public function testUserPictureField(): void {
     /** @var \Drupal\field\FieldStorageConfigInterface $field_storage */
     $field_storage = FieldStorageConfig::load('user.user_picture');
     $this->assertInstanceOf(FieldStorageConfigInterface::class, $field_storage);

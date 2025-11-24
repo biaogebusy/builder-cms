@@ -68,24 +68,24 @@ function charts_chartjs_requirements($phase) {
  */
 function charts_chartjs_find_library() {
   // The following logic is taken from libraries_get_libraries()
-  $searchdir = [];
+  $search_dir = [];
 
   // Similar to 'modules' and 'themes' directories inside an installation
   // profile, installation profiles may want to place libraries into a
   // 'libraries' directory.
-  $searchdir[] = 'profiles/' . \Drupal::installProfile() . '/libraries';
+  $search_dir[] = 'profiles/' . \Drupal::installProfile() . '/libraries';
 
   // Always search libraries.
-  $searchdir[] = 'libraries';
+  $search_dir[] = 'libraries';
 
   // Also search sites/<domain>/*.
   $container = \Drupal::getContainer();
   $site_path = $container->getParameter('site.path');
   $site_path = explode('/', $site_path);
   $site_name = $site_path[1];
-  $searchdir[] = $site_name . '/libraries';
+  $search_dir[] = $site_name . '/libraries';
 
-  foreach ($searchdir as $dir) {
+  foreach ($search_dir as $dir) {
     if (file_exists($dir . '/chart.js/dist/chart.js') || file_exists($dir . '/chart.js/dist/chart.umd.js')) {
       return $dir . '/chartjs';
     }

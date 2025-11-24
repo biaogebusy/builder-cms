@@ -1,0 +1,12 @@
+<?php
+
+/**
+ * @file
+ * CSV Serialization Module.
+ */
+
+// Ludwig module integration.
+if (\Drupal::hasService('ludwig.require_once')) {
+  $ludwig_require_once = \Drupal::service('ludwig.require_once');
+  $ludwig_require_once->requireOnce('league/csv', 'src/functions_include.php', dirname(__FILE__));
+}

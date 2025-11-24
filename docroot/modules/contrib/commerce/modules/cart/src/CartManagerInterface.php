@@ -2,9 +2,9 @@
 
 namespace Drupal\commerce_cart;
 
-use Drupal\commerce_order\Entity\OrderItemInterface;
-use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce\PurchasableEntityInterface;
+use Drupal\commerce_order\Entity\OrderInterface;
+use Drupal\commerce_order\Entity\OrderItemInterface;
 
 /**
  * Manages the cart order and its order items.

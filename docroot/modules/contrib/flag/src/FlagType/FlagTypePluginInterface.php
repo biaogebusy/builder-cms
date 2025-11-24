@@ -2,12 +2,12 @@
 
 namespace Drupal\flag\FlagType;
 
-use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\Component\Plugin\ConfigurableInterface;
-use Drupal\Core\Session\AccountInterface;
-use Drupal\flag\FlagInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Plugin\PluginFormInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\flag\FlagInterface;
 
 /**
  * Provides an interface for all flag type plugins.
@@ -40,6 +40,6 @@ interface FlagTypePluginInterface extends PluginFormInterface, ConfigurableInter
    * @return \Drupal\Core\Access\AccessResult
    *   An AccessResult object.
    */
-  public function actionAccess($action, FlagInterface $flag, AccountInterface $account, EntityInterface $flaggable = NULL);
+  public function actionAccess($action, FlagInterface $flag, AccountInterface $account, ?EntityInterface $flaggable = NULL);
 
 }

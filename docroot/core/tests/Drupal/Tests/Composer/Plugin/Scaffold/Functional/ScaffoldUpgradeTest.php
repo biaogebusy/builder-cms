@@ -1,11 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Composer\Plugin\Scaffold\Functional;
 
 use Composer\Util\Filesystem;
 use Drupal\Tests\Composer\Plugin\Scaffold\AssertUtilsTrait;
 use Drupal\Tests\Composer\Plugin\Scaffold\ExecTrait;
 use Drupal\Tests\Composer\Plugin\Scaffold\Fixtures;
+use Drupal\Tests\PhpUnitCompatibilityTrait;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -13,7 +16,7 @@ use PHPUnit\Framework\TestCase;
  *
  * Upgrading a Composer plugin can be a dangerous operation. If the plugin
  * instantiates any classes during the activate method, and the plugin code
- * is subsequentially modified by a `composer update` operation, then any
+ * is subsequently modified by a `composer update` operation, then any
  * post-update hook (& etc.) may run with inconsistent code, leading to
  * runtime errors. This test ensures that it is possible to upgrade from the
  * last available stable 8.8.x tag to the current Scaffold plugin code (e.g. in
@@ -25,6 +28,7 @@ class ScaffoldUpgradeTest extends TestCase {
 
   use AssertUtilsTrait;
   use ExecTrait;
+  use PhpUnitCompatibilityTrait;
 
   /**
    * The Fixtures object.
@@ -38,7 +42,7 @@ class ScaffoldUpgradeTest extends TestCase {
    *
    * @var string
    */
-  protected $fixturesDir;
+  protected string $fixturesDir;
 
   /**
    * {@inheritdoc}
@@ -51,12 +55,12 @@ class ScaffoldUpgradeTest extends TestCase {
   /**
    * Tests upgrading the Composer Scaffold plugin.
    */
-  public function testScaffoldUpgrade() {
+  public function testScaffoldUpgrade(): void {
     $composerVersionLine = exec('composer --version');
-    if (strpos($composerVersionLine, 'Composer version 2') !== FALSE) {
+    if (str_contains($composerVersionLine, 'Composer version 2')) {
       $this->markTestSkipped('We cannot run the scaffold upgrade test with Composer 2 until we have a stable version of drupal/core-composer-scaffold to start from that we can install with Composer 2.x.');
     }
-    $this->fixturesDir = $this->fixtures->tmpDir($this->getName());
+    $this->fixturesDir = $this->fixtures->tmpDir($this->name());
     $replacements = ['SYMLINK' => 'false', 'PROJECT_ROOT' => $this->fixtures->projectRoot()];
     $this->fixtures->cloneFixtureProjects($this->fixturesDir, $replacements);
     $topLevelProjectDir = 'drupal-drupal';
@@ -112,7 +116,7 @@ class ScaffoldUpgradeTest extends TestCase {
    * @return string
    *   Path to temporary git repository.
    */
-  protected function createTmpRepo($source, $destParent, $version) {
+  protected function createTmpRepo($source, $destParent, $version): string {
     $target = $destParent . '/' . basename($source);
     $filesystem = new Filesystem();
     $filesystem->copy($source, $target);

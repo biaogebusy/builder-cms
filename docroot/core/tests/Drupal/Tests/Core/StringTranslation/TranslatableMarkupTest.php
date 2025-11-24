@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\StringTranslation;
 
 use Drupal\Component\Render\FormattableMarkup;
@@ -51,10 +53,10 @@ class TranslatableMarkupTest extends UnitTestCase {
    *
    * @covers ::__toString
    */
-  public function testToString() {
+  public function testToString(): void {
     $translation = $this->createMock(TranslationInterface::class);
 
-    $string = 'May I have an exception please?';
+    $string = 'May I have an exception?';
     $text = $this->getMockBuilder(TranslatableMarkup::class)
       ->setConstructorArgs([$string, [], [], $translation])
       ->onlyMethods(['_die'])
@@ -77,14 +79,14 @@ class TranslatableMarkupTest extends UnitTestCase {
     (string) $text;
     restore_error_handler();
 
-    $this->assertEquals(E_USER_ERROR, $this->lastErrorNumber);
+    $this->assertEquals(E_USER_WARNING, $this->lastErrorNumber);
     $this->assertMatchesRegularExpression('/Exception thrown while calling __toString on a .*Mock_TranslatableMarkup_.* object in .*TranslatableMarkupTest.php on line [0-9]+: Yes you may./', $this->lastErrorMessage);
   }
 
   /**
    * @covers ::__construct
    */
-  public function testIsStringAssertion() {
+  public function testIsStringAssertion(): void {
     $translation = $this->getStringTranslationStub();
     $this->expectException(\InvalidArgumentException::class);
     $this->expectExceptionMessage('$string ("foo") must be a string.');
@@ -94,7 +96,7 @@ class TranslatableMarkupTest extends UnitTestCase {
   /**
    * @covers ::__construct
    */
-  public function testIsStringAssertionWithFormattableMarkup() {
+  public function testIsStringAssertionWithFormattableMarkup(): void {
     $formattable_string = new FormattableMarkup('@bar', ['@bar' => 'foo']);
     $this->expectException(\InvalidArgumentException::class);
     $this->expectExceptionMessage('$string ("foo") must be a string.');

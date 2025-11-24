@@ -13,6 +13,17 @@ use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\language\Plugin\migrate\source\d7\LanguageContentSettingsTaxonomyVocabulary as D7LanguageContentSettingsTaxonomyVocabulary;
+use Drupal\migrate\Plugin\MigrateSourceInterface;
+use Drupal\migrate\Plugin\MigrationInterface;
+use Drupal\migrate\Row;
+use Drupal\taxonomy\Plugin\migrate\source\d6\Term as D6Term;
+use Drupal\taxonomy\Plugin\migrate\source\d6\Vocabulary as D6Vocabulary;
+use Drupal\taxonomy\Plugin\migrate\source\d6\VocabularyPerType as D6VocabularyPerType;
+use Drupal\taxonomy\Plugin\migrate\source\d7\Term as D7Term;
+use Drupal\taxonomy\Plugin\migrate\source\d7\TermEntityTranslation;
+use Drupal\taxonomy\Plugin\migrate\source\d7\Vocabulary as D7Vocabulary;
+use Drupal\taxonomy\Plugin\migrate\source\d7\VocabularyTranslation as D7VocabularyTranslation;
 use Drupal\taxonomy\VocabularyInterface;
 use Drupal\user\Entity\User;
 
@@ -23,7 +34,7 @@ function forum_help($route_name, RouteMatchInterface $route_match) {
   switch ($route_name) {
     case 'help.page.forum':
       $output = '';
-      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<h2>' . t('About') . '</h2>';
       $output .= '<p>' . t('The Forum module lets you create threaded discussion forums with functionality similar to other message board systems. In a forum, users post topics and threads in nested hierarchies, allowing discussions to be categorized and grouped.') . '</p>';
       $output .= '<p>' . t('The Forum module adds and uses a content type called <em>Forum topic</em>. For background information on content types, see the <a href=":node_help">Node module help page</a>.', [':node_help' => Url::fromRoute('help.page', ['name' => 'node'])->toString()]) . '</p>';
       $output .= '<p>' . t('A forum is represented by a hierarchical structure, consisting of:');
@@ -35,14 +46,14 @@ function forum_help($route_name, RouteMatchInterface $route_match) {
       $output .= '</ul>';
       $output .= '</p>';
       $output .= '<p>' . t('For more information, see the <a href=":forum">online documentation for the Forum module</a>.', [':forum' => 'https://www.drupal.org/documentation/modules/forum']) . '</p>';
-      $output .= '<h3>' . t('Uses') . '</h3>';
+      $output .= '<h2>' . t('Uses') . '</h2>';
       $output .= '<dl>';
       $output .= '<dt>' . t('Setting up the forum structure') . '</dt>';
       $output .= '<dd>' . t('Visit the <a href=":forums">Forums page</a> to set up containers and forums to hold your discussion topics.', [':forums' => Url::fromRoute('forum.overview')->toString()]) . '</dd>';
       $output .= '<dt>' . t('Starting a discussion') . '</dt>';
       $output .= '<dd>' . t('The <a href=":create-topic">Forum topic</a> link on the <a href=":content-add">Add content</a> page creates the first post of a new threaded discussion, or thread.', [':create-topic' => Url::fromRoute('node.add', ['node_type' => 'forum'])->toString(), ':content-add' => Url::fromRoute('node.add_page')->toString()]) . '</dd>';
       $output .= '<dt>' . t('Navigating in the forum') . '</dt>';
-      $output .= '<dd>' . t('Enabling the Forum module provides a default <em>Forums</em> menu link in the Tools menu that links to the <a href=":forums">Forums page</a>.', [':forums' => Url::fromRoute('forum.index')->toString()]) . '</dd>';
+      $output .= '<dd>' . t('Installing the Forum module provides a default <em>Forums</em> menu link in the Tools menu that links to the <a href=":forums">Forums page</a>.', [':forums' => Url::fromRoute('forum.index')->toString()]) . '</dd>';
       $output .= '<dt>' . t('Moving forum topics') . '</dt>';
       $output .= '<dd>' . t('A forum topic (and all of its comments) may be moved between forums by selecting a different forum while editing a forum topic. When moving a forum topic between forums, the <em>Leave shadow copy</em> option creates a link in the original forum pointing to the new location.') . '</dd>';
       $output .= '<dt>' . t('Locking and disabling comments') . '</dt>';
@@ -67,7 +78,7 @@ function forum_help($route_name, RouteMatchInterface $route_match) {
           'class' => ['more-link'],
         ],
       ];
-      $output .= \Drupal::service('renderer')->renderPlain($container);
+      $output .= \Drupal::service('renderer')->renderInIsolation($container);
       return $output;
 
     case 'forum.add_container':
@@ -97,6 +108,9 @@ function forum_theme() {
     ],
     'forum_submitted' => [
       'variables' => ['topic' => NULL],
+    ],
+    'forum_topic' => [
+      'variables' => ['title_link' => NULL, 'submitted' => NULL],
     ],
   ];
 }
@@ -486,7 +500,9 @@ function template_preprocess_forums(&$variables) {
           'data' => [
             $topic->icon,
             [
-              '#markup' => '<div class="forum__title"><div>' . $topic->title_link . '</div><div>' . $topic->submitted . '</div></div>',
+              '#theme' => 'forum_topic',
+              '#title_link' => $topic->title_link,
+              '#submitted' => $topic->submitted,
             ],
           ],
           'class' => ['forum__topic'],
@@ -642,4 +658,103 @@ function template_preprocess_forum_submitted(&$variables) {
     $variables['author'] = \Drupal::service('renderer')->render($username);
   }
   $variables['time'] = isset($variables['topic']->created) ? \Drupal::service('date.formatter')->formatTimeDiffSince($variables['topic']->created) : '';
+}
+
+/**
+ * Implements hook_migrate_prepare_row().
+ */
+function forum_migrate_prepare_row(Row $row, MigrateSourceInterface $source, MigrationInterface $migration) {
+  $source_plugin = $migration->getSourcePlugin();
+  if (is_a($source_plugin, D6Term::class) || is_a($source_plugin, D7Term::class) || is_a($source_plugin, TermEntityTranslation::class)) {
+    $connection = $source_plugin->getDatabase();
+    if ($connection) {
+      if ($connection->schema()->tableExists('variable')) {
+        $query = $connection->select('variable', 'v')
+          ->fields('v', ['value'])
+          ->condition('name', 'forum_containers');
+        $result = $query->execute()->fetchCol();
+        if ($result) {
+          $forum_container_tids = unserialize($result[0], ['allowed_classes' => FALSE]);
+          $current_tid = $row->getSourceProperty('tid');
+          $row->setSourceProperty('is_container', in_array($current_tid, $forum_container_tids));
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_migrate_MIGRATION_ID_prepare_row().
+ */
+function forum_migrate_d7_taxonomy_vocabulary_prepare_row(Row $row, MigrateSourceInterface $source, MigrationInterface $migration) {
+  // If the vocabulary being migrated is the one defined in the
+  // 'forum_nav_vocabulary' variable, set the 'forum_vocabulary' source
+  // property to true so we know this is the vocabulary used by Forum.
+  $connection = $migration->getSourcePlugin()->getDatabase();
+  if ($connection) {
+    if ($connection->schema()->tableExists('variable')) {
+      $query = $connection->select('variable', 'v')
+        ->fields('v', ['value'])
+        ->condition('name', 'forum_nav_vocabulary');
+      $result = $query->execute()->fetchCol();
+      if ($result) {
+        $forum_nav_vocabulary = unserialize($result[0], ['allowed_classes' => FALSE]);
+        if ($forum_nav_vocabulary == $row->getSourceProperty('vid')) {
+          $row->setSourceProperty('forum_vocabulary', TRUE);
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_migration_plugins_alter().
+ */
+function forum_migration_plugins_alter(array &$migrations) {
+  // Function to append the forum_vocabulary process plugin.
+  $merge_forum_vocabulary = function ($process) {
+    $process[] = [
+      'plugin' => 'forum_vocabulary',
+      'machine_name' => 'forums',
+    ];
+    return $process;
+  };
+  $merge_forum_field_name = function ($process) {
+    $process[] = [
+      'plugin' => 'forum_vocabulary',
+      'machine_name' => 'taxonomy_forums',
+    ];
+    return $process;
+  };
+  foreach ($migrations as $migration_id => $migration) {
+    // Add process for forum_nav_vocabulary.
+    /** @var \Drupal\migrate\Plugin\migrate\source\SqlBase $source_plugin */
+    $source_plugin = \Drupal::service('plugin.manager.migration')
+      ->createStubMigration($migration)
+      ->getSourcePlugin();
+    if (is_a($source_plugin, D6Vocabulary::class)
+      || is_a($source_plugin, D6VocabularyPerType::class)) {
+      if (isset($migration['process']['vid'])) {
+        $migrations[$migration_id]['process']['vid'] = $merge_forum_vocabulary($migration['process']['vid']);
+      }
+      if (isset($migration['process']['field_name'])) {
+        $migrations[$migration_id]['process']['field_name'] = $merge_forum_field_name($migration['process']['field_name']);
+      }
+    }
+
+    if (is_a($source_plugin, D7Vocabulary::class)
+      && !is_a($source_plugin, D7VocabularyTranslation::class)
+      && !is_a($source_plugin, D7LanguageContentSettingsTaxonomyVocabulary::class)) {
+      if (isset($migration['process']['vid'])) {
+        $process[] = $migrations[$migration_id]['process']['vid'];
+        $migrations[$migration_id]['process']['vid'] = $merge_forum_vocabulary($process);
+      }
+    }
+    // Add process for forum_container.
+    if (is_a($source_plugin, D6Term::class)
+      || is_a($source_plugin, D7Term::class)
+      || is_a($source_plugin, TermEntityTranslation::class)) {
+      $migrations[$migration_id]['process']['forum_container'] = 'is_container';
+    }
+  }
 }

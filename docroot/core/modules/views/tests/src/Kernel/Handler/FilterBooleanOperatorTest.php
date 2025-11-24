@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Kernel\Handler;
 
 use Drupal\Tests\views\Kernel\ViewsKernelTestBase;
@@ -14,9 +16,7 @@ use Drupal\views\Views;
 class FilterBooleanOperatorTest extends ViewsKernelTestBase {
 
   /**
-   * The modules to enable for this test.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['system'];
 
@@ -39,7 +39,7 @@ class FilterBooleanOperatorTest extends ViewsKernelTestBase {
   /**
    * Tests the BooleanOperator filter.
    */
-  public function testFilterBooleanOperator() {
+  public function testFilterBooleanOperator(): void {
     $view = Views::getView('test_view');
     $view->setDisplay();
 
@@ -113,7 +113,7 @@ class FilterBooleanOperatorTest extends ViewsKernelTestBase {
   /**
    * Tests the boolean filter with grouped exposed form enabled.
    */
-  public function testFilterGroupedExposed() {
+  public function testFilterGroupedExposed(): void {
     $filters = $this->getGroupedExposedFilters();
     $view = Views::getView('test_view');
 

@@ -2,9 +2,9 @@
 
 namespace Drupal\commerce_product;
 
-use Drupal\content_translation\ContentTranslationHandler;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\content_translation\ContentTranslationHandler;
 
 /**
  * Defines the translation handler for products.
@@ -56,9 +56,9 @@ class ProductTranslationHandler extends ContentTranslationHandler {
     if ($form_state->hasValue('content_translation')) {
       $translation = &$form_state->getValue('content_translation');
       $translation['status'] = $entity->isPublished();
-      $account = $entity->uid->entity;
+      $account = $entity->getOwner();
       $translation['uid'] = $account ? $account->id() : 0;
-      $translation['created'] = \Drupal::service('date.formatter')->format($entity->created->value, 'custom', 'Y-m-d H:i:s O');
+      $translation['created'] = $this->dateFormatter->format($entity->getCreatedTime(), 'custom', 'Y-m-d H:i:s O');
     }
     parent::entityFormEntityBuild($entity_type, $entity, $form, $form_state);
   }

@@ -1,19 +1,19 @@
 private_message.admin.structure:
   title: 'Private Messages'
   description: 'Configure private messages'
-  route_name:  private_message.admin_structure
+  route_name: private_message.admin_structure
   parent: system.admin_structure
 
 private_message_thread.admin.structure.settings:
   title: 'Private Message Threads'
   description: 'Configure private message entities'
-  route_name:  private_message.private_message_thread_settings
+  route_name: private_message.private_message_thread_settings
   parent: private_message.admin.structure
 
 private_message.admin.structure.settings:
   title: 'Private Message'
   description: 'Configure private message thread entities'
-  route_name:  private_message.private_message_settings
+  route_name: private_message.private_message_settings
   parent: private_message.admin.structure
 
 private_message.admin_config:
@@ -33,3 +33,11 @@ private_message.admin_config.uninstall:
   description: 'Prepare the private message module for uninstallation'
   route_name: private_message.admin_config.uninstall
   parent: private_message.admin_config
+
+# Private Message Ban menu items definition
+entity.private_message_ban.collection:
+  title: 'Private Message Bans list'
+  route_name: entity.private_message_ban.collection
+  description: 'List Private Message Bans'
+  parent: private_message.admin.structure
+  weight: 100

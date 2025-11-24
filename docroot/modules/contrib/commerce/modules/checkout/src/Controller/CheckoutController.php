@@ -2,10 +2,6 @@
 
 namespace Drupal\commerce_checkout\Controller;
 
-use Drupal\commerce_cart\CartProviderInterface;
-use Drupal\commerce_cart\CartSession;
-use Drupal\commerce_cart\CartSessionInterface;
-use Drupal\commerce_checkout\CheckoutOrderManagerInterface;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
@@ -16,6 +12,10 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
+use Drupal\commerce_cart\CartProviderInterface;
+use Drupal\commerce_cart\CartSession;
+use Drupal\commerce_cart\CartSessionInterface;
+use Drupal\commerce_checkout\CheckoutOrderManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
@@ -172,8 +172,10 @@ class CheckoutController implements ContainerInjectionInterface {
     }
 
     $access = AccessResult::allowedIf($customer_check)
+      ->andIf(AccessResult::allowedIf($order->getStore()->isPublished()))
       ->andIf(AccessResult::allowedIf($order->hasItems()))
       ->andIf(AccessResult::allowedIfHasPermission($account, 'access checkout'))
+      ->addCacheableDependency($order->getStore())
       ->addCacheableDependency($order);
 
     return $access;

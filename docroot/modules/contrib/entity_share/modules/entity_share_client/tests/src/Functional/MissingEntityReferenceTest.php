@@ -131,7 +131,7 @@ class MissingEntityReferenceTest extends EntityShareClientFunctionalTestBase {
 
     $this->assertNotEmpty($existing_entities, 'The content has been imported');
     if (!empty($existing_entities)) {
-      $node = array_shift($existing_entities);
+      $node = \array_shift($existing_entities);
       $content_reference_value = $node->get('field_es_test_content_reference')->getValue();
       $expected_content_reference_value = [];
       $this->assertEquals($expected_content_reference_value, $content_reference_value, 'The content reference field is empty.');

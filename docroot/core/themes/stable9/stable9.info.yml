@@ -11,28 +11,18 @@ libraries-override:
     css:
       theme:
         css/block.admin.css: css/block/block.admin.css
-
-  ckeditor/drupal.ckeditor:
-    css:
-      state:
-        css/ckeditor.css: css/ckeditor/ckeditor.css
-  ckeditor/drupal.ckeditor.plugins.drupalimagecaption:
+  announcements_feed/drupal.announcements_feed.page:
     css:
       component:
-        css/plugins/drupalimagecaption/ckeditor.drupalimagecaption.css: css/ckeditor/plugins/drupalimagecaption/ckeditor.drupalimagecaption.css
-  ckeditor/drupal.ckeditor.plugins.language:
+        css/announcements_feed.page.css: css/announcements_feed/announcements_feed.page.css
+  announcements_feed/drupal.announcements_feed.dialog:
     css:
       component:
-        css/plugins/language/ckeditor.language.css: css/ckeditor/plugins/language/ckeditor.language.css
-  ckeditor/drupal.ckeditor.admin:
+        css/announcements_feed.dialog.css: css/announcements_feed/announcements_feed.dialog.css
+  announcements_feed/drupal.announcements_feed.toolbar:
     css:
-      theme:
-        css/ckeditor.admin.css: css/ckeditor/ckeditor.admin.css
-
-  color/admin:
-    css:
-      theme:
-        css/color.admin.css: css/color/color.admin.css
+      component:
+        css/announcements_feed.toolbar.css: css/announcements_feed/announcements_feed.toolbar.css
 
   config_translation/drupal.config_translation.admin:
     css:
@@ -63,27 +53,37 @@ libraries-override:
       component:
         css/contextual.toolbar.css: css/contextual/contextual.toolbar.css
 
-  core/drupal.dialog.off_canvas:
+  core/drupal.ajax:
     css:
-      base:
-        misc/dialog/off-canvas.reset.css: css/core/dialog/off-canvas.reset.css
-        misc/dialog/off-canvas.base.css: css/core/dialog/off-canvas.base.css
-        misc/dialog/off-canvas.css: css/core/dialog/off-canvas.css
-        misc/dialog/off-canvas.theme.css: css/core/dialog/off-canvas.theme.css
       component:
-        misc/dialog/off-canvas.motion.css: css/core/dialog/off-canvas.motion.css
-        misc/dialog/off-canvas.button.css: css/core/dialog/off-canvas.button.css
-        misc/dialog/off-canvas.form.css: css/core/dialog/off-canvas.form.css
-        misc/dialog/off-canvas.table.css: css/core/dialog/off-canvas.table.css
-        misc/dialog/off-canvas.details.css: css/core/dialog/off-canvas.details.css
-        misc/dialog/off-canvas.tabledrag.css: css/core/dialog/off-canvas.tabledrag.css
-        misc/dialog/off-canvas.dropbutton.css: css/core/dialog/off-canvas.dropbutton.css
-        misc/dialog/off-canvas.layout.css: css/core/dialog/off-canvas.layout.css
+        misc/components/ajax-progress.module.css: css/core/components/ajax-progress.module.css
+
+  core/drupal.autocomplete:
+    css:
+      component:
+        misc/components/autocomplete-loading.module.css: css/core/components/autocomplete-loading.module.css
 
   core/drupal.dropbutton:
     css:
       component:
         misc/dropbutton/dropbutton.css: css/core/dropbutton/dropbutton.css
+
+  core/drupal.progress:
+    css:
+      component:
+        misc/components/progress.module.css: css/core/components/progress.module.css
+
+  core/drupal.tabledrag:
+    css:
+      component:
+        misc/components/tabledrag.module.css: css/core/components/tabledrag.module.css
+        misc/components/tree-child.module.css: css/core/components/tree-child.module.css
+
+  core/drupal.tableheader:
+    css:
+      component:
+        misc/components/sticky-header.module.css: css/core/components/sticky-header.module.css
+
   core/drupal.vertical-tabs:
     css:
       component:
@@ -201,30 +201,6 @@ libraries-override:
       theme:
         css/node.admin.css: css/node/node.admin.css
 
-  quickedit/quickedit:
-    css:
-      component:
-        css/quickedit.module.css: css/quickedit/quickedit.module.css
-      theme:
-        css/quickedit.theme.css: css/quickedit/quickedit.theme.css
-        css/quickedit.icons.theme.css: css/quickedit/quickedit.icons.theme.css
-  quickedit/quickedit.inPlaceEditor.formattedText:
-    css:
-      component:
-        css/editors/formattedText.ckeditor.css: css/quickedit/editors/formattedText.ckeditor.css
-        css/editors/formattedText.ckeditor5.css: css/quickedit/editors/formattedText.ckeditor5.css
-  quickedit/quickedit.inPlaceEditor.image:
-    css:
-      component:
-        css/editors/image.css: css/quickedit/editors/image.css
-      theme:
-        css/editors/image.theme.css: css/quickedit/editors/image.theme.css
-  quickedit/quickedit.ckeditor5-temporary-work-around:
-    # "Temporary work-around until https://www.drupal.org/project/drupal/issues/3196689 lands."
-    css:
-      theme:
-        css/editors/formattedText/ckeditor5.workaround.css: css/quickedit/editors/formattedText/ckeditor5.workaround.css
-
   settings_tray/drupal.settings_tray:
     css:
       component:
@@ -243,9 +219,7 @@ libraries-override:
   system/base:
     css:
       component:
-        css/components/ajax-progress.module.css: css/system/components/ajax-progress.module.css
         css/components/align.module.css: css/system/components/align.module.css
-        css/components/autocomplete-loading.module.css: css/system/components/autocomplete-loading.module.css
         css/components/fieldgroup.module.css: css/system/components/fieldgroup.module.css
         css/components/container-inline.module.css: css/system/components/container-inline.module.css
         css/components/clearfix.module.css: css/system/components/clearfix.module.css
@@ -255,16 +229,12 @@ libraries-override:
         css/components/js.module.css: css/system/components/js.module.css
         css/components/nowrap.module.css: css/system/components/nowrap.module.css
         css/components/position-container.module.css: css/system/components/position-container.module.css
-        css/components/progress.module.css: css/system/components/progress.module.css
         css/components/reset-appearance.module.css: css/system/components/reset-appearance.module.css
         css/components/resize.module.css: css/system/components/resize.module.css
-        css/components/sticky-header.module.css: css/system/components/sticky-header.module.css
         css/components/system-status-counter.css: css/system/components/system-status-counter.css
         css/components/system-status-report-counters.css: css/system/components/system-status-report-counters.css
         css/components/system-status-report-general-info.css: css/system/components/system-status-report-general-info.css
-        css/components/tabledrag.module.css: css/system/components/tabledrag.module.css
         css/components/tablesort.module.css: css/system/components/tablesort.module.css
-        css/components/tree-child.module.css: css/system/components/tree-child.module.css
   system/admin:
     css:
       theme:
@@ -330,6 +300,10 @@ libraries-override:
       theme:
         css/views_ui.admin.theme.css: css/views_ui/views_ui.admin.theme.css
         css/views_ui.contextual.css: css/views_ui/views_ui.contextual.css
+  field_ui/drupal.field_ui_table:
+    css:
+      theme:
+        css/field_ui_display_mode_table.css: css/field_ui/field_ui_display_mode_table.css
 
 libraries-extend:
   tour/tour:

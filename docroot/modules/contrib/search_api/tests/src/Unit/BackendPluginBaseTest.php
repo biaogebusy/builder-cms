@@ -39,7 +39,6 @@ class BackendPluginBaseTest extends UnitTestCase {
     $backend = new TestBackend([], '', []);
     $class = new \ReflectionClass(TestBackend::class);
     $method = $class->getMethod('getQueryFulltextFields');
-    $method->setAccessible(TRUE);
     $this->assertEquals($expected, $method->invokeArgs($backend, [$query]));
   }
 
@@ -49,7 +48,7 @@ class BackendPluginBaseTest extends UnitTestCase {
    * @return array[]
    *   An array of argument arrays for testGetQueryFulltextFields().
    */
-  public function getQueryFulltextFieldsDataProvider() {
+  public static function getQueryFulltextFieldsDataProvider() {
     return [
       'null fields' => [NULL, ['field1', 'field2']],
       'field1' => [['field1'], ['field1']],

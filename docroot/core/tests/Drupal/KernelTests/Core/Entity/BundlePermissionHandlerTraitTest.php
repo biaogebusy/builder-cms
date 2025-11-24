@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Entity;
 
 use Drupal\Core\Entity\BundlePermissionHandlerTrait;
@@ -23,7 +25,7 @@ class BundlePermissionHandlerTraitTest extends KernelTestBase {
   /**
    * @covers ::generatePermissions
    */
-  public function testGeneratePermissions() {
+  public function testGeneratePermissions(): void {
     EntityTestBundle::create([
       'id' => 'test1',
     ])->save();

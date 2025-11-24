@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Kernel\Controller;
 
 use Drupal\Core\Url;
@@ -58,7 +60,7 @@ class UserControllerTest extends KernelTestBase {
    *
    * @covers ::userEditPage
    */
-  public function testUserEditPage() {
+  public function testUserEditPage(): void {
 
     $response = $this->userController->userEditPage();
 

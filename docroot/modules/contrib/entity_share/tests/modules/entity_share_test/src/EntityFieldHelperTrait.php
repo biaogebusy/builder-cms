@@ -57,7 +57,7 @@ trait EntityFieldHelperTrait {
 
       // Remove unexpected properties.
       foreach ($values as $delta => $value) {
-        $values[$delta] = array_intersect_key($value, array_flip($structure));
+        $values[$delta] = \array_intersect_key($value, \array_flip($structure));
       }
     }
 

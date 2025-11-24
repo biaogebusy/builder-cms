@@ -23,6 +23,9 @@ use Drupal\search_api_db\Tests\DatabaseTestsTrait;
 use Drupal\Tests\search_api\Kernel\BackendTestBase;
 use Drupal\Tests\search_api\Kernel\TestLogger;
 
+// cspell:ignore foob fooblob
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
  * Tests index and search capabilities using the Database search backend.
  *
@@ -30,6 +33,7 @@ use Drupal\Tests\search_api\Kernel\TestLogger;
  *
  * @group search_api
  */
+#[RunTestsInSeparateProcesses]
 class BackendTest extends BackendTestBase {
 
   use DatabaseTestsTrait;
@@ -55,7 +59,7 @@ class BackendTest extends BackendTestBase {
   /**
    * The test logger installed in the container.
    *
-   * Will throw expections whenever a warning or error is logged.
+   * Will throw exceptions whenever a warning or error is logged.
    *
    * @var \Drupal\Tests\search_api\Kernel\TestLogger
    */
@@ -70,7 +74,8 @@ class BackendTest extends BackendTestBase {
     // Create a dummy table that will cause a naming conflict with the backend's
     // default table names, thus testing whether it correctly reacts to such
     // conflicts.
-    \Drupal::database()->schema()->createTable('search_api_db_database_search_index', [
+    $db = \Drupal::database();
+    $db->schema()->createTable('search_api_db_database_search_index', [
       'fields' => [
         'id' => [
           'type' => 'int',
@@ -103,6 +108,15 @@ class BackendTest extends BackendTestBase {
       $index->addField($field);
     }
     $index->save();
+
+    // If the driver is MySQL, make sure the "ONLY_FULL_GROUP_BY" SQL mode is
+    // active so we can spot any problems with that.
+    if ($db->driver() === 'mysql') {
+      $sql_mode = $db->query("SELECT @@SESSION.sql_mode;")->fetchField();
+      if (!str_contains($sql_mode, 'ONLY_FULL_GROUP_BY')) {
+        $db->query("SET SESSION sql_mode = ?", ["$sql_mode,ONLY_FULL_GROUP_BY"]);
+      }
+    }
   }
 
   /**
@@ -153,6 +167,8 @@ class BackendTest extends BackendTestBase {
     $this->regressionTest3225675();
     $this->regressionTest3258802();
     $this->regressionTest3227268();
+    $this->regressionTest3397017();
+    $this->regressionTest3436123();
   }
 
   /**
@@ -317,6 +333,27 @@ class BackendTest extends BackendTestBase {
       $this->assertEquals($this->getItemIds([1, 2, 4, 5]), $result_ids);
     }
     $this->assertNotEquals($first_result, $second_result);
+
+    // Run only for MySQL and Postgres because SQLite does not support seeds
+    // right now.
+    // Run the query 3 times and compare the results.
+    if (in_array(\Drupal::database()->driver(), ['mysql', 'pgsql'])) {
+      $seed = rand(10000, 100000);
+      $results = [];
+      for ($i = 1; $i <= 3; $i++) {
+        $query = $this->buildSearch('foo', [], NULL, FALSE)
+          ->sort('search_api_random')
+          ->sort('id');
+
+        $query->setOption('search_api_random_sort', ['seed' => $seed]);
+        $results[$i] = $query->execute()->getResultItems();
+        $this->assertCount(4, $results[$i]);
+      }
+
+      // Check if results are the same
+      $this->assertEquals($results[1], $results[2]);
+      $this->assertEquals($results[2], $results[3]);
+    }
   }
 
   /**
@@ -473,7 +510,7 @@ class BackendTest extends BackendTestBase {
     $results = $this->buildSearch("\"$long_token_1 $long_token_2 su baz\"")->execute();
     $this->assertResults([], $results);
 
-    // '0' should be searchable.  See also testCleanNumericString().
+    // '0' should be searchable. See also testCleanNumericString().
     $results = $this->buildSearch("\"baz 0\"")->execute();
     $this->assertResults([6], $results);
 
@@ -592,7 +629,7 @@ class BackendTest extends BackendTestBase {
         ->execute();
       $this->fail('Unknown operator "!=" did not throw an exception.');
     }
-    catch (SearchApiException $e) {
+    catch (SearchApiException) {
       $this->assertTrue(TRUE, 'Unknown operator "!=" threw an exception.');
     }
   }
@@ -648,7 +685,7 @@ class BackendTest extends BackendTestBase {
       $second_server->search($query);
       $this->fail('Could execute a query for an index on a different server.');
     }
-    catch (SearchApiException $e) {
+    catch (SearchApiException) {
       $this->assertTrue(TRUE, 'Executing a query for an index on a different server throws an exception.');
     }
     $second_server->delete();
@@ -736,7 +773,7 @@ class BackendTest extends BackendTestBase {
 
     // Make sure to re-index the proper version of the item to avoid confusing
     // the other tests.
-    list($datasource_id, $raw_id) = Utility::splitCombinedId($item_id);
+    [$datasource_id, $raw_id] = Utility::splitCombinedId($item_id);
     $index->trackItemsUpdated($datasource_id, [$raw_id]);
     $this->indexItems($index->id());
   }
@@ -879,21 +916,23 @@ class BackendTest extends BackendTestBase {
    * Tests whether keywords with special characters work correctly.
    *
    * @see https://www.drupal.org/node/2873023
+   * @see https://www.drupal.org/node/3505734
    */
   protected function regressionTest2873023() {
-    $keyword = 'regression@test@2873023';
+    $keyword1 = 'regression@test@2873023';
+    $keyword2 = 'FOO-03505734';
 
     $entity_id = count($this->entities) + 1;
     $entity = $this->addTestEntity($entity_id, [
-      'name' => $keyword,
+      'name' => "$keyword1 $keyword2",
       'type' => 'article',
     ]);
 
     $index = $this->getIndex();
     $this->assertFalse($index->isValidProcessor('tokenizer'));
     $this->indexItems($this->indexId);
-    $results = $this->buildSearch($keyword, [], ['name'])->execute();
-    $this->assertResults([$entity_id], $results, 'Keywords with special characters (Tokenizer disabled)');
+    $this->assertResults([$entity_id], $this->buildSearch($keyword1, [], ['name'])->execute());
+    $this->assertResults([$entity_id], $this->buildSearch($keyword2, [], ['name'])->execute());
 
     $processor = \Drupal::getContainer()->get('search_api.plugin_helper')
       ->createProcessorPlugin($index, 'tokenizer');
@@ -901,16 +940,16 @@ class BackendTest extends BackendTestBase {
     $index->save();
     $this->assertTrue($index->isValidProcessor('tokenizer'));
     $this->indexItems($this->indexId);
-    $results = $this->buildSearch($keyword, [], ['name'])->execute();
-    $this->assertResults([$entity_id], $results, 'Keywords with special characters (Tokenizer enabled)');
+    $this->assertResults([$entity_id], $this->buildSearch($keyword1, [], ['name'])->execute());
+    $this->assertResults([$entity_id], $this->buildSearch($keyword2, [], ['name'])->execute());
 
     $index->getProcessor('tokenizer')->setConfiguration([
       'spaces' => '\s',
     ]);
     $index->save();
     $this->indexItems($this->indexId);
-    $results = $this->buildSearch($keyword, [], ['name'])->execute();
-    $this->assertResults([$entity_id], $results, 'Keywords with special characters (Tokenizer with special config)');
+    $this->assertResults([$entity_id], $this->buildSearch($keyword1, [], ['name'])->execute());
+    $this->assertResults([$entity_id], $this->buildSearch($keyword2, [], ['name'])->execute());
 
     $index->removeProcessor('tokenizer');
     $index->save();
@@ -918,6 +957,7 @@ class BackendTest extends BackendTestBase {
 
     $entity->delete();
     unset($this->entities[$entity_id]);
+    $this->indexItems($this->indexId);
   }
 
   /**
@@ -1044,6 +1084,66 @@ class BackendTest extends BackendTestBase {
     // collation as "utf8_general_ci" or "utf8mb3_general_ci".
     $this->assertContains($collations['item_id'], ['utf8mb3_general_ci', 'utf8_general_ci']);
     $this->assertEquals('utf8mb4_bin', $collations['word']);
+  }
+
+  /**
+   * Tests that bigram indexing doesn't choke on 49-characters words.
+   *
+   * @see https://www.drupal.org/node/3397017
+   */
+  protected function regressionTest3397017(): void {
+    // Index all items before adding a new one, so we can better predict the
+    // expected count.
+    $this->indexItems($this->indexId);
+
+    $entity_id = count($this->entities) + 1;
+    // @see \Drupal\search_api_db\Plugin\search_api\backend\Database::TOKEN_LENGTH_MAX
+    $long_word = str_repeat('a', 49);
+    $entity = $this->addTestEntity($entity_id, [
+      'type' => 'article',
+      'body' => "foo $long_word bar baz",
+    ]);
+
+    $count = $this->indexItems($this->indexId);
+    $this->assertEquals(1, $count);
+    $results = $this->buildSearch($long_word)
+      ->execute();
+    $this->assertResults([$entity_id], $results, 'String filter with trailing space');
+
+    $entity->delete();
+    unset($this->entities[$entity_id]);
+  }
+
+  /**
+   * Tests that AND facets work correctly with single-field partial matching.
+   *
+   * @see https://www.drupal.org/node/3436123
+   */
+  protected function regressionTest3436123(): void {
+    $this->assertEquals('words', $this->getServer()->getBackendConfig()['matching']);
+    $this->setServerMatchMode();
+
+    $query = $this->buildSearch('test', ['type,item']);
+    $query->setFulltextFields(['body']);
+    $facets['category'] = [
+      'field' => 'category',
+      'limit' => 0,
+      'min_count' => 1,
+      'missing' => TRUE,
+      'operator' => 'and',
+    ];
+    $query->setOption('search_api_facets', $facets);
+    $results = $query->execute();
+    $this->assertResults([1, 2, 3], $results, 'AND facets query');
+    $expected = [
+      ['count' => 2, 'filter' => '"item_category"'],
+      ['count' => 1, 'filter' => '!'],
+    ];
+    $category_facets = $results->getExtraData('search_api_facets')['category'];
+    usort($category_facets, [$this, 'facetCompare']);
+    $this->assertEquals($expected, $category_facets, 'Incorrect AND facets were returned');
+
+    $this->setServerMatchMode('words');
   }
 
   /**
@@ -1296,7 +1396,7 @@ class BackendTest extends BackendTestBase {
 
     $id = 0;
     date_default_timezone_set('Asia/Seoul');
-    foreach ($test_values as $label => list($field_value, $expected)) {
+    foreach ($test_values as $label => [$field_value, $expected]) {
       $entity = $this->addTestEntity(++$id, [
         'name' => $field_value,
         'type' => 'item',
@@ -1322,9 +1422,9 @@ class BackendTest extends BackendTestBase {
    *
    * @see https://www.drupal.org/project/search_api/issues/2949962
    *
-   * @dataProvider regression2949962DataProvider
+   * @dataProvider matchModesDataProvider
    */
-  public function testRegression2949962($match_mode) {
+  public function testRegression2949962(string $match_mode): void {
     $this->insertExampleContent();
     $this->setServerMatchMode($match_mode);
     $this->indexItems($this->indexId);
@@ -1395,12 +1495,13 @@ class BackendTest extends BackendTestBase {
   }
 
   /**
-   * Provides test data for testRegression2949962().
+   * Provides test data for test methods that need to test all match modes.
    *
    * @return array
-   *   An associative array of argument arrays for testRegression2949962().
+   *   An associative array of argument arrays for test methods that take any
+   *   match mode as an argument.
    */
-  public function regression2949962DataProvider() {
+  public static function matchModesDataProvider(): array {
     return [
       'Match mode "partial"' => ['partial'],
       'Match mode "prefix"' => ['prefix'],
@@ -1415,13 +1516,234 @@ class BackendTest extends BackendTestBase {
     $class = new \ReflectionClass(Database::class);
     /** @see \Drupal\search_api_db\Plugin\search_api\backend\Database::cleanNumericString() */
     $method = $class->getMethod('cleanNumericString');
-    $method->setAccessible(TRUE);
 
     $this->assertEquals('42', $method->invoke(NULL, '-042'));
     $this->assertEquals('42', $method->invoke(NULL, '00042'));
     $this->assertEquals('0', $method->invoke(NULL, '0'));
     $this->assertEquals('0', $method->invoke(NULL, '000'));
     $this->assertEquals('0', $method->invoke(NULL, '-0'));
+  }
+
+  /**
+   * Test AND of nested OR groups, and negated nested group queries.
+   *
+   * @param string $match_mode
+   *   The match mode to use – "partial", "prefix" or "words".
+   *
+   * @see https://www.drupal.org/node/3537045
+   *
+   * @dataProvider matchModesDataProvider
+   */
+  public function testRegression3537045(string $match_mode): void {
+    $this->addTestEntity(1, [
+      'name' => 'foo baz',
+      'body' => 'bar fux',
+      'type' => 'article',
+    ]);
+
+    $this->addTestEntity(2, [
+      'name' => 'bar',
+      'body' => 'Nothing else mentioned here.',
+      'type' => 'article',
+    ]);
+
+    $this->addTestEntity(3, [
+      'name' => 'Nothing else mentioned here.',
+      'body' => 'fux',
+      'type' => 'article',
+    ]);
+
+    $this->addTestEntity(4, [
+      'name' => 'foo baz qux quux',
+      'body' => 'Nothing else mentioned here.',
+      'type' => 'article',
+    ]);
+
+    $this->addTestEntity(5, [
+      'name' => 'foo qux quux',
+      'body' => 'Nothing else mentioned here.',
+      'type' => 'article',
+    ]);
+
+    $count = \Drupal::entityQuery('entity_test_mulrev_changed')
+      ->count()
+      ->accessCheck(FALSE)
+      ->execute();
+    $this->assertEquals(5, $count, "$count items inserted.");
+
+    $this->setServerMatchMode($match_mode);
+    $this->indexItems($this->indexId);
+
+    $searches = [
+      // (foo OR bar) AND (baz OR fux)
+      // Count rows combined by UNION (one per matched group) to avoid counting
+      // non-existing [t].[word].
+      'grouped AND condition' => [
+        'keys' => [
+          '#conjunction' => 'AND',
+          [
+            '#conjunction' => 'OR',
+            'foo',
+            'bar',
+          ],
+          [
+            '#conjunction' => 'OR',
+            'baz',
+            'fux',
+          ],
+        ],
+        'expected_results' => [
+          1,
+          4,
+        ],
+      ],
+      // NOT (foo AND (bar OR baz))
+      // Ensure negated word queries select consistent fields preventing UNION
+      // column mismatches.
+      'negation with nested groups and phrases' => [
+        'keys' => [
+          '#negation' => TRUE,
+          '#conjunction' => 'AND',
+          [
+            '#conjunction' => 'AND',
+            'foo',
+            [
+              '#conjunction' => 'OR',
+              'bar',
+              'baz',
+            ],
+          ],
+        ],
+        'expected_results' => [
+          2,
+          3,
+          5,
+        ],
+      ],
+      // foo AND (NOT baz OR (baz NOT qux))
+      // Ensures every NOT IN (...) subquery returns exactly one column
+      // (item_id).
+      'single-column NOT IN subqueries' => [
+        'keys' => [
+          '#conjunction' => 'AND',
+          'foo',
+          [
+            '#conjunction' => 'OR',
+            [
+              '#negation' => TRUE,
+              '#conjunction' => 'AND',
+              'baz',
+            ],
+            [
+              '#conjunction' => 'AND',
+              'baz',
+              [
+                '#negation' => TRUE,
+                '#conjunction' => 'AND',
+                'qux',
+              ],
+            ],
+          ],
+        ],
+        'expected_results' => [
+          1,
+          5,
+        ],
+      ],
+
+      // foo AND (NOT bar OR (baz NOT "qux quux"))
+      // Verifies that the positive nested branch is preserved (OR baz)
+      // meaning no unintended NOT IN negation happens as in:
+      // foo AND (NOT bar OR (NOT baz OR qux))
+      'positive nested branch preserved' => [
+        'keys' => [
+          '#conjunction' => 'AND',
+          'foo',
+          [
+            '#conjunction' => 'OR',
+            [
+              '#negation' => TRUE,
+              '#conjunction' => 'AND',
+              'bar',
+            ],
+            [
+              '#conjunction' => 'AND',
+              'baz',
+              [
+                '#negation' => TRUE,
+                '#conjunction' => 'AND',
+                'qux quux',
+              ],
+            ],
+          ],
+        ],
+        'expected_results' => [
+          1,
+          4,
+          5,
+        ],
+      ],
+
+      // foo AND (NOT bar OR NOT (baz NOT "qux quux"))
+      // Guard against the De Morgan drift.
+      // NOT (baz NOT "qux quux") == (NOT baz) OR "qux quux"
+      'guard against de morgan drift' => [
+        'keys' => [
+          '#conjunction' => 'AND',
+          'foo',
+          [
+            '#conjunction' => 'OR',
+            [
+              '#negation' => TRUE,
+              '#conjunction' => 'AND',
+              'bar',
+            ],
+            [
+              '#negation' => TRUE,
+              '#conjunction' => 'AND',
+              [
+                '#conjunction' => 'AND',
+                'baz',
+                [
+                  '#negation' => TRUE,
+                  '#conjunction' => 'AND',
+                  'qux quux',
+                ],
+              ],
+            ],
+          ],
+        ],
+        'expected_results' => [
+          4,
+          5,
+        ],
+      ],
+      // foo AND (baz NOT "qux quux")
+      // Isolates the (baz NOT "qux quux") branch
+      'baz branch isolated' => [
+        'keys' => [
+          '#conjunction' => 'AND',
+          'foo',
+          [
+            '#conjunction' => 'AND',
+            'baz',
+            [
+              '#negation' => TRUE,
+              '#conjunction' => 'AND',
+              'qux quux',
+            ],
+          ],
+        ],
+        'expected_results' => [
+          1,
+        ],
+      ],
+    ];
+
+    foreach ($searches as $search) {
+      $results = $this->buildSearch($search['keys'], [], ['name', 'body'])->execute();
+      $this->assertResults($search['expected_results'], $results);
+    }
   }
 
 }

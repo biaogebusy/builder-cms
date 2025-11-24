@@ -2,7 +2,7 @@
 
 namespace Drupal\content_lock\Plugin\Action;
 
-use Drupal\content_lock\ContentLock\ContentLock;
+use Drupal\content_lock\ContentLock\ContentLockInterface;
 use Drupal\Core\Action\ActionBase;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
@@ -36,10 +36,10 @@ class BreakLock extends ActionBase implements ContainerFactoryPluginInterface {
    *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
-   * @param \Drupal\content_lock\ContentLock\ContentLock $contentLock
+   * @param \Drupal\content_lock\ContentLock\ContentLockInterface $contentLock
    *   Content lock service.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, ContentLock $contentLock) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, ContentLockInterface $contentLock) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->lockService = $contentLock;
   }

@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Kernel\Common;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Language\Language;
@@ -21,31 +22,34 @@ use Drupal\KernelTests\KernelTestBase;
  */
 class UrlTest extends KernelTestBase {
 
+  /**
+   * {@inheritdoc}
+   */
   protected static $modules = ['common_test', 'url_alter_test'];
 
   /**
    * Confirms that invalid URLs are filtered in link generating functions.
    */
-  public function testLinkXSS() {
+  public function testLinkXSS(): void {
     // Test link generator.
     $text = $this->randomMachineName();
     $path = "<SCRIPT>alert('XSS')</SCRIPT>";
-    $encoded_path = "3CSCRIPT%3Ealert%28%27XSS%27%29%3C/SCRIPT%3E";
+    $encoded_path = "%3CSCRIPT%3Ealert%28%27XSS%27%29%3C/SCRIPT%3E";
 
-    $link = Link::fromTextAndUrl($text, Url::fromUserInput('/' . $path))->toString();
-    $this->assertStringContainsString($encoded_path, $link, new FormattableMarkup('XSS attack @path was filtered by \Drupal\Core\Utility\LinkGeneratorInterface::generate().', ['@path' => $path]));
-    $this->assertStringNotContainsString($path, $link, new FormattableMarkup('XSS attack @path was filtered by \Drupal\Core\Utility\LinkGeneratorInterface::generate().', ['@path' => $path]));
+    $link = (string) Link::fromTextAndUrl($text, Url::fromUserInput('/' . $path))->toString();
+    $this->assertStringContainsString($encoded_path, $link, "XSS attack $path was filtered by \\Drupal\\Core\\Utility\\LinkGeneratorInterface::generate().");
+    $this->assertStringNotContainsString($path, $link, "XSS attack $path was filtered by \\Drupal\\Core\\Utility\\LinkGeneratorInterface::generate().");
 
     // Test \Drupal\Core\Url.
-    $link = Url::fromUri('base:' . $path)->toString();
-    $this->assertStringContainsString($encoded_path, $link, new FormattableMarkup('XSS attack @path was filtered by #theme', ['@path' => $path]));
-    $this->assertStringNotContainsString($path, $link, new FormattableMarkup('XSS attack @path was filtered by #theme', ['@path' => $path]));
+    $link = (string) Url::fromUri('base:' . $path)->toString();
+    $this->assertStringContainsString($encoded_path, $link, "XSS attack $path was filtered by #theme");
+    $this->assertStringNotContainsString($path, $link, "XSS attack $path was filtered by #theme");
   }
 
   /**
    * Tests that #type=link bubbles outbound route/path processors' metadata.
    */
-  public function testLinkBubbleableMetadata() {
+  public function testLinkBubbleableMetadata(): void {
     \Drupal::service('module_installer')->install(['user']);
 
     $cases = [
@@ -75,7 +79,7 @@ class UrlTest extends KernelTestBase {
   /**
    * Tests that default and custom attributes are handled correctly on links.
    */
-  public function testLinkAttributes() {
+  public function testLinkAttributes(): void {
     /** @var \Drupal\Core\Render\RendererInterface $renderer */
     $renderer = $this->container->get('renderer');
 
@@ -96,18 +100,18 @@ class UrlTest extends KernelTestBase {
     $hreflang_override_link = $hreflang_link;
     $hreflang_override_link['#options']['attributes']['hreflang'] = 'foo';
 
-    $rendered = $renderer->renderRoot($hreflang_link);
-    $this->assertTrue($this->hasAttribute('hreflang', $rendered, $langcode), new FormattableMarkup('hreflang attribute with value @langcode is present on a rendered link when langcode is provided in the render array.', ['@langcode' => $langcode]));
+    $rendered = (string) $renderer->renderRoot($hreflang_link);
+    $this->assertTrue($this->hasAttribute('hreflang', $rendered, $langcode), "hreflang attribute with value $langcode is present on a rendered link when langcode is provided in the render array.");
 
-    $rendered = $renderer->renderRoot($hreflang_override_link);
-    $this->assertTrue($this->hasAttribute('hreflang', $rendered, 'foo'), new FormattableMarkup('hreflang attribute with value @hreflang is present on a rendered link when @hreflang is provided in the render array.', ['@hreflang' => 'foo']));
+    $rendered = (string) $renderer->renderRoot($hreflang_override_link);
+    $this->assertTrue($this->hasAttribute('hreflang', $rendered, 'foo'), 'hreflang attribute with value foo is present on a rendered link when @hreflang is provided in the render array.');
 
     // Test adding a custom class in links produced by
     // \Drupal\Core\Utility\LinkGeneratorInterface::generate() and #type 'link'.
     // Test the link generator.
     $class_l = $this->randomMachineName();
-    $link_l = Link::fromTextAndUrl($this->randomMachineName(), Url::fromRoute('common_test.destination', [], ['attributes' => ['class' => [$class_l]]]))->toString();
-    $this->assertTrue($this->hasAttribute('class', $link_l, $class_l), new FormattableMarkup('Custom class @class is present on link when requested by Link::toString()', ['@class' => $class_l]));
+    $link_l = (string) Link::fromTextAndUrl($this->randomMachineName(), Url::fromRoute('common_test.destination', [], ['attributes' => ['class' => [$class_l]]]))->toString();
+    $this->assertTrue($this->hasAttribute('class', $link_l, $class_l), "Custom class $class_l is present on link when requested by Link::toString()");
 
     // Test #type.
     $class_theme = $this->randomMachineName();
@@ -121,14 +125,14 @@ class UrlTest extends KernelTestBase {
         ],
       ],
     ];
-    $link_theme = $renderer->renderRoot($type_link);
-    $this->assertTrue($this->hasAttribute('class', $link_theme, $class_theme), new FormattableMarkup('Custom class @class is present on link when requested by #type', ['@class' => $class_theme]));
+    $link_theme = (string) $renderer->renderRoot($type_link);
+    $this->assertTrue($this->hasAttribute('class', $link_theme, $class_theme), "Custom class $class_theme is present on link when requested by #type");
   }
 
   /**
    * Tests that link functions support render arrays as 'text'.
    */
-  public function testLinkRenderArrayText() {
+  public function testLinkRenderArrayText(): void {
     /** @var \Drupal\Core\Render\RendererInterface $renderer */
     $renderer = $this->container->get('renderer');
 
@@ -136,7 +140,7 @@ class UrlTest extends KernelTestBase {
     $l = Link::fromTextAndUrl('foo', Url::fromUri('https://www.drupal.org'))->toString();
 
     // Test a renderable array passed to the link generator.
-    $renderer->executeInRenderContext(new RenderContext(), function () use ($renderer, $l) {
+    $renderer->executeInRenderContext(new RenderContext(), function () use ($l) {
       $renderable_text = ['#markup' => 'foo'];
       $l_renderable_text = \Drupal::service('link_generator')->generate($renderable_text, Url::fromUri('https://www.drupal.org'));
       $this->assertEquals($l, $l_renderable_text);
@@ -181,7 +185,7 @@ class UrlTest extends KernelTestBase {
   /**
    * Tests UrlHelper::filterQueryParameters().
    */
-  public function testDrupalGetQueryParameters() {
+  public function testDrupalGetQueryParameters(): void {
     $original = [
       'a' => 1,
       'b' => [
@@ -217,7 +221,7 @@ class UrlTest extends KernelTestBase {
   /**
    * Tests UrlHelper::parse().
    */
-  public function testDrupalParseUrl() {
+  public function testDrupalParseUrl(): void {
     // Relative, absolute, and external URLs, without/with explicit script path,
     // without/with Drupal path.
     foreach (['', '/', 'https://www.drupal.org/'] as $absolute) {
@@ -244,7 +248,7 @@ class UrlTest extends KernelTestBase {
     $this->assertEquals($result, UrlHelper::parse($url), 'Relative URL parsed correctly.');
 
     // Test that drupal can recognize an absolute URL. Used to prevent attack vectors.
-    $url = 'https://www.drupal.org/foo/bar?foo=bar&bar=baz&baz#foo';
+    $url = 'https://www.example.org/foo/bar?foo=bar&bar=baz&baz#foo';
     $this->assertTrue(UrlHelper::isExternal($url), 'Correctly identified an external URL.');
 
     // Test that UrlHelper::parse() does not allow spoofing a URL to force a malicious redirect.
@@ -255,7 +259,7 @@ class UrlTest extends KernelTestBase {
   /**
    * Tests external URL handling.
    */
-  public function testExternalUrls() {
+  public function testExternalUrls(): void {
     $test_url = 'https://www.drupal.org/';
 
     // Verify external URL can contain a fragment.

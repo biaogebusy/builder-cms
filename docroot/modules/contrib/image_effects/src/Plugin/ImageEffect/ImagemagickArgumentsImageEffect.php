@@ -1,21 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageEffect;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Image\ImageInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\image\Attribute\ImageEffect;
 use Drupal\image\ConfigurableImageEffectBase;
 use Drupal\image_effects\Component\ImageUtility;
 
 /**
  * Directly enter ImageMagick/GraphicsMagick command line arguments.
- *
- * @ImageEffect(
- *   id = "image_effects_imagemagick_arguments",
- *   label = @Translation("ImageMagick arguments"),
- *   description = @Translation("Directly enter ImageMagick/GraphicsMagick command line arguments.")
- * )
  */
+#[ImageEffect(
+  id: 'image_effects_imagemagick_arguments',
+  label: new TranslatableMarkup('ImageMagick arguments'),
+  description: new TranslatableMarkup('Directly enter ImageMagick/GraphicsMagick command line arguments.')
+)]
 class ImagemagickArgumentsImageEffect extends ConfigurableImageEffectBase {
 
   /**
@@ -124,17 +127,17 @@ class ImagemagickArgumentsImageEffect extends ConfigurableImageEffectBase {
    * {@inheritdoc}
    */
   public function transformDimensions(array &$dimensions, $uri) {
-    $d = $this->getDimensions($dimensions['width'], $dimensions['height']);
-    $dimensions['width'] = $d['width'];
-    $dimensions['height'] = $d['height'];
+    $dimensions['width'] = $dimensions['width'] ? (int) $dimensions['width'] : NULL;
+    $dimensions['height'] = $dimensions['height'] ? (int) $dimensions['height'] : NULL;
+    ['width' => $dimensions['width'], 'height' => $dimensions['height']] = $this->getDimensions($dimensions['width'], $dimensions['height']);
   }
 
   /**
    * Calculate resulting image dimensions.
    *
-   * @param int $source_width
+   * @param int|null $source_width
    *   Source image width.
-   * @param int $source_height
+   * @param int|null $source_height
    *   Source image height.
    *
    * @return array
@@ -142,7 +145,7 @@ class ImagemagickArgumentsImageEffect extends ConfigurableImageEffectBase {
    *   - width: Integer with the derivative image width.
    *   - height: Integer with the derivative image height.
    */
-  protected function getDimensions($source_width, $source_height) {
+  protected function getDimensions(?int $source_width, ?int $source_height): array {
     $dimensions = [];
     switch ($this->configuration['dimensions_method']) {
       case 'strip':

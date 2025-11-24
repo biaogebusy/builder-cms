@@ -4,19 +4,20 @@ namespace Drupal\jsonapi_extras\Plugin\jsonapi\FieldEnhancer;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\jsonapi_extras\Attribute\ResourceFieldEnhancer;
 use Drupal\jsonapi_extras\Plugin\ResourceFieldEnhancerBase;
 use Shaper\Util\Context;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Perform additional manipulations to JSON fields.
- *
- * @ResourceFieldEnhancer(
- *   id = "json",
- *   label = @Translation("JSON Field"),
- *   description = @Translation("Render JSON Field has real json")
- * )
  */
+#[ResourceFieldEnhancer(
+  id: 'json',
+  label: new TranslatableMarkup('JSON Field'),
+  description: new TranslatableMarkup('Render JSON Field has real json'),
+)]
 class JSONFieldEnhancer extends ResourceFieldEnhancerBase implements ContainerFactoryPluginInterface {
 
   /**
@@ -76,7 +77,7 @@ class JSONFieldEnhancer extends ResourceFieldEnhancerBase implements ContainerFa
    */
   public function getOutputJsonSchema() {
     return [
-      'oneOf' => [
+      'anyOf' => [
         ['type' => 'object'],
         ['type' => 'array'],
         ['type' => 'null'],

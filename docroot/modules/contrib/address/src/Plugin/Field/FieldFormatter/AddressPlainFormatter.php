@@ -9,9 +9,9 @@ use CommerceGuys\Addressing\Country\CountryRepositoryInterface;
 use CommerceGuys\Addressing\Locale;
 use CommerceGuys\Addressing\Subdivision\SubdivisionRepositoryInterface;
 use Drupal\address\AddressInterface;
-use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -125,8 +125,12 @@ class AddressPlainFormatter extends FormatterBase implements ContainerFactoryPlu
    *   A renderable array.
    */
   protected function viewElement(AddressInterface $address, $langcode) {
+    // If the parent entity is non-translatable, $address->getLocale() contains
+    // the interface language at the time of address creation, while $langcode
+    // contains the current interface language. Our goal is to have the country
+    // name be recognizable by all users, making $langcode a safer bet.
+    $countries = $this->countryRepository->getList($langcode);
     $country_code = $address->getCountryCode();
-    $countries = $this->countryRepository->getList();
     $address_format = $this->addressFormatRepository->get($country_code);
     $values = $this->getValues($address, $address_format);
 
@@ -138,6 +142,7 @@ class AddressPlainFormatter extends FormatterBase implements ContainerFactoryPlu
       '#organization' => $values['organization'],
       '#address_line1' => $values['addressLine1'],
       '#address_line2' => $values['addressLine2'],
+      '#address_line3' => $values['addressLine3'],
       '#postal_code' => $values['postalCode'],
       '#sorting_code' => $values['sortingCode'],
       '#administrative_area' => $values['administrativeArea'],
@@ -152,6 +157,7 @@ class AddressPlainFormatter extends FormatterBase implements ContainerFactoryPlu
       '#cache' => [
         'contexts' => [
           'languages:' . LanguageInterface::TYPE_INTERFACE,
+          'languages:' . LanguageInterface::TYPE_CONTENT,
         ],
       ],
     ];
@@ -189,13 +195,17 @@ class AddressPlainFormatter extends FormatterBase implements ContainerFactoryPlu
       ];
 
       if (empty($value)) {
-        // This level is empty, so there can be no sublevels.
-        break;
+        // This level is empty, but it might be optional so check sublevels.
+        continue;
       }
-      $parents[] = $index ? $original_values[$subdivision_fields[$index - 1]] : $address->getCountryCode();
+
+      $parents[] = ($index > 0 && !empty($original_values[$subdivision_fields[$index - 1]]))
+        ? $original_values[$subdivision_fields[$index - 1]]
+        : $address->getCountryCode();
+
       $subdivision = $this->subdivisionRepository->get($value, $parents);
       if (!$subdivision) {
-        break;
+        continue;
       }
 
       // Remember the original value so that it can be used for $parents.

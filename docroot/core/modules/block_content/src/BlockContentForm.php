@@ -7,7 +7,7 @@ use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
- * Form handler for the custom block edit forms.
+ * Form handler for the content block edit forms.
  *
  * @internal
  */
@@ -25,18 +25,62 @@ class BlockContentForm extends ContentEntityForm {
    */
   public function form(array $form, FormStateInterface $form_state) {
     $block = $this->entity;
-
     $form = parent::form($form, $form_state);
 
     if ($this->operation == 'edit') {
-      $form['#title'] = $this->t('Edit custom block %label', ['%label' => $block->label()]);
+      $form['#title'] = $this->t('Edit content block %label', ['%label' => $block->label()]);
     }
-    // Override the default CSS class name, since the user-defined custom block
+    // Override the default CSS class name, since the user-defined content block
     // type name in 'TYPE-block-form' potentially clashes with third-party class
     // names.
     $form['#attributes']['class'][0] = 'block-' . Html::getClass($block->bundle()) . '-form';
 
     return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function actions(array $form, FormStateInterface $form_state): array {
+    $element = parent::actions($form, $form_state);
+
+    if ($this->getRequest()->query->has('theme')) {
+      $element['submit']['#value'] = $this->t('Save and configure');
+    }
+
+    if ($this->currentUser()->hasPermission('administer blocks') && !$this->getRequest()->query->has('theme') && $this->entity->isNew()) {
+      $element['configure_block'] = [
+        '#type' => 'submit',
+        '#value' => $this->t('Save and configure'),
+        '#weight' => 20,
+        '#submit' => array_merge($element['submit']['#submit'], ['::configureBlock']),
+      ];
+    }
+
+    return $element;
+  }
+
+  /**
+   * Form submission handler for the 'configureBlock' action.
+   *
+   * @param array $form
+   *   An associative array containing the structure of the form.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current state of the form.
+   */
+  public function configureBlock(array $form, FormStateInterface $form_state): void {
+    $block = $this->entity;
+    if (!$theme = $block->getTheme()) {
+      $theme = $this->config('system.theme')->get('default');
+    }
+    $form_state->setRedirect(
+      'block.admin_add',
+      [
+        'plugin_id' => 'block_content:' . $block->uuid(),
+        'theme' => $theme,
+      ]
+    );
+    $form_state->setIgnoreDestination();
   }
 
   /**
@@ -53,26 +97,25 @@ class BlockContentForm extends ContentEntityForm {
     $t_args = ['@type' => $block_type->label(), '%info' => $block->label()];
 
     if ($insert) {
-      $logger->notice('@type: added %info.', $context);
+      $logger->info('@type: added %info.', $context);
       $this->messenger()->addStatus($this->t('@type %info has been created.', $t_args));
     }
     else {
-      $logger->notice('@type: updated %info.', $context);
+      $logger->info('@type: updated %info.', $context);
       $this->messenger()->addStatus($this->t('@type %info has been updated.', $t_args));
     }
 
     if ($block->id()) {
       $form_state->setValue('id', $block->id());
       $form_state->set('id', $block->id());
-      if ($insert) {
-        if (!$theme = $block->getTheme()) {
-          $theme = $this->config('system.theme')->get('default');
-        }
+      $theme = $block->getTheme();
+      if ($insert && $theme) {
         $form_state->setRedirect(
           'block.admin_add',
           [
             'plugin_id' => 'block_content:' . $block->uuid(),
             'theme' => $theme,
+            'region' => $this->getRequest()->query->getString('region'),
           ]
         );
       }

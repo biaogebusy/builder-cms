@@ -1,13 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drush\Preflight;
 
-use Symfony\Component\Console\Input\ArgvInput;
-use Symfony\Component\Console\Input\InputInterface;
 use Consolidation\Config\Config;
 use Consolidation\Config\ConfigInterface;
-use Drush\Utils\StringUtils;
 use Drush\Symfony\LessStrictArgvInput;
+use Drush\Utils\StringUtils;
+use Symfony\Component\Console\Input\ArgvInput;
+use Symfony\Component\Console\Input\InputInterface;
 
 /**
  * Storage for arguments preprocessed during preflight.
@@ -342,22 +344,6 @@ class PreflightArgs extends Config implements PreflightArgsInterface
     }
 
     /**
-     * Add multiple additional locations for alias paths.
-     */
-    public function mergeAliasPaths(string $aliasPaths): self
-    {
-        $aliasPaths = array_map(
-            function ($item) {
-                return StringUtils::replaceTilde($item, $this->homeDir());
-            },
-            $aliasPaths
-        );
-        $paths = $this->aliasPaths();
-        $merged_paths = array_merge($paths, $aliasPaths);
-        return $this->set(self::ALIAS_PATH, $merged_paths);
-    }
-
-    /**
      * Get the path where Drush commandfiles e.g. FooCommands.php may be found.
      */
     public function commandPaths()
@@ -413,10 +399,8 @@ class PreflightArgs extends Config implements PreflightArgsInterface
 
     /**
      * Set simulated mode
-     *
-     * @param bool $simulated
      */
-    public function setSimulate($simulate): self
+    public function setSimulate(bool $simulate): self
     {
         return $this->set(self::SIMULATE, $simulate);
     }
@@ -431,10 +415,8 @@ class PreflightArgs extends Config implements PreflightArgsInterface
 
     /**
      * Set the coverage file path.
-     *
-     * @param string
      */
-    public function setCoverageFile($coverageFile): self
+    public function setCoverageFile(string $coverageFile): self
     {
         return $this->set(self::COVERAGE_FILE, StringUtils::replaceTilde($coverageFile, $this->homeDir()));
     }
@@ -469,7 +451,7 @@ class PreflightArgs extends Config implements PreflightArgsInterface
             array_map(
                 function ($item) {
                     // Ignore configuration definitions
-                    if (substr($item, 0, 2) == '-D') {
+                    if (str_starts_with($item, '-D')) {
                         return null;
                     }
                     // Regular expression matches:

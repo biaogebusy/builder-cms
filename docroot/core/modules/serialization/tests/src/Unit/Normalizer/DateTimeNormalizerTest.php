@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\serialization\Unit\Normalizer;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -55,7 +57,7 @@ class DateTimeNormalizerTest extends UnitTestCase {
   /**
    * @covers ::supportsNormalization
    */
-  public function testSupportsNormalization() {
+  public function testSupportsNormalization(): void {
     $this->assertTrue($this->normalizer->supportsNormalization($this->data->reveal()));
 
     $datetimeiso8601 = $this->prophesize(DateTimeIso8601::class);
@@ -68,14 +70,14 @@ class DateTimeNormalizerTest extends UnitTestCase {
   /**
    * @covers ::supportsDenormalization
    */
-  public function testSupportsDenormalization() {
+  public function testSupportsDenormalization(): void {
     $this->assertTrue($this->normalizer->supportsDenormalization($this->data->reveal(), DateTimeInterface::class));
   }
 
   /**
    * @covers ::normalize
    */
-  public function testNormalize() {
+  public function testNormalize(): void {
     $random_rfc_3339_string = $this->randomMachineName();
 
     $drupal_date_time = $this->prophesize(DateTimeNormalizerTestDrupalDateTime::class);
@@ -94,7 +96,7 @@ class DateTimeNormalizerTest extends UnitTestCase {
   /**
    * @covers ::normalize
    */
-  public function testNormalizeWhenNull() {
+  public function testNormalizeWhenNull(): void {
     $this->data->getDateTime()
       ->willReturn(NULL);
 
@@ -108,7 +110,7 @@ class DateTimeNormalizerTest extends UnitTestCase {
    * @covers ::denormalize
    * @dataProvider providerTestDenormalizeValidFormats
    */
-  public function testDenormalizeValidFormats($normalized, $expected) {
+  public function testDenormalizeValidFormats($normalized, $expected): void {
     $denormalized = $this->normalizer->denormalize($normalized, DateTimeInterface::class, NULL, []);
     $this->assertSame(0, $denormalized->getTimestamp() - $expected->getTimestamp());
     $this->assertEquals($expected, $denormalized);
@@ -119,7 +121,7 @@ class DateTimeNormalizerTest extends UnitTestCase {
    *
    * @return array
    */
-  public function providerTestDenormalizeValidFormats() {
+  public static function providerTestDenormalizeValidFormats() {
     $data = [];
 
     $data['RFC3339'] = ['2016-11-06T09:02:00+00:00', new \DateTimeImmutable('2016-11-06T09:02:00+00:00')];
@@ -139,7 +141,7 @@ class DateTimeNormalizerTest extends UnitTestCase {
    * @covers ::denormalize
    * @dataProvider providerTestDenormalizeUserFormats
    */
-  public function testDenormalizeUserFormats($normalized, $format, $expected) {
+  public function testDenormalizeUserFormats($normalized, $format, $expected): void {
     $denormalized = $this->normalizer->denormalize($normalized, DateTimeInterface::class, NULL, ['datetime_allowed_formats' => [$format]]);
     $this->assertSame(0, $denormalized->getTimestamp() - $expected->getTimestamp());
     $this->assertEquals($expected, $denormalized);
@@ -150,7 +152,7 @@ class DateTimeNormalizerTest extends UnitTestCase {
    *
    * @return array
    */
-  public function providerTestDenormalizeUserFormats() {
+  public static function providerTestDenormalizeUserFormats() {
     $data = [];
 
     $data['Y/m/d H:i:s P'] = ['2016/11/06 09:02:00 +00:00', 'Y/m/d H:i:s P', new \DateTimeImmutable('2016-11-06T09:02:00+00:00')];
@@ -165,7 +167,7 @@ class DateTimeNormalizerTest extends UnitTestCase {
    *
    * @covers ::denormalize
    */
-  public function testDenormalizeException() {
+  public function testDenormalizeException(): void {
     $this->expectException(UnexpectedValueException::class);
     $this->expectExceptionMessage('The specified date "2016/11/06 09:02am GMT" is not in an accepted format: "Y-m-d\TH:i:sP" (RFC 3339), "Y-m-d\TH:i:sO" (ISO 8601).');
 

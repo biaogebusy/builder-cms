@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Unit\Plugin\filter;
 
 use Drupal\Tests\UnitTestCase;
@@ -16,7 +18,7 @@ class FilterPluginBaseTest extends UnitTestCase {
    *
    * @dataProvider acceptExposedInputProvider
    */
-  public function testAcceptExposedInput(bool $expected_result, array $options, array $input) {
+  public function testAcceptExposedInput(bool $expected_result, array $options, array $input): void {
     $definition = [
       'title' => 'Accept exposed input Test',
       'group' => 'Test',
@@ -32,7 +34,7 @@ class FilterPluginBaseTest extends UnitTestCase {
    * @return array
    *   The data set.
    */
-  public function acceptExposedInputProvider() {
+  public static function acceptExposedInputProvider() {
     return [
       'not-exposed' => [TRUE, ['exposed' => FALSE], []],
       'exposed-no-input' => [TRUE, ['exposed' => TRUE], []],

@@ -5,7 +5,7 @@ dependencies:
   - drupal:entity_test
   - state_machine:state_machine
 
-# Information added by Drupal.org packaging script on 2024-03-15
-version: '8.x-1.11'
+# Information added by Drupal.org packaging script on 2025-05-05
+version: '8.x-1.13'
 project: 'state_machine'
-datestamp: 1710486010
+datestamp: 1746459632

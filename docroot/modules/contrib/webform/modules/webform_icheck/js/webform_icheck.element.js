@@ -57,7 +57,7 @@
   };
 
   /**
-   * Enhance table select checkall.
+   * Enhance table select check-all.
    *
    * ISSUE: Select all is not sync'd with checkboxes because iCheck overrides all existing event handlers.
    *

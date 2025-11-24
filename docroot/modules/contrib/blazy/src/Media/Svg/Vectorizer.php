@@ -337,7 +337,7 @@ class Vectorizer implements VectorizerInterface {
     $x,
     $y,
     $width,
-    $direction
+    $direction,
   ) {
     $rectWidth  = $width;
     $rectHeight = 1;

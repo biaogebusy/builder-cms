@@ -2,20 +2,20 @@
 
 namespace Drupal\views_bulk_operations\Plugin\Action;
 
-use Drupal\views_bulk_operations\Action\ViewsBulkOperationsActionBase;
+use Drupal\Core\Action\Attribute\Action;
 use Drupal\Core\Entity\TranslatableInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\views_bulk_operations\Action\ViewsBulkOperationsActionBase;
 
 /**
- * Delete entity action with default confirmation form.
- *
- * @Action(
- *   id = "views_bulk_operations_delete_entity",
- *   label = @Translation("Delete selected entities / translations"),
- *   type = "",
- *   confirm = TRUE,
- * )
+ * Delete entity action.
  */
+#[Action(
+  id: 'views_bulk_operations_delete_entity',
+  label: new TranslatableMarkup('Delete selected entities / translations'),
+  type: ''
+)]
 class EntityDeleteAction extends ViewsBulkOperationsActionBase {
 
   /**
@@ -23,9 +23,16 @@ class EntityDeleteAction extends ViewsBulkOperationsActionBase {
    */
   public function execute($entity = NULL) {
     if ($entity instanceof TranslatableInterface && !$entity->isDefaultTranslation()) {
-      $untranslated_entity = $entity->getUntranslated();
-      $untranslated_entity->removeTranslation($entity->language()->getId());
-      $untranslated_entity->save();
+      try {
+        $untranslated_entity = $entity->getUntranslated();
+        $untranslated_entity->removeTranslation($entity->language()->getId());
+        $untranslated_entity->save();
+      }
+      catch (EntityStorageException $e) {
+        // If the untranslated entity got deleted before
+        // the translated one, an EntityStorageException will be thrown.
+        // We can ignore it as the translated entity will be deleted anyway.
+      }
       return $this->t('Delete translations');
     }
     else {
@@ -37,12 +44,8 @@ class EntityDeleteAction extends ViewsBulkOperationsActionBase {
   /**
    * {@inheritdoc}
    */
-  public function access($object, AccountInterface $account = NULL, $return_as_object = FALSE) {
-    $access = $object->access('delete', $account, TRUE);
-    if ($object->getEntityType() === 'node') {
-      $access->andIf($object->status->access('delete', $account, TRUE));
-    }
-    return $return_as_object ? $access : $access->isAllowed();
+  public function access($object, ?AccountInterface $account = NULL, $return_as_object = FALSE) {
+    return $object->access('delete', $account, $return_as_object);
   }
 
 }

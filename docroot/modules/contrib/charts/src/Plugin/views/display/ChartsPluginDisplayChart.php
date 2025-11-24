@@ -3,22 +3,21 @@
 namespace Drupal\charts\Plugin\views\display;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\views\Attribute\ViewsDisplay;
 use Drupal\views\Plugin\views\display\Attachment;
 use Drupal\views\ViewExecutable;
 
 /**
- * Display plugin to attach multiple chart configurations to the same chart.
- *
- * @ingroup views_display_plugins
- *
- * @ViewsDisplay(
- *   id = "chart_extension",
- *   title = @Translation("Chart attachment"),
- *   help = @Translation("Display that produces a chart."),
- *   theme = "views_view",
- *   contextual_links_locations = {""}
- * )
+ * Defines a Views display plugin for rendering charts.
  */
+#[ViewsDisplay(
+  id: "chart_extension",
+  title: new TranslatableMarkup("Chart attachment"),
+  help: new TranslatableMarkup("Display that produces a chart."),
+  theme: "views_view",
+  contextual_links_locations: [""]
+)]
 class ChartsPluginDisplayChart extends Attachment {
 
   /**

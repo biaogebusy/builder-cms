@@ -1,29 +1,32 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\image_effects\ImageSelector;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Image\ImageFactory;
+use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Drupal\image_effects\Plugin\Attribute\ImageSelector;
 use Drupal\image_effects\Plugin\ImageEffectsPluginBase;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Messenger\MessengerInterface;
 
 /**
  * Dropdown image selector plugin.
  *
  * Provides access to a list of images stored in a directory, specified in
  * configuration.
- *
- * @Plugin(
- *   id = "dropdown",
- *   title = @Translation("Dropdown image selector"),
- *   short_title = @Translation("Dropdown"),
- *   help = @Translation("Access a list of images stored in the directory specified in configuration.")
- * )
  */
+#[ImageSelector(
+  id: "dropdown",
+  title: new TranslatableMarkup("Dropdown image selector"),
+  shortTitle: new TranslatableMarkup("Dropdown"),
+  help: new TranslatableMarkup("Access a list of images stored in the directory specified in configuration."),
+)]
 class Dropdown extends ImageEffectsPluginBase {
 
   /**
@@ -41,7 +44,7 @@ class Dropdown extends ImageEffectsPluginBase {
   protected $messenger;
 
   /**
-   * Constructs a ImageEffectsPluginBase object.
+   * Dropdown constructor.
    *
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
@@ -104,7 +107,7 @@ class Dropdown extends ImageEffectsPluginBase {
   /**
    * Validation handler for the 'path' element.
    */
-  public function validatePath($element, FormStateInterface $form_state, $form) {
+  public function validatePath(array $element, FormStateInterface $form_state, array $form): void {
     if (!is_dir($element['#value'])) {
       $form_state->setErrorByName(implode('][', $element['#parents']), $this->t('Invalid directory specified.'));
     }
@@ -113,7 +116,7 @@ class Dropdown extends ImageEffectsPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function selectionElement(array $options = []) {
+  public function selectionElement(array $options = []): array {
     // Get list of images.
     $image_files = $this->getList();
     if (empty($image_files)) {
@@ -140,7 +143,7 @@ class Dropdown extends ImageEffectsPluginBase {
   /**
    * Validation handler for the selection element.
    */
-  public function validateSelectorUri($element, FormStateInterface $form_state, $form) {
+  public function validateSelectorUri(array $element, FormStateInterface $form_state, array $form): void {
     if (!empty($element['#value'])) {
       if (file_exists($file_path = $this->configuration['path'] . '/' . $element['#value'])) {
         $form_state->setValueForElement($element, $file_path);
@@ -154,10 +157,10 @@ class Dropdown extends ImageEffectsPluginBase {
   /**
    * Returns an array of files with image extensions in the specified directory.
    *
-   * @return array
+   * @return string[]
    *   Array of image files.
    */
-  protected function getList() {
+  protected function getList(): array {
     $filelist = [];
     if (is_dir($this->configuration['path']) && $handle = opendir($this->configuration['path'])) {
       while ($file = readdir($handle)) {

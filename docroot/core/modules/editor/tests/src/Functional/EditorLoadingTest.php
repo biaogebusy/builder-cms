@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\editor\Functional;
 
 use Drupal\editor\Entity\Editor;
@@ -16,9 +18,7 @@ use Drupal\Tests\BrowserTestBase;
 class EditorLoadingTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['filter', 'editor', 'editor_test', 'node'];
 
@@ -130,7 +130,7 @@ class EditorLoadingTest extends BrowserTestBase {
   /**
    * Tests loading of text editors.
    */
-  public function testLoading() {
+  public function testLoading(): void {
     // Only associate a text editor with the "Full HTML" text format.
     $editor = Editor::create([
       'format' => 'full_html',
@@ -155,7 +155,7 @@ class EditorLoadingTest extends BrowserTestBase {
     $this->assertFalse($editor_js_present, 'No Text Editor JavaScript.');
     $this->assertSession()->elementsCount('xpath', $body, 1);
     $this->assertSession()->elementNotExists('css', 'select.js-filter-list');
-    $this->drupalLogout($this->normalUser);
+    $this->drupalLogout();
 
     // The privileged user:
     // - has access to 2 text formats (and the fallback format);
@@ -186,7 +186,7 @@ class EditorLoadingTest extends BrowserTestBase {
     $this->drupalGet('editor/dialog/image/full_html');
     $this->assertSession()->statusCodeEquals(200);
 
-    $this->drupalLogout($this->privilegedUser);
+    $this->drupalLogout();
 
     // Also associate a text editor with the "Plain Text" text format.
     $editor = Editor::create([
@@ -250,7 +250,7 @@ class EditorLoadingTest extends BrowserTestBase {
   /**
    * Tests supported element types.
    */
-  public function testSupportedElementTypes() {
+  public function testSupportedElementTypes(): void {
     // Associate the unicorn text editor with the "Full HTML" text format.
     $editor = Editor::create([
       'format' => 'full_html',
@@ -316,7 +316,7 @@ class EditorLoadingTest extends BrowserTestBase {
       // Editor.module's JS settings present.
       isset($settings['editor']),
       // Editor.module's JS present.
-      strpos($this->getSession()->getPage()->getContent(), $this->getModulePath('editor') . '/js/editor.js') !== FALSE,
+      str_contains($this->getSession()->getPage()->getContent(), $this->getModulePath('editor') . '/js/editor.js'),
       // Body field.
       '//' . $type . '[@id="edit-' . $field_name . '-0-value"]',
     ];

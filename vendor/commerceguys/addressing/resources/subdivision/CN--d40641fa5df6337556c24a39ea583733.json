@@ -1,0 +1,38 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"YN",
+		"Qujing Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Fuyuan Xian": {
+			"local_name": "富源县"
+		},
+		"Huize Xian": {
+			"local_name": "会泽县"
+		},
+		"Luliang Xian": {
+			"local_name": "陆良县"
+		},
+		"Luoping Xian": {
+			"local_name": "罗平县"
+		},
+		"Malong Xian": {
+			"local_name": "马龙县"
+		},
+		"Qilin Qu": {
+			"local_name": "麒麟区"
+		},
+		"Shizong Xian": {
+			"local_name": "师宗县"
+		},
+		"Xuanwei Shi": {
+			"local_name": "宣威市"
+		},
+		"Zhanyi Xian": {
+			"local_name": "沾益县"
+		}
+	}
+}

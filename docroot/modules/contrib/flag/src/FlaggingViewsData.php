@@ -26,7 +26,8 @@ class FlaggingViewsData extends EntityViewsData {
       'extra' => [[
         'left_field' => 'entity_id',
         'field' => 'entity_id',
-      ]],
+      ],
+      ],
     ];
     $data['flag_counts']['count'] = [
       'title' => $this->t('Flagging count'),

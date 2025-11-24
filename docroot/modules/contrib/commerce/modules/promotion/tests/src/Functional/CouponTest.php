@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\commerce_promotion\Functional;
 
+use Drupal\Tests\commerce\Functional\CommerceBrowserTestBase;
 use Drupal\commerce_promotion\Entity\Coupon;
 use Drupal\commerce_promotion\Entity\Promotion;
-use Drupal\Tests\commerce\Functional\CommerceBrowserTestBase;
 
 /**
  * Tests the admin UI for coupons.
@@ -74,7 +74,7 @@ class CouponTest extends CommerceBrowserTestBase {
     $this->assertSession()->fieldExists('code[0][value]');
     $code = $this->randomMachineName(8);
     $this->getSession()->getPage()->fillField('code[0][value]', $code);
-    $this->submitForm([], $this->t('Save'));
+    $this->submitForm([], (string) $this->t('Save'));
     $this->assertSession()->pageTextContains("Saved the $code coupon.");
     $coupon_count = $this->getSession()->getPage()->findAll('xpath', "//table/tbody/tr/td[text()[contains(., '$code')]]");
     $this->assertEquals(count($coupon_count), 1, 'Coupon exists in the table.');
@@ -124,7 +124,7 @@ class CouponTest extends CommerceBrowserTestBase {
     $this->drupalGet($coupon->toUrl('delete-form'));
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->pageTextContains('This action cannot be undone.');
-    $this->submitForm([], $this->t('Delete'));
+    $this->submitForm([], (string) $this->t('Delete'));
 
     $this->container->get('entity_type.manager')->getStorage('commerce_promotion_coupon')->resetCache([$coupon->id()]);
     $coupon_exists = (bool) Coupon::load($coupon->id());

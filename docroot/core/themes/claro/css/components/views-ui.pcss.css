@@ -2,8 +2,6 @@
  * Views styling
  */
 
-@import "../base/variables.pcss.css";
-
 /* @group Forms */
 
 /**
@@ -352,6 +350,34 @@ details.fieldset-no-legend {
   background: none repeat scroll 0 0 transparent;
   font-weight: normal;
 }
+
+/* JS moves Views action buttons under a secondary tabs container, which causes
+a large layout shift. We mitigate this by using animations to temporarily hide
+the buttons, but they will appear after a set amount of time just in case the JS
+is loaded but does not properly run. */
+@media (scripting: enabled) {
+  .views-tabs__action-list-button:not(.views-tabs--secondary *) {
+    animation-name: appear;
+    animation-duration: 0.1s;
+    /* Buttons will be hidden for the amount of time in the animation-delay if
+    not moved. Note this is the approximate time to download the views
+    aggregate CSS with slow 3G. */
+    animation-delay: 5s;
+    animation-iteration-count: 1;
+    animation-fill-mode: backwards;
+  }
+}
+
+@keyframes appear {
+  from {
+    display: none;
+  }
+
+  to {
+    display: unset;
+  }
+}
+
 /* RTL required for precedence over core's styles. */
 [dir="rtl"] .views-tabs__action-list-button {
   margin: 0;
@@ -452,9 +478,8 @@ details.fieldset-no-legend {
 /* @group Query info table */
 
 .views-query-info table {
+  border-spacing: 1px;
   border-radius: 7px;
-  -webkit-border-horizontal-spacing: 1px;
-  -webkit-border-vertical-spacing: 1px;
 }
 
 .views-query-info table tr td:last-child {
@@ -556,7 +581,7 @@ details.fieldset-no-legend {
   position: absolute;
   z-index: 1;
   top: 3.8rem;
-  left: calc(0 - var(--space-m)); /* LTR */
+  left: calc(var(--space-m) * -1); /* LTR */
   padding: 0 0.3rem 0.3rem 0.4rem; /* LTR */
   content: ">";
   color: var(--color-gray-600);
@@ -568,44 +593,8 @@ details.fieldset-no-legend {
 }
 
 [dir="rtl"] .views-config-group-region .views-group-box--value > .form-item::after {
-  right: calc(0 - var(--space-m));
+  right: calc(var(--space-m) * -1);
   left: auto;
   padding-right: 0.4rem;
   padding-left: 0.3rem;
-}
-
-@media all and (-ms-high-contrast: active), (-ms-high-contrast: none) {
-  /**
-   * Remove borders from IE11 filter config in IE11, as it does not fully support
-   * the CSS needed to size and position them properly. This results in a
-   * slightly different presentation for IE11, but one that users are accustomed
-   * to with the Seven theme.
-   */
-  .views-config-group-region .views-group-box--value > .form-item::before,
-  .views-config-group-region .views-group-box--value > .form-item::after {
-    content: "";
-    border: none;
-  }
-  .views-config-group-region,
-  .views-config-group-region .views-group-box {
-    border: none;
-  }
-
-  /**
-   * IE11 has trouble correctly using `justify-content: space-between` when a
-   * flex item has the `.visually-hidden` class. This addresses the issue and
-   * the end result is the extra action button remains in it's own column on
-   * wrap, which matches the experience when using the Seven theme.
-   */
-  .views-display-top {
-    flex-wrap: nowrap;
-    justify-content: flex-start;
-  }
-  .views-display-top__extra-actions-wrapper {
-    margin-left: auto; /* LTR */
-  }
-  [dir="rtl"] .views-display-top__extra-actions-wrapper {
-    margin-right: auto;
-    margin-left: calc(var(--space-xs) / 2);
-  }
 }

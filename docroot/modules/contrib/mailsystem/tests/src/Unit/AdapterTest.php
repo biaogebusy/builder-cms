@@ -38,6 +38,7 @@ class AdapterTest extends UnitTestCase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    parent::setUp();
     $this->formatter = new Test();
     $this->sender = new Test();
     $this->adapter = new Adapter($this->formatter, $this->sender);

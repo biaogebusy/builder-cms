@@ -48,7 +48,7 @@ class FieldItemNormalizer extends JsonApiNormalizerDecoratorBase {
   /**
    * {@inheritdoc}
    */
-  public function normalize($object, $format = NULL, array $context = []) {
+  public function normalize($object, $format = NULL, array $context = []): array|bool|string|int|float|null|\ArrayObject {
     // First get the regular output.
     $normalized_output = parent::normalize($object, $format, $context);
     // Then detect if there is any enhancer to be applied here.

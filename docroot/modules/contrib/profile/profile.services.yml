@@ -3,3 +3,6 @@ services:
     class: Drupal\profile\Access\ProfileTypeMultipleAccessCheck
     tags:
       - { name: access_check, applies_to: _profile_type_multiple }
+
+  profile.user_syncer:
+    class: Drupal\profile\ProfileUserSyncer

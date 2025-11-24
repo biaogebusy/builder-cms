@@ -3,7 +3,9 @@
 namespace Drupal\advancedqueue\Entity;
 
 use Drupal\advancedqueue\BackendPluginCollection;
+use Drupal\advancedqueue\Exception\InvalidBackendException;
 use Drupal\advancedqueue\Job;
+use Drupal\advancedqueue\Plugin\AdvancedQueue\Backend\SupportsDetectingDuplicateJobsInterface;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\Entity\EntityStorageInterface;
 
@@ -48,6 +50,7 @@ use Drupal\Core\Entity\EntityStorageInterface;
  *     "processing_time",
  *     "threshold",
  *     "locked",
+ *     "stop_when_empty",
  *   },
  *   links = {
  *     "add-form" = "/admin/config/system/queues/add",
@@ -125,9 +128,17 @@ class Queue extends ConfigEntityBase implements QueueInterface {
   protected $pluginCollection;
 
   /**
+   * Whether the processor should stop when the queue is empty.
+   *
+   * @var bool
+   */
+  protected $stop_when_empty = TRUE;
+
+  /**
    * {@inheritdoc}
    */
   public function enqueueJob(Job $job, $delay = 0) {
+    $job = $this->prepareJob($job);
     return $this->getBackend()->enqueueJob($job, $delay);
   }
 
@@ -135,7 +146,43 @@ class Queue extends ConfigEntityBase implements QueueInterface {
    * {@inheritdoc}
    */
   public function enqueueJobs(array $jobs, $delay = 0) {
-    return $this->getBackend()->enqueueJobs($jobs, $delay);
+    $prepared_jobs = [];
+    foreach ($jobs as $job) {
+      $prepared_jobs[] = $this->prepareJob($job);
+    }
+    return $this->getBackend()->enqueueJobs($prepared_jobs, $delay);
+  }
+
+  /**
+   * Prepare a job for enqueueing.
+   *
+   * @param \Drupal\advancedqueue\Job $job
+   *   The job to prepare.
+   *
+   * @return \Drupal\advancedqueue\Job
+   *   A job to enqueue. This may or may not be the $job object supplied.
+   *
+   * @throws \Drupal\advancedqueue\Exception\InvalidBackendException
+   *   Throws an exception if the queue's backend cannot handle the given job.
+   */
+  protected function prepareJob(Job $job): Job {
+    $job->setQueueId($this->id());
+    $job_type_manager = \Drupal::service('plugin.manager.advancedqueue_job_type');
+    if (!$job_type_manager->getDefinition($job->getType())['allow_duplicates']) {
+      if (!$this->getBackend() instanceof SupportsDetectingDuplicateJobsInterface) {
+        throw new InvalidBackendException(strtr("Backend :type doesn't support detecting duplicate jobs", [':type' => $this->getBackend()->getLabel()]));
+      }
+
+      $job_type_plugin = $job_type_manager->createInstance($job->getType());
+      if (empty($job->getFingerprint())) {
+        $job->setFingerprint($job_type_plugin->createJobFingerprint($job));
+      }
+
+      if ($duplicates = $this->getBackend()->getDuplicateJobs($job)) {
+        $job = $job_type_plugin->handleDuplicateJobs($job, $duplicates, $this->getBackend());
+      }
+    }
+    return $job;
   }
 
   /**
@@ -246,9 +293,11 @@ class Queue extends ConfigEntityBase implements QueueInterface {
     // Invoke the setters to clear related properties.
     if ($property_name == 'backend') {
       $this->setBackendId($value);
+      return $this;
     }
     elseif ($property_name == 'backend_configuration') {
       $this->setBackendConfiguration($value);
+      return $this;
     }
     else {
       return parent::set($property_name, $value);
@@ -291,6 +340,21 @@ class Queue extends ConfigEntityBase implements QueueInterface {
     foreach ($entities as $entity) {
       $entity->getBackend()->deleteQueue();
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getStopWhenEmpty() {
+    return $this->stop_when_empty;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setStopWhenEmpty(bool $stop_when_empty) {
+    $this->stop_when_empty = $stop_when_empty;
+    return $this;
   }
 
 }

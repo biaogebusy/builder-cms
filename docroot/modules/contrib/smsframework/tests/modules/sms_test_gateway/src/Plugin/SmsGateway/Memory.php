@@ -82,7 +82,7 @@ class Memory extends SmsGatewayPluginBase implements SmsIncomingEventProcessorIn
 
     // Reports.
     $reports = \Drupal::state()->get('sms_test_gateway.memory.report', []);
-    $gateway_reports = isset($reports[$gateway_id]) ? $reports[$gateway_id] : [];
+    $gateway_reports = $reports[$gateway_id] ?? [];
     $new_reports = $this->randomDeliveryReports($sms_message);
     $reports[$gateway_id] = array_merge($gateway_reports, $new_reports);
     \Drupal::state()->set('sms_test_gateway.memory.report', $reports);
@@ -148,7 +148,7 @@ class Memory extends SmsGatewayPluginBase implements SmsIncomingEventProcessorIn
   /**
    * {@inheritdoc}
    */
-  public function getDeliveryReports(array $message_ids = NULL): array {
+  public function getDeliveryReports(?array $message_ids = NULL): array {
     return [];
   }
 

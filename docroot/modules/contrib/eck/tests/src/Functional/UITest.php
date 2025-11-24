@@ -16,12 +16,12 @@ class UITest extends FunctionalTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['block'];
+  protected static $modules = ['block'];
 
   /**
    * {@inheritdoc}
    */
-  public function setUp() {
+  public function setUp(): void {
     parent::setUp();
 
     // Place the actions block, to test if the actions are placed correctly.
@@ -76,7 +76,7 @@ class UITest extends FunctionalTestBase {
     $entityTypeManager = \Drupal::entityTypeManager();
     $entity = $entityTypeManager->getDefinition('eck_entity_type');
     $this->drupalGet(Url::fromRoute('eck.entity_type.list'));
-    $noEntitiesYetText = (string) $this->t('There are no @label entities yet.', ['@label' => \strtolower($entity->getLabel())]);
+    $noEntitiesYetText = (string) $this->t('There are no @label entities yet.', ['@label' => strtolower($entity->getLabel())]);
     $this->assertSession()->responseContains($noEntitiesYetText);
 
     $entityType = $this->createEntityType();
@@ -103,7 +103,7 @@ class UITest extends FunctionalTestBase {
     // directly to the correct add entity form. We should be able to add a new
     // entity directly after clicking the link.
     $this->clickLink($this->t('Add content'));
-    $this->drupalPostForm(NULL, ['title[0][value]' => $this->randomMachineName()], $this->t('Save'));
+    $this->submitForm(['title[0][value]' => $this->randomMachineName()], 'Save');
     // There is now content in the datbase, which means the content list link
     // should also be displayed.
     $this->drupalGet(Url::fromRoute('eck.entity_type.list'));
@@ -154,10 +154,45 @@ class UITest extends FunctionalTestBase {
     // entity form when clicking the action link.
     $route = "entity.{$entityType['id']}_type.delete_form";
     $routeArguments = ["{$entityType['id']}_type" => $bundles[1]['type']];
-    $this->drupalPostForm(Url::fromRoute($route, $routeArguments), [], $this->t('Delete'));
+    $this->drupalGet(Url::fromRoute($route, $routeArguments));
+    $this->submitForm([], 'Delete');
     $this->drupalGet(Url::fromRoute("eck.entity.{$entityType['id']}.list"));
     $this->clickLink("Add {$entityType['label']}");
     $this->assertSession()->fieldExists('title[0][value]');
+  }
+
+  /**
+   * Tests "Use the administration theme when editing or creating ECK entities".
+   */
+  public function testAdministrationEckThemeSettings() {
+    $admin_user = $this->drupalCreateUser([
+      'administer eck entity types',
+      'administer eck entities',
+      'administer eck entity bundles',
+      'access administration pages',
+      'view the administration theme',
+      'administer themes',
+    ]);
+    $this->drupalLogin($admin_user);
+
+    $type = $this->createEntityType();
+    $bundle = $this->createEntityBundle($type['id']);
+
+    $this->drupalGet(Url::fromRoute('eck.entity.add', ['eck_entity_type' => $type['id'], 'eck_entity_bundle' => $bundle['type']]));
+    $this->assertSession()->responseContains('core/themes/starterkit_theme');
+
+    // Install an administration theme and enable "Use the administration theme
+    // when editing or creating ECK entities" option.
+    $this->container->get('theme_installer')->install(['claro']);
+    $edit = [
+      'admin_theme' => 'claro',
+      'eck_use_admin_theme' => TRUE,
+    ];
+    $this->drupalGet('admin/appearance');
+    $this->submitForm($edit, 'Save configuration');
+
+    $this->drupalGet(Url::fromRoute('eck.entity.add', ['eck_entity_type' => $type['id'], 'eck_entity_bundle' => $bundle['type']]));
+    $this->assertSession()->responseContains('core/themes/claro');
   }
 
 }

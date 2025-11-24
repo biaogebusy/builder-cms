@@ -4,6 +4,7 @@ namespace Drupal\contact\Plugin\views\field;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Drupal\views\Attribute\ViewsField;
 use Drupal\views\Plugin\views\field\LinkBase;
 use Drupal\views\ResultRow;
 
@@ -11,9 +12,8 @@ use Drupal\views\ResultRow;
  * Defines a field that links to the user contact page, if access is permitted.
  *
  * @ingroup views_field_handlers
- *
- * @ViewsField("contact_link")
  */
+#[ViewsField("contact_link")]
 class ContactLink extends LinkBase {
 
   /**
@@ -30,7 +30,11 @@ class ContactLink extends LinkBase {
    * {@inheritdoc}
    */
   protected function getUrlInfo(ResultRow $row) {
-    return Url::fromRoute('entity.user.contact_form', ['user' => $this->getEntity($row)->id()]);
+    $entity = $this->getEntity($row);
+    if (!$entity) {
+      return NULL;
+    }
+    return Url::fromRoute('entity.user.contact_form', ['user' => $entity->id()]);
   }
 
   /**
@@ -38,6 +42,9 @@ class ContactLink extends LinkBase {
    */
   protected function renderLink(ResultRow $row) {
     $entity = $this->getEntity($row);
+    if (!$entity) {
+      return '';
+    }
 
     $this->options['alter']['make_link'] = TRUE;
     $this->options['alter']['url'] = $this->getUrlInfo($row);

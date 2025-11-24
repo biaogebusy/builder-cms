@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image_effects\Unit;
 
 use Drupal\image_effects\Component\PositionedRectangle;
@@ -19,7 +21,7 @@ class PositionedRectangleTest extends TestCase {
    * @covers ::setPoint
    * @covers ::getPoint
    */
-  public function testResize() {
+  public function testResize(): void {
     $rect = new PositionedRectangle(200, 100);
     $rect->setPoint('test_a', [20, 10]);
     $this->assertSame(200, $rect->getWidth());
@@ -46,7 +48,7 @@ class PositionedRectangleTest extends TestCase {
   /**
    * Data provider for testAddGrid.
    */
-  public function addGridProvider() {
+  public static function addGridProvider(): array {
     return [
       '800x600, grid 5x5, full' => [
         800,
@@ -392,13 +394,13 @@ class PositionedRectangleTest extends TestCase {
    * @covers ::getPoints
    * @dataProvider addGridProvider
    */
-  public function testAddGrid($rect_width, $rect_height, $x, $y, $width, $height, $rows, $columns, $expected_points, $expected_subgrid_dimensions) {
+  public function testAddGrid(int $rect_width, int $rect_height, int $x, int $y, int $width, int $height, int $rows, int $columns, array $expected_points, array $expected_subgrid_dimensions): void {
     $rect = new PositionedRectangle($rect_width, $rect_height);
     $rect->addGrid('test_a', $x, $y, $width, $height, $rows, $columns);
     $this->assertEquals($expected_points, $rect->getPoints());
     foreach ($expected_subgrid_dimensions as $params => $dimensions) {
       $args = explode(', ', $params);
-      $this->assertSame($dimensions, $rect->getSubGridDimensions('test_a', $args[0], $args[1], $args[2], $args[3]));
+      $this->assertSame($dimensions, $rect->getSubGridDimensions('test_a', (int) $args[0], (int) $args[1], (int) $args[2], (int) $args[3]));
     }
   }
 

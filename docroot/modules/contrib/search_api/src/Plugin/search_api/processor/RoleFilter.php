@@ -2,30 +2,48 @@
 
 namespace Drupal\search_api\Plugin\search_api\processor;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\search_api\Attribute\SearchApiProcessor;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Plugin\PluginFormTrait;
 use Drupal\search_api\Processor\ProcessorPluginBase;
 use Drupal\search_api\Utility\Utility;
 use Drupal\user\RoleInterface;
 use Drupal\user\UserInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Filters out users based on their role.
- *
- * @SearchApiProcessor(
- *   id = "role_filter",
- *   label = @Translation("Role filter"),
- *   description = @Translation("Filters out users based on their role."),
- *   stages = {
- *     "alter_items" = 0,
- *   },
- * )
  */
+#[SearchApiProcessor(
+  id: 'role_filter',
+  label: new TranslatableMarkup('Role filter'),
+  description: new TranslatableMarkup('Filters out users based on their role.'),
+  stages: [
+    'alter_items' => 0,
+  ],
+)]
 class RoleFilter extends ProcessorPluginBase implements PluginFormInterface {
 
   use PluginFormTrait;
+
+  /**
+   * The entity type manager.
+   */
+  protected ?EntityTypeManagerInterface $entityTypeManager = NULL;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    /** @var static $processor */
+    $processor = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $processor->setEntityTypeManager($container->get('entity_type.manager'));
+    return $processor;
+  }
 
   /**
    * Can only be enabled for an index that indexes the user entity.
@@ -39,6 +57,29 @@ class RoleFilter extends ProcessorPluginBase implements PluginFormInterface {
       }
     }
     return FALSE;
+  }
+
+  /**
+   * Retrieves the entity type manager.
+   *
+   * @return \Drupal\Core\Entity\EntityTypeManagerInterface
+   *   The entity type manager.
+   */
+  public function getEntityTypeManager(): EntityTypeManagerInterface {
+    return $this->entityTypeManager ?: \Drupal::entityTypeManager();
+  }
+
+  /**
+   * Sets the entity type manager.
+   *
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
+   *
+   * @return $this
+   */
+  public function setEntityTypeManager(EntityTypeManagerInterface $entity_type_manager): static {
+    $this->entityTypeManager = $entity_type_manager;
+    return $this;
   }
 
   /**
@@ -57,7 +98,7 @@ class RoleFilter extends ProcessorPluginBase implements PluginFormInterface {
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $options = array_map(function (RoleInterface $role) {
       return Utility::escapeHtml($role->label());
-    }, user_roles());
+    }, $this->getEntityTypeManager()->getStorage('user_role')->loadMultiple());
 
     $form['default'] = [
       '#type' => 'radios',

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image_effects\Unit;
 
 use Drupal\image_effects\Component\MatrixUtility;
@@ -17,7 +19,7 @@ class MatrixUtilityTest extends TestCase {
   /**
    * Data provider for testCumulativeSum.
    */
-  public function cumulativeSumProvider() {
+  public static function cumulativeSumProvider(): array {
     return [
       'https://stackoverflow.com/questions/39937212/maximum-subarray-of-size-hxw-within-a-2d-matrix' => [
         [
@@ -72,14 +74,14 @@ class MatrixUtilityTest extends TestCase {
    * @covers ::cumulativeSum
    * @dataProvider cumulativeSumProvider
    */
-  public function testCumulativeSum($input, $expected) {
+  public function testCumulativeSum(array $input, array $expected): void {
     $this->assertSame($expected, MatrixUtility::cumulativeSum($input));
   }
 
   /**
    * Data provider for testFindMaxSumSubmatrix.
    */
-  public function findMaxSumSubmatrixProvider() {
+  public static function findMaxSumSubmatrixProvider(): array {
     return [
       'https://stackoverflow.com/questions/39937212/maximum-subarray-of-size-hxw-within-a-2d-matrix' => [
         [
@@ -124,7 +126,7 @@ class MatrixUtilityTest extends TestCase {
    * @covers ::findMaxSumSubmatrix
    * @dataProvider findMaxSumSubmatrixProvider
    */
-  public function testFindMaxSumSubmatrix($input, $rows, $columns, $expected) {
+  public function testFindMaxSumSubmatrix(array $input, int $rows, int $columns, array $expected): void {
     $this->assertSame($expected, MatrixUtility::findMaxSumSubmatrix($input, $rows, $columns));
   }
 

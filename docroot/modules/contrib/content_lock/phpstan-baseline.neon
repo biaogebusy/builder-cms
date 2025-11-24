@@ -1,0 +1,11 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^\\\\Drupal calls should be avoided in classes, use dependency injection instead$#"
+			count: 4
+			path: modules/content_lock_timeout/tests/modules/content_lock_timeout_test/src/TimeChanger.php
+
+		-
+			message: "#^Access to an undefined property Drupal\\\\content_lock\\\\Plugin\\\\views\\\\sort\\\\ContentLockSort\\:\\:\\$table_alias\\.$#"
+			count: 1
+			path: src/Plugin/views/sort/ContentLockSort.php

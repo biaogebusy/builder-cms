@@ -18,13 +18,13 @@
 }
 
 .tabledrag-toggle-weight-wrapper {
-  margin-top: 0;
+  margin-block-start: 0;
 
   .action-link {
-    margin-bottom: var(--gin-spacing-xs);
+    margin-block-end: var(--gin-spacing-xs);
 
     .action-link {
-      margin-bottom: 0;
+      margin-block-end: 0;
     }
   }
 }
@@ -35,21 +35,22 @@
 .field--type-link,
 .field--type-smartdate {
   .gin-layer-wrapper > .tabledrag-toggle-weight-wrapper {
-    @include mq(small) {
+    @include mq(medium) {
       position: relative;
       z-index: 1;
-      margin-right: var(--gin-spacing-m);
-      margin-bottom: calc(var(--gin-spacing-xxl) * -1);
+      margin-block-end: calc(var(--gin-spacing-xxl) * -1);
       pointer-events: none;
     }
 
     .action-link {
       pointer-events: all;
+      background-color: var(--gin-bg-layer);
     }
   }
 }
 
-.tabledrag-handle {
+.tabledrag-handle,
+.tabledrag-handle.tabledrag-handle-y {
   &::after {
     background-image: none;
     mask-image: icon('drag');
@@ -77,6 +78,10 @@
   }
 }
 
+.tabledrag-handle.tabledrag-handle-y::after {
+  mask-image: icon('drag-y');
+}
+
 .draggable.drag, .draggable.drag:focus {
   background-color: var(--gin-bg-layer2);
 
@@ -99,41 +104,27 @@
   @media (forced-colors: active) {
     position: relative;
     &::after {
-      border-left: 6px solid linktext;
-      left:0
+      border-inline-start: 6px solid linktext;
+      inset-inline-start:0
     }
   }
 }
 
-.tabledrag-leaf td,
 .tabledrag-cell {
-  vertical-align: top;
-}
-
-.tabledrag-cell {
-  padding-top: var(--gin-spacing-density-m);
-  padding-bottom: var(--gin-spacing-density-m);
+  padding-block: var(--gin-spacing-density-m);
 
   &-content {
-    margin-top: var(--gin-spacing-xs);
-    margin-bottom: var(--gin-spacing-xs);
-  }
-
-  &-content__item {
-    .checkbox-toggle:hover {
-      cursor: pointer;
-    }
+    margin-block: var(--gin-spacing-xs);
   }
 }
 
 .field-plugin-settings-edit-wrapper,
 .field-plugin-settings-edit-wrapper + a {
-  margin-top: var(--gin-spacing-m);
-  margin-bottom: var(--gin-spacing-m);
+  margin-block: var(--gin-spacing-m);
 }
 
 .field-plugin-settings-edit-wrapper + a {
-  margin-top: var(--gin-spacing-s);
+  margin-block-start: var(--gin-spacing-s);
 }
 
 .table-file-multiple-widget .tabledrag-cell-content {

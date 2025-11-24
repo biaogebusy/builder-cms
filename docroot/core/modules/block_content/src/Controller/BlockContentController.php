@@ -4,23 +4,27 @@ namespace Drupal\block_content\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Routing\PathChangedHelper;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\block_content\BlockContentInterface;
 use Drupal\block_content\BlockContentTypeInterface;
 use Drupal\Core\Extension\ThemeHandlerInterface;
 use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class BlockContentController extends ControllerBase {
 
   /**
-   * The custom block storage.
+   * The content block storage.
    *
    * @var \Drupal\Core\Entity\EntityStorageInterface
    */
   protected $blockContentStorage;
 
   /**
-   * The custom block type storage.
+   * The content block type storage.
    *
    * @var \Drupal\Core\Entity\EntityStorageInterface
    */
@@ -49,9 +53,9 @@ class BlockContentController extends ControllerBase {
    * Constructs a BlockContent object.
    *
    * @param \Drupal\Core\Entity\EntityStorageInterface $block_content_storage
-   *   The custom block storage.
+   *   The content block storage.
    * @param \Drupal\Core\Entity\EntityStorageInterface $block_content_type_storage
-   *   The custom block type storage.
+   *   The block type storage.
    * @param \Drupal\Core\Extension\ThemeHandlerInterface $theme_handler
    *   The theme handler.
    */
@@ -62,18 +66,26 @@ class BlockContentController extends ControllerBase {
   }
 
   /**
-   * Displays add custom block links for available types.
+   * Displays add content block links for available types.
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The current request object.
    *
    * @return array
-   *   A render array for a list of the custom block types that can be added or
-   *   if there is only one custom block type defined for the site, the function
-   *   returns the custom block add page for that custom block type.
+   *   A render array for a list of the block types that can be added or
+   *   if there is only one block type defined for the site, the function
+   *   returns the content block add page for that block type.
    */
   public function add(Request $request) {
-    $types = $this->blockContentTypeStorage->loadMultiple();
+    // @todo deprecate see https://www.drupal.org/project/drupal/issues/3346394.
+    $types = [];
+    // Only use block types the user has access to.
+    foreach ($this->blockContentTypeStorage->loadMultiple() as $type) {
+      $access = $this->entityTypeManager()->getAccessControlHandler('block_content')->createAccess($type->id(), NULL, [], TRUE);
+      if ($access->isAllowed()) {
+        $types[$type->id()] = $type;
+      }
+    }
     uasort($types, [$this->blockContentTypeStorage->getEntityType()->getClass(), 'sort']);
     if ($types && count($types) == 1) {
       $type = reset($types);
@@ -91,10 +103,10 @@ class BlockContentController extends ControllerBase {
   }
 
   /**
-   * Presents the custom block creation form.
+   * Presents the content block creation form.
    *
    * @param \Drupal\block_content\BlockContentTypeInterface $block_content_type
-   *   The custom block type to add.
+   *   The block type to add.
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The current request object.
    *
@@ -119,13 +131,109 @@ class BlockContentController extends ControllerBase {
    * Provides the page title for this controller.
    *
    * @param \Drupal\block_content\BlockContentTypeInterface $block_content_type
-   *   The custom block type being added.
+   *   The block type being added.
    *
    * @return string
    *   The page title.
    */
   public function getAddFormTitle(BlockContentTypeInterface $block_content_type) {
-    return $this->t('Add %type custom block', ['%type' => $block_content_type->label()]);
+    return $this->t('Add %type content block', ['%type' => $block_content_type->label()]);
+  }
+
+  /**
+   * Provides a redirect to the list of block types.
+   *
+   * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
+   *   A route match object, used for the route name and the parameters.
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The current request object.
+   *
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse
+   *
+   * @deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use
+   *   /admin/structure/block-content directly instead of
+   *   /admin/structure/block/block-content/types.
+   *
+   * @see https://www.drupal.org/node/3320855
+   */
+  public function blockContentTypeRedirect(RouteMatchInterface $route_match, Request $request): RedirectResponse {
+    @trigger_error('The path /admin/structure/block/block-content/types is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use /admin/structure/block-content. See https://www.drupal.org/node/3320855', E_USER_DEPRECATED);
+    $helper = new PathChangedHelper($route_match, $request);
+    $params = [
+      '%old_path' => $helper->oldPath(),
+      '%new_path' => $helper->newPath(),
+      '%change_record' => 'https://www.drupal.org/node/3320855',
+    ];
+    $warning_message = $this->t('You have been redirected from %old_path. Update links, shortcuts, and bookmarks to use %new_path.', $params);
+    $this->messenger()->addWarning($warning_message);
+    $this->getLogger('block_content')->warning('A user was redirected from %old_path. This redirect will be removed in a future version of Drupal. Update links, shortcuts, and bookmarks to use %new_path. See %change_record for more information.', $params);
+
+    return $helper->redirect();
+  }
+
+  /**
+   * Provides a redirect to the content block library.
+   *
+   * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
+   *   A route match object, used for the route name and the parameters.
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The current request object.
+   *
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse
+   *
+   * @deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use
+   *   /admin/content/block directly instead of
+   *   /admin/structure/block/block-content.
+   *
+   * @see https://www.drupal.org/node/3320855
+   */
+  public function blockLibraryRedirect(RouteMatchInterface $route_match, Request $request) {
+    @trigger_error('The path /admin/structure/block/block-content is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use /admin/content/block. See https://www.drupal.org/node/3320855', E_USER_DEPRECATED);
+    $helper = new PathChangedHelper($route_match, $request);
+    $params = [
+      '%old_path' => $helper->oldPath(),
+      '%new_path' => $helper->newPath(),
+      '%change_record' => 'https://www.drupal.org/node/3320855',
+    ];
+    $warning_message = $this->t('You have been redirected from %old_path. Update links, shortcuts, and bookmarks to use %new_path.', $params);
+    $this->messenger()->addWarning($warning_message);
+    $this->getLogger('block_content')
+      ->warning('A user was redirected from %old_path. This redirect will be removed in a future version of Drupal. Update links, shortcuts, and bookmarks to use %new_path. See %change_record for more information.', $params);
+
+    return $helper->redirect();
+  }
+
+  /**
+   * Provides a redirect to block edit page.
+   *
+   * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
+   *   A route match object, used for the route name and the parameters.
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The current request object.
+   * @param Drupal\block_content\BlockContentInterface $block_content
+   *   The block to be edited.
+   *
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse
+   *
+   * @deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use
+   *   /admin/content/block/{block_content} directly instead of
+   *   /block/{block_content}.
+   *
+   * @see https://www.drupal.org/node/3320855
+   */
+  public function editRedirect(RouteMatchInterface $route_match, Request $request, BlockContentInterface $block_content): RedirectResponse {
+    @trigger_error('The path /block/{block_content} is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use /admin/content/block/{block_content}. See https://www.drupal.org/node/3320855', E_USER_DEPRECATED);
+    $helper = new PathChangedHelper($route_match, $request);
+    $params = [
+      '%old_path' => $helper->oldPath(),
+      '%new_path' => $helper->newPath(),
+      '%change_record' => 'https://www.drupal.org/node/3320855',
+    ];
+    $warning_message = $this->t('You have been redirected from %old_path. Update links, shortcuts, and bookmarks to use %new_path.', $params);
+    $this->messenger()->addWarning($warning_message);
+    $this->getLogger('block_content')->warning('A user was redirected from %old_path to %new_path. This redirect will be removed in a future version of Drupal. Update links, shortcuts, and bookmarks to use %new_path. See %change_record for more information.', $params);
+
+    return $helper->redirect();
   }
 
 }

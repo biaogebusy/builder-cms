@@ -2,11 +2,11 @@
 
 namespace Drupal\Tests\commerce_product\Functional;
 
+use Drupal\Core\Language\Language;
+use Drupal\Core\Url;
 use Drupal\commerce_price\Price;
 use Drupal\commerce_product\Entity\Product;
 use Drupal\commerce_product\Entity\ProductVariation;
-use Drupal\Core\Language\Language;
-use Drupal\Core\Url;
 
 /**
  * Tests translating products and variations.
@@ -50,9 +50,9 @@ class ProductTranslationTest extends ProductBrowserTestBase {
 
     // Add the French and German languages.
     $this->drupalGet('admin/config/regional/language/add');
-    $this->submitForm(['predefined_langcode' => 'fr'], $this->t('Add language'));
+    $this->submitForm(['predefined_langcode' => 'fr'], (string) $this->t('Add language'));
     $this->drupalGet('admin/config/regional/language/add');
-    $this->submitForm(['predefined_langcode' => 'de'], $this->t('Add language'));
+    $this->submitForm(['predefined_langcode' => 'de'], (string) $this->t('Add language'));
 
     // Enable content translation on products and variations.
     $this->drupalGet('admin/config/regional/content-language');
@@ -62,7 +62,7 @@ class ProductTranslationTest extends ProductBrowserTestBase {
       'entity_types[commerce_product_variation]' => TRUE,
       'settings[commerce_product_variation][default][translatable]' => TRUE,
     ];
-    $this->submitForm($edit, $this->t('Save configuration'));
+    $this->submitForm($edit, (string) $this->t('Save configuration'));
     // Adding languages requires a container rebuild in the test running
     // environment so that multilingual services are used.
     $this->resetAll();
@@ -114,13 +114,13 @@ class ProductTranslationTest extends ProductBrowserTestBase {
       'multipleVariations' => FALSE,
       'language_configuration[language_alterable]' => TRUE,
     ];
-    $this->submitForm($edit, $this->t('Save'));
+    $this->submitForm($edit, (string) $this->t('Save'));
 
     $this->drupalGet('admin/commerce/config/product-variation-types/default/edit');
     $edit = [
       'generateTitle' => FALSE,
     ];
-    $this->submitForm($edit, $this->t('Save'));
+    $this->submitForm($edit, (string) $this->t('Save'));
 
     $product = $this->createEntity('commerce_product', [
       'type' => 'default',
@@ -168,6 +168,48 @@ class ProductTranslationTest extends ProductBrowserTestBase {
     $this->assertEquals('de', $variation->language()->getId());
     $this->assertEquals('Hat', $variation->getTitle());
     $this->assertTrue($variation->hasTranslation('fr'));
+  }
+
+  /**
+   * Test variation unpublishing when translation enabled.
+   */
+  public function testVariationTranslationUnpublishing() {
+    /** @var \Drupal\commerce_product\Entity\ProductInterface $product */
+    $product = $this->createEntity('commerce_product', [
+      'type' => 'default',
+      'title' => 'Translation test product',
+      'stores' => $this->stores,
+    ]);
+    $this->createEntity('commerce_product_variation', [
+      'type' => 'default',
+      'product_id' => $product->id(),
+      'sku' => $this->randomMachineName(),
+      'price' => new Price('9.99', 'USD'),
+    ]);
+
+    $this->drupalGet(Url::fromRoute('entity.commerce_product_variation.collection', [
+      'commerce_product' => $product->id(),
+    ]));
+    $variation = $product->getVariations()[0];
+    $translation_overview_url = $variation->toUrl('drupal:content-translation-overview');
+    $this->assertSession()->linkByHrefExists($translation_overview_url->toString());
+    $this->drupalGet($translation_overview_url);
+    $this->assertSession()->linkByHrefExists('/fr/product/1/variations/1/translations/add/en/fr');
+    $this->getSession()->getPage()->clickLink('Add');
+    $this->getSession()->getPage()->pressButton('Save');
+    $this->assertSession()->pageTextContains('Saved the Translation test product variation.');
+
+    $this->drupalGet($translation_overview_url);
+
+    $edit_url = $variation->toUrl('edit-form')->toString();
+    $this->assertSession()->linkByHrefExists($edit_url);
+    $this->getSession()->getPage()->clickLink('Edit');
+    $this->getSession()->getPage()->uncheckField('Published');
+    $this->getSession()->getPage()->pressButton('Save (this translation)');
+
+    /** @var \Drupal\commerce_product\Entity\ProductVariationInterface $variation */
+    $variation = $this->reloadEntity($variation);
+    $this->assertFalse($variation->isPublished());
   }
 
 }

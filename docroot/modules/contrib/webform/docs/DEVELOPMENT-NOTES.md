@@ -70,7 +70,7 @@ git archive --format zip --output webform-[issue-number]-[issue-description].zip
 git reset --hard
 
 # Adding changes to the last commit
-git commit --amendd ../
+git commit --amend ../
 
 # Unstage a file about to be committed
 git reset HEAD <file>…

@@ -1,20 +1,25 @@
 services:
+  _defaults:
+    autowire: true
+
   views_bulk_operations.data:
     class: Drupal\views_bulk_operations\Service\ViewsBulkOperationsViewData
-    arguments: ['@event_dispatcher', '@pager.manager']
+  Drupal\views_bulk_operations\Service\ViewsBulkOperationsViewDataInterface: '@views_bulk_operations.data'
+
   views_bulk_operations.processor:
     class: Drupal\views_bulk_operations\Service\ViewsBulkOperationsActionProcessor
-    arguments: ['@views_bulk_operations.data', '@plugin.manager.views_bulk_operations_action', '@current_user', '@module_handler']
+  Drupal\views_bulk_operations\Service\ViewsBulkOperationsActionProcessorInterface: '@views_bulk_operations.processor'
+
   plugin.manager.views_bulk_operations_action:
     class: Drupal\views_bulk_operations\Service\ViewsBulkOperationsActionManager
-    arguments: ['@container.namespaces', '@cache.discovery', '@module_handler', '@event_dispatcher', '@entity_type.manager']
+  Drupal\views_bulk_operations\Service\ViewsBulkOperationsActionManager: '@plugin.manager.views_bulk_operations_action'
+
   views_bulk_operations.access:
     class: Drupal\views_bulk_operations\Access\ViewsBulkOperationsAccess
-    arguments: ['@tempstore.private']
     tags:
       - { name: access_check, applies_to: _views_bulk_operation_access }
+
   views_bulk_operations.view_data_provider:
     class: Drupal\views_bulk_operations\EventSubscriber\ViewsBulkOperationsEventSubscriber
-    arguments: ['@views_bulk_operations.data']
     tags:
       - { name: event_subscriber }

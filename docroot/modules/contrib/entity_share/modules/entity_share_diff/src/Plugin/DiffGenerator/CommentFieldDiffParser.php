@@ -4,8 +4,8 @@ declare(strict_types = 1);
 
 namespace Drupal\entity_share_diff\Plugin\DiffGenerator;
 
-use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\comment\Plugin\Field\FieldType\CommentItemInterface;
+use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\entity_share_diff\DiffGenerator\DiffGeneratorPluginBase;
 
 /**

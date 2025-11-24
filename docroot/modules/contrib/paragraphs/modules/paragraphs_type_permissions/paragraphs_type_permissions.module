@@ -69,7 +69,7 @@ function paragraphs_type_permissions_paragraph_access(ParagraphInterface $entity
 /**
  * Implements hook_ENTITY_TYPE_create_access() for entity type "paragraph".
  */
-function paragraphs_type_permissions_paragraph_create_access(AccountInterface $account = NULL, array $context = array(), $entity_bundle = NULL) {
+function paragraphs_type_permissions_paragraph_create_access(?AccountInterface $account = NULL, array $context = array(), $entity_bundle = NULL) {
   $permissions = &drupal_static(__FUNCTION__, array());
 
   // Set static cache id to use the type machine name.

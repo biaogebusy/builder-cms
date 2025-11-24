@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image_effects\Functional\Effect;
 
 use Drupal\Component\Utility\NestedArray;
@@ -24,7 +26,7 @@ class RelativeCropTest extends ImageEffectsTestBase {
    *
    * @dataProvider providerToolkits
    */
-  public function testRelativeCrop($toolkit_id, $toolkit_config, array $toolkit_settings) {
+  public function testRelativeCrop(string $toolkit_id, string $toolkit_config, array $toolkit_settings): void {
     $this->changeToolkit($toolkit_id, $toolkit_config, $toolkit_settings);
 
     $test_files = [

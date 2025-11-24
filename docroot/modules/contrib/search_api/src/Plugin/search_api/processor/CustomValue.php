@@ -3,7 +3,9 @@
 namespace Drupal\search_api\Plugin\search_api\processor;
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Utility\Token;
+use Drupal\search_api\Attribute\SearchApiProcessor;
 use Drupal\search_api\Datasource\DatasourceInterface;
 use Drupal\search_api\Item\ItemInterface;
 use Drupal\search_api\Plugin\search_api\processor\Property\CustomValueProperty;
@@ -12,18 +14,17 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Allows adding custom tokenized text values to the index.
- *
- * @SearchApiProcessor(
- *   id = "custom_value",
- *   label = @Translation("Custom value"),
- *   description = @Translation("Allows adding custom tokenized text values to the index."),
- *   stages = {
- *     "add_properties" = 0,
- *   },
- *   locked = true,
- *   hidden = true,
- * )
  */
+#[SearchApiProcessor(
+  id: 'custom_value',
+  label: new TranslatableMarkup('Custom value'),
+  description: new TranslatableMarkup('Allows adding custom tokenized text values to the index.'),
+  stages: [
+    'add_properties' => 0,
+  ],
+  locked: TRUE,
+  hidden: TRUE,
+)]
 class CustomValue extends ProcessorPluginBase {
 
   /**
@@ -68,7 +69,7 @@ class CustomValue extends ProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function getPropertyDefinitions(DatasourceInterface $datasource = NULL) {
+  public function getPropertyDefinitions(?DatasourceInterface $datasource = NULL) {
     $properties = [];
 
     if (!$datasource) {
@@ -108,8 +109,9 @@ class CustomValue extends ProcessorPluginBase {
         continue;
       }
       // Check if there are any tokens to replace.
-      if (preg_match_all('/\[[-\w]++(?::[-\w]++)++]/', $config['value'], $matches)) {
-        $field_value = $token->replacePlain($config['value'], $data);
+      $field_value = $config['value'];
+      if (preg_match_all('/\[[-\w]++(?::[-\w]++)++]/', $field_value, $matches)) {
+        $field_value = $token->replacePlain($field_value, $data);
         // Make sure there are no left-over tokens.
         $field_value = str_replace($matches[0], '', $field_value);
         $field_value = trim($field_value);

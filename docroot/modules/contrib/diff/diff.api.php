@@ -5,6 +5,8 @@
  * Hooks and documentation related to diff module.
  */
 
+declare(strict_types=1);
+
 /**
  * @defgroup diff Diff API
  *
@@ -36,7 +38,7 @@
  *   The array of field diff builders plugins, keyed on the machine-readable
  *    plugin name.
  */
-function hook_field_diff_builder_info_alter(array &$diff_builders) {
+function hook_field_diff_builder_info_alter(array &$diff_builders): void {
   // Set a new label for the text_field_diff_builder plugin
   // instead of the one provided in the annotation.
   $diff_builders['text_field_diff_builder']['label'] = t('New label');
@@ -49,7 +51,7 @@ function hook_field_diff_builder_info_alter(array &$diff_builders) {
  *   The array of diff layout builders plugins, keyed on the machine-readable
  *    plugin name.
  */
-function hook_diff_layout_builder_info_alter(array &$diff_layouts) {
+function hook_diff_layout_builder_info_alter(array &$diff_layouts): void {
   // Set a new label for the text_field_diff_builder plugin
   // instead of the one provided in the annotation.
   $diff_layouts['my_layout']['label'] = t('New label');

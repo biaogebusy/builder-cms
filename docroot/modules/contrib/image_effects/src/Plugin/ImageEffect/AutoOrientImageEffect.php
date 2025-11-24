@@ -1,17 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageEffect;
 
-use Drupal\Core\Image\ImageInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Image\ImageInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Drupal\image\ConfigurableImageEffectBase;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\file_mdm\FileMetadataManagerInterface;
+use Drupal\image\Attribute\ImageEffect;
+use Drupal\image\ConfigurableImageEffectBase;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Automatically adjusts the orientation of an image resource.
+ * Automatically adjusts the orientation of an image.
  *
  * Uses EXIF Orientation tags to determine the image orientation.
  * EXIF: https://en.wikipedia.org/wiki/Exchangeable_image_file_format.
@@ -19,24 +23,16 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *
  * Originally contributed to the imagecache_actions module by jonathan_hunt
  * https://drupal.org/user/28976, September 1, 2009.
- *
- * @ImageEffect(
- *   id = "image_effects_auto_orient",
- *   label = @Translation("Automatically correct orientation"),
- *   description = @Translation("Automatically rotates images according to orientation flag set by many phones and digital cameras.")
- * )
  */
+#[ImageEffect(
+  id: 'image_effects_auto_orient',
+  label: new TranslatableMarkup('Automatically correct orientation'),
+  description: new TranslatableMarkup('Automatically rotates images according to orientation flag set by many phones and digital cameras.'),
+)]
 class AutoOrientImageEffect extends ConfigurableImageEffectBase implements ContainerFactoryPluginInterface {
 
   /**
-   * The file metadata manager service.
-   *
-   * @var \Drupal\file_mdm\FileMetadataManagerInterface
-   */
-  protected $fileMetadataManager;
-
-  /**
-   * Constructs an AutoOrientImageEffect object.
+   * AutoOrientImageEffect constructor.
    *
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
@@ -46,12 +42,17 @@ class AutoOrientImageEffect extends ConfigurableImageEffectBase implements Conta
    *   The plugin implementation definition.
    * @param \Psr\Log\LoggerInterface $logger
    *   A logger instance.
-   * @param \Drupal\file_mdm\FileMetadataManagerInterface $file_metadata_manager
+   * @param \Drupal\file_mdm\FileMetadataManagerInterface $fileMetadataManager
    *   The file metadata manager service.
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, LoggerInterface $logger, FileMetadataManagerInterface $file_metadata_manager) {
+  public function __construct(
+    array $configuration,
+    string $plugin_id,
+    array $plugin_definition,
+    LoggerInterface $logger,
+    protected readonly FileMetadataManagerInterface $fileMetadataManager,
+  ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $logger);
-    $this->fileMetadataManager = $file_metadata_manager;
   }
 
   /**
@@ -63,7 +64,7 @@ class AutoOrientImageEffect extends ConfigurableImageEffectBase implements Conta
       $plugin_id,
       $plugin_definition,
       $container->get('logger.factory')->get('image'),
-      $container->get('file_metadata_manager')
+      $container->get(FileMetadataManagerInterface::class),
     );
   }
 
@@ -144,6 +145,9 @@ class AutoOrientImageEffect extends ConfigurableImageEffectBase implements Conta
    * {@inheritdoc}
    */
   public function transformDimensions(array &$dimensions, $uri) {
+    $dimensions['width'] = $dimensions['width'] ? (int) $dimensions['width'] : NULL;
+    $dimensions['height'] = $dimensions['height'] ? (int) $dimensions['height'] : NULL;
+
     if ($dimensions['width'] && $dimensions['height'] && $this->configuration['scan_exif']) {
       // Both dimensions in input, and effect is configured to check the
       // the input file. Read EXIF data, and determine image orientation.
@@ -156,6 +160,7 @@ class AutoOrientImageEffect extends ConfigurableImageEffectBase implements Conta
       }
       return;
     }
+
     // Either no full dimensions in input, or effect is configured to skip
     // checking the input file. Set both dimensions to NULL.
     $dimensions['width'] = $dimensions['height'] = NULL;

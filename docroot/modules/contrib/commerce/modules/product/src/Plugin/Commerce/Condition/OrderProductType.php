@@ -2,20 +2,21 @@
 
 namespace Drupal\commerce_product\Plugin\Commerce\Condition;
 
-use Drupal\commerce\Plugin\Commerce\Condition\ConditionBase;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce\Attribute\CommerceCondition;
+use Drupal\commerce\Plugin\Commerce\Condition\ConditionBase;
 
 /**
  * Provides the product type condition for orders.
- *
- * @CommerceCondition(
- *   id = "order_product_type",
- *   label = @Translation("Product type"),
- *   display_label = @Translation("Order contains product types"),
- *   category = @Translation("Products"),
- *   entity_type = "commerce_order",
- * )
  */
+#[CommerceCondition(
+  id: "order_product_type",
+  label: new TranslatableMarkup("Product type"),
+  entity_type: "commerce_order",
+  display_label: new TranslatableMarkup("Order contains product types"),
+  category: new TranslatableMarkup("Products"),
+)]
 class OrderProductType extends ConditionBase {
 
   use ProductTypeTrait;

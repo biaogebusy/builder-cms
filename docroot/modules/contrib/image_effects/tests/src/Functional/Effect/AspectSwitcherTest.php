@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image_effects\Functional\Effect;
 
 use Drupal\Core\Config\ConfigValueException;
+use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Tests\image_effects\Functional\ImageEffectsTestBase;
 use Drupal\image\Entity\ImageStyle;
@@ -20,10 +23,8 @@ class AspectSwitcherTest extends ImageEffectsTestBase {
    * Define 2 distinguishable effects that will be used to assert that the
    * correct image style (and therefore image effects) is being applied to
    * the image.
-   *
-   * @var array
    */
-  protected $effects = [
+  protected array $effects = [
     'landscape' => [
       'id' => 'image_resize',
       'data' => [
@@ -72,19 +73,19 @@ class AspectSwitcherTest extends ImageEffectsTestBase {
    *
    * @dataProvider providerToolkits
    */
-  public function testAspectSwitcherEffect($toolkit_id, $toolkit_config, array $toolkit_settings) {
+  public function testAspectSwitcherEffect(string $toolkit_id, string $toolkit_config, array $toolkit_settings): void {
     $this->changeToolkit($toolkit_id, $toolkit_config, $toolkit_settings);
 
     $image_factory = $this->container->get('image.factory');
 
     $test_landscape_file = 'core/tests/fixtures/files/image-test.png';
-    $original_landscape_uri = $this->fileSystem->copy($test_landscape_file, 'public://', FileSystemInterface::EXISTS_RENAME);
+    $original_landscape_uri = $this->fileSystem->copy($test_landscape_file, 'public://', FileExists::Rename);
 
     $img_portrait = imagerotate(imagecreatefrompng($original_landscape_uri), 90, 0);
     $generated_uri = \Drupal::service('file_system')->realpath('public://image-test-portrait.png');
     imagepng($img_portrait, $generated_uri);
     $test_portrait_file = $generated_uri;
-    $original_portrait_uri = $this->fileSystem->copy($test_portrait_file, 'public://', FileSystemInterface::EXISTS_RENAME);
+    $original_portrait_uri = $this->fileSystem->copy($test_portrait_file, 'public://', FileExists::Rename);
 
     // Add aspect switcher effect.
     $effect = [
@@ -210,7 +211,7 @@ class AspectSwitcherTest extends ImageEffectsTestBase {
   /**
    * Image style save should fail if AspectSwitcher effect has circular ref.
    */
-  public function testAspectSwitcherFailureOnLandscapeCircularReference() {
+  public function testAspectSwitcherFailureOnLandscapeCircularReference(): void {
     $effect = [
       'id' => 'image_effects_aspect_switcher',
       'data' => [
@@ -228,7 +229,7 @@ class AspectSwitcherTest extends ImageEffectsTestBase {
   /**
    * Image style save should fail if AspectSwitcher effect has circular ref.
    */
-  public function testAspectSwitcherFailureOnPortraitCircularReference() {
+  public function testAspectSwitcherFailureOnPortraitCircularReference(): void {
     $effect = [
       'id' => 'image_effects_aspect_switcher',
       'data' => [

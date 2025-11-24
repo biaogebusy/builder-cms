@@ -23,3 +23,10 @@ easy_breadcrumb_test.title_render_array:
   defaults:
     _controller: '\Drupal\easy_breadcrumb_test\Controller\TestRouteController::page'
     _title_callback: '\Drupal\easy_breadcrumb_test\Controller\TestRouteController::pageTitleRender'
+easy_breadcrumb_test.custom_path:
+  path: '/test/easy-breadcrumb-custom-path'
+  requirements:
+    _access: 'TRUE'
+  defaults:
+    _title: 'Easy Breadcrumb Custom Path Test'
+    _controller: '\Drupal\easy_breadcrumb_test\Controller\TestRouteController::page'

@@ -9,8 +9,6 @@ use Drupal\entity_share_server\OperatorsHelper;
 
 /**
  * Form to edit a filter on a channel.
- *
- * @package Drupal\entity_share_server\Form
  */
 class FilterEditForm extends FilterBaseForm {
 
@@ -68,9 +66,9 @@ class FilterEditForm extends FilterBaseForm {
       '#default_value' => $channel_filters[$filter_id]['operator'],
       '#required' => TRUE,
       '#ajax' => [
-        'callback' => [get_class($this), 'buildAjaxValueElement'],
+        'callback' => [static::class, 'buildAjaxValueElement'],
         'effect' => 'fade',
-        'method' => 'replace',
+        'method' => 'replaceWith',
         'wrapper' => 'value-wrapper',
       ],
     ];
@@ -90,7 +88,7 @@ class FilterEditForm extends FilterBaseForm {
       '#title' => $this->t('Parent group'),
       '#options' => $this->getGroupOptions(),
       '#empty_option' => $this->t('Select a group'),
-      '#default_value' => isset($channel_filters[$filter_id]['memberof']) ? $channel_filters[$filter_id]['memberof'] : '',
+      '#default_value' => $channel_filters[$filter_id]['memberof'] ?? '',
     ];
 
     return $form;
@@ -111,8 +109,8 @@ class FilterEditForm extends FilterBaseForm {
     ];
 
     $value = $form_state->getValue(['value_wrapper', 'value']);
-    if (!is_null($value)) {
-      $edited_filter['value'] = array_filter($value);
+    if ($value !== NULL) {
+      $edited_filter['value'] = \array_filter($value);
     }
 
     $memberof = $form_state->getValue('memberof');
@@ -168,7 +166,7 @@ class FilterEditForm extends FilterBaseForm {
     }
 
     // Operators which do not require value.
-    if (in_array($operator, OperatorsHelper::getStandAloneOperators())) {
+    if (\in_array($operator, OperatorsHelper::getStandAloneOperators(), TRUE)) {
       return;
     }
 
@@ -177,7 +175,7 @@ class FilterEditForm extends FilterBaseForm {
     // We have to ensure that there is at least one value field.
     if ($number_of_values === NULL) {
       if (isset($channel_filters[$filter_id]['value'])) {
-        $number_of_values = count($channel_filters[$filter_id]['value']);
+        $number_of_values = \count($channel_filters[$filter_id]['value']);
       }
       else {
         $number_of_values = 1;
@@ -186,18 +184,18 @@ class FilterEditForm extends FilterBaseForm {
       $form_state->set('number_of_values', $number_of_values);
     }
 
-    for ($i = 0; $i < $number_of_values; $i++) {
+    for ($i = 0; $i < $number_of_values; ++$i) {
       $form['value_wrapper']['value'][$i] = [
         '#type' => 'textfield',
         '#title' => $this->t('Value'),
-        '#default_value' => isset($channel_filters[$filter_id]['value'][$i]) ? $channel_filters[$filter_id]['value'][$i] : '',
+        '#default_value' => $channel_filters[$filter_id]['value'][$i] ?? '',
       ];
     }
 
     $form['value_wrapper']['actions'] = [
       '#type' => 'actions',
     ];
-    if (in_array($operator, OperatorsHelper::getMultipleValuesOperators())) {
+    if (\in_array($operator, OperatorsHelper::getMultipleValuesOperators(), TRUE)) {
       $form['value_wrapper']['actions']['add_one_value'] = [
         '#type' => 'submit',
         '#value' => $this->t('Add a value'),

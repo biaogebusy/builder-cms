@@ -8,25 +8,32 @@
     },
     "license": "GPL-2.0+",
     "require": {
-        "highcharts/3d": "11.1.0",
-        "highcharts/accessibility": "11.1.0",
-        "highcharts/export-data": "11.1.0",
-        "highcharts/exporting": "11.1.0",
-        "highcharts/highcharts": "11.1.0",
-        "highcharts/more": "11.1.0"
+        "highcharts/3d": "12.1.1",
+        "highcharts/accessibility": "12.1.1",
+        "highcharts/annotations": "12.1.1",
+        "highcharts/boost": "12.1.1",
+        "highcharts/coloraxis": "12.1.1",
+        "highcharts/data": "12.1.1",
+        "highcharts/export-data": "12.1.1",
+        "highcharts/exporting": "12.1.1",
+        "highcharts/highcharts": "12.1.1",
+        "highcharts/high-contrast-light": "12.1.1",
+        "highcharts/more": "12.1.1",
+        "highcharts/no-data-to-display": "12.1.1",
+        "highcharts/pattern-fill": "12.1.1"
     },
     "repositories": {
         "highcharts": {
             "type": "package",
             "package": {
                 "name": "highcharts/highcharts",
-                "version": "11.1.0",
+                "version": "12.1.1",
                 "type": "drupal-library",
                 "extra": {
                     "installer-name": "highcharts"
                 },
                 "dist": {
-                    "url": "https://code.highcharts.com/11.1.0/highcharts.js",
+                    "url": "https://code.highcharts.com/12.1.1/highcharts.js",
                     "type": "file"
                 },
                 "require": {
@@ -38,13 +45,13 @@
             "type": "package",
             "package": {
                 "name": "highcharts/3d",
-                "version": "11.1.0",
+                "version": "12.1.1",
                 "type": "drupal-library",
                 "extra": {
                     "installer-name": "highcharts_3d"
                 },
                 "dist": {
-                    "url": "https://code.highcharts.com/11.1.0/highcharts-3d.js",
+                    "url": "https://code.highcharts.com/12.1.1/highcharts-3d.js",
                     "type": "file"
                 },
                 "require": {
@@ -56,13 +63,85 @@
             "type": "package",
             "package": {
                 "name": "highcharts/accessibility",
-                "version": "11.1.0",
+                "version": "12.1.1",
                 "type": "drupal-library",
                 "extra": {
                     "installer-name": "highcharts_accessibility"
                 },
                 "dist": {
-                    "url": "https://code.highcharts.com/11.1.0/modules/accessibility.js",
+                    "url": "https://code.highcharts.com/12.1.1/modules/accessibility.js",
+                    "type": "file"
+                },
+                "require": {
+                    "composer/installers": "^1.0 || ^2.0"
+                }
+            }
+        },
+        "highcharts_annotations": {
+            "type": "package",
+            "package": {
+                "name": "highcharts/annotations",
+                "version": "12.1.1",
+                "type": "drupal-library",
+                "extra": {
+                    "installer-name": "highcharts_annotations"
+                },
+                "dist": {
+                    "url": "https://code.highcharts.com/12.1.1/modules/annotations.js",
+                    "type": "file"
+                },
+                "require": {
+                    "composer/installers": "^1.0 || ^2.0"
+                }
+            }
+        },
+        "highcharts_boost": {
+            "type": "package",
+            "package": {
+                "name": "highcharts/boost",
+                "version": "12.1.1",
+                "type": "drupal-library",
+                "extra": {
+                    "installer-name": "highcharts_boost"
+                },
+                "dist": {
+                    "url": "https://code.highcharts.com/12.1.1/modules/boost.js",
+                    "type": "file"
+                },
+                "require": {
+                    "composer/installers": "^1.0 || ^2.0"
+                }
+            }
+        },
+        "highcharts_coloraxis": {
+            "type": "package",
+            "package": {
+                "name": "highcharts/coloraxis",
+                "version": "12.1.1",
+                "type": "drupal-library",
+                "extra": {
+                    "installer-name": "highcharts_coloraxis"
+                },
+                "dist": {
+                    "url": "https://code.highcharts.com/12.1.1/modules/coloraxis.js",
+                    "type": "file"
+                },
+                "require": {
+                    "composer/installers": "^1.0 || ^2.0"
+                }
+            }
+        },
+        "highcharts_data": {
+            "type": "package",
+            "package": {
+                "name": "highcharts/data",
+                "version": "12.1.1",
+                "type": "drupal-library",
+                "extra": {
+                    "installer-name": "highcharts_data"
+                },
+                "dist": {
+                    "url": "https://code.highcharts.com/12.1.1/modules/data.js",
                     "type": "file"
                 },
                 "require": {
@@ -74,13 +153,13 @@
             "type": "package",
             "package": {
                 "name": "highcharts/export-data",
-                "version": "11.1.0",
+                "version": "12.1.1",
                 "type": "drupal-library",
                 "extra": {
                     "installer-name": "highcharts_export-data"
                 },
                 "dist": {
-                    "url": "https://code.highcharts.com/11.1.0/modules/export-data.js",
+                    "url": "https://code.highcharts.com/12.1.1/modules/export-data.js",
                     "type": "file"
                 },
                 "require": {
@@ -92,13 +171,31 @@
             "type": "package",
             "package": {
                 "name": "highcharts/exporting",
-                "version": "11.1.0",
+                "version": "12.1.1",
                 "type": "drupal-library",
                 "extra": {
                     "installer-name": "highcharts_exporting"
                 },
                 "dist": {
-                    "url": "https://code.highcharts.com/11.1.0/modules/exporting.js",
+                    "url": "https://code.highcharts.com/12.1.1/modules/exporting.js",
+                    "type": "file"
+                },
+                "require": {
+                    "composer/installers": "^1.0 || ^2.0"
+                }
+            }
+        },
+        "highcharts_high-contrast-light": {
+            "type": "package",
+            "package": {
+                "name": "highcharts/high-contrast-light",
+                "version": "12.1.1",
+                "type": "drupal-library",
+                "extra": {
+                    "installer-name": "highcharts_high-contrast-light"
+                },
+                "dist": {
+                    "url": "https://code.highcharts.com/12.1.1/themes/high-contrast-light.js",
                     "type": "file"
                 },
                 "require": {
@@ -110,13 +207,49 @@
             "type": "package",
             "package": {
                 "name": "highcharts/more",
-                "version": "11.1.0",
+                "version": "12.1.1",
                 "type": "drupal-library",
                 "extra": {
                     "installer-name": "highcharts_more"
                 },
                 "dist": {
-                    "url": "https://code.highcharts.com/11.1.0/highcharts-more.js",
+                    "url": "https://code.highcharts.com/12.1.1/highcharts-more.js",
+                    "type": "file"
+                },
+                "require": {
+                    "composer/installers": "^1.0 || ^2.0"
+                }
+            }
+        },
+        "highcharts_no-data-to-display": {
+            "type": "package",
+            "package": {
+                "name": "highcharts/no-data-to-display",
+                "version": "12.1.1",
+                "type": "drupal-library",
+                "extra": {
+                    "installer-name": "highcharts_no-data-to-display"
+                },
+                "dist": {
+                    "url": "https://code.highcharts.com/12.1.1/modules/no-data-to-display.js",
+                    "type": "file"
+                },
+                "require": {
+                    "composer/installers": "^1.0 || ^2.0"
+                }
+            }
+        },
+        "highcharts_pattern-fill": {
+            "type": "package",
+            "package": {
+                "name": "highcharts/pattern-fill",
+                "version": "12.1.1",
+                "type": "drupal-library",
+                "extra": {
+                    "installer-name": "highcharts_pattern-fill"
+                },
+                "dist": {
+                    "url": "https://code.highcharts.com/12.1.1/modules/pattern-fill.js",
                     "type": "file"
                 },
                 "require": {

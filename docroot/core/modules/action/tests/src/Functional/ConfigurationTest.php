@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\action\Functional;
 
 use Drupal\system\Entity\Action;
@@ -9,6 +11,7 @@ use Drupal\Tests\BrowserTestBase;
  * Tests complex actions configuration.
  *
  * @group action
+ * @group legacy
  */
 class ConfigurationTest extends BrowserTestBase {
 
@@ -28,7 +31,7 @@ class ConfigurationTest extends BrowserTestBase {
   /**
    * Tests configuration of advanced actions through administration interface.
    */
-  public function testActionConfiguration() {
+  public function testActionConfiguration(): void {
     // Create a user with permission to view the actions administration pages.
     $user = $this->drupalCreateUser(['administer actions']);
     $this->drupalLogin($user);

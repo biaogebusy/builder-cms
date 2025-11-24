@@ -3,12 +3,6 @@
 namespace Drupal\commerce_order\Plugin\Field\FieldFormatter;
 
 use CommerceGuys\Intl\Formatter\CurrencyFormatterInterface;
-use Drupal\commerce\Context;
-use Drupal\commerce\PurchasableEntityInterface;
-use Drupal\commerce_order\AdjustmentTypeManager;
-use Drupal\commerce_order\PriceCalculatorInterface;
-use Drupal\commerce_price\Plugin\Field\FieldFormatter\PriceDefaultFormatter;
-use Drupal\commerce_store\CurrentStoreInterface;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
@@ -16,6 +10,12 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\commerce\Context;
+use Drupal\commerce\PurchasableEntityInterface;
+use Drupal\commerce_order\AdjustmentTypeManager;
+use Drupal\commerce_order\PriceCalculatorInterface;
+use Drupal\commerce_price\Plugin\Field\FieldFormatter\PriceDefaultFormatter;
+use Drupal\commerce_store\CurrentStoreInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**

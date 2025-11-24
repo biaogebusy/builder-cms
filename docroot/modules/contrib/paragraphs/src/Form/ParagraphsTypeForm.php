@@ -98,7 +98,7 @@ class ParagraphsTypeForm extends EntityForm {
       '#type' => 'managed_file',
       '#upload_location' => ParagraphsTypeInterface::ICON_UPLOAD_LOCATION,
       '#upload_validators' => [
-        'file_validate_extensions' => ['png jpg svg'],
+        'FileExtension' => ['extensions' => 'png jpg svg'],
       ],
     ];
 

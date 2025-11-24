@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\commerce\Unit\Resolver;
 
-use Drupal\commerce\Resolver\ChainLocaleResolver;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Tests\UnitTestCase;
+use Drupal\commerce\Resolver\ChainLocaleResolver;
 
 /**
  * @coversDefaultClass  Drupal\commerce\Resolver\ChainLocaleResolver

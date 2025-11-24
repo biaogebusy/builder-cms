@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate_drupal\Traits;
 
 /**
@@ -14,8 +16,6 @@ trait CreateTestContentEntitiesTrait {
    */
   protected function getRequiredModules() {
     return [
-      // @todo Remove aggregator in https://www.drupal.org/project/drupal/issues/3264120
-      'aggregator',
       'block_content',
       'comment',
       'field',
@@ -36,9 +36,6 @@ trait CreateTestContentEntitiesTrait {
    * Install required entity schemas.
    */
   protected function installEntitySchemas() {
-    // @todo Remove aggregator in https://www.drupal.org/project/drupal/issues/3264120
-    $this->installEntitySchema('aggregator_feed');
-    $this->installEntitySchema('aggregator_item');
     $this->installEntitySchema('block_content');
     $this->installEntitySchema('comment');
     $this->installEntitySchema('file');
@@ -54,24 +51,6 @@ trait CreateTestContentEntitiesTrait {
    */
   protected function createContent() {
     $entity_type_manager = \Drupal::entityTypeManager();
-
-    // @todo Remove aggregator in https://www.drupal.org/project/drupal/issues/3264120
-    // Create an aggregator feed.
-    if ($entity_type_manager->hasDefinition('aggregator_feed')) {
-      $feed = $entity_type_manager->getStorage('aggregator_feed')->create([
-        'title' => 'feed',
-        'url' => 'http://www.example.com',
-      ]);
-      $feed->save();
-
-      // Create an aggregator feed item.
-      $item = $entity_type_manager->getStorage('aggregator_item')->create([
-        'title' => 'feed item',
-        'fid' => $feed->id(),
-        'link' => 'http://www.example.com',
-      ]);
-      $item->save();
-    }
 
     // Create a block content.
     if ($entity_type_manager->hasDefinition('block_content')) {
@@ -186,7 +165,7 @@ trait CreateTestContentEntitiesTrait {
     if ($entity_type_manager->hasDefinition('menu_link_content')) {
       $menu_link = $entity_type_manager->getStorage('menu_link_content')->create([
         'title' => 'post upgrade menu link',
-        'link' => ['uri' => 'http://www.drupal.org'],
+        'link' => ['uri' => 'http://www.example.com'],
         'menu_name' => 'tools',
       ]);
       $menu_link->save();

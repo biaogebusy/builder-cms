@@ -206,8 +206,7 @@ class AjaxFormsTestCommandsForm extends FormBase {
     ];
 
     // Demonstrates the Ajax 'settings' command. The 'settings' command has
-    // nothing visual to "show", but it can be tested via SimpleTest and via
-    // Firebug.
+    // nothing visual to "show", but it can be tested.
     $form['settings_command_example'] = [
       '#type' => 'submit',
       '#value' => $this->t("AJAX 'settings' command"),
@@ -222,6 +221,16 @@ class AjaxFormsTestCommandsForm extends FormBase {
       '#value' => $this->t("AJAX 'add_css' command"),
       '#ajax' => [
         'callback' => 'ajax_forms_test_advanced_commands_add_css_callback',
+      ],
+    ];
+
+    // Shows the Ajax 'add_css' command with legacy string parameter.
+    // @todo Remove in Drupal 11.0.0 https://www.drupal.org/i/3339374
+    $form['add_css_legacy_command_example'] = [
+      '#type' => 'submit',
+      '#value' => $this->t("AJAX 'add_css' legacy command"),
+      '#ajax' => [
+        'callback' => 'ajax_forms_test_advanced_commands_add_css_legacy_callback',
       ],
     ];
 

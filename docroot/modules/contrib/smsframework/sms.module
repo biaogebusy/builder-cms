@@ -1,11 +1,11 @@
 <?php
 
-declare(strict_types = 1);
-
 /**
  * @file
  * Provides hooks for SMS Framework.
  */
+
+declare(strict_types = 1);
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
@@ -13,7 +13,7 @@ use Drupal\Core\Entity\ContentEntityInterface;
 /**
  * Implements hook_cron().
  */
-function sms_cron() {
+function sms_cron(): void {
   /** @var \Drupal\sms\Provider\PhoneNumberVerificationInterface $phone_number_verification */
   $phone_number_verification_provider = \Drupal::service('sms.phone_number.verification');
   $phone_number_verification_provider->purgeExpiredVerifications();
@@ -27,21 +27,21 @@ function sms_cron() {
 /**
  * Implements hook_entity_insert().
  */
-function sms_entity_insert(EntityInterface $entity) {
+function sms_entity_insert(EntityInterface $entity): void {
   _sms_entity_postsave($entity);
 }
 
 /**
  * Implements hook_entity_update().
  */
-function sms_entity_update(EntityInterface $entity) {
+function sms_entity_update(EntityInterface $entity): void {
   _sms_entity_postsave($entity);
 }
 
 /**
  * Implements hook_entity_delete().
  */
-function sms_entity_delete(EntityInterface $entity) {
+function sms_entity_delete(EntityInterface $entity): void {
   if ($entity instanceof ContentEntityInterface) {
     /** @var \Drupal\sms\Provider\PhoneNumberVerificationInterface $phone_number_verification_provider */
     $phone_number_verification_provider = \Drupal::service('sms.phone_number.verification');
@@ -56,7 +56,7 @@ function sms_entity_delete(EntityInterface $entity) {
  * @see sms_entity_insert()
  * @see sms_entity_update()
  */
-function _sms_entity_postsave(EntityInterface $entity) {
+function _sms_entity_postsave(EntityInterface $entity): void {
   if ($entity instanceof ContentEntityInterface) {
     /** @var \Drupal\sms\Provider\PhoneNumberVerificationInterface $phone_number_verification_provider */
     $phone_number_verification_provider = \Drupal::service('sms.phone_number.verification');

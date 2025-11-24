@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\diff;
 
 use Drupal\Component\Plugin\ConfigurableInterface;
@@ -28,6 +30,6 @@ interface DiffLayoutInterface extends PluginFormInterface, ConfigurableInterface
    * @return array
    *   The modified build array that the plugin builds.
    */
-  public function build(ContentEntityInterface $left_revision, ContentEntityInterface $right_revision, ContentEntityInterface $entity);
+  public function build(ContentEntityInterface $left_revision, ContentEntityInterface $right_revision, ContentEntityInterface $entity): array;
 
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\Theme;
 
 use Drupal\Component\Serialization\Json;
@@ -40,9 +42,9 @@ class ThemeTest extends BrowserTestBase {
    * separate file, so this test also ensures that the file is correctly loaded
    * when needed.
    */
-  public function testPreprocessForSuggestions() {
+  public function testPreprocessForSuggestions(): void {
     // Test with both an unprimed and primed theme registry.
-    drupal_theme_rebuild();
+    \Drupal::service('theme.registry')->reset();
     for ($i = 0; $i < 2; $i++) {
       $this->drupalGet('theme-test/suggestion');
       $this->assertSession()->pageTextContains('Theme hook implementor=theme-test--suggestion.html.twig. Foo=template_preprocess_theme_test');
@@ -52,7 +54,7 @@ class ThemeTest extends BrowserTestBase {
   /**
    * Tests the priority of some theme negotiators.
    */
-  public function testNegotiatorPriorities() {
+  public function testNegotiatorPriorities(): void {
     $this->drupalGet('theme-test/priority');
 
     // Ensure that the custom theme negotiator was not able to set the theme.
@@ -62,7 +64,7 @@ class ThemeTest extends BrowserTestBase {
   /**
    * Ensures that non-HTML requests never initialize themes.
    */
-  public function testThemeOnNonHtmlRequest() {
+  public function testThemeOnNonHtmlRequest(): void {
     $this->drupalGet('theme-test/non-html');
     $json = Json::decode($this->getSession()->getPage()->getContent());
     $this->assertFalse($json['theme_initialized']);
@@ -71,7 +73,7 @@ class ThemeTest extends BrowserTestBase {
   /**
    * Ensure page-front template suggestion is added when on front page.
    */
-  public function testFrontPageThemeSuggestion() {
+  public function testFrontPageThemeSuggestion(): void {
     // Set the current route to user.login because theme_get_suggestions() will
     // query it to see if we are on the front page.
     $request = Request::create('/user/login');
@@ -88,7 +90,7 @@ class ThemeTest extends BrowserTestBase {
   /**
    * Tests theme can provide classes.
    */
-  public function testClassLoading() {
+  public function testClassLoading(): void {
     // Install test theme and set it as default.
     $this->config('system.theme')
       ->set('default', 'test_theme')
@@ -104,7 +106,7 @@ class ThemeTest extends BrowserTestBase {
    *
    * @see test_theme.info.yml
    */
-  public function testCSSOverride() {
+  public function testCSSOverride(): void {
     // Reuse the same page as in testPreprocessForSuggestions(). We're testing
     // what is output to the HTML HEAD based on what is in a theme's .info.yml
     // file, so it doesn't matter what page we get, as long as it is themed with
@@ -133,7 +135,7 @@ class ThemeTest extends BrowserTestBase {
   /**
    * Ensures a themes template is overridable based on the 'template' filename.
    */
-  public function testTemplateOverride() {
+  public function testTemplateOverride(): void {
     $this->config('system.theme')
       ->set('default', 'test_theme')
       ->save();
@@ -147,7 +149,7 @@ class ThemeTest extends BrowserTestBase {
    * Some modules check the page array in template_preprocess_html(), so we
    * ensure that it has not been rendered prematurely.
    */
-  public function testPreprocessHtml() {
+  public function testPreprocessHtml(): void {
     $this->drupalGet('');
     $this->assertSession()->elementsCount('xpath', '/body[@theme_test_page_variable="Page variable is an array."]', 1);
     $this->assertSession()->pageTextContains('theme test page bottom markup');
@@ -156,7 +158,7 @@ class ThemeTest extends BrowserTestBase {
   /**
    * Tests that region attributes can be manipulated via preprocess functions.
    */
-  public function testRegionClass() {
+  public function testRegionClass(): void {
     \Drupal::service('module_installer')->install(['block', 'theme_region_test']);
 
     // Place a block.
@@ -175,10 +177,10 @@ class ThemeTest extends BrowserTestBase {
    * separate file, so this test also ensures that the file is correctly loaded
    * when needed.
    */
-  public function testSuggestionPreprocessForDefaults() {
+  public function testSuggestionPreprocessForDefaults(): void {
     $this->config('system.theme')->set('default', 'test_theme')->save();
     // Test with both an unprimed and primed theme registry.
-    drupal_theme_rebuild();
+    \Drupal::service('theme.registry')->reset();
     for ($i = 0; $i < 2; $i++) {
       $this->drupalGet('theme-test/preprocess-suggestions');
       $items = $this->cssSelect('.suggestion');
@@ -198,7 +200,7 @@ class ThemeTest extends BrowserTestBase {
   /**
    * Ensures that preprocess callbacks can be defined.
    */
-  public function testPreprocessCallback() {
+  public function testPreprocessCallback(): void {
     $this->drupalGet('theme-test/preprocess-callback');
     $this->assertSession()->pageTextContains('Make Drupal full of kittens again!');
   }

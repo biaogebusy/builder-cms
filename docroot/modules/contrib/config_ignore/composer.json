@@ -1,6 +1,6 @@
 {
   "name": "drupal/config_ignore",
-  "description": "Ignore certain configuration during import.",
+  "description": "Ignore certain configuration during import and export.",
   "type": "drupal-module",
   "homepage": "http://drupal.org/project/config_ignore",
   "authors": [
@@ -17,13 +17,13 @@
     }
   ],
   "support": {
-    "issues": "https://drupal.org/project/config_ignore",
-    "irc": "irc://irc.freenode.org/drupal-contribute",
+    "issues": "http://drupal.org/project/config_ignore",
     "source": "https://git.drupalcode.org/project/config_ignore"
   },
   "license": "GPL-2.0-or-later",
   "minimum-stability": "dev",
-  "require": {
-    "drupal/config_filter": "^1 || ^2"
+  "require-dev": {
+    "drupal/config_filter": "^1.8||^2.2",
+    "drush/drush": "^10 || ^11 || ^12"
   }
 }

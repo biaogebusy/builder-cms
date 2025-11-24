@@ -2,13 +2,39 @@
 
 namespace Drupal\commerce_payment\PluginForm;
 
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_payment\CreditCard;
+use Drupal\commerce_payment\Entity\PaymentGatewayInterface;
 use Drupal\commerce_payment\Entity\PaymentMethodInterface;
+use Drupal\commerce_payment\Event\FailedPaymentEvent;
+use Drupal\commerce_payment\Event\PaymentEvents;
 use Drupal\commerce_payment\Exception\DeclineException;
 use Drupal\commerce_payment\Exception\PaymentGatewayException;
-use Drupal\Core\Form\FormStateInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 class PaymentMethodEditForm extends PaymentMethodFormBase {
+
+  /**
+   * The event dispatcher.
+   */
+  protected EventDispatcherInterface $eventDispatcher;
+
+  /**
+   * The order.
+   */
+  protected ?OrderInterface $order = NULL;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    $instance = parent::create($container);
+    $instance->eventDispatcher = $container->get('event_dispatcher');
+    $instance->order = $container->get('current_route_match')->getParameter('commerce_order');
+    return $instance;
+  }
 
   /**
    * {@inheritdoc}
@@ -71,13 +97,23 @@ class PaymentMethodEditForm extends PaymentMethodFormBase {
       $payment_gateway_plugin->updatePaymentMethod($payment_method);
       $payment_method->save();
     }
-    catch (DeclineException $e) {
-      $this->logger->warning($e->getMessage());
-      throw new DeclineException(t('We encountered an error processing your payment method. Please verify your details and try again.'));
-    }
     catch (PaymentGatewayException $e) {
-      $this->logger->error($e->getMessage());
-      throw new PaymentGatewayException(t('We encountered an unexpected error processing your payment method. Please try again later.'));
+      if (
+        $this->order instanceof OrderInterface &&
+        $payment_method->getPaymentGateway() instanceof PaymentGatewayInterface
+      ) {
+        $event = new FailedPaymentEvent($this->order, $payment_method->getPaymentGateway(), $e);
+        $event->setPaymentMethod($payment_method);
+        $this->eventDispatcher->dispatch($event, PaymentEvents::PAYMENT_FAILURE);
+      }
+      $this->logger->warning($e->getMessage());
+
+      $message = $e instanceof DeclineException ?
+        $this->t('We encountered an error processing your payment method. Please verify your details and try again.') :
+        $this->t('We encountered an unexpected error processing your payment. Please try again later.');
+
+      // Rethrow the original exception with a new message for security reasons.
+      throw new (get_class($e))($message);
     }
   }
 

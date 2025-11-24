@@ -1,10 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Traits;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Database\DatabaseExceptionWrapper;
-use Drupal\Core\Database\SchemaObjectExistsException;
 use Drupal\Core\Entity\EntityStorageException;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\KernelTests\KernelTestBase;
@@ -55,13 +55,6 @@ trait UserCreationTrait {
     // the "sequences" table.
     if (!\Drupal::moduleHandler()->moduleExists('system')) {
       $values['uid'] = 0;
-    }
-    if ($this instanceof KernelTestBase && (!isset($values['uid']) || $values['uid'])) {
-      try {
-        $this->installSchema('system', ['sequences']);
-      }
-      catch (SchemaObjectExistsException $e) {
-      }
     }
 
     // Creating an administrator or assigning custom permissions would result in
@@ -191,7 +184,7 @@ trait UserCreationTrait {
     $account->save();
 
     $valid_user = $account->id() !== NULL;
-    $this->assertTrue($valid_user, new FormattableMarkup('User created with name %name and pass %pass', ['%name' => $edit['name'], '%pass' => $edit['pass']]), 'User login');
+    $this->assertTrue($valid_user, "User created with name {$edit['name']} and pass {$edit['pass']}");
     if (!$valid_user) {
       return FALSE;
     }
@@ -247,7 +240,7 @@ trait UserCreationTrait {
   protected function createRole(array $permissions, $rid = NULL, $name = NULL, $weight = NULL) {
     // Generate a random, lowercase machine name if none was passed.
     if (!isset($rid)) {
-      $rid = strtolower($this->randomMachineName(8));
+      $rid = $this->randomMachineName(8);
     }
     // Generate a random label.
     if (!isset($name)) {
@@ -271,7 +264,7 @@ trait UserCreationTrait {
     }
     $result = $role->save();
 
-    $this->assertSame(SAVED_NEW, $result, new FormattableMarkup('Created role ID @rid with name @name.', ['@name' => var_export($role->label(), TRUE), '@rid' => var_export($role->id(), TRUE)]), 'Role');
+    $this->assertSame(SAVED_NEW, $result, "Created role ID {$role->id()} with name {$role->label()}.");
 
     if ($result === SAVED_NEW) {
       // Grant the specified permissions to the role, if any.
@@ -302,7 +295,7 @@ trait UserCreationTrait {
     $valid = TRUE;
     foreach ($permissions as $permission) {
       if (!in_array($permission, $available)) {
-        $this->fail(new FormattableMarkup('Invalid permission %permission.', ['%permission' => $permission]), 'Role');
+        $this->fail("Invalid permission $permission.");
         $valid = FALSE;
       }
     }

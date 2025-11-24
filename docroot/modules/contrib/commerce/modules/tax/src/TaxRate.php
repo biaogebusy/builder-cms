@@ -119,7 +119,7 @@ class TaxRate {
    * @return \Drupal\commerce_tax\TaxRatePercentage|null
    *   The percentage, or NULL if none found.
    */
-  public function getPercentage(DrupalDateTime $date = NULL) {
+  public function getPercentage(?DrupalDateTime $date = NULL) {
     // Default to the current date.
     $date = $date ?: new DrupalDateTime();
     // Unlike DateTime, DrupalDateTime objects can't be compared directly.

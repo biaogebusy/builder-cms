@@ -14,29 +14,42 @@ abstract class FunctionalTestBase extends BrowserTestBase {
   use StringTranslationTrait;
 
   /**
-   * {@inheritdoc}
+   * The admin user.
+   *
+   * @var \Drupal\user\UserInterface
    */
-  public static $modules = ['node', 'eck'];
+  protected $adminUser;
 
   /**
    * {@inheritdoc}
    */
-  protected $defaultTheme = 'classy';
+  protected static $modules = ['eck'];
 
   /**
    * {@inheritdoc}
    */
-  public function setUp() {
+  protected $defaultTheme = 'starterkit_theme';
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setUp(): void {
     parent::setUp();
 
-    $permissions = [
+    $this->adminUser = $this->drupalCreateUser($this->getAdministratorPermissions());
+    $this->drupalLogin($this->adminUser);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getAdministratorPermissions() {
+    return [
       'administer eck entity types',
       'administer eck entities',
       'administer eck entity bundles',
       'bypass eck entity access',
     ];
-    $user = $this->createUser($permissions);
-    $this->drupalLogin($user);
   }
 
   /**
@@ -66,10 +79,14 @@ abstract class FunctionalTestBase extends BrowserTestBase {
     foreach ($fields as $field) {
       $edit[$field] = TRUE;
     }
-
-    $this->drupalPostForm(Url::fromRoute('eck.entity_type.add'), $edit, $this->t('Create entity type'));
+    $this->drupalGet(Url::fromRoute('eck.entity_type.add'));
+    $this->submitForm($edit, 'Create entity type');
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->responseContains("Entity type <em class=\"placeholder\">$label</em> has been added.");
+
+    // Clear entity definitions cache to find definition of our new entity type.
+    \Drupal::entityTypeManager()->clearCachedDefinitions();
+
     return ['id' => $id, 'label' => $label];
   }
 
@@ -80,7 +97,7 @@ abstract class FunctionalTestBase extends BrowserTestBase {
    *   The machine names of the configurable base fields.
    */
   protected function getConfigurableBaseFields() {
-    return ['created', 'changed', 'uid', 'title'];
+    return ['created', 'changed', 'uid', 'title', 'status'];
   }
 
   /**
@@ -113,7 +130,8 @@ abstract class FunctionalTestBase extends BrowserTestBase {
       $edit[$field . '_title_override'] = $title_override;
     }
 
-    $this->drupalPostForm(Url::fromRoute("eck.entity.{$entity_type}_type.add"), $edit, $this->t('Save bundle'));
+    $this->drupalGet(Url::fromRoute("eck.entity.{$entity_type}_type.add"));
+    $this->submitForm($edit, 'Save bundle');
     $this->assertSession()->responseContains("The entity bundle <em class=\"placeholder\">$label</em> has been added.");
 
     return $edit;
@@ -146,8 +164,27 @@ abstract class FunctionalTestBase extends BrowserTestBase {
       $edit[$field . '_title_override'] = $title_override;
     }
 
-    $this->drupalPostForm(NULL, $edit, $this->t('Save bundle'));
+    $this->submitForm($edit, 'Save bundle');
     $this->assertSession()->responseContains("The entity bundle <em class=\"placeholder\">$label</em> has been updated.");
+  }
+
+  /**
+   * Creates a new entity.
+   *
+   * @param string $entity_type
+   *   The entity type to be created.
+   * @param array $values
+   *   An array of settings.
+   *   Example: 'id' => 'foo'.
+   *
+   * @return \Drupal\Core\Entity\EntityInterface
+   *   A new entity.
+   */
+  protected function createEntity($entity_type, array $values) {
+    $storage = $this->container->get('entity_type.manager')->getStorage($entity_type);
+    $entity = $storage->create($values);
+    $entity->save();
+    return $entity;
   }
 
 }

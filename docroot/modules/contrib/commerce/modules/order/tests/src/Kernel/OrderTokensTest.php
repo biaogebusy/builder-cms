@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\commerce_order\Kernel;
 
-use Drupal\commerce_order\Entity\Order;
 use Drupal\Core\Render\BubbleableMetadata;
+use Drupal\commerce_order\Entity\Order;
 use Drupal\user\Entity\User;
 
 /**
@@ -60,7 +60,7 @@ class OrderTokensTest extends OrderKernelTestBase {
    * @return \Generator
    *   The test data.
    */
-  public function tokensTestData(): \Generator {
+  public static function tokensTestData(): \Generator {
     yield [
       '[commerce_order:order_id]',
       '123',

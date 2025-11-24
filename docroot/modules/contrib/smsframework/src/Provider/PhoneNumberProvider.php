@@ -19,30 +19,17 @@ use Drupal\sms\Message\SmsMessageInterface;
 class PhoneNumberProvider implements PhoneNumberProviderInterface {
 
   /**
-   * The event dispatcher.
-   *
-   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
-   */
-  protected $eventDispatcher;
-
-  /**
-   * The SMS provider.
-   *
-   * @var \Drupal\sms\Provider\SmsProviderInterface
-   */
-  protected $smsProvider;
-
-  /**
    * Constructs a new PhoneNumberProvider object.
    *
-   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
+   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $eventDispatcher
    *   The event dispatcher.
-   * @param \Drupal\sms\Provider\SmsProviderInterface $sms_provider
+   * @param \Drupal\sms\Provider\SmsProviderInterface $smsProvider
    *   The SMS provider.
    */
-  public function __construct(EventDispatcherInterface $event_dispatcher, SmsProviderInterface $sms_provider) {
-    $this->eventDispatcher = $event_dispatcher;
-    $this->smsProvider = $sms_provider;
+  public function __construct(
+    protected EventDispatcherInterface $eventDispatcher,
+    protected SmsProviderInterface $smsProvider,
+  ) {
   }
 
   /**

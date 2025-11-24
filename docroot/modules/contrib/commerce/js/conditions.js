@@ -3,10 +3,7 @@
  * Condition UI behaviors.
  */
 
-(function ($, window, Drupal) {
-
-  'use strict';
-
+(($, window, Drupal) => {
   /**
    * Provides the summary information for the condition vertical tabs.
    *
@@ -16,18 +13,22 @@
    *   Attaches the behavior for the condition summaries.
    */
   Drupal.behaviors.conditionSummary = {
-    attach: function () {
-      $('.vertical-tabs__pane').each(function () {
-        $(this).drupalSetSummary(function (context) {
-          if ($(context).find('input.enable:checked').length) {
+    attach: (context) => {
+      // The drupalSetSummary method required for this behavior is not available
+      // on the Promotion form, so we need to make sure this
+      // behavior is processed only if drupalSetSummary is defined.
+      if (typeof $.fn.drupalSetSummary === 'undefined') {
+        return;
+      }
+      const $context = $(context);
+      $context
+        .find('.vertical-tabs__item, .vertical-tabs__pane')
+        .drupalSetSummary((summaryContext) => {
+          if ($(summaryContext).find('input.enable:checked').length) {
             return Drupal.t('Restricted');
           }
-          else {
-            return Drupal.t('Not restricted');
-          }
+          return Drupal.t('Not restricted');
         });
-      });
-    }
+    },
   };
-
 })(jQuery, window, Drupal);

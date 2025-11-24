@@ -7,7 +7,7 @@ private_message.private_message_page:
     _permission: 'use private messaging system,access user profiles'
     _user_is_logged_in: 'TRUE'
   options:
-    no_cache: 'TRUE'
+    no_cache: TRUE
 
 entity.private_message_thread.canonical:
   path: '/private-messages/{private_message_thread}'
@@ -90,22 +90,6 @@ private_message.private_message_thread_settings:
   requirements:
     _permission: 'administer private message module'
 
-private_message.members_widget_callback:
-  path: '/private-message/autocomplete/members/{target_type}/{selection_handler}/{selection_settings_key}'
-  defaults:
-    _controller: '\Drupal\private_message\Controller\AjaxController::privateMessageMembersAutocomplete'
-  requirements:
-    _user_is_logged_in: 'TRUE'
-    _permission: 'use private messaging system,access user profiles'
-  options:
-    parameters:
-      target_type:
-        type: string
-      selection_handler:
-        type: string
-      selection_settings_key:
-        type: string
-
 private_message.admin_config:
   path: '/admin/config/private-message'
   defaults:
@@ -130,6 +114,13 @@ private_message.admin_config.uninstall:
   requirements:
     _permission: 'administer private message module'
 
+private_message.admin_config.uninstall_confirm:
+  path: '/admin/config/private-message/uninstall/confirm'
+  defaults:
+    _form: '\Drupal\private_message\Form\AdminUninstallForm'
+  requirements:
+    _permission: 'administer private message module'
+
 private_message.ajax_callback:
   path: '/private-message/ajax-callback/{op}'
   defaults:
@@ -138,3 +129,39 @@ private_message.ajax_callback:
     _csrf_token: 'TRUE'
     _user_is_logged_in: 'TRUE'
     _permission: 'use private messaging system,access user profiles'
+    op: '^get_(new_messages|old_messages|old_inbox_threads|new_inbox_threads|new_unread_thread_count|new_unread_message_count)|load_thread$'
+
+private_message.ban_page:
+  path: '/private-message/ban'
+  defaults:
+    _controller: '\Drupal\private_message\Controller\PrivateMessageController::banUnbanPage'
+    _title: 'Ban/Unban users'
+  requirements:
+    _permission: 'use private messaging system,access user profiles'
+
+private_message.ban_user_form:
+  path: '/private-message/ban/{user}'
+  defaults:
+    _form: '\Drupal\private_message\Form\ConfirmBanUserForm'
+    _title: 'Ban User'
+  requirements:
+    _permission: 'use private messaging system,access user profiles'
+    _user_is_logged_in: 'TRUE'
+    user: \d+
+  options:
+    parameters:
+      user:
+        type: entity:user
+
+private_message.unban_user_form:
+  path: '/private-message/unban/{user}'
+  defaults:
+    _form: '\Drupal\private_message\Form\ConfirmUnbanUserForm'
+    _title: 'Unban User'
+  requirements:
+    _permission: 'use private messaging system,access user profiles'
+    _user_is_logged_in: 'TRUE'
+  options:
+    parameters:
+      user:
+        type: entity:user

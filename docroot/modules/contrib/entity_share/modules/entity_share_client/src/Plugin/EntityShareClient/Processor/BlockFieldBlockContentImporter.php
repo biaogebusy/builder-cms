@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\entity_share_client\Plugin\EntityShareClient\Processor;
 
-use Drupal\entity_share\EntityShareUtility;
+use Drupal\entity_share_client\ImportProcessor\ImportProcessorReferencePluginBase;
 use Drupal\entity_share_client\RuntimeImportContext;
 
 /**
@@ -20,7 +20,7 @@ use Drupal\entity_share_client\RuntimeImportContext;
  *   locked = false,
  * )
  */
-class BlockFieldBlockContentImporter extends EntityReference {
+class BlockFieldBlockContentImporter extends ImportProcessorReferencePluginBase {
 
   /**
    * {@inheritdoc}
@@ -28,10 +28,10 @@ class BlockFieldBlockContentImporter extends EntityReference {
   public function prepareImportableEntityData(RuntimeImportContext $runtime_import_context, array &$entity_json_data) {
     // Parse entity data to extract urls to get block content from block
     // field. And remove this info.
-    if (isset($entity_json_data['attributes']) && is_array($entity_json_data['attributes'])) {
+    if (isset($entity_json_data['attributes']) && \is_array($entity_json_data['attributes'])) {
       foreach ($entity_json_data['attributes'] as $field_name => $field_data) {
-        if (is_array($field_data)) {
-          if (EntityShareUtility::isNumericArray($field_data)) {
+        if (\is_array($field_data)) {
+          if (array_is_list($field_data)) {
             foreach ($field_data as $delta => $value) {
               if (isset($value['block_content_href'])) {
                 $this->processBlockContent($runtime_import_context, $value['block_content_href']);
@@ -57,15 +57,15 @@ class BlockFieldBlockContentImporter extends EntityReference {
    *   The import URL prepared by the entity_share_block_field enhancer plugin.
    */
   protected function processBlockContent(RuntimeImportContext $runtime_import_context, string $import_url) {
-    $parsed_url = explode('/', $import_url);
+    $parsed_url = \explode('/', $import_url);
     if (!empty($parsed_url)) {
-      $entity_uuid = array_pop($parsed_url);
+      $entity_uuid = \array_pop($parsed_url);
 
       // In the case of block content entities, if the block content entity is
       // already present on the website, there is nothing to do.
       if (
-        $this->currentRecursionDepth != $this->configuration['max_recursion_depth'] &&
-        !$runtime_import_context->isEntityMarkedForImport($entity_uuid)
+        $this->currentRecursionDepth != $this->configuration['max_recursion_depth']
+        && !$runtime_import_context->isEntityMarkedForImport($entity_uuid)
       ) {
         $runtime_import_context->addEntityMarkedForImport($entity_uuid);
         $this->importUrl($runtime_import_context, $import_url);

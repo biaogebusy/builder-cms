@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\private_message\Annotation;
 
 use Drupal\Component\Annotation\Plugin;
+use Drupal\Core\Annotation\Translation;
 
 /**
  * Annotation definition for the Private Message Configuration Form plugin.
@@ -13,18 +16,14 @@ class PrivateMessageConfigForm extends Plugin {
 
   /**
    * The plugin ID.
-   *
-   * @var string
    */
-  public $id;
+  public string $id;
 
   /**
    * The name of the form plugin.
    *
-   * @var \Drupal\Core\Annotation\Translation
-   *
    * @ingroup plugin_translatable
    */
-  public $name;
+  public Translation $name;
 
 }

@@ -45,6 +45,21 @@ class VocabularyForm extends BundleEntityFormBase {
   /**
    * {@inheritdoc}
    */
+  public function buildEntity(array $form, FormStateInterface $form_state) {
+    /** @var \Drupal\taxonomy\VocabularyInterface $entity */
+    $entity = parent::buildEntity($form, $form_state);
+
+    // The description cannot be an empty string.
+    if (trim($form_state->getValue('description')) === '') {
+      $entity->set('description', NULL);
+    }
+
+    return $entity;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function form(array $form, FormStateInterface $form_state) {
     $vocabulary = $this->entity;
     if ($vocabulary->isNew()) {
@@ -74,6 +89,13 @@ class VocabularyForm extends BundleEntityFormBase {
       '#type' => 'textfield',
       '#title' => $this->t('Description'),
       '#default_value' => $vocabulary->getDescription(),
+    ];
+
+    $form['revision'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Create new revision'),
+      '#default_value' => $vocabulary->shouldCreateNewRevision(),
+      '#description' => $this->t('Create a new revision by default for this vocabulary.'),
     ];
 
     // $form['langcode'] is not wrapped in an
@@ -117,6 +139,7 @@ class VocabularyForm extends BundleEntityFormBase {
    */
   public function save(array $form, FormStateInterface $form_state) {
     $vocabulary = $this->entity;
+    $vocabulary->setNewRevision($form_state->getValue(['revision']));
 
     // Prevent leading and trailing spaces in vocabulary names.
     $vocabulary->set('name', trim($vocabulary->label()));

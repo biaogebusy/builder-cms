@@ -179,7 +179,7 @@ class CropTypeForm extends EntityForm {
       $this->logger('crop')->notice('Added crop type %name.', $context);
     }
 
-    $form_state->setRedirect('crop.overview_types');
+    return $form_state->setRedirect('crop.overview_types');
   }
 
 }

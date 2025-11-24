@@ -1,0 +1,41 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"SC",
+		"Yibin Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Cuiping Qu": {
+			"local_name": "翠屏区"
+		},
+		"Gao Xian": {
+			"local_name": "高县"
+		},
+		"Gong Xian": {
+			"local_name": "珙县"
+		},
+		"Jiang'an Xian": {
+			"local_name": "江安县"
+		},
+		"Nanxi Xian": {
+			"local_name": "南溪县"
+		},
+		"Pingshan Xian": {
+			"local_name": "屏山县"
+		},
+		"Xingwen Xian": {
+			"local_name": "兴文县"
+		},
+		"Yibin Xian": {
+			"local_name": "宜宾县"
+		},
+		"Junlian Xian": {
+			"local_name": "筠连县"
+		},
+		"Changning Xian": {
+			"local_name": "长宁县"
+		}
+	}
+}

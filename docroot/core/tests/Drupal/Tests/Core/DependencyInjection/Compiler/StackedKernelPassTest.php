@@ -1,11 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\DependencyInjection\Compiler;
 
 use Drupal\Core\DependencyInjection\Compiler\StackedKernelPass;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
+use Drupal\Core\StackMiddleware\StackedHttpKernel;
+use Drupal\Tests\Core\DependencyInjection\Fixture\FinalTestHttpMiddlewareClass;
+use Drupal\Tests\Core\DependencyInjection\Fixture\FinalTestNonTerminableHttpMiddlewareClass;
 use Drupal\Tests\UnitTestCase;
 use Symfony\Component\DependencyInjection\Definition;
+use Symfony\Component\HttpKernel\HttpKernel;
+use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 /**
  * @coversDefaultClass \Drupal\Core\DependencyInjection\Compiler\StackedKernelPass
@@ -29,6 +36,8 @@ class StackedKernelPassTest extends UnitTestCase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    parent::setUp();
+
     $this->stackedKernelPass = new StackedKernelPass();
     $this->containerBuilder = new ContainerBuilder();
   }
@@ -36,8 +45,8 @@ class StackedKernelPassTest extends UnitTestCase {
   /**
    * @covers ::process
    */
-  public function testProcessWithStackedKernel() {
-    $stacked_kernel = new Definition('Stack\StackedHttpKernel');
+  public function testProcessWithStackedKernel(): void {
+    $stacked_kernel = new Definition(StackedHttpKernel::class);
     $stacked_kernel->setPublic(TRUE);
     $this->containerBuilder->setDefinition('http_kernel', $stacked_kernel);
     $this->containerBuilder->setDefinition('http_kernel.basic', $this->createMiddlewareServiceDefinition(FALSE, 0));
@@ -78,7 +87,7 @@ class StackedKernelPassTest extends UnitTestCase {
   /**
    * @covers ::process
    */
-  public function testProcessWithHttpKernel() {
+  public function testProcessWithHttpKernel(): void {
     $kernel = new Definition('Symfony\Component\HttpKernel\HttpKernelInterface');
     $kernel->setPublic(TRUE);
     $this->containerBuilder->setDefinition('http_kernel', $kernel);
@@ -88,6 +97,53 @@ class StackedKernelPassTest extends UnitTestCase {
 
     $this->assertSame($kernel, $unprocessed_kernel);
     $this->assertSame($kernel->getArguments(), $unprocessed_kernel->getArguments());
+  }
+
+  /**
+   * Tests that class declared 'final' can be added as http_middleware.
+   */
+  public function testProcessWithStackedKernelAndFinalHttpMiddleware(): void {
+    $stacked_kernel = new Definition(StackedHttpKernel::class);
+    $stacked_kernel->setPublic(TRUE);
+    $this->containerBuilder->setDefinition('http_kernel', $stacked_kernel);
+    $basic_kernel = $this->getMockBuilder(HttpKernel::class)
+      ->disableOriginalConstructor()
+      ->onlyMethods(['handle', 'terminate'])
+      ->getMock();
+    $basic_definition = (new Definition($basic_kernel::class))
+      ->setPublic(TRUE);
+    $this->containerBuilder->setDefinition('http_kernel.basic', $basic_definition);
+
+    // Services tagged 'http_middleware', other than the highest priority
+    // middleware that is a responder, is also set as lazy by
+    // StackedKernelPass::process(). Add middleware classes declared final and
+    // confirm they are interface proxied correctly.
+    // @see https://symfony.com/doc/current/service_container/lazy_services.html#interface-proxifying
+    $first_responder = $this->getMockBuilder(HttpKernelInterface::class)
+      ->getMock();
+    $this->containerBuilder->setDefinition('http_kernel.one', (new Definition($first_responder::class))
+      ->setPublic(TRUE)
+      ->addTag('http_middleware', [
+        'priority' => 200,
+        'responder' => TRUE,
+      ]));
+    // First middleware class declared final.
+    $this->containerBuilder->setDefinition('http_kernel.two', (new Definition(FinalTestHttpMiddlewareClass::class))
+      ->setPublic(TRUE)
+      ->addTag('http_middleware', [
+        'priority' => 100,
+        'responder' => TRUE,
+      ]));
+    // Second middleware class declared final, this time without implementing
+    // TerminableInterface.
+    $this->containerBuilder->setDefinition('http_kernel.three', (new Definition(FinalTestNonTerminableHttpMiddlewareClass::class))
+      ->setPublic(TRUE)
+      ->addTag('http_middleware', [
+        'priority' => 50,
+        'responder' => TRUE,
+      ]));
+    $this->stackedKernelPass->process($this->containerBuilder);
+    $this->assertIsObject($this->containerBuilder->get('http_kernel'));
   }
 
   /**

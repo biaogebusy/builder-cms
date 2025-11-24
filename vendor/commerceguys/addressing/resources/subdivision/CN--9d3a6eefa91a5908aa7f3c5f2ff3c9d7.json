@@ -1,0 +1,47 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"SN",
+		"Yulin Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Dingbian Xian": {
+			"local_name": "定边县"
+		},
+		"Fugu Xian": {
+			"local_name": "府谷县"
+		},
+		"Hengshan Xian": {
+			"local_name": "横山县"
+		},
+		"Jia Xian": {
+			"local_name": "佳县"
+		},
+		"Jingbian Xian": {
+			"local_name": "靖边县"
+		},
+		"Mizhi Xian": {
+			"local_name": "米脂县"
+		},
+		"Qingjian Xian": {
+			"local_name": "清涧县"
+		},
+		"Shenmu Xian": {
+			"local_name": "神木县"
+		},
+		"Suide Xian": {
+			"local_name": "绥德县"
+		},
+		"Wubu Xian": {
+			"local_name": "吴堡县"
+		},
+		"Yuyang Qu": {
+			"local_name": "榆阳区"
+		},
+		"Zizhou Xian": {
+			"local_name": "子洲县"
+		}
+	}
+}

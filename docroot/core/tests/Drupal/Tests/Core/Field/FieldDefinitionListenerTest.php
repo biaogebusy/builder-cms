@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Field;
 
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
@@ -106,7 +108,7 @@ class FieldDefinitionListenerTest extends UnitTestCase {
   /**
    * @covers ::onFieldDefinitionCreate
    */
-  public function testOnFieldDefinitionCreateNewField() {
+  public function testOnFieldDefinitionCreateNewField(): void {
     $field_definition = $this->prophesize(FieldDefinitionInterface::class);
     $field_definition->getTargetEntityTypeId()->willReturn('test_entity_type');
     $field_definition->getTargetBundle()->willReturn('test_bundle');
@@ -137,7 +139,7 @@ class FieldDefinitionListenerTest extends UnitTestCase {
   /**
    * @covers ::onFieldDefinitionCreate
    */
-  public function testOnFieldDefinitionCreateExistingField() {
+  public function testOnFieldDefinitionCreateExistingField(): void {
     $field_definition = $this->prophesize(FieldDefinitionInterface::class);
     $field_definition->getTargetEntityTypeId()->willReturn('test_entity_type');
     $field_definition->getTargetBundle()->willReturn('test_bundle');
@@ -173,7 +175,7 @@ class FieldDefinitionListenerTest extends UnitTestCase {
   /**
    * @covers ::onFieldDefinitionUpdate
    */
-  public function testOnFieldDefinitionUpdate() {
+  public function testOnFieldDefinitionUpdate(): void {
     $field_definition = $this->prophesize(FieldDefinitionInterface::class);
     $field_definition->getTargetEntityTypeId()->willReturn('test_entity_type');
 
@@ -190,7 +192,7 @@ class FieldDefinitionListenerTest extends UnitTestCase {
   /**
    * @covers ::onFieldDefinitionDelete
    */
-  public function testOnFieldDefinitionDeleteMultipleBundles() {
+  public function testOnFieldDefinitionDeleteMultipleBundles(): void {
     $field_definition = $this->prophesize(FieldDefinitionInterface::class);
     $field_definition->getTargetEntityTypeId()->willReturn('test_entity_type');
     $field_definition->getTargetBundle()->willReturn('test_bundle');
@@ -230,7 +232,7 @@ class FieldDefinitionListenerTest extends UnitTestCase {
   /**
    * @covers ::onFieldDefinitionDelete
    */
-  public function testOnFieldDefinitionDeleteSingleBundles() {
+  public function testOnFieldDefinitionDeleteSingleBundles(): void {
     $field_definition = $this->prophesize(FieldDefinitionInterface::class);
     $field_definition->getTargetEntityTypeId()->willReturn('test_entity_type');
     $field_definition->getTargetBundle()->willReturn('test_bundle');

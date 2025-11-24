@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\redirect\Functional;
 
 use Drupal\Tests\BrowserTestBase;

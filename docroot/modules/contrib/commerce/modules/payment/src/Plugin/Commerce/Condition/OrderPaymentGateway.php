@@ -2,21 +2,22 @@
 
 namespace Drupal\commerce_payment\Plugin\Commerce\Condition;
 
-use Drupal\commerce\Plugin\Commerce\Condition\ConditionBase;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce\Attribute\CommerceCondition;
+use Drupal\commerce\Plugin\Commerce\Condition\ConditionBase;
 
 /**
  * Provides the payment gateway condition for orders.
- *
- * @CommerceCondition(
- *   id = "order_payment_gateway",
- *   label = @Translation("Payment gateway"),
- *   display_label = @Translation("Selected payment gateway"),
- *   category = @Translation("Order", context = "Commerce"),
- *   entity_type = "commerce_order",
- * )
  */
+#[CommerceCondition(
+  id: "order_payment_gateway",
+  label: new TranslatableMarkup("Payment gateway"),
+  entity_type: "commerce_order",
+  display_label: new TranslatableMarkup("Selected payment gateway"),
+  category: new TranslatableMarkup("Order", [], ["context" => "Commerce"]),
+)]
 class OrderPaymentGateway extends ConditionBase {
 
   /**

@@ -7,6 +7,12 @@ namespace Drupal\Core\Entity;
  */
 interface EntityRepositoryInterface {
 
+  /**
+   * @deprecated in drupal:10.3.0 and is removed from drupal:12.0.0. There is no
+   *   replacement.
+   *
+   * @see https://www.drupal.org/node/3437685
+   */
   const CONTEXT_ID_LEGACY_CONTEXT_OPERATION = '@entity.repository:legacy_context_operation';
 
   /**
@@ -62,10 +68,12 @@ interface EntityRepositoryInterface {
    *   content language.
    * @param array $context
    *   (optional) An associative array of arbitrary data that can be useful to
-   *   determine the proper fallback sequence.
+   *   determine the proper fallback sequence. See
+   *   \Drupal\Core\Language\LanguageManagerInterface::getFallbackCandidates().
    *
-   * @return \Drupal\Core\Entity\EntityInterface
-   *   An entity object for the translated data.
+   * @return \Drupal\Core\Entity\EntityInterface|null
+   *   An entity object for the translated data, or NULL if the requested
+   *   translation is missing, forbidden, or unavailable.
    *
    * @see \Drupal\Core\Language\LanguageManagerInterface::getFallbackCandidates()
    */
@@ -92,15 +100,16 @@ interface EntityRepositoryInterface {
    *   The entity type identifier.
    * @param int|string $entity_id
    *   An entity identifier.
-   * @param \Drupal\Core\Plugin\Context\ContextInterface[] $contexts
-   *   (optional) An associative array of objects representing the contexts the
-   *   entity will be edited in keyed by fully qualified context ID. Defaults to
-   *   the currently available contexts.
+   * @param array|null $contexts
+   *   (optional) An associative array of arbitrary data that can be useful to
+   *   determine the proper fallback sequence. See
+   *   \Drupal\Core\Language\LanguageManagerInterface::getFallbackCandidates().
+   *   Using context ids from the plugin context system is deprecated.
    *
    * @return \Drupal\Core\Entity\EntityInterface|null
    *   An entity object variant or NULL if the entity does not exist.
    */
-  public function getActive($entity_type_id, $entity_id, array $contexts = NULL);
+  public function getActive($entity_type_id, $entity_id, ?array $contexts = NULL);
 
   /**
    * Retrieves the active entity variants matching the specified context.
@@ -109,17 +118,18 @@ interface EntityRepositoryInterface {
    *   The entity type identifier.
    * @param int[]|string[] $entity_ids
    *   An array of entity identifiers.
-   * @param \Drupal\Core\Plugin\Context\ContextInterface[] $contexts
-   *   (optional) An associative array of objects representing the contexts the
-   *   entity will be edited in keyed by fully qualified context ID. Defaults to
-   *   the currently available contexts.
+   * @param array|null $contexts
+   *   (optional) An associative array of arbitrary data that can be useful to
+   *   determine the proper fallback sequence. See
+   *   \Drupal\Core\Language\LanguageManagerInterface::getFallbackCandidates().
+   *   Using context ids from the plugin context system is deprecated.
    *
    * @return \Drupal\Core\Entity\EntityInterface[]
    *   An array of entity object variants keyed by entity ID.
    *
    * @see getActive()
    */
-  public function getActiveMultiple($entity_type_id, array $entity_ids, array $contexts = NULL);
+  public function getActiveMultiple($entity_type_id, array $entity_ids, ?array $contexts = NULL);
 
   /**
    * Retrieves the canonical entity variant matching the specified context.
@@ -138,15 +148,16 @@ interface EntityRepositoryInterface {
    *   The entity type identifier.
    * @param int|string $entity_id
    *   An entity identifier.
-   * @param \Drupal\Core\Plugin\Context\ContextInterface[] $contexts
-   *   (optional) An associative array of objects representing the contexts the
-   *   entity will be edited in keyed by fully qualified context ID. Defaults to
-   *   the currently available contexts.
+   * @param array|null $contexts
+   *   (optional) An associative array of arbitrary data that can be useful to
+   *   determine the proper fallback sequence. See
+   *   \Drupal\Core\Language\LanguageManagerInterface::getFallbackCandidates().
+   *   Using context ids from the plugin context system is deprecated.
    *
    * @return \Drupal\Core\Entity\EntityInterface|null
    *   An entity object variant or NULL if the entity does not exist.
    */
-  public function getCanonical($entity_type_id, $entity_id, array $contexts = NULL);
+  public function getCanonical($entity_type_id, $entity_id, ?array $contexts = NULL);
 
   /**
    * Retrieves the canonical entity variants matching the specified context.
@@ -155,16 +166,17 @@ interface EntityRepositoryInterface {
    *   The entity type identifier.
    * @param int[]|string[] $entity_ids
    *   An array of entity identifiers.
-   * @param \Drupal\Core\Plugin\Context\ContextInterface[] $contexts
-   *   (optional) An associative array of objects representing the contexts the
-   *   entity will be edited in keyed by fully qualified context ID. Defaults to
-   *   the currently available contexts.
+   * @param array|null $contexts
+   *   (optional) An associative array of arbitrary data that can be useful to
+   *   determine the proper fallback sequence. See
+   *   \Drupal\Core\Language\LanguageManagerInterface::getFallbackCandidates().
+   *   Using context ids from the plugin context system is deprecated.
    *
    * @return \Drupal\Core\Entity\EntityInterface[]
    *   An array of entity object variants keyed by entity ID.
    *
    * @see getCanonical()
    */
-  public function getCanonicalMultiple($entity_type_id, array $entity_ids, array $contexts = NULL);
+  public function getCanonicalMultiple($entity_type_id, array $entity_ids, ?array $contexts = NULL);
 
 }

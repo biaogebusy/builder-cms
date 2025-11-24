@@ -47,9 +47,9 @@ class InstallationTest extends BrowserTestBase {
    */
   protected function assertInstallationStatus($installed) {
     $this->drupalGet('admin/modules');
-    // @todo, add video_embed_media once infrastructure places version
+    // @todo add video_embed_media once infrastructure places version
     // information in module info files.
-    foreach (['video_embed_field', 'video_embed_wysiwyg'] as $module) {
+    foreach (['video_embed_field'] as $module) {
       $this->assertSession()->{$installed ? 'checkboxChecked' : 'checkboxNotChecked'}('modules[' . $module . '][enable]');
     }
   }
@@ -58,11 +58,6 @@ class InstallationTest extends BrowserTestBase {
    * Uninstall the module using the UI.
    */
   protected function uninstallModules() {
-    $this->drupalGet('admin/modules/uninstall');
-    $this->submitForm([
-      'uninstall[video_embed_wysiwyg]' => TRUE,
-    ], 'Uninstall');
-    $this->getSession()->getPage()->pressButton('Uninstall');
     $this->drupalGet('admin/modules/uninstall');
     $this->submitForm([
       'uninstall[video_embed_field]' => TRUE,
@@ -77,7 +72,6 @@ class InstallationTest extends BrowserTestBase {
     $this->drupalGet('admin/modules');
     $this->submitForm([
       'modules[video_embed_field][enable]' => TRUE,
-      'modules[video_embed_wysiwyg][enable]' => TRUE,
     ], 'Install');
     // Continue is only required to confirm dependencies being enabled on the
     // first call of this function.

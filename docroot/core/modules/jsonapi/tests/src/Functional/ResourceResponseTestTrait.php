@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\jsonapi\Functional;
 
 use Drupal\Component\Serialization\Json;
@@ -242,7 +244,7 @@ trait ResourceResponseTestTrait {
       $cacheability->addCacheContexts(explode(' ', $response->getHeader('X-Drupal-Cache-Contexts')[0]));
     }
     if ($dynamic_cache = $response->getHeader('X-Drupal-Dynamic-Cache')) {
-      $cacheability->setCacheMaxAge(($dynamic_cache[0] === 'UNCACHEABLE' && $response->getStatusCode() < 400) ? 0 : Cache::PERMANENT);
+      $cacheability->setCacheMaxAge((str_contains($dynamic_cache[0], 'UNCACHEABLE') && $response->getStatusCode() < 400) ? 0 : Cache::PERMANENT);
     }
     $related_document = Json::decode($response->getBody());
     $resource_response = new CacheableResourceResponse($related_document, $response->getStatusCode());
@@ -396,7 +398,7 @@ trait ResourceResponseTestTrait {
    * @return string
    *   The relationship link.
    */
-  protected static function getRelationshipLink(array $resource_identifier, $relationship_field_name) {
+  protected static function getRelationshipLink(array $resource_identifier, $relationship_field_name): string {
     return static::getResourceLink($resource_identifier) . "/relationships/$relationship_field_name";
   }
 
@@ -411,7 +413,7 @@ trait ResourceResponseTestTrait {
    * @return string
    *   The related resource link.
    */
-  protected static function getRelatedLink(array $resource_identifier, $relationship_field_name) {
+  protected static function getRelatedLink(array $resource_identifier, $relationship_field_name): string {
     return static::getResourceLink($resource_identifier) . "/$relationship_field_name";
   }
 
@@ -430,7 +432,7 @@ trait ResourceResponseTestTrait {
    *
    * @see \GuzzleHttp\ClientInterface::request()
    */
-  protected function getRelatedResponses(array $relationship_field_names, array $request_options, EntityInterface $entity = NULL) {
+  protected function getRelatedResponses(array $relationship_field_names, array $request_options, ?EntityInterface $entity = NULL) {
     $entity = $entity ?: $this->entity;
     $links = array_map(function ($relationship_field_name) use ($entity) {
       return static::getRelatedLink(static::toResourceIdentifier($entity), $relationship_field_name);
@@ -523,7 +525,7 @@ trait ResourceResponseTestTrait {
       'jsonapi' => static::$jsonApiMember,
       'errors' => [$error],
     ], 403))
-      ->addCacheableDependency((new CacheableMetadata())->addCacheTags(['4xx-response', 'http_response'])->addCacheContexts(['url.site']))
+      ->addCacheableDependency((new CacheableMetadata())->addCacheTags(['4xx-response', 'http_response'])->addCacheContexts(['url.query_args', 'url.site']))
       ->addCacheableDependency($access);
   }
 
@@ -543,8 +545,7 @@ trait ResourceResponseTestTrait {
     // If the entity type is revisionable, add a resource version cache context.
     $cache_contexts = Cache::mergeContexts([
       // Cache contexts for JSON:API URL query parameters.
-      'url.query_args:fields',
-      'url.query_args:include',
+      'url.query_args',
       // Drupal defaults.
       'url.site',
     ], $this->entity->getEntityType()->isRevisionable() ? ['url.query_args:resourceVersion'] : []);

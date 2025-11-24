@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Config;
 
 use Drupal\Core\Config\Entity\ConfigEntityDependency;
@@ -15,6 +17,7 @@ use Drupal\KernelTests\KernelTestBase;
  * Tests that the installed config matches the default config.
  *
  * @group Config
+ * @group #slow
  */
 class DefaultConfigTest extends KernelTestBase {
 
@@ -36,14 +39,11 @@ class DefaultConfigTest extends KernelTestBase {
    *
    * Comparing them does not make sense.
    *
-   * @todo Figure out why simpletest.settings is not installed.
-   *
    * @var array
    */
   public static $skippedConfig = [
     'locale.settings' => ['path: '],
     'syslog.settings' => ['facility: '],
-    'simpletest.settings' => TRUE,
   ];
 
   /**
@@ -51,7 +51,7 @@ class DefaultConfigTest extends KernelTestBase {
    *
    * @dataProvider moduleListDataProvider
    */
-  public function testModuleConfig($module) {
+  public function testModuleConfig(string $module): void {
     $this->assertExtensionConfig($module, 'module');
   }
 
@@ -60,7 +60,7 @@ class DefaultConfigTest extends KernelTestBase {
    *
    * @dataProvider themeListDataProvider
    */
-  public function testThemeConfig($theme) {
+  public function testThemeConfig($theme): void {
     $this->assertExtensionConfig($theme, 'theme');
   }
 
@@ -86,7 +86,7 @@ class DefaultConfigTest extends KernelTestBase {
         $file_name = DRUPAL_ROOT . '/core/modules/system/tests/modules/' . $name . '/' . $name . '.info.yml';
         break;
 
-      default;
+      default:
         $file_name = DRUPAL_ROOT . '/core/' . $type . 's/' . $name . '/' . $name . '.info.yml';
     }
 
@@ -145,7 +145,7 @@ class DefaultConfigTest extends KernelTestBase {
    *   An array of theme names to test, with both key and value being the name
    *   of the theme.
    */
-  public function themeListDataProvider() {
+  public static function themeListDataProvider() {
     $prefix = dirname(__DIR__, 4) . DIRECTORY_SEPARATOR . 'themes';
     $theme_dirs = array_keys(iterator_to_array(new \FilesystemIterator($prefix)));
     $theme_names = array_map(function ($path) use ($prefix) {
@@ -173,8 +173,8 @@ class DefaultConfigTest extends KernelTestBase {
    *   An array of module names to test, with both key and value being the name
    *   of the module.
    */
-  public function moduleListDataProvider() {
-    $modules_keyed = $this->coreModuleListDataProvider();
+  public static function moduleListDataProvider(): array {
+    $modules_keyed = self::coreModuleListDataProvider();
 
     // Add a deprecated module with config.
     $modules_keyed['deprecated_module'] = ['deprecated_module'];

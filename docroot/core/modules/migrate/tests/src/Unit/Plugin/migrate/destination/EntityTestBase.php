@@ -1,9 +1,6 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\migrate\Unit\Plugin\migrate\destination\EntityTestBase.
- */
+declare(strict_types=1);
 
 namespace Drupal\Tests\migrate\Unit\Plugin\migrate\destination;
 
@@ -41,7 +38,7 @@ class EntityTestBase extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $this->migration = $this->prophesize(MigrationInterface::class);

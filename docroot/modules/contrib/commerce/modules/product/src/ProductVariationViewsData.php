@@ -25,4 +25,19 @@ class ProductVariationViewsData extends CommerceEntityViewsData {
     ];
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getViewsData() {
+    $data = parent::getViewsData();
+    $data['commerce_product_variation']['copy_link'] = [
+      'title' => $this->t('Copy variation link'),
+      'help' => $this->t('Provide a button to copy variation link.'),
+      'field' => [
+        'id' => 'commerce_product_variation_copy_link',
+      ],
+    ];
+    return $data;
+  }
+
 }

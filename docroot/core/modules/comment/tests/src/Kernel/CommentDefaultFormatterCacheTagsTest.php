@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Kernel;
 
 use Drupal\comment\Tests\CommentTestTrait;
@@ -21,9 +23,7 @@ class CommentDefaultFormatterCacheTagsTest extends EntityKernelTestBase {
   use CommentTestTrait;
 
   /**
-   * Modules to install.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['entity_test', 'comment'];
 
@@ -36,7 +36,7 @@ class CommentDefaultFormatterCacheTagsTest extends EntityKernelTestBase {
     // Create user 1 so that the user created later in the test has a different
     // user ID.
     // @todo Remove in https://www.drupal.org/node/540008.
-    $this->createUser(['uid' => 1, 'name' => 'user1'])->save();
+    $this->createUser([], NULL, FALSE, ['uid' => 1, 'name' => 'user1'])->save();
 
     $this->container->get('module_handler')->loadInclude('comment', 'install');
     comment_install();
@@ -55,7 +55,7 @@ class CommentDefaultFormatterCacheTagsTest extends EntityKernelTestBase {
     // user does not have access to the 'administer comments' permission, to
     // ensure only published comments are visible to the end user.
     $current_user = $this->container->get('current_user');
-    $current_user->setAccount($this->createUser([], ['access comments', 'post comments']));
+    $current_user->setAccount($this->createUser(['access comments', 'post comments']));
 
     // Install tables and config needed to render comments.
     $this->installSchema('comment', ['comment_entity_statistics']);
@@ -69,7 +69,7 @@ class CommentDefaultFormatterCacheTagsTest extends EntityKernelTestBase {
   /**
    * Tests the bubbling of cache tags.
    */
-  public function testCacheTags() {
+  public function testCacheTags(): void {
     /** @var \Drupal\Core\Render\RendererInterface $renderer */
     $renderer = $this->container->get('renderer');
 
@@ -84,6 +84,7 @@ class CommentDefaultFormatterCacheTagsTest extends EntityKernelTestBase {
     $renderer->renderRoot($build);
     $expected_cache_tags = [
       'entity_test_view',
+      'CACHE_MISS_IF_UNCACHEABLE_HTTP_METHOD:form',
       'entity_test:' . $commented_entity->id(),
       'config:core.entity_form_display.comment.comment.default',
       'config:field.field.comment.comment.comment_body',
@@ -131,6 +132,7 @@ class CommentDefaultFormatterCacheTagsTest extends EntityKernelTestBase {
       'comment:' . $comment->id(),
       'config:filter.format.plain_text',
       'user_view',
+      'CACHE_MISS_IF_UNCACHEABLE_HTTP_METHOD:form',
       'user:' . $user->id(),
       'config:core.entity_form_display.comment.comment.default',
       'config:field.field.comment.comment.comment_body',

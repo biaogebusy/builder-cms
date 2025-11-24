@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Functional\Rest;
 
 use Drupal\Tests\rest\Functional\BasicAuthResourceTestTrait;
@@ -35,5 +37,22 @@ class NodeJsonBasicAuthTest extends NodeResourceTestBase {
    * {@inheritdoc}
    */
   protected static $auth = 'basic_auth';
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUpAuthorization($method) {
+    parent::setUpAuthorization($method);
+    $this->grantPermissionsToTestedRole(['view camelids revisions']);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getExpectedNormalizedEntity() {
+    $entity = parent::getExpectedNormalizedEntity();
+    $entity['revision_log'] = [];
+    return $entity;
+  }
 
 }

@@ -5,9 +5,9 @@ namespace Drupal\page_manager_ui\Form;
 use Drupal\Core\Entity\EntityTypeRepositoryInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\TempStore\SharedTempStoreFactory;
 use Drupal\Core\TypedData\PrimitiveInterface;
 use Drupal\Core\TypedData\TypedDataManagerInterface;
-use Drupal\Core\TempStore\SharedTempStoreFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -55,6 +55,7 @@ class ParameterEditForm extends FormBase {
    *
    * @var string
    */
+  //phpcs:ignore
   protected $tempstore_id;
 
   /**
@@ -62,6 +63,7 @@ class ParameterEditForm extends FormBase {
    *
    * @var string
    */
+  //phpcs:ignore
   protected $machine_name;
 
   /**
@@ -249,7 +251,7 @@ class ParameterEditForm extends FormBase {
 
     $this->setTempstore($cache_values);
     $this->messenger()->addMessage($this->t('The %label parameter has been updated.', ['%label' => $label ?: $name]));
-    list($route_name, $route_parameters) = $this->getParentRouteInfo($cache_values);
+    [$route_name, $route_parameters] = $this->getParentRouteInfo($cache_values);
     $form_state->setRedirect($route_name, $route_parameters);
   }
 
@@ -260,7 +262,7 @@ class ParameterEditForm extends FormBase {
    *   Array containing the route name and its parameters.
    */
   protected function getParentRouteInfo($cached_values) {
-    /** @var $page \Drupal\page_manager\PageInterface */
+    /** @var \Drupal\page_manager\PageInterface $page */
     $page = $cached_values['page'];
 
     if ($page->isNew()) {

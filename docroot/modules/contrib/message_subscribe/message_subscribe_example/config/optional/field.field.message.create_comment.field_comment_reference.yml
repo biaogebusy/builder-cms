@@ -18,8 +18,7 @@ default_value_callback: ''
 settings:
   handler: 'default:comment'
   handler_settings:
-    target_bundles:
-      comment: comment
+    target_bundles: { }
     sort:
       field: _none
 field_type: entity_reference

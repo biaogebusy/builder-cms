@@ -94,7 +94,7 @@ abstract class SmsGatewayPluginBase extends PluginBase implements SmsGatewayPlug
   /**
    * {@inheritdoc}
    */
-  public function getDeliveryReports(array $message_ids = NULL) {
+  public function getDeliveryReports(?array $message_ids = NULL) {
     return [];
   }
 

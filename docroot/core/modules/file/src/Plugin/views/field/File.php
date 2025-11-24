@@ -4,6 +4,7 @@ namespace Drupal\file\Plugin\views\field;
 
 use Drupal\Core\File\FileUrlGeneratorInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\views\Attribute\ViewsField;
 use Drupal\views\ResultRow;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
@@ -14,9 +15,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Field handler to provide simple renderer that allows linking to a file.
  *
  * @ingroup views_field_handlers
- *
- * @ViewsField("file")
  */
+#[ViewsField("file")]
 class File extends FieldPluginBase {
 
   /**
@@ -32,18 +32,14 @@ class File extends FieldPluginBase {
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\File\FileUrlGeneratorInterface $file_url_generator
    *   The file URL generator.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, FileUrlGeneratorInterface $file_url_generator = NULL) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, FileUrlGeneratorInterface $file_url_generator) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
-    if (!$file_url_generator) {
-      @trigger_error('Calling File::__construct() without the $file_url_generator argument is deprecated in drupal:9.3.0 and the $file_url_generator argument will be required in drupal:10.0.0. See https://www.drupal.org/node/2940031', E_USER_DEPRECATED);
-      $file_url_generator = \Drupal::service('file_url_generator');
-    }
     $this->fileUrlGenerator = $file_url_generator;
   }
 
@@ -57,7 +53,7 @@ class File extends FieldPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function init(ViewExecutable $view, DisplayPluginBase $display, array &$options = NULL) {
+  public function init(ViewExecutable $view, DisplayPluginBase $display, ?array &$options = NULL) {
     parent::init($view, $display, $options);
 
     if (!empty($options['link_to_file'])) {

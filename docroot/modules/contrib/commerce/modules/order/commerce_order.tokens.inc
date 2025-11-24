@@ -5,10 +5,10 @@
  * Builds placeholder replacement tokens for order data.
  */
 
-use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\Core\GeneratedUrl;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Url;
+use Drupal\commerce_order\Entity\OrderInterface;
 
 /**
  * Implements hook_token_info().

@@ -11,10 +11,9 @@
  */
 
 @media (min-width: 75rem) {
-
   .maintenance-page .site-header__initial {
     flex-shrink: 0;
-    width: 5.625rem;
+    width: var(--content-left);
   }
 }
 
@@ -24,6 +23,9 @@
 
 .maintenance-page-icon {
   display: block;
-  margin-top: 3.375rem;
-  margin-bottom: 3.375rem;
+  margin-block: var(--sp3);
+}
+
+.maintenance-page-icon path {
+  fill: var(--color--primary-50);
 }

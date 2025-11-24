@@ -19,20 +19,13 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * )
  */
 class DatabaseQueue extends QueueUIBase implements ContainerFactoryPluginInterface {
+
   use StringTranslationTrait;
 
   /**
    * The database table name.
    */
   public const TABLE_NAME = CoreDatabaseQueue::TABLE_NAME;
-
-  /**
-   * Database.
-   *
-   * @var \Drupal\Core\Database\Database
-   * It acts to encapsulate all control
-   */
-  protected $database;
 
   /**
    * {@inheritdoc}
@@ -70,9 +63,12 @@ class DatabaseQueue extends QueueUIBase implements ContainerFactoryPluginInterfa
    * @param \Drupal\Core\Database\Connection $database
    *   The database connection.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, Connection $database) {
-    $this->database = $database;
-  }
+  public function __construct(
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+    protected Connection $database,
+  ) {}
 
   /**
    * DatabaseQueue implements all default QueueUI methods.
@@ -116,7 +112,7 @@ class DatabaseQueue extends QueueUIBase implements ContainerFactoryPluginInterfa
    * @param string $queueName
    *   The name of the queue being inspected.
    *
-   * @return \Drupal\Core\Database\StatementInterface|int|null
+   * @return int|null
    *   return the value null
    */
   public function releaseItems($queueName) {

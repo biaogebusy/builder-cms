@@ -2,10 +2,12 @@
 
 namespace Drupal\blazy;
 
+use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+
 /**
- * Provides common blazy utility methods.
+ * Provides base blazy utility methods.
  */
-interface BlazyInterface {
+interface BlazyInterface extends ContainerInjectionInterface {
 
   /**
    * Returns the app root.
@@ -30,6 +32,14 @@ interface BlazyInterface {
    *   The entity type manager.
    */
   public function entityTypeManager();
+
+  /**
+   * Returns the libraries service.
+   *
+   * @return \Drupal\blazy\Asset\LibrariesInterface
+   *   The libraries service.
+   */
+  public function libraries();
 
   /**
    * Returns the module handler service.
@@ -128,7 +138,7 @@ interface BlazyInterface {
   public function configSchemaInfoAlter(
     array &$definitions,
     $formatter = 'blazy_base',
-    array $settings = []
+    array $settings = [],
   ): void;
 
   /**
@@ -176,7 +186,7 @@ interface BlazyInterface {
   public function getCachedData(
     $cid,
     array $data = [],
-    array $info = []
+    array $info = [],
   ): array;
 
   /**
@@ -201,7 +211,7 @@ interface BlazyInterface {
     $cid,
     array $data = [],
     $as_options = TRUE,
-    array $info = []
+    array $info = [],
   ): array;
 
   /**
@@ -325,7 +335,7 @@ interface BlazyInterface {
     array &$attrs,
     array &$content_attrs,
     $blazies,
-    $root = FALSE
+    $root = FALSE,
   ): void;
 
   /**
@@ -356,7 +366,7 @@ interface BlazyInterface {
   public function gridItemAttributes(
     array &$attrs,
     array &$content_attrs,
-    array $settings
+    array $settings,
   ): void;
 
   /**
@@ -441,7 +451,7 @@ interface BlazyInterface {
     $type = 'file',
     $access = TRUE,
     $conjunction = 'AND',
-    $condition = 'IN'
+    $condition = 'IN',
   ): array;
 
   /**
@@ -521,6 +531,17 @@ interface BlazyInterface {
    *   The merged configuration inside $configs.
    */
   public function mergeSettings($keys, array $defaults, array $configs): array;
+
+  /**
+   * A D9-12 compat \Drupal\Core\Render\RendererInterface::renderInIsolation().
+   *
+   * @param array $elements
+   *   The structured array describing the data to be rendered.
+   *
+   * @return \Drupal\Component\Render\MarkupInterface
+   *   The rendered HTML.
+   */
+  public function renderInIsolation(array &$elements);
 
   /**
    * A wrapper for \Drupal\Core\Extension\ModuleHandlerInterface::moduleExists.
@@ -623,7 +644,7 @@ interface BlazyInterface {
     array &$settings,
     array $data = [],
     $key = 'blazies',
-    array $defaults = []
+    array $defaults = [],
   ): array;
 
   /**
@@ -714,18 +735,5 @@ interface BlazyInterface {
    *   The checked value.
    */
   public function toHashtag(array $data, $key = 'settings', $default = []);
-
-  /**
-   * Deprecated in blazy:8.x-2.17, added in blazy:8.x-2.17. What a waste.
-   *
-   * @param array $settings
-   *   The settings being modified.
-   *
-   * @todo deprecated for self::verifySafely() for the returned values.
-   * @todo deprecated in blazy:8.x-2.17 and is removed from blazy:3.0.0. Use
-   * self::verifySafely() instead.
-   * @see https://www.drupal.org/node/3367291
-   */
-  public function verify(array &$settings): void;
 
 }

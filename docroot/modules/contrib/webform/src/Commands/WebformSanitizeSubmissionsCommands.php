@@ -105,7 +105,7 @@ class WebformSanitizeSubmissionsCommands extends DrushCommands implements Saniti
    *   The enabled options value.
    *
    * @return bool
-   *   TRUE if santize websubmission is enabled.
+   *   TRUE if sanitize websubmission is enabled.
    */
   protected function isEnabled($value) {
     return ($value !== 'no');

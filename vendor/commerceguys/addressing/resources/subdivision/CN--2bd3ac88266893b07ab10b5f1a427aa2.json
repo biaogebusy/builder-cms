@@ -1,0 +1,44 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"HN",
+		"Chenzhou Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Anren Xian": {
+			"local_name": "安仁县"
+		},
+		"Beihu Qu": {
+			"local_name": "北湖区"
+		},
+		"Guidong Xian": {
+			"local_name": "桂东县"
+		},
+		"Guiyang Xian": {
+			"local_name": "桂阳县"
+		},
+		"Jiahe Xian": {
+			"local_name": "嘉禾县"
+		},
+		"Linwu Xian": {
+			"local_name": "临武县"
+		},
+		"Rucheng Xian": {
+			"local_name": "汝城县"
+		},
+		"Suxian Qu": {
+			"local_name": "苏仙区"
+		},
+		"Yizhang Xian": {
+			"local_name": "宜章县"
+		},
+		"Yongxing Xian": {
+			"local_name": "永兴县"
+		},
+		"Zixing Shi": {
+			"local_name": "资兴市"
+		}
+	}
+}

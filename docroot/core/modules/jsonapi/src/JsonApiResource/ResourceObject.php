@@ -88,7 +88,7 @@ class ResourceObject implements CacheableDependencyInterface, ResourceIdentifier
    * @param \Drupal\Core\Language\LanguageInterface|null $language
    *   (optional) The resource language.
    */
-  public function __construct(CacheableDependencyInterface $cacheability, ResourceType $resource_type, $id, $revision_id, array $fields, LinkCollection $links, LanguageInterface $language = NULL) {
+  public function __construct(CacheableDependencyInterface $cacheability, ResourceType $resource_type, $id, $revision_id, array $fields, LinkCollection $links, ?LanguageInterface $language = NULL) {
     assert(is_null($revision_id) || $resource_type->isVersionable());
     $this->setCacheability($cacheability);
     $this->resourceType = $resource_type;
@@ -117,7 +117,7 @@ class ResourceObject implements CacheableDependencyInterface, ResourceIdentifier
    * @return static
    *   An instantiated resource object.
    */
-  public static function createFromEntity(ResourceType $resource_type, EntityInterface $entity, LinkCollection $links = NULL) {
+  public static function createFromEntity(ResourceType $resource_type, EntityInterface $entity, ?LinkCollection $links = NULL) {
     return new static(
       $entity,
       $resource_type,
@@ -311,7 +311,7 @@ class ResourceObject implements CacheableDependencyInterface, ResourceIdentifier
     // Special handling for user entities that allows a JSON:API user agent to
     // access the display name of a user. For example, this is useful when
     // displaying the name of a node's author.
-    // @todo: eliminate this special casing in https://www.drupal.org/project/drupal/issues/3079254.
+    // @todo Eliminate this special casing in https://www.drupal.org/project/drupal/issues/3079254.
     $entity_type = $entity->getEntityType();
     if ($entity_type->id() == 'user' && $resource_type->isFieldEnabled('display_name')) {
       assert($entity instanceof UserInterface);
@@ -344,7 +344,7 @@ class ResourceObject implements CacheableDependencyInterface, ResourceIdentifier
     // access the display name of a user. This is useful when displaying the
     // name of a node's author.
     // @see \Drupal\jsonapi\JsonApiResource\ResourceObject::extractContentEntityFields()
-    // @todo: eliminate this special casing in https://www.drupal.org/project/drupal/issues/3079254.
+    // @todo Eliminate this special casing in https://www.drupal.org/project/drupal/issues/3079254.
     if ($entity->getEntityTypeId() === 'user') {
       $label_field_name = 'display_name';
     }

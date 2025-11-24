@@ -7,36 +7,36 @@ namespace Drupal\sms\Message;
 /**
  * Defines states for SMS message reports.
  */
-class SmsMessageReportStatus extends SmsMessageStatus {
+final class SmsMessageReportStatus extends SmsMessageStatus {
 
   /**
    * Message was queued for sending.
    */
-  const QUEUED = 'queued';
+  public const QUEUED = 'queued';
 
   /**
    * Message was successfully delivered to the recipient.
    */
-  const DELIVERED = 'delivered';
+  public const DELIVERED = 'delivered';
 
   /**
    * Message expired and was not sent.
    */
-  const EXPIRED = 'expired';
+  public const EXPIRED = 'expired';
 
   /**
    * Message was rejected by the gateway.
    */
-  const REJECTED = 'rejected';
+  public const REJECTED = 'rejected';
 
   /**
    * Indicates a recipient of the message is invalid.
    */
-  const INVALID_RECIPIENT = 'invalid_recipient';
+  public const INVALID_RECIPIENT = 'invalid_recipient';
 
   /**
    * Content of message invalid or not supported by gateway.
    */
-  const CONTENT_INVALID = 'content_invalid';
+  public const CONTENT_INVALID = 'content_invalid';
 
 }

@@ -1,0 +1,25 @@
+<!-- Menu Breadcrumb logo - https://www.drupal.org/project/menu_breadcrumb/issues/3474524 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+    <!-- White background -->
+    <rect width="512" height="512" fill="#FFFFFF"/>
+
+    <!-- Top Menu Bar -->
+    <rect x="0" y="0" width="512" height="100" fill="#999"/>
+
+    <!-- Aligned Drupal Droplet -->
+    <path d="M50 20 C50 20 70 40 70 60 C70 72.5 62.5 80 50 80 C37.5 80 30 72.5 30 60 C30 40 50 20 50 20 Z"
+          fill="#FFF" stroke="#0678BE" stroke-width="5"/>
+
+    <!-- Letters in top menubar -->
+    <text x="90" y="75" font-family="Chicago" fill="#FF2222" font-size="60">M</text>
+    <text x="160" y="75" font-family="Chicago" fill="#00FF00" font-size="60">B</text>
+    <text x="210" y="75" font-family="Chicago" fill="#0000FF" font-size="60">C</text>
+
+    <!-- Dropdown menu rectangle -->
+    <rect x="0" y="100" width="512" height="412" fill="#EEE" stroke="#000000" stroke-width="5"/>
+
+    <!-- Menu entries -->
+    <text x="30" y="180" font-family="Chicago" fill="#000000" font-size="60">Menu</text>
+    <text x="30" y="260" font-family="Chicago" fill="#000000" font-size="60">Bread</text>
+    <text x="30" y="340" font-family="Chicago" fill="#000000" font-size="60">Crumb</text>
+</svg>

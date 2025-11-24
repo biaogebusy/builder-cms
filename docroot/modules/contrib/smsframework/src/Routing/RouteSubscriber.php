@@ -17,20 +17,14 @@ use Drupal\sms\Entity\SmsGateway;
 class RouteSubscriber implements ContainerInjectionInterface {
 
   /**
-   * The config factory.
-   *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface
-   */
-  protected $configFactory;
-
-  /**
    * Constructs a new SMS Framework RouteSubscriber.
    *
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   The gateway manager.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
+   *   The config factory.
    */
-  public function __construct(ConfigFactoryInterface $config_factory) {
-    $this->configFactory = $config_factory;
+  public function __construct(
+    protected ConfigFactoryInterface $configFactory,
+  ) {
   }
 
   /**
@@ -38,7 +32,7 @@ class RouteSubscriber implements ContainerInjectionInterface {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('config.factory')
+      $container->get('config.factory'),
     );
   }
 
@@ -64,7 +58,7 @@ class RouteSubscriber implements ContainerInjectionInterface {
         ],
         [
           '_permission' => 'sms verify phone number',
-        ]
+        ],
       ));
     }
 

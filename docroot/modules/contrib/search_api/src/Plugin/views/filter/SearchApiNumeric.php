@@ -2,15 +2,15 @@
 
 namespace Drupal\search_api\Plugin\views\filter;
 
+use Drupal\views\Attribute\ViewsFilter;
 use Drupal\views\Plugin\views\filter\NumericFilter;
 
 /**
  * Defines a filter for filtering on numeric values.
  *
  * @ingroup views_filter_handlers
- *
- * @ViewsFilter("search_api_numeric")
  */
+#[ViewsFilter('search_api_numeric')]
 class SearchApiNumeric extends NumericFilter {
 
   use SearchApiFilterTrait;

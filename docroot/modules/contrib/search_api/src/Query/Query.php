@@ -2,7 +2,6 @@
 
 namespace Drupal\search_api\Query;
 
-use Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
 use Drupal\Core\Cache\RefinableCacheableDependencyTrait;
@@ -10,14 +9,15 @@ use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\search_api\Display\DisplayPluginManagerInterface;
-use Drupal\search_api\Event\QueryPreExecuteEvent;
 use Drupal\search_api\Event\ProcessingResultsEvent;
+use Drupal\search_api\Event\QueryPreExecuteEvent;
 use Drupal\search_api\Event\SearchApiEvents;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\ParseMode\ParseModeInterface;
 use Drupal\search_api\ParseMode\ParseModePluginManager;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\Utility\QueryHelperInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Provides a standard implementation for a Search API query.
@@ -166,7 +166,7 @@ class Query implements QueryInterface, RefinableCacheableDependencyInterface {
   /**
    * The event dispatcher.
    *
-   * @var \Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher|null
+   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface|null
    */
   protected $eventDispatcher;
 
@@ -256,7 +256,7 @@ class Query implements QueryInterface, RefinableCacheableDependencyInterface {
   /**
    * Retrieves the event dispatcher.
    *
-   * @return \Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher
+   * @return \Symfony\Component\EventDispatcher\EventDispatcherInterface
    *   The event dispatcher.
    */
   public function getEventDispatcher() {
@@ -266,12 +266,12 @@ class Query implements QueryInterface, RefinableCacheableDependencyInterface {
   /**
    * Sets the event dispatcher.
    *
-   * @param \Drupal\Component\EventDispatcher\ContainerAwareEventDispatcher $event_dispatcher
+   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
    *   The new event dispatcher.
    *
    * @return $this
    */
-  public function setEventDispatcher(ContainerAwareEventDispatcher $event_dispatcher) {
+  public function setEventDispatcher(EventDispatcherInterface $event_dispatcher) {
     $this->eventDispatcher = $event_dispatcher;
     return $this;
   }
@@ -406,7 +406,7 @@ class Query implements QueryInterface, RefinableCacheableDependencyInterface {
   /**
    * {@inheritdoc}
    */
-  public function setLanguages(array $languages = NULL) {
+  public function setLanguages(?array $languages = NULL) {
     $this->languages = $languages !== NULL ? array_values($languages) : NULL;
     return $this;
   }
@@ -444,7 +444,7 @@ class Query implements QueryInterface, RefinableCacheableDependencyInterface {
   /**
    * {@inheritdoc}
    */
-  public function setFulltextFields(array $fields = NULL) {
+  public function setFulltextFields(?array $fields = NULL) {
     $this->fields = $fields;
     return $this;
   }
@@ -506,6 +506,7 @@ class Query implements QueryInterface, RefinableCacheableDependencyInterface {
    */
   public function abort($error_message = NULL) {
     $this->aborted = $error_message ?? TRUE;
+    return $this;
   }
 
   /**
@@ -602,7 +603,7 @@ class Query implements QueryInterface, RefinableCacheableDependencyInterface {
         $this->getEventDispatcher()->dispatch($event, $event_name);
       }
 
-      $description = 'This hook is deprecated in search_api:8.x-1.14 and is removed from search_api:2.0.0. Please use the "search_api.query_pre_execute" event instead. See https://www.drupal.org/node/3059866';
+      $description = 'This hook is deprecated in search_api:8.x-1.14 and is removed from search_api:2.0.0. Use the "search_api.query_pre_execute" event instead. See https://www.drupal.org/node/3059866';
       $this->getModuleHandler()->alterDeprecated($description, $hooks, $this);
     }
   }
@@ -632,7 +633,7 @@ class Query implements QueryInterface, RefinableCacheableDependencyInterface {
       $this->getEventDispatcher()->dispatch($event, "$event_base_name.$tag");
       $this->results = $event->getResults();
     }
-    $description = 'This hook is deprecated in search_api:8.x-1.14 and is removed from search_api:2.0.0. Please use the "search_api.processing_results" event instead. See https://www.drupal.org/node/3059866';
+    $description = 'This hook is deprecated in search_api:8.x-1.14 and is removed from search_api:2.0.0. Use the "search_api.processing_results" event instead. See https://www.drupal.org/node/3059866';
     $this->getModuleHandler()->alterDeprecated($description, $hooks, $this->results);
 
     // Store the results in the static cache.
@@ -812,7 +813,7 @@ class Query implements QueryInterface, RefinableCacheableDependencyInterface {
   /**
    * Implements the magic __sleep() method to avoid serializing the index.
    */
-  public function __sleep() {
+  public function __sleep(): array {
     $this->indexId = $this->index->id();
     $keys = $this->traitSleep();
     return array_diff($keys, ['index']);
@@ -821,7 +822,7 @@ class Query implements QueryInterface, RefinableCacheableDependencyInterface {
   /**
    * Implements the magic __wakeup() method to reload the query's index.
    */
-  public function __wakeup() {
+  public function __wakeup(): void {
     if (!isset($this->index)
         && !empty($this->indexId)
         && \Drupal::hasContainer()
@@ -829,8 +830,8 @@ class Query implements QueryInterface, RefinableCacheableDependencyInterface {
       $this->index = \Drupal::entityTypeManager()
         ->getStorage('search_api_index')
         ->load($this->indexId);
-      $this->indexId = NULL;
     }
+    $this->indexId = NULL;
 
     $this->traitWakeup();
   }

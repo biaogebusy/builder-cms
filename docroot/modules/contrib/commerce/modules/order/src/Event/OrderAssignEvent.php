@@ -60,16 +60,4 @@ class OrderAssignEvent extends EventBase {
     return $this->customer;
   }
 
-  /**
-   * Gets the user account.
-   *
-   * @deprecated Use getCustomer() instead.
-   *
-   * @return \Drupal\user\UserInterface
-   *   The user account.
-   */
-  public function getAccount() {
-    return $this->getCustomer();
-  }
-
 }

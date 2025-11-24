@@ -22,8 +22,6 @@ use Drupal\jsonapi\ResourceType\ResourceTypeRepositoryInterface;
 
 /**
  * Service to extract code out of the PullForm.
- *
- * @package Drupal\entity_share_client\Service
  */
 class FormHelper implements FormHelperInterface {
 
@@ -34,7 +32,7 @@ class FormHelper implements FormHelperInterface {
    *
    * Long format.
    */
-  const CHANGED_FORMAT = 'l, F j, Y - H:i';
+  public const CHANGED_FORMAT = 'l, F j, Y - H:i';
 
   /**
    * The resource type repository.
@@ -149,7 +147,7 @@ class FormHelper implements FormHelperInterface {
    * @throws \Drupal\entity_share_client\Exception\ResourceTypeNotFoundException
    */
   protected function addOptionFromJson(array &$options, array $data, RemoteInterface $remote, $channel_id, $level = 0) {
-    $parsed_type = explode('--', $data['type']);
+    $parsed_type = \explode('--', $data['type']);
     $entity_type_id = $parsed_type[0];
     $bundle_id = $parsed_type[1];
 
@@ -172,17 +170,17 @@ class FormHelper implements FormHelperInterface {
     if ($resource_type->hasField('changed')) {
       $changed_public_name = $resource_type->getPublicName('changed');
       if (!empty($data['attributes'][$changed_public_name])) {
-        if (is_numeric($data['attributes'][$changed_public_name])) {
+        if (\is_numeric($data['attributes'][$changed_public_name])) {
           $remote_changed_date = DrupalDateTime::createFromTimestamp($data['attributes'][$changed_public_name]);
           $remote_changed_info = $remote_changed_date->format(self::CHANGED_FORMAT, [
-            'timezone' => date_default_timezone_get(),
+            'timezone' => \date_default_timezone_get(),
           ]);
         }
         else {
           $remote_changed_date = DrupalDateTime::createFromFormat(\DateTime::RFC3339, $data['attributes'][$changed_public_name]);
           if ($remote_changed_date) {
             $remote_changed_info = $remote_changed_date->format(self::CHANGED_FORMAT, [
-              'timezone' => date_default_timezone_get(),
+              'timezone' => \date_default_timezone_get(),
             ]);
           }
         }
@@ -205,12 +203,12 @@ class FormHelper implements FormHelperInterface {
     if ($this->moduleHandler->moduleExists('entity_share_diff')) {
       $id_public_name = $resource_type->getPublicName($entity_keys['id']);
       if (
-        in_array($status_info['info_id'], [
+        \in_array($status_info['info_id'], [
           StateInformationInterface::INFO_ID_CHANGED,
           StateInformationInterface::INFO_ID_NEW_TRANSLATION,
-        ]) &&
-        !is_null($status_info['local_revision_id']) &&
-        isset($data['attributes'][$id_public_name])
+        ], TRUE)
+        && $status_info['local_revision_id'] !== NULL
+        && isset($data['attributes'][$id_public_name])
       ) {
         $options[$data['id']]['status']['data'] = new FormattableMarkup('@label: @diff_link', [
           '@label' => $options[$data['id']]['status']['data'],
@@ -253,11 +251,11 @@ class FormHelper implements FormHelperInterface {
    */
   protected function getOptionLabel(array $data, array $status_info, array $entity_keys, $remote_url, $level) {
     $indentation = '';
-    for ($i = 1; $i <= $level; $i++) {
+    for ($i = 1; $i <= $level; ++$i) {
       $indentation .= '<div class="indentation">&nbsp;</div>';
     }
 
-    $parsed_type = explode('--', $data['type']);
+    $parsed_type = \explode('--', $data['type']);
     $entity_type_id = $parsed_type[0];
     $bundle_id = $parsed_type[1];
 
@@ -292,7 +290,7 @@ class FormHelper implements FormHelperInterface {
 
       if ($entity_definition->hasLinkTemplate('canonical')) {
         $canonical_path = $entity_definition->getLinkTemplate('canonical');
-        $remote_entity_path = str_replace('{' . $entity_type_id . '}', $remote_entity_id, $canonical_path);
+        $remote_entity_path = \str_replace('{' . $entity_type_id . '}', $remote_entity_id, $canonical_path);
         $remote_entity_url = Url::fromUri($remote_url . $remote_entity_path);
 
         $label = Link::fromTextAndUrl($label, $remote_entity_url)->toString();
@@ -301,16 +299,14 @@ class FormHelper implements FormHelperInterface {
 
     // Prepare link to local entity if it exists.
     $local_link = '';
-    if (!is_null($status_info['local_entity_link'])) {
+    if ($status_info['local_entity_link'] !== NULL) {
       $local_link = new Link($this->t('(View local)'), $status_info['local_entity_link']);
       $local_link = $local_link->toString();
     }
 
-    $label = new FormattableMarkup($indentation . '@label ' . $local_link, [
+    return new FormattableMarkup($indentation . '@label ' . $local_link, [
       '@label' => $label,
     ]);
-
-    return $label;
   }
 
   /**
@@ -332,7 +328,7 @@ class FormHelper implements FormHelperInterface {
       return $this->t('Untranslatable entity');
     }
 
-    $parsed_type = explode('--', $data['type']);
+    $parsed_type = \explode('--', $data['type']);
     $resource_type = $this->resourceTypeRepository->get(
       $parsed_type[0],
       $parsed_type[1]
@@ -340,7 +336,7 @@ class FormHelper implements FormHelperInterface {
     $langcode = $data['attributes'][$resource_type->getPublicName($entity_keys['langcode'])];
     $language = $this->languageManager->getLanguage($langcode);
     // Check if the entity is in an enabled language.
-    if (is_null($language)) {
+    if ($language === NULL) {
       $language_list = LanguageManager::getStandardLanguageList();
       if (isset($language_list[$langcode])) {
         $entity_language = $language_list[$langcode][0] . ' ' . $this->t('(not enabled)', [], ['context' => 'language']);

@@ -216,7 +216,7 @@ class RangeFieldTest extends UnitTestCase {
   /**
    * Data provider.
    */
-  public function alterMigrationDataProvider() {
+  public static function alterMigrationDataProvider() {
     return [
       'not range field' => ['link', FALSE],
       'range integer field' => ['range_integer', TRUE],

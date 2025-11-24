@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\select_or_other\Unit;
 
+use Drupal\select_or_other\Plugin\Field\FieldWidget\WidgetBase;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -41,7 +42,7 @@ abstract class UnitTestBase extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
     $this->prepareContainer();
     $this->addMockServicesToContainer();
@@ -83,7 +84,7 @@ abstract class UnitTestBase extends UnitTestCase {
    *   The mocked user.
    */
   private function getNewUserMock() {
-    $user_mock = $this->getMockForAbstractClass('\Drupal\Core\Session\AccountProxyInterface');
+    $user_mock = $this->createMock('\Drupal\Core\Session\AccountProxyInterface');
     $user_mock->method('id')->willReturn(1);
     return $user_mock;
   }
@@ -95,7 +96,7 @@ abstract class UnitTestBase extends UnitTestCase {
    *   The new Entity Type Manager Mock.
    */
   private function getNewEntityTypeManagerMock() {
-    $field_storage_config = $this->getMockForAbstractClass('\Drupal\field\FieldStorageConfigInterface');
+    $field_storage_config = $this->createMock('\Drupal\field\FieldStorageConfigInterface');
     $field_storage_config->method('setSetting')->willReturnSelf();
     $entity_storage_methods = [
       'load' => $field_storage_config,
@@ -116,11 +117,11 @@ abstract class UnitTestBase extends UnitTestCase {
    *   The two mocks.
    */
   protected function getBasicMocks() {
-    $methods = ['getSetting', 'getSelectedOptions', 'getColumn'];
-    $parent = $this->getMockBuilder('Drupal\select_or_other\Plugin\Field\FieldWidget\WidgetBase')
+    $methods = ['getSetting', 'getSelectedOptions', 'getColumn', 'getOptions'];
+    $parent = $this->getMockBuilder(WidgetBase::class)
       ->onlyMethods($methods)
       ->disableOriginalConstructor()
-      ->getMockForAbstractClass();
+      ->getMock();
     $mock = $this->getMockBuilder($this->getTestedClassName())
       ->onlyMethods($methods)
       ->disableOriginalConstructor()
@@ -131,7 +132,7 @@ abstract class UnitTestBase extends UnitTestCase {
     $reflected_field_definition->setAccessible(TRUE);
     /** @var \PHPUnit\Framework\MockObject\MockObject $current_mock */
     foreach ($mocks as $current_mock) {
-      $field_definition_methods = ['getFieldStorageDefinition' => $this->getMockForAbstractClass('Drupal\Core\Field\FieldStorageDefinitionInterface')];
+      $field_definition_methods = ['getFieldStorageDefinition' => $this->createMock('Drupal\Core\Field\FieldStorageDefinitionInterface')];
       $field_definition = $this->getMockForAbstractClassWithMethods('\Drupal\Core\Field\FieldDefinitionInterface', $field_definition_methods);
       $reflected_field_definition->setValue($current_mock, $field_definition);
 
@@ -154,7 +155,7 @@ abstract class UnitTestBase extends UnitTestCase {
    *   The created mock.
    */
   protected function getMockForAbstractClassWithMethods($abstractClassName, array $methods) {
-    $mock = $this->getMockForAbstractClass($abstractClassName);
+    $mock = $this->createMock($abstractClassName);
 
     foreach ($methods as $method => $return_value) {
       $mock->method($method)->willReturn($return_value);

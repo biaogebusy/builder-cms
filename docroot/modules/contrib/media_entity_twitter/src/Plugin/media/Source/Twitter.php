@@ -6,19 +6,19 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Field\FieldTypePluginManagerInterface;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Psr\Log\LoggerInterface;
-use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
 use Drupal\Core\Render\RendererInterface;
+use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
 use Drupal\media\MediaInterface;
 use Drupal\media\MediaSourceBase;
+use Drupal\media\MediaSourceFieldConstraintsInterface;
 use Drupal\media\MediaTypeInterface;
 use Drupal\media\Plugin\media\Source\OEmbedInterface;
 use Drupal\media_entity_twitter\TweetFetcherInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Field\FieldTypePluginManagerInterface;
-use Drupal\media\MediaSourceFieldConstraintsInterface;
 
 /**
  * Twitter entity media source.
@@ -89,7 +89,7 @@ class Twitter extends MediaSourceBase implements MediaSourceFieldConstraintsInte
    * @var array
    */
   public static $validationRegexp = [
-    '@((http|https):){0,1}//(www\.){0,1}twitter\.com/(?<user>[a-z0-9_-]+)/(status(es){0,1})/(?<id>[\d]+)@i' => 'id',
+    '@((http|https):){0,1}//(www\.){0,1}(twitter|x)\.com/(?<user>[a-z0-9_-]+)/(status(es){0,1})/(?<id>[\d]+)@i' => 'id',
   ];
 
   /**
@@ -214,6 +214,14 @@ class Twitter extends MediaSourceBase implements MediaSourceFieldConstraintsInte
         $svg = $this->renderer->renderRoot($thumbnail);
 
         return $this->fileSystem->saveData($svg, $thumbnail_uri, FileSystemInterface::EXISTS_ERROR) ?: parent::getMetadata($media, $attribute_name);
+
+      case 'default_name':
+        $user = $this->getMetadata($media, 'user');
+        $id = $this->getMetadata($media, 'id');
+        if (!empty($user) && !empty($id)) {
+          return $user . ' - ' . $id;
+        }
+        return parent::getMetadata($media, 'default_name');
     }
 
     // If we have auth settings return the other fields.
@@ -234,7 +242,7 @@ class Twitter extends MediaSourceBase implements MediaSourceFieldConstraintsInte
             }
             else {
               $image_url = $this->getMetadata($media, 'image');
-              // @TODO: Use Guzzle, possibly in a service, for this.
+              // @todo Use Guzzle, possibly in a service, for this.
               $image_data = file_get_contents($image_url);
               if ($image_data) {
                 return $this->fileSystem->saveData($image_data, $local_uri, FileSystemInterface::EXISTS_REPLACE);
@@ -281,14 +289,6 @@ class Twitter extends MediaSourceBase implements MediaSourceFieldConstraintsInte
             return $tweet['user']['name'];
           }
           return NULL;
-
-        case 'default_name':
-          $user = $this->getMetadata($media, 'user');
-          $id = $this->getMetadata($media, 'id');
-          if (!empty($user) && !empty($id)) {
-            return $user . ' - ' . $id;
-          }
-          return NULL;
       }
     }
 
@@ -312,7 +312,7 @@ class Twitter extends MediaSourceBase implements MediaSourceFieldConstraintsInte
       ],
     ];
 
-    // @todo: Evaluate if this should be a site-wide configuration.
+    // @todo Evaluate if this should be a site-wide configuration.
     $form['consumer_key'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Consumer key'),
@@ -485,7 +485,7 @@ class Twitter extends MediaSourceBase implements MediaSourceFieldConstraintsInte
    * {@inheritdoc}
    */
   public function getProviders() {
-    return ['Twitter'];
+    return ['Twitter', 'X'];
   }
 
 }

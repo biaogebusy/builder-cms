@@ -29,6 +29,9 @@ block.settings.commerce_cart:
     dropdown:
       type: boolean
       label: 'Display cart contents in dropdown'
+    show_if_empty:
+      type: boolean
+      label: 'Display block if cart is empty'
 
 views.field.commerce_order_item_edit_quantity:
   type: views.field.field

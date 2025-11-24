@@ -29,11 +29,16 @@ class ProductVariationAccessControlHandler extends CoreEntityAccessControlHandle
       return AccessResult::allowed()->cachePerPermissions();
     }
 
+    $bundle = $entity->bundle();
+    $manage_bundle_permission = "manage $bundle commerce_product_variation";
     /** @var \Drupal\commerce_product\Entity\ProductVariationInterface $entity */
+    if ($operation === 'view' && !$entity->isPublished()) {
+      return AccessResult::allowedIfHasPermission($account, $manage_bundle_permission)->addCacheableDependency($entity);
+    }
+
     $product = $entity->getProduct();
     if (!$product) {
-      // The product variation is malformed.
-      return AccessResult::forbidden()->addCacheableDependency($entity);
+      return AccessResult::forbidden('The product variation is malformed.')->addCacheableDependency($entity);
     }
 
     if ($operation === 'view') {
@@ -42,8 +47,7 @@ class ProductVariationAccessControlHandler extends CoreEntityAccessControlHandle
       $result->addCacheableDependency($entity);
     }
     else {
-      $bundle = $entity->bundle();
-      $result = AccessResult::allowedIfHasPermission($account, "manage $bundle commerce_product_variation")->cachePerPermissions();
+      $result = AccessResult::allowedIfHasPermission($account, $manage_bundle_permission);
     }
 
     return $result;

@@ -131,14 +131,13 @@ class ImageFieldTest extends EntityBrowserWebDriverTestBase {
     $this->getSession()->switchToIFrame('entity_browser_iframe_test_entity_browser_iframe_view');
     $this->getSession()->getPage()->checkField('entity_browser_select[file:' . $this->image->id() . ']');
     $this->getSession()->getPage()->pressButton('Select entities');
-    $this->waitForAjaxToFinish();
     $button = $this->assertSession()->waitForButton('Use selected');
     $this->assertSession()->pageTextContains('example.jpg');
     $button->press();
+    $this->waitForAjaxToFinish();
 
     // Switch back to the main page.
     $this->getSession()->switchToIFrame();
-    $this->waitForAjaxToFinish();
     // Check if the image thumbnail exists.
     $this->assertSession()
       ->waitForElementVisible('xpath', '//tr[@data-drupal-selector="edit-field-image-current-1"]');
@@ -222,7 +221,6 @@ class ImageFieldTest extends EntityBrowserWebDriverTestBase {
     // to allow png but the field widget is configured to allow jpg, so we
     // expect the field to override the widget.
     $this->getSession()->getPage()->attachFileToField('files[upload][]', $file_wrong_type);
-    $this->waitForAjaxToFinish();
     if (version_compare(\Drupal::VERSION, '8.7', '>=')) {
       $this->assertSession()->responseContains('Only files with the following extensions are allowed: <em class="placeholder">jpg</em>.');
       $this->assertSession()->responseContains('The selected file <em class="placeholder">druplicon.png</em> cannot be uploaded.');
@@ -239,14 +237,17 @@ class ImageFieldTest extends EntityBrowserWebDriverTestBase {
     $this->getSession()->getPage()->attachFileToField('files[upload][]', $file_just_right);
     $this->waitForAjaxToFinish();
     $this->getSession()->getPage()->pressButton('Select files');
-    $this->waitForAjaxToFinish();
     $button = $this->assertSession()->waitForButton('Use selected');
     $this->assertSession()->pageTextContains('image-test.jpg');
     $button->press();
     $this->waitForAjaxToFinish();
     // Check that the file has uploaded to the correct sub-directory.
     $this->getSession()->switchToIFrame();
-    $this->waitForAjaxToFinish();
+
+    if (!$this->coreVersion('10.2')) {
+      $this->assertSession()->assertWaitOnAjaxRequest();
+    }
+
     $entity_id = $this->getSession()->evaluateScript('jQuery("#edit-field-image-wrapper [data-entity-id]").data("entity-id")');
     $this->assertStringStartsWith('file:', $entity_id);
     /** @var \Drupal\file\Entity\File $file */

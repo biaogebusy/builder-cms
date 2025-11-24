@@ -377,7 +377,7 @@ class IndexProcessorsForm extends EntityForm {
       else {
         $this->logger->warning('Processor %id specifies a non-existing class %class.', [
           '%id' => $name,
-          '%class' => $processor_definition['class'],
+          '%class' => $processor_definition['class'] ?? '(null)',
         ]);
       }
     }

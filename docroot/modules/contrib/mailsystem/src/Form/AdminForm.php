@@ -3,6 +3,7 @@
 namespace Drupal\mailsystem\Form;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Extension\ModuleExtensionList;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Extension\ThemeHandlerInterface;
 use Drupal\Core\Form\ConfigFormBase;
@@ -39,34 +40,22 @@ class AdminForm extends ConfigFormBase {
   protected $themeHandler;
 
   /**
-   * Constructs a \Drupal\system\ConfigFormBase object.
+   * The module extension list.
    *
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   The factory for configuration objects.
-   * @param \Drupal\Core\Mail\MailManagerInterface $mail_manager
-   *   The mail manager.
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
-   *   The module handler.
-   * @param \Drupal\Core\Extension\ThemeHandlerInterface $theme_handler
-   *   The theme handler.
+   * @var \Drupal\Core\Extension\ModuleExtensionList
    */
-  public function __construct(ConfigFactoryInterface $config_factory, MailManagerInterface $mail_manager, ModuleHandlerInterface $module_handler, ThemeHandlerInterface $theme_handler) {
-    parent::__construct($config_factory);
-    $this->mailManager = $mail_manager;
-    $this->moduleHandler = $module_handler;
-    $this->themeHandler = $theme_handler;
-  }
+  protected ModuleExtensionList $moduleExtensionList;
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('config.factory'),
-      $container->get('plugin.manager.mail'),
-      $container->get('module_handler'),
-      $container->get('theme_handler')
-    );
+    $form = parent::create($container);
+    $form->mailManager = $container->get('plugin.manager.mail');
+    $form->moduleHandler = $container->get('module_handler');
+    $form->themeHandler = $container->get('theme_handler');
+    $form->moduleExtensionList = $container->get('extension.list.module');
+    return $form;
   }
 
   /**
@@ -198,7 +187,7 @@ class AdminForm extends ConfigFormBase {
           $module_key = $module . '.' . $key;
 
           $row = [
-            'module' => ['#markup' => $this->moduleHandler->getName($module)],
+            'module' => ['#markup' => $this->moduleExtensionList->getName($module)],
             'key' => ['#markup' => $key == 'none' ? $this->t('All') : $key],
           ];
 
@@ -332,8 +321,8 @@ class AdminForm extends ConfigFormBase {
     $list = [];
 
     // Append all MailPlugins.
-    foreach ($this->mailManager->getDefinitions() as $definition) {
-      $list[$definition['id']] = $definition['label'];
+    foreach ($this->mailManager->getDefinitions() as $plugin_id => $definition) {
+      $list[$plugin_id] = $definition['label'];
     }
     return $list;
   }
@@ -370,7 +359,7 @@ class AdminForm extends ConfigFormBase {
    */
   protected function getModulesList() {
     $list = [];
-    if (method_exists($this->moduleHandler, 'invokeAllWIth')) {
+    if (method_exists($this->moduleHandler, 'invokeAllWith')) {
       $this->moduleHandler->invokeAllWith('mail', function (callable $hook, string $module) use (&$list) {
         $list[$module] = $this->moduleHandler->getName($module);
       });

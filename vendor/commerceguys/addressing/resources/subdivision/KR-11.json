@@ -1,0 +1,85 @@
+{
+	"country_code": "KR",
+	"parents": [
+		"KR",
+		"11"
+	],
+	"locale": "ko",
+	"subdivisions": {
+		"Gangnam-gu": {
+			"local_name": "강남구"
+		},
+		"Gangdong-gu": {
+			"local_name": "강동구"
+		},
+		"Gangbuk-gu": {
+			"local_name": "강북구"
+		},
+		"Gangseo-gu": {
+			"local_name": "강서구"
+		},
+		"Gwanak-gu": {
+			"local_name": "관악구"
+		},
+		"Gwangjin-gu": {
+			"local_name": "광진구"
+		},
+		"Guro-gu": {
+			"local_name": "구로구"
+		},
+		"Geumcheon-gu": {
+			"local_name": "금천구"
+		},
+		"Nowon-gu": {
+			"local_name": "노원구"
+		},
+		"Dobong-gu": {
+			"local_name": "도봉구"
+		},
+		"Dongdaemun-gu": {
+			"local_name": "동대문구"
+		},
+		"Dongjak-gu": {
+			"local_name": "동작구"
+		},
+		"Mapo-gu": {
+			"local_name": "마포구"
+		},
+		"Seodaemun-gu": {
+			"local_name": "서대문구"
+		},
+		"Seocho-gu": {
+			"local_name": "서초구"
+		},
+		"Seongdong-gu": {
+			"local_name": "성동구"
+		},
+		"Seongbuk-gu": {
+			"local_name": "성북구"
+		},
+		"Songpa-gu": {
+			"local_name": "송파구"
+		},
+		"Yangcheon-gu": {
+			"local_name": "양천구"
+		},
+		"Yeongdeungpo-gu": {
+			"local_name": "영등포구"
+		},
+		"Yongsan-gu": {
+			"local_name": "용산구"
+		},
+		"Eunpyeong-gu": {
+			"local_name": "은평구"
+		},
+		"Jongno-gu": {
+			"local_name": "종로구"
+		},
+		"Jung-gu": {
+			"local_name": "중구"
+		},
+		"Jungnang-gu": {
+			"local_name": "중랑구"
+		}
+	}
+}

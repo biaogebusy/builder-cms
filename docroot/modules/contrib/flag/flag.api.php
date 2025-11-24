@@ -5,10 +5,10 @@
  * Hooks provided by the Flag module.
  */
 
-use Drupal\flag\FlagInterface;
-use Drupal\Core\Session\AccountInterface;
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\flag\FlagInterface;
 
 /**
  * @addtogroup hooks
@@ -51,7 +51,7 @@ function hook_flag_options_alter(array &$options, FlagInterface $flag) {
  *
  * This hook may be placed in a $module.flag.inc file.
  *
- * @param $link_types
+ * @param array $link_types
  *   An array of the link types defined by all modules.
  *
  * @see \Drupal\flag\ActionLink\ActionLinkPluginManager
@@ -75,6 +75,6 @@ function hook_flag_link_type_info_alter(array &$link_types) {
  * @return \Drupal\Core\Access\AccessResult
  *   An AccessResult object.
  */
-function hook_flag_action_access($action, FlagInterface $flag, AccountInterface $account, EntityInterface $flaggable = NULL) {
+function hook_flag_action_access($action, FlagInterface $flag, AccountInterface $account, ?EntityInterface $flaggable = NULL) {
   return AccessResult::neutral();
 }

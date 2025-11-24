@@ -7,7 +7,6 @@
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Entity\ContentEntityFormInterface;
-use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
@@ -15,6 +14,9 @@ use Drupal\Core\Url;
 use Drupal\group\Entity\GroupContent;
 use Drupal\group\Entity\GroupRelationship;
 use Drupal\group\Plugin\Group\Relation\GroupRelationTypeManagerInterface;
+use Drupal\node\NodeInterface;
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Session\AccountInterface;
 
 /**
  * Implements hook_entity_type_build().
@@ -36,15 +38,13 @@ function quick_node_clone_entity_operation(EntityInterface $entity) {
     return $operations;
   }
 
-  if (!_quick_node_clone_has_clone_permission($entity)) {
-    return $operations;
+  if ($entity->access('clone')) {
+    $operations['quick_clone'] = [
+      'title' => t('Clone'),
+      'weight' => '100',
+      'url' => Url::fromRoute('quick_node_clone.node.quick_clone', ['node' => $entity->id()]),
+    ];
   }
-
-  $operations['quick_clone'] = [
-    'title' => t('Clone'),
-    'weight' => '100',
-    'url' => Url::fromRoute('quick_node_clone.node.quick_clone', ['node' => $entity->id()]),
-  ];
 
   return $operations;
 }
@@ -103,50 +103,61 @@ function quick_node_clone_form_alter(&$form, FormStateInterface $form_state, $fo
 }
 
 /**
- * Determine if the current user has permission to clone a specified node.
- *
- * @param \Drupal\Core\Entity\ContentEntityInterface $node
- *   The node to examine.
- *
- * @return bool
- *   TRUE or FALSE
+ * Implements hook_node_access().
  */
-function _quick_node_clone_has_clone_permission(ContentEntityInterface $node) {
-  $current_user = \Drupal::currentUser();
+function quick_node_clone_node_access(NodeInterface $node, $operation, AccountInterface $account) {
+  // Check if the operation is 'clone'.
+  if ($operation != 'clone') {
+    return AccessResult::neutral();
+  }
+
   $bundle = $node->bundle();
-  if ($current_user->hasPermission("clone $bundle content")) {
-    if (\Drupal::moduleHandler()->moduleExists('gnode')) {
-      // Check that user has permission to create a relationship.
-      // Support for group module version 1.x.
-      if (class_exists(GroupContent::class)) {
-        $group_relationships = GroupContent::loadByEntity($node);
-        foreach ($group_relationships as $group_relationship) {
-          $access = $group_relationship->getContentPlugin()->createEntityAccess($group_relationship->getGroup(), $current_user);
-          if ($access->isAllowed()) {
-            return TRUE;
-          }
-        }
-      }
-      // Support for group module version 2.x and 3.x.
-      else {
-        $group_relationships = GroupRelationship::loadByEntity($node);
-        $relation_type_manager = \Drupal::service('group_relation_type.manager');
-        assert($relation_type_manager instanceof GroupRelationTypeManagerInterface);
-        foreach ($group_relationships as $group_relationship) {
-          $access_handler = $relation_type_manager->getAccessControlHandler($group_relationship->getPluginId());
-          $access = $access_handler->entityCreateAccess($group_relationship->getGroup(), $current_user);
-          if ($access) {
-            return TRUE;
-          }
+  $permissions = ["clone $bundle content"];
+
+  $is_owner = $node->getOwnerId() == $account->id();
+  if ($is_owner) {
+    $permissions[] = "clone own $bundle content";
+  }
+
+  $access = AccessResult::allowedIfHasPermissions($account, $permissions, 'OR');
+  if (!$access->isAllowed()) {
+    return AccessResult::neutral();
+  }
+
+  if (\Drupal::moduleHandler()->moduleExists('gnode')) {
+
+    // Check that user has permission to create a relationship.
+    // Support for group module version 1.x.
+    if (class_exists(GroupContent::class)) {
+      $group_relationships = GroupContent::loadByEntity($node);
+      foreach ($group_relationships as $group_relationship) {
+        $access = $group_relationship->getContentPlugin()->createEntityAccess($group_relationship->getGroup(), $account);
+        if ($access->isAllowed()) {
+          return AccessResult::allowed();
         }
       }
     }
-
-    // Only check global access if we there is no group module enabled, or
-    // content does not have group(s).
-    if (empty($group_relationships) && $node->access('create')) {
-      return TRUE;
+    // Support for group module version 2.x and 3.x.
+    else {
+      $group_relationships = GroupRelationship::loadByEntity($node);
+      $relation_type_manager = \Drupal::service('group_relation_type.manager');
+      assert($relation_type_manager instanceof GroupRelationTypeManagerInterface);
+      foreach ($group_relationships as $group_relationship) {
+        $access_handler = $relation_type_manager->getAccessControlHandler($group_relationship->getPluginId());
+        $access = $access_handler->entityCreateAccess($group_relationship->getGroup(), $account);
+        if ($access) {
+          return AccessResult::allowed();
+        }
+      }
     }
   }
-  return FALSE;
+
+  // Only check global access if we there is no group module enabled, or
+  // content does not have group(s).
+  if (empty($group_relationships) && $node->access('create')) {
+    return AccessResult::allowed();
+  }
+
+  // Default to Drupal's normal access handling.
+  return AccessResult::neutral();
 }

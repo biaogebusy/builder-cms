@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\webform\Functional\Element;
 
+use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\file\Entity\File;
 use Drupal\webform\Entity\WebformSubmission;
 
@@ -38,16 +39,16 @@ class WebformElementMediaFileTest extends WebformElementManagedFileTestBase {
     $this->drupalGet('/webform/test_element_media_file');
 
     // Check document file.
-    $assert_session->responseContains('<input data-drupal-selector="edit-document-file-upload" type="file" id="edit-document-file-upload" name="files[document_file]" size="22" class="js-form-file form-file" />');
+    $assert_session->responseContains('<input aria-describedby="edit-document-file--description" data-drupal-selector="edit-document-file-upload" type="file" id="edit-document-file-upload" name="files[document_file]" size="22" class="js-form-file form-file" />');
 
     // Check audio file.
-    $assert_session->responseContains('<input data-drupal-selector="edit-audio-file-upload" accept="audio/*" type="file" id="edit-audio-file-upload" name="files[audio_file]" size="22" class="js-form-file form-file" />');
+    $assert_session->responseContains('<input aria-describedby="edit-audio-file--description" data-drupal-selector="edit-audio-file-upload" accept="audio/*" type="file" id="edit-audio-file-upload" name="files[audio_file]" size="22" class="js-form-file form-file" />');
 
     // Check image file.
-    $assert_session->responseContains('<input data-drupal-selector="edit-image-file-upload" accept="image/*" type="file" id="edit-image-file-upload" name="files[image_file]" size="22" class="js-form-file form-file" />');
+    $assert_session->responseContains('<input aria-describedby="edit-image-file--description" data-drupal-selector="edit-image-file-upload" accept="image/*" type="file" id="edit-image-file-upload" name="files[image_file]" size="22" class="js-form-file form-file" />');
 
     // Check video file.
-    $assert_session->responseContains('<input data-drupal-selector="edit-video-file-upload" accept="video/mp4,video/x-m4v,video/*" type="file" id="edit-video-file-upload" name="files[video_file]" size="22" class="js-form-file form-file" />');
+    $assert_session->responseContains('<input aria-describedby="edit-video-file--description" data-drupal-selector="edit-video-file-upload" accept="video/mp4,video/x-m4v,video/*" type="file" id="edit-video-file-upload" name="files[video_file]" size="22" class="js-form-file form-file" />');
 
     /* Element processing */
 
@@ -64,7 +65,12 @@ class WebformElementMediaFileTest extends WebformElementManagedFileTestBase {
 
     // Check image file link to modal.
     $assert_session->responseContains('/system/files/webform/test_element_media_file/_sid_/image_file_jpg_modal.jpg" class="js-webform-image-file-modal webform-image-file-modal">');
-    $assert_session->responseContains('/system/files/styles/thumbnail/private/webform/test_element_media_file/_sid_/image_file_jpg_modal.jpg?itok=');
+    DeprecationHelper::backwardsCompatibleCall(
+      currentVersion: \Drupal::VERSION,
+      deprecatedVersion: '10.3',
+      currentCallable: fn() => $assert_session->responseContains('/system/files/styles/thumbnail/private/webform/test_element_media_file/_sid_/image_file_jpg_modal.jpg.webp?itok='),
+      deprecatedCallable: fn() => $assert_session->responseContains('/system/files/styles/thumbnail/private/webform/test_element_media_file/_sid_/image_file_jpg_modal.jpg?itok='),
+    );
 
     // Check video file preview.
     $assert_session->responseContains('<source src="' . $this->getAbsoluteUrl('/system/files/webform/test_element_media_file/_sid_/video_file_mp4.mp4') . '" type="video/mp4">');

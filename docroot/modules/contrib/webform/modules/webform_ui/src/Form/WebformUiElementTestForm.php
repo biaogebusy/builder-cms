@@ -115,7 +115,7 @@ class WebformUiElementTestForm extends WebformUiElementFormBase {
       $form['test']['render_array'] = [
         '#type' => 'details',
         '#title' => $this->t('Render array'),
-        '#desciption' => $this->t("Below is the element's final render array."),
+        '#description' => $this->t("Below is the element's final render array."),
         'source' => [
           '#theme' => 'webform_codemirror',
           '#type' => 'yaml',

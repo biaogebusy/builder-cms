@@ -2,131 +2,19 @@
 
 namespace Drupal\blazy\Media\Svg;
 
-use Drupal\blazy\internals\Internals;
 use Drupal\Component\Utility\Color;
 use Drupal\Core\File\FileSystemInterface;
-use Drupal\Core\Image\ImageFactory;
-use Drupal\Core\Image\ImageInterface;
-use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\blazy\Media\BlazyFile;
+use Drupal\blazy\internals\Internals;
 use Drupal\file\Entity\File;
-use Drupal\file\FileRepository;
 use enshrined\svgSanitize\Sanitizer;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides Svg utility for blazy_file with SVG, and blur images.
  *
  * @todo make this class also functional for SVG blur.
  */
-class Svg implements SvgInterface {
-
-  /**
-   * The file system service.
-   *
-   * @var \Drupal\Core\File\FileSystemInterface
-   */
-  protected $fileSystem;
-
-  /**
-   * The file repository service.
-   *
-   * @var \Drupal\file\FileRepository|null
-   */
-  protected $fileRepository;
-
-  /**
-   * The image object.
-   *
-   * @var \Drupal\Core\Image\ImageInterface|null
-   */
-  protected $image;
-
-  /**
-   * The image factory service.
-   *
-   * @var \Drupal\Core\Image\ImageFactory
-   */
-  protected $imageFactory;
-
-  /**
-   * A logger instance.
-   *
-   * @var \Drupal\Core\Logger\LoggerChannelInterface
-   */
-  protected $logger;
-
-  /**
-   * Constructs a SVG manager object.
-   */
-  public function __construct(
-    FileSystemInterface $file_system,
-    // @todo FileRepository $file_repository,
-    ImageFactory $image_factory,
-    LoggerChannelFactoryInterface $logger
-  ) {
-    $this->fileSystem = $file_system;
-    // @todo $this->fileRepository = $file_repository;
-    $this->imageFactory = $image_factory;
-    $this->logger = $logger->get('image');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('file_system'),
-      // @todo $container->get('file.repository'),
-      $container->get('image.factory'),
-      $container->get('logger.factory')
-    );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function fileSystem(): FileSystemInterface {
-    return $this->fileSystem;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function fileRepository(): FileRepository {
-    // @todo remove when min D9.3.
-    if (!isset($this->fileRepository)) {
-      $this->fileRepository = Internals::service('file.repository');
-    }
-    return $this->fileRepository;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function imageFactory(): ImageFactory {
-    return $this->imageFactory;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function image($source = NULL, $toolkit_id = NULL): ImageInterface {
-    return $this->imageFactory->get($source, $toolkit_id);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function isSvg(File $file): bool {
-    return $file->getMimeType() === 'image/svg+xml';
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function realpath($uri): string {
-    return $this->fileSystem->realpath($uri);
-  }
+class Svg extends BlazyFile implements SvgInterface {
 
   /**
    * {@inheritdoc}
@@ -164,7 +52,7 @@ class Svg implements SvgInterface {
    * {@inheritdoc}
    */
   public function sanitizer(): ?object {
-    return class_exists('\enshrined\svgSanitize\Sanitizer') ? new Sanitizer() : NULL;
+    return class_exists(Sanitizer::class) ? new Sanitizer() : NULL;
   }
 
   /**
@@ -174,7 +62,7 @@ class Svg implements SvgInterface {
     $uri,
     $destination,
     $color = '#ffffff',
-    $fuzz = 20
+    $fuzz = 20,
   ): ?string {
     $path = $this->realpath($uri);
     $dest = $this->realpath($destination);
@@ -212,7 +100,8 @@ class Svg implements SvgInterface {
       $this->runOsShell('mktrans', $arg);
 
       // Destination is harcoded as NAME-transparent.png, move it.
-      $this->fileSystem->move($tmp, $dest, FileSystemInterface::EXISTS_REPLACE);
+      $replace = Internals::fileExistsReplace();
+      $this->fileSystem->move($tmp, $dest, $replace);
       $res = $dest;
     }
     // Fallbacks to ImageMagick convert command, no real joy here.
@@ -240,9 +129,9 @@ class Svg implements SvgInterface {
     // Set standard file permissions for webserver-generated files.
     if ($res) {
       // @todo update database.
+      // $replace = Internals::fileExistsReplace();
       // if ($file = Internals::loadByProperty('uri', $uri, 'file')) {
-      // $this->fileRepository->move($file, $dest,
-      // FileSystemInterface::EXISTS_REPLACE);
+      // $this->fileRepository->move($file, $dest, $replace);
       // }
       if (isset($this->image) && $this->image->save($res)) {
         return $res;

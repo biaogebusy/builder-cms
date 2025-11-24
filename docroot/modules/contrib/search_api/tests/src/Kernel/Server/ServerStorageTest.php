@@ -6,12 +6,14 @@ use Drupal\Core\Config\Entity\ConfigEntityStorage;
 use Drupal\search_api\ServerInterface;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\search_api_test\PluginTestTrait;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests whether the storage of search servers works correctly.
  *
  * @group search_api
  */
+#[RunTestsInSeparateProcesses]
 class ServerStorageTest extends KernelTestBase {
 
   use PluginTestTrait;

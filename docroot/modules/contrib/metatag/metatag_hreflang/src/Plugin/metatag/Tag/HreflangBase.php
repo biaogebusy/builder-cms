@@ -12,7 +12,7 @@ abstract class HreflangBase extends LinkRelBase {
   /**
    * {@inheritdoc}
    */
-  public function output() {
+  public function output(): array {
     $element = parent::output();
 
     if ($element) {
@@ -30,7 +30,7 @@ abstract class HreflangBase extends LinkRelBase {
   /**
    * {@inheritdoc}
    */
-  public function name() {
+  public function name(): string {
     return str_replace('hreflang_', '', parent::name());
   }
 

@@ -2,11 +2,11 @@ name: 'Webform Custom Options'
 type: module
 description: 'Provides a webform element for converting HTML or SVG markup into a selectable single or multiple options input.'
 package: 'Webform'
-core_version_requirement: ^9.4 || ^10
+core_version_requirement: ^10.2
 dependencies:
   - 'webform:webform'
 
-# Information added by Drupal.org packaging script on 2023-12-07
-version: '6.2.2'
+# Information added by Drupal.org packaging script on 2024-12-10
+version: '6.2.9'
 project: 'webform'
-datestamp: 1701948372
+datestamp: 1733851071

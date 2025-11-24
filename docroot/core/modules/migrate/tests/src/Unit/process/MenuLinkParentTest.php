@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Unit\process;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
@@ -14,6 +16,8 @@ use Drupal\migrate\MigrateLookupInterface;
 use Drupal\migrate\MigrateSkipRowException;
 use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\Plugin\migrate\process\MenuLinkParent;
+
+// cspell:ignore plid
 
 /**
  * Tests the menu link parent process plugin.
@@ -76,6 +80,55 @@ class MenuLinkParentTest extends MigrateProcessTestCase {
   }
 
   /**
+   * Tests that an exception is thrown for invalid options.
+   *
+   * @param array $configuration
+   *   The plugin configuration being tested.
+   * @param bool $is_valid
+   *   TRUE if the configuration is valid, FALSE if not.
+   *
+   * @dataProvider providerConstructorException
+   */
+  public function testConstructorException(array $configuration, bool $is_valid): void {
+    if (!$is_valid) {
+      $this->expectException('TypeError');
+      $this->expectExceptionMessage('Cannot assign string to property ' . MenuLinkParent::class . '::$lookupMigrations of type array');
+    }
+    $plugin = new MenuLinkParent($configuration, 'map', [], $this->migrateLookup->reveal(), $this->menuLinkManager->reveal(), $this->menuLinkStorage->reveal(), $this->migration->reveal());
+    if ($is_valid) {
+      $this->assertInstanceOf(MenuLinkParent::class, $plugin);
+    }
+  }
+
+  /**
+   * Provides data for testConstructorException().
+   */
+  public static function providerConstructorException(): array {
+    return [
+      'default configuration is valid' => [
+        'configuration' => [],
+        'is_valid' => TRUE,
+      ],
+      'lookup_migrations = null is valid' => [
+        'configuration' => ['lookup_migrations' => NULL],
+        'is_valid' => TRUE,
+      ],
+      'bypass migration lookup is valid' => [
+        'configuration' => ['lookup_migrations' => []],
+        'is_valid' => TRUE,
+      ],
+      'a list of migrations is valid' => [
+        'configuration' => ['lookup_migrations' => ['this_migration', 'another_migration']],
+        'is_valid' => TRUE,
+      ],
+      'a single string is not valid' => [
+        'configuration' => ['lookup_migrations' => 'this_migration'],
+        'is_valid' => FALSE,
+      ],
+    ];
+  }
+
+  /**
    * Tests that an exception is thrown when the parent menu link is not found.
    *
    * @param string[] $source_value
@@ -87,7 +140,7 @@ class MenuLinkParentTest extends MigrateProcessTestCase {
    *
    * @dataProvider providerTransformException
    */
-  public function testTransformException(array $source_value) {
+  public function testTransformException(array $source_value): void {
     [$parent_id, $menu_name] = $source_value;
     $this->migrateLookup->lookup(NULL, [1])->willReturn([]);
     $plugin = new MenuLinkParent([], 'map', [], $this->migrateLookup->reveal(), $this->menuLinkManager->reveal(), $this->menuLinkStorage->reveal(), $this->migration->reveal());
@@ -99,11 +152,11 @@ class MenuLinkParentTest extends MigrateProcessTestCase {
   /**
    * Provides data for testTransformException().
    */
-  public function providerTransformException() {
+  public static function providerTransformException() {
     // The parent ID does not for the following tests.
     return [
       'parent link external and could not be loaded' => [
-        'source_value' => [1, 'admin', 'http://drupal.org'],
+        'source_value' => [1, 'admin', 'http://example.com'],
       ],
       'parent link path/menu name not passed' => [
         'source_value' => [1, NULL, NULL],
@@ -134,7 +187,7 @@ class MenuLinkParentTest extends MigrateProcessTestCase {
    *
    * @dataProvider providerMenuLinkParent
    */
-  public function testMenuLinkParent(array $source_value, $lookup_result, $plugin_id, $route_name, $expected_result) {
+  public function testMenuLinkParent(array $source_value, $lookup_result, $plugin_id, $route_name, $expected_result): void {
     [$parent_id, $menu_name, $parent_link_path] = $source_value;
     $this->migrateLookup->lookup(NULL, [$parent_id])
       ->willReturn([['id' => $lookup_result]]);
@@ -157,7 +210,7 @@ class MenuLinkParentTest extends MigrateProcessTestCase {
   /**
    * Provides data for testMenuLinkParent().
    */
-  public function providerMenuLinkParent() {
+  public static function providerMenuLinkParent() {
     return [
       'menu link is route item' => [
         'source_value' => [0, NULL, NULL],
@@ -219,6 +272,70 @@ class MenuLinkParentTest extends MigrateProcessTestCase {
 
     $plugin = new MenuLinkParent([], 'menu_link', [], $this->migrateLookup->reveal(), $this->menuLinkManager->reveal(), $this->menuLinkStorage->reveal(), $this->migration->reveal());
     return $plugin->transform($source_value, $this->migrateExecutable, $this->row, 'destination');
+  }
+
+  /**
+   * Tests the lookup_migrations option.
+   *
+   * @param int $plid
+   *   The ID of the parent menu link.
+   * @param array $configuration
+   *   The plugin configuration being tested.
+   * @param string $expected_result
+   *   The expected value(s) of the migration process plugin.
+   *
+   * @dataProvider providerLookupMigrations
+   */
+  public function testLookupMigrations(int $plid, array $configuration, string $expected_result): void {
+    $source_value = [$plid, 'some_menu', 'https://www.example.com'];
+
+    $this->migration->id()
+      ->willReturn('this_migration');
+    $this->migrateLookup->lookup('this_migration', [1])
+      ->willReturn([['id' => 101]]);
+    $this->migrateLookup->lookup('some_migration', [2])
+      ->willReturn([['id' => 202]]);
+    $this->migrateLookup->lookup('some_migration', [3])
+      ->willReturn([]);
+    $this->migrateLookup->lookup('another_migration', [3])
+      ->willReturn([['id' => 303]]);
+
+    $menu_link_content_this = $this->prophesize(MenuLinkContent::class);
+    $menu_link_content_this->getPluginId()->willReturn('menu_link_content:this_migration');
+    $this->menuLinkStorage->load(101)->willReturn($menu_link_content_this);
+    $menu_link_content_some = $this->prophesize(MenuLinkContent::class);
+    $menu_link_content_some->getPluginId()->willReturn('menu_link_content:some_migration');
+    $this->menuLinkStorage->load(202)->willReturn($menu_link_content_some);
+    $menu_link_content_another = $this->prophesize(MenuLinkContent::class);
+    $menu_link_content_another->getPluginId()->willReturn('menu_link_content:another_migration');
+    $this->menuLinkStorage->load(303)->willReturn($menu_link_content_another);
+
+    $plugin = new MenuLinkParent($configuration, 'menu_link', [], $this->migrateLookup->reveal(), $this->menuLinkManager->reveal(), $this->menuLinkStorage->reveal(), $this->migration->reveal());
+    $result = $plugin->transform($source_value, $this->migrateExecutable, $this->row, 'destination');
+    $this->assertSame($expected_result, $result);
+  }
+
+  /**
+   * Provides data for testLookupMigrations().
+   */
+  public static function providerLookupMigrations(): array {
+    return [
+      'default configuration' => [
+        'plid' => 1,
+        'configuration' => [],
+        'expected_result' => 'menu_link_content:this_migration',
+      ],
+      'some migration' => [
+        'plid' => 2,
+        'configuration' => ['lookup_migrations' => ['some_migration', 'another_migration']],
+        'expected_result' => 'menu_link_content:some_migration',
+      ],
+      'another migration' => [
+        'plid' => 3,
+        'configuration' => ['lookup_migrations' => ['some_migration', 'another_migration']],
+        'expected_result' => 'menu_link_content:another_migration',
+      ],
+    ];
   }
 
 }

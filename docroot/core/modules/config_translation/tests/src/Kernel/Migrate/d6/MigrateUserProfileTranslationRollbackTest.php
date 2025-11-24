@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\config_translation\Kernel\Migrate\d6;
 
 use Drupal\migrate\MigrateExecutable;
@@ -25,7 +27,7 @@ class MigrateUserProfileTranslationRollbackTest extends MigrateDrupal6TestBase {
   /**
    * Tests rollback of the complete node migration.
    */
-  public function testRollback() {
+  public function testRollback(): void {
     $migration_ids = [
       'user_profile_field',
       'd6_profile_field_option_translation',

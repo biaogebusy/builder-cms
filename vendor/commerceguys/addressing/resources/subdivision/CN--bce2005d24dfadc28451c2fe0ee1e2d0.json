@@ -1,0 +1,50 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"TW",
+		"Hualien County"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Fengbin Township": {
+			"local_name": "豐濱鄉"
+		},
+		"Fenglin Township": {
+			"local_name": "鳳林鎮"
+		},
+		"Fuli Township": {
+			"local_name": "富里鄉"
+		},
+		"Guangfu Township": {
+			"local_name": "光復鄉"
+		},
+		"Hualien City": {
+			"local_name": "花蓮市"
+		},
+		"Ji'an Township": {
+			"local_name": "吉安鄉"
+		},
+		"Ruisui Township": {
+			"local_name": "瑞穗鄉"
+		},
+		"Shoufeng Township": {
+			"local_name": "壽豐鄉"
+		},
+		"Wanrong Township": {
+			"local_name": "萬榮鄉"
+		},
+		"Xincheng Township": {
+			"local_name": "新城鄉"
+		},
+		"Xiulin Township": {
+			"local_name": "秀林鄉"
+		},
+		"Yuli Township": {
+			"local_name": "玉里鎮"
+		},
+		"Zhuoxi Township": {
+			"local_name": "卓溪鄉"
+		}
+	}
+}

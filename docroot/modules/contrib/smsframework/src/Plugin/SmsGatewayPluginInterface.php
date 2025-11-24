@@ -66,6 +66,6 @@ interface SmsGatewayPluginInterface extends ConfigurableInterface, DependentPlug
    * @return \Drupal\sms\Message\SmsDeliveryReportInterface[]
    *   An array of the delivery reports which have been pulled.
    */
-  public function getDeliveryReports(array $message_ids = NULL);
+  public function getDeliveryReports(?array $message_ids = NULL);
 
 }

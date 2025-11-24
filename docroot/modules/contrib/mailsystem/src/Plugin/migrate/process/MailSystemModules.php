@@ -25,6 +25,11 @@ class MailSystemModules extends ProcessPluginBase {
     // migration process pipeline ("defaults/sender" and "defaults/formatter").
     unset($value['default-system']);
     foreach ($value as $key => $data) {
+      // When there is no mail key, unset this value.
+      if (!str_contains($key, '_')) {
+        unset($value[$key]);
+        continue;
+      }
       [$module, $index] = explode("_", $key);
       if (\Drupal::moduleHandler()->moduleExists($module)) {
         if ($data == 'DefaultMailSystem') {
@@ -33,11 +38,15 @@ class MailSystemModules extends ProcessPluginBase {
         else {
           $data = 'test_mail_collector';
         }
-        $value[$module][$index]['formatter'] = $data;
-        $value[$module][$index]['sender'] = $data;
+        $value[$module] = [];
+        $value[$module][$index] = [
+          'formatter' => $data,
+          'sender' => $data,
+        ];
       }
       unset($value[$key]);
     }
+
     return $value;
   }
 

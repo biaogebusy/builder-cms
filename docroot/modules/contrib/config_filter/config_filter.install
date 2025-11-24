@@ -18,12 +18,13 @@ function config_filter_requirements($phase) {
   $config_filter_extension = \Drupal::service('extension.list.module')->get('config_filter');
 
   $modules_requiring_config_filter = [];
-  foreach (array_keys($config_filter_extension->required_by) as $module) {
-    if ($module_handler->moduleExists($module)) {
-      $modules_requiring_config_filter[] = $module;
+  if (isset($config_filter_extension->required_by)) {
+    foreach (array_keys($config_filter_extension->required_by) as $module) {
+      if ($module_handler->moduleExists($module)) {
+        $modules_requiring_config_filter[] = $module;
+      }
     }
   }
-
   if (empty($modules_requiring_config_filter)) {
     $requirements['config_filter_disable'] = [
       'title' => t('Configuration Filter'),

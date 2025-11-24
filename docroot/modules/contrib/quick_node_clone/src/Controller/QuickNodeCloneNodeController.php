@@ -2,6 +2,7 @@
 
 namespace Drupal\quick_node_clone\Controller;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Render\RendererInterface;
@@ -24,6 +25,13 @@ class QuickNodeCloneNodeController extends NodeController {
   protected $qncEntityFormBuilder;
 
   /**
+   * The settings.
+   *
+   * @var \Drupal\Core\Config\ImmutableConfig
+   */
+  protected $settings;
+
+  /**
    * Constructs a NodeController object.
    *
    * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
@@ -34,10 +42,19 @@ class QuickNodeCloneNodeController extends NodeController {
    *   The entity repository.
    * @param \Drupal\quick_node_clone\Entity\QuickNodeCloneEntityFormBuilder $entity_form_builder
    *   The entity form builder.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The config factory.
    */
-  public function __construct(DateFormatterInterface $date_formatter, RendererInterface $renderer, EntityRepositoryInterface $entity_repository, QuickNodeCloneEntityFormBuilder $entity_form_builder) {
+  public function __construct(
+    DateFormatterInterface $date_formatter,
+    RendererInterface $renderer,
+    EntityRepositoryInterface $entity_repository,
+    QuickNodeCloneEntityFormBuilder $entity_form_builder,
+    ConfigFactoryInterface $config_factory,
+  ) {
     parent::__construct($date_formatter, $renderer, $entity_repository);
     $this->qncEntityFormBuilder = $entity_form_builder;
+    $this->settings = $config_factory->get('quick_node_clone.settings');
   }
 
   /**
@@ -48,7 +65,8 @@ class QuickNodeCloneNodeController extends NodeController {
       $container->get('date.formatter'),
       $container->get('renderer'),
       $container->get('entity.repository'),
-      $container->get('quick_node_clone.entity.form_builder')
+      $container->get('quick_node_clone.entity.form_builder'),
+      $container->get('config.factory'),
     );
   }
 
@@ -92,9 +110,8 @@ class QuickNodeCloneNodeController extends NodeController {
    */
   public function clonePageTitle(Node $node) {
     $prepend_text = "";
-    $config = \Drupal::config('quick_node_clone.settings');
-    if (!empty($config->get('text_to_prepend_to_title'))) {
-      $prepend_text = $config->get('text_to_prepend_to_title') . " ";
+    if (!empty($this->settings->get('text_to_prepend_to_title'))) {
+      $prepend_text = $this->settings->get('text_to_prepend_to_title') . " ";
     }
     return $prepend_text . $node->getTitle();
   }

@@ -54,10 +54,10 @@
     .toolbar-tab > .toolbar-icon-edit.toolbar-item {
       &::before {
         @include mq(medium) {
-          left: calc((var(--gin-toolbar-width-collapsed) - var(--gin-icon-size-toolbar)) / 2 - 9px);
+          inset-inline-start: calc((var(--gin-toolbar-width-collapsed) - var(--gin-icon-size-toolbar)) / 2 - 9px);
           width: var(--gin-icon-size-toolbar);
           height: var(--gin-icon-size-toolbar);
-          top: 50%;
+          inset-block-start: 50%;
           transform: translateY(-50%);
         }
       }
@@ -65,7 +65,7 @@
 
     .toolbar-tab > .toolbar-icon-edit.toolbar-item::before {
       @include mq($to: xsmall) {
-        left: 0;
+        inset-inline-start: 0;
       }
     }
 
@@ -90,7 +90,7 @@
 
       #toolbar-item-administration-tray a.toolbar-icon.override-icon {
         &:before {
-          left: 0;
+          inset-inline-start: 0;
           width: 0;
           content: none;
         }
@@ -111,8 +111,11 @@
     #toolbar-item-administration-tray a.toolbar-icon-admin-toolbar-tools-help.toolbar-icon-default {
       @include mq(medium) {
         height: 74px;
-        margin-bottom: 6px;
-        transition: top var(--gin-transition);
+        margin-block-end: 6px;
+
+        @media (prefers-reduced-motion: no-preference) {
+          transition: top var(--gin-transition);
+        }
       }
 
       &::before {
@@ -121,7 +124,7 @@
         @include mq(medium) {
           width: $logoSize;
           height: $logoSize;
-          left: calc((var(--gin-toolbar-width-collapsed) - #{$logoSize}) / 2 - 9px);
+          inset-inline-start: calc((var(--gin-toolbar-width-collapsed) - #{$logoSize}) / 2 - 9px);
           mask-size: $logoSize $logoSize;
           mask-position: center center;
         }
@@ -163,7 +166,7 @@
 #toolbar-item-administration-tray a.toolbar-icon.override-icon {
   &:before {
     @include mq(medium) {
-      left: 0;
+      inset-inline-start: 0;
       width: 0;
       content: none;
     }
@@ -172,7 +175,7 @@
 
 .toolbar .toolbar-bar {
   position: fixed;
-  left: 0;
+  inset-inline-start: 0;
   width: 100%;
 }
 
@@ -217,7 +220,9 @@ a.toolbar-menu__trigger,
   }
 
   .toolbar-fixed {
-    transition: var(--gin-transition);
+    @media (prefers-reduced-motion: no-preference) {
+      transition: var(--gin-transition);
+    }
   }
 
   .toolbar .toolbar-box {
@@ -232,8 +237,8 @@ a.toolbar-menu__trigger,
 
   .toolbar-menu-administration a.toolbar-menu__trigger {
     position: fixed;
-    left: 0;
-    bottom: 0;
+    inset-inline-start: 0;
+    inset-block-end: 0;
     font-size: var(--gin-font-size-s);
     color: var(--gin-color-text-light);
     text-decoration: none;
@@ -241,10 +246,14 @@ a.toolbar-menu__trigger,
     align-items: center;
     width: var(--gin-toolbar-width-collapsed);
     height: 64px;
-    padding: var(--gin-spacing-m) 0 var(--gin-spacing-m) var(--gin-toolbar-width-collapsed);
+    padding-block: var(--gin-spacing-m);
+    padding-inline: var(--gin-toolbar-width-collapsed) 0;
     margin: 0;
-    transition: width var(--gin-transition);
     overflow: hidden;
+
+    @media (prefers-reduced-motion: no-preference) {
+      transition: width var(--gin-transition);
+    }
 
     &, &:active, &:focus {
       background-color: transparent;
@@ -260,7 +269,7 @@ a.toolbar-menu__trigger,
     &::before {
       content: "";
       position: absolute;
-      left: calc((var(--gin-toolbar-width-collapsed) - 36px) / 2);
+      inset-inline-start: calc((var(--gin-toolbar-width-collapsed) - 36px) / 2);
       display: inline-block;
       width: 32px;
       height: 32px;
@@ -268,7 +277,10 @@ a.toolbar-menu__trigger,
       border: 1px solid var(--gin-border-color);
       background: var(--gin-bg-layer) url("data:image/svg+xml,%3Csvg width='9' height='14' viewBox='0 0 9 14' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M 1.7109375,0.31445312 0.2890625,1.7226562 5.5917969,7.0761719 0.2890625,12.429688 1.7109375,13.837891 8.4082031,7.0761719 Z' fill='%23999999'/%3E%3C/svg%3E") no-repeat center center;
       background-size: 11px 11px;
-      transition: transform var(--gin-transition);
+
+      @media (prefers-reduced-motion: no-preference) {
+        transition: transform var(--gin-transition);
+      }
 
       @media (forced-colors: active) {
         background: var(--gin-bg-layer) url("data:image/svg+xml,%3Csvg width='9' height='14' viewBox='0 0 9 14' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M 1.7109375,0.31445312 0.2890625,1.7226562 5.5917969,7.0761719 0.2890625,12.429688 1.7109375,13.837891 8.4082031,7.0761719 Z' fill='linkText'/%3E%3C/svg%3E") no-repeat center center;
@@ -310,14 +322,17 @@ a.toolbar-menu__trigger,
   .toolbar-menu-administration {
     display: flex;
     position: fixed;
-    top: auto;
-    left: 0;
+    inset-block-start: auto;
+    inset-inline-start: 0;
     width: var(--gin-toolbar-width-collapsed);
     height: 100vh;
     max-width: calc(100% - var(--gin-toolbar-height));
     background: var(--gin-bg-layer);
-    border-right: 1px solid var(--gin-border-color-layer);
-    transition: var(--gin-transition);
+    border-inline-end: 1px solid var(--gin-border-color-layer);
+
+    @media (prefers-reduced-motion: no-preference) {
+      transition: var(--gin-transition);
+    }
 
     .gin--dark-mode & {
       box-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
@@ -330,8 +345,8 @@ a.toolbar-menu__trigger,
     .toolbar-tray-horizontal & {
       ul li.menu-item--expanded .menu-item.hover-intent ul,
       ul li.menu-item--expanded .menu-item:focus-within ul {
-        margin-top: 0;
-        margin-left: calc(var(--gin-toolbar-width) - 2px);
+        margin-block-start: 0;
+        margin-inline-start: calc(var(--gin-toolbar-width) - 2px);
       }
 
       // admin_toolbar 3.3.1 fix
@@ -347,17 +362,16 @@ a.toolbar-menu__trigger,
 
       > .toolbar-menu {
         > .menu-item {
-          border-top: 0 none;
-          border-bottom: 0 none;
+          border-block: 0 none;
 
           > .toolbar-icon,
           > .toolbar-box > .toolbar-icon {
             width: auto;
-            padding-left: calc(var(--gin-spacing-xxl) + var(--gin-spacing-xs))
+            padding-inline-start: calc(var(--gin-spacing-xxl) + var(--gin-spacing-xs))
           }
 
           .toolbar-menu {
-            left: var(--gin-toolbar-width);
+            inset-inline-start: var(--gin-toolbar-width);
           }
         }
       }
@@ -385,12 +399,16 @@ a.toolbar-menu__trigger,
           align-items: center;
           width: calc(var(--gin-toolbar-x-offset) - var(--gin-spacing-m));
           height: 48px;
-          padding-left: calc(var(--gin-toolbar-width-collapsed) - var(--gin-spacing-m));
-          padding-right: 0;
-          margin: 0 var(--gin-spacing-xs) 1px;
+          padding-inline-start: calc(var(--gin-toolbar-width-collapsed) - var(--gin-spacing-m));
+          padding-inline-end: 0;
+          margin-block: 0 1px;
+          margin-inline: var(--gin-spacing-xs);
           border-radius: var(--gin-border-m);
           overflow: hidden;
-          transition: width var(--gin-transition);
+
+          @media (prefers-reduced-motion: no-preference) {
+            transition: width var(--gin-transition);
+          }
 
           &:hover {
             color: var(--gin-color-primary);
@@ -417,15 +435,18 @@ a.toolbar-menu__trigger,
 
         .toolbar-menu {
           display: none;
-          top: 0;
-          margin-left: calc(var(--gin-toolbar-x-offset) - 1px);
+          inset-block-start: 0;
+          margin-inline-start: calc(var(--gin-toolbar-x-offset) - 1px);
           height: 100vh;
           max-width: calc(100% - var(--gin-toolbar-height));
           box-shadow: none;
-          border-left: 1px solid var(--gin-border-color-layer);
-          transition: margin-left var(--gin-transition);
+          border-inline-start: 1px solid var(--gin-border-color-layer);
           overflow-y: auto;
           overflow-x: hidden;
+
+          @media (prefers-reduced-motion: no-preference) {
+            transition: margin-inline-start var(--gin-transition);
+          }
 
           &,
           [dir] & {
@@ -458,7 +479,8 @@ a.toolbar-menu__trigger,
             font-size: var(--gin-font-size-h3);
             letter-spacing: -.025em;
             padding: 0;
-            margin: var(--gin-spacing-m) var(--gin-spacing-s) calc(var(--gin-spacing-l) - var(--gin-spacing-xxs)) var(--gin-spacing-s);
+            margin-block: var(--gin-spacing-m) calc(var(--gin-spacing-l) - var(--gin-spacing-xxs));
+            margin-inline: var(--gin-spacing-s);
 
             a {
               font-weight: var(--gin-font-weight-semibold);
@@ -471,7 +493,7 @@ a.toolbar-menu__trigger,
           &__sub-title {
             font-size: var(--gin-font-size-xl);
             letter-spacing: -.01em;
-            margin-bottom: 1.275rem;
+            margin-block-end: 1.275rem;
 
             a {
               padding: .9rem var(--gin-spacing-s);
@@ -480,16 +502,16 @@ a.toolbar-menu__trigger,
 
           .menu-item {
             float: none;
-            border-top: 0 none;
-            border-left: 0 none;
-            border-bottom: 0 none;
+            border-block: 0 none;
+            border-inline-start: 0 none;
 
             .toolbar-icon {
               font-size:var(--gin-font-size);
               display: block;
               width: 100%;
               max-width: calc(100% - var(--gin-spacing-l));
-              padding: var(--gin-spacing-s) var(--gin-spacing-xl) var(--gin-spacing-s) var(--gin-spacing-s);
+              padding-block: var(--gin-spacing-s);
+              padding-inline: var(--gin-spacing-s) var(--gin-spacing-xl);
               margin: .25em var(--gin-spacing-s);
               border-radius: var(--gin-border-m);
               overflow: hidden;
@@ -519,7 +541,7 @@ a.toolbar-menu__trigger,
     .menu-item:focus-within > .toolbar-menu {
       z-index: 2;
       display: block;
-      border-right: 1px solid rgba(0,0,0,.075);
+      border-inline-end: 1px solid rgba(0,0,0,.075);
       box-shadow: 7px 0 16px rgba(0,0,0,.075),
         -12px 0 0 0 var(--gin-bg-layer);
     }
@@ -555,8 +577,8 @@ a.toolbar-menu__trigger,
 
   &::before {
     z-index: 1;
-    top: 1em;
-    right: 20px;
+    inset-block-start: 1em;
+    inset-inline-end: 20px;
   }
 }
 
@@ -584,8 +606,8 @@ a.toolbar-menu__trigger,
         content: "";
         display: block;
         position: absolute;
-        top: 3px;
-        left: calc((var(--gin-toolbar-width-collapsed) - var(--gin-spacing-xl) - var(--gin-spacing-xs)) / 2 - 9px);
+        inset-block-start: 3px;
+        inset-inline-start: calc((var(--gin-toolbar-width-collapsed) - var(--gin-spacing-xl) - var(--gin-spacing-xs)) / 2 - 9px);
         width: calc(100% - 10px);
         height: 42px;
         background: var(--gin-color-primary-light);

@@ -16,7 +16,7 @@ function media_entity_instagram_post_update_rename_cache_bin() {
 /**
  * Rename source from "instagram" to "oembed:instagram".
  */
-function media_entity_instagram_post_update_change_source_name() {
+function media_entity_instagram_post_update_change_source_name(): void {
   $config_factory = \Drupal::configFactory();
   foreach ($config_factory->listAll('media.type.') as $name) {
     $config = $config_factory->getEditable($name);

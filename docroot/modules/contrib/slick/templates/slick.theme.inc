@@ -77,7 +77,7 @@ function template_preprocess_slick(&$variables) {
   $language = \Drupal::languageManager()->getCurrentLanguage();
   if ($language->getDirection() == 'rtl') {
     $attrs['dir'] = $language->getDirection();
-    $js['rtl'] = $language->getDirection() ? TRUE : FALSE;
+    $js['rtl'] = TRUE;
   }
 
   // Remove settings that aren't supported by the active library.

@@ -1,0 +1,4 @@
+commerce.inbox_message:
+  class: \Drupal\commerce\Menu\InboxAction
+  deriver: \Drupal\commerce\Plugin\Derivative\InboxLocalAction
+  weight: 100

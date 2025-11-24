@@ -10,21 +10,12 @@ use CommerceGuys\Intl\Currency\CurrencyRepositoryInterface;
 class MinorUnitsConverter implements MinorUnitsConverterInterface {
 
   /**
-   * The currency repository.
-   *
-   * @var \Drupal\commerce_price\Repository\CurrencyRepositoryInterface
-   */
-  protected $currencyRepository;
-
-  /**
    * Constructs a new MinorUnitsConverter object.
    *
-   * @param \Drupal\commerce_price\Repository\CurrencyRepositoryInterface $currency_repository
+   * @param \Drupal\commerce_price\Repository\CurrencyRepositoryInterface $currencyRepository
    *   The currency repository.
    */
-  public function __construct(CurrencyRepositoryInterface $currency_repository) {
-    $this->currencyRepository = $currency_repository;
-  }
+  public function __construct(protected CurrencyRepositoryInterface $currencyRepository) {}
 
   /**
    * {@inheritdoc}

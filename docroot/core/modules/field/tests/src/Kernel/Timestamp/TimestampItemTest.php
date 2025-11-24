@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Kernel\Timestamp;
 
 use Drupal\Core\Field\FieldItemInterface;
@@ -53,7 +55,7 @@ class TimestampItemTest extends FieldKernelTestBase {
   /**
    * Tests using entity fields of the datetime field type.
    */
-  public function testDateTime() {
+  public function testDateTime(): void {
     // Verify entity creation.
     $entity = EntityTest::create();
     $value = 1488914208;

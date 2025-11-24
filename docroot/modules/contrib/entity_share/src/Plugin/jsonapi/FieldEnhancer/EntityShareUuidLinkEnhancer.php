@@ -30,7 +30,7 @@ class EntityShareUuidLinkEnhancer extends UuidLinkEnhancer {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) : self {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): self {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->languageManager = $container->get('language_manager');
     return $instance;
@@ -42,16 +42,16 @@ class EntityShareUuidLinkEnhancer extends UuidLinkEnhancer {
   protected function doUndoTransform($data, Context $context) {
     if (isset($data['uri'])) {
       // Check if it is a link to an entity.
-      preg_match("/entity:(.*)\/(.*)/", $data['uri'], $parsed_uri);
+      \preg_match('/entity:(.*)\\/(.*)/', $data['uri'], $parsed_uri);
       if (!empty($parsed_uri)) {
         $entity_type = $parsed_uri[1];
-        $entity_id = $parsed_uri[2];
+        $entity_id = $parsed_uri[(int) 2];
         $entity = $this->entityTypeManager->getStorage($entity_type)->load($entity_id);
-        if (!is_null($entity)) {
+        if ($entity !== NULL) {
           $data['uri'] = 'entity:' . $entity_type . '/' . $entity->bundle() . '/' . $entity->uuid();
 
           // Add URL for import.
-          $route_name = sprintf('jsonapi.%s--%s.individual', $entity_type, $entity->bundle());
+          $route_name = \sprintf('jsonapi.%s--%s.individual', $entity_type, $entity->bundle());
           try {
             $content_url = Url::fromRoute($route_name, [
               'entity' => $entity->uuid(),

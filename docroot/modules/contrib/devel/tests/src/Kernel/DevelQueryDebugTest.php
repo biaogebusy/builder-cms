@@ -19,7 +19,7 @@ class DevelQueryDebugTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['devel', 'system', 'user'];
+  protected static $modules = ['devel', 'system', 'user'];
 
   /**
    * The user used in test.
@@ -31,7 +31,7 @@ class DevelQueryDebugTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $this->installSchema('system', 'sequences');
@@ -55,7 +55,7 @@ class DevelQueryDebugTest extends KernelTestBase {
   /**
    * Tests devel_query_debug_alter() for select queries.
    */
-  public function testSelectQueryDebugTag() {
+  public function testSelectQueryDebugTag(): void {
     // Clear the messages stack.
     $this->getDrupalMessages();
 
@@ -73,7 +73,12 @@ class DevelQueryDebugTest extends KernelTestBase {
     // permissions. We expect only one status message containing the SQL for
     // the debugged query.
     \Drupal::currentUser()->setAccount($this->develUser);
-    $expected_message = "SELECT u.uid AS uid\nFROM\n{users} u";
+    $expected_message = '
+SELECT u.uid AS uid\\n
+FROM\\n
+{users} u
+
+';
 
     $query = \Drupal::database()->select('users', 'u');
     $query->fields('u', ['uid']);
@@ -93,13 +98,13 @@ class DevelQueryDebugTest extends KernelTestBase {
   /**
    * Tests devel_query_debug_alter() for entity queries.
    */
-  public function testEntityQueryDebugTag() {
+  public function testEntityQueryDebugTag(): void {
     // Clear the messages stack.
     $this->getDrupalMessages();
 
     // Ensures that no debug message is shown to user without the adequate
     // permissions.
-    $query = \Drupal::entityQuery('user');
+    $query = \Drupal::entityQuery('user')->accessCheck(FALSE);
     $query->addTag('debug');
     $query->execute();
 
@@ -110,9 +115,14 @@ class DevelQueryDebugTest extends KernelTestBase {
     // permissions. We expect only one status message containing the SQL for
     // the debugged entity query.
     \Drupal::currentUser()->setAccount($this->develUser);
-    $expected_message = "SELECT base_table.uid AS uid, base_table.uid AS base_table_uid\nFROM\n{users} base_table";
+    $expected_message = '
+SELECT base_table.uid AS uid, base_table.uid AS base_table_uid\\n
+FROM\\n
+{users} base_table
 
-    $query = \Drupal::entityQuery('user');
+';
+
+    $query = \Drupal::entityQuery('user')->accessCheck(FALSE);
     $query->addTag('debug');
     $query->execute();
 

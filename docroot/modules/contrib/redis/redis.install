@@ -5,8 +5,6 @@
  * Redis install related functions.
  */
 
-use \Drupal\redis\ClientFactory;
-
 /**
  * Implements hook_requirements().
  */
@@ -20,10 +18,12 @@ function redis_requirements($phase) {
 
   $requirements = [];
 
-  if (ClientFactory::hasClient()) {
+  $factory = \Drupal::service('redis.factory');
+
+  if ($factory->hasClient()) {
     $requirements['redis'] = [
       'title'       => "Redis",
-      'value'       => t("Connected, using the <em>@name</em> client.", ['@name' => ClientFactory::getClientName()]),
+      'value'       => t("Connected, using the <em>@name</em> client.", ['@name' => $factory->getClientName()]),
       'severity'    => REQUIREMENT_OK,
     ];
   }

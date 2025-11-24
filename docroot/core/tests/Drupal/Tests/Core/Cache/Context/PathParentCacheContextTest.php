@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Cache\Context;
 
 use Drupal\Core\Cache\Context\PathParentCacheContext;
@@ -18,7 +20,7 @@ class PathParentCacheContextTest extends UnitTestCase {
    *
    * @dataProvider providerTestGetContext
    */
-  public function testGetContext($original_path, $context) {
+  public function testGetContext($original_path, $context): void {
     $request_stack = new RequestStack();
     $request = Request::create($original_path);
     $request_stack->push($request);
@@ -29,7 +31,7 @@ class PathParentCacheContextTest extends UnitTestCase {
   /**
    * Provides a list of paths and expected cache contexts.
    */
-  public function providerTestGetContext() {
+  public static function providerTestGetContext() {
     return [
       ['/some/path', 'some'],
       ['/some/other-path', 'some'],

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Kernel\Migrate\d7;
 
 use Drupal\Core\Database\Database;
@@ -28,6 +30,7 @@ class MigrateUserTest extends MigrateDrupal7TestBase {
     'link',
     'menu_ui',
     'node',
+    'phpass',
     'taxonomy',
     'telephone',
     'text',
@@ -140,7 +143,7 @@ class MigrateUserTest extends MigrateDrupal7TestBase {
   /**
    * Tests the Drupal 7 user to Drupal 8 migration.
    */
-  public function testUser() {
+  public function testUser(): void {
     $users = Database::getConnection('default', 'migrate')
       ->select('users', 'u')
       ->fields('u')
@@ -193,10 +196,10 @@ class MigrateUserTest extends MigrateDrupal7TestBase {
         $source->name,
         $source->mail,
         $source->pass,
-        $source->created,
-        $source->access,
-        $source->login,
-        $source->status,
+        (int) $source->created,
+        (int) $source->access,
+        (int) $source->login,
+        (bool) $source->status,
         $entity_language,
         $source->language,
         $source->timezone,

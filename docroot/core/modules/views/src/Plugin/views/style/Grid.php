@@ -4,20 +4,21 @@ namespace Drupal\views\Plugin\views\style;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\views\Attribute\ViewsStyle;
 
 /**
  * Style plugin to render each item in a grid cell.
  *
  * @ingroup views_style_plugins
- *
- * @ViewsStyle(
- *   id = "grid",
- *   title = @Translation("Grid"),
- *   help = @Translation("Displays rows in a grid."),
- *   theme = "views_view_grid",
- *   display_types = {"normal"}
- * )
  */
+#[ViewsStyle(
+  id: "grid",
+  title: new TranslatableMarkup("Grid"),
+  help: new TranslatableMarkup("Displays rows in a grid."),
+  theme: "views_view_grid",
+  display_types: ["normal"],
+)]
 class Grid extends StylePluginBase {
 
   /**
@@ -78,7 +79,7 @@ class Grid extends StylePluginBase {
       '#default_value' => $this->options['col_class_custom'],
     ];
     if ($this->usesFields()) {
-      $form['col_class_custom']['#description'] .= ' ' . $this->t('You may use field tokens from as per the "Replacement patterns" used in "Rewrite the output of this field" for all fields.');
+      $form['col_class_custom']['#description'] .= ' ' . $this->t('You may use field tokens as per the "Replacement patterns" used in "Rewrite the output of this field" for all fields.');
     }
     $form['row_class_default'] = [
       '#title' => $this->t('Default row classes'),
@@ -93,7 +94,7 @@ class Grid extends StylePluginBase {
       '#default_value' => $this->options['row_class_custom'],
     ];
     if ($this->usesFields()) {
-      $form['row_class_custom']['#description'] .= ' ' . $this->t('You may use field tokens from as per the "Replacement patterns" used in "Rewrite the output of this field" for all fields.');
+      $form['row_class_custom']['#description'] .= ' ' . $this->t('You may use field tokens as per the "Replacement patterns" used in "Rewrite the output of this field" for all fields.');
     }
   }
 

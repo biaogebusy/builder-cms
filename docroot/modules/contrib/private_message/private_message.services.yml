@@ -1,40 +1,37 @@
-parameters:
-  private_message.mapper.class: 'Drupal\private_message\Mapper\PrivateMessageMapper'
-  private_message.service.class: 'Drupal\private_message\Service\PrivateMessageService'
-  cache_context.private_message_thread.class: 'Drupal\private_message\Cache\Context\PrivateMessageThreadCacheContext'
-  private_message.thread_manager.class: 'Drupal\private_message\Service\PrivateMessageThreadManager'
-  private_message.private_message_config_form_manager.class: 'Drupal\private_message\PluginManager\PrivateMessageConfigFormManager'
-
 services:
-  private_message.mapper:
-    class: '%private_message.mapper.class%'
-    arguments:
-      - '@database'
-      - '@current_user'
+  _defaults:
+    autoconfigure: true
+    autowire: true
 
   private_message.service:
-    class: '%private_message.service.class%'
-    arguments:
-      - '@private_message.mapper'
-      - '@current_user'
-      - '@config.factory'
-      - '@user.data'
-      - '@cache_tags.invalidator'
-      - '@entity_type.manager'
-      - '@datetime.time'
+    class: Drupal\private_message\Service\PrivateMessageService
+  Drupal\private_message\Service\PrivateMessageServiceInterface: '@private_message.service'
+
+  private_message.uninstaller:
+    class: Drupal\private_message\Service\PrivateMessageUninstaller
+  Drupal\private_message\Service\PrivateMessageUninstallerInterface: '@private_message.uninstaller'
+
+  private_message.ban_manager:
+    class: Drupal\private_message\Service\PrivateMessageBanManager
+  Drupal\private_message\Service\PrivateMessageBanManagerInterface: '@private_message.ban_manager'
 
   cache_context.private_message_thread:
-    class: '%cache_context.private_message_thread.class%'
-    arguments:
-      - '@current_route_match'
+    class: Drupal\private_message\Cache\Context\PrivateMessageThreadCacheContext
     tags:
       - { name: cache.context }
 
   private_message.thread_manager:
-    class: '%private_message.thread_manager.class%'
-    arguments:
-      - '@private_message.service'
+    class: Drupal\private_message\Service\PrivateMessageThreadManager
+  Drupal\private_message\Service\PrivateMessageThreadManagerInterface: '@private_message.thread_manager'
 
   private_message.private_message_config_form_manager:
-    class: '%private_message.private_message_config_form_manager.class%'
+    class: Drupal\private_message\PluginManager\PrivateMessageConfigFormManager
     parent: default_plugin_manager
+  Drupal\private_message\PluginManager\PrivateMessageConfigFormManagerInterface: '@private_message.private_message_config_form_manager'
+
+  private_message.mapper:
+    class: Drupal\private_message\Mapper\PrivateMessageMapper
+    deprecated: The "%service_id%" service is deprecated in private_message:4.0.0 and is removed from private_message:5.0.0. No replacement is provided. See https://www.drupal.org/node/3490530
+
+  # TODO remove the service after <11.1 support is removed.
+  Drupal\private_message\Hook\ViewsHooks: { }

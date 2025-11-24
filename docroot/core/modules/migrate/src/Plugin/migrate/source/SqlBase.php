@@ -4,6 +4,7 @@ namespace Drupal\migrate\Plugin\migrate\source;
 
 use Drupal\Core\Database\ConnectionNotDefinedException;
 use Drupal\Core\Database\Database;
+use Drupal\Core\Database\DatabaseException;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\migrate\Exception\RequirementsException;
@@ -62,7 +63,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * For a complete example on migrating data from an SQL source, refer to
  * https://www.drupal.org/docs/8/api/migrate-api/migrating-data-from-sql-source
  *
- * @see https://www.drupal.org/docs/8/api/database-api
+ * @see https://www.drupal.org/docs/drupal-apis/database-api
  * @see \Drupal\migrate_drupal\Plugin\migrate\source\DrupalSqlBase
  */
 abstract class SqlBase extends SourcePluginBase implements ContainerFactoryPluginInterface, RequirementsInterface {
@@ -115,7 +116,7 @@ abstract class SqlBase extends SourcePluginBase implements ContainerFactoryPlugi
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration = NULL) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition, ?MigrationInterface $migration = NULL) {
     return new static(
       $configuration,
       $plugin_id,
@@ -182,20 +183,10 @@ abstract class SqlBase extends SourcePluginBase implements ContainerFactoryPlugi
    *   Thrown if no source database connection is configured.
    */
   protected function setUpDatabase(array $database_info) {
-    if (isset($database_info['key'])) {
-      $key = $database_info['key'];
-    }
-    else {
-      // If there is no explicit database configuration at all, fall back to a
-      // connection named 'migrate'.
-      $key = 'migrate';
-    }
-    if (isset($database_info['target'])) {
-      $target = $database_info['target'];
-    }
-    else {
-      $target = 'default';
-    }
+    // If there is no explicit database configuration at all, fall back to a
+    // connection named 'migrate'.
+    $key = $database_info['key'] ?? 'migrate';
+    $target = $database_info['target'] ?? 'default';
     if (isset($database_info['database'])) {
       Database::addConnectionInfo($key, $target, $database_info['database']);
     }
@@ -220,7 +211,12 @@ abstract class SqlBase extends SourcePluginBase implements ContainerFactoryPlugi
    */
   public function checkRequirements() {
     if ($this->pluginDefinition['requirements_met'] === TRUE) {
-      $this->getDatabase();
+      try {
+        $this->getDatabase();
+      }
+      catch (\PDOException | DatabaseException $e) {
+        throw new RequirementsException("No database connection available for source plugin " . $this->pluginId, [], 0, $e);
+      }
     }
   }
 

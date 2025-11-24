@@ -17,24 +17,14 @@ class QueueUIPermissions implements ContainerInjectionInterface {
   use StringTranslationTrait;
 
   /**
-   * The QueueWorkerManager.
-   *
-   * @var \Drupal\Core\Queue\QueueWorkerManager
-   */
-  private $queueWorkerManager;
-
-  /**
    * Constructor for QueueUIPermissions.
    *
    * @param \Drupal\Core\Queue\QueueWorkerManagerInterface|null $queueWorkerManager
    *   Queue worker manager instance.
    */
-  public function __construct(QueueWorkerManagerInterface $queueWorkerManager = NULL) {
-    if ($queueWorkerManager === NULL) {
-      $queueWorkerManager = \Drupal::service('plugin.manager.queue_worker');
-    }
-    $this->queueWorkerManager = $queueWorkerManager;
-  }
+  public function __construct(
+    private QueueWorkerManagerInterface $queueWorkerManager,
+  ) {}
 
   /**
    * {@inheritdoc}

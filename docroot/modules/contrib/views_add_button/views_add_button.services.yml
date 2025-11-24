@@ -1,4 +1,7 @@
 services:
+  views_add_button.service:
+    class: Drupal\views_add_button\Service\ViewsAddButtonService
+    arguments: ['@entity_type.manager', '@entity_type.bundle.info', '@config.factory', '@plugin.manager.views_add_button']
   plugin.manager.views_add_button:
     class: Drupal\views_add_button\ViewsAddButtonManager
     arguments: ['@container.namespaces', '@cache.default', '@module_handler']

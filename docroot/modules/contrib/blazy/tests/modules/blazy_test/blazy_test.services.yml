@@ -1,8 +1,4 @@
 services:
   blazy_test.admin:
-    class: Drupal\blazy_test\Form\BlazyAdminTest
+    class: Drupal\blazy_test\Form\BlazyAdminTst
     arguments: ['@blazy.admin.formatter', '@blazy.manager']
-
-  blazy_test.formatter:
-    class: Drupal\blazy_test\BlazyFormatterTest
-    parent: blazy.formatter

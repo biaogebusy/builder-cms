@@ -5,6 +5,7 @@ namespace Drupal\views\Plugin\views\filter;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\views\Attribute\ViewsFilter;
 use Drupal\views\Plugin\ViewsHandlerManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -12,9 +13,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * Filter to show only the latest revision of an entity.
  *
  * @ingroup views_filter_handlers
- *
- * @ViewsFilter("latest_revision")
  */
+#[ViewsFilter("latest_revision")]
 class LatestRevision extends FilterPluginBase implements ContainerFactoryPluginInterface {
 
   /**
@@ -37,7 +37,7 @@ class LatestRevision extends FilterPluginBase implements ContainerFactoryPluginI
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -93,21 +93,10 @@ class LatestRevision extends FilterPluginBase implements ContainerFactoryPluginI
     $entity_type = $this->entityTypeManager->getDefinition($this->getEntityType());
     $keys = $entity_type->getKeys();
 
-    $definition = [
-      'table' => $query_base_table,
-      'type' => 'LEFT',
-      'field' => $keys['id'],
-      'left_table' => $query_base_table,
-      'left_field' => $keys['id'],
-      'extra' => [
-        ['left_field' => $keys['revision'], 'field' => $keys['revision'], 'operator' => '>'],
-      ],
-    ];
-
-    $join = $this->joinHandler->createInstance('standard', $definition);
-
-    $join_table_alias = $query->addTable($query_base_table, $this->relationship, $join);
-    $query->addWhere($this->options['group'], "$join_table_alias.{$keys['id']}", NULL, 'IS NULL');
+    $subquery = $query->getConnection()->select($query_base_table, 'base_table');
+    $subquery->addExpression("MAX(base_table.{$keys['revision']})", $keys['revision']);
+    $subquery->groupBy("base_table.{$keys['id']}");
+    $query->addWhere($this->options['group'], "$query_base_table.{$keys['revision']}", $subquery, 'IN');
   }
 
 }

@@ -1,21 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\ImageToolkit\Operation\gd;
 
-use Drupal\system\Plugin\ImageToolkit\Operation\gd\GDImageToolkitOperationBase;
+use Drupal\Core\ImageToolkit\Attribute\ImageToolkitOperation;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\image_effects\Plugin\ImageToolkit\Operation\WatermarkTrait;
+use Drupal\system\Plugin\ImageToolkit\Operation\gd\GDImageToolkitOperationBase;
 
 /**
  * Defines GD Watermark operation.
- *
- * @ImageToolkitOperation(
- *   id = "image_effects_gd_watermark",
- *   toolkit = "gd",
- *   operation = "watermark",
- *   label = @Translation("Watermark"),
- *   description = @Translation("Add watermark image effect.")
- * )
  */
+#[ImageToolkitOperation(
+  id: 'image_effects_gd_watermark',
+  toolkit: 'gd',
+  operation: 'watermark',
+  label: new TranslatableMarkup('Watermark'),
+  description: new TranslatableMarkup('Add watermark image effect.'),
+)]
 class Watermark extends GDImageToolkitOperationBase {
 
   use GDOperationTrait;
@@ -33,8 +36,8 @@ class Watermark extends GDImageToolkitOperationBase {
     }
 
     return $this->imageCopyMergeAlpha(
-      $this->getToolkit()->getResource(),
-      $watermark->getToolkit()->getResource(),
+      $this->getToolkit()->getImage(),
+      $watermark->getToolkit()->getImage(),
       $arguments['x_offset'],
       $arguments['y_offset'],
       0,

@@ -8,8 +8,6 @@ use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Form to add a sort on a channel.
- *
- * @package Drupal\entity_share_server\Form
  */
 class SortAddForm extends SortBaseForm {
 
@@ -61,7 +59,7 @@ class SortAddForm extends SortBaseForm {
     $channel = $this->entity;
     $channel_sorts = $channel->get('channel_sorts');
 
-    if (is_null($channel_sorts)) {
+    if ($channel_sorts === NULL) {
       $channel_sorts = [];
     }
 

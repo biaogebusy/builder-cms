@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Entity\Enhancer;
 
 use Drupal\Core\Entity\Enhancer\EntityRouteEnhancer;
@@ -19,7 +21,7 @@ class EntityRouteEnhancerTest extends UnitTestCase {
    *
    * @see \Drupal\Core\Entity\Enhancer\EntityRouteEnhancer::enhancer()
    */
-  public function testEnhancer() {
+  public function testEnhancer(): void {
     $route_enhancer = new EntityRouteEnhancer();
 
     // Set a controller to ensure it is not overridden.

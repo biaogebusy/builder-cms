@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\language\Unit\process;
 
 use Drupal\language\Plugin\migrate\process\LanguageDomains;
@@ -42,7 +44,7 @@ class LanguageDomainsTest extends MigrateProcessTestCase {
   /**
    * @covers ::transform
    */
-  public function testTransform() {
+  public function testTransform(): void {
     $source = [
       ['language' => 'en', 'domain' => ''],
       ['language' => 'fr', 'domain' => 'fr.example.com'],

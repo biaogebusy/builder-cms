@@ -10,21 +10,12 @@ use Symfony\Component\HttpFoundation\Session\SessionInterface;
 class CartSession implements CartSessionInterface {
 
   /**
-   * The session.
-   *
-   * @var \Symfony\Component\HttpFoundation\Session\SessionInterface
-   */
-  protected $session;
-
-  /**
    * Constructs a new CartSession object.
    *
    * @param \Symfony\Component\HttpFoundation\Session\SessionInterface $session
    *   The session.
    */
-  public function __construct(SessionInterface $session) {
-    $this->session = $session;
-  }
+  public function __construct(protected SessionInterface $session) {}
 
   /**
    * {@inheritdoc}
@@ -57,15 +48,22 @@ class CartSession implements CartSessionInterface {
    * {@inheritdoc}
    */
   public function deleteCartId($cart_id, $type = self::ACTIVE) {
-    $key = $this->getSessionKey($type);
-    $ids = $this->session->get($key, []);
-    $ids = array_diff($ids, [$cart_id]);
-    if (!empty($ids)) {
-      $this->session->set($key, $ids);
+    try {
+      $key = $this->getSessionKey($type);
+      $ids = $this->session->get($key, []);
+      $ids = array_diff($ids, [$cart_id]);
+      if (!empty($ids)) {
+        $this->session->set($key, $ids);
+      }
+      else {
+        // Remove the empty list to allow the system to clean up empty sessions.
+        $this->session->remove($key);
+      }
     }
-    else {
-      // Remove the empty list to allow the system to clean up empty sessions.
-      $this->session->remove($key);
+    catch (\RuntimeException) {
+      // Do nothing, a \RuntimeException can be triggered when this method is
+      // invoked by the cron job for expiring cart orders. Logging this wouldn't
+      // really help.
     }
   }
 

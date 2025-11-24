@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Unit\process;
 
 use Drupal\migrate\Plugin\migrate\process\UrlEncode;
@@ -26,7 +28,7 @@ class UrlEncodeTest extends MigrateTestCase {
    * @return array
    *   An array of URLs to test.
    */
-  public function urlDataProvider() {
+  public static function urlDataProvider() {
     return [
       'A URL with no characters requiring encoding' => ['http://example.com/normal_url.html', 'http://example.com/normal_url.html'],
       'The definitive use case - encoding spaces in URLs' => ['http://example.com/url with spaces.html', 'http://example.com/url%20with%20spaces.html'],
@@ -41,7 +43,7 @@ class UrlEncodeTest extends MigrateTestCase {
    * Cover various encoding scenarios.
    * @dataProvider urlDataProvider
    */
-  public function testUrls($input, $output) {
+  public function testUrls($input, $output): void {
     $this->assertEquals($output, $this->doTransform($input));
   }
 

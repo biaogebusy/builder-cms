@@ -52,6 +52,7 @@ class Porter2 {
   public function __construct($word, array $custom_exceptions = []) {
     $this->word = $word;
     $this->exceptions = $custom_exceptions + [
+      // cspell:disable
       'skis' => 'ski',
       'skies' => 'sky',
       'dying' => 'die',
@@ -70,6 +71,7 @@ class Porter2 {
       'cosmos' => 'cosmos',
       'bias' => 'bias',
       'andes' => 'andes',
+      // cspell:enable
     ];
 
     // Set initial y, or y after a vowel, to Y.
@@ -149,11 +151,13 @@ class Porter2 {
    */
   protected function step1a() {
     $found = FALSE;
+    // cspell:disable
     if ($this->hasEnding('sses')) {
       $this->removeEnding('sses');
       $this->addEnding('ss');
       $found = TRUE;
     }
+    // cspell:enable
     $checks = ['ied', 'ies'];
     foreach ($checks as $check) {
       if (!$found && $this->hasEnding($check)) {
@@ -196,6 +200,7 @@ class Porter2 {
     if (in_array($this->word, $exceptions)) {
       return;
     }
+    // cspell:disable-next-line
     $checks = ['eedly', 'eed'];
     foreach ($checks as $check) {
       if ($this->hasEnding($check)) {
@@ -206,6 +211,7 @@ class Porter2 {
         return;
       }
     }
+    // cspell:disable-next-line
     $checks = ['ingly', 'edly', 'ing', 'ed'];
     $second_endings = ['at', 'bl', 'iz'];
     foreach ($checks as $check) {
@@ -245,6 +251,7 @@ class Porter2 {
    * Implements step 2 of the Porter2 algorithm.
    */
   protected function step2() {
+    // cspell:disable
     $checks = [
       "ization" => "ize",
       "iveness" => "ive",
@@ -270,6 +277,7 @@ class Porter2 {
       "bli" => "ble",
       "ogi" => "og",
     ];
+    // cspell:enable
     foreach ($checks as $find => $replace) {
       if ($this->hasEnding($find)) {
         if ($this->inR1($find)) {
@@ -290,6 +298,7 @@ class Porter2 {
    * Implements step 3 of the Porter2 algorithm.
    */
   protected function step3() {
+    // cspell:disable
     $checks = [
       'ational' => 'ate',
       'tional' => 'tion',
@@ -300,6 +309,7 @@ class Porter2 {
       'ness' => '',
       'ful' => '',
     ];
+    // cspell:enable
     foreach ($checks as $find => $replace) {
       if ($this->hasEnding($find)) {
         if ($this->inR1($find)) {
@@ -309,17 +319,20 @@ class Porter2 {
         return;
       }
     }
+    // cspell:disable
     if ($this->hasEnding('ative')) {
       if ($this->inR2('ative')) {
         $this->removeEnding('ative');
       }
     }
+    // cspell:enable
   }
 
   /**
    * Implements step 4 of the Porter2 algorithm.
    */
   protected function step4() {
+    // cspell:disable
     $checks = [
       'ement',
       'ment',
@@ -340,6 +353,7 @@ class Porter2 {
       'er',
       'ic',
     ];
+    // cspell:enable
     foreach ($checks as $check) {
       // Among the suffixes, if found and in R2, delete.
       if ($this->hasEnding($check)) {
@@ -497,10 +511,12 @@ class Porter2 {
     }
     elseif ($this->length() > 5) {
       $prefix_5 = substr($this->word, 0, 5);
+      // cspell:disable-next-line
       if ($prefix_5 === 'gener' || $prefix_5 === 'arsen') {
         return 5;
       }
-      if ($this->length() > 6 && substr($this->word, 0, 6) === 'commun') {
+      // cspell:disable-next-line
+      if ($this->length() > 6 && str_starts_with($this->word, 'commun')) {
         return 6;
       }
     }
@@ -533,7 +549,7 @@ class Porter2 {
    */
   protected function inR1($string) {
     $r1 = substr($this->word, $this->r1);
-    return strpos($r1, $string) !== FALSE;
+    return str_contains($r1, $string);
   }
 
   /**
@@ -547,7 +563,7 @@ class Porter2 {
    */
   protected function inR2($string) {
     $r2 = substr($this->word, $this->r2);
-    return strpos($r2, $string) !== FALSE;
+    return str_contains($r2, $string);
   }
 
   /**

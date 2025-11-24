@@ -1,0 +1,32 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"FJ",
+		"Longyan Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Liancheng Xian": {
+			"local_name": "连城县"
+		},
+		"Shanghang Xian": {
+			"local_name": "上杭县"
+		},
+		"Wuping Xian": {
+			"local_name": "武平县"
+		},
+		"Xinluo Qu": {
+			"local_name": "新罗区"
+		},
+		"Yongding Xian": {
+			"local_name": "永定县"
+		},
+		"Zhangping Shi": {
+			"local_name": "漳平市"
+		},
+		"Changting Xian": {
+			"local_name": "长汀县"
+		}
+	}
+}

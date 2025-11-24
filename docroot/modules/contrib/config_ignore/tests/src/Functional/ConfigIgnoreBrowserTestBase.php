@@ -5,23 +5,20 @@ namespace Drupal\Tests\config_ignore\Functional;
 use Drupal\Core\Config\ConfigImporter;
 use Drupal\Core\Config\StorageComparer;
 use Drupal\Tests\BrowserTestBase;
-use Drupal\Tests\config_filter\Kernel\ConfigStorageTestTrait;
 
 /**
- * Class ConfigIgnoreBrowserTestBase.
+ * Base class for browser tests.
  *
  * @package Drupal\Tests\config_ignore
  */
 abstract class ConfigIgnoreBrowserTestBase extends BrowserTestBase {
 
-  use ConfigStorageTestTrait;
-
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
-  protected static $modules = ['config_ignore', 'config', 'config_filter'];
+  protected static $modules = [
+    'config_ignore',
+  ];
 
   /**
    * {@inheritdoc}
@@ -34,7 +31,9 @@ abstract class ConfigIgnoreBrowserTestBase extends BrowserTestBase {
   public function doImport() {
     // Set up the ConfigImporter object for testing.
     $storage_comparer = new StorageComparer(
-      $this->getImportStorage(),
+      $this->container->get('config.import_transformer')->transform(
+        $this->container->get('config.storage.sync')
+      ),
       $this->container->get('config.storage')
     );
 
@@ -58,8 +57,15 @@ abstract class ConfigIgnoreBrowserTestBase extends BrowserTestBase {
    * Perform a config export to sync. folder.
    */
   public function doExport() {
-    // Export the config using the export storage service.
-    $this->copyConfig($this->getExportStorage(), $this->getSyncFileStorage());
+    // Setup a config sync. dir with a, more or less,  known set of config
+    // entities. This is a full blown export of yaml files, written to the disk.
+    /** @var \Drupal\Core\Config\StorageInterface $destination_storage */
+    $destination_storage = $this->container->get('config.storage.sync');
+    // Importantly export from the export storage so that the export
+    // transformation is triggered.
+    /** @var \Drupal\Core\Config\StorageInterface $source_storage */
+    $source_storage = $this->container->get('config.storage.export');
+    $this->copyConfig($source_storage, $destination_storage);
   }
 
 }

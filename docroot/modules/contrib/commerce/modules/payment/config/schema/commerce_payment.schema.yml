@@ -65,6 +65,16 @@ commerce_payment_gateway_configuration:
       type: boolean
       label: 'Collect billing information'
 
+commerce_checkout.commerce_checkout_pane.payment_information:
+  type: commerce_checkout_pane_configuration
+  mapping:
+    always_display:
+      type: boolean
+      label: 'Always display payment methods'
+    require_payment_method:
+      type: boolean
+      label: 'Require Payment Method'
+
 commerce_checkout.commerce_checkout_pane.payment_process:
   type: commerce_checkout_pane_configuration
   mapping:

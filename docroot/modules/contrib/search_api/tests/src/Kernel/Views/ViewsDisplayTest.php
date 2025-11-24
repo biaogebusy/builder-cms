@@ -7,12 +7,14 @@ use Drupal\Core\Theme\ThemeManagerInterface;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\search_api\Utility\Utility;
 use Drupal\Tests\block\Traits\BlockCreationTrait;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests whether search display plugins for Views work correctly.
  *
  * @group search_api
  */
+#[RunTestsInSeparateProcesses]
 class ViewsDisplayTest extends KernelTestBase {
 
   use BlockCreationTrait;

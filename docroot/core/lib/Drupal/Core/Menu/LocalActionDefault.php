@@ -32,7 +32,7 @@ class LocalActionDefault extends PluginBase implements LocalActionInterface, Con
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Routing\RouteProviderInterface $route_provider
@@ -66,7 +66,7 @@ class LocalActionDefault extends PluginBase implements LocalActionInterface, Con
   /**
    * {@inheritdoc}
    */
-  public function getTitle(Request $request = NULL) {
+  public function getTitle(?Request $request = NULL) {
     // Subclasses may pull in the request or specific attributes as parameters.
     // The title from YAML file discovery may be a TranslatableMarkup object.
     return (string) $this->pluginDefinition['title'];

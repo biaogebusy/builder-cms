@@ -9,6 +9,7 @@ backend_configuration:
 processor: cron
 processing_time: 90
 locked: false
+stop_when_empty: true
 threshold:
   type: 0
   limit: 0

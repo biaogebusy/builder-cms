@@ -24,4 +24,10 @@ function gin_css_alter(&$css, $assets) {
   if (isset($css[$base_css])) {
     $css[$base_css]['group'] = 200;
   }
+
+  // The gin-custom.css file should be loaded just after our gin.css file.
+  $custom_css = 'public://gin-custom.css';
+  if (isset($css[$custom_css])) {
+    $css[$custom_css]['group'] = 201;
+  }
 }

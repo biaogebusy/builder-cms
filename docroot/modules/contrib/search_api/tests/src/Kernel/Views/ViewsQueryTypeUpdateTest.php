@@ -2,17 +2,19 @@
 
 namespace Drupal\Tests\search_api\Kernel\Views;
 
-use Drupal\Core\Serialization\Yaml;
+use Drupal\Component\Serialization\Yaml;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\views\ViewEntityInterface;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests that the Search API Views are updated correctly.
  *
- * @covers search_api_post_update_views_query_type()
+ * @covers search_api_post_update_views_query_type
  *
  * @group search_api
  */
+#[RunTestsInSeparateProcesses]
 class ViewsQueryTypeUpdateTest extends KernelTestBase {
 
   /**

@@ -1,0 +1,145 @@
+/**
+ * @file
+ * Commerce Management links styling.
+ */
+
+.commerce-dashboard--management-links .management-links {
+  --management-icon: var(--commerce-icon--store);
+
+  display: none;
+  margin-top: 1rem;
+}
+
+.commerce-dashboard--management-links .management-links.show {
+  display: block;
+}
+
+.commerce-dashboard--management-links .management-link a {
+  display: -webkit-box;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+  -ms-flex-direction: row;
+  flex-direction: row;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  padding: 0.75rem 1.125rem;
+  text-decoration: none;
+  color: var(--commerce-color--dark);
+  border: 1px solid var(--commerce-color--border);
+  background-color: white;
+  font-size: 1rem;
+  font-weight: bold;
+  gap: 1rem;
+}
+
+.commerce-dashboard--management-links .management-link a:hover {
+  background-color: var(--commerce-color--light);
+}
+
+.commerce-dashboard--management-links .management-link__icon {
+  -ms-flex-negative: 0;
+  flex-shrink: 0;
+  width: 2.625rem;
+  height: 2.625rem;
+  border-radius: 50%;
+  background-color: var(--commerce-color--icon-bg);
+}
+
+.commerce-dashboard--management-links .management-link__icon::before {
+  display: block;
+  width: 100%;
+  height: 100%;
+  content: "";
+  background-color: white;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: 1.5rem;
+  mask-size: 1.5rem;
+  -webkit-mask-image: var(--management-icon);
+  mask-image: var(--management-icon);
+}
+
+/* Mobile toggle */
+.commerce-dashboard--management-links .management-links-toggle {
+  padding: 0.25rem 0.5rem;
+  border: 0;
+  border: 1px solid var(--commerce-color--border);
+  background-color: transparent;
+}
+
+.commerce-dashboard--management-links .management-links-toggle__icon {
+  display: inline-block;
+  width: 1.5em;
+  height: 1.5em;
+  vertical-align: middle;
+  background-image: var(--commerce-icon--list);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100%;
+}
+
+.commerce-dashboard--management-links .management-links-toggle.active .management-links-toggle__icon {
+  background-image: var(--commerce-icon--x);
+}
+
+/* Icons */
+.commerce-dashboard--management-links .management-link--entity-commerce-order-collection {
+  --management-icon: var(--commerce-icon--clipboard-check-fill);
+}
+
+.commerce-dashboard--management-links .management-link--entity-commerce-product-collection {
+  --management-icon: var(--commerce-icon--box-seam-fill);
+}
+
+.commerce-dashboard--management-links .management-link--entity-commerce-promotion-collection {
+  --management-icon: var(--commerce-icon--bookmark-star-fill);
+}
+
+.commerce-dashboard--management-links .management-link--entity-commerce-license-collection {
+  --management-icon: var(--commerce-icon--person-vcard-fill);
+}
+
+.commerce-dashboard--management-links .management-link--entity-commerce-pricelist-collection {
+  --management-icon: var(--commerce-icon--tags-fill);
+}
+
+.commerce-dashboard--management-links .management-link--entity-commerce-shipping-method-collection {
+  --management-icon: var(--commerce-icon--truck-front-fill);
+}
+
+.commerce-dashboard--management-links .management-link--entity-commerce-subscription-collection {
+  --management-icon: var(--commerce-icon--envelope-plus-fill);
+}
+
+.commerce-dashboard--management-links .management-link--entity-commerce-wishlist-collection {
+  --management-icon: var(--commerce-icon--bag-heart-fill);
+}
+
+.commerce-dashboard--management-links .management-link--entity-commerce-invoice-collection {
+  --management-icon: var(--commerce-icon--file-earmark-ruled-fill);
+}
+
+.commerce-dashboard--management-links .management-link--commerce-configuration {
+  --management-icon: var(--commerce-icon--gear-fill);
+}
+
+@media screen and (min-width: 62em) {
+  .commerce-dashboard--management-links .management-links {
+    display: -ms-grid;
+    display: grid;
+    -ms-flex-pack: justify;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    justify-content: space-between;
+    margin-top: 0;
+    -webkit-box-pack: justify;
+    gap: 1.5rem;
+  }
+
+  .commerce-dashboard--management-links .management-links-toggle {
+    display: none;
+  }
+}

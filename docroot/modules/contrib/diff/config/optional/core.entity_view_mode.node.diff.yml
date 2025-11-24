@@ -1,6 +1,6 @@
 langcode: en
 id: node.diff
-label: 'Revision comparison'
+label: "Revision comparison"
 status: false
 cache: true
 targetEntityType: node

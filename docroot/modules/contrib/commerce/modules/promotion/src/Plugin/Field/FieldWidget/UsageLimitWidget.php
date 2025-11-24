@@ -2,27 +2,26 @@
 
 namespace Drupal\commerce_promotion\Plugin\Field\FieldWidget;
 
-use Drupal\commerce_promotion\Entity\CouponInterface;
-use Drupal\commerce_promotion\Entity\PromotionInterface;
-use Drupal\commerce_promotion\PromotionUsageInterface;
+use Drupal\Core\Field\Attribute\FieldWidget;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce_promotion\Entity\CouponInterface;
+use Drupal\commerce_promotion\Entity\PromotionInterface;
+use Drupal\commerce_promotion\PromotionUsageInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Plugin implementation of 'commerce_usage_limit'.
- *
- * @FieldWidget(
- *   id = "commerce_usage_limit",
- *   label = @Translation("Usage limit"),
- *   field_types = {
- *     "integer"
- *   }
- * )
  */
+#[FieldWidget(
+  id: "commerce_usage_limit",
+  label: new TranslatableMarkup("Usage limit"),
+  field_types: ["integer"],
+)]
 class UsageLimitWidget extends WidgetBase implements ContainerFactoryPluginInterface {
 
   /**

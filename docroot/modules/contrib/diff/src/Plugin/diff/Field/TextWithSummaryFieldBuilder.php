@@ -1,28 +1,29 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\diff\Plugin\diff\Field;
 
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\diff\Attribute\FieldDiffBuilder;
 use Drupal\diff\FieldDiffBuilderBase;
 
 /**
  * Plugin to diff text with summary fields.
- *
- * @FieldDiffBuilder(
- *   id = "text_summary_field_diff_builder",
- *   label = @Translation("Text with Summary Field"),
- *   field_types = {
- *     "text_with_summary"
- *   },
- * )
  */
+#[FieldDiffBuilder(
+  id: 'text_summary_field_diff_builder',
+  label: new TranslatableMarkup('Text with Summary Field Diff'),
+  field_types: ['text_with_summary'],
+)]
 class TextWithSummaryFieldBuilder extends FieldDiffBuilderBase {
 
   /**
    * {@inheritdoc}
    */
-  public function build(FieldItemListInterface $field_items) {
+  public function build(FieldItemListInterface $field_items): array {
     $result = [];
     // Every item from $field_items is of type FieldItemInterface.
     foreach ($field_items as $field_key => $field_item) {
@@ -78,7 +79,7 @@ class TextWithSummaryFieldBuilder extends FieldDiffBuilderBase {
   /**
    * {@inheritdoc}
    */
-  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
     $form['compare_format'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Compare format'),
@@ -98,7 +99,7 @@ class TextWithSummaryFieldBuilder extends FieldDiffBuilderBase {
   /**
    * {@inheritdoc}
    */
-  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
+  public function submitConfigurationForm(array &$form, FormStateInterface $form_state): void {
     $this->configuration['compare_format'] = $form_state->getValue('compare_format');
     $this->configuration['compare_summary'] = $form_state->getValue('compare_summary');
 
@@ -108,7 +109,7 @@ class TextWithSummaryFieldBuilder extends FieldDiffBuilderBase {
   /**
    * {@inheritdoc}
    */
-  public function defaultConfiguration() {
+  public function defaultConfiguration(): array {
     $default_configuration = [
       'compare_format' => 0,
       'compare_summary' => 0,

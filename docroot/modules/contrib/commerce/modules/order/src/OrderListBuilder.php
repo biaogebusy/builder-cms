@@ -2,12 +2,12 @@
 
 namespace Drupal\commerce_order;
 
-use Drupal\commerce_order\Entity\OrderType;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityListBuilder;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\commerce_order\Entity\OrderType;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**

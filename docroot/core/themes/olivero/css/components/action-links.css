@@ -8,42 +8,20 @@
  * @file
  * Styles for action links.
 */
-[dir="ltr"] .action-links {
-  margin-left: 0;
-}
-[dir="rtl"] .action-links {
-  margin-right: 0;
-}
-[dir="ltr"] .action-links {
-  margin-right: 0;
-}
-[dir="rtl"] .action-links {
-  margin-left: 0;
-}
-[dir="ltr"] .action-links {
-  padding-left: 0;
-}
-[dir="rtl"] .action-links {
-  padding-right: 0;
-}
-[dir="ltr"] .action-links {
-  padding-right: 0;
-}
-[dir="rtl"] .action-links {
-  padding-left: 0;
-}
 .action-links {
-  margin-top: 0;
-  margin-bottom: 0;
-  padding-top: 0;
-  padding-bottom: 0;
+  margin-block: 0;
+  margin-inline-start: 0;
+  margin-inline-end: 0;
+  padding-block: 0;
+  padding-inline-start: 0;
+  padding-inline-end: 0;
   list-style: none;
 }
 .action-links li {
   display: inline-block;
 }
 .action-links li a {
-  color: #0d77b5;
+  color: var(--color-text-primary-medium);
 }
 .action-links-item {
   display: inline-block;

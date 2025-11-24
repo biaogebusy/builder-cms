@@ -14,7 +14,7 @@ use Drupal\search_api\Plugin\IndexPluginInterface;
  * won't have any effect – that is, inserting items which are already known, or
  * marking items as indexed, updated or deleted that are not.
  *
- * @see \Drupal\search_api\Annotation\SearchApiTracker
+ * @see \Drupal\search_api\Attribute\SearchApiTracker
  * @see \Drupal\search_api\Tracker\TrackerPluginManager
  * @see \Drupal\search_api\Tracker\TrackerPluginBase
  * @see plugin_api
@@ -60,7 +60,7 @@ interface TrackerInterface extends IndexPluginInterface {
    *   (optional) The item IDs of the deleted items; or NULL to remove all
    *   items.
    */
-  public function trackItemsDeleted(array $ids = NULL);
+  public function trackItemsDeleted(?array $ids = NULL);
 
   /**
    * Removes all items from the tracker, or only those of a specific datasource.

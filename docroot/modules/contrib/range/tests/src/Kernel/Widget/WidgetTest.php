@@ -3,9 +3,9 @@
 namespace Drupal\Tests\range\Kernel\Widget;
 
 use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\entity_test\Entity\EntityTest;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Tests\range\Traits\RangeTestTrait;
-use Drupal\entity_test\Entity\EntityTest;
 
 /**
  * Tests field widget.
@@ -127,7 +127,7 @@ class WidgetTest extends KernelTestBase {
    * @return string
    *   Expected step value.
    */
-  private function getExpectedStepValue() {
+  private function getExpectedStepValue(): string {
     switch ($this->fieldType) {
       case 'range_integer':
         return '1';
@@ -137,6 +137,9 @@ class WidgetTest extends KernelTestBase {
 
       case 'range_decimal':
         return '0.0001';
+
+      default:
+        return '';
     }
   }
 

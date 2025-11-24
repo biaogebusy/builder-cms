@@ -1,50 +1,47 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\image_effects\ColorSelector;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\image_effects\Plugin\Attribute\ColorSelector;
 use Drupal\image_effects\Plugin\ImageEffectsPluginBase;
 
 /**
  * Farbtastic color selector plugin.
- *
- * @Plugin(
- *   id = "farbtastic",
- *   title = @Translation("Farbtastic color selector"),
- *   short_title = @Translation("Farbtastic"),
- *   help = @Translation("Use a Farbtastic color picker to select colors.")
- * )
  */
+#[ColorSelector(
+  id: "farbtastic",
+  title: new TranslatableMarkup("Farbtastic color selector"),
+  shortTitle: new TranslatableMarkup("Farbtastic"),
+  help: new TranslatableMarkup("Use a Farbtastic color picker to select colors."),
+)]
 class Farbtastic extends ImageEffectsPluginBase {
 
   /**
    * {@inheritdoc}
    */
-  public function selectionElement(array $options = []) {
-    // @todo remove versioning once Drupal 9 is no longer  supported.
-    $libraryVersion = (version_compare(\Drupal::VERSION, 10) >= 0) ? '_v2' : '';
+  public function selectionElement(array $options = []): array {
     return [
       '#type' => 'textfield',
-      '#title' => isset($options['#title']) ? $options['#title'] : $this->t('Color'),
-      '#description' => isset($options['#description']) ? $options['#description'] : NULL,
+      '#title' => $options['#title'] ?? $this->t('Color'),
+      '#description' => $options['#description'] ?? NULL,
       '#default_value' => $options['#default_value'],
       '#field_suffix' => '<div class="farbtastic-colorpicker"></div>',
       '#maxlength' => 7,
       '#size' => 8,
       '#wrapper_attributes' => ['class' => ['image-effects-farbtastic-color-selector']],
       '#attributes' => ['class' => ['image-effects-color-textfield']],
-      '#attached' => ['library' => ['image_effects/image_effects.farbtastic_color_selector' . $libraryVersion]],
+      '#attached' => ['library' => ['image_effects/image_effects.farbtastic_color_selector_v2']],
     ];
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function isAvailable() {
-    // @todo remove versioning once Drupal 9 is no longer  supported.
-    if (version_compare(\Drupal::VERSION, 10) >= 0) {
-      return \Drupal::service('module_handler')->moduleExists('color');
-    }
-    return TRUE;
+  public static function isAvailable(): bool {
+    return \Drupal::service('module_handler')->moduleExists('color');
   }
 
 }

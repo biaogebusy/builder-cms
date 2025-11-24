@@ -28,6 +28,7 @@ class ManualPaymentAddForm extends PaymentGatewayFormBase {
       '#title' => $this->t('Amount'),
       '#default_value' => $amount->toArray(),
       '#required' => TRUE,
+      '#allow_negative' => TRUE,
     ];
     $form['received'] = [
       '#type' => 'checkbox',

@@ -5,9 +5,13 @@
  * Provide structure for the administrative interface to Views.
  */
 
+use Drupal\block\BlockInterface;
+use Drupal\Component\Utility\Unicode;
 use Drupal\Component\Utility\Xss;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Url;
+use Drupal\views\Entity\View;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Analyzer;
 
@@ -18,9 +22,9 @@ function views_ui_help($route_name, RouteMatchInterface $route_match) {
   switch ($route_name) {
     case 'help.page.views_ui':
       $output = '';
-      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<h2>' . t('About') . '</h2>';
       $output .= '<p>' . t('The Views UI module provides an interface for managing views for the <a href=":views">Views module</a>. For more information, see the <a href=":handbook">online documentation for the Views UI module</a>.', [':views' => Url::fromRoute('help.page', ['name' => 'views'])->toString(), ':handbook' => 'https://www.drupal.org/documentation/modules/views_ui']) . '</p>';
-      $output .= '<h3>' . t('Uses') . '</h3>';
+      $output .= '<h2>' . t('Uses') . '</h2>';
       $output .= '<dl>';
       $output .= '<dt>' . t('Creating and managing views') . '</dt>';
       $output .= '<dd>' . t('Views can be created from the <a href=":list">Views list page</a> by using the "Add view" action. Existing views can be managed from the <a href=":list">Views list page</a> by locating the view in the "Enabled" or "Disabled" list and selecting the desired operation action, for example "Edit".', [':list' => Url::fromRoute('entity.view.collection', ['name' => 'views_ui'])->toString()]) . '</dd>';
@@ -62,7 +66,7 @@ function views_ui_entity_type_build(array &$entity_types) {
  */
 function views_ui_theme() {
   return [
-    // edit a view
+    // Edit a view
     'views_ui_display_tab_setting' => [
       'variables' => ['description' => '', 'link' => '', 'settings_links' => [], 'overridden' => FALSE, 'defaulted' => FALSE, 'description_separator' => TRUE, 'class' => []],
       'file' => 'views_ui.theme.inc',
@@ -167,9 +171,9 @@ function views_ui_theme_suggestions_views_ui_view_preview_section(array $variabl
 /**
  * Returns contextual links for each handler of a certain section.
  *
- * @TODO
- *   Bring in relationships
- *   Refactor this function to use much stuff of views_ui_edit_form_get_bucket.
+ * @todo Bring in relationships.
+ * @todo Refactor this function to use much stuff of
+ *    views_ui_edit_form_get_bucket.
  *
  * @param $title
  *   Add a bolded title of this section.
@@ -339,12 +343,41 @@ function views_ui_views_analyze(ViewExecutable $view) {
  * Truncate strings to a set length and provide a '...' if they truncated.
  *
  * This is often used in the UI to ensure long strings fit.
+ *
+ * @deprecated in drupal:10.3.0 and is removed from drupal:12.0.0.
+ *   Use \Drupal\Component\Utility\Unicode::truncate().
+ *
+ * @see https://www.drupal.org/node/3408283
  */
 function views_ui_truncate($string, $length) {
-  if (mb_strlen($string) > $length) {
-    $string = mb_substr($string, 0, $length);
-    $string .= '...';
+  @trigger_error('views_ui_truncate() is deprecated in drupal:10.3.0 and is removed from drupal:12.0.0. Use \Drupal\Component\Utility\Unicode::truncate(). See https://www.drupal.org/node/3408283', E_USER_DEPRECATED);
+  return Unicode::truncate($string, $length, FALSE, TRUE);
+}
+
+/**
+ * Implements hook_entity_operation().
+ */
+function views_ui_entity_operation(EntityInterface $entity): array {
+  $operations = [];
+  if ($entity instanceof BlockInterface) {
+    $plugin = $entity->getPlugin();
+    if ($plugin->getBaseId() === 'views_block') {
+      $view_id_parts = explode('-', $plugin->getDerivativeId());
+      $view_id = $view_id_parts[0] ?? '';
+      $display_id = $view_id_parts[1] ?? '';
+      $view = View::load($view_id);
+      if ($view && $view->access('edit')) {
+        $operations['view-edit'] = [
+          'title' => t('Edit view'),
+          'url' => Url::fromRoute('entity.view.edit_display_form', [
+            'view' => $view_id,
+            'display_id' => $display_id,
+          ]),
+          'weight' => 50,
+        ];
+      }
+    }
   }
 
-  return $string;
+  return $operations;
 }

@@ -29,6 +29,7 @@ services:
     class: Drupal\entity_share_client\Service\RemoteManager
     arguments:
       - '@logger.channel.entity_share_client'
+      - '@cache.data'
 
   entity_share_client.import_service:
     class: Drupal\entity_share_client\Service\ImportService

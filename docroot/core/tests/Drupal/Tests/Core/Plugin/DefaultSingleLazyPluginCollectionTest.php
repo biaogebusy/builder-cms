@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Plugin;
 
 use Drupal\Component\Plugin\ConfigurableInterface;
@@ -16,7 +18,7 @@ class DefaultSingleLazyPluginCollectionTest extends LazyPluginCollectionTestBase
   /**
    * {@inheritdoc}
    */
-  protected function setupPluginCollection(InvocationOrder $create_count = NULL) {
+  protected function setupPluginCollection(?InvocationOrder $create_count = NULL) {
     $definitions = $this->getPluginDefinitions();
     $this->pluginInstances['apple'] = new ConfigurablePlugin(['id' => 'apple', 'key' => 'value'], 'apple', $definitions['apple']);
     $this->pluginInstances['banana'] = new ConfigurablePlugin(['id' => 'banana', 'key' => 'other_value'], 'banana', $definitions['banana']);
@@ -34,7 +36,7 @@ class DefaultSingleLazyPluginCollectionTest extends LazyPluginCollectionTestBase
   /**
    * Tests the get() method.
    */
-  public function testGet() {
+  public function testGet(): void {
     $this->setupPluginCollection($this->once());
     $apple = $this->pluginInstances['apple'];
 
@@ -46,7 +48,7 @@ class DefaultSingleLazyPluginCollectionTest extends LazyPluginCollectionTestBase
    * @covers ::getConfiguration
    * @covers ::setConfiguration
    */
-  public function testAddInstanceId() {
+  public function testAddInstanceId(): void {
     $this->setupPluginCollection($this->any());
 
     $this->assertEquals(['id' => 'apple', 'key' => 'value'], $this->defaultPluginCollection->get('apple')->getConfiguration());
@@ -62,12 +64,45 @@ class DefaultSingleLazyPluginCollectionTest extends LazyPluginCollectionTestBase
   /**
    * @covers ::getInstanceIds
    */
-  public function testGetInstanceIds() {
+  public function testGetInstanceIds(): void {
     $this->setupPluginCollection($this->any());
     $this->assertEquals(['apple' => 'apple'], $this->defaultPluginCollection->getInstanceIds());
 
     $this->defaultPluginCollection->addInstanceId('banana', ['id' => 'banana', 'key' => 'other_value']);
     $this->assertEquals(['banana' => 'banana'], $this->defaultPluginCollection->getInstanceIds());
+  }
+
+  /**
+   * @covers ::setConfiguration
+   */
+  public function testConfigurableSetConfiguration(): void {
+    $this->setupPluginCollection($this->any());
+
+    $this->defaultPluginCollection->setConfiguration(['apple' => ['value' => 'pineapple', 'id' => 'apple']]);
+    $config = $this->defaultPluginCollection->getConfiguration();
+    $this->assertSame(['apple' => ['value' => 'pineapple', 'id' => 'apple']], $config);
+    $plugin = $this->pluginInstances['apple'];
+    $this->assertSame(['apple' => ['value' => 'pineapple', 'id' => 'apple']], $plugin->getConfiguration());
+
+    $this->defaultPluginCollection->setConfiguration([]);
+    $this->assertSame([], $this->defaultPluginCollection->getConfiguration());
+
+    $this->defaultPluginCollection->setConfiguration(['cherry' => ['value' => 'kiwi', 'id' => 'cherry']]);
+    $expected['cherry'] = ['value' => 'kiwi', 'id' => 'cherry'];
+    $config = $this->defaultPluginCollection->getConfiguration();
+    $this->assertSame($expected, $config);
+  }
+
+  /**
+   * @covers ::setConfiguration
+   * @group legacy
+   */
+  public function testConfigurableSetConfigurationToNull(): void {
+    $this->setupPluginCollection($this->any());
+
+    $this->expectDeprecation('Calling Drupal\Core\Plugin\DefaultSingleLazyPluginCollection::setConfiguration() with a non-array argument is deprecated in drupal:10.3.0 and will fail in drupal:11.0.0. See https://www.drupal.org/node/3406191');
+    $this->defaultPluginCollection->setConfiguration(NULL);
+    $this->assertSame([], $this->defaultPluginCollection->getConfiguration());
   }
 
 }

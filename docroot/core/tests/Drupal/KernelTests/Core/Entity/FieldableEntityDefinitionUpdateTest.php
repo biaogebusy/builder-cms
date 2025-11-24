@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Entity;
 
 use Drupal\Core\Entity\EntityStorageException;
@@ -76,9 +78,7 @@ class FieldableEntityDefinitionUpdateTest extends EntityKernelTestBase {
   protected $testEntities = [];
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'content_translation',
@@ -108,13 +108,12 @@ class FieldableEntityDefinitionUpdateTest extends EntityKernelTestBase {
     // provide test coverage for this special case.
     $fields['changed'] = BaseFieldDefinition::create('changed')
       ->setLabel(t('Changed'))
-      ->setDescription(t('The time that the custom block was last edited.'))
+      ->setDescription(t('The time that the content block was last edited.'))
       ->setTranslatable(TRUE)
       ->setRevisionable(TRUE);
     $this->state->set('entity_test_update.additional_base_field_definitions', $fields);
 
     $this->installEntitySchema($this->entityTypeId);
-    $this->installEntitySchema('configurable_language');
 
     // Enable an additional language.
     ConfigurableLanguage::createFromLangcode('ro')->save();
@@ -123,163 +122,6 @@ class FieldableEntityDefinitionUpdateTest extends EntityKernelTestBase {
     $settings = Settings::getAll();
     $settings['entity_update_batch_size'] = 1;
     new Settings($settings);
-  }
-
-  /**
-   * @covers ::updateFieldableEntityType
-   * @dataProvider providerTestFieldableEntityTypeUpdates
-   */
-  public function testFieldableEntityTypeUpdates($initial_rev, $initial_mul, $new_rev, $new_mul, $data_migration_supported) {
-    // The 'entity_test_update' entity type is neither revisionable nor
-    // translatable by default, so we need to get it into the initial testing
-    // state. This also covers the "no existing data" scenario for fieldable
-    // entity type updates.
-    if ($initial_rev || $initial_mul) {
-      $entity_type = $this->getUpdatedEntityTypeDefinition($initial_rev, $initial_mul);
-      $field_storage_definitions = $this->getUpdatedFieldStorageDefinitions($initial_rev, $initial_mul);
-
-      $this->entityDefinitionUpdateManager->updateFieldableEntityType($entity_type, $field_storage_definitions);
-      $this->assertEntityTypeSchema($initial_rev, $initial_mul);
-    }
-
-    // Add a few entities so we can test the data copying step.
-    $this->insertData($initial_rev, $initial_mul);
-
-    $updated_entity_type = $this->getUpdatedEntityTypeDefinition($new_rev, $new_mul);
-    $updated_field_storage_definitions = $this->getUpdatedFieldStorageDefinitions($new_rev, $new_mul);
-
-    if (!$data_migration_supported) {
-      $this->expectException(EntityStorageException::class);
-      $this->expectExceptionMessage('Converting an entity type from revisionable to non-revisionable or from translatable to non-translatable is not supported.');
-    }
-
-    // Check that existing data can be retrieved from the storage before the
-    // entity schema is updated.
-    if ($data_migration_supported) {
-      $this->assertEntityData($initial_rev, $initial_mul);
-    }
-
-    // Enable the creation of a new base field during a fieldable entity type
-    // update.
-    $this->state->set('entity_test_update.install_new_base_field_during_update', TRUE);
-
-    // Simulate a batch run since we are converting the entities one by one.
-    $sandbox = [];
-    do {
-      $this->entityDefinitionUpdateManager->updateFieldableEntityType($updated_entity_type, $updated_field_storage_definitions, $sandbox);
-    } while ($sandbox['#finished'] != 1);
-
-    $this->assertEntityTypeSchema($new_rev, $new_mul, TRUE);
-    $this->assertEntityData($initial_rev, $initial_mul);
-
-    $change_list = $this->entityDefinitionUpdateManager->getChangeList();
-    $this->assertArrayNotHasKey('entity_test_update', $change_list, "There are no remaining updates for the 'entity_test_update' entity type.");
-
-    // Check that we can still save new entities after the schema has been
-    // updated.
-    $this->insertData($new_rev, $new_mul);
-
-    // Check that the backup tables have been kept in place.
-    $this->assertBackupTables();
-  }
-
-  /**
-   * Data provider for testFieldableEntityTypeUpdates().
-   */
-  public function providerTestFieldableEntityTypeUpdates() {
-    return [
-      'no change' => [
-        'initial_rev' => FALSE,
-        'initial_mul' => FALSE,
-        'new_rev' => FALSE,
-        'new_mul' => FALSE,
-        'data_migration_supported' => TRUE,
-      ],
-      'non_rev non_mul to rev non_mul' => [
-        'initial_rev' => FALSE,
-        'initial_mul' => FALSE,
-        'new_rev' => TRUE,
-        'new_mul' => FALSE,
-        'data_migration_supported' => TRUE,
-      ],
-      'non_rev non_mul to rev mul' => [
-        'initial_rev' => FALSE,
-        'initial_mul' => FALSE,
-        'new_rev' => TRUE,
-        'new_mul' => TRUE,
-        'data_migration_supported' => TRUE,
-      ],
-      'non_rev non_mul to non_rev mul' => [
-        'initial_rev' => FALSE,
-        'initial_mul' => FALSE,
-        'new_rev' => FALSE,
-        'new_mul' => TRUE,
-        'data_migration_supported' => TRUE,
-      ],
-      'rev non_mul to non_rev non_mul' => [
-        'initial_rev' => TRUE,
-        'initial_mul' => FALSE,
-        'new_rev' => FALSE,
-        'new_mul' => FALSE,
-        'data_migration_supported' => FALSE,
-      ],
-      'rev non_mul to non_rev mul' => [
-        'initial_rev' => TRUE,
-        'initial_mul' => FALSE,
-        'new_rev' => FALSE,
-        'new_mul' => TRUE,
-        'data_migration_supported' => FALSE,
-      ],
-      'rev non_mul to rev mul' => [
-        'initial_rev' => TRUE,
-        'initial_mul' => FALSE,
-        'new_rev' => TRUE,
-        'new_mul' => TRUE,
-        'data_migration_supported' => TRUE,
-      ],
-      'non_rev mul to non_rev non_mul' => [
-        'initial_rev' => FALSE,
-        'initial_mul' => TRUE,
-        'new_rev' => FALSE,
-        'new_mul' => FALSE,
-        'data_migration_supported' => FALSE,
-      ],
-      'non_rev mul to rev non_mul' => [
-        'initial_rev' => FALSE,
-        'initial_mul' => TRUE,
-        'new_rev' => TRUE,
-        'new_mul' => FALSE,
-        'data_migration_supported' => FALSE,
-      ],
-      'non_rev mul to rev mul' => [
-        'initial_rev' => FALSE,
-        'initial_mul' => TRUE,
-        'new_rev' => TRUE,
-        'new_mul' => TRUE,
-        'data_migration_supported' => TRUE,
-      ],
-      'rev mul to non_rev non_mul' => [
-        'initial_rev' => TRUE,
-        'initial_mul' => TRUE,
-        'new_rev' => FALSE,
-        'new_mul' => FALSE,
-        'data_migration_supported' => FALSE,
-      ],
-      'rev mul to rev non_mul' => [
-        'initial_rev' => TRUE,
-        'initial_mul' => TRUE,
-        'new_rev' => TRUE,
-        'new_mul' => FALSE,
-        'data_migration_supported' => FALSE,
-      ],
-      'rev mul to non_rev mul' => [
-        'initial_rev' => TRUE,
-        'initial_mul' => TRUE,
-        'new_rev' => FALSE,
-        'new_mul' => TRUE,
-        'data_migration_supported' => FALSE,
-      ],
-    ];
   }
 
   /**
@@ -665,7 +507,7 @@ class FieldableEntityDefinitionUpdateTest extends EntityKernelTestBase {
   /**
    * Tests that a failed entity schema update preserves the existing data.
    */
-  public function testFieldableEntityTypeUpdatesErrorHandling() {
+  public function testFieldableEntityTypeUpdatesErrorHandling(): void {
     $schema = $this->database->schema();
 
     // First, convert the entity type to be translatable for better coverage and
@@ -833,7 +675,7 @@ class FieldableEntityDefinitionUpdateTest extends EntityKernelTestBase {
   /**
    * Tests the removal of the backup tables after a successful update.
    */
-  public function testFieldableEntityTypeUpdatesRemoveBackupTables() {
+  public function testFieldableEntityTypeUpdatesRemoveBackupTables(): void {
     $schema = $this->database->schema();
 
     // Convert the entity type to be revisionable.

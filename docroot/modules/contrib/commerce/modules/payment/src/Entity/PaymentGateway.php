@@ -2,11 +2,11 @@
 
 namespace Drupal\commerce_payment\Entity;
 
+use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\commerce\CommerceSinglePluginCollection;
 use Drupal\commerce\ConditionGroup;
 use Drupal\commerce\Plugin\Commerce\Condition\ParentEntityAwareInterface;
 use Drupal\commerce_order\Entity\OrderInterface;
-use Drupal\Core\Config\Entity\ConfigEntityBase;
 
 /**
  * Defines the payment gateway entity class.
@@ -244,9 +244,11 @@ class PaymentGateway extends ConfigEntityBase implements PaymentGatewayInterface
     // Invoke the setters to clear related properties.
     if ($property_name == 'plugin') {
       $this->setPluginId($value);
+      return $this;
     }
     elseif ($property_name == 'configuration') {
       $this->setPluginConfiguration($value);
+      return $this;
     }
     else {
       return parent::set($property_name, $value);

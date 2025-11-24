@@ -4,6 +4,7 @@ namespace Drupal\Tests\entity_embed\FunctionalJavascript;
 
 use Drupal\editor\Entity\Editor;
 use Drupal\filter\Entity\FilterFormat;
+use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 
 /**
  * Tests the entity_embed dialog controller and route.
@@ -11,14 +12,24 @@ use Drupal\filter\Entity\FilterFormat;
  * @group entity_embed
  * @requires function Drupal\FunctionalJavascriptTests\WebDriverTestBase::assertSession
  */
-class EntityEmbedDialogTest extends EntityEmbedTestBase {
+class EntityEmbedDialogTest extends WebDriverTestBase {
 
   /**
    * Modules to enable.
    *
    * @var array
    */
-  protected static $modules = ['image'];
+  protected static $modules = [
+    'entity_embed',
+    'entity_embed_test',
+    'node',
+    'ckeditor5',
+  ];
+
+  /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
 
   /**
    * The test user.
@@ -55,18 +66,12 @@ class EntityEmbedDialogTest extends EntityEmbedTestBase {
     ]);
     $format->save();
 
-    $editor_group = [
-      'name' => 'Entity Embed',
-      'items' => [
-        'node',
-      ],
-    ];
     $editor = Editor::create([
       'format' => 'custom_format',
-      'editor' => 'ckeditor',
+      'editor' => 'ckeditor5',
       'settings' => [
         'toolbar' => [
-          'rows' => [[$editor_group]],
+          'items' => ['node'],
         ],
       ],
     ]);

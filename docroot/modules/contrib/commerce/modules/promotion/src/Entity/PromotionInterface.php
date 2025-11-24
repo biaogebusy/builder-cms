@@ -2,12 +2,12 @@
 
 namespace Drupal\commerce_promotion\Entity;
 
-use Drupal\commerce_order\Entity\OrderInterface;
-use Drupal\commerce_store\Entity\EntityStoresInterface;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Entity\ContentEntityInterface;
-use Drupal\commerce_promotion\Plugin\Commerce\PromotionOffer\PromotionOfferInterface;
 use Drupal\Core\Entity\EntityChangedInterface;
+use Drupal\commerce_order\Entity\OrderInterface;
+use Drupal\commerce_promotion\Plugin\Commerce\PromotionOffer\PromotionOfferInterface;
+use Drupal\commerce_store\Entity\EntityStoresInterface;
 use Drupal\user\EntityOwnerInterface;
 
 /**
@@ -330,7 +330,7 @@ interface PromotionInterface extends ContentEntityInterface, EntityStoresInterfa
    *
    * @return $this
    */
-  public function setEndDate(DrupalDateTime $end_date = NULL);
+  public function setEndDate(?DrupalDateTime $end_date = NULL);
 
   /**
    * Gets the promotion compatibility.
@@ -456,5 +456,13 @@ interface PromotionInterface extends ContentEntityInterface, EntityStoresInterfa
    *   TRUE if the promotion requires a coupon, FALSE otherwise.
    */
   public function requiresCoupon();
+
+  /**
+   * Checks whether multiple coupons are allowed to apply on same order.
+   *
+   * @return bool
+   *   TRUE if allow, FALSE otherwise.
+   */
+  public function isMultipleCouponsAllowed();
 
 }

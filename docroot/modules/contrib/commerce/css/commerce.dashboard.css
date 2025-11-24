@@ -1,0 +1,99 @@
+/**
+ * @file
+ * Commerce dashboard styling.
+ */
+
+.commerce-dashboard {
+  display: -ms-grid;
+  display: grid;
+  gap: 1rem;
+}
+
+.commerce-dashboard--inbox {
+  -webkit-box-ordinal-group: 3;
+  -ms-flex-order: 2;
+  order: 2;
+}
+
+.commerce-dashboard__periods {
+  -ms-flex-negative: 0;
+  flex-shrink: 0;
+}
+
+.commerce-dashboard .ext-link::after {
+  margin-left: 0.25rem;
+  content: "\2197\0020";
+  white-space: nowrap;
+}
+
+.commerce-dashboard--video iframe {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 16/9;
+}
+
+/* Make the title attribute visible */
+.commerce-dashboard__periods .button.is-disabled {
+  cursor: default;
+  pointer-events: auto;
+}
+
+.commerce-dashboard__refresh {
+  display: -webkit-box;
+  display: flex;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  font-size: 0.75rem;
+  gap: 0.5rem;
+}
+
+.commerce-dashboard__refresh .link {
+  overflow: hidden;
+  -ms-flex-negative: 0;
+  flex-shrink: 0;
+  width: 1.125rem;
+  height: 1.125rem;
+  margin: 0;
+  text-indent: -9999px;
+  background-color: currentColor;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-image: var(--commerce-icon--refresh);
+  mask-image: var(--commerce-icon--refresh);
+}
+
+@media screen and (min-width: 62em) {
+  .commerce-dashboard {
+    -ms-grid-columns: 40% 2rem 1fr;
+    grid-template-columns: 40% 1fr;
+    gap: 2rem;
+  }
+
+  .commerce-dashboard--inbox {
+    -webkit-box-ordinal-group: unset;
+    -ms-flex-order: unset;
+    order: unset;
+  }
+
+  .commerce-dashboard--management-links {
+    -ms-grid-column-span: 2;
+    grid-column: span 2;
+  }
+
+  .commerce-dashboard__actions {
+    display: -webkit-box;
+    display: flex;
+    -ms-flex-pack: justify;
+    align-items: center;
+    justify-content: space-between;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    -webkit-box-pack: justify;
+    gap: 0.5rem;
+  }
+}

@@ -1,10 +1,12 @@
 services:
   xls_serialization.encoder.xls:
     class: Drupal\xls_serialization\Encoder\Xls
+    arguments: ['@config.factory']
     tags:
       - { name: encoder, format: xls }
   xls_serialization.encoder.xlsx:
     class: Drupal\xls_serialization\Encoder\Xlsx
+    arguments: ['@config.factory']
     tags:
       - { name: encoder, format: xlsx }
   xls_serialization.subscriber:

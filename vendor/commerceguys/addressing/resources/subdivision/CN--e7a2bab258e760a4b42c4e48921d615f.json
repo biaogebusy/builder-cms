@@ -1,0 +1,50 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"SX",
+		"Lüliang Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Wanshan Xian": {
+			"local_name": "方山县"
+		},
+		"Fenyang Shi": {
+			"local_name": "汾阳市"
+		},
+		"Jiaocheng Xian": {
+			"local_name": "交城县"
+		},
+		"Jiaokou Xian": {
+			"local_name": "交口县"
+		},
+		"Lan Xian": {
+			"local_name": "岚县"
+		},
+		"Lishi Qu": {
+			"local_name": "离石区"
+		},
+		"Lin Xian": {
+			"local_name": "临县"
+		},
+		"Liulin Xian": {
+			"local_name": "柳林县"
+		},
+		"Shilou Xian": {
+			"local_name": "石楼县"
+		},
+		"Wenshui Xian": {
+			"local_name": "文水县"
+		},
+		"Xiaoyi Shi": {
+			"local_name": "孝义市"
+		},
+		"Xing Xian": {
+			"local_name": "兴县"
+		},
+		"Zhongyang Xian": {
+			"local_name": "中阳县"
+		}
+	}
+}

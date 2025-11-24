@@ -3,9 +3,9 @@
 namespace Drupal\Tests\jsonapi_extras\Functional;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\Tests\jsonapi\Functional\JsonApiFunctionalTestBase;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\Tests\jsonapi\Functional\JsonApiFunctionalTestBase;
 
 /**
  * Provides helper methods for the JSON API Extras module's functional tests.

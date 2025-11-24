@@ -155,14 +155,29 @@ class MessageTemplateTest extends UnitTestCase {
       '#format' => $text[0]['format'],
       '#langcode' => Language::LANGCODE_NOT_SPECIFIED,
     ];
-    $renderer->renderPlain($expected_build)->willReturn('<div>foo text</div>');
+
+    if (version_compare(\Drupal::VERSION, '10.3.0', '<')) {
+      // @phpstan-ignore-next-line
+      $renderer->renderPlain($expected_build)->willReturn('<div>foo text</div>');
+    }
+    else {
+      $renderer->renderInIsolation($expected_build)->willReturn('<div>foo text</div>');
+    }
     $expected_build = [
       '#type' => 'processed_text',
       '#text' => $text[1]['value'],
       '#format' => $text[1]['format'],
       '#langcode' => Language::LANGCODE_NOT_SPECIFIED,
     ];
-    $renderer->renderPlain($expected_build)->willReturn('bar text');
+
+    if (version_compare(\Drupal::VERSION, '10.3.0', '<')) {
+      // @phpstan-ignore-next-line
+      $renderer->renderPlain($expected_build)->willReturn('bar text');
+    }
+    else {
+      $renderer->renderInIsolation($expected_build)->willReturn('bar text');
+    }
+
     \Drupal::getContainer()->set('renderer', $renderer->reveal());
 
     $this->messageTemplate->set('text', $text);
@@ -192,11 +207,11 @@ class MessageTemplateTest extends UnitTestCase {
     $container->set('language_manager', $language_manager);
     \Drupal::setContainer($container);
 
-    // Default language with configurable languages available.
-    $default_language = $this->prophesize(Language::class);
-    $default_language->getId()->willReturn('hu');
+    // Current language with configurable languages available.
+    $current_language = $this->prophesize(Language::class);
+    $current_language->getId()->willReturn('hu');
     $language_manager = $this->prophesize(ConfigurableLanguageManagerInterface::class);
-    $language_manager->getDefaultLanguage()->willReturn($default_language);
+    $language_manager->getCurrentLanguage()->willReturn($current_language);
     $language_manager->getLanguageConfigOverride('hu', 'message.template.foo_template')->willReturn($this->messageTemplate);
     \Drupal::getContainer()->set('language_manager', $language_manager->reveal());
 
@@ -212,14 +227,29 @@ class MessageTemplateTest extends UnitTestCase {
       '#format' => $text[0]['format'],
       '#langcode' => 'hu',
     ];
-    $renderer->renderPlain($expected_build)->willReturn('<div>foo text</div>');
+
+    if (version_compare(\Drupal::VERSION, '10.3.0', '<')) {
+      // @phpstan-ignore-next-line
+      $renderer->renderPlain($expected_build)->willReturn('<div>foo text</div>');
+    }
+    else {
+      $renderer->renderInIsolation($expected_build)->willReturn('<div>foo text</div>');
+    }
+
     $expected_build = [
       '#type' => 'processed_text',
       '#text' => $text[1]['value'],
       '#format' => $text[1]['format'],
       '#langcode' => 'hu',
     ];
-    $renderer->renderPlain($expected_build)->willReturn('bar text');
+
+    if (version_compare(\Drupal::VERSION, '10.3.0', '<')) {
+      // @phpstan-ignore-next-line
+      $renderer->renderPlain($expected_build)->willReturn('bar text');
+    }
+    else {
+      $renderer->renderInIsolation($expected_build)->willReturn('bar text');
+    }
     \Drupal::getContainer()->set('renderer', $renderer->reveal());
 
     $expected = [

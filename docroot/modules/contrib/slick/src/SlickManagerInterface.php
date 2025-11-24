@@ -2,8 +2,8 @@
 
 namespace Drupal\slick;
 
-use Drupal\blazy\BlazyManagerBaseInterface;
 use Drupal\Core\Security\TrustedCallbackInterface;
+use Drupal\blazy\BlazyManagerBaseInterface;
 use Drupal\slick\Entity\Slick;
 
 /**

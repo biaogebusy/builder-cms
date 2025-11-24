@@ -2,9 +2,11 @@
 
 namespace Drupal\views_bulk_operations\Service;
 
-use Drupal\views\ViewExecutable;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\ResultRow;
+use Drupal\views\ViewExecutable;
 
 /**
  * Defines view data service for Views Bulk Operations.
@@ -21,7 +23,7 @@ interface ViewsBulkOperationsViewDataInterface {
    * @param string $relationship
    *   Relationship ID.
    */
-  public function init(ViewExecutable $view, DisplayPluginBase $display, $relationship);
+  public function init(ViewExecutable $view, DisplayPluginBase $display, $relationship): void;
 
   /**
    * Get entity type IDs.
@@ -29,7 +31,7 @@ interface ViewsBulkOperationsViewDataInterface {
    * @return array
    *   Array of entity type IDs.
    */
-  public function getEntityTypeIds();
+  public function getEntityTypeIds(): array;
 
   /**
    * Get view provider.
@@ -37,15 +39,15 @@ interface ViewsBulkOperationsViewDataInterface {
    * @return string
    *   View provider ID.
    */
-  public function getViewProvider();
+  public function getViewProvider(): string;
 
   /**
    * Get base field for the current view.
    *
-   * @return sting
+   * @return string
    *   The base field name.
    */
-  public function getViewBaseField();
+  public function getViewBaseField(): string;
 
   /**
    * Get entity from views row.
@@ -53,10 +55,10 @@ interface ViewsBulkOperationsViewDataInterface {
    * @param \Drupal\views\ResultRow $row
    *   Views row object.
    *
-   * @return \Drupal\Core\Entity\EntityInterface
+   * @return \Drupal\Core\Entity\EntityInterface|null
    *   An entity object.
    */
-  public function getEntity(ResultRow $row);
+  public function getEntity(ResultRow $row): ?EntityInterface;
 
   /**
    * Get the total count of results on all pages.
@@ -65,9 +67,9 @@ interface ViewsBulkOperationsViewDataInterface {
    *   Are we clearing selection on exposed filters change?
    *
    * @return int
-   *   The total number of results this view displays.
+   *   The total number of results this view displays or null if undetermined.
    */
-  public function getTotalResults($clear_on_exposed);
+  public function getTotalResults($clear_on_exposed): ?int;
 
   /**
    * The default entity getter function.
@@ -81,9 +83,17 @@ interface ViewsBulkOperationsViewDataInterface {
    * @param \Drupal\views\ViewExecutable $view
    *   The current view object.
    *
-   * @return \Drupal\Core\Entity\FieldableEntityInterface
+   * @return \Drupal\Core\Entity\FieldableEntityInterface|null
    *   The translated entity.
    */
-  public function getEntityDefault(ResultRow $row, $relationship_id, ViewExecutable $view);
+  public function getEntityDefault(ResultRow $row, $relationship_id, ViewExecutable $view): ?FieldableEntityInterface;
+
+  /**
+   * Get entity data array for this view results.
+   *
+   * @return array<string, string>
+   *   Bulk form keys and labels keyed by row index.
+   */
+  public function getViewEntityData(): array;
 
 }

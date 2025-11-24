@@ -1,54 +1,57 @@
 services:
   commerce.configurable_field_manager:
     class: Drupal\commerce\ConfigurableFieldManager
-    arguments: ['@entity_type.manager']
+    autowire: true
+  Drupal\commerce\ConfigurableFieldManagerInterface: '@commerce.configurable_field_manager'
 
   commerce.credentials_check_flood:
     class: Drupal\commerce\CredentialsCheckFlood
-    arguments: ['@flood', '@entity_type.manager', '@config.factory']
+    autowire: true
+  Drupal\commerce\CredentialsCheckFloodInterface: '@commerce.credentials_check_flood'
 
   commerce.current_country:
     class: Drupal\commerce\CurrentCountry
-    arguments: ['@request_stack', '@commerce.chain_country_resolver']
+    autowire: true
+  Drupal\commerce\CurrentCountryInterface: '@commerce.current_country'
 
   commerce.chain_country_resolver:
     class: Drupal\commerce\Resolver\ChainCountryResolver
     tags:
       - { name: service_collector, call: addResolver, tag: commerce.country_resolver }
+  Drupal\commerce\Resolver\ChainCountryResolverInterface: '@commerce.chain_country_resolver'
 
   commerce.default_country_resolver:
     class: Drupal\commerce\Resolver\DefaultCountryResolver
-    arguments: ['@config.factory']
+    autowire: true
     tags:
       - { name: commerce.country_resolver, priority: -100 }
 
   commerce.current_locale:
     class: Drupal\commerce\CurrentLocale
-    arguments: ['@request_stack', '@commerce.chain_locale_resolver']
+    autowire: true
+  Drupal\commerce\CurrentLocaleInterface: '@commerce.current_locale'
 
   commerce.chain_locale_resolver:
     class: Drupal\commerce\Resolver\ChainLocaleResolver
     tags:
       - { name: service_collector, call: addResolver, tag: commerce.locale_resolver }
+  Drupal\commerce\Resolver\ChainLocaleResolverInterface: '@commerce.chain_locale_resolver'
 
   commerce.default_locale_resolver:
     class: Drupal\commerce\Resolver\DefaultLocaleResolver
-    arguments: ['@language_manager', '@commerce.current_country']
+    autowire: true
     tags:
       - { name: commerce.locale_resolver, priority: -100 }
 
-  commerce.availability_manager:
-    class: Drupal\commerce\AvailabilityManager
-    tags:
-      - { name: service_collector, tag: commerce.availability_checker, call: addChecker }
-
   commerce.config_updater:
     class: Drupal\commerce\Config\ConfigUpdater
-    arguments: ['@entity_type.manager', '@config.storage', '@config.factory']
+    arguments: ['@entity_type.manager', '@config.storage', '@config.factory', '%install_profile%']
+  Drupal\commerce\Config\ConfigUpdaterInterface: '@commerce.config_updater'
 
   commerce.entity_uuid_mapper:
     class: Drupal\commerce\EntityUuidMapper
-    arguments: ['@database', '@entity_type.manager']
+    autowire: true
+  Drupal\commerce\EntityUuidMapperInterface: '@commerce.entity_uuid_mapper'
 
   commerce.twig_extension:
     class: Drupal\commerce\TwigExtension\CommerceTwigExtension
@@ -57,31 +60,55 @@ services:
 
   cache_context.country:
     class: Drupal\commerce\Cache\Context\CountryCacheContext
-    arguments: ['@commerce.current_country']
+    autowire: true
     tags:
       - { name: cache.context}
 
   plugin.manager.commerce_condition:
     class: Drupal\commerce\ConditionManager
     arguments: ['@container.namespaces', '@cache.discovery', '@module_handler', '@entity_type.manager', '@event_dispatcher']
+  Drupal\commerce\ConditionManagerInterface: '@plugin.manager.commerce_condition'
 
   plugin.manager.commerce_entity_trait:
     class: Drupal\commerce\EntityTraitManager
     arguments: ['@container.namespaces', '@cache.discovery', '@module_handler', '@commerce.configurable_field_manager']
+  Drupal\commerce\EntityTraitManagerInterface: '@plugin.manager.commerce_entity_trait'
 
   plugin.manager.commerce_inline_form:
     class: Drupal\commerce\InlineFormManager
     arguments: ['@container.namespaces', '@cache.discovery', '@module_handler']
+  Drupal\commerce\InlineFormManager: '@plugin.manager.commerce_inline_form'
 
   commerce.mail_handler:
     class: Drupal\commerce\MailHandler
-    arguments: ['@language.default', '@language_manager', '@plugin.manager.mail', '@event_dispatcher']
+    autowire: true
+  Drupal\commerce\MailHandlerInterface: '@commerce.mail_handler'
 
   commerce.purchasable_entity_type_repository:
     class: Drupal\commerce\PurchasableEntityTypeRepository
-    arguments: ['@entity_type.manager']
+    autowire: true
+  Drupal\commerce\PurchasableEntityTypeRepositoryInterface: '@commerce.purchasable_entity_type_repository'
 
   commerce.response_subscriber:
     class: Drupal\commerce\EventSubscriber\ResponseSubscriber
     tags:
       - { name: event_subscriber }
+
+  commerce.inbox_message_storage:
+    class: Drupal\commerce\InboxMessageStorage
+    autowire: true
+  Drupal\commerce\InboxMessageStorageInterface: '@commerce.inbox_message_storage'
+
+  commerce.inbox_message_fetcher:
+    class: Drupal\commerce\InboxMessageFetcher
+    arguments: ['@http_client', '@commerce.logger', '@module_handler', '@commerce.inbox_message_storage', '@date.formatter', '@state', '@datetime.time']
+  Drupal\commerce\InboxMessageFetcherInterface: '@commerce.inbox_message_fetcher'
+
+  commerce.logger:
+    class: Drupal\Core\Logger\LoggerChannel
+    factory: logger.factory:get
+    arguments: ['commerce']
+
+  commerce.lazy_builders:
+    class: Drupal\commerce\LazyBuilders
+    autowire: true

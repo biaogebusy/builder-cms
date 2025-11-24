@@ -2,22 +2,21 @@
 
 namespace Drupal\commerce_order\Plugin\Field\FieldWidget;
 
+use Drupal\Core\Field\Attribute\FieldWidget;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Field\Plugin\Field\FieldWidget\NumberWidget;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Plugin implementation of the 'commerce_quantity' widget.
- *
- * @FieldWidget(
- *   id = "commerce_quantity",
- *   label = @Translation("Quantity"),
- *   field_types = {
- *     "decimal",
- *   }
- * )
  */
+#[FieldWidget(
+  id: "commerce_quantity",
+  label: new TranslatableMarkup("Quantity"),
+  field_types: ["decimal"],
+)]
 class QuantityWidget extends NumberWidget {
 
   /**
@@ -103,10 +102,30 @@ class QuantityWidget extends NumberWidget {
    */
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
     $element = parent::formElement($items, $delta, $element, $form, $form_state);
+
+    $decimal_part = explode('.', $this->getSetting('step'));
+    $decimal_places = isset($decimal_part[1]) ? strlen($decimal_part[1]) : 0;
+    $element['value']['#default_value'] = number_format($element['value']['#default_value'], $decimal_places, '.', '');
     $element['value']['#step'] = $this->getSetting('step');
     $element['value']['#min'] = $this->getSetting('step');
+    $element['#element_validate'][] = [static::class, 'validateElement'];
 
     return $element;
+  }
+
+  /**
+   * Form validation handler for the quantity element.
+   *
+   * @param array $element
+   *   The form element.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   */
+  public static function validateElement(array $element, FormStateInterface $form_state) {
+    if ($element['value']['#value'] === '') {
+      $form_state->setValueForElement($element, ['value' => 0]);
+      $form_state->setError($element, t('The @name field is required.', ['@name' => $element['value']['#title']]));
+    }
   }
 
   /**

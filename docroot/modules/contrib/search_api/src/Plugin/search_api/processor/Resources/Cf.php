@@ -12,6 +12,7 @@ class Cf implements UnicodeCharacterPropertyInterface {
    */
   public static function getRegularExpression() {
     // phpcs:disable
+    // cspell:disable
     return
       '\x{00AD}\x{0600}\x{0601}\x{0602}\x{0603}\x{0604}\x{061C}' .
       '\x{06DD}\x{070F}\x{180E}\x{200B}\x{200C}\x{200D}\x{200E}' .
@@ -35,6 +36,7 @@ class Cf implements UnicodeCharacterPropertyInterface {
       '\x{E0074}\x{E0075}\x{E0076}\x{E0077}\x{E0078}\x{E0079}\x{E007A}' .
       '\x{E007B}\x{E007C}\x{E007D}\x{E007E}\x{E007F}';
     // phpcs:enable
+    // cspell:enable
   }
 
 }

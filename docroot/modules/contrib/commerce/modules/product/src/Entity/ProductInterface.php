@@ -2,10 +2,10 @@
 
 namespace Drupal\commerce_product\Entity;
 
-use Drupal\commerce_store\Entity\EntityStoresInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityChangedInterface;
 use Drupal\Core\Entity\EntityPublishedInterface;
+use Drupal\commerce_store\Entity\EntityStoresInterface;
 use Drupal\user\EntityOwnerInterface;
 
 /**

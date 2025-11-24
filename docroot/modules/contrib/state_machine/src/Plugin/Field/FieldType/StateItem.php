@@ -14,6 +14,7 @@ use Drupal\Core\Validation\Plugin\Validation\Constraint\AllowedValuesConstraint;
 use Drupal\state_machine\Event\WorkflowTransitionEvent;
 use Drupal\state_machine\Plugin\Workflow\WorkflowState;
 use Drupal\state_machine\Plugin\Workflow\WorkflowTransition;
+use Drupal\state_machine\Plugin\Workflow\WorkflowInterface;
 
 /**
  * Plugin implementation of the 'state' field type.
@@ -175,14 +176,14 @@ class StateItem extends FieldItemBase implements StateItemInterface, OptionsProv
   /**
    * {@inheritdoc}
    */
-  public function getPossibleValues(AccountInterface $account = NULL) {
+  public function getPossibleValues(?AccountInterface $account = NULL) {
     return array_keys($this->getPossibleOptions($account));
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getPossibleOptions(AccountInterface $account = NULL) {
+  public function getPossibleOptions(?AccountInterface $account = NULL) {
     $workflow = $this->getWorkflow();
     if (!$workflow) {
       // The workflow is not known yet, the field is probably being created.
@@ -198,14 +199,14 @@ class StateItem extends FieldItemBase implements StateItemInterface, OptionsProv
   /**
    * {@inheritdoc}
    */
-  public function getSettableValues(AccountInterface $account = NULL) {
+  public function getSettableValues(?AccountInterface $account = NULL) {
     return array_keys($this->getSettableOptions($account));
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getSettableOptions(AccountInterface $account = NULL) {
+  public function getSettableOptions(?AccountInterface $account = NULL) {
     // $this->value is unpopulated due to https://www.drupal.org/node/2629932
     $field_name = $this->getFieldDefinition()->getName();
     if (!$this->getEntity()->hasField($field_name)) {
@@ -406,7 +407,12 @@ class StateItem extends FieldItemBase implements StateItemInterface, OptionsProv
   protected function dispatchTransitionEvent($phase) {
     /** @var \Drupal\state_machine\Plugin\Workflow\WorkflowInterface $workflow */
     $workflow = $this->getWorkflow();
+    if (!$workflow instanceof WorkflowInterface) {
+      return;
+    }
+
     $transition = $this->transitionToApply ?? $workflow->findTransition($this->originalValue, $this->value);
+
     if ($transition) {
       $field_name = $this->getFieldDefinition()->getName();
       $group_id = $workflow->getGroup();

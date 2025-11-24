@@ -2,35 +2,32 @@
 
 namespace Drupal\commerce_payment\Plugin\Commerce\PaymentGateway;
 
-use Drupal\commerce_payment\Entity\PaymentInterface;
-use Drupal\commerce_payment\PaymentMethodTypeManager;
-use Drupal\commerce_payment\PaymentTypeManager;
-use Drupal\commerce_price\MinorUnitsConverterInterface;
-use Drupal\commerce_price\Price;
-use Drupal\Component\Datetime\TimeInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Utility\Token;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce_payment\Attribute\CommercePaymentGateway;
+use Drupal\commerce_payment\Entity\PaymentInterface;
+use Drupal\commerce_payment\PluginForm\ManualPaymentAddForm;
+use Drupal\commerce_payment\PluginForm\PaymentReceiveForm;
+use Drupal\commerce_price\Price;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides the Manual payment gateway.
- *
- * @CommercePaymentGateway(
- *   id = "manual",
- *   label = "Manual",
- *   display_label = "Manual",
- *   modes = {
- *     "n/a" = @Translation("N/A"),
- *   },
- *   forms = {
- *     "add-payment" = "Drupal\commerce_payment\PluginForm\ManualPaymentAddForm",
- *     "receive-payment" = "Drupal\commerce_payment\PluginForm\PaymentReceiveForm",
- *   },
- *   payment_type = "payment_manual",
- *   requires_billing_information = FALSE,
- * )
  */
+#[CommercePaymentGateway(
+  id: "manual",
+  label: new TranslatableMarkup("Manual"),
+  display_label: new TranslatableMarkup("Manual"),
+  modes: [
+    "n/a" => new TranslatableMarkup("N/A"),
+  ],
+  forms: [
+    "add-payment" => ManualPaymentAddForm::class,
+    "receive-payment" => PaymentReceiveForm::class,
+  ],
+  payment_type: "payment_manual",
+  requires_billing_information: FALSE,
+)]
 class Manual extends PaymentGatewayBase implements ManualPaymentGatewayInterface {
 
   /**
@@ -41,48 +38,12 @@ class Manual extends PaymentGatewayBase implements ManualPaymentGatewayInterface
   protected $token;
 
   /**
-   * Constructs a new Manual object.
-   *
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
-   * @param mixed $plugin_definition
-   *   The plugin implementation definition.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
-   * @param \Drupal\commerce_payment\PaymentTypeManager $payment_type_manager
-   *   The payment type manager.
-   * @param \Drupal\commerce_payment\PaymentMethodTypeManager $payment_method_type_manager
-   *   The payment method type manager.
-   * @param \Drupal\Component\Datetime\TimeInterface $time
-   *   The time.
-   * @param \Drupal\commerce_price\MinorUnitsConverterInterface $minor_units_converter
-   *   The minor units converter.
-   * @param \Drupal\Core\Utility\Token $token
-   *   The token service.
-   */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, PaymentTypeManager $payment_type_manager, PaymentMethodTypeManager $payment_method_type_manager, TimeInterface $time, MinorUnitsConverterInterface $minor_units_converter, Token $token) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $entity_type_manager, $payment_type_manager, $payment_method_type_manager, $time, $minor_units_converter);
-
-    $this->token = $token;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('entity_type.manager'),
-      $container->get('plugin.manager.commerce_payment_type'),
-      $container->get('plugin.manager.commerce_payment_method_type'),
-      $container->get('datetime.time'),
-      $container->get('commerce_price.minor_units_converter'),
-      $container->get('token')
-    );
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->token = $container->get('token');
+    return $instance;
   }
 
   /**
@@ -200,7 +161,7 @@ class Manual extends PaymentGatewayBase implements ManualPaymentGatewayInterface
   /**
    * {@inheritdoc}
    */
-  public function receivePayment(PaymentInterface $payment, Price $amount = NULL) {
+  public function receivePayment(PaymentInterface $payment, ?Price $amount = NULL) {
     $this->assertPaymentState($payment, ['pending']);
 
     // If not specified, use the entire amount.
@@ -223,7 +184,7 @@ class Manual extends PaymentGatewayBase implements ManualPaymentGatewayInterface
   /**
    * {@inheritdoc}
    */
-  public function refundPayment(PaymentInterface $payment, Price $amount = NULL) {
+  public function refundPayment(PaymentInterface $payment, ?Price $amount = NULL) {
     $this->assertPaymentState($payment, ['completed', 'partially_refunded']);
     // If not specified, refund the entire amount.
     $amount = $amount ?: $payment->getAmount();

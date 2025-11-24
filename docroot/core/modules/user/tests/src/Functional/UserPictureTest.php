@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Functional;
 
+use Drupal\comment\Tests\CommentTestTrait;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\Core\StreamWrapper\StreamWrapperManager;
@@ -20,16 +23,16 @@ class UserPictureTest extends BrowserTestBase {
   use TestFileCreationTrait {
     getTestFiles as drupalGetTestFiles;
   }
+  use CommentTestTrait;
 
   /**
-   * The profile to install as a basis for testing.
-   *
-   * Using the standard profile to test user picture config provided by the
-   * standard profile.
-   *
-   * @var string
+   * {@inheritdoc}
    */
-  protected $profile = 'standard';
+  protected static $modules = [
+    'test_user_config',
+    'node',
+    'comment',
+  ];
 
   /**
    * {@inheritdoc}
@@ -66,7 +69,7 @@ class UserPictureTest extends BrowserTestBase {
   /**
    * Tests creation, display, and deletion of user pictures.
    */
-  public function testCreateDeletePicture() {
+  public function testCreateDeletePicture(): void {
     $this->drupalLogin($this->webUser);
 
     // Save a new picture.
@@ -89,7 +92,7 @@ class UserPictureTest extends BrowserTestBase {
     // would set the timestamp.
     Database::getConnection()->update('file_managed')
       ->fields([
-        'changed' => REQUEST_TIME - ($this->config('system.file')->get('temporary_maximum_age') + 1),
+        'changed' => \Drupal::time()->getRequestTime() - ($this->config('system.file')->get('temporary_maximum_age') + 1),
       ])
       ->condition('fid', $file->id())
       ->execute();
@@ -105,8 +108,11 @@ class UserPictureTest extends BrowserTestBase {
   /**
    * Tests embedded users on node pages.
    */
-  public function testPictureOnNodeComment() {
+  public function testPictureOnNodeComment(): void {
     $this->drupalLogin($this->webUser);
+
+    $this->drupalCreateContentType(['type' => 'article', 'name' => 'Article']);
+    $this->addDefaultCommentField('node', 'article');
 
     // Save a new picture.
     $image = current($this->drupalGetTestFiles('image'));
@@ -124,7 +130,7 @@ class UserPictureTest extends BrowserTestBase {
 
     // Verify that the image is displayed on the node page.
     $this->drupalGet('node/' . $node->id());
-    $elements = $this->cssSelect('article[role="article"] > footer img[alt="' . $alt_text . '"][src="' . $image_url . '"]');
+    $elements = $this->cssSelect('article > footer img[alt="' . $alt_text . '"][src="' . $image_url . '"]');
     $this->assertCount(1, $elements, 'User picture with alt text found on node page.');
 
     // Enable user pictures on comments, instead of nodes.
@@ -171,7 +177,7 @@ class UserPictureTest extends BrowserTestBase {
    *
    * @see user_user_view_alter()
    */
-  public function testUserViewAlter() {
+  public function testUserViewAlter(): void {
     \Drupal::service('module_installer')->install(['image_module_test']);
     // Set dummy_image_formatter to the default view mode of user entity.
     EntityViewDisplay::load('user.user.default')->setComponent('user_picture', [

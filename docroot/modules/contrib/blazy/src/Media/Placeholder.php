@@ -2,8 +2,8 @@
 
 namespace Drupal\blazy\Media;
 
-use Drupal\blazy\internals\Internals;
 use Drupal\blazy\Theme\Attributes;
+use Drupal\blazy\internals\Internals;
 
 /**
  * Provides placeholder thumbnail image.
@@ -128,7 +128,7 @@ class Placeholder {
    * The `[data-b-thumb|data-thumb(deprecated)]` attribute usages:
    * - Zoom-in-out effect as seen at Splidebox and PhotoSwipe.
    * - Hoverable or static grid pagination/ thumbnails seen at Splide/ Slick.
-   * - Lightbox thumbnails seen at Photobox.
+   * - Lightbox thumbnails seen at Splidebox.
    * - Switchable thumbnail to main stage seen at ElevateZoomPlus.
    * - Slider arrows with thumbnails as navigation previews, etc. seen at Slick.
    * - etc.
@@ -290,7 +290,7 @@ class Placeholder {
         $width  = $blazies->get('thumbnail.width');
         $height = $blazies->get('thumbnail.height');
 
-        // Keep overriden/ original thumbnail data intact for custom works.
+        // Keep overriden/ original thumbnail data intact.
         $blazies->set('thumbnail.original.uri', $_tn_uri)
           ->set('thumbnail.original.url', $_tn_url);
       }
@@ -301,7 +301,7 @@ class Placeholder {
 
     // SVG is scalable, can be used as a thumbnail as long as style is defined.
     if (!$tn_url && $blazies->is('svg') && $style) {
-      $svg_url = BlazyImage::url($uri);
+      $svg_url = $blazies->get('image.url');
       $blazies->set('thumbnail.url', $svg_url);
     }
 

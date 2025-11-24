@@ -2,7 +2,9 @@
 
 namespace Drupal\flag\Controller;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\InvokeCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityInterface;
@@ -11,7 +13,6 @@ use Drupal\flag\Ajax\ActionLinkFlashCommand;
 use Drupal\flag\FlagInterface;
 use Drupal\flag\FlagServiceInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Component\Utility\Html;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -65,17 +66,19 @@ class ActionLinkController implements ContainerInjectionInterface {
    *   The flag entity.
    * @param int $entity_id
    *   The flaggable entity ID.
+   * @param string $view_mode
+   *   The flaggable entity view mode.
    *
    * @return \Drupal\Core\Ajax\AjaxResponse|null
    *   The response object, only if successful.
    *
    * @see \Drupal\flag\Plugin\Reload
    */
-  public function flag(FlagInterface $flag, $entity_id) {
-    /* @var \Drupal\Core\Entity\EntityInterface $entity */
+  public function flag(FlagInterface $flag, $entity_id, ?string $view_mode = NULL) {
+    /** @var \Drupal\Core\Entity\EntityInterface $entity */
     $entity = $this->flagService->getFlaggableById($flag, $entity_id);
 
-    if (empty($entity)) {
+    if ($entity === NULL) {
       throw new NotFoundHttpException();
     }
 
@@ -87,7 +90,7 @@ class ActionLinkController implements ContainerInjectionInterface {
       // link for the existing state of the flag.
     }
 
-    return $this->generateResponse($flag, $entity, $flag->getMessage('flag'));
+    return $this->generateResponse($flag, $entity, $flag->getMessage('flag'), $view_mode);
   }
 
   /**
@@ -97,17 +100,19 @@ class ActionLinkController implements ContainerInjectionInterface {
    *   The flag entity.
    * @param int $entity_id
    *   The flaggable entity ID.
+   * @param string $view_mode
+   *   The flaggable entity view mode.
    *
    * @return \Drupal\Core\Ajax\AjaxResponse|null
    *   The response object, only if successful.
    *
    * @see \Drupal\flag\Plugin\Reload
    */
-  public function unflag(FlagInterface $flag, $entity_id) {
-    /* @var \Drupal\Core\Entity\EntityInterface $entity */
+  public function unflag(FlagInterface $flag, $entity_id, ?string $view_mode = NULL) {
+    /** @var \Drupal\Core\Entity\EntityInterface $entity */
     $entity = $this->flagService->getFlaggableById($flag, $entity_id);
 
-    if (empty($entity)) {
+    if ($entity === NULL) {
       throw new NotFoundHttpException();
     }
 
@@ -119,7 +124,7 @@ class ActionLinkController implements ContainerInjectionInterface {
       // link for the existing state of the flag.
     }
 
-    return $this->generateResponse($flag, $entity, $flag->getMessage('unflag'));
+    return $this->generateResponse($flag, $entity, $flag->getMessage('unflag'), $view_mode);
   }
 
   /**
@@ -131,11 +136,13 @@ class ActionLinkController implements ContainerInjectionInterface {
    *   The entity object.
    * @param string $message
    *   (optional) The message to flash.
+   * @param string $view_mode
+   *   The flaggable entity view mode.
    *
    * @return \Drupal\Core\Ajax\AjaxResponse
    *   The response object.
    */
-  private function generateResponse(FlagInterface $flag, EntityInterface $entity, $message) {
+  private function generateResponse(FlagInterface $flag, EntityInterface $entity, $message, ?string $view_mode = NULL) {
     // Create a new AJAX response.
     $response = new AjaxResponse();
 
@@ -143,14 +150,18 @@ class ActionLinkController implements ContainerInjectionInterface {
     $link_type = $flag->getLinkTypePlugin();
 
     // Generate the link render array.
-    $link = $link_type->getAsFlagLink($flag, $entity);
+    $link = $link_type->getAsFlagLink($flag, $entity, $view_mode);
 
     // Generate a CSS selector to use in a JQuery Replace command.
     $selector = '.js-flag-' . Html::cleanCssIdentifier($flag->id()) . '-' . $entity->id();
 
     // Create a new JQuery Replace command to update the link display.
-    $replace = new ReplaceCommand($selector, $this->renderer->renderPlain($link));
+    $replace = new ReplaceCommand($selector, $this->renderer->renderInIsolation($link));
     $response->addCommand($replace);
+
+    // Put the focus back on the link.
+    $focus = new InvokeCommand($selector . '>a', 'focus');
+    $response->addCommand($focus);
 
     // Push a message pulsing command onto the stack.
     $pulse = new ActionLinkFlashCommand($selector, $message);

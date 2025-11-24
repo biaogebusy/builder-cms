@@ -5,6 +5,7 @@ namespace Drupal\menu_link_content\Plugin\migrate\process;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Url;
+use Drupal\migrate\Attribute\MigrateProcess;
 use Drupal\migrate\MigrateException;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\ProcessPluginBase;
@@ -38,11 +39,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * without validating if the resulting URI is valid. For example, if the
  * 'link_path' property is 'node/12', the uri property value of link will be
  * 'entity:node/12'.
- *
- * @MigrateProcessPlugin(
- *   id = "link_uri"
- * )
  */
+#[MigrateProcess('link_uri')]
 class LinkUri extends ProcessPluginBase implements ContainerFactoryPluginInterface {
 
   /**
@@ -58,7 +56,7 @@ class LinkUri extends ProcessPluginBase implements ContainerFactoryPluginInterfa
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -95,8 +93,11 @@ class LinkUri extends ProcessPluginBase implements ContainerFactoryPluginInterfa
       if ($path == '<front>') {
         $path = '';
       }
-      elseif ($path == '<nolink>') {
+      elseif (empty($path) || in_array($path, ['<nolink>', '<none>'])) {
         return 'route:<nolink>';
+      }
+      elseif ($path == '<button>') {
+        return 'route:<button>';
       }
       $path = 'internal:/' . $path;
 

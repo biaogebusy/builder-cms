@@ -147,7 +147,7 @@ class Modal extends IFrame {
   /**
    * {@inheritdoc}
    */
-  public function __sleep() {
+  public function __sleep(): array {
     return ['configuration'];
   }
 

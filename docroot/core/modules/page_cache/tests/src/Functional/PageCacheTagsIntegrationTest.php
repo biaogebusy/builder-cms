@@ -1,12 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\page_cache\Functional;
 
+use Drupal\comment\Tests\CommentTestTrait;
 use Drupal\Core\EventSubscriber\MainContentViewSubscriber;
 use Drupal\Core\Language\LanguageInterface;
+use Drupal\filter\Entity\FilterFormat;
+use Drupal\language\Plugin\LanguageNegotiation\LanguageNegotiationContentEntity;
+use Drupal\language\Plugin\LanguageNegotiation\LanguageNegotiationUrl;
 use Drupal\node\NodeInterface;
 use Drupal\Tests\system\Functional\Cache\AssertPageCacheContextsAndTagsTrait;
 use Drupal\Tests\BrowserTestBase;
+use Drupal\user\Entity\Role;
+use Drupal\user\RoleInterface;
+use Symfony\Component\Yaml\Yaml;
 
 /**
  * Enables the page cache and tests its cache tags in various scenarios.
@@ -17,11 +26,28 @@ use Drupal\Tests\BrowserTestBase;
 class PageCacheTagsIntegrationTest extends BrowserTestBase {
 
   use AssertPageCacheContextsAndTagsTrait;
+  use CommentTestTrait;
 
   /**
    * {@inheritdoc}
    */
-  protected $profile = 'standard';
+  protected $defaultTheme = 'olivero';
+
+  /**
+   * {@inheritdoc}
+   */
+  protected static $modules = [
+    'big_pipe',
+    'block',
+    'comment',
+    'editor',
+    'filter',
+    'language',
+    'help',
+    'node',
+    'search',
+    'views',
+  ];
 
   /**
    * {@inheritdoc}
@@ -35,7 +61,33 @@ class PageCacheTagsIntegrationTest extends BrowserTestBase {
   /**
    * Tests that cache tags are properly bubbled up to the page level.
    */
-  public function testPageCacheTags() {
+  public function testPageCacheTags(): void {
+    $config = $this->config('language.types');
+    $config->set('configurable', [LanguageInterface::TYPE_INTERFACE, LanguageInterface::TYPE_CONTENT]);
+    $config->set('negotiation.language_content.enabled', [
+      LanguageNegotiationUrl::METHOD_ID => 0,
+      LanguageNegotiationContentEntity::METHOD_ID => 1,
+    ]);
+    $config->save();
+
+    // Create two filters.
+    FilterFormat::create(
+      Yaml::parseFile('core/profiles/standard/config/install/filter.format.basic_html.yml')
+    )->save();
+    FilterFormat::create(
+      Yaml::parseFile('core/profiles/standard/config/install/filter.format.full_html.yml')
+    )->save();
+
+    $this->drupalCreateContentType(['type' => 'page', 'title' => 'Basic page']);
+    $this->addDefaultCommentField('node', 'page');
+
+    // To generate search and comment tags.
+    $anonymous = Role::load(RoleInterface::ANONYMOUS_ID);
+    $anonymous
+      ->grantPermission('search content')
+      ->grantPermission('access comments');
+    $anonymous->save();
+
     // Create two nodes.
     $author_1 = $this->drupalCreateUser();
     $node_1 = $this->drupalCreateNode([
@@ -80,7 +132,7 @@ class PageCacheTagsIntegrationTest extends BrowserTestBase {
       'cookies:big_pipe_nojs',
       'session.exists',
       'user.permissions',
-      'user.roles:authenticated',
+      'user.roles',
     ];
 
     // Full node page 1.
@@ -107,6 +159,7 @@ class PageCacheTagsIntegrationTest extends BrowserTestBase {
       'config:block.block.olivero_primary_admin_actions',
       'config:block.block.olivero_page_title',
       'node_view',
+      'CACHE_MISS_IF_UNCACHEABLE_HTTP_METHOD:form',
       'node:' . $node_1->id(),
       'user:' . $author_1->id(),
       'config:filter.format.basic_html',
@@ -146,6 +199,7 @@ class PageCacheTagsIntegrationTest extends BrowserTestBase {
       'config:block.block.olivero_primary_admin_actions',
       'config:block.block.olivero_page_title',
       'node_view',
+      'CACHE_MISS_IF_UNCACHEABLE_HTTP_METHOD:form',
       'node:' . $node_2->id(),
       'user:' . $author_2->id(),
       'config:filter.format.full_html',

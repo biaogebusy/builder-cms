@@ -6,20 +6,20 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
- * JQuery UI slider widget implementation.
+ * Sliders widget implementation.
  *
  * @BetterExposedFiltersFilterWidget(
  *   id = "bef_sliders",
- *   label = @Translation("jQuery UI Slider"),
+ *   label = @Translation("Sliders"),
  * )
  */
 class Sliders extends FilterWidgetBase {
 
   // Slider animation options.
-  const ANIMATE_NONE = 'none';
-  const ANIMATE_SLOW = 'slow';
-  const ANIMATE_NORMAL = 'normal';
-  const ANIMATE_FAST = 'fast';
+  const ANIMATE_NONE = 0;
+  const ANIMATE_SLOW = 600;
+  const ANIMATE_NORMAL = 400;
+  const ANIMATE_FAST = 200;
   const ANIMATE_CUSTOM = 'custom';
 
   // Slider orientation options.
@@ -29,7 +29,7 @@ class Sliders extends FilterWidgetBase {
   /**
    * {@inheritdoc}
    */
-  public function defaultConfiguration() {
+  public function defaultConfiguration(): array {
     return parent::defaultConfiguration() + [
       'min' => 0,
       'max' => 99999,
@@ -43,16 +43,16 @@ class Sliders extends FilterWidgetBase {
   /**
    * {@inheritdoc}
    */
-  public static function isApplicable($filter = NULL, array $filter_options = []) {
-    /** @var \Drupal\views\Plugin\views\filter\FilterPluginBase $filter */
+  public static function isApplicable(mixed $handler = NULL, array $options = []): bool {
+    /** @var \Drupal\views\Plugin\views\filter\FilterPluginBase $handler */
     $is_applicable = FALSE;
 
-    // The date filter handler extends the numeric filter handler so we have
+    // The date filter handler extends the numeric filter handler, so we have
     // to exclude it specifically.
-    $is_numeric_filter = is_a($filter, 'Drupal\views\Plugin\views\filter\NumericFilter');
-    $is_range_filter = is_a($filter, 'Drupal\range\Plugin\views\filter\Range');
-    $is_date_filter = is_a($filter, 'Drupal\views\Plugin\views\filter\Date');
-    if (($is_numeric_filter || $is_range_filter) && !$is_date_filter && !$filter->isAGroup()) {
+    $is_numeric_filter = is_a($handler, 'Drupal\views\Plugin\views\filter\NumericFilter');
+    $is_range_filter = is_a($handler, 'Drupal\range\Plugin\views\filter\Range');
+    $is_date_filter = is_a($handler, 'Drupal\views\Plugin\views\filter\Date');
+    if (($is_numeric_filter || $is_range_filter) && !$is_date_filter && !$handler->isAGroup()) {
       $is_applicable = TRUE;
     }
 
@@ -62,7 +62,7 @@ class Sliders extends FilterWidgetBase {
   /**
    * {@inheritdoc}
    */
-  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
     /** @var \Drupal\views\Plugin\views\filter\FilterPluginBase $filter */
     $filter = $this->handler;
 
@@ -72,14 +72,14 @@ class Sliders extends FilterWidgetBase {
       '#type' => 'number',
       '#title' => $this->t('Range minimum'),
       '#default_value' => $this->configuration['min'],
-      '#description' => $this->t('The minimum allowed value for the jQuery range slider. It can be positive, negative, or zero and have up to 11 decimal places.'),
+      '#description' => $this->t('The minimum allowed value for the range slider. It can be positive, negative, or zero and have up to 11 decimal places.'),
     ];
 
     $form['max'] = [
       '#type' => 'number',
       '#title' => $this->t('Range maximum'),
       '#default_value' => $this->configuration['max'],
-      '#description' => $this->t('The maximum allowed value for the jQuery range slider. It can be positive, negative, or zero and have up to 11 decimal places.'),
+      '#description' => $this->t('The maximum allowed value for the range slider. It can be positive, negative, or zero and have up to 11 decimal places.'),
     ];
 
     $form['step'] = [
@@ -95,9 +95,9 @@ class Sliders extends FilterWidgetBase {
       '#title' => $this->t('Animation speed'),
       '#options' => [
         self::ANIMATE_NONE => $this->t('None'),
-        self::ANIMATE_SLOW => $this->t('Slow'),
-        self::ANIMATE_NORMAL => $this->t('Normal'),
-        self::ANIMATE_FAST => $this->t('Fast'),
+        self::ANIMATE_SLOW => $this->t('Slow (600 ms)'),
+        self::ANIMATE_NORMAL => $this->t('Normal (400 ms)'),
+        self::ANIMATE_FAST => $this->t('Fast (200 ms)'),
         self::ANIMATE_CUSTOM => $this->t('Custom'),
       ],
       '#default_value' => $this->configuration['animate'],
@@ -124,7 +124,7 @@ class Sliders extends FilterWidgetBase {
         self::ORIENTATION_VERTICAL => $this->t('Vertical'),
       ],
       '#default_value' => $this->configuration['orientation'],
-      '#description' => $this->t('The orientation of the jQuery range slider.'),
+      '#description' => $this->t('The orientation of the range slider.'),
     ];
 
     return $form;
@@ -133,7 +133,7 @@ class Sliders extends FilterWidgetBase {
   /**
    * {@inheritdoc}
    */
-  public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
+  public function validateConfigurationForm(array &$form, FormStateInterface $form_state): void {
     parent::validateConfigurationForm($form, $form_state);
 
     // Max must be > min.
@@ -151,8 +151,8 @@ class Sliders extends FilterWidgetBase {
       $form_state->setError($form['step'], $this->t('The slider step option for %name cannot have more than 5 decimal places.'));
     }
 
-    // Very small step and a vary large range can go beyond the max value of
-    // an int in PHP. Thus we look for a decimal point when casting the result
+    // Very small step and a very large range can go beyond the max value of
+    // an int in PHP. Thus, we look for a decimal point when casting the result
     // to a string.
     if (strpos((string) ($max - $min) / $step, '.')) {
       $form_state->setError($form['step'], $this->t('The slider range must be evenly divisible by the step option.'));
@@ -162,7 +162,7 @@ class Sliders extends FilterWidgetBase {
   /**
    * {@inheritdoc}
    */
-  public function exposedFormAlter(array &$form, FormStateInterface $form_state) {
+  public function exposedFormAlter(array &$form, FormStateInterface $form_state): void {
     $field_id = $this->getExposedFilterFieldId();
 
     parent::exposedFormAlter($form, $form_state);

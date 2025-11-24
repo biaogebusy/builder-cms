@@ -1,33 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drush\Drupal\Commands\sql;
 
-use Consolidation\AnnotatedCommand\CommandData;
-use Symfony\Component\Console\Input\InputInterface;
+use Drush\Commands\sql\sanitize\SanitizePluginInterface as NewSanitizePluginInterface;
 
 /**
- * Implement this interface when building a Drush sql-sanitize plugin.
+ * @deprecated use \Drush\Commands\sql\sanitize\SanitizePluginInterface instead.
  */
-interface SanitizePluginInterface
+interface SanitizePluginInterface extends NewSanitizePluginInterface
 {
-    /**
-     * Run your sanitization logic using standard Drupal APIs.
-     *
-     * @param $result Exit code from the main operation for sql-sanitize.
-     * @param CommandData $commandData Information about the current request.
-     *
-     * @hook post-command sql-sanitize
-     */
-    public function sanitize($result, CommandData $commandData);
-
-    /**
-     * @hook on-event sql-sanitize-confirms
-     *
-     * @param array $messages An array of messages to show during confirmation.
-     * @param InputInterface $input The effective commandline input for this request.
-     *
-     * @return String[]
-     *   An array of messages.
-     */
-    public function messages(array &$messages, InputInterface $input);
 }

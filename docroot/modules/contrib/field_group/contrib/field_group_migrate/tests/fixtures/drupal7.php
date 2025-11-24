@@ -218,6 +218,7 @@ $connection->insert('system')
     'bootstrap' => '0',
     'schema_version' => '7008',
     'weight' => '1',
+    // cspell:ignore ctools
     'info' => 'a:12:{s:4:"name";s:11:"Field Group";s:11:"description";s:67:"Provides the ability to group your fields on both form and display.";s:7:"package";s:6:"Fields";s:12:"dependencies";a:2:{i:0;s:5:"field";i:1;s:6:"ctools";}s:4:"core";s:3:"7.x";s:5:"files";a:2:{i:0;s:25:"tests/field_group.ui.test";i:1;s:30:"tests/field_group.display.test";}s:7:"version";s:7:"7.x-1.5";s:7:"project";s:11:"field_group";s:9:"datestamp";s:10:"1452033709";s:5:"mtime";i:1486548096;s:3:"php";s:5:"5.2.4";s:9:"bootstrap";i:0;}',
   ])
   ->execute();

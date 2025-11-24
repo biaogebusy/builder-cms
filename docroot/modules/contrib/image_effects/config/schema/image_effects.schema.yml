@@ -541,13 +541,13 @@ image.effect.image_effects_convolution:
         type: sequence
         label: 'Row'
         sequence:
-          type: integer
+          type: float
           label: 'Column'
     divisor:
-      type: integer
+      type: float
       label: 'Divisor'
     offset:
-      type: integer
+      type: float
       label: 'Offset'
     label:
       type: string

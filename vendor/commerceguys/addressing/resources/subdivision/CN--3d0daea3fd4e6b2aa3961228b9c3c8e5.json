@@ -1,0 +1,45 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"HN",
+		"Yongzhou Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Dao Xian": {
+			"local_name": "道县"
+		},
+		"Dong'an Xian": {
+			"local_name": "东安县"
+		},
+		"Jianghua Xian": {
+			"local_code": "江华瑶族自治县",
+			"local_name": "江华县"
+		},
+		"Jiangyong Xian": {
+			"local_name": "江永县"
+		},
+		"Lanshan Xian": {
+			"local_name": "蓝山县"
+		},
+		"Lengshuitan Qu": {
+			"local_name": "冷水滩区"
+		},
+		"Lingling Qu": {
+			"local_name": "零陵区"
+		},
+		"Ningyuan Xian": {
+			"local_name": "宁远县"
+		},
+		"Qiyang Xian": {
+			"local_name": "祁阳县"
+		},
+		"Shuangpai Xian": {
+			"local_name": "双牌县"
+		},
+		"Xintian Xian": {
+			"local_name": "新田县"
+		}
+	}
+}

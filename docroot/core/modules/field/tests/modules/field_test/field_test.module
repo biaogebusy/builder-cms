@@ -13,8 +13,10 @@
  */
 
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\field\FieldStorageConfigInterface;
 
 require_once __DIR__ . '/field_test.entity.inc';
@@ -50,7 +52,7 @@ require_once __DIR__ . '/field_test.field.inc';
  *
  *   // make sure hook_field_storage_config_create() is invoked correctly
  *   assertEquals(1, count($mem['field_test_field_storage_config_create']));
- *   assertEquals(array($field), $mem['field_test_field_storage_config_create'][0]);
+ *   assertEquals([$field], $mem['field_test_field_storage_config_create'][0]);
  * @endcode
  *
  * @param $key
@@ -214,4 +216,62 @@ function field_test_field_ui_preconfigured_options_alter(array &$options, $field
       'test_formatter_setting_multiple' => 'altered dummy test string',
     ];
   }
+}
+
+/**
+ * Implements hook_field_info_entity_type_ui_definitions_alter().
+ */
+function field_test_field_info_entity_type_ui_definitions_alter(array &$ui_definitions, string $entity_type_id) {
+  if ($entity_type_id === 'node') {
+    $ui_definitions['boolean']['label'] = new TranslatableMarkup('Boolean (overridden by alter)');
+  }
+}
+
+function field_test_entity_reference_selection_alter(array &$definitions): void {
+  if (\Drupal::state()->get('field_test_disable_broken_entity_reference_handler')) {
+    unset($definitions['broken']);
+  }
+}
+
+/**
+ * Implements hook_entity_query_alter().
+ *
+ * @see Drupal\KernelTests\Core\Entity\EntityQueryTest::testAlterHook
+ */
+function field_test_entity_query_alter(QueryInterface $query): void {
+  if ($query->hasTag('entity_query_alter_hook_test')) {
+    $query->condition('id', '5', '<>');
+  }
+}
+
+/**
+ * Implements hook_entity_query_ENTITY_TYPE_alter() for 'entity_test_mulrev'.
+ *
+ * @see Drupal\KernelTests\Core\Entity\EntityQueryTest::testAlterHook
+ */
+function field_test_entity_query_entity_test_mulrev_alter(QueryInterface $query): void {
+  if ($query->hasTag('entity_query_entity_test_mulrev_alter_hook_test')) {
+    $query->condition('id', '7', '<>');
+  }
+}
+
+/**
+ * Implements hook_entity_query_tag__TAG_alter() for 'entity_query_alter_tag_test'.
+ *
+ * @see Drupal\KernelTests\Core\Entity\EntityQueryTest::testAlterHook
+ */
+function field_test_entity_query_tag__entity_query_alter_tag_test_alter(QueryInterface $query): void {
+  $query->condition('id', '13', '<>');
+}
+
+/**
+ * Implements hook_entity_query_tag__ENTITY_TYPE__TAG_alter().
+ *
+ * Entity type is 'entity_test_mulrev' and tag is
+ * 'entity_query_entity_test_mulrev_alter_tag_test'.
+ *
+ * @see Drupal\KernelTests\Core\Entity\EntityQueryTest::testAlterHook
+ */
+function field_test_entity_query_tag__entity_test_mulrev__entity_query_entity_test_mulrev_alter_tag_test_alter(QueryInterface $query): void {
+  $query->condition('id', '15', '<>');
 }

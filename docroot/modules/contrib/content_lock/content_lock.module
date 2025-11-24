@@ -16,6 +16,7 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Url;
 use Drupal\Component\Utility\Html;
 use Drupal\user\Entity\User;
+use Drupal\views\ViewEntityInterface;
 
 /**
  * Implements hook_help().
@@ -178,7 +179,7 @@ function content_lock_entity_predelete(EntityInterface $entity) {
     return;
   }
 
-  $data = $lock_service->fetchLock($entity_id, NULL, $entity->language()->getId(), $entity_type);
+  $data = $lock_service->fetchLock($entity_id, $entity->language()->getId(), NULL, $entity_type);
 
   if ($data !== FALSE) {
     $current_user = \Drupal::currentUser();
@@ -455,4 +456,28 @@ function template_preprocess_content_lock_settings_entities(&$variables) {
     '#rows' => $rows,
     '#type' => 'table',
   ];
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_presave() for views.
+ *
+ * When a views is saved, we add the cache tags if they have any relation with content_lock.
+ */
+function content_lock_view_presave(ViewEntityInterface $view) {
+  $viewDependencies = $view->getDependencies();
+  if (in_array('content_lock', $viewDependencies['module'] ?? [], TRUE)) {
+    $changed_cache = FALSE;
+    $displays = $view->get('display');
+    foreach ($displays as &$display) {
+      if (isset($display['display_options']['cache']['type']) && $display['display_options']['cache']['type'] !== 'none') {
+        $display['display_options']['cache']['type'] = 'none';
+        $changed_cache = TRUE;
+      }
+    }
+    if ($changed_cache) {
+      $view->set('display', $displays);
+      $warning = t('The selected caching mechanism does not work with views including content lock information. The selected caching mechanism was changed to none accordingly for the view %view.', ['%view' => $view->label()]);
+      \Drupal::messenger()->addWarning($warning);
+    }
+  }
 }

@@ -3,15 +3,15 @@
 namespace Drupal\restui\Controller;
 
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
+use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\Url;
+use Drupal\rest\Plugin\Type\ResourcePluginManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Drupal\rest\Plugin\Type\ResourcePluginManager;
-use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
-use Drupal\Core\Url;
-use Drupal\Core\Messenger\MessengerInterface;
 
 /**
  * Controller routines for REST resources.
@@ -117,7 +117,10 @@ class RestUIController implements ContainerInjectionInterface {
     // List of resources.
     foreach (['enabled', 'disabled'] as $status) {
       $list[$status]['#type'] = 'container';
-      $list[$status]['#attributes'] = ['class' => ['rest-ui-list-section', $status]];
+      $list[$status]['#attributes'] =
+        [
+          'class' => ['rest-ui-list-section', $status],
+        ];
       $list[$status]['table'] = [
         '#theme' => 'table',
         '#header' => [
@@ -170,7 +173,14 @@ class RestUIController implements ContainerInjectionInterface {
         // @todo Remove this when https://www.drupal.org/node/2300677 is fixed.
         $is_config_entity = isset($resource['serialization_class']) && is_subclass_of($resource['serialization_class'], ConfigEntityInterface::class, TRUE);
         if ($is_config_entity) {
-          $available_methods = array_diff($available_methods, ['POST', 'PATCH', 'DELETE']);
+          $available_methods = array_diff(
+            $available_methods,
+            [
+              'POST',
+              'PATCH',
+              'DELETE',
+            ]
+          );
           $create_uri_path = FALSE;
         }
 

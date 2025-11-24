@@ -11,23 +11,25 @@
  */
 
 *,
-*:before,
-*:after {
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
 html {
-  font-family: metropolis, sans-serif;
+  font-family: var(--font-sans);
   font-size: 100%;
   font-weight: normal;
   font-style: normal;
-  line-height: 1.6875rem;
+  line-height: var(--line-height-base);
 }
 
 body {
   margin: 0;
-  color: #313637;
-  background-color: #f7f9fa;
+  word-wrap: break-word;
+  hyphens: auto;
+  color: var(--color-text-neutral-medium);
+  background-color: var(--color--gray-100);
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='50' height='84' viewBox='0 0 50 84'%3e  %3cpath opacity='0.05' fill='%230e6ba6' d='M25,61.7C25,68.5,19.4,74,12.5,74S0,68.5,0,61.7c0-5.7,3.9-9.6,7.4-12.9c2.3-2.2,4.5-4.4,5.1-6.8c0.7,2.4,2.8,4.6,5.1,6.8C21.1,52.2,25,56,25,61.7z M42.6,6.8c-2.3-2.2-4.5-4.4-5.1-6.8c-0.7,2.4-2.9,4.6-5.1,6.8C28.9,10.2,25,14,25,19.7C25,26.5,30.6,32,37.5,32S50,26.5,50,19.7C50,14,46.1,10.2,42.6,6.8z'/%3e%3c/svg%3e");
   background-position: top left; /* LTR */
 }
@@ -43,11 +45,11 @@ body.is-fixed {
 }
 
 a {
-  color: #0d77b5;
+  color: var(--color-text-primary-medium);
 }
 
 a:hover {
-  color: #2494db;
+  color: var(--color--primary-50);
 }
 
 a:focus {
@@ -74,57 +76,54 @@ audio {
 h1 {
   letter-spacing: -0.01em;
   font-size: 1.75rem;
-  line-height: 2.25rem;
+  line-height: var(--sp2);
 }
 
 @media (min-width: 43.75rem) {
-
   h1 {
     font-size: 3.75rem;
-    line-height: 4.5rem;
+    line-height: var(--sp4);
   }
 }
 
 h2 {
   letter-spacing: -0.01em;
   font-size: 1.5rem;
-  line-height: 2.25rem;
+  line-height: var(--sp2);
 }
 
 @media (min-width: 43.75rem) {
-
   h2 {
     font-size: 2.25rem;
-    line-height: 3.375rem;
+    line-height: var(--sp3);
   }
 }
 
 h3 {
   font-size: 1.25rem;
-  line-height: 1.6875rem;
+  line-height: var(--sp1-5);
 }
 
 @media (min-width: 43.75rem) {
-
   h3 {
     font-size: 1.5rem;
-    line-height: 2.25rem;
+    line-height: var(--sp2);
   }
 }
 
 h4 {
   font-size: 1.125rem;
-  line-height: 1.6875rem;
+  line-height: var(--sp1-5);
 }
 
 h5 {
   font-size: 1rem;
-  line-height: 1.6875rem;
+  line-height: var(--sp1-5);
 }
 
 h6 {
   font-size: 0.875rem;
-  line-height: 1.125rem;
+  line-height: var(--sp);
 }
 
 h1,
@@ -133,53 +132,29 @@ h3,
 h4,
 h5,
 h6 {
-  margin-top: 1.125rem;
-  margin-bottom: 1.125rem;
-  color: #0d1214;
-  font-family: metropolis, sans-serif;
+  margin-block: var(--sp);
+  color: var(--color-text-neutral-loud);
+  font-family: var(--font-sans);
   font-weight: bold;
 }
 
 @media (min-width: 43.75rem) {
-
   h1,
   h2,
   h3,
   h4,
   h5,
   h6 {
-    margin-top: 2.25rem;
-    margin-bottom: 2.25rem;
+    margin-block: var(--sp2);
   }
 }
 
-[dir="ltr"] ul {
-  margin-left: 1.5em;
-}
-
-[dir="rtl"] ul {
-  margin-right: 1.5em;
-}
-
-[dir="ltr"] ul {
-  margin-right: 0;
-}
-
-[dir="rtl"] ul {
-  margin-left: 0;
-}
-
-[dir="ltr"] ul {
-  padding-left: 0;
-}
-
-[dir="rtl"] ul {
-  padding-right: 0;
-}
-
 ul {
-  margin-top: 0.25em;
-  margin-bottom: 0.25em;
+  margin-block-start: 0.25em;
+  margin-block-end: 0.25em;
+  margin-inline-start: 1.5em;
+  margin-inline-end: 0;
+  padding-inline-start: 0;
   list-style-type: disc;
   list-style-image: none;
 }

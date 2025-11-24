@@ -11,285 +11,137 @@
  */
 
 figure {
-  background: #f7f9fa;
-}
-
-[dir="ltr"] figcaption {
-  padding-left: 0.5625rem;
-}
-
-[dir="rtl"] figcaption {
-  padding-right: 0.5625rem;
-}
-
-[dir="ltr"] figcaption {
-  padding-right: 0.5625rem;
-}
-
-[dir="rtl"] figcaption {
-  padding-left: 0.5625rem;
+  background: var(--color--gray-100);
 }
 
 figcaption {
-  padding-top: 0.5625rem;
-  padding-bottom: 0.5625rem;
-  color: #313637;
-  background: #f7f9fa;
-  font-family: Lora, georgia, serif;
+  padding-block: var(--sp0-5);
+  padding-inline-start: var(--sp0-5);
+  padding-inline-end: var(--sp0-5);
+  color: var(--color-text-neutral-medium);
+  background: var(--color--gray-100);
+  font-family: var(--font-serif);
   font-size: 0.875rem;
   font-style: italic;
-  line-height: 1.125rem;
+  line-height: var(--sp);
 }
 
 @media (min-width: 31.25rem) {
-
-  [dir="ltr"] figcaption {
-    padding-left: 1.125rem;
-  }
-
-  [dir="rtl"] figcaption {
-    padding-right: 1.125rem;
-  }
-
-  [dir="ltr"] figcaption {
-    padding-right: 1.125rem;
-  }
-
-  [dir="rtl"] figcaption {
-    padding-left: 1.125rem;
-  }
-
   figcaption {
-    padding-top: 1.125rem;
-    padding-bottom: 1.125rem;
+    padding-block: var(--sp);
+    padding-inline-start: var(--sp);
+    padding-inline-end: var(--sp);
   }
-}
-
-[dir="ltr"] .align-right {
-  margin-left: 0;
-}
-
-[dir="rtl"] .align-right {
-  margin-right: 0;
-}
-
-[dir="ltr"] .align-right {
-  margin-right: 0;
-}
-
-[dir="rtl"] .align-right {
-  margin-left: 0;
 }
 
 .align-right {
   float: none; /* Override core's align.module.css. */
   max-width: 100%;
-  margin-top: 3.375rem;
-  margin-bottom: 3.375rem;
+  margin-block: var(--sp3);
+  margin-inline-start: 0;
+  margin-inline-end: 0;
 }
 
 @media (min-width: 43.75rem) {
-
-  [dir="ltr"] .align-right {
-    float: right;
-  }
-
-  [dir="rtl"] .align-right {
-    float: left;
-  }
-
-  [dir="ltr"] .align-right {
-    margin-left: 1.125rem;
-  }
-
-  [dir="rtl"] .align-right {
-    margin-right: 1.125rem;
-  }
-
-  [dir="ltr"] .align-right {
-    margin-right: 0;
-  }
-
-  [dir="rtl"] .align-right {
-    margin-left: 0;
-  }
-
   .align-right {
+    float: right; /* LTR */
     max-width: 50%;
-    margin-top: 1.125rem;
-    margin-bottom: 1.125rem;
+    margin-block-start: var(--sp);
+    margin-block-end: var(--sp);
+    margin-inline-start: var(--sp);
+    margin-inline-end: 0;
+
+    /**
+     * Chromium and Webkit do not yet support flow relative logical properties,
+     * such as float: inline-end. However, PostCSS Logical does not compile this
+     * value, so we accommodate by not using these.
+     *
+     * @see https://caniuse.com/mdn-css_properties_clear_flow_relative_values
+     * @see https://github.com/csstools/postcss-plugins/issues/632
+     */
+  }
+  .align-right:dir(rtl) {
+    float: left;
   }
 }
 
 /* Pull out of grid if nested in content narrow layout. */
 
+/* @todo this can be simplified. */
+
 @media (min-width: 43.75rem) {
-
-  [dir="ltr"] .layout--content-narrow .align-right,
-  [dir="ltr"] .layout--pass--content-narrow > * .align-right {
-    margin-right: -7.14286vw;
-  }
-
-  [dir="rtl"] .layout--content-narrow .align-right,
-  [dir="rtl"] .layout--pass--content-narrow > * .align-right {
-    margin-left: -7.14286vw;
+  .layout--content-narrow .align-right,
+  .layout--pass--content-narrow > * .align-right {
+    margin-inline-end: calc(-1 * ((var(--grid-col-width) + var(--grid-gap))));
   }
 }
 
 @media (min-width: 62.5rem) {
-
-  [dir="ltr"] .layout--content-narrow .align-right,
-  [dir="ltr"] .layout--pass--content-narrow > * .align-right {
-    margin-right: calc(-14.28571vw - -0.13393rem);
-  }
-
-  [dir="rtl"] .layout--content-narrow .align-right,
-  [dir="rtl"] .layout--pass--content-narrow > * .align-right {
-    margin-left: calc(-14.28571vw - -0.13393rem);
+  .layout--content-narrow .align-right,
+  .layout--pass--content-narrow > * .align-right {
+    margin-inline-end: calc(-2 * ((var(--grid-col-width) + var(--grid-gap))));
   }
 }
 
 @media (min-width: 75rem) {
-
-  [dir="ltr"] .layout--content-narrow .align-right,
-  [dir="ltr"] .layout--pass--content-narrow > * .align-right {
-    margin-right: calc(-21.42857vw - -1.88839rem);
-  }
-
-  [dir="rtl"] .layout--content-narrow .align-right,
-  [dir="rtl"] .layout--pass--content-narrow > * .align-right {
-    margin-left: calc(-21.42857vw - -1.88839rem);
+  .layout--content-narrow .align-right,
+  .layout--pass--content-narrow > * .align-right {
+    margin-inline-end: calc(-3 * ((var(--grid-col-width) + var(--grid-gap))));
   }
 }
 
 @media (min-width: 90rem) {
-
-  [dir="ltr"] .layout--content-narrow .align-right,
-  [dir="ltr"] .layout--pass--content-narrow > * .align-right {
-    margin-right: -17.59821rem;
+  .layout--content-narrow .align-right,
+  .layout--pass--content-narrow > * .align-right {
+    margin-inline-end: calc(-3 * ((var(--grid-col-width) + var(--grid-gap))));
   }
-
-  [dir="rtl"] .layout--content-narrow .align-right,
-  [dir="rtl"] .layout--pass--content-narrow > * .align-right {
-    margin-left: -17.59821rem;
-  }
-}
-
-[dir="ltr"] .align-left {
-  margin-left: 0;
-}
-
-[dir="rtl"] .align-left {
-  margin-right: 0;
-}
-
-[dir="ltr"] .align-left {
-  margin-right: 0;
-}
-
-[dir="rtl"] .align-left {
-  margin-left: 0;
 }
 
 .align-left {
   float: none; /* Override core's align.module.css. */
   max-width: 100%;
-  margin-top: 3.375rem;
-  margin-bottom: 3.375rem;
+  margin-block-start: var(--sp3);
+  margin-block-end: var(--sp3);
+  margin-inline-start: 0;
+  margin-inline-end: 0;
 }
 
 @media (min-width: 43.75rem) {
-
-  [dir="ltr"] .align-left {
-    float: left;
-  }
-
-  [dir="rtl"] .align-left {
-    float: right;
-  }
-
-  [dir="ltr"] .align-left {
-    margin-left: 0;
-  }
-
-  [dir="rtl"] .align-left {
-    margin-right: 0;
-  }
-
-  [dir="ltr"] .align-left {
-    margin-right: 2.25rem;
-  }
-
-  [dir="rtl"] .align-left {
-    margin-left: 2.25rem;
-  }
-
   .align-left {
+    float: left; /* LTR */
     max-width: 50%;
-    margin-top: 1.125rem;
-    margin-bottom: 1.125rem; /* Extra right margins in case of aligning next to lists. */
+    margin-block-start: var(--sp);
+    margin-block-end: var(--sp);
+    margin-inline-start: 0;
+    margin-inline-end: var(--sp2); /* Extra right margins in case of aligning next to lists. */
+
+    /**
+     * Chromium and Webkit do not yet support flow relative logical properties,
+     * such as float: inline-end. However, PostCSS Logical does not compile this
+     * value, so we accommodate by not using these.
+     *
+     * @see https://caniuse.com/mdn-css_properties_clear_flow_relative_values
+     * @see https://github.com/csstools/postcss-plugins/issues/632
+     */
+  }
+  .align-left:dir(rtl) {
+    float: right;
   }
 }
 
 /* Pull out of grid if nested in content narrow layout. */
 
 @media (min-width: 43.75rem) {
-
-  [dir="ltr"] .layout--content-narrow .align-left,
-  [dir="ltr"] .layout--pass--content-narrow > * .align-left {
-    margin-left: -7.14286vw;
-  }
-
-  [dir="rtl"] .layout--content-narrow .align-left,
-  [dir="rtl"] .layout--pass--content-narrow > * .align-left {
-    margin-right: -7.14286vw;
-  }
-}
-
-@media (min-width: 62.5rem) {
-
-  [dir="ltr"] .layout--content-narrow .align-left,
-  [dir="ltr"] .layout--pass--content-narrow > * .align-left {
-    margin-left: calc(-7.14286vw - -0.06696rem);
-  }
-
-  [dir="rtl"] .layout--content-narrow .align-left,
-  [dir="rtl"] .layout--pass--content-narrow > * .align-left {
-    margin-right: calc(-7.14286vw - -0.06696rem);
-  }
-}
-
-@media (min-width: 75rem) {
-
-  [dir="ltr"] .layout--content-narrow .align-left,
-  [dir="ltr"] .layout--pass--content-narrow > * .align-left {
-    margin-left: calc(-7.14286vw - -0.62946rem);
-  }
-
-  [dir="rtl"] .layout--content-narrow .align-left,
-  [dir="rtl"] .layout--pass--content-narrow > * .align-left {
-    margin-right: calc(-7.14286vw - -0.62946rem);
-  }
-}
-
-@media (min-width: 90rem) {
-
-  [dir="ltr"] .layout--content-narrow .align-left,
-  [dir="ltr"] .layout--pass--content-narrow > * .align-left {
-    margin-left: -5.86607rem;
-  }
-
-  [dir="rtl"] .layout--content-narrow .align-left,
-  [dir="rtl"] .layout--pass--content-narrow > * .align-left {
-    margin-right: -5.86607rem;
+  .layout--content-narrow .align-left,
+  .layout--pass--content-narrow > * .align-left {
+    margin-inline-start: calc(-1 * ((var(--grid-col-width) + var(--grid-gap))));
   }
 }
 
 .align-center img,
 .align-center video,
 .align-center audio {
-  margin-right: auto;
-  margin-left: auto;
+  margin-inline: auto;
 }
 
 .media-oembed-content {

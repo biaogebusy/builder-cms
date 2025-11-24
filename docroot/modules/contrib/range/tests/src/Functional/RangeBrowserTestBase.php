@@ -101,6 +101,8 @@ abstract class RangeBrowserTestBase extends BrowserTestBase {
           'scale' => 4,
         ];
     }
+
+    return [];
   }
 
   /**
@@ -139,6 +141,8 @@ abstract class RangeBrowserTestBase extends BrowserTestBase {
           ],
         ];
     }
+
+    return [];
   }
 
   /**

@@ -2,10 +2,10 @@
 
 namespace Drupal\commerce_payment\PluginForm;
 
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\commerce_payment\CreditCard;
 use Drupal\commerce_payment\Exception\DeclineException;
 use Drupal\commerce_payment\Exception\PaymentGatewayException;
-use Drupal\Core\Form\FormStateInterface;
 
 class PaymentMethodAddForm extends PaymentMethodFormBase {
 
@@ -80,15 +80,15 @@ class PaymentMethodAddForm extends PaymentMethodFormBase {
     // The payment method form is customer facing. For security reasons
     // the returned errors need to be more generic.
     try {
-      $payment_gateway_plugin->createPaymentMethod($payment_method, $values['payment_details']);
+      $payment_gateway_plugin->createPaymentMethod($payment_method, $values['payment_details'] ?? []);
     }
     catch (DeclineException $e) {
       $this->logger->warning($e->getMessage());
-      throw new DeclineException(t('We encountered an error processing your payment method. Please verify your details and try again.'));
+      throw DeclineException::createForPayment($payment_method, t('We encountered an error processing your payment method. Please verify your details and try again.'));
     }
     catch (PaymentGatewayException $e) {
       $this->logger->error($e->getMessage());
-      throw new PaymentGatewayException(t('We encountered an unexpected error processing your payment method. Please try again later.'));
+      throw PaymentGatewayException::createForPayment($payment_method, t('We encountered an unexpected error processing your payment method. Please try again later.'));
     }
   }
 

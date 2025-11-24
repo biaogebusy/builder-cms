@@ -43,9 +43,9 @@ final class RecipientGatewayEventTest extends UnitTestCase {
     $event->addGateway($gateway, 200);
 
     $sorted = $event->getGatewaysSorted();
-    $this->assertCount(2, $sorted);
-    $this->assertEquals('gateway_second', $sorted[0]->id());
-    $this->assertEquals('gateway_first', $sorted[1]->id());
+    static::assertCount(2, $sorted);
+    static::assertEquals('gateway_second', $sorted[0]->id());
+    static::assertEquals('gateway_first', $sorted[1]->id());
   }
 
   /**
@@ -56,7 +56,7 @@ final class RecipientGatewayEventTest extends UnitTestCase {
   public function testRecipientConstructor(): void {
     $number = $this->randomPhoneNumbers()[0];
     $event = $this->createEvent($number);
-    $this->assertEquals($number, $event->getRecipient(), 'Constructor recipient is set');
+    static::assertEquals($number, $event->getRecipient(), 'Constructor recipient is set');
   }
 
   /**
@@ -70,7 +70,7 @@ final class RecipientGatewayEventTest extends UnitTestCase {
 
     $number = $this->randomPhoneNumbers()[0];
     $event->setRecipient($number);
-    $this->assertEquals($number, $event->getRecipient(), 'Recipient is set via setRecipient');
+    static::assertEquals($number, $event->getRecipient(), 'Recipient is set via setRecipient');
   }
 
   /**
@@ -97,10 +97,10 @@ final class RecipientGatewayEventTest extends UnitTestCase {
     $event->addGateway($gateway, 400);
 
     $gateways = $event->getGateways();
-    $this->assertEquals('gateway_1', $gateways[0][0]->id());
-    $this->assertEquals(200, $gateways[0][1]);
-    $this->assertEquals('gateway_2', $gateways[1][0]->id());
-    $this->assertEquals(400, $gateways[1][1]);
+    static::assertEquals('gateway_1', $gateways[0][0]->id());
+    static::assertEquals(200, $gateways[0][1]);
+    static::assertEquals('gateway_2', $gateways[1][0]->id());
+    static::assertEquals(400, $gateways[1][1]);
   }
 
   /**
@@ -132,10 +132,10 @@ final class RecipientGatewayEventTest extends UnitTestCase {
       ->willReturn('gateway_2');
     $event->addGateway($gateway, 600);
 
-    $this->assertCount(3, $event->getGateways(), 'There are three gateways.');
+    static::assertCount(3, $event->getGateways(), 'There are three gateways.');
 
     $event->removeGateway('gateway_1', 400);
-    $this->assertCount(2, $event->getGateways(), 'One gateways was removed.');
+    static::assertCount(2, $event->getGateways(), 'One gateways was removed.');
   }
 
   /**
@@ -167,10 +167,10 @@ final class RecipientGatewayEventTest extends UnitTestCase {
       ->willReturn('gateway_2');
     $event->addGateway($gateway, 600);
 
-    $this->assertCount(3, $event->getGateways(), 'There are three gateways.');
+    static::assertCount(3, $event->getGateways(), 'There are three gateways.');
 
     $event->removeGateway('gateway_1');
-    $this->assertCount(1, $event->getGateways(), 'Two gateways were removed.');
+    static::assertCount(1, $event->getGateways(), 'Two gateways were removed.');
   }
 
   /**

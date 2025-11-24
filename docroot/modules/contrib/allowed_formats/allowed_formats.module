@@ -7,51 +7,10 @@
  * It enables limiting which text formats are available for each fields.
  */
 
-use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Field\FieldConfigBase;
-use Drupal\Core\Field\WidgetInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
-
-/**
- * Implements hook_form_FORM_ID_form_alter().
- */
-function allowed_formats_form_field_config_edit_form_alter(array &$form, FormStateInterface $form_state) {
-  /** @var \Drupal\Core\Field\FieldConfigInterface $field */
-  $field = $form_state->getFormObject()->getEntity();
-
-  if (in_array($field->getType(), _allowed_formats_field_types())) {
-
-    $options = [];
-    foreach (filter_formats() as $format) {
-      $options[$format->id()] = $format->label();
-    }
-
-    $settings = $field->getThirdPartySettings('allowed_formats');
-    $form['third_party_settings']['allowed_formats']['allowed_formats'] = [
-      '#type' => 'checkboxes',
-      '#title' => t('Allowed formats'),
-      '#options' => $options,
-      '#default_value' => !empty($settings['allowed_formats']) ? $settings['allowed_formats'] : [],
-      '#description' => t('Restrict which text formats are allowed, given the user has the required permissions. If no text formats are selected, then all the ones the user has access to will be available.'),
-    ];
-
-    $form['#validate'][] = 'allowed_formats_form_field_config_edit_form_validate';
-  }
-}
-
-/**
- * Validation handler for field_config_edit_form.
- */
-function allowed_formats_form_field_config_edit_form_validate(array &$form, FormStateInterface $form_state) {
-  // Restructure options to store the value as a sequence.
-  $form_parents = [
-    'third_party_settings',
-    'allowed_formats',
-    'allowed_formats',
-  ];
-  $value = $form_state->getValue($form_parents);
-  $form_state->setValue($form_parents, array_keys(array_filter($value)));
-}
+use Drupal\Core\Field\WidgetInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\field\FieldConfigInterface;
 
 /**
  * Implements hook_field_widget_third_party_settings_form().
@@ -75,9 +34,9 @@ function allowed_formats_field_widget_third_party_settings_form(WidgetInterface 
 }
 
 /**
- * Implements hook_field_widget_form_alter().
+ * Implements hook_field_widget_single_element_form_alter().
  */
-function allowed_formats_field_widget_form_alter(&$element, FormStateInterface $form_state, $context) {
+function allowed_formats_field_widget_single_element_form_alter(&$element, FormStateInterface $form_state, $context) {
   /** @var \Drupal\Core\Field\FieldDefinitionInterface $field_definition */
   $field_definition = $context['items']->getFieldDefinition();
 
@@ -85,23 +44,6 @@ function allowed_formats_field_widget_form_alter(&$element, FormStateInterface $
   $is_default_value_widget = (bool) $form_state->get('default_value_widget');
 
   if (in_array($field_definition->getType(), _allowed_formats_field_types()) && !$is_default_value_widget) {
-    if ($field_definition instanceof FieldConfigBase) {
-      // Read configuration if available.  This is possible for bundle fields or
-      // base fields overridden using a BaseFieldOverride.
-      $field_configuration = $field_definition->getConfig($field_definition->getTargetBundle());
-      $allowed_formats_setting = $field_configuration->getThirdPartySetting('allowed_formats', 'allowed_formats');
-    }
-    else {
-      // Base fields don't support third party settings so use an ordinary
-      // setting.  That's the way it would work anyway if allowed formats gets
-      // into core.
-      $allowed_formats_setting = $field_definition->getSetting('allowed_formats');
-    }
-
-    if (!empty($allowed_formats_setting) && is_array($allowed_formats_setting)) {
-      $element['#allowed_formats'] = $allowed_formats_setting;
-    }
-
     /** @var \Drupal\Core\Field\WidgetInterface $widget */
     $widget = $context['widget'];
     $element['#allowed_format_hide_settings'] = $widget->getThirdPartySettings('allowed_formats');
@@ -145,4 +87,53 @@ function _allowed_formats_remove_textarea_help($form_element, FormStateInterface
  */
 function _allowed_formats_field_types() {
   return ['text', 'text_long', 'text_with_summary'];
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_presave().
+ */
+function allowed_formats_field_config_presave(FieldConfigInterface $field_config): void {
+  // Ensure backwards compatibility for default configuration not converted yet
+  // to Drupal 10.1.x.
+  // @see https://www.drupal.org/node/3318572
+  // @see https://www.drupal.org/project/allowed_formats/issues/3324446
+  _allowed_formats_convert_formats2core($field_config);
+}
+
+/**
+ * Converts allowed formats to Drupal 10.1.x.
+ *
+ * @param \Drupal\field\FieldConfigInterface $field_config
+ *   The field configuration entity.
+ *
+ * @return bool
+ *   Whether the field configuration has been changed.
+ *
+ * @see https://www.drupal.org/node/3318572
+ */
+function _allowed_formats_convert_formats2core(FieldConfigInterface $field_config): bool {
+  // Can't use $field_config->getThirdPartySettings() because that doesn't
+  // reveal if allowed_formats module key exists. If the module key exists, even
+  // if it's empty, we want to remove it.
+  if (!array_key_exists('allowed_formats', $field_config->get('third_party_settings') ?? [])) {
+    return FALSE;
+  }
+
+  $allowed_formats = $field_config->getThirdPartySetting('allowed_formats', 'allowed_formats', []);
+  // On some installations it might be possible that earlier module versions
+  // stored the formats as they are submitted from a checkbox list:
+  // @code
+  // ['format1' => '0', 'format2' => 'format2', 'format3' => '0']
+  // @encode
+  $allowed_formats = array_values(array_filter($allowed_formats));
+  // At the time when the site builder updates this module, the allowed
+  // format field setting, provided by core, might already contain data, but
+  // that is irrelevant because the allowed formats provided by this module
+  // takes precedence in the form. So, it's safe to override potential field
+  // settings added via new Drupal >10.0.0 feature.
+  $field_config
+    ->setSetting('allowed_formats', $allowed_formats)
+    ->unsetThirdPartySetting('allowed_formats', 'allowed_formats');
+
+  return TRUE;
 }

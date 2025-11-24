@@ -1,54 +1,29 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drush\Commands\generate;
 
 use DrupalCodeGenerator\Application;
-use DrupalCodeGenerator\ClassResolver\SimpleClassResolver;
-use DrupalCodeGenerator\Command\Generator;
-use DrupalCodeGenerator\GeneratorFactory;
-use DrupalCodeGenerator\Helper\DrupalContext;
-use DrupalCodeGenerator\Helper\Dumper;
-use DrupalCodeGenerator\Helper\QuestionHelper;
-use DrupalCodeGenerator\Helper\Renderer;
-use DrupalCodeGenerator\Helper\ResultPrinter;
-use DrupalCodeGenerator\Twig\TwigEnvironment;
-use Drush\Boot\AutoloaderAwareInterface;
-use Drush\Boot\AutoloaderAwareTrait;
-use Drush\Boot\DrupalBootLevels;
-use Drush\Drupal\DrushServiceModifier;
-use Drush\Drush;
+use DrupalCodeGenerator\Event\GeneratorInfoAlter;
+use Drush\Commands\generate\Generators\Drush\DrushAliasFile;
+use Drush\Commands\generate\Generators\Drush\DrushCommandFile;
+use Drush\Commands\generate\Generators\Drush\DrushGeneratorFile;
+use Drush\Runtime\ServiceManager;
+use Psr\Container\ContainerInterface as DrushContainer;
 use Psr\Log\LoggerInterface;
-use Robo\ClassDiscovery\RelativeNamespaceDiscovery;
-use Symfony\Component\Console\Helper\HelperSet;
-use Symfony\Component\Filesystem\Filesystem;
-use Symfony\Component\Filesystem\Path;
-use Twig\Loader\FilesystemLoader;
 
-class ApplicationFactory implements AutoloaderAwareInterface
+class ApplicationFactory
 {
-    use AutoloaderAwareTrait;
+    private readonly ServiceManager $serviceManager;
+    private readonly \Symfony\Component\DependencyInjection\ContainerInterface $container;
 
-    /**
-     * @var LoggerInterface
-     */
-    protected $logger;
-
-    protected $config;
-
-    public function __construct(LoggerInterface $logger, $config)
-    {
-        $this->logger = $logger;
-        $this->config = $config;
-    }
-
-    public function logger(): LoggerInterface
-    {
-        return $this->logger;
-    }
-
-    public function getConfig()
-    {
-        return $this->config;
+    public function __construct(
+        private readonly DrushContainer $drush_container,
+        private readonly LoggerInterface $logger
+    ) {
+        $this->serviceManager = $this->drush_container->get('service.manager');
+        $this->container = $this->drush_container->get('service_container');
     }
 
     /**
@@ -56,105 +31,54 @@ class ApplicationFactory implements AutoloaderAwareInterface
      */
     public function create(): Application
     {
-        $application = new Application('Drupal Code Generator', Drush::getVersion());
+        $this->container->get('event_dispatcher')
+            ->addListener(GeneratorInfoAlter::class, [self::class, 'alterGenerators']);
+        $application = Application::create($this->container);
         $application->setAutoExit(false);
 
-        $class_resolver = new SimpleClassResolver();
-        if (Drush::bootstrapManager()->hasBootstrapped(DrupalBootLevels::FULL)) {
-            $container = \Drupal::getContainer();
-            $class_resolver = new GeneratorClassResolver($container->get('class_resolver'));
+        $generators = $this->discover();
+        // Listen to this event in order to alter generator info.
+        $application->addCommands($application->dispatch(new GeneratorInfoAlter($generators))->generators);
+        // Hide default Symfony console commands.
+        foreach (['help', 'list', 'completion', '_complete'] as $name) {
+            $application->get($name)->setHidden(true);
         }
-        $generator_factory = new GeneratorFactory($class_resolver, $this->logger());
-
-        $helper_set = new HelperSet([
-                                        new QuestionHelper(),
-                                        new Dumper(new Filesystem()),
-                                        new Renderer(new TwigEnvironment(new FilesystemLoader([Application::TEMPLATE_PATH]))),
-                                        new ResultPrinter(),
-                                        new DrupalContext($container)
-                                    ]);
-        $application->setHelperSet($helper_set);
-
-        $dcg_generators = $generator_factory->getGenerators([Application::ROOT . '/src/Command'], Application::GENERATOR_NAMESPACE);
-        $drush_generators = $generator_factory->getGenerators([__DIR__ . '/Generators'], '\Drush\Commands\generate\Generators');
-        $global_generators = $this->discoverPsr4Generators();
-
-        $module_generators = [];
-        if (isset($container)) {
-            if ($container->has(DrushServiceModifier::DRUSH_GENERATOR_SERVICES)) {
-                $module_generators = $container->get(DrushServiceModifier::DRUSH_GENERATOR_SERVICES)->getCommandList();
-            }
-        }
-
-        $generators = [
-            ...self::filterGenerators($dcg_generators),
-            ...$drush_generators,
-            ...$global_generators,
-            ...$module_generators,
-        ];
-        $application->addCommands($generators);
-
         return $application;
     }
 
-    /**
-     * Filter and rename DCG generators.
-     * @param Generator[] $generators
-     */
-    private static function filterGenerators(array $generators): array
+    public function discover(): array
     {
-        $generators = array_filter(
-            $generators,
-            static fn ($generator) =>
-                !str_starts_with($generator->getName(), 'misc:d7:') &&
-                !str_starts_with($generator->getName(), 'console:'),
-        );
-        $generators = array_map(
-            function ($generator) {
-                if ($generator->getName() == 'theme-file') $generator->setName('theme:file');
-                if ($generator->getName() == 'theme-settings') $generator->setName('theme:settings');
-                if ($generator->getName() == 'plugin-manager') $generator->setName('plugin:manager');
-                // Remove the word 'module'.
-                if ($generator->getName() == 'configuration-entity') $generator->setDescription('Generates configuration entity');
-                if ($generator->getName() == 'content-entity') $generator->setDescription('Generates configuration entity');
-                return $generator;
-            },
-            $generators
-        );
-        return $generators;
-    }
-
-    protected function discoverGlobalPathsDeprecated(): array
-    {
-        $config_paths = $this->getConfig()->get('runtime.commandfile.paths', []);
-        foreach ($config_paths as $path) {
-            $global_paths[] = Path::join($path, 'Generators');
-            $global_paths[] = Path::join($path, 'src/Generators');
+        $module_generator_classes = [];
+        foreach ($this->container->get('module_handler')->getModuleList() as $moduleId => $extension) {
+            $path = DRUPAL_ROOT . '/' . $extension->getPath() . '/src/Drush/';
+            $module_generator_classes = array_merge(
+                $module_generator_classes,
+                $this->serviceManager->discoverModuleGenerators([$path], "\\Drupal\\" . $moduleId . "\\Drush")
+            );
         }
-        return array_filter($global_paths, 'file_exists');
-    }
+        $module_generators = $this->serviceManager->instantiateServices($module_generator_classes, $this->drush_container, $this->container);
 
-    protected function discoverPsr4Generators(): array
-    {
-        $classes = (new RelativeNamespaceDiscovery($this->autoloader()))
-            ->setRelativeNamespace('Drush\Generators')
-            ->setSearchPattern('/.*Generator\.php$/')->getClasses();
-        $classes = $this->filterExists($classes);
-        return $this->getGenerators($classes);
+        $global_generator_classes = $this->serviceManager->discoverPsr4Generators();
+        $global_generator_classes = $this->filterClassExists($global_generator_classes);
+        $global_generators = $this->serviceManager->instantiateServices($global_generator_classes, $this->drush_container, $this->container);
+        return [
+            new DrushCommandFile(),
+            new DrushAliasFile(),
+            new DrushGeneratorFile(),
+            ...$global_generators,
+            ...$module_generators,
+        ];
     }
 
     /**
      * Check each class for existence.
-     *
-     * @param array $classes
-     * @return array
      */
-    protected function filterExists(array $classes): array
+    public function filterClassExists(array $classes): array
     {
         $exists = [];
         foreach ($classes as $class) {
             try {
-                // DCG v1 generators extend a non-existent class, so this check is needed.
+                // DCG v1+v2 generators extend a non-existent class, so this check is needed.
                 if (class_exists($class)) {
                     $exists[] = $class;
                 }
@@ -166,25 +90,23 @@ class ApplicationFactory implements AutoloaderAwareInterface
     }
 
     /**
-     * Validate and instantiate generator classes.
+     * Implements hook GeneratorInfoAlter.
      *
-     * @param array $classes
-     * @return Generator[]
-     * @throws \ReflectionException
+     * This gets called twice: first for the DCG core generators and then for all Drush+Drupal generators.
      */
-    protected function getGenerators(array $classes): array
+    public static function alterGenerators(GeneratorInfoAlter $event): void
     {
-        return array_map(
-            function (string $class): Generator {
-                return new $class();
-            },
-            array_filter($classes, function (string $class): bool {
-                $reflectionClass = new \ReflectionClass($class);
-                return $reflectionClass->isSubclassOf(Generator::class)
-                    && !$reflectionClass->isAbstract()
-                    && !$reflectionClass->isInterface()
-                    && !$reflectionClass->isTrait();
-            })
-        );
+        // Alter DCG core generator names to match ours.
+        if (isset($event->generators['plugin-manager'])) {
+            $event->generators['plugin-manager']->setName('plugin:manager');
+        }
+        if (isset($event->generators['theme-settings'])) {
+            $event->generators['theme-settings']->setName('theme:settings');
+        }
+    }
+
+    public function logger(): LoggerInterface
+    {
+        return $this->logger;
     }
 }

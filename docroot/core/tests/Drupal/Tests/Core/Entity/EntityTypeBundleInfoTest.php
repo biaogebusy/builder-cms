@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Entity;
 
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
@@ -113,8 +115,8 @@ class EntityTypeBundleInfoTest extends UnitTestCase {
   protected function setUpEntityTypeDefinitions($definitions = []) {
     foreach ($definitions as $key => $entity_type) {
       // \Drupal\Core\Entity\EntityTypeInterface::getLinkTemplates() is called
-      // by \Drupal\Core\Entity\EntitTypeManager::processDefinition() so it must
-      // always be mocked.
+      // by \Drupal\Core\Entity\EntityTypeManager::processDefinition() so it
+      // must always be mocked.
       $entity_type->getLinkTemplates()->willReturn([]);
 
       $definitions[$key] = $entity_type->reveal();
@@ -143,7 +145,7 @@ class EntityTypeBundleInfoTest extends UnitTestCase {
    *
    * @covers ::clearCachedBundles
    */
-  public function testClearCachedBundles() {
+  public function testClearCachedBundles(): void {
     $this->setUpEntityTypeDefinitions();
 
     $this->typedDataManager->clearCachedDefinitions()->shouldBeCalled();
@@ -160,7 +162,7 @@ class EntityTypeBundleInfoTest extends UnitTestCase {
    *
    * @dataProvider providerTestGetBundleInfo
    */
-  public function testGetBundleInfo($entity_type_id, $expected) {
+  public function testGetBundleInfo($entity_type_id, $expected): void {
     $this->moduleHandler->invokeAll('entity_bundle_info')->willReturn([]);
     $this->moduleHandler->alter('entity_bundle_info', Argument::type('array'))->willReturn(NULL);
 
@@ -187,7 +189,7 @@ class EntityTypeBundleInfoTest extends UnitTestCase {
    * @return array
    *   Test data.
    */
-  public function providerTestGetBundleInfo() {
+  public static function providerTestGetBundleInfo() {
     return [
       [
         'apple',
@@ -210,7 +212,7 @@ class EntityTypeBundleInfoTest extends UnitTestCase {
    *
    * @covers ::getAllBundleInfo
    */
-  public function testGetAllBundleInfo() {
+  public function testGetAllBundleInfo(): void {
     $this->moduleHandler->invokeAll('entity_bundle_info')->willReturn([]);
     $this->moduleHandler->alter('entity_bundle_info', Argument::type('array'))->willReturn(NULL);
 
@@ -227,10 +229,11 @@ class EntityTypeBundleInfoTest extends UnitTestCase {
       'banana' => $banana,
     ]);
 
+    $cacheBackend = $this->cacheBackend;
     $this->cacheBackend->get('entity_bundle_info:en')->willReturn(FALSE);
     $this->cacheBackend->set('entity_bundle_info:en', Argument::any(), Cache::PERMANENT, ['entity_types', 'entity_bundles'])
-      ->will(function () {
-        $this->get('entity_bundle_info:en')
+      ->will(function () use ($cacheBackend) {
+        $cacheBackend->get('entity_bundle_info:en')
           ->willReturn((object) ['data' => 'cached data'])
           ->shouldBeCalled();
       })
@@ -267,7 +270,7 @@ class EntityTypeBundleInfoTest extends UnitTestCase {
   /**
    * @covers ::getAllBundleInfo
    */
-  public function testGetAllBundleInfoWithEntityBundleInfo() {
+  public function testGetAllBundleInfoWithEntityBundleInfo(): void {
     // Ensure that EntityTypeBundleInfo::getAllBundleInfo() does not add
     // additional bundles if hook_entity_bundle_info() defines some and the
     // entity_type does not define a bundle entity type.

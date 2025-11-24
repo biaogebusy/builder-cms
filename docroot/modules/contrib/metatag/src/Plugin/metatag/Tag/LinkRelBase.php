@@ -8,23 +8,17 @@ namespace Drupal\metatag\Plugin\metatag\Tag;
 abstract class LinkRelBase extends MetaNameBase {
 
   /**
-   * The string this tag uses for the tag itself.
-   *
-   * @var string
+   * {@inheritdoc}
    */
   protected $htmlTag = 'link';
 
   /**
-   * The attribute this tag uses for the name.
-   *
-   * @var string
+   * {@inheritdoc}
    */
   protected $htmlNameAttribute = 'rel';
 
   /**
-   * The attribute this tag uses for the contents.
-   *
-   * @var string
+   * {@inheritdoc}
    */
   protected $htmlValueAttribute = 'href';
 

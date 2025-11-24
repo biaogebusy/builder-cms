@@ -1040,7 +1040,7 @@ final class HTMLRestrictions {
   private static function isWildcardAttributeName(string $attribute_name): bool {
     // @see ::validateAllowedRestrictionsPhase3()
     assert($attribute_name !== '*');
-    return strpos($attribute_name, '*') !== FALSE;
+    return str_contains($attribute_name, '*');
   }
 
   /**
@@ -1116,7 +1116,7 @@ final class HTMLRestrictions {
    *   TRUE if it is a wildcard, otherwise FALSE.
    */
   private static function isWildcardTag(string $tag_name): bool {
-    return substr($tag_name, 0, 1) === '$' && array_key_exists($tag_name, self::WILDCARD_ELEMENT_METHODS);
+    return str_starts_with($tag_name, '$') && array_key_exists($tag_name, self::WILDCARD_ELEMENT_METHODS);
   }
 
   /**
@@ -1315,7 +1315,7 @@ final class HTMLRestrictions {
           // the attribute name contains a partial wildcard, more complex syntax
           // is needed.
           $to_allow['attributes'][] = [
-            'key' => strpos($name, '*') === FALSE ? $name : ['regexp' => ['pattern' => self::getRegExForWildCardAttributeName($name)]],
+            'key' => !str_contains($name, '*') ? $name : ['regexp' => ['pattern' => self::getRegExForWildCardAttributeName($name)]],
             'value' => $allowed_attribute_value,
           ];
         }

@@ -2,11 +2,11 @@
 
 namespace Drupal\Tests\commerce_product\Kernel;
 
+use Drupal\Core\Session\AccountInterface;
+use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
 use Drupal\commerce_product\Entity\Product;
 use Drupal\commerce_product\Entity\ProductInterface;
 use Drupal\commerce_product\Entity\ProductVariation;
-use Drupal\Core\Session\AccountInterface;
-use Drupal\Tests\commerce\Kernel\CommerceKernelTestBase;
 
 /**
  * Tests the default product variation event.

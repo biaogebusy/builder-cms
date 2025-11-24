@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\block\Functional;
 
 use Drupal\Tests\BrowserTestBase;
@@ -12,9 +14,7 @@ use Drupal\Tests\BrowserTestBase;
 class BlockDemoTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['block'];
 
@@ -26,7 +26,7 @@ class BlockDemoTest extends BrowserTestBase {
   /**
    * Check for the accessibility of the admin block demo page.
    */
-  public function testBlockDemo() {
+  public function testBlockDemo(): void {
     // Create administrative user.
     $admin_user = $this->drupalCreateUser([
       'administer blocks',

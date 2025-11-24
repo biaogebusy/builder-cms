@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\redirect\FunctionalJavascript;
 
 use Drupal\Core\Url;
@@ -27,7 +29,7 @@ class RedirectJavascriptTest extends WebDriverTestBase {
   protected $repository;
 
   /**
-   * The Sql conntent entity storage.
+   * The Sql content entity storage.
    *
    * @var \Drupal\Core\Entity\Sql\SqlContentEntityStorage
    */
@@ -104,7 +106,6 @@ class RedirectJavascriptTest extends WebDriverTestBase {
     $this->assertSession()->addressEquals('admin/config/search/redirect');
     $this->assertSession()->pageTextContains('non-existing');
     $this->assertSession()->linkExists(Url::fromUri('base:node')->toString());
-    $this->assertSession()->pageTextContains('Not specified');
 
     // Test the edit form and update action.
     $this->clickLink('Edit');
@@ -256,15 +257,23 @@ class RedirectJavascriptTest extends WebDriverTestBase {
     $this->getSession()->getPage()->selectFieldOption("action", "redirect_delete_action", TRUE);
     $this->submitForm($edit, 'Apply to selected items');
     $this->assertSession()->pageTextContains('Are you sure you want to delete these redirects?');
-    $this->clickLink('Cancel');
 
     // Test the delete action.
+    $this->drupalGet('admin/config/search/redirect');
     $page->find('css', '.dropbutton-toggle button')->press();
     $this->clickLink('Delete');
+    if (version_compare(\Drupal::VERSION, '11.1', '>=')) {
+      $this->assertSession()->assertWaitOnAjaxRequest();
+    }
     $this->assertSession()->responseContains(
       'Are you sure you want to delete the URL redirect from ' . Url::fromUri('base:non-existing', ['query' => ['key' => 'value']])->toString() . ' to ' . Url::fromUri('base:node')->toString() . '?'
     );
-    $this->submitForm([], 'Delete');
+    if (version_compare(\Drupal::VERSION, '11.1', '>=')) {
+      $this->assertSession()->elementExists('css', '.ui-dialog-buttonset')->findButton('Delete')->press();
+    }
+    else {
+      $this->getSession()->getPage()->findButton('Delete')->press();
+    }
     $this->assertSession()->addressEquals('admin/config/search/redirect');
 
     // Test the bulk delete action.

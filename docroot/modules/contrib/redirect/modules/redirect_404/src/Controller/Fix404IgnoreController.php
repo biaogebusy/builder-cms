@@ -57,13 +57,13 @@ class Fix404IgnoreController extends ControllerBase {
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   The HttpRequest object representing the current request.
    *
-   * @return \Symfony\Component\HttpFoundation\RedirectResponse
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse|null
+   *   The redirect response.
    */
   public function ignorePath(Request $request) {
     $editable = $this->configuration->getEditable('redirect_404.settings');
     $existing_config_raw = $editable->get('pages');
     $path = $request->query->get('path');
-    $langcode = $request->query->get('langcode');
 
     if (empty($existing_config_raw) || !empty($path) || !strpos($path, $existing_config_raw)) {
       $this->redirectStorage->resolveLogRequest($path);
@@ -95,6 +95,8 @@ class Fix404IgnoreController extends ControllerBase {
 
       return $response;
     }
+
+    return NULL;
   }
 
 }

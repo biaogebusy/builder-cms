@@ -2,7 +2,7 @@
 
 namespace Drupal\migrate\Plugin\migrate\process;
 
-use Drupal\migrate\MigrateSkipProcessException;
+use Drupal\migrate\Attribute\MigrateProcess;
 use Drupal\migrate\ProcessPluginBase;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\Row;
@@ -20,7 +20,7 @@ use Drupal\migrate\MigrateSkipRowException;
  * - method: (optional) What to do if the input value is empty. Possible values:
  *   - row: Skips the entire row when an empty value is encountered.
  *   - process: Prevents further processing of the input property when the value
- *     is empty.
+ *     is empty and sets the value to NULL.
  * - message: (optional) A message to be logged in the {migrate_message_*} table
  *   for this row. Messages are only logged for the 'row' method. If not set,
  *   nothing is logged in the message table.
@@ -50,16 +50,32 @@ use Drupal\migrate\MigrateSkipRowException;
  *       migration: d6_taxonomy_term
  * @endcode
  * If 'parent' is empty, any further processing of the property is skipped and
- * the next process plugin (migration_lookup) will not be run. Combining
- * skip_on_empty and migration_lookup is a typical process pipeline combination
- * for hierarchical entities where the root entity does not have a parent.
+ * the next process plugin (migration_lookup) will not be run. If the
+ * migration_lookup process is executed it will use 'parent' as the source.
+ * Combining skip_on_empty and migration_lookup is a typical process pipeline
+ * combination for hierarchical entities where the root entity does not have a
+ * parent.
+ *
+ * @code
+ * process:
+ *   parent:
+ *     -
+ *       plugin: skip_on_empty
+ *       method: process
+ *       source: parent
+ *     -
+ *       plugin: migration_lookup
+ *       migration: d6_taxonomy_term
+ *       source: original_term
+ * @endcode
+ * If 'parent' is empty, any further processing of the property is skipped and
+ * the next process plugin (migration_lookup) will not be run. If the
+ * migration_lookup process is executed it will use 'original_term' as the
+ * source.
  *
  * @see \Drupal\migrate\Plugin\MigrateProcessInterface
- *
- * @MigrateProcessPlugin(
- *   id = "skip_on_empty"
- * )
  */
+#[MigrateProcess('skip_on_empty')]
 class SkipOnEmpty extends ProcessPluginBase {
 
   /**
@@ -105,14 +121,11 @@ class SkipOnEmpty extends ProcessPluginBase {
    *
    * @return mixed
    *   The input value, $value, if it is not empty.
-   *
-   * @throws \Drupal\migrate\MigrateSkipProcessException
-   *   Thrown if the source property is not set and rest of the process should
-   *   be skipped.
    */
   public function process($value, MigrateExecutableInterface $migrate_executable, Row $row, $destination_property) {
     if (!$value) {
-      throw new MigrateSkipProcessException();
+      $this->stopPipeline();
+      return NULL;
     }
     return $value;
   }

@@ -10,7 +10,7 @@ dependencies:
   - drupal:user
   - drupal:path
 
-# Information added by Drupal.org packaging script on 2024-04-19
-version: '6.0.5'
+# Information added by Drupal.org packaging script on 2025-01-31
+version: '7.0.5'
 project: 'better_exposed_filters'
-datestamp: 1713570806
+datestamp: 1738353784

@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.user.antbooks.album.sync request
  *
  * @author auto create
- * @since 1.0, 2024-04-25 16:02:01
+ * @since 1.0, 2024-09-03 13:47:07
  */
 class AlipayUserAntbooksAlbumSyncRequest
 {

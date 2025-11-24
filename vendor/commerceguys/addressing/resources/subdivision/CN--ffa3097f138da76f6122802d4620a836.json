@@ -1,0 +1,50 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"SX",
+		"Changzhi Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Cheng Qu": {
+			"local_name": "城区"
+		},
+		"Huguan Xian": {
+			"local_name": "壶关县"
+		},
+		"Jiao Qu": {
+			"local_name": "郊区"
+		},
+		"Licheng Xian": {
+			"local_name": "黎城县"
+		},
+		"Lucheng Shi": {
+			"local_name": "潞城市"
+		},
+		"Pingshun Xian": {
+			"local_name": "平顺县"
+		},
+		"Qin Xian": {
+			"local_name": "沁县"
+		},
+		"Qinyuan Xian": {
+			"local_name": "沁源县"
+		},
+		"Tunliu Xian": {
+			"local_name": "屯留县"
+		},
+		"Wuxiang Xian": {
+			"local_name": "武乡县"
+		},
+		"Xiangyuan Xian": {
+			"local_name": "襄垣县"
+		},
+		"Changzhi Xian": {
+			"local_name": "长治县"
+		},
+		"Zhangzi Xian": {
+			"local_name": "长子县"
+		}
+	}
+}

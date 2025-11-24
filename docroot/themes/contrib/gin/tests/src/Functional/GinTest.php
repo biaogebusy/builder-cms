@@ -23,6 +23,7 @@ class GinTest extends BrowserTestBase {
   protected static $modules = [
     'shortcut',
     'toolbar',
+    'node',
   ];
 
   /**
@@ -47,6 +48,7 @@ class GinTest extends BrowserTestBase {
       'access administration pages',
       'administer themes',
       'access toolbar',
+      'access content overview',
     ]);
     $this->drupalLogin($adminUser);
   }
@@ -118,6 +120,7 @@ class GinTest extends BrowserTestBase {
     $this->assertStringContainsString('"darkmode":"0"', $this->drupalGet($user1->toUrl('edit-form')));
 
     $this->submitForm([
+      'sticky_action_buttons' => TRUE,
       'enable_user_settings' => TRUE,
       'enable_darkmode' => '1',
     ], 'Save');

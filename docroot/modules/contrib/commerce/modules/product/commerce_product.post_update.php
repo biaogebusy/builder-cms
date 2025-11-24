@@ -132,3 +132,36 @@ function commerce_product_post_update_7() {
     $form_display->save();
   }
 }
+
+/**
+ * Update target bundles in attribute fields.
+ */
+function commerce_product_post_update_8() {
+  /** @var \Drupal\Core\Entity\EntityTypeBundleInfoInterface $bundle_info */
+  $bundle_info = \Drupal::service('entity_type.bundle.info');
+  $variation_bundles = $bundle_info->getBundleInfo('commerce_product_variation');
+
+  // Get attribute field mapping for every bundle.
+  /** @var \Drupal\commerce_product\ProductAttributeFieldManagerInterface $attribute_field_manager */
+  $attribute_field_manager = \Drupal::service('commerce_product.attribute_field_manager');
+  foreach (array_keys($variation_bundles) as $bundle) {
+    $field_configs = $attribute_field_manager->getFieldDefinitions($bundle);
+
+    /** @var \Drupal\field\FieldConfigInterface $field_config */
+    foreach ($field_configs as $field_config) {
+      $settings = $field_config->getSettings();
+      if (empty($settings['handler_settings']['target_bundles'])) {
+        continue;
+      }
+
+      // Update structure of 'target_bundles'.
+      $target_bundles = &$settings['handler_settings']['target_bundles'];
+      foreach ($target_bundles as $key => $target_bundle) {
+        unset($target_bundles[$key]);
+        $target_bundles[$target_bundle] = $target_bundle;
+      }
+      $field_config->set('settings', $settings);
+      $field_config->save();
+    }
+  }
+}

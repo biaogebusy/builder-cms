@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\contact\Functional;
 
 use Drupal\contact\Entity\Message;
@@ -18,9 +20,7 @@ use Drupal\user\RoleInterface;
 class ContactStorageTest extends ContactSitewideTest {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'block',
@@ -39,7 +39,7 @@ class ContactStorageTest extends ContactSitewideTest {
   /**
    * Tests configuration options and the site-wide contact form.
    */
-  public function testContactStorage() {
+  public function testContactStorage(): void {
     // Create and log in administrative user.
     $admin_user = $this->drupalCreateUser([
       'access site-wide contact form',
@@ -51,7 +51,7 @@ class ContactStorageTest extends ContactSitewideTest {
     $this->drupalLogin($admin_user);
     // Create first valid contact form.
     $mail = 'simpletest@example.com';
-    $this->addContactForm($id = mb_strtolower($this->randomMachineName(16)), $label = $this->randomMachineName(16), implode(',', [$mail]), '', TRUE, 'Your message has been sent.', [
+    $this->addContactForm($id = $this->randomMachineName(16), $label = $this->randomMachineName(16), implode(',', [$mail]), '', TRUE, 'Your message has been sent.', [
       'send_a_pony' => 1,
     ]);
     $this->assertSession()->pageTextContains('Contact form ' . $label . ' has been added.');

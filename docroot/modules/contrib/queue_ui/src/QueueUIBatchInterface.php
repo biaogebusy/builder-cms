@@ -15,7 +15,7 @@ interface QueueUIBatchInterface {
    * @param string[] $queues
    *   Queues names to process.
    */
-  public function batch(array $queues);
+  public function batch(array $queues): void;
 
   /**
    * Batch step definition to process a queue.
@@ -27,13 +27,13 @@ interface QueueUIBatchInterface {
    *
    * @param string $queue_name
    *   The name of the queue being inspected.
-   * @param array|\DrushBatchContext $context
-   *   An associative array or DrushBatchContext.
+   * @param array $context
+   *   An associative array.
    *
    * @throws \Drupal\Component\Plugin\Exception\PluginException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function step(string $queue_name, &$context);
+  public function step(string $queue_name, array &$context): void;
 
   /**
    * Callback when finishing a batch job.
@@ -45,6 +45,6 @@ interface QueueUIBatchInterface {
    * @param array $operations
    *   If $success is FALSE, contains the operations that remained unprocessed.
    */
-  public function finish(bool $success, array $results, array $operations);
+  public function finish(bool $success, array $results, array $operations): void;
 
 }

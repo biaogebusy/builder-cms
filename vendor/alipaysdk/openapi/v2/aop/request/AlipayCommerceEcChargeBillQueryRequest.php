@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.commerce.ec.charge.bill.query request
  *
  * @author auto create
- * @since 1.0, 2024-03-28 00:12:02
+ * @since 1.0, 2024-11-28 11:33:38
  */
 class AlipayCommerceEcChargeBillQueryRequest
 {

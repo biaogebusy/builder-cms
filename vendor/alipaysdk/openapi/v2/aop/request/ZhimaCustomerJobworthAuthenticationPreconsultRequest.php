@@ -3,7 +3,7 @@
  * ALIPAY API: zhima.customer.jobworth.authentication.preconsult request
  *
  * @author auto create
- * @since 1.0, 2024-03-15 15:26:57
+ * @since 1.0, 2024-10-16 09:47:13
  */
 class ZhimaCustomerJobworthAuthenticationPreconsultRequest
 {

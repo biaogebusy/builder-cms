@@ -33,7 +33,7 @@ use Drupal\views\ViewExecutable;
 function media_library_help($route_name, RouteMatchInterface $route_match) {
   switch ($route_name) {
     case 'help.page.media_library':
-      $output = '<h3>' . t('About') . '</h3>';
+      $output = '<h2>' . t('About') . '</h2>';
       $output .= '<p>' . t('The Media Library module provides a rich, visual interface for managing media, and allows media to be reused in entity reference fields or embedded into text content. It overrides the <a href=":media-collection">media administration page</a>, allowing users to toggle between the existing table-style interface and a new grid-style interface for browsing and performing administrative operations on media.', [
         ':media-collection' => Url::fromRoute('entity.media.collection')->toString(),
       ]) . '</p>';
@@ -41,10 +41,10 @@ function media_library_help($route_name, RouteMatchInterface $route_match) {
         ':media-help' => Url::fromRoute('help.page', ['name' => 'media'])->toString(),
         ':media-library-handbook' => 'https://www.drupal.org/docs/8/core/modules/media-library-module',
       ]) . '</p>';
-      $output .= '<h3>' . t('Selection dialog') . '</h3>';
+      $output .= '<h2>' . t('Selection dialog') . '</h2>';
       $output .= '<p>' . t('When selecting media for an entity reference field or a text editor, Media Library opens a modal dialog to help users easily find and select media. The modal dialog can toggle between a grid-style and table-style interface, and new media items can be uploaded directly into it.') . '</p>';
       $output .= '<p>' . t('Within the dialog, media items are divided up by type. If more than one media type can be selected by the user, the available types will be displayed as a set of vertical tabs. To users who have appropriate permissions, each media type may also present a short form allowing you to upload or create new media items of that type.') . '</p>';
-      $output .= '<h3>' . t('Uses') . '</h3>';
+      $output .= '<h2>' . t('Uses') . '</h2>';
       $output .= '<dl>';
       $output .= '<dt>' . t('Grid-style vs. table-style interface') . '</dt>';
       $output .= '<dd>' . t('The Media Library module provides a new grid-style interface for the media administration page that displays media as thumbnails, with minimal textual information, allowing users to visually browse media in their site. The existing table-style interface is better suited to displaying additional information about media items, in addition to being more accessible to users with assistive technology.') . '</dd>';
@@ -53,7 +53,7 @@ function media_library_help($route_name, RouteMatchInterface $route_match) {
       $output .= '<dt>' . t('Embedding media in text content') . '</dt>';
       $output .= '<dd>' . t('To use the media library within CKEditor, you must add the "Insert from Media Library" button to the CKEditor toolbar, and enable the "Embed media" filter in the text format associated with the text editor.') . '</dd>';
       $output .= '</dl>';
-      $output .= '<h3>' . t('Customize') . '</h3>';
+      $output .= '<h2>' . t('Customize') . '</h2>';
       $output .= '<ul>';
       $output .= '<li>';
       if (\Drupal::moduleHandler()->moduleExists('views_ui') && \Drupal::currentUser()->hasPermission('administer views')) {
@@ -165,7 +165,7 @@ function media_library_views_pre_render(ViewExecutable $view) {
         $add_classes($view->field['media_bulk_form']->options['element_class'], ['js-click-to-select-checkbox']);
       }
     }
-    elseif (strpos($view->current_display, 'widget') === 0) {
+    elseif (str_starts_with($view->current_display, 'widget')) {
       if (array_key_exists('media_library_select_form', $view->field)) {
         $add_classes($view->field['media_library_select_form']->options['element_wrapper_class'], ['js-click-to-select-checkbox']);
       }
@@ -189,7 +189,7 @@ function media_library_views_pre_render(ViewExecutable $view) {
 function media_library_views_post_render(ViewExecutable $view, &$output, CachePluginBase $cache) {
   if ($view->id() === 'media_library') {
     $output['#attached']['library'][] = 'media_library/view';
-    if (strpos($view->current_display, 'widget') === 0) {
+    if (str_starts_with($view->current_display, 'widget')) {
       try {
         $query = MediaLibraryState::fromRequest($view->getRequest())->all();
       }
@@ -214,6 +214,8 @@ function media_library_views_post_render(ViewExecutable $view, &$output, CachePl
         $ajax_path = &$output['#attached']['drupalSettings']['views']['ajax_path'];
         $parsed_url = UrlHelper::parse($ajax_path);
         $query = array_merge($query, $parsed_url['query']);
+        // Reset the pager so that the user starts on the first page.
+        unset($query['page']);
         $ajax_path = $parsed_url['path'] . '?' . UrlHelper::buildQuery($query);
       }
     }
@@ -277,9 +279,7 @@ function media_library_form_views_form_media_library_page_alter(array &$form, Fo
     foreach (Element::getVisibleChildren($form['media_bulk_form']) as $key) {
       if (isset($view->result[$key])) {
         $media = $view->field['media_bulk_form']->getEntity($view->result[$key]);
-        $form['media_bulk_form'][$key]['#title'] = t('Select @label', [
-          '@label' => $media->label(),
-        ]);
+        $form['media_bulk_form'][$key]['#title'] = $media ? t('Select @label', ['@label' => $media->label()]) : '';
       }
     }
   }
@@ -291,13 +291,17 @@ function media_library_form_views_form_media_library_page_alter(array &$form, Fo
 function media_library_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
   // Add a process callback to ensure that the media library view's exposed
   // filters submit button is not moved to the modal dialog's button area.
-  if ($form_id === 'views_exposed_form' && strpos($form['#id'], 'views-exposed-form-media-library-widget') === 0) {
+  if ($form_id === 'views_exposed_form' && str_starts_with($form['#id'], 'views-exposed-form-media-library-widget')) {
     $form['#after_build'][] = '_media_library_views_form_media_library_after_build';
   }
 
   // Configures media_library displays when a type is submitted.
   if ($form_state->getFormObject() instanceof MediaTypeForm) {
     $form['actions']['submit']['#submit'][] = '_media_library_media_type_form_submit';
+    // @see field_ui_form_alter()
+    if (isset($form['actions']['save_continue'])) {
+      $form['actions']['save_continue']['#submit'][] = '_media_library_media_type_form_submit';
+    }
   }
 }
 

@@ -4,6 +4,8 @@ namespace Drupal\Tests\commerce_tax\Kernel\Plugin\Commerce\TaxType;
 
 use Drupal\commerce_tax\Entity\TaxType;
 
+// cspell:ignore Büsingen
+
 /**
  * @coversDefaultClass \Drupal\commerce_tax\Plugin\Commerce\TaxType\SwissVat
  * @group commerce

@@ -3,14 +3,23 @@
  * Colorbox JS.
  */
 
-(function ($, Drupal, drupalSettings) {
+(function ($, Drupal, drupalSettings, once) {
 
   'use strict';
 
   Drupal.behaviors.initColorbox = {
     attach: function (context, settings) {
-      if (!$.isFunction($.colorbox) || typeof settings.colorbox === 'undefined') {
+      if (typeof $.colorbox !== 'function' || typeof settings.colorbox === 'undefined') {
         return;
+      }
+
+      // The colorbox library uses jQuery.isFunction().
+      // This function was removed in jQuery 3.3.0.
+      // This is a workaround to avoid fixing the library.
+      if (!$.isFunction) {
+        $.isFunction = function (obj) {
+          return typeof obj === 'function' || false;
+        };
       }
 
       if (settings.colorbox.mobiledetect && window.matchMedia) {
@@ -23,11 +32,16 @@
       }
 
       settings.colorbox.rel = function () {
-        return $(this).data('colorbox-gallery')
+        return $(this).data('colorbox-gallery');
       };
 
-      $('.colorbox', context)
-        .once('init-colorbox').each(function() {
+      settings.colorbox.html = function () {
+        var $modalContent = $(this).find('> .modal-content');
+        return $modalContent.length ? $(this).find('> .modal-content').children().clone() : false;
+      };
+
+      $(once('init-colorbox', '.colorbox', context))
+        .each(function() {
         // Only images are supported for the "colorbox" class.
         // The "photo" setting forces the href attribute to be treated as an image.
         var extendParams = {
@@ -35,10 +49,49 @@
         };
         // If a title attribute is supplied, sanitize it.
         var title = $(this).attr('title');
+        if (typeof title === 'undefined') {
+          title = this.dataset.cboxTitle;
+        }
         if (title) {
           extendParams.title = Drupal.colorbox.sanitizeMarkup(title);
         }
         $(this).colorbox($.extend({}, settings.colorbox, extendParams));
+
+        // Only allow http or https protocol in hrefs.
+        var href = $(this).attr('href');
+        var protocolRegex = /^(https?)/;
+        if (href && href.substring(0, 1) !== '/') {
+          var protocol = href.split(':')[0];
+          // Use a regex to match http or https protocol.
+          if (!protocolRegex.test(protocol)) {
+            $(this).removeAttr('href');
+          }
+        }
+        var dataHref = this.dataset.cboxHref;
+        if (dataHref && dataHref.substring(0, 1) !== '/') {
+          var dataProtocol = dataHref.split(':')[0];
+          if (!protocolRegex.test(dataProtocol)) {
+            delete this.dataset.cboxHref;
+          }
+        }
+
+        // Since the sanitized title has been passed to colorbox settings,
+        // delete the unsanitized data-cbox-title attribute.
+        delete this.dataset.cboxTitle;
+
+        // Disallow dangerous data attributes.
+        delete this.dataset.cboxIframeAttrs;
+
+        // Sanitize other data attributes.
+        var sanitizeDataList = ['cboxNext', 'cboxPrevious', 'cboxCurrent',
+          'cboxClose', 'cboxSlideshowstop', 'cboxSlideshowstart',
+          'cboxXhrError', 'cboxImgerror', 'cboxHtml'
+        ];
+        for (var a of sanitizeDataList) {
+          if (this.dataset.hasOwnProperty(a)) {
+            this.dataset[a] = Drupal.colorbox.sanitizeMarkup(this.dataset[a]);
+          }
+        }
       });
 
       $('.colorbox', context).colorbox({
@@ -109,4 +162,4 @@
     }
   }
 
-})(jQuery, Drupal, drupalSettings);
+})(jQuery, Drupal, drupalSettings, once);

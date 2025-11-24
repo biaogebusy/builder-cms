@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\filter\Functional;
 
 use Drupal\filter\Entity\FilterFormat;
@@ -13,9 +15,7 @@ use Drupal\Tests\BrowserTestBase;
 class FilterFormTest extends BrowserTestBase {
 
   /**
-   * Modules to enable for this test.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['filter', 'filter_test'];
 
@@ -68,7 +68,7 @@ class FilterFormTest extends BrowserTestBase {
   /**
    * Tests various different configurations of the 'text_format' element.
    */
-  public function testFilterForm() {
+  public function testFilterForm(): void {
     $this->doFilterFormTestAsAdmin();
     $this->doFilterFormTestAsNonAdmin();
     // Ensure that enabling modules which provide filter plugins behaves

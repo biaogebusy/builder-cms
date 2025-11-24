@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\user\Kernel\Views;
 
 use Drupal\Component\Utility\Html;
@@ -28,7 +30,7 @@ class HandlerFilterPermissionTest extends UserKernelTestBase {
    * @todo Fix the different commented out tests by fixing the many to one
    *   handler handling with the NOT operator.
    */
-  public function testFilterPermission() {
+  public function testFilterPermission(): void {
     $this->setupPermissionTestData();
 
     $column_map = ['uid' => 'uid'];
@@ -105,7 +107,7 @@ class HandlerFilterPermissionTest extends UserKernelTestBase {
     }
     foreach (['system' => 'System', 'user' => 'User'] as $module => $title) {
       $expected = array_map(function ($permission) {
-        return Html::escape(strip_tags($permission['title']));
+        return Html::escape(strip_tags((string) $permission['title']));
       }, $permission_by_module[$module]);
 
       $this->assertEquals($expected, $value_options[$title], 'Ensure the all permissions are available');

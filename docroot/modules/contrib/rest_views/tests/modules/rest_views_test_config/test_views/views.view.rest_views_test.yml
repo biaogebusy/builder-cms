@@ -1,0 +1,90 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.page
+  module:
+    - node
+    - rest
+    - rest_views
+    - serialization
+    - user
+id: rest_views_test
+label: rest_views_test
+module: views
+base_table: node_field_data
+base_field: nid
+display:
+  default:
+    id: default
+    display_title: Default
+    display_plugin: default
+    display_options:
+      fields:
+        nid_export:
+          id: nid_export
+          table: node_field_data
+          field: nid_export
+          entity_type: node
+          entity_field: nid
+          plugin_id: field_export
+          type: number_export
+        uid_export:
+          id: uid_export
+          table: node_field_data
+          field: uid_export
+          entity_type: node
+          entity_field: uid
+          plugin_id: field_export
+          type: entity_reference_entity_id_export
+        title:
+          id: title
+          table: node_field_data
+          field: title
+          entity_type: node
+          entity_field: title
+          plugin_id: field
+          type: string
+          settings:
+            link_to_entity: false
+      access:
+        type: perm
+        options:
+          perm: 'access content'
+      filters:
+        type:
+          id: type
+          table: node_field_data
+          field: type
+          entity_type: node
+          entity_field: type
+          plugin_id: bundle
+          value:
+            page: page
+      style:
+        type: serializer
+      row:
+        type: fields
+      query:
+        type: views_query
+  rest_export:
+    id: rest_export
+    display_title: rest_export
+    display_plugin: rest_export
+    display_options:
+      style:
+        type: serializer
+      row:
+        type: data_field
+        options:
+          field_options:
+            title:
+              alias: ''
+            uid_export:
+              alias: uid
+            nid_export:
+              alias: nid
+            view_node:
+              alias: url
+      path: /rest-views-test
+

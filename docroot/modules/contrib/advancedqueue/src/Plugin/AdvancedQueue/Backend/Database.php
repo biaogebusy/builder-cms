@@ -2,22 +2,23 @@
 
 namespace Drupal\advancedqueue\Plugin\AdvancedQueue\Backend;
 
+use Drupal\advancedqueue\Attribute\AdvancedQueueBackend;
 use Drupal\advancedqueue\Entity\Queue;
 use Drupal\advancedqueue\Entity\QueueInterface;
 use Drupal\advancedqueue\Job;
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Database\Connection;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides the database queue backend.
- *
- * @AdvancedQueueBackend(
- *   id = "database",
- *   label = @Translation("Database"),
- * )
  */
-class Database extends BackendBase implements SupportsDeletingJobsInterface, SupportsListingJobsInterface, SupportsReleasingJobsInterface, SupportsLoadingJobsInterface {
+#[AdvancedQueueBackend(
+  id: "database",
+  label: new TranslatableMarkup("Database"),
+)]
+class Database extends BackendBase implements SupportsDeletingJobsInterface, SupportsListingJobsInterface, SupportsReleasingJobsInterface, SupportsLoadingJobsInterface, SupportsDetectingDuplicateJobsInterface {
 
   /**
    * The database connection.
@@ -25,6 +26,13 @@ class Database extends BackendBase implements SupportsDeletingJobsInterface, Sup
    * @var \Drupal\Core\Database\Connection
    */
   protected $connection;
+
+  /**
+   * The database table.
+   *
+   * @var string
+   */
+  protected const TABLE = 'advancedqueue';
 
   /**
    * Constructs a new Database object.
@@ -71,7 +79,7 @@ class Database extends BackendBase implements SupportsDeletingJobsInterface, Sup
    */
   public function deleteQueue() {
     // Delete all jobs in the current queue.
-    $this->connection->delete('advancedqueue')
+    $this->connection->delete(static::TABLE)
       ->condition('queue_id', $this->queueId)
       ->execute();
   }
@@ -81,7 +89,7 @@ class Database extends BackendBase implements SupportsDeletingJobsInterface, Sup
    */
   public function cleanupQueue() {
     // Reset expired jobs.
-    $this->connection->update('advancedqueue')
+    $this->connection->update(static::TABLE)
       ->fields([
         'state' => Job::STATE_QUEUED,
         'expires' => 0,
@@ -124,7 +132,7 @@ class Database extends BackendBase implements SupportsDeletingJobsInterface, Sup
     }
     else {
       $delete_before = $this->connection
-        ->select('advancedqueue', 'a')
+        ->select(static::TABLE, 'a')
         ->fields('a', ['processed'])
         ->condition('state', $states, 'IN')
         ->condition('queue_id', $this->queueId)
@@ -135,7 +143,7 @@ class Database extends BackendBase implements SupportsDeletingJobsInterface, Sup
     }
 
     if ($delete_before) {
-      $this->connection->delete('advancedqueue')
+      $this->connection->delete(static::TABLE)
         ->condition('queue_id', $this->queueId)
         ->condition('processed', $delete_before, '<')
         ->condition('state', $states, 'IN')
@@ -154,7 +162,7 @@ class Database extends BackendBase implements SupportsDeletingJobsInterface, Sup
       Job::STATE_SUCCESS => 0,
       Job::STATE_FAILURE => 0,
     ];
-    $query = 'SELECT state, COUNT(job_id) FROM {advancedqueue} WHERE queue_id = :queue_id GROUP BY state';
+    $query = "SELECT state, COUNT(job_id) FROM {" . static::TABLE . "} WHERE queue_id = :queue_id GROUP BY state";
     $counts = $this->connection->query($query, [':queue_id' => $this->queueId])->fetchAllKeyed();
     foreach ($counts as $state => $count) {
       $jobs[$state] = $count;
@@ -176,7 +184,7 @@ class Database extends BackendBase implements SupportsDeletingJobsInterface, Sup
   public function enqueueJobs(array $jobs, $delay = 0) {
     if (count($jobs) > 1) {
       // Make the inserts atomic, and improve performance on certain engines.
-      $this->connection->startTransaction();
+      $transaction = $this->connection->startTransaction();
     }
 
     /** @var \Drupal\advancedqueue\Job $job */
@@ -192,11 +200,43 @@ class Database extends BackendBase implements SupportsDeletingJobsInterface, Sup
       $fields['payload'] = json_encode($fields['payload']);
       // InsertQuery supports inserting multiple rows at once, which is faster,
       // but that doesn't give us the inserted job IDs.
-      $query = $this->connection->insert('advancedqueue')->fields($fields);
+      $query = $this->connection->insert(static::TABLE)->fields($fields);
       $job_id = $query->execute();
-
       $job->setId($job_id);
     }
+
+    if (isset($transaction)) {
+      // Commit the transaction.
+      $transaction = NULL;
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDuplicateJobs(Job $job): array {
+    $fingerprint = $job->getFingerprint();
+    if (empty($fingerprint)) {
+      throw new \InvalidArgumentException('Job must have its fingerprint set.');
+    }
+
+    $query = $this->connection->select(static::TABLE, 'aq')
+      ->fields('aq')
+      ->condition('queue_id', $this->queueId)
+      ->condition('fingerprint', $fingerprint)
+      ->condition('state', [Job::STATE_QUEUED, Job::STATE_PROCESSING], 'IN');
+
+    if (!empty($job->getId())) {
+      $query->condition('job_id', $job->getId(), '<>');
+    }
+    $result = $query->execute();
+    $job_definitions = $result->fetchAllAssoc('job_id', \PDO::FETCH_ASSOC);
+
+    $jobs = [];
+    foreach ($job_definitions as $job_id => $job_definition) {
+      $jobs[$job_id] = $this->constructJobFromDefinition($job_definition);
+    }
+    return $jobs;
   }
 
   /**
@@ -222,9 +262,9 @@ class Database extends BackendBase implements SupportsDeletingJobsInterface, Sup
     // until a job is successfully claimed or we are reasonably sure there
     // are no unclaimed jobs left.
     while (TRUE) {
-      $query = 'SELECT * FROM {advancedqueue}
+      $query = "SELECT * FROM {" . static::TABLE . "}
         WHERE queue_id = :queue_id AND state = :state AND available <= :now AND expires = 0
-        ORDER BY available, job_id ASC';
+        ORDER BY available, job_id ASC";
       $params = [
         ':queue_id' => $this->queueId,
         ':state' => Job::STATE_QUEUED,
@@ -244,7 +284,7 @@ class Database extends BackendBase implements SupportsDeletingJobsInterface, Sup
       // should really expire.
       $state = Job::STATE_PROCESSING;
       $expires = $this->time->getCurrentTime() + $this->configuration['lease_time'];
-      $update = $this->connection->update('advancedqueue')
+      $update = $this->connection->update(static::TABLE)
         ->fields([
           'state' => $state,
           'expires' => $expires,
@@ -280,7 +320,7 @@ class Database extends BackendBase implements SupportsDeletingJobsInterface, Sup
    * {@inheritdoc}
    */
   public function releaseJob($job_id) {
-    $this->connection->update('advancedqueue')
+    $this->connection->update(static::TABLE)
       ->fields([
         'state' => Job::STATE_QUEUED,
         'expires' => 0,
@@ -293,7 +333,7 @@ class Database extends BackendBase implements SupportsDeletingJobsInterface, Sup
    * {@inheritdoc}
    */
   public function deleteJob($job_id) {
-    $this->connection->delete('advancedqueue')
+    $this->connection->delete(static::TABLE)
       ->condition('job_id', $job_id)
       ->execute();
   }
@@ -305,7 +345,7 @@ class Database extends BackendBase implements SupportsDeletingJobsInterface, Sup
    *   The job.
    */
   protected function updateJob(Job $job) {
-    $this->connection->update('advancedqueue')
+    $this->connection->update(static::TABLE)
       ->fields([
         'payload' => json_encode($job->getPayload()),
         'state' => $job->getState(),
@@ -323,7 +363,7 @@ class Database extends BackendBase implements SupportsDeletingJobsInterface, Sup
    * {@inheritdoc}
    */
   public function loadJob($job_id) {
-    $query = 'SELECT * FROM {advancedqueue} WHERE queue_id = :queue_id AND job_id = :job_id';
+    $query = "SELECT * FROM {" . static::TABLE . "} WHERE queue_id = :queue_id AND job_id = :job_id";
     $params = [
       ':queue_id' => $this->queueId,
       ':job_id' => $job_id,

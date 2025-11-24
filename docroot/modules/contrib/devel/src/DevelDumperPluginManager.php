@@ -37,7 +37,7 @@ class DevelDumperPluginManager extends DefaultPluginManager implements DevelDump
   /**
    * {@inheritdoc}
    */
-  public function processDefinition(&$definition, $plugin_id) {
+  public function processDefinition(&$definition, $plugin_id): void {
     parent::processDefinition($definition, $plugin_id);
 
     $definition['supported'] = (bool) call_user_func([$definition['class'], 'checkRequirements']);
@@ -46,7 +46,7 @@ class DevelDumperPluginManager extends DefaultPluginManager implements DevelDump
   /**
    * {@inheritdoc}
    */
-  public function isPluginSupported($plugin_id) {
+  public function isPluginSupported($plugin_id): bool {
     $definition = $this->getDefinition($plugin_id, FALSE);
     return $definition && $definition['supported'];
   }
@@ -58,14 +58,15 @@ class DevelDumperPluginManager extends DefaultPluginManager implements DevelDump
     if (!$this->isPluginSupported($plugin_id)) {
       $plugin_id = $this->getFallbackPluginId($plugin_id);
     }
+
     return parent::createInstance($plugin_id, $configuration);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getFallbackPluginId($plugin_id, array $configuration = []) {
-    return 'default';
+  public function getFallbackPluginId($plugin_id, array $configuration = []): string {
+    return 'var_dumper';
   }
 
 }

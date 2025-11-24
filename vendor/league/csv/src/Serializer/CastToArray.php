@@ -14,26 +14,29 @@ declare(strict_types=1);
 namespace League\Csv\Serializer;
 
 use JsonException;
+use League\Csv\Exception;
+use League\Csv\Reader;
 use ReflectionParameter;
 use ReflectionProperty;
 
+use function array_map;
 use function explode;
+use function filter_var;
 use function is_array;
 use function json_decode;
-use function str_getcsv;
 use function strlen;
 
 use const FILTER_REQUIRE_ARRAY;
 use const JSON_THROW_ON_ERROR;
 
 /**
- * @implements TypeCasting<?array>
+ * @implements TypeCasting<array|null>
  */
 final class CastToArray implements TypeCasting
 {
-    private ArrayShape $shape;
     private readonly Type $type;
     private readonly bool $isNullable;
+    private ArrayShape $shape;
     private int $filterFlag;
     /** @var non-empty-string */
     private string $separator = ',';
@@ -43,6 +46,9 @@ final class CastToArray implements TypeCasting
     private int $depth = 512;
     private int $flags = 0;
     private ?array $default = null;
+    private bool $trimElementValueBeforeCasting = false;
+    private ?int $headerOffset = null;
+    private readonly TypeCastingInfo $info;
 
     /**
      * @throws MappingFailed
@@ -50,6 +56,14 @@ final class CastToArray implements TypeCasting
     public function __construct(ReflectionProperty|ReflectionParameter $reflectionProperty)
     {
         [$this->type, $this->isNullable] = $this->init($reflectionProperty);
+        $this->shape = ArrayShape::List;
+        $this->filterFlag = Type::String->filterFlag();
+        $this->info = TypeCastingInfo::fromAccessor($reflectionProperty);
+    }
+
+    public function info(): TypeCastingInfo
+    {
+        return $this->info;
     }
 
     /**
@@ -68,6 +82,8 @@ final class CastToArray implements TypeCasting
         int $depth = 512,
         int $flags = 0,
         Type|string $type = Type::String,
+        bool $trimElementValueBeforeCasting = false,
+        ?int $headerOffset = null,
     ): void {
         if (!$shape instanceof ArrayShape) {
             $shape = ArrayShape::tryFrom($shape) ?? throw new MappingFailed('Unable to resolve the array shape; Verify your options arguments.');
@@ -91,15 +107,17 @@ final class CastToArray implements TypeCasting
             1 !== strlen($this->enclosure) && $this->shape->equals(ArrayShape::Csv) => throw new MappingFailed('expects enclosure to be a single character; `'.$this->enclosure.'` given.'),
             default => $this->resolveFilterFlag($type),
         };
+        $this->trimElementValueBeforeCasting = $trimElementValueBeforeCasting;
+        $this->headerOffset = $headerOffset;
     }
 
-    public function toVariable(?string $value): ?array
+    public function toVariable(mixed $value): ?array
     {
         if (null === $value) {
             return match (true) {
                 $this->isNullable,
                 Type::Mixed->equals($this->type) => $this->default,
-                default => throw TypeCastingFailed::dueToNotNullableType($this->type->value),
+                default => throw TypeCastingFailed::dueToNotNullableType($this->type->value, info: $this->info),
             };
         }
 
@@ -107,22 +125,65 @@ final class CastToArray implements TypeCasting
             return [];
         }
 
-        try {
-            $result = match ($this->shape) {
-                ArrayShape::Json => json_decode($value, true, $this->depth, $this->flags | JSON_THROW_ON_ERROR),
-                ArrayShape::List => filter_var(explode($this->separator, $value), $this->filterFlag, FILTER_REQUIRE_ARRAY),
-                ArrayShape::Csv => filter_var(str_getcsv($value, $this->delimiter, $this->enclosure, ''), $this->filterFlag, FILTER_REQUIRE_ARRAY),
-            };
+        if (is_array($value)) {
+            return $value;
+        }
 
-            if (!is_array($result)) {
-                throw TypeCastingFailed::dueToInvalidValue($value, $this->type->value);
+        if (!is_string($value)) {
+            throw TypeCastingFailed::dueToInvalidValue($value, $this->type->value, info: $this->info);
+        }
+
+        if ($this->shape->equals(ArrayShape::Json)) {
+            try {
+                $data = json_decode($value, true, $this->depth, $this->flags | JSON_THROW_ON_ERROR);
+            } catch (JsonException $exception) {
+                throw TypeCastingFailed::dueToInvalidValue($value, $this->type->value, $exception, $this->info);
             }
 
-            return $result;
+            if (!is_array($data)) {
+                throw TypeCastingFailed::dueToInvalidValue($value, $this->type->value, info: $this->info);
+            }
 
-        } catch (JsonException $exception) {
-            throw TypeCastingFailed::dueToInvalidValue($value, $this->type->value, $exception);
+            return $data;
         }
+
+        if ($this->shape->equals(ArrayShape::Csv)) {
+            try {
+                $data = Reader::fromString($value);
+                $data->setDelimiter($this->delimiter);
+                $data->setEnclosure($this->enclosure);
+                $data->setEscape('');
+                $data->setHeaderOffset($this->headerOffset);
+                if ($this->trimElementValueBeforeCasting) {
+                    $data->addFormatter($this->trimString(...));
+                }
+                $data->addFormatter($this->filterElement(...));
+
+                return [...$data];
+            } catch (Exception $exception) {
+                throw TypeCastingFailed::dueToInvalidValue($value, $this->type->value, $exception, $this->info);
+            }
+        }
+
+        $data = explode($this->separator, $value);
+
+        return $this->filterElement(match (true) {
+            $this->trimElementValueBeforeCasting => $this->trimString($data),
+            default => $data,
+        });
+    }
+
+    private function trimString(array $record): array
+    {
+        return array_map(
+            fn (mixed $value): mixed => is_string($value) ? trim($value) : $value,
+            $record
+        );
+    }
+
+    private function filterElement(array $record): array
+    {
+        return filter_var($record, $this->filterFlag, FILTER_REQUIRE_ARRAY);
     }
 
     /**

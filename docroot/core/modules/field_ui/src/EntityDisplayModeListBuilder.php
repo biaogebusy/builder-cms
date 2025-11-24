@@ -2,6 +2,8 @@
 
 namespace Drupal\field_ui;
 
+use Drupal\Component\Serialization\Json;
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
@@ -58,6 +60,7 @@ class EntityDisplayModeListBuilder extends ConfigEntityListBuilder {
    */
   public function buildHeader() {
     $header['label'] = $this->t('Name');
+    $header['description'] = $this->t('Description');
     return $header + parent::buildHeader();
   }
 
@@ -66,7 +69,33 @@ class EntityDisplayModeListBuilder extends ConfigEntityListBuilder {
    */
   public function buildRow(EntityInterface $entity) {
     $row['label'] = $entity->label();
+    $row['description'] = $entity->getDescription();
     return $row + parent::buildRow($entity);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getOperations(EntityInterface $entity) {
+    // Make the edit form render in a dialog, like the add form.
+    // The edit form also contains an option to delete the view mode, which
+    // also spawns a dialog. Rather than have nested dialogs, we allow the
+    // existing dialog to be replaced, so users will be shown the list again
+    // if they cancel deleting the view mode.
+    $operations = parent::getOperations($entity);
+    if (isset($operations['edit'])) {
+      $operations['edit'] = NestedArray::mergeDeepArray([[
+        'attributes' => [
+          'class' => ['button', 'use-ajax'],
+          'data-dialog-type' => 'modal',
+          'data-dialog-options' => Json::encode([
+            'width' => '880',
+          ]),
+        ],
+      ], $operations['edit'],
+      ]);
+    }
+    return $operations;
   }
 
   /**
@@ -100,6 +129,9 @@ class EntityDisplayModeListBuilder extends ConfigEntityListBuilder {
         '#type' => 'table',
         '#header' => $this->buildHeader(),
         '#rows' => [],
+        '#attributes' => [
+          'class' => ['display-mode-table'],
+        ],
       ];
       foreach ($entities as $entity) {
         if ($row = $this->buildRow($entity)) {
@@ -117,7 +149,21 @@ class EntityDisplayModeListBuilder extends ConfigEntityListBuilder {
         'data' => [
           '#type' => 'link',
           '#url' => Url::fromRoute($short_type == 'view' ? 'entity.entity_view_mode.add_form' : 'entity.entity_form_mode.add_form', ['entity_type_id' => $entity_type]),
-          '#title' => $this->t('Add new @entity-type %label', ['@entity-type' => $this->entityTypes[$entity_type]->getLabel(), '%label' => $this->entityType->getSingularLabel()]),
+          '#title' => $this->t('Add %label for @entity-type', ['@entity-type' => $this->entityTypes[$entity_type]->getLabel(), '%label' => $this->entityType->getSingularLabel()]),
+          '#button_type' => 'primary',
+          '#attributes' => [
+            'class' => ['button', 'use-ajax', 'button--small'],
+            'data-dialog-type' => 'modal',
+            'data-dialog-options' => Json::encode([
+              'width' => '880',
+            ]),
+          ],
+          '#attached' => [
+            'library' => [
+              'core/drupal.dialog.ajax',
+              'field_ui/drupal.field_ui_table',
+            ],
+          ],
         ],
         'colspan' => count($table['#header']),
       ];

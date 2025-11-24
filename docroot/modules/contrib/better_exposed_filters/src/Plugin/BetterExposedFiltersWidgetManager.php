@@ -17,7 +17,7 @@ class BetterExposedFiltersWidgetManager extends DefaultPluginManager {
    *
    * @var string
    */
-  protected $type;
+  protected string $type;
 
   /**
    * Constructs a new BetterExposedFiltersFilterWidgetManager object.

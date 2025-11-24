@@ -62,7 +62,7 @@ final class SmsFrameworkPhoneNumberWidgetTest extends SmsFrameworkBrowserTestBas
     $this->assertSession()->responseContains(t('A verification code has been sent to this phone number. Go to the <a href="@url">verification form</a> and enter the code. The code will expire if it is not verified in', $t_args));
 
     $input = $this->xpath('//input[@name="' . $form_field_phone_number . '" and @disabled="disabled"]');
-    $this->assertTrue(count($input) === 1, 'The phone number text field is disabled.');
+    static::assertTrue(count($input) === 1, 'The phone number text field is disabled.');
 
     // Verify the code.
     $phone_verification = $this->getLastVerification();
@@ -75,7 +75,7 @@ final class SmsFrameworkPhoneNumberWidgetTest extends SmsFrameworkBrowserTestBas
     $this->assertSession()->responseContains(t('This phone number is verified. <strong>Warning:</strong> Modifying this phone number will remove verification.'));
 
     $input = $this->xpath('//input[@name="' . $form_field_phone_number . '" and @disabled="disabled"]');
-    $this->assertTrue(count($input) === 0, 'The phone number text field is enabled.');
+    static::assertTrue(count($input) === 0, 'The phone number text field is enabled.');
   }
 
   /**

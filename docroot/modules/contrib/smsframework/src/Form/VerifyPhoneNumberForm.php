@@ -18,43 +18,24 @@ use Drupal\Core\Form\FormStateInterface;
 class VerifyPhoneNumberForm extends FormBase {
 
   /**
-   * The flood control mechanism.
-   *
-   * @var \Drupal\Core\Flood\FloodInterface
-   */
-  protected $flood;
-
-  /**
-   * The phone number verification service.
-   *
-   * @var \Drupal\sms\Provider\PhoneNumberVerificationInterface
-   */
-  protected $phoneNumberVerification;
-
-  /**
-   * Time.
-   *
-   * @var \Drupal\Component\Datetime\TimeInterface
-   */
-  protected $time;
-
-  /**
    * Constructs a VerifyPhoneNumberForm object.
    *
    * @param \Drupal\Core\Flood\FloodInterface $flood
    *   The flood control mechanism.
-   * @param \Drupal\sms\Provider\PhoneNumberVerificationInterface $phone_number_verification
+   * @param \Drupal\sms\Provider\PhoneNumberVerificationInterface $phoneNumberVerification
    *   The phone number verification service.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger.
    * @param \Drupal\Component\Datetime\TimeInterface $time
    *   Time.
    */
-  public function __construct(FloodInterface $flood, PhoneNumberVerificationInterface $phone_number_verification, MessengerInterface $messenger, TimeInterface $time) {
-    $this->flood = $flood;
-    $this->phoneNumberVerification = $phone_number_verification;
+  public function __construct(
+    protected FloodInterface $flood,
+    protected PhoneNumberVerificationInterface $phoneNumberVerification,
+    MessengerInterface $messenger,
+    protected TimeInterface $time,
+  ) {
     $this->setMessenger($messenger);
-    $this->time = $time;
   }
 
   /**
@@ -80,7 +61,6 @@ class VerifyPhoneNumberForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-
     $form['code'] = [
       '#title' => $this->t('Verification code'),
       '#description' => $this->t('Enter the code you received from a SMS message.'),

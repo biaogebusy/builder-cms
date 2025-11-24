@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\embed\Kernel;
 
 use Drupal\embed\EmbedButtonInterface;
@@ -77,7 +79,7 @@ class IconTest extends KernelTestBase {
    * Test a button's icon URL.
    *
    * @param string $uri
-   *   The exepcted URI to the icon file.
+   *   The expected URI to the icon file.
    * @param \Drupal\embed\EmbedButtonInterface $button
    *   The embed button.
    * @param string $message

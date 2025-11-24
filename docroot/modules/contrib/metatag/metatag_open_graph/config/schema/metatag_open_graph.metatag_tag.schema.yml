@@ -35,6 +35,9 @@ metatag.metatag_tag.book_release_date:
 metatag.metatag_tag.book_tag:
   type: text
   label: 'Book Tags'
+metatag.metatag_tag.fediverse_creator:
+  type: text
+  label: 'Fediverse Creator'
 metatag.metatag_tag.og_audio:
   type: text
   label: 'Audio URL'

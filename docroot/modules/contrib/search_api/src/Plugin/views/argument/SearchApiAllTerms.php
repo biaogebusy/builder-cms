@@ -9,15 +9,15 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Defines a contextual filter searching through all indexed taxonomy fields.
  *
- * Note: The plugin annotation below is not misspelled. Due to dependency
+ * Note: The plugin attribute below is commented out because, due to dependency
  * problems, the plugin is not defined here but in
  * search_api_views_plugins_argument_alter().
  *
  * @ingroup views_argument_handlers
  *
- * ViewsArgument("search_api_all_terms")
- *
  * @see search_api_views_plugins_argument_alter()
+ *
+ * #[ViewsArgument('search_api_all_terms')]
  */
 class SearchApiAllTerms extends SearchApiTerm {
 
@@ -96,7 +96,7 @@ class SearchApiAllTerms extends SearchApiTerm {
       $terms = $this->getEntityTypeManager()->getStorage('taxonomy_term')
         ->loadMultiple($this->value);
     }
-    catch (PluginException $e) {
+    catch (PluginException) {
       $this->query->abort($this->t('Could not load taxonomy terms.'));
       return;
     }

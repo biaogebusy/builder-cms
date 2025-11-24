@@ -58,8 +58,6 @@ class ResourceRoutes implements EventSubscriberInterface {
    *
    * @param \Drupal\Core\Routing\RouteBuildEvent $event
    *   The route build event.
-   *
-   * @return array
    */
   public function onDynamicRouteEvent(RouteBuildEvent $event) {
     // Iterate over all enabled REST resource config entities.
@@ -91,7 +89,7 @@ class ResourceRoutes implements EventSubscriberInterface {
 
     foreach ($plugin->routes() as $name => $route) {
       /** @var \Symfony\Component\Routing\Route $route */
-      // @todo: Are multiple methods possible here?
+      // @todo Are multiple methods possible here?
       $methods = $route->getMethods();
       // Only expose routes that have an explicit method and allow >=1 format
       // for that method.
@@ -140,7 +138,7 @@ class ResourceRoutes implements EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     $events[RoutingEvents::DYNAMIC] = 'onDynamicRouteEvent';
     return $events;
   }

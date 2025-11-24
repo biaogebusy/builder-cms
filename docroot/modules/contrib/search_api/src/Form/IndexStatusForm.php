@@ -5,7 +5,7 @@ namespace Drupal\search_api\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\MessengerInterface;
-use Drupal\search_api\IndexBatchHelper;
+use Drupal\search_api\Utility\IndexingBatchHelperInterface;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\IndexInterface;
 use Drupal\search_api\Task\IndexTaskManagerInterface;
@@ -24,12 +24,16 @@ class IndexStatusForm extends FormBase {
   protected $messenger;
 
   /**
-   * Constructs an IndexStatusForm object.
+   * The index task manager.
    *
-   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
-   *   The messenger.
+   * @var \Drupal\search_api\Task\IndexTaskManagerInterface|null
    */
-  public function __construct(MessengerInterface $messenger) {
+  protected $indexTaskManager;
+
+  public function __construct(
+    MessengerInterface $messenger,
+    protected IndexingBatchHelperInterface $indexingBatchHelper,
+  ) {
     $this->messenger = $messenger;
   }
 
@@ -37,17 +41,11 @@ class IndexStatusForm extends FormBase {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    $messenger = $container->get('messenger');
-
-    return new static($messenger);
+    return new static(
+      $container->get('messenger'),
+      $container->get('search_api.indexing_batch_helper'),
+    );
   }
-
-  /**
-   * The index task manager.
-   *
-   * @var \Drupal\search_api\Task\IndexTaskManagerInterface|null
-   */
-  protected $indexTaskManager;
 
   /**
    * Retrieves the index task manager.
@@ -82,7 +80,7 @@ class IndexStatusForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, IndexInterface $index = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?IndexInterface $index = NULL) {
     if (!isset($index)) {
       return [];
     }
@@ -129,9 +127,16 @@ class IndexStatusForm extends FormBase {
         ],
         '#disabled' => !$has_remaining_items,
       ];
+      // If cron indexing is disabled, default to the default cron limit. If
+      // that is set to 0 (to disable cron indexing by default), fall back to
+      // the default default cron limit, 50, since letting this field default to
+      // 0 really makes no sense.
+      $default_batch_size = $index->getOption('cron_limit')
+        ?: $this->config('search_api.settings')->get('default_cron_limit')
+        ?: 50;
       $batch_size = [
         '#type' => 'textfield',
-        '#default_value' => $index->getOption('cron_limit', $this->config('search_api.settings')->get('default_cron_limit')),
+        '#default_value' => $default_batch_size,
         '#size' => 4,
         '#attributes' => [
           'class' => ['search-api-batch-size'],
@@ -243,12 +248,15 @@ class IndexStatusForm extends FormBase {
     switch ($form_state->getTriggeringElement()['#name']) {
       case 'index_now':
         $values = $form_state->getValues();
-        try {
-          IndexBatchHelper::setStringTranslation($this->getStringTranslation());
-          IndexBatchHelper::create($index, $values['batch_size'], $values['limit']);
+        if (!\Drupal::lock()->lockMayBeAvailable($index->getLockId())) {
+          $this->messenger->addWarning($this->t('Cannot start indexing because another indexing process (like a cron job or Drush command) is already running.'));
+          break;
         }
-        catch (SearchApiException $e) {
-          $this->messenger->addWarning($this->t('Failed to create a batch, please check the batch size and limit.'));
+        try {
+          $this->indexingBatchHelper->createBatch($index, $values['batch_size'], $values['limit']);
+        }
+        catch (SearchApiException) {
+          $this->messenger->addWarning($this->t('Failed to create a batch, check the batch size and limit.'));
         }
         break;
 

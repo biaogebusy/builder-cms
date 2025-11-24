@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\commerce_price\Unit;
 
-use Drupal\commerce_price\Price;
 use Drupal\Tests\UnitTestCase;
+use Drupal\commerce_price\Price;
 
 /**
  * Tests the Price class.

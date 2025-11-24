@@ -6,16 +6,14 @@ namespace Drupal\entity_share_server\Routing;
 
 use Drupal\Core\Authentication\AuthenticationCollectorInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
-use Drupal\entity_share_server\Entity\ChannelInterface;
 use Drupal\Core\Routing\RouteObjectInterface;
+use Drupal\entity_share_server\Entity\ChannelInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 
 /**
  * Defines dynamic routes.
- *
- * @internal
  */
 class Routes implements ContainerInjectionInterface {
 
@@ -82,7 +80,7 @@ class Routes implements ContainerInjectionInterface {
     if (isset($this->providerIds)) {
       return $this->providerIds;
     }
-    $this->providerIds = array_keys($this->authCollector->getSortedProviders());
+    $this->providerIds = \array_keys($this->authCollector->getSortedProviders());
 
     return $this->providerIds;
   }

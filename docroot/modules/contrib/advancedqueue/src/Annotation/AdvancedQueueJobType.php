@@ -43,4 +43,15 @@ class AdvancedQueueJobType extends Plugin {
    */
   public $retry_delay = 10;
 
+  /**
+   * Whether duplicate jobs of this type are allowed.
+   *
+   * Not all backends can detect duplicates; if duplicates are not allowed
+   * then ensure the backend used implements
+   * SupportsDetectingDuplicateJobsInterface.
+   *
+   * @var bool
+   */
+  public bool $allow_duplicates = TRUE;
+
 }

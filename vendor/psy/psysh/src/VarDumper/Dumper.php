@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2023 Justin Hileman
+ * (c) 2012-2025 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -20,8 +20,8 @@ use Symfony\Component\VarDumper\Dumper\CliDumper;
  */
 class Dumper extends CliDumper
 {
-    private $formatter;
-    private $forceArrayIndexes;
+    private OutputFormatter $formatter;
+    private bool $forceArrayIndexes;
 
     private const ONLY_CONTROL_CHARS = '/^[\x00-\x1F\x7F]+$/';
     private const CONTROL_CHARS = '/([\x00-\x1F\x7F]+)/';

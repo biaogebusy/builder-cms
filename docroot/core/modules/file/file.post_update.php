@@ -6,37 +6,40 @@
  */
 
 use Drupal\Core\Config\Entity\ConfigEntityUpdater;
-use Drupal\Core\File\FileSystemInterface;
-use Drupal\field\Entity\FieldConfig;
-use Drupal\file\Plugin\Field\FieldType\FileItem;
+use Drupal\user\RoleInterface;
 
 /**
- * Add txt to allowed extensions for all fields that allow uploads of insecure files.
+ * Implements hook_removed_post_updates().
  */
-function file_post_update_add_txt_if_allows_insecure_extensions(&$sandbox = NULL) {
-  if (\Drupal::config('system.file')->get('allow_insecure_uploads')) {
-    return t('The system is configured to allow insecure file uploads. No file field updates are necessary.');
-  }
+function file_removed_post_updates() {
+  return [
+    'file_post_update_add_txt_if_allows_insecure_extensions' => '10.0.0',
+  ];
+}
 
-  $updater = function (FieldConfig $field) {
-    // Determine if this field uses an item definition that extends FileItem.
-    if (is_subclass_of($field->getItemDefinition()->getClass(), FileItem::class)) {
-      $allowed_extensions_string = trim($field->getSetting('file_extensions'));
-      $allowed_extensions = array_filter(explode(' ', $allowed_extensions_string));
-      if (in_array('txt', $allowed_extensions, TRUE)) {
-        // Since .txt is specifically allowed, there's nothing to do.
-        return FALSE;
-      }
-      foreach ($allowed_extensions as $extension) {
-        // Allow .txt if an insecure extension is allowed.
-        if (preg_match(FileSystemInterface::INSECURE_EXTENSION_REGEX, 'test.' . $extension)) {
-          $allowed_extensions_string .= ' txt';
-          $field->setSetting('file_extensions', $allowed_extensions_string);
-          return TRUE;
-        }
-      }
+/**
+ * Grant all non-anonymous roles the 'delete own files' permission.
+ */
+function file_post_update_add_permissions_to_roles(?array &$sandbox = NULL): void {
+  \Drupal::classResolver(ConfigEntityUpdater::class)->update($sandbox, 'user_role', function (RoleInterface $role): bool {
+    if ($role->id() === RoleInterface::ANONYMOUS_ID || $role->isAdmin()) {
       return FALSE;
     }
-  };
-  \Drupal::classResolver(ConfigEntityUpdater::class)->update($sandbox, 'field_config', $updater);
+    $role->grantPermission('delete own files');
+    return TRUE;
+  });
+}
+
+/**
+ * Add default filename sanitization configuration.
+ */
+function file_post_update_add_default_filename_sanitization_configuration() {
+  $config = \Drupal::configFactory()->getEditable('file.settings');
+  $config->set('filename_sanitization.transliterate', FALSE);
+  $config->set('filename_sanitization.replace_whitespace', FALSE);
+  $config->set('filename_sanitization.replace_non_alphanumeric', FALSE);
+  $config->set('filename_sanitization.deduplicate_separators', FALSE);
+  $config->set('filename_sanitization.lowercase', FALSE);
+  $config->set('filename_sanitization.replacement_character', '-');
+  $config->save();
 }

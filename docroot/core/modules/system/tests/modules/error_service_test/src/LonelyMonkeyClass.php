@@ -12,7 +12,7 @@ class LonelyMonkeyClass {
   /**
    * The database connection.
    */
-  protected $connection;
+  protected Connection $connection;
 
   public function __construct(Connection $connection) {
     $this->connection = $connection;

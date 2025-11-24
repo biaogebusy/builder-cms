@@ -82,12 +82,12 @@ class AutosaveFormBuilder extends FormBuilder {
    *   The element info manager.
    * @param \Drupal\Core\Theme\ThemeManagerInterface $theme_manager
    *   The theme manager.
+   * @param \Drupal\autosave_form\Storage\AutosaveEntityFormStorageInterface $autosave_entity_form_storage
+   *    The autosave form storage service.
    * @param \Drupal\Core\Access\CsrfTokenGenerator $csrf_token
    *   The CSRF token generator.
-   * @param \Drupal\autosave_form\Storage\AutosaveEntityFormStorageInterface $autosave_entity_form_storage
-   *   The autosave form storage service.
    */
-  public function __construct(FormBuilderInterface $form_builder, FormValidatorInterface $form_validator, FormSubmitterInterface $form_submitter, FormCacheInterface $form_cache, ModuleHandlerInterface $module_handler, EventDispatcherInterface $event_dispatcher, RequestStack $request_stack, ClassResolverInterface $class_resolver, ElementInfoManagerInterface $element_info, ThemeManagerInterface $theme_manager, CsrfTokenGenerator $csrf_token = NULL, AutosaveEntityFormStorageInterface $autosave_entity_form_storage) {
+  public function __construct(FormBuilderInterface $form_builder, FormValidatorInterface $form_validator, FormSubmitterInterface $form_submitter, FormCacheInterface $form_cache, ModuleHandlerInterface $module_handler, EventDispatcherInterface $event_dispatcher, RequestStack $request_stack, ClassResolverInterface $class_resolver, ElementInfoManagerInterface $element_info, ThemeManagerInterface $theme_manager, AutosaveEntityFormStorageInterface $autosave_entity_form_storage, ?CsrfTokenGenerator $csrf_token = NULL) {
     parent::__construct($form_validator, $form_submitter, $form_cache, $module_handler, $event_dispatcher, $request_stack, $class_resolver, $element_info, $theme_manager, $csrf_token);
     $this->formBuilder = $form_builder;
     $this->autosaveEntityFormStorage = $autosave_entity_form_storage;
@@ -177,7 +177,12 @@ class AutosaveFormBuilder extends FormBuilder {
       // Restore entity form.
       if ($form_object instanceof EntityFormInterface) {
         $entity = $form_object->getEntity();
-        $autosaved_state = $this->autosaveEntityFormStorage->getEntityAndFormState($form_id, $entity->getEntityTypeId(), $entity->id(), $entity->language()->getId(), $this->currentUser()->id(), NULL, $autosaved_timestamp);
+        $entity_type = $entity->getEntityType();
+        $entity_id = $entity_type->hasHandlerClass('autosave_form')
+          && ($class = $entity_type->getHandlerClass('autosave_form'))
+          ? $class::getEntityId($entity)
+          : AutosaveEntityFormHandler::getEntityId($entity);
+        $autosaved_state = $this->autosaveEntityFormStorage->getEntityAndFormState($form_id, $entity->getEntityTypeId(), $entity_id, $entity->language()->getId(), $this->currentUser()->id(), NULL, $autosaved_timestamp);
 
         if (is_null($autosaved_state)) {
           // @todo Cover the case that the autosaved state has been purged

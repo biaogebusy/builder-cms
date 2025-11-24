@@ -5,8 +5,6 @@ namespace Drupal\Core\ParamConverter;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Plugin\Context\Context;
-use Drupal\Core\Plugin\Context\ContextDefinition;
 use Symfony\Component\Routing\Route;
 
 /**
@@ -132,24 +130,7 @@ class EntityConverter implements ParamConverterInterface {
       return $entity;
     }
 
-    // Do not inject the context repository as it is not an actual dependency:
-    // it will be removed once both the TODOs below are fixed.
-    /** @var \Drupal\Core\Plugin\Context\ContextRepositoryInterface $contexts_repository */
-    $contexts_repository = \Drupal::service('context.repository');
-    // @todo Consider deprecating the legacy context operation altogether in
-    //   https://www.drupal.org/node/3031124.
-    $contexts = $contexts_repository->getAvailableContexts();
-    $contexts[EntityRepositoryInterface::CONTEXT_ID_LEGACY_CONTEXT_OPERATION] =
-      new Context(new ContextDefinition('string'), 'entity_upcast');
-    // @todo At the moment we do not need the current user context, which is
-    //   triggering some test failures. We can remove these lines once
-    //   https://www.drupal.org/node/2934192 is fixed.
-    $context_id = '@user.current_user_context:current_user';
-    if (isset($contexts[$context_id])) {
-      $account = $contexts[$context_id]->getContextValue();
-      unset($account->_skipProtectedUserFieldConstraint);
-      unset($contexts[$context_id]);
-    }
+    $contexts = ['operation' => 'entity_upcast'];
     $entity = $this->entityRepository->getCanonical($entity_type_id, $value, $contexts);
 
     if (
@@ -167,9 +148,9 @@ class EntityConverter implements ParamConverterInterface {
    * {@inheritdoc}
    */
   public function applies($definition, $name, Route $route) {
-    if (!empty($definition['type']) && strpos($definition['type'], 'entity:') === 0) {
+    if (!empty($definition['type']) && str_starts_with($definition['type'], 'entity:')) {
       $entity_type_id = substr($definition['type'], strlen('entity:'));
-      if (strpos($definition['type'], '{') !== FALSE) {
+      if (str_contains($definition['type'], '{')) {
         $entity_type_slug = substr($entity_type_id, 1, -1);
         return $name != $entity_type_slug && in_array($entity_type_slug, $route->compile()->getVariables(), TRUE);
       }

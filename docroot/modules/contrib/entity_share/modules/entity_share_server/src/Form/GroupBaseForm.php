@@ -9,8 +9,6 @@ use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Base class for group form.
- *
- * @package Drupal\entity_share_server\Form
  */
 class GroupBaseForm extends EntityForm {
 
@@ -49,12 +47,12 @@ class GroupBaseForm extends EntityForm {
     /** @var \Drupal\entity_share_server\Entity\ChannelInterface $channel */
     $channel = $this->entity;
     $channel_groups = $channel->get('channel_groups');
-    if (is_null($channel_groups)) {
+    if ($channel_groups === NULL) {
       $channel_groups = [];
     }
-    $member_options = array_keys($channel_groups);
+    $member_options = \array_keys($channel_groups);
 
-    $options = array_combine($member_options, $member_options);
+    $options = \array_combine($member_options, $member_options);
 
     if (isset($options[$group_id])) {
       unset($options[$group_id]);
@@ -77,16 +75,15 @@ class GroupBaseForm extends EntityForm {
     $channel = $this->entity;
     $channel_groups = $channel->get('channel_groups');
 
-    if (is_null($channel_groups)) {
+    if ($channel_groups === NULL) {
       return FALSE;
     }
 
     if (isset($channel_groups[$name])) {
       return TRUE;
     }
-    else {
-      return FALSE;
-    }
+
+    return FALSE;
   }
 
   /**

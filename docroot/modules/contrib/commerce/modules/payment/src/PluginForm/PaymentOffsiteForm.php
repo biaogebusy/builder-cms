@@ -2,10 +2,10 @@
 
 namespace Drupal\commerce_payment\PluginForm;
 
-use Drupal\commerce\Response\NeedsRedirectException;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Url;
+use Drupal\commerce\Response\NeedsRedirectException;
 
 /**
  * Provides the base class for payment off-site forms.

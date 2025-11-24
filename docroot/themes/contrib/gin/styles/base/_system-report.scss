@@ -1,11 +1,11 @@
 .system-status-report__requirements-group {
   h3 {
-    margin-top: 0;
+    margin-block-start: 0;
   }
 }
 
 .system-status-report__row {
-  border-bottom: 1px solid var(--gin-border-color);
+  border-block-end: 1px solid var(--gin-border-color);
 }
 
 .system-status-counter__status-icon {
@@ -27,7 +27,8 @@
 
 .system-status-general-info {
   &__items {
-    margin: var(--gin-spacing-m) 0 0;
+    margin-block:  var(--gin-spacing-m) 0;
+    margin-inline: 0;
   }
 
   &__item {
@@ -40,7 +41,8 @@
 .system-status-report__requirements-group > h3,
 .system-themes-list__header {
   text-transform: none;
-  margin: calc(var(--gin-spacing-xs) * -1) 0 var(--gin-spacing-m) 0;
+  margin-block: calc(var(--gin-spacing-xs) * -1) var(--gin-spacing-m);
+  margin-inline: 0;
 }
 
 .claro-details__summary--system-status-report {

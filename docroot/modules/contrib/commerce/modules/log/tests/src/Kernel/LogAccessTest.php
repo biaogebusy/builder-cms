@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\commerce_log\Kernel;
 
-use Drupal\commerce_order\Entity\Order;
-use Drupal\commerce_log\Entity\Log;
 use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
+use Drupal\commerce_log\Entity\Log;
+use Drupal\commerce_order\Entity\Order;
 
 /**
  * Tests the log access control.
@@ -54,29 +54,29 @@ class LogAccessTest extends OrderKernelTestBase {
     ]);
     $log->save();
 
-    $account = $this->createUser([], ['access administration pages']);
+    $account = $this->createUser(['access administration pages']);
     $this->assertFalse($log->access('view', $account));
     $this->assertFalse($log->access('update', $account));
     $this->assertFalse($log->access('delete', $account));
 
-    $account = $this->createUser([], ['view commerce_order']);
+    $account = $this->createUser(['view commerce_order']);
     $this->assertTrue($log->access('view', $account));
     $this->assertFalse($log->access('update', $account));
     $this->assertFalse($log->access('delete', $account));
 
-    $account = $this->createUser([], ['update default commerce_order']);
+    $account = $this->createUser(['update default commerce_order']);
     $this->assertFalse($log->access('view', $account));
     $this->assertTrue($log->access('update', $account));
     $this->assertTrue($log->access('delete', $account));
 
-    $account = $this->createUser([], ['administer commerce_order']);
+    $account = $this->createUser(['administer commerce_order']);
     $this->assertTrue($log->access('view', $account));
     $this->assertTrue($log->access('update', $account));
     $this->assertTrue($log->access('delete', $account));
 
     // Broken source reference.
     $log->set('source_entity_id', '999');
-    $account = $this->createUser([], ['update default commerce_order']);
+    $account = $this->createUser(['update default commerce_order']);
     $this->assertFalse($log->access('view', $account));
     $this->assertFalse($log->access('update', $account));
     $this->assertFalse($log->access('delete', $account));

@@ -15,6 +15,6 @@ interface RecentlyReadTypeInterface extends ConfigEntityInterface {
    * @return string
    *   Name of recently read types.
    */
-  public function getTypes();
+  public function getTypes(): array;
 
 }

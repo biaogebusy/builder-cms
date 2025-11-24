@@ -34,6 +34,11 @@ class Transaction {
    * A boolean value to indicate whether this transaction has been rolled back.
    *
    * @var bool
+   *
+   * @deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. There is
+   *   no replacement.
+   *
+   * @see https://www.drupal.org/node/3381002
    */
   protected $rolledBack = FALSE;
 
@@ -47,10 +52,26 @@ class Transaction {
    */
   protected $name;
 
-  public function __construct(Connection $connection, $name = NULL) {
+  public function __construct(
+    Connection $connection,
+    $name = NULL,
+    protected readonly string $id = '',
+  ) {
+    // Transactions rely on objects being destroyed in order to be committed.
+    // PHP makes no guarantee about the order in which objects are destroyed so
+    // ensure all transactions are committed on shutdown.
+    Database::commitAllOnShutdown();
+
+    if ($connection->transactionManager()) {
+      $this->connection = $connection;
+      $this->name = $name;
+      return;
+    }
+    // Start of BC layer.
     $this->connection = $connection;
     // If there is no transaction depth, then no transaction has started. Name
     // the transaction 'drupal_transaction'.
+    // @phpstan-ignore-next-line
     if (!$depth = $connection->transactionDepth()) {
       $this->name = 'drupal_transaction';
     }
@@ -62,14 +83,31 @@ class Transaction {
     else {
       $this->name = $name;
     }
+    // @phpstan-ignore-next-line
     $this->connection->pushTransaction($this->name);
+    // End of BC layer.
   }
 
   public function __destruct() {
+    if ($this->connection->transactionManager()) {
+      $this->connection->transactionManager()->unpile($this->name, $this->id);
+      return;
+    }
+    // Start of BC layer.
     // If we rolled back then the transaction would have already been popped.
+    // @phpstan-ignore-next-line
     if (!$this->rolledBack) {
+      // @phpstan-ignore-next-line
       $this->connection->popTransaction($this->name);
     }
+    // End of BC layer.
+  }
+
+  /**
+   * Prevent transactions from being unserialized.
+   */
+  public function __wakeup(): void {
+    throw new \BadMethodCallException('Cannot unserialize ' . get_class($this));
   }
 
   /**
@@ -84,16 +122,22 @@ class Transaction {
    *
    * This is just a wrapper method to rollback whatever transaction stack we are
    * currently in, which is managed by the connection object itself. Note that
-   * logging (preferable with watchdog_exception()) needs to happen after a
-   * transaction has been rolled back or the log messages will be rolled back
-   * too.
+   * logging needs to happen after a transaction has been rolled back or the log
+   * messages will be rolled back too.
    *
    * @see \Drupal\Core\Database\Connection::rollBack()
-   * @see watchdog_exception()
    */
   public function rollBack() {
+    if ($this->connection->transactionManager()) {
+      $this->connection->transactionManager()->rollback($this->name, $this->id);
+      return;
+    }
+    // Start of BC layer.
+    // @phpstan-ignore-next-line
     $this->rolledBack = TRUE;
+    // @phpstan-ignore-next-line
     $this->connection->rollBack($this->name);
+    // End of BC layer.
   }
 
 }

@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\sms\EventSubscriber;
 
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\sms\Event\SmsDeliveryReportEvent;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -19,7 +20,7 @@ class SmsDeliveryReportsProcessor implements EventSubscriberInterface {
    *
    * @var \Drupal\Core\Entity\EntityStorageInterface
    */
-  protected $reportStorage;
+  protected EntityStorageInterface $reportStorage;
 
   /**
    * Creates a new SmsDeliveryReportsProcessor controller.

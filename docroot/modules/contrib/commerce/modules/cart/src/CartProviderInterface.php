@@ -2,9 +2,9 @@
 
 namespace Drupal\commerce_cart;
 
+use Drupal\Core\Session\AccountInterface;
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_store\Entity\StoreInterface;
-use Drupal\Core\Session\AccountInterface;
 
 /**
  * Creates and loads carts for anonymous and authenticated users.
@@ -29,7 +29,7 @@ interface CartProviderInterface {
    * @throws \Drupal\commerce_cart\Exception\DuplicateCartException
    *   When a cart with the given criteria already exists.
    */
-  public function createCart($order_type, StoreInterface $store = NULL, AccountInterface $account = NULL);
+  public function createCart($order_type, ?StoreInterface $store = NULL, ?AccountInterface $account = NULL);
 
   /**
    * Finalizes the given cart order.
@@ -58,7 +58,7 @@ interface CartProviderInterface {
    * @return \Drupal\commerce_order\Entity\OrderInterface|null
    *   The cart order, or NULL if none found.
    */
-  public function getCart($order_type, StoreInterface $store = NULL, AccountInterface $account = NULL);
+  public function getCart($order_type, ?StoreInterface $store = NULL, ?AccountInterface $account = NULL);
 
   /**
    * Gets the cart order ID for the given store and user.
@@ -73,7 +73,7 @@ interface CartProviderInterface {
    * @return int|null
    *   The cart order ID, or NULL if none found.
    */
-  public function getCartId($order_type, StoreInterface $store = NULL, AccountInterface $account = NULL);
+  public function getCartId($order_type, ?StoreInterface $store = NULL, ?AccountInterface $account = NULL);
 
   /**
    * Gets all cart orders for the given user.
@@ -86,7 +86,7 @@ interface CartProviderInterface {
    * @return \Drupal\commerce_order\Entity\OrderInterface[]
    *   A list of cart orders.
    */
-  public function getCarts(AccountInterface $account = NULL, StoreInterface $store = NULL);
+  public function getCarts(?AccountInterface $account = NULL, ?StoreInterface $store = NULL);
 
   /**
    * Gets all cart order ids for the given user.
@@ -99,7 +99,7 @@ interface CartProviderInterface {
    * @return int[]
    *   A list of cart orders ids.
    */
-  public function getCartIds(AccountInterface $account = NULL, StoreInterface $store = NULL);
+  public function getCartIds(?AccountInterface $account = NULL, ?StoreInterface $store = NULL);
 
   /**
    * Clears the static caches.

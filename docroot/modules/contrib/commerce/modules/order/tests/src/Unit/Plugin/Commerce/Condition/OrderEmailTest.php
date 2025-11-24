@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\commerce_order\Unit\Plugin\Commerce\Condition;
 
+use Drupal\Tests\UnitTestCase;
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_order\Plugin\Commerce\Condition\OrderEmail;
-use Drupal\Tests\UnitTestCase;
 
 /**
  * @coversDefaultClass \Drupal\commerce_order\Plugin\Commerce\Condition\OrderEmail

@@ -27,7 +27,7 @@ class WebformImageSelectImagesController extends ControllerBase {
     $webform_images_storage = $this->entityTypeManager()->getStorage('webform_image_select_images');
 
     $query = $webform_images_storage->getQuery()
-      ->accessCheck()
+      ->accessCheck(TRUE)
       ->range(0, 10)
       ->sort('label');
 

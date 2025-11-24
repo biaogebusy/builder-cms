@@ -2,14 +2,14 @@
 
 namespace Drupal\config_filter\Tests;
 
+use Drupal\Core\Config\MemoryStorage;
+use Drupal\Core\Config\StorageInterface;
+use Drupal\KernelTests\Core\Config\Storage\MemoryStorageTest;
 use Drupal\config_filter\Config\FilteredStorage;
 use Drupal\config_filter\Config\FilteredStorageInterface;
 use Drupal\config_filter\Config\ReadOnlyStorage;
 use Drupal\config_filter\Config\StorageFilterInterface;
 use Drupal\config_filter\Exception\InvalidStorageFilterException;
-use Drupal\Core\Config\MemoryStorage;
-use Drupal\Core\Config\StorageInterface;
-use Drupal\KernelTests\Core\Config\Storage\MemoryStorageTest;
 use Prophecy\Argument;
 
 /**
@@ -151,31 +151,32 @@ class FilteredStorageTest extends MemoryStorageTest {
   /**
    * Data provider for testReadFilter.
    */
-  public function readFilterProvider() {
+  public static function readFilterProvider() {
+    $instance = new self("test");
     // @codingStandardsIgnoreStart
     return [
-      [$this->randomString(), 'exists', 'filterExists', TRUE, TRUE],
-      [$this->randomString(), 'exists', 'filterExists', TRUE, FALSE],
-      [$this->randomString(), 'exists', 'filterExists', FALSE, TRUE],
-      [$this->randomString(), 'exists', 'filterExists', FALSE, FALSE],
+      [$instance->randomString(), 'exists', 'filterExists', TRUE, TRUE],
+      [$instance->randomString(), 'exists', 'filterExists', TRUE, FALSE],
+      [$instance->randomString(), 'exists', 'filterExists', FALSE, TRUE],
+      [$instance->randomString(), 'exists', 'filterExists', FALSE, FALSE],
 
-      [$this->randomString(), 'read', 'filterRead', $this->randomArray(), $this->randomArray()],
-      [$this->randomString(), 'read', 'filterRead', NULL, $this->randomArray()],
-      [$this->randomString(), 'read', 'filterRead', $this->randomArray(), NULL],
+      [$instance->randomString(), 'read', 'filterRead', $instance->randomArray(), $instance->randomArray()],
+      [$instance->randomString(), 'read', 'filterRead', NULL, $instance->randomArray()],
+      [$instance->randomString(), 'read', 'filterRead', $instance->randomArray(), NULL],
 
       [
-        [$this->randomString(), $this->randomString()],
+        [$instance->randomString(), $instance->randomString()],
         'readMultiple',
         'filterReadMultiple',
-        [$this->randomArray(), $this->randomArray()],
-        [$this->randomArray(), $this->randomArray()],
+        [$instance->randomArray(), $instance->randomArray()],
+        [$instance->randomArray(), $instance->randomArray()],
       ],
       [
-        [$this->randomString(), $this->randomString()],
+        [$instance->randomString(), $instance->randomString()],
         'readMultiple',
         'filterReadMultiple',
-        [$this->randomArray(), FALSE],
-        [$this->randomArray(), $this->randomArray()],
+        [$instance->randomArray(), FALSE],
+        [$instance->randomArray(), $instance->randomArray()],
       ],
     ];
     // @codingStandardsIgnoreEnd
@@ -237,15 +238,16 @@ class FilteredStorageTest extends MemoryStorageTest {
   /**
    * Data provider for testWriteFilter.
    */
-  public function writeFilterProvider() {
+  public static function writeFilterProvider() {
+    $instance = new self("test");
     return [
-      [$this->randomArray(), $this->randomArray()],
-      [NULL, $this->randomArray()],
-      [[], $this->randomArray()],
-      [$this->randomArray(), []],
-      [$this->randomArray(), NULL, FALSE],
-      [$this->randomArray(), FALSE, FALSE],
-      [$this->randomArray(), NULL, TRUE],
+      [$instance->randomArray(), $instance->randomArray()],
+      [NULL, $instance->randomArray()],
+      [[], $instance->randomArray()],
+      [$instance->randomArray(), []],
+      [$instance->randomArray(), NULL, FALSE],
+      [$instance->randomArray(), FALSE, FALSE],
+      [$instance->randomArray(), NULL, TRUE],
     ];
   }
 
@@ -299,7 +301,7 @@ class FilteredStorageTest extends MemoryStorageTest {
   /**
    * Data provider for testDeleteFilter.
    */
-  public function deleteFilterProvider() {
+  public static function deleteFilterProvider() {
     return [
       [TRUE, TRUE],
       [FALSE, TRUE],
@@ -337,7 +339,7 @@ class FilteredStorageTest extends MemoryStorageTest {
   /**
    * Data provider for testRenameFilter.
    */
-  public function renameFilterProvider() {
+  public static function renameFilterProvider() {
     return [
       [TRUE, TRUE],
       [FALSE, TRUE],
@@ -381,7 +383,7 @@ class FilteredStorageTest extends MemoryStorageTest {
   /**
    * Data provider for testDeleteAllFilter.
    */
-  public function deleteAllFilterProvider() {
+  public static function deleteAllFilterProvider() {
     return [
       [TRUE, TRUE],
       [FALSE, TRUE],

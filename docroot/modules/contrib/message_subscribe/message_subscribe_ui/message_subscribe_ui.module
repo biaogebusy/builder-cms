@@ -16,7 +16,8 @@ function message_subscribe_ui_form_flag_form_alter(array &$form, FormStateInterf
   $prefix = \Drupal::config('message_subscribe.settings')->get('flag_prefix');
   /** @var \Drupal\flag\FlagInterface $flag */
   $flag = $form_state->getFormObject()->getEntity();
-  if (strpos($flag->id(), $prefix) === 0) {
+  $flag_id = $flag->id();
+  if ($flag_id !== NULL && strpos($flag_id, $prefix) === 0) {
     // This is a message subscribe flag, so add the view selection option.
     $form['message_subscribe_view_name'] = [
       '#type' => 'select',

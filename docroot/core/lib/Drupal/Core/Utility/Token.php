@@ -45,7 +45,7 @@ use Drupal\Core\Render\RendererInterface;
  *
  * // [date:...] tokens use the current date automatically.
  * $token_service = \Drupal::token();
- * $data = array('node' => $node, 'user' => $user);
+ * $data = ['node' => $node, 'user' => $user];
  * $result = $token_service->replace($text, $data);
  * return $result
  * @endcode
@@ -187,7 +187,7 @@ class Token {
    *
    * @see static::replacePlain()
    */
-  public function replace($markup, array $data = [], array $options = [], BubbleableMetadata $bubbleable_metadata = NULL) {
+  public function replace($markup, array $data = [], array $options = [], ?BubbleableMetadata $bubbleable_metadata = NULL) {
     return $this->doReplace(TRUE, (string) $markup, $data, $options, $bubbleable_metadata);
   }
 
@@ -206,7 +206,7 @@ class Token {
    * @return string
    *   The entered plain text with tokens replaced.
    */
-  public function replacePlain(string $plain, array $data = [], array $options = [], BubbleableMetadata $bubbleable_metadata = NULL): string {
+  public function replacePlain(string $plain, array $data = [], array $options = [], ?BubbleableMetadata $bubbleable_metadata = NULL): string {
     return $this->doReplace(FALSE, $plain, $data, $options, $bubbleable_metadata);
   }
 
@@ -227,7 +227,7 @@ class Token {
    * @return string
    *   The token result is the entered string with tokens replaced.
    */
-  protected function doReplace(bool $markup, string $text, array $data, array $options, BubbleableMetadata $bubbleable_metadata = NULL): string {
+  protected function doReplace(bool $markup, string $text, array $data, array $options, ?BubbleableMetadata $bubbleable_metadata = NULL): string {
     $text_tokens = $this->scan($text);
     if (empty($text_tokens)) {
       return $text;
@@ -289,6 +289,11 @@ class Token {
    *   An associative array of discovered tokens, grouped by type.
    */
   public function scan($text) {
+    if (!is_string($text)) {
+      @trigger_error('Calling ' . __METHOD__ . '() with a $text parameter of type other than string is deprecated in drupal:10.1.0 and will cause an error in drupal:11.0.0. See https://www.drupal.org/node/3334317', E_USER_DEPRECATED);
+      $text = (string) $text;
+    }
+
     // Matches tokens with the following pattern: [$type:$name]
     // $type and $name may not contain [ ] characters.
     // $type may not contain : or whitespace characters, but $name may.
@@ -376,13 +381,13 @@ class Token {
    * Used to extract a group of 'chained' tokens (such as [node:author:name])
    * from the full list of tokens found in text. For example:
    * @code
-   *   $data = array(
+   *   $data = [
    *     'author:name' => '[node:author:name]',
    *     'title'       => '[node:title]',
    *     'created'     => '[node:created]',
-   *   );
+   *   ];
    *   $results = Token::findWithPrefix($data, 'author');
-   *   $results == array('name' => '[node:author:name]');
+   *   $results == ['name' => '[node:author:name]'];
    * @endcode
    *
    * @param array $tokens

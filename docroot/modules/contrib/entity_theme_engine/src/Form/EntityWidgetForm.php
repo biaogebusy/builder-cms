@@ -159,13 +159,13 @@ class EntityWidgetForm extends EntityForm {
 
     switch ($status) {
       case SAVED_NEW:
-        \Drupal::messenger()->addStatus($this->t('Created the %label entity widget.', [
+        \Drupal::messenger()->addMessage($this->t('Created the %label entity widget.', [
           '%label' => $entity_widget->label(),
         ]));
         break;
 
       default:
-        \Drupal::messenger()->addStatus($this->t('Saved the %label entity widget.', [
+        \Drupal::messenger()->addMessage($this->t('Saved the %label entity widget.', [
           '%label' => $entity_widget->label(),
         ]));
     }
@@ -197,7 +197,7 @@ class EntityWidgetForm extends EntityForm {
       $form_state->setRedirectUrl($entity_widget->toUrl('collection'));
     }
     else {
-      $form_state->setRedirectUrl($entity_widget->toUrl());
+      $form_state->setRebuild();
     }
 
   }

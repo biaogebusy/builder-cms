@@ -1,3 +1,5 @@
+# cspell:ignore ȅchȏ
+
 system_test.page_cache_accept_header:
   path: '/system-test/page-cache/accept-header'
   defaults:
@@ -74,10 +76,10 @@ system_test.cache_tags_page:
   requirements:
     _access: 'TRUE'
 
-system_test.cache_maxage_page:
-  path: '/system-test/cache_maxage_page'
+system_test.cache_max_age_page:
+  path: '/system-test/cache_max_age_page'
   defaults:
-    _controller: '\Drupal\system_test\Controller\SystemTestController::system_test_cache_maxage_page'
+    _controller: '\Drupal\system_test\Controller\SystemTestController::system_test_cache_max_age_page'
   requirements:
     _access: 'TRUE'
 
@@ -212,6 +214,38 @@ system_test.custom_cache_control:
     _controller: '\Drupal\system_test\Controller\SystemTestController::getCacheableResponseWithCustomCacheControl'
   requirements:
     _access: 'TRUE'
+
+system_test.copy_field_value:
+  path: '/system-test/copy-field-value-test-form'
+  defaults:
+    _form: '\Drupal\system_test\Form\CopyFieldValueTestForm'
+    _title: 'Copy Field Value Test Form'
+  requirements:
+    _access: 'TRUE'
+
+router_test.cacheable_redirect:
+  path: '/system-test/redirect/cacheable/{status_code}'
+  defaults:
+    _controller: '\Drupal\system_test\Controller\SystemTestController::respondWithCacheableRedirectResponse'
+  requirements:
+    _access: 'TRUE'
+    status_code: 201|301|302|303|307|308
+
+router_test.local_redirect:
+  path: '/system-test/redirect/local/{status_code}'
+  defaults:
+    _controller: '\Drupal\system_test\Controller\SystemTestController::respondWithLocalRedirectResponse'
+  requirements:
+    _access: 'TRUE'
+    status_code: 201|301|302|303|307|308
+
+router_test.trusted_redirect:
+  path: '/system-test/redirect/trusted/{status_code}'
+  defaults:
+    _controller: '\Drupal\system_test\Controller\SystemTestController::respondWithTrustedRedirectResponse'
+  requirements:
+    _access: 'TRUE'
+    status_code: 201|301|302|303|307|308
 
 system_test.install_profile:
   path: '/system-test/get-install-profile'

@@ -18,7 +18,7 @@ interface IndexTaskManagerInterface {
    *   (optional) The IDs of specific datasources for which tracking should
    *   start. Or NULL to start tracking for all datasources.
    */
-  public function startTracking(IndexInterface $index, array $datasource_ids = NULL);
+  public function startTracking(IndexInterface $index, ?array $datasource_ids = NULL);
 
   /**
    * Adds a single page of items to the tracker.
@@ -68,7 +68,7 @@ interface IndexTaskManagerInterface {
    *   (optional) The IDs of the datasources for which to stop tracking. Or NULL
    *   to stop tracking for all datasources.
    */
-  public function stopTracking(IndexInterface $index, array $datasource_ids = NULL);
+  public function stopTracking(IndexInterface $index, ?array $datasource_ids = NULL);
 
   /**
    * Checks whether tracking has already been completed for the given index.

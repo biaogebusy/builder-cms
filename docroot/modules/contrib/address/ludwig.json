@@ -5,12 +5,12 @@
             "url": "https://github.com/doctrine/collections/archive/1.8.0.zip"
         },
         "doctrine/deprecations": {
-            "version": "v1.0.0",
-            "url": "https://github.com/doctrine/deprecations/archive/v1.0.0.zip"
+            "version": "v1.1.1",
+            "url": "https://github.com/doctrine/deprecations/archive/v1.1.1.zip"
         },
         "commerceguys/addressing": {
-            "version": "v1.4.2",
-            "url": "https://github.com/commerceguys/addressing/archive/v1.4.2.zip"
+            "version": "v2.1.1",
+            "url": "https://github.com/commerceguys/addressing/archive/v2.1.1.zip"
         }
     }
 }

@@ -21,15 +21,19 @@ class BlazyViewsFieldFile extends BlazyViewsFieldPluginBase {
     $entity = $this->getEntity($values);
 
     if ($entity instanceof File) {
-      $settings = $this->mergedViewsSettings();
+      $settings = $this->mergedViewsSettings([], $entity);
 
       $data['#entity']   = $entity;
       $data['#settings'] = $settings;
       $data['#delta']    = $values->index;
+      $data['#view']     = $this->view;
       $data['fallback']  = $entity->getFilename();
 
+      // Merge settings.
+      $this->mergedSettings = $data['#settings'];
+
       // Pass results to \Drupal\blazy\BlazyEntity.
-      // @todo phpstan bug only undestands the doc return types, not dynamic.
+      // @todo phpstan bug only undertands the doc return types, not dynamic.
       /* @phpstan-ignore-next-line */
       return $this->blazyEntity->build($data);
     }

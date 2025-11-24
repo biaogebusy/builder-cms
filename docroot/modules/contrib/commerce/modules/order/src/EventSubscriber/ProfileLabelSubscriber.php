@@ -6,12 +6,15 @@ use Drupal\profile\Entity\ProfileType;
 use Drupal\profile\Event\ProfileLabelEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
+/**
+ * Sets the customer profile label to the first address line.
+ */
 class ProfileLabelSubscriber implements EventSubscriberInterface {
 
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     $events = [
       'profile.label' => 'onLabel',
     ];
@@ -26,14 +29,22 @@ class ProfileLabelSubscriber implements EventSubscriberInterface {
    * @param \Drupal\profile\Event\ProfileLabelEvent $event
    *   The profile label event.
    */
-  public function onLabel(ProfileLabelEvent $event) {
+  public function onLabel(ProfileLabelEvent $event): void {
     /** @var \Drupal\profile\Entity\ProfileInterface $order */
     $profile = $event->getProfile();
     $profile_type = ProfileType::load($profile->bundle());
     $customer_flag = $profile_type->getThirdPartySetting('commerce_order', 'customer_profile_type');
-    if ($customer_flag && $profile->hasField('address') && !$profile->get('address')->isEmpty()) {
-      $event->setLabel($profile->get('address')->address_line1);
+
+    if (!$customer_flag || !$profile->hasField('address')) {
+      return;
     }
+
+    $address = $profile->get('address');
+    if ($address->isEmpty() || empty($address->address_line1)) {
+      return;
+    }
+
+    $event->setLabel($address->address_line1);
   }
 
 }

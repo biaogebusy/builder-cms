@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.ins.marketing.gift.contract.apply request
  *
  * @author auto create
- * @since 1.0, 2023-08-21 04:09:57
+ * @since 1.0, 2025-08-13 14:27:40
  */
 class AlipayInsMarketingGiftContractApplyRequest
 {

@@ -1,0 +1,29 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"NM",
+		"Hinggan Meng"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Arxan Shi": {
+			"local_name": "阿尔山市"
+		},
+		"Horqin Youyi Qianqi": {
+			"local_name": "科尔沁右翼前旗"
+		},
+		"Horqin Youyi Zhongqi": {
+			"local_name": "科尔沁右翼中旗"
+		},
+		"Tuquan Xian": {
+			"local_name": "突泉县"
+		},
+		"Ulan Hot Shi": {
+			"local_name": "乌兰浩特市"
+		},
+		"Jalaid Qi": {
+			"local_name": "扎赉特旗"
+		}
+	}
+}

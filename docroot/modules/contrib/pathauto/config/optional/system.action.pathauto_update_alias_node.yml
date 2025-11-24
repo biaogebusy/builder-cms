@@ -10,3 +10,4 @@ dependencies:
       - node
   module:
     - pathauto
+configuration: { }

@@ -134,7 +134,7 @@ abstract class QueryBase implements QueryInterface {
   /**
    * Defines how the conditions on the query need to match.
    */
-  protected $conjunction;
+  protected string $conjunction;
 
   /**
    * Constructs this object.
@@ -193,8 +193,8 @@ abstract class QueryBase implements QueryInterface {
    * {@inheritdoc}
    */
   public function range($start = NULL, $length = NULL) {
-    $this->range = [
-      'start' => $start,
+    $this->range = is_null($start) && is_null($length) ? [] : [
+      'start' => $start ?? 0,
       'length' => $length,
     ];
     return $this;
@@ -368,14 +368,14 @@ abstract class QueryBase implements QueryInterface {
    * {@inheritdoc}
    */
   public function hasAllTags() {
-    return !(boolean) array_diff(func_get_args(), array_keys($this->alterTags));
+    return !(bool) array_diff(func_get_args(), array_keys($this->alterTags));
   }
 
   /**
    * {@inheritdoc}
    */
   public function hasAnyTag() {
-    return (boolean) array_intersect(func_get_args(), array_keys($this->alterTags));
+    return (bool) array_intersect(func_get_args(), array_keys($this->alterTags));
   }
 
   /**
@@ -468,6 +468,11 @@ abstract class QueryBase implements QueryInterface {
   /**
    * Gets a list of namespaces of the ancestors of a class.
    *
+   * Returns a list of namespaces that includes the namespace of the
+   * class, as well as the namespaces of its parent class and ancestors. This
+   * is useful for locating classes in a hierarchy of namespaces, such as when
+   * searching for the appropriate query class for an entity type.
+   *
    * @param $object
    *   An object within a namespace.
    *
@@ -486,6 +491,8 @@ abstract class QueryBase implements QueryInterface {
   /**
    * Finds a class in a list of namespaces.
    *
+   * Searches in the order of the array, and returns the first one it finds.
+   *
    * @param array $namespaces
    *   A list of namespaces.
    * @param string $short_class_name
@@ -501,6 +508,31 @@ abstract class QueryBase implements QueryInterface {
         return $class;
       }
     }
+  }
+
+  /**
+   * Invoke hooks to allow modules to alter the entity query.
+   *
+   * Modules may alter all queries or only those having a particular tag.
+   * Alteration happens before the query is prepared for execution, so that
+   * the alterations then get prepared in the same way.
+   *
+   * @return $this
+   *   Returns the called object.
+   */
+  protected function alter(): QueryInterface {
+    $hooks = ['entity_query', 'entity_query_' . $this->getEntityTypeId()];
+    if ($this->alterTags) {
+      foreach ($this->alterTags as $tag => $value) {
+        // Tags and entity type ids may well contain single underscores, and
+        // 'tag' is a possible entity type id. Therefore use double underscores
+        // to avoid collisions.
+        $hooks[] = 'entity_query_tag__' . $tag;
+        $hooks[] = 'entity_query_tag__' . $this->getEntityTypeId() . '__' . $tag;
+      }
+    }
+    \Drupal::moduleHandler()->alter($hooks, $this);
+    return $this;
   }
 
 }

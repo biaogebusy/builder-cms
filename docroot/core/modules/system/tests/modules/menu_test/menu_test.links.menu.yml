@@ -15,6 +15,101 @@ menu_test.menu_callback_description.description-plain:
   description: 'Menu item description text'
   route_name: menu_test.callback_description_plain
   parent: menu_test.menu_callback_description
+menu_test.parent_test:
+  title: 'Menu Parent'
+  description: 'Menu item description parent'
+  route_name: menu_test.parent_test
+  parent: system.admin
+menu_test.parent_test.child1_test:
+  title: 'Menu child1'
+  description: 'Menu child1: uses SystemController::overview'
+  route_name: menu_test.child1_test
+  parent: menu_test.parent_test
+menu_test.parent_test.child2_test:
+  title: 'Menu child2'
+  description: 'Menu item description child2'
+  route_name: menu_test.child2_test
+  parent: menu_test.parent_test
+menu_test.parent_test.child3_test:
+  title: 'Menu child3'
+  description: 'Menu item description child3'
+  route_name: menu_test.child3_test_block
+  parent: menu_test.parent_test
+menu_test.parent_test.child4_test:
+  title: 'Menu child4'
+  description: 'Menu item description child4'
+  route_name: menu_test.child4_test
+  parent: menu_test.parent_test
+menu_test.parent_test.child4_test_overview:
+  title: 'Menu child4 overview'
+  description: 'Menu item description child4 overview'
+  route_name: menu_test.child4_test_overview
+  parent: menu_test.parent_test
+menu_test.parent_test.child_test.grand_child1_test:
+  title: 'Menu grand child1'
+  description: 'Menu grand child1: direct parent uses SystemController::overview'
+  route_name: menu_test.grand_child1_test
+  parent: menu_test.parent_test.child1_test
+menu_test.parent_test.child_test.grand_child2_test:
+  title: 'Menu grand child2'
+  description: 'Menu item description grand child2'
+  route_name: menu_test.grand_child2_test
+  parent: menu_test.parent_test.child2_test
+menu_test.parent_test.child_test.grand_child3_test:
+  title: 'Menu grand child3'
+  description: 'Menu item description grand child3'
+  route_name: menu_test.grand_child3_test
+  parent: menu_test.parent_test.child2_test
+menu_test.parent_test.child_test.grand_child4_test:
+  title: 'Menu grand child4'
+  description: 'Menu item description grand child4'
+  route_name: menu_test.grand_child4_test
+  parent: menu_test.parent_test.child4_test
+menu_test.parent_test.child_test.great_grand_child1_test:
+  title: 'Menu great grand child1'
+  description: 'Menu great grand child1: grand parent uses SystemController::overview'
+  route_name: menu_test.great_grand_child1_test
+  parent: menu_test.parent_test.child_test.grand_child1_test
+menu_test.menu_parent_test_param:
+  title: 'Menu Parent Param'
+  description: 'Menu item description parent'
+  route_name: menu_test.parent_test_param
+  parent: system.admin
+  route_parameters:
+    param: 'param-in-menu'
+menu_test.menu_parent_test.child_test_param:
+  title: 'Menu Child Param'
+  description: 'Menu item description child'
+  route_name: menu_test.child_test_param
+  parent: menu_test.menu_parent_test_param
+  route_parameters:
+    param: 'param-in-menu'
+menu_test.menu_parent_test_param_default:
+  title: 'Menu Parent Param Default'
+  description: 'Menu item description parent'
+  route_name: menu_test.parent_test_param
+  parent: system.admin
+  route_parameters:
+    param: 'child_uses_default'
+menu_test.menu_parent_test.child_test_param_default:
+  title: 'Menu Child Param Default'
+  description: 'Menu item description child'
+  route_name: menu_test.child_test_param
+  parent: menu_test.menu_parent_test_param_default
+menu_test.menu_parent_test_param_default_explicit:
+  title: 'Menu Parent Param Default Explicit'
+  description: 'Menu item description parent'
+  route_name: menu_test.parent_test_param_explicit
+  parent: system.admin
+  route_parameters:
+    param: 'my_default'
+menu_test.menu_parent_test.child_test_param_default_explicit:
+  title: 'Menu Child Param Default Explicit'
+  description: 'Menu item description child'
+  route_name: menu_test.child_test_param_explicit
+  parent: menu_test.menu_parent_test_param_default_explicit
+  route_parameters:
+    param: 'my_default'
 menu_test.menu_no_title_callback:
   title: 'A title with @placeholder'
   route_name: menu_test.menu_no_title_callback
@@ -89,3 +184,8 @@ menu_test.access_check:
   title: 'Test custom route access check'
   route_name: menu_test.router_test_session
   menu_name: account
+
+menu_test.admin_description:
+  title: 'Test custom admin block without description'
+  parent: system.admin_config_content
+  route_name: menu_test.menu_name_test

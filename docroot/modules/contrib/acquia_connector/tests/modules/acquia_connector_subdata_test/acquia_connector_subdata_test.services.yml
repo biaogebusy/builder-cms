@@ -1,0 +1,5 @@
+services:
+  acquia_connector_subdata_test.subscription_data:
+    class: Drupal\acquia_connector_subdata_test\EventSubscriber\AcquiaSubscriptionData\SubscriptionData
+    tags:
+      - { name: 'event_subscriber' }

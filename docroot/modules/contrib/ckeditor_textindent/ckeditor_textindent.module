@@ -1,5 +1,6 @@
 <?php
 
-function ckeditor_textindent_page_attachments(array &$page) {
-  $page['#attached']['library'][] = 'ckeditor_textindent/data_text_indent';
-}
+/**
+ * @file
+ * Adds a hook for attaching a css file with indentation information to each page.
+ */

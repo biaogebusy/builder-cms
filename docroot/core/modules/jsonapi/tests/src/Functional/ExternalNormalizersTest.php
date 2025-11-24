@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\jsonapi\Functional;
 
 use Drupal\Component\Serialization\Json;
@@ -8,6 +10,7 @@ use Drupal\entity_test\Entity\EntityTest;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Tests\BrowserTestBase;
+use Drupal\Tests\jsonapi\Traits\GetDocumentFromResponseTrait;
 use Drupal\user\Entity\Role;
 use Drupal\user\RoleInterface;
 use GuzzleHttp\RequestOptions;
@@ -20,6 +23,8 @@ use GuzzleHttp\RequestOptions;
  * @group jsonapi
  */
 class ExternalNormalizersTest extends BrowserTestBase {
+
+  use GetDocumentFromResponseTrait;
 
   /**
    * {@inheritdoc}
@@ -59,7 +64,7 @@ class ExternalNormalizersTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  public function setUp(): void {
+  protected function setUp(): void {
     parent::setUp();
 
     // This test is not about access control at all, so allow anonymous users to
@@ -108,7 +113,7 @@ class ExternalNormalizersTest extends BrowserTestBase {
    *
    * @dataProvider providerTestFormatAgnosticNormalizers
    */
-  public function testFormatAgnosticNormalizers($test_module, $expected_value_jsonapi_normalization, $expected_value_jsonapi_denormalization) {
+  public function testFormatAgnosticNormalizers($test_module, $expected_value_jsonapi_normalization, $expected_value_jsonapi_denormalization): void {
     assert(in_array($expected_value_jsonapi_normalization, [static::VALUE_ORIGINAL, static::VALUE_OVERRIDDEN], TRUE));
     assert(in_array($expected_value_jsonapi_denormalization, [static::VALUE_ORIGINAL, static::VALUE_OVERRIDDEN], TRUE));
 
@@ -150,7 +155,7 @@ class ExternalNormalizersTest extends BrowserTestBase {
     // $url = $this->entity->toUrl('jsonapi');
     $client = $this->getSession()->getDriver()->getClient()->getClient();
     $response = $client->request('GET', $url->setAbsolute(TRUE)->toString());
-    $document = Json::decode((string) $response->getBody());
+    $document = $this->getDocumentFromResponse($response);
     $this->assertSame($expected_value_jsonapi_normalization, $document['data']['attributes']['field_test']);
 
     // Asserts the expected JSON:API denormalization.
@@ -165,7 +170,7 @@ class ExternalNormalizersTest extends BrowserTestBase {
     ]);
     $request_options[RequestOptions::HEADERS]['Content-Type'] = 'application/vnd.api+json';
     $response = $client->request('POST', Url::fromRoute('jsonapi.entity_test--entity_test.collection.post')->setAbsolute(TRUE)->toString(), $request_options);
-    $document = Json::decode((string) $response->getBody());
+    $document = $this->getDocumentFromResponse($response);
     $this->assertSame(static::VALUE_OVERRIDDEN, $document['data']['attributes']['field_test']);
     $entity_type_manager = $this->container->get('entity_type.manager');
     $uuid_key = $entity_type_manager->getDefinition('entity_test')->getKey('uuid');
@@ -182,7 +187,7 @@ class ExternalNormalizersTest extends BrowserTestBase {
    * @return array
    *   Test cases.
    */
-  public function providerTestFormatAgnosticNormalizers() {
+  public static function providerTestFormatAgnosticNormalizers() {
     return [
       'Format-agnostic @FieldType-level normalizers SHOULD NOT be able to affect the JSON:API normalization' => [
         'jsonapi_test_field_type',

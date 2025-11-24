@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Render\Element;
 
 use Drupal\Core\Form\FormInterface;
@@ -64,9 +66,9 @@ class MachineNameTest extends KernelTestBase implements FormInterface {
   /**
    * Tests the order of the machine name field and the source.
    */
-  public function testMachineNameOrderException() {
+  public function testMachineNameOrderException(): void {
     $this->expectException(\LogicException::class);
-    $this->expectErrorMessage('The machine name element "test_machine_name" is defined before the source element "test_source", it must be defined after or the source element must specify an id.');
+    $this->expectExceptionMessage('The machine name element "test_machine_name" is defined before the source element "test_source", it must be defined after or the source element must specify an id.');
     $form = \Drupal::formBuilder()->getForm($this);
     $this->render($form);
   }

@@ -12,7 +12,7 @@ embed.embed_type_settings.embed_test_animal:
       label: 'Allowed vertebrates'
       sequence:
         type: string
-        label: 'Vertibrate type'
+        label: 'Vertebrate type'
 
 embed.embed_type_settings.embed_test_aircraft:
   type: mapping

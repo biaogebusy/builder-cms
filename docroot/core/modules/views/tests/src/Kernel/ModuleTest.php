@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\views\Kernel;
 
 use Drupal\Component\Render\FormattableMarkup;
@@ -26,9 +28,7 @@ class ModuleTest extends ViewsKernelTestBase {
   public static $testViews = ['test_view_status', 'test_view', 'test_argument'];
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['field', 'user', 'block'];
 
@@ -46,7 +46,7 @@ class ModuleTest extends ViewsKernelTestBase {
    *
    * @see \Drupal\views\Plugin\ViewsHandlerManager::getHandler()
    */
-  public function testViewsGetHandler() {
+  public function testViewsGetHandler(): void {
     $types = [
       'field' => BrokenField::class,
       'area' => BrokenArea::class,
@@ -65,7 +65,7 @@ class ModuleTest extends ViewsKernelTestBase {
     ];
     $form_state = new FormState();
     $description_top = '<p>The handler for this item is broken or missing. The following details are available:</p>';
-    $description_bottom = '<p>Enabling the appropriate module may solve this issue. Otherwise, check to see if there is a module update available.</p>';
+    $description_bottom = '<p>Installing the appropriate module may solve this issue. Otherwise, check to see if there is a module update available.</p>';
     foreach ($types as $type => $class) {
       foreach ($items as $item) {
         $handler = $this->container->get('plugin.manager.views.' . $type)
@@ -114,7 +114,7 @@ class ModuleTest extends ViewsKernelTestBase {
   /**
    * Tests the load wrapper/helper functions.
    */
-  public function testLoadFunctions() {
+  public function testLoadFunctions(): void {
     $this->enableModules(['text', 'node']);
     $this->installEntitySchema('node');
     $this->installConfig(['node']);
@@ -185,7 +185,7 @@ class ModuleTest extends ViewsKernelTestBase {
   /**
    * Tests view enable and disable procedural wrapper functions.
    */
-  public function testStatusFunctions() {
+  public function testStatusFunctions(): void {
     $view = Views::getView('test_view_status')->storage;
 
     $this->assertFalse($view->status(), 'The view status is disabled.');
@@ -202,7 +202,7 @@ class ModuleTest extends ViewsKernelTestBase {
   /**
    * Tests the \Drupal\views\Views::fetchPluginNames() method.
    */
-  public function testViewsFetchPluginNames() {
+  public function testViewsFetchPluginNames(): void {
     // All style plugins should be returned, as we have not specified a type.
     $plugins = Views::fetchPluginNames('style');
     $definitions = $this->container->get('plugin.manager.views.style')->getDefinitions();
@@ -226,14 +226,14 @@ class ModuleTest extends ViewsKernelTestBase {
   /**
    * Tests the \Drupal\views\Views::pluginList() method.
    */
-  public function testViewsPluginList() {
+  public function testViewsPluginList(): void {
     $plugin_list = Views::pluginList();
     // Only plugins used by 'test_view' should be in the plugin list.
     foreach (['display:default', 'pager:none'] as $key) {
       [$plugin_type, $plugin_id] = explode(':', $key);
       $plugin_def = $this->container->get("plugin.manager.views.$plugin_type")->getDefinition($plugin_id);
 
-      $this->assertTrue(isset($plugin_list[$key]), new FormattableMarkup('The expected @key plugin list key was found.', ['@key' => $key]));
+      $this->assertTrue(isset($plugin_list[$key]), "The expected $key plugin list key was found.");
       $plugin_details = $plugin_list[$key];
 
       $this->assertEquals($plugin_type, $plugin_details['type'], 'The expected plugin type was found.');
@@ -246,35 +246,35 @@ class ModuleTest extends ViewsKernelTestBase {
   /**
    * Tests views.module: views_embed_view().
    */
-  public function testViewsEmbedView() {
+  public function testViewsEmbedView(): void {
     /** @var \Drupal\Core\Render\RendererInterface $renderer */
     $renderer = \Drupal::service('renderer');
 
     $result = views_embed_view('test_argument');
-    $renderer->renderPlain($result);
+    $renderer->renderInIsolation($result);
     $this->assertCount(5, $result['view_build']['#view']->result);
 
     $result = views_embed_view('test_argument', 'default', 1);
-    $renderer->renderPlain($result);
+    $renderer->renderInIsolation($result);
     $this->assertCount(1, $result['view_build']['#view']->result);
 
     $result = views_embed_view('test_argument', 'default', '1,2');
-    $renderer->renderPlain($result);
+    $renderer->renderInIsolation($result);
     $this->assertCount(2, $result['view_build']['#view']->result);
 
     $result = views_embed_view('test_argument', 'default', '1,2', 'John');
-    $renderer->renderPlain($result);
+    $renderer->renderInIsolation($result);
     $this->assertCount(1, $result['view_build']['#view']->result);
 
     $result = views_embed_view('test_argument', 'default', '1,2', 'John,George');
-    $renderer->renderPlain($result);
+    $renderer->renderInIsolation($result);
     $this->assertCount(2, $result['view_build']['#view']->result);
   }
 
   /**
    * Tests the \Drupal\views\ViewsExecutable::preview() method.
    */
-  public function testViewsPreview() {
+  public function testViewsPreview(): void {
     $view = Views::getView('test_argument');
     $result = $view->preview('default');
     $this->assertCount(5, $result['#view']->result);

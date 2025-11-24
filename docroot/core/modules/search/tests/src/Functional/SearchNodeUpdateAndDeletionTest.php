@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\search\Functional;
 
 use Drupal\Core\Database\Database;
@@ -49,7 +51,7 @@ class SearchNodeUpdateAndDeletionTest extends BrowserTestBase {
   /**
    * Tests that the search index info is properly updated when a node changes.
    */
-  public function testSearchIndexUpdateOnNodeChange() {
+  public function testSearchIndexUpdateOnNodeChange(): void {
     // Create a node.
     $node = $this->drupalCreateNode([
       'title' => 'Someone who says Ni!',
@@ -86,7 +88,7 @@ class SearchNodeUpdateAndDeletionTest extends BrowserTestBase {
   /**
    * Tests that the search index info is updated when a node is deleted.
    */
-  public function testSearchIndexUpdateOnNodeDeletion() {
+  public function testSearchIndexUpdateOnNodeDeletion(): void {
     // Create a node.
     $node = $this->drupalCreateNode([
       'title' => 'No dragons here',

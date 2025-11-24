@@ -2,14 +2,15 @@
 
 namespace Drupal\Core\Flood;
 
+use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\DatabaseException;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Drupal\Core\Database\Connection;
 
 /**
  * Defines the database flood backend. This is the default Drupal backend.
  */
-class DatabaseBackend implements FloodInterface {
+class DatabaseBackend implements FloodInterface, PrefixFloodInterface {
 
   /**
    * The database table name.
@@ -38,10 +39,16 @@ class DatabaseBackend implements FloodInterface {
    *   information.
    * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
    *   The request stack used to retrieve the current request.
+   * @param \Drupal\Component\Datetime\TimeInterface|null $time
+   *   The time service.
    */
-  public function __construct(Connection $connection, RequestStack $request_stack) {
+  public function __construct(Connection $connection, RequestStack $request_stack, protected ?TimeInterface $time = NULL) {
     $this->connection = $connection;
     $this->requestStack = $request_stack;
+    if (!$time) {
+      @trigger_error('Calling ' . __METHOD__ . '() without the $time argument is deprecated in drupal:10.3.0 and it will be required in drupal:11.0.0. See https://www.drupal.org/node/3387233', E_USER_DEPRECATED);
+      $this->time = \Drupal::service(TimeInterface::class);
+    }
   }
 
   /**
@@ -83,8 +90,8 @@ class DatabaseBackend implements FloodInterface {
       ->fields([
         'event' => $name,
         'identifier' => $identifier,
-        'timestamp' => REQUEST_TIME,
-        'expiration' => REQUEST_TIME + $window,
+        'timestamp' => $this->time->getRequestTime(),
+        'expiration' => $this->time->getRequestTime() + $window,
       ])
       ->execute();
   }
@@ -110,6 +117,21 @@ class DatabaseBackend implements FloodInterface {
   /**
    * {@inheritdoc}
    */
+  public function clearByPrefix(string $name, string $prefix): void {
+    try {
+      $this->connection->delete(static::TABLE_NAME)
+        ->condition('event', $name)
+        ->condition('identifier', $prefix . '-%', 'LIKE')
+        ->execute();
+    }
+    catch (\Exception $e) {
+      $this->catchException($e);
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function isAllowed($name, $threshold, $window = 3600, $identifier = NULL) {
     if (!isset($identifier)) {
       $identifier = $this->requestStack->getCurrentRequest()->getClientIp();
@@ -118,14 +140,16 @@ class DatabaseBackend implements FloodInterface {
       $number = $this->connection->select(static::TABLE_NAME, 'f')
         ->condition('event', $name)
         ->condition('identifier', $identifier)
-        ->condition('timestamp', REQUEST_TIME - $window, '>')
+        ->condition('timestamp', $this->time->getRequestTime() - $window, '>')
         ->countQuery()
         ->execute()
         ->fetchField();
       return ($number < $threshold);
     }
     catch (\Exception $e) {
-      $this->catchException($e);
+      if (!$this->ensureTableExists()) {
+        throw $e;
+      }
       return TRUE;
     }
   }
@@ -136,7 +160,7 @@ class DatabaseBackend implements FloodInterface {
   public function garbageCollection() {
     try {
       $this->connection->delete(static::TABLE_NAME)
-        ->condition('expiration', REQUEST_TIME, '<')
+        ->condition('expiration', $this->time->getRequestTime(), '<')
         ->execute();
     }
     catch (\Exception $e) {
@@ -215,12 +239,14 @@ class DatabaseBackend implements FloodInterface {
           'type' => 'int',
           'not null' => TRUE,
           'default' => 0,
+          'size' => 'big',
         ],
         'expiration' => [
           'description' => 'Expiration timestamp. Expired events are purged on cron run.',
           'type' => 'int',
           'not null' => TRUE,
           'default' => 0,
+          'size' => 'big',
         ],
       ],
       'primary key' => ['fid'],

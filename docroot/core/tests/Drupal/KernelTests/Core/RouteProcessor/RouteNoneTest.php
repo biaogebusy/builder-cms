@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\RouteProcessor;
 
 use Drupal\Core\Cache\Cache;
@@ -8,6 +10,8 @@ use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Core\Routing\RouteObjectInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage;
 use Symfony\Component\Routing\Route;
 
 /**
@@ -43,7 +47,7 @@ class RouteNoneTest extends KernelTestBase {
   /**
    * Tests the output process.
    */
-  public function testProcessOutbound() {
+  public function testProcessOutbound(): void {
     $expected_cacheability = (new BubbleableMetadata())->setCacheMaxAge(Cache::PERMANENT);
 
     $request_stack = \Drupal::requestStack();
@@ -59,6 +63,7 @@ class RouteNoneTest extends KernelTestBase {
     $request = Request::create('/subdir', 'GET', [], [], [], $server);
     $request->attributes->set(RouteObjectInterface::ROUTE_NAME, '<front>');
     $request->attributes->set(RouteObjectInterface::ROUTE_OBJECT, new Route('/'));
+    $request->setSession(new Session(new MockArraySessionStorage()));
 
     $request_stack->push($request);
     $request_context->fromRequest($request);
@@ -76,6 +81,7 @@ class RouteNoneTest extends KernelTestBase {
     $request = Request::create('/subdir/node/add', 'GET', [], [], [], $server);
     $request->attributes->set(RouteObjectInterface::ROUTE_NAME, 'node.add');
     $request->attributes->set(RouteObjectInterface::ROUTE_OBJECT, new Route('/node/add'));
+    $request->setSession(new Session(new MockArraySessionStorage()));
 
     $request_stack->push($request);
     $request_context->fromRequest($request);
@@ -93,6 +99,7 @@ class RouteNoneTest extends KernelTestBase {
     $request = Request::create('/', 'GET', [], [], [], $server);
     $request->attributes->set(RouteObjectInterface::ROUTE_NAME, '<front>');
     $request->attributes->set(RouteObjectInterface::ROUTE_OBJECT, new Route('/'));
+    $request->setSession(new Session(new MockArraySessionStorage()));
 
     $request_stack->push($request);
     $request_context->fromRequest($request);
@@ -110,6 +117,7 @@ class RouteNoneTest extends KernelTestBase {
     $request = Request::create('/node/add', 'GET', [], [], [], $server);
     $request->attributes->set(RouteObjectInterface::ROUTE_NAME, 'node.add');
     $request->attributes->set(RouteObjectInterface::ROUTE_OBJECT, new Route('/node/add'));
+    $request->setSession(new Session(new MockArraySessionStorage()));
 
     $request_stack->push($request);
     $request_context->fromRequest($request);

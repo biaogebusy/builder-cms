@@ -29,22 +29,27 @@
       var me = D_BLAZY.init;
       var opts;
 
-      if (me) {
-        opts = D_BLAZY.options;
+      clearTimeout(REV_TIMER);
 
-        clearTimeout(REV_TIMER);
+      // DOM ready fix. Be sure Views "Use field template" is disabled.
+      REV_TIMER = setTimeout(function () {
+        if (response && response.length) {
+          $.once.unload = true;
 
-        // DOM ready fix. Be sure Views "Use field template" is disabled.
-        REV_TIMER = setTimeout(function () {
-          var el = $.find(_doc, $.selector(opts, true));
-          if (el) {
-            // See blazy.load.js.
-            $.once.removeSafely('b-root', 'body', _doc);
+          if (me) {
+            opts = D_BLAZY.options;
+            var el = $.find(_doc, $.selector(opts, true));
+            if (el) {
+              // See blazy.load.js.
+              $.once.removeSafely('b-root', 'body', _doc);
 
-            Drupal.attachBehaviors(_doc.body);
+              Drupal.attachBehaviors(_doc.body);
+            }
           }
-        }, 100);
-      }
+
+          $.trigger('blazy:ajaxSuccess', [me, response, status]);
+        }
+      }, 100);
 
       return D_AJAX.apply(this, arguments);
     };

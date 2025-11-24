@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field\Kernel\Migrate\d7;
 
 use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
@@ -47,7 +49,7 @@ class MigrateFieldOptionTranslationTest extends MigrateDrupal7TestBase {
   /**
    * Tests the Drupal 7 field option translation to Drupal 8 migration.
    */
-  public function testFieldOptionTranslation() {
+  public function testFieldOptionTranslation(): void {
     $language_manager = $this->container->get('language_manager');
 
     /** @var \Drupal\language\Config\LanguageConfigOverride $config_translation */

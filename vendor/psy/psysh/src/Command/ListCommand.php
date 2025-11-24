@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2023 Justin Hileman
+ * (c) 2012-2025 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -35,8 +35,8 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class ListCommand extends ReflectingCommand implements PresenterAware
 {
-    protected $presenter;
-    protected $enumerators;
+    protected Presenter $presenter;
+    protected array $enumerators;
 
     /**
      * PresenterAware interface.
@@ -122,7 +122,7 @@ HELP
         $method = $input->getOption('long') ? 'writeLong' : 'write';
 
         if ($target = $input->getArgument('target')) {
-            list($target, $reflector) = $this->getTargetAndReflector($target);
+            list($target, $reflector) = $this->getTargetAndReflector($target, $output);
         } else {
             $reflector = null;
         }

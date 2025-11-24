@@ -3,10 +3,3 @@ field_permissions:
   css:
     theme:
       css/field_permissions.css: {}
-  js:
-    js/field_permissions.js: {}
-  dependencies:
-    - core/jquery
-    - core/drupal
-    - core/drupalSettings
-    - core/drupal.form

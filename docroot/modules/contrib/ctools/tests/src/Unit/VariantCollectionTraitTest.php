@@ -46,7 +46,7 @@ class VariantCollectionTraitTest extends UnitTestCase {
 
     $variants = $trait_object->getVariants();
     $this->assertInstanceOf(VariantPluginCollection::class, $variants);
-    $this->assertSame(0, count($variants));
+    $this->assertCount(0, $variants);
   }
 
   /**
@@ -66,7 +66,7 @@ class VariantCollectionTraitTest extends UnitTestCase {
 
     $variants = $trait_object->getVariants();
     $this->assertInstanceOf(VariantPluginCollection::class, $variants);
-    $this->assertSame(2, count($variants));
+    $this->assertCount(2, $variants);
     return $variants;
   }
 

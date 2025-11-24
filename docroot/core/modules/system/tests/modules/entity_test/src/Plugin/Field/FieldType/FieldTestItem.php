@@ -2,6 +2,7 @@
 
 namespace Drupal\entity_test\Plugin\Field\FieldType;
 
+use Drupal\Core\Field\Attribute\FieldType;
 use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
@@ -11,14 +12,12 @@ use Drupal\Core\TypedData\TypedDataInterface;
 
 /**
  * Defines the 'field_test' entity field type.
- *
- * @FieldType(
- *   id = "field_test",
- *   label = @Translation("Test field item"),
- *   description = @Translation("A field containing a plain string value."),
- *   category = @Translation("Field"),
- * )
  */
+#[FieldType(
+  id: "field_test",
+  label: new TranslatableMarkup("Test field item"),
+  description: new TranslatableMarkup("A field containing a plain string value."),
+)]
 class FieldTestItem extends FieldItemBase {
 
   /**
@@ -56,7 +55,7 @@ class FieldTestItem extends FieldItemBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct(DataDefinitionInterface $definition, $name = NULL, TypedDataInterface $parent = NULL) {
+  public function __construct(DataDefinitionInterface $definition, $name = NULL, ?TypedDataInterface $parent = NULL) {
     parent::__construct($definition, $name, $parent);
 
     $name = $this->getFieldDefinition()->getName();

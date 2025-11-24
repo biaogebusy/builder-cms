@@ -11,21 +11,21 @@ details summary {
   display: flex;
   align-items: flex-start;
   flex-wrap: wrap;
-  padding-top: var(--gin-spacing-m);
+  padding-block-start: var(--gin-spacing-m);
 
   .form-item,
   .form-actions {
-    margin: var(--gin-spacing-xs) var(--gin-spacing-xs) var(--gin-spacing-xs) 0;
+    margin-block: var(--gin-spacing-xs);
+    margin-inline: 0 var(--gin-spacing-xs);
     align-self: flex-start;
   }
 
   .button,
   .action-link {
-    margin-top: 0;
-    margin-bottom: 0;
+    margin-block: 0;
   }
 
   .field-add-more-submit {
-    margin-top: var(--gin-spacing-s);
+    margin-block-start: var(--gin-spacing-s);
   }
 }

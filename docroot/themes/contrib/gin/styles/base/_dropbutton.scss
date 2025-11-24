@@ -3,6 +3,19 @@ html.js .dropbutton-widget {
   background-color: transparent;
 }
 
+// Overlay the dropdown button on top of the sticky header and main toolbar
+html.js {
+  .dropbutton-wrapper.open {
+    .dropbutton-widget {
+      z-index: 502; // Above toolbar and sticky header
+    }
+
+    .dropbutton {
+      background: var(--gin-bg-layer3);
+    }
+  }
+}
+
 .dropbutton {
   border: 2px solid var(--gin-color-primary);
   border-radius: var(--gin-border-m);
@@ -11,8 +24,8 @@ html.js .dropbutton-widget {
   // Offset for select button on first item
   &--multiple > .dropbutton__item:first-of-type {
     height: 100%;
-    margin-right: var(--gin-spacing-xxl);
-    border-right: 1px solid var(--gin-color-primary-light-active);
+    margin-inline-end: var(--gin-spacing-xxl);
+    border-inline-end: 1px solid var(--gin-color-primary-light-active);
 
     input {
       color: var(--gin-color-primary);
@@ -54,8 +67,8 @@ html.js .dropbutton-widget {
   }
 
   &__toggle {
-    top: 2px;
-    right: 2px;
+    inset-block-start: 2px;
+    inset-inline-end: 2px;
     width: calc(var(--gin-spacing-xxl) + 1px);
     height: 2.75rem;
     border-inline-start: var(--dropbutton-border-size, 1px) solid var(--gin-color-primary) !important;
@@ -84,7 +97,7 @@ html.js .dropbutton-widget {
 
   & &__items {
     position: absolute;
-    right: 0;
+    inset-inline-end: 0;
     list-style: none;
     padding: .5em;
     margin: 0;
@@ -94,8 +107,8 @@ html.js .dropbutton-widget {
     box-shadow: var(--gin-shadow-l2);
 
     .node-form & {
-      left: 0;
-      right: auto;
+      inset-inline-start: 0;
+      inset-inline-end: auto;
     }
 
     @media (forced-colors: active) {
@@ -125,10 +138,10 @@ html.js .dropbutton-widget {
     box-shadow: none;
 
     &:first-of-type {
-      margin-right: 0;
+      margin-inline-end: 0;
     }
 
-    // Mutiple Dropbutton only has one item
+    // Multiple Dropbutton only has one item
     &:first-of-type:last-of-type > * {
       .js .dropbutton--multiple & {
         border-radius: var(--gin-border-s);
@@ -139,7 +152,7 @@ html.js .dropbutton-widget {
     > input,
     > .button {
       font-weight: var(--gin-font-weight-heavy);
-      text-align: left;
+      text-align: start;
       white-space: nowrap;
       text-overflow: ellipsis;
       overflow: hidden;
@@ -226,11 +239,15 @@ html.js {
   }
 
   .dropbutton-wrapper:not(.open) .dropbutton__items {
-    display: none;
+    visibility: hidden;
+    opacity: 0;
   }
 
   .dropbutton-wrapper .dropbutton__items {
-    display: block;
+    visibility: visible;
+    opacity: 1;
+    max-height: 30vh;
+    overflow: auto;
   }
 
   .dropbutton-wrapper:not(.open) .dropbutton__item:first-of-type ~ .dropbutton__items {
@@ -239,20 +256,21 @@ html.js {
 
   .dropbutton-wrapper:not(.open) .dropbutton__items .dropbutton__item:first-of-type ~ .dropbutton__item {
     display: block;
+    height: auto;
   }
 }
 
 html.js.no-touchevents {
   .dropbutton--multiple.dropbutton--small .dropbutton__item:first-of-type {
-    margin-right: 0;
+    margin-inline-end: 0;
   }
 
   .dropbutton--multiple.dropbutton--small > .dropbutton__item:first-of-type {
-    margin-right: var(--gin-spacing-xl);
+    margin-inline-end: var(--gin-spacing-xl);
   }
 
   .dropbutton--multiple.dropbutton--extrasmall > .dropbutton__item:first-of-type {
-    margin-right: var(--gin-spacing-l);
+    margin-inline-end: var(--gin-spacing-l);
   }
 
   .dropbutton--small {
@@ -277,18 +295,11 @@ html.js.no-touchevents {
     }
 
     .dropbutton__item:first-of-type > * {
-      padding-left: var(--gin-spacing-s);
-      padding-right: var(--gin-spacing-s);
+      padding-inline: var(--gin-spacing-s);
     }
   }
 
   .dropbutton--multiple.dropbutton--extrasmall .dropbutton__items .dropbutton__item {
-    margin-right: 0;
+    margin-inline-end: 0;
   }
-}
-
-// Last item in table
-table tr:not(:first-of-type):nth-last-child(2) td .dropbutton__items,
-table tr:not(:first-of-type):last-of-type td .dropbutton__items {
-  bottom: 100%;
 }

@@ -36,7 +36,7 @@ class PageThemeNegotiator implements ThemeNegotiatorInterface {
   /**
    * Protected pathAlias variable.
    *
-   * @var \Drupal\path_alias\AliasManagerInterface;
+   * @var \Drupal\path_alias\AliasManagerInterface
    */
   protected $pathAlias;
 
@@ -124,11 +124,17 @@ class PageThemeNegotiator implements ThemeNegotiatorInterface {
     }
 
     foreach ($spt_table as $value) {
+      $value += ['domain' => [], 'language' => []];
       $condition = FALSE;
       // Check if rule is enabled.
       if ($value['status'] == 1) {
         // Check condition for basic rules.
-        $condition = ($this->request->getCurrentRequest()->attributes->get("_route") != "system.403" && ($this->pathMatcher->matchPath($this->currentPath->getPath(), $value["pages"]) || $this->pathMatcher->matchPath($this->pathAlias->getAliasByPath($this->currentPath->getPath()), $value["pages"])) && (!array_filter($value["roles"]) || !empty(array_intersect($value["roles"], $this->account->getRoles()))));
+        $condition = (
+          $this->currentRequestIsNotSystem403() &&
+          $this->currentPathConfiguredInRules($value["pages"] ?? '') &&
+          $this->checkThemeKey($value["theme_key"] ?? '') &&
+          $this->checkCorrectRoles($value['roles'] ?? [])
+        );
 
         // Check if domain module is enabled.
         if ($this->moduleHandler->moduleExists('domain') && !empty($this->negotiator->getActiveDomain())) {
@@ -169,6 +175,44 @@ class PageThemeNegotiator implements ThemeNegotiatorInterface {
     global $theme;
     // Return the actual theme name.
     return $theme;
+  }
+
+  /**
+   * Checks if the current user as per the SPT rules.
+   */
+  protected function checkCorrectRoles($roles) {
+    $currentUserRoles = $this->account->getRoles();
+    return (!array_filter($roles) || !empty(array_intersect($roles, $currentUserRoles)));
+  }
+
+  /**
+   * Checks the theme key.
+   */
+  protected function checkThemeKey($themeKey) {
+    return (empty($themeKey) || $this->request->getCurrentRequest()->get('theme_key') == $themeKey);
+  }
+
+  /**
+   * Checks if the current page is configured in SPT Rules.
+   */
+  protected function currentPathConfiguredInRules($pages) {
+    $request = $this->request->getCurrentRequest();
+    $currentPath = $this->currentPath->getPath();
+
+    // Override current path if 403/404 paths are added in the spt rule.
+    if (!empty($request->attributes->get('exception')) && !empty($request->attributes->get('node'))) {
+      $currentPath = '/node/' . $request->attributes->get('node')->id();
+    }
+
+    $alias = $this->pathAlias->getAliasByPath($currentPath);
+    return $this->pathMatcher->matchPath($currentPath, $pages) || $this->pathMatcher->matchPath($alias, $pages);
+  }
+
+  /**
+   * Checks if the current request is not System 403 page.
+   */
+  protected function currentRequestIsNotSystem403() {
+    return $this->request->getCurrentRequest()->attributes->get("_route") != "system.403";
   }
 
 }

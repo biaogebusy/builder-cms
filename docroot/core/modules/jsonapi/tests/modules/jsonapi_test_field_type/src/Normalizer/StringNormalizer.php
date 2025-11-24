@@ -14,12 +14,7 @@ class StringNormalizer extends FieldItemNormalizer implements DenormalizerInterf
   /**
    * {@inheritdoc}
    */
-  protected $supportedInterfaceOrClass = StringItem::class;
-
-  /**
-   * {@inheritdoc}
-   */
-  public function normalize($object, $format = NULL, array $context = []) {
+  public function normalize($object, $format = NULL, array $context = []): array|string|int|float|bool|\ArrayObject|NULL {
     $data = parent::normalize($object, $format, $context);
     $data['value'] = str_replace('super', 'NOT', $data['value']);
     return $data;
@@ -32,6 +27,13 @@ class StringNormalizer extends FieldItemNormalizer implements DenormalizerInterf
     $data = parent::constructValue($data, $context);
     $data['value'] = str_replace('NOT', 'super', $data['value']);
     return $data;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSupportedTypes(?string $format): array {
+    return [StringItem::class => TRUE];
   }
 
 }

@@ -2,9 +2,9 @@
 
 namespace Drupal\Tests\commerce_promotion\Kernel;
 
+use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 use Drupal\commerce_promotion\Entity\Coupon;
 use Drupal\commerce_promotion\Entity\Promotion;
-use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 
 /**
  * Tests the coupon access control.
@@ -58,7 +58,7 @@ class CouponAccessTest extends OrderKernelTestBase {
     $collection_url = $coupon->toUrl('collection');
     $access_manager = \Drupal::accessManager();
 
-    $account = $this->createUser([], ['access administration pages']);
+    $account = $this->createUser(['access administration pages']);
     $this->assertFalse($coupon->access('view', $account));
     $this->assertFalse($coupon->access('update', $account));
     $this->assertFalse($coupon->access('delete', $account));
@@ -66,7 +66,7 @@ class CouponAccessTest extends OrderKernelTestBase {
     $this->assertFalse($promotion->access('update', $account));
     $this->assertFalse($access->isAllowed());
 
-    $account = $this->createUser([], ['view commerce_promotion']);
+    $account = $this->createUser(['view commerce_promotion']);
     $this->assertTrue($coupon->access('view', $account));
     $this->assertFalse($coupon->access('update', $account));
     $this->assertFalse($coupon->access('delete', $account));
@@ -74,7 +74,7 @@ class CouponAccessTest extends OrderKernelTestBase {
     $this->assertFalse($promotion->access('update', $account));
     $this->assertFalse($access->isAllowed());
 
-    $account = $this->createUser([], ['update any commerce_promotion']);
+    $account = $this->createUser(['update any commerce_promotion']);
     $this->assertFalse($coupon->access('view', $account));
     $this->assertTrue($coupon->access('update', $account));
     $this->assertTrue($coupon->access('delete', $account));
@@ -82,7 +82,7 @@ class CouponAccessTest extends OrderKernelTestBase {
     $this->assertTrue($promotion->access('update', $account));
     $this->assertTrue($access->isAllowed());
 
-    $account = $this->createUser([], ['administer commerce_promotion']);
+    $account = $this->createUser(['administer commerce_promotion']);
     $this->assertTrue($coupon->access('view', $account));
     $this->assertTrue($coupon->access('update', $account));
     $this->assertTrue($coupon->access('delete', $account));
@@ -97,13 +97,13 @@ class CouponAccessTest extends OrderKernelTestBase {
   public function testCreateAccess() {
     $access_control_handler = \Drupal::entityTypeManager()->getAccessControlHandler('commerce_promotion_coupon');
 
-    $account = $this->createUser([], ['access content']);
+    $account = $this->createUser(['access content']);
     $this->assertFalse($access_control_handler->createAccess('test', $account));
 
-    $account = $this->createUser([], ['update any commerce_promotion']);
+    $account = $this->createUser(['update any commerce_promotion']);
     $this->assertTrue($access_control_handler->createAccess('test', $account));
 
-    $account = $this->createUser([], ['administer commerce_promotion']);
+    $account = $this->createUser(['administer commerce_promotion']);
     $this->assertTrue($access_control_handler->createAccess('test', $account));
   }
 

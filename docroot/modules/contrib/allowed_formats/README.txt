@@ -1,60 +1,13 @@
-CONTENTS OF THIS FILE
----------------------
+IMPORTANT CHANGES IN 3.x BRANCH
+-------------------------------
 
- * Introduction
- * Requirements
- * Installation
- * Configuration
- * Maintainers
-
-
-INTRODUCTION
-------------
-
-The Allowed Formats module limits which text formats are available for each
-field instance.
-
- * For a full description of the module visit:
-   https://www.drupal.org/project/allowed_formats
-
- * To submit bug reports and feature suggestions, or to track changes visit:
-   https://www.drupal.org/project/issues/allowed_formats
-
-
-REQUIREMENTS
-------------
-
-This module requires no modules outside of Drupal core.
-
-
-INSTALLATION
-------------
-
- * Install the Allowed Formats module as you would normally install a
-   contributed Drupal module. Visit https://www.drupal.org/node/1897420 for
-   further information.
-
-
-CONFIGURATION
--------------
-
-There is no real configuration necessary. Navigate to Administration >
-Extend and enable the module.
-
-There is now a set of checkboxes for field settings (not the widget settings on
-the form display tab) of text fields with a list of allowed formats: Basic
-HTML, Restricted HTML, Full HTML, and Plain text.
-
-Note that base fields defined by the entity type (for example the description
-field of taxonomy terms) cannot have their allowed formats limited through the
-UI.
-
-
-MAINTAINERS
------------
-
- * Florian Loretan (floretan) - https://www.drupal.org/u/floretan
-
-Supporting organization:
-
- * Wunder - https://www.drupal.org/wunder-group
+* Since Drupal 10.1.0, limiting the text formats per field instance is a feature
+  provided by Drupal core. Read https://www.drupal.org/node/3318572 for details.
+* In the 3.x branch of this module this feature has been removed as obsolete,
+  but the module provide an update path from existing sites to move the allowed
+  formats, as they were stored by the previous versions of the module, to Drupal
+  >=10.1.0 way, in field settings.
+* The module provides also a feature that allows site builders to hide the
+  formatted text format help and guidelines. Even this feature is still
+  preserved in the 3.x module branch, there is an issue that aims to move it in
+  Drupal core in the future. See https://www.drupal.org/i/3323007.

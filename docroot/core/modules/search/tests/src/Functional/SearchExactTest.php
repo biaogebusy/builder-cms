@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\search\Functional;
 
 use Drupal\Tests\BrowserTestBase;
@@ -24,7 +26,7 @@ class SearchExactTest extends BrowserTestBase {
   /**
    * Tests that the correct number of pager links are found for both keywords and phrases.
    */
-  public function testExactQuery() {
+  public function testExactQuery(): void {
     $this->drupalCreateContentType(['type' => 'page', 'name' => 'Basic page']);
 
     // Log in with sufficient privileges.

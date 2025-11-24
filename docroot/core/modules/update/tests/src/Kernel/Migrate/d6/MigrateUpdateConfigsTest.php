@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\update\Kernel\Migrate\d6;
 
 use Drupal\Tests\SchemaCheckTestTrait;
@@ -30,7 +32,7 @@ class MigrateUpdateConfigsTest extends MigrateDrupal6TestBase {
   /**
    * Tests migration of update variables to update.settings.yml.
    */
-  public function testUpdateSettings() {
+  public function testUpdateSettings(): void {
     $config = $this->config('update.settings');
     $this->assertSame(2, $config->get('fetch.max_attempts'));
     $this->assertSame('https://updates.drupal.org/release-history', $config->get('fetch.url'));

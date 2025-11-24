@@ -72,8 +72,8 @@ class DynamicEntityReferenceFormatterTest extends EntityKernelTestBase {
     parent::setUp();
 
     // Use Classy theme for testing markup output.
-    \Drupal::service('theme_installer')->install(['classy']);
-    $this->config('system.theme')->set('default', 'classy')->save();
+    \Drupal::service('theme_installer')->install(['stark']);
+    $this->config('system.theme')->set('default', 'stark')->save();
 
     // Grant the 'view test entity' permission.
     $this->installConfig(['user']);
@@ -233,33 +233,33 @@ class DynamicEntityReferenceFormatterTest extends EntityKernelTestBase {
 
     // Test the first field item.
     $expected_rendered_name_field_1 = '
-            <div class="field field--name-name field--type-string field--label-hidden field__item">' . $this->referencedEntity->label() . '</div>
+            <div>' . $this->referencedEntity->label() . '</div>
       ';
     $expected_rendered_body_field_1 = '
-  <div class="clearfix text-formatted field field--name-body field--type-text field--label-above">
-    <div class="field__label">Body</div>
-              <div class="field__item"><p>Hello, world!</p></div>
+  <div>
+    <div>Body</div>
+              <div><p>Hello, world!</p></div>
           </div>
 ';
     $renderer->renderRoot($build[0]);
-    $this->assertEquals($build[0]['#markup'], 'default | ' . $this->referencedEntity->label() . $expected_rendered_name_field_1 . $expected_rendered_body_field_1, sprintf('The markup returned by the %s formatter is correct for an item with a saved entity.', $formatter));
+    $this->assertSame('default | ' . $this->referencedEntity->label() . $expected_rendered_name_field_1 . $expected_rendered_body_field_1, (string) $build[0]['#markup'], sprintf('The markup returned by the %s formatter is correct for an item with a saved entity.', $formatter));
     $expected_cache_tags = Cache::mergeTags(\Drupal::entityTypeManager()->getViewBuilder($this->entityType)->getCacheTags(), $this->referencedEntity->getCacheTags());
     $expected_cache_tags = Cache::mergeTags($expected_cache_tags, FilterFormat::load('full_html')->getCacheTags());
     $this->assertEquals($build[0]['#cache']['tags'], $expected_cache_tags, (string) new FormattableMarkup('The @formatter formatter has the expected cache tags.', ['@formatter' => $formatter]));
 
     // Test the second field item.
     $expected_rendered_name_field_2 = '
-            <div class="field field--name-name field--type-string field--label-hidden field__item">' . $this->unsavedReferencedEntity->label() . '</div>
+            <div>' . $this->unsavedReferencedEntity->label() . '</div>
       ';
     $expected_rendered_body_field_2 = '
-  <div class="clearfix text-formatted field field--name-body field--type-text field--label-above">
-    <div class="field__label">Body</div>
-              <div class="field__item"><p>Hello, unsaved world!</p></div>
+  <div>
+    <div>Body</div>
+              <div><p>Hello, unsaved world!</p></div>
           </div>
 ';
 
     $renderer->renderRoot($build[1]);
-    $this->assertEquals($build[1]['#markup'], 'default | ' . $this->unsavedReferencedEntity->label() . $expected_rendered_name_field_2 . $expected_rendered_body_field_2, sprintf('The markup returned by the %s formatter is correct for an item with a unsaved entity.', $formatter));
+    $this->assertSame('default | ' . $this->unsavedReferencedEntity->label() . $expected_rendered_name_field_2 . $expected_rendered_body_field_2, (string) $build[1]['#markup'], sprintf('The markup returned by the %s formatter is correct for an item with a unsaved entity.', $formatter));
   }
 
   /**
@@ -303,6 +303,7 @@ class DynamicEntityReferenceFormatterTest extends EntityKernelTestBase {
     // lacking any URL info.
     $expected_item_2 = [
       '#plain_text' => $this->unsavedReferencedEntity->label(),
+      '#entity' => $this->unsavedReferencedEntity,
       '#cache' => [
         'contexts' => [
           'user.permissions',

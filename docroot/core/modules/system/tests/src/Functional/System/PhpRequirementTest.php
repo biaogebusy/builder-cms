@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\system\Functional\System;
 
 use Drupal\Core\Utility\PhpRequirements;
@@ -47,7 +49,7 @@ class PhpRequirementTest extends BrowserTestBase {
   /**
    * Tests status report messages regarding the PHP version.
    */
-  public function testStatusPage() {
+  public function testStatusPage(): void {
     $minimum_php_version = PhpRequirements::getMinimumSupportedPhp();
     // Go to Administration.
     $this->drupalGet('admin/reports/status');
@@ -72,11 +74,11 @@ class PhpRequirementTest extends BrowserTestBase {
     // There should be an informational message if the PHP version is below the
     // recommended version.
     if (version_compare($phpversion, \Drupal::RECOMMENDED_PHP) < 0) {
-      // If running a PHP version affected by a known OPcache bug, warn about
-      // that.
+      // If it's possible to run Drupal on PHP 8.1.0 to 8.1.5, warn about a
+      // bug in OPcache.
       // @todo Remove this when \Drupal::MINIMUM_PHP is at least 8.1.6 in
       //   https://www.drupal.org/i/3305726.
-      if (version_compare($phpversion, '8.1.0', 'ge') && version_compare($phpversion, '8.1.6', 'lt')) {
+      if (version_compare($phpversion, '8.1.6') < 0) {
         $this->assertSession()->pageTextContains("PHP $phpversion has an OPcache bug that can cause fatal errors with class autoloading. This can be fixed by upgrading to PHP 8.1.6 or later.");
         $this->assertSession()->linkExists('an OPcache bug that can cause fatal errors with class autoloading');
       }

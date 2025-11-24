@@ -2,14 +2,13 @@
 
 namespace Drupal\Tests\commerce_promotion\Kernel\Entity;
 
+use Drupal\Core\Datetime\DrupalDateTime;
+use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 use Drupal\commerce_order\Entity\OrderType;
-use Drupal\commerce_price\RounderInterface;
 use Drupal\commerce_promotion\Entity\Coupon;
 use Drupal\commerce_promotion\Entity\Promotion;
 use Drupal\commerce_promotion\Plugin\Commerce\PromotionOffer\OrderItemPercentageOff;
-use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\datetime\Plugin\Field\FieldType\DateTimeItemInterface;
-use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 
 /**
  * Tests the Promotion entity.
@@ -116,8 +115,7 @@ class PromotionTest extends OrderKernelTestBase {
     $promotion->setStoreIds([$this->store->id()]);
     $this->assertEquals([$this->store->id()], $promotion->getStoreIds());
 
-    $rounder = $this->prophesize(RounderInterface::class)->reveal();
-    $offer = new OrderItemPercentageOff(['percentage' => '0.5'], 'order_percentage_off', [], $rounder);
+    $offer = new OrderItemPercentageOff(['percentage' => '0.5'], 'order_percentage_off', []);
     $promotion->setOffer($offer);
     $this->assertEquals($offer->getPluginId(), $promotion->getOffer()->getPluginId());
     $this->assertEquals($offer->getConfiguration(), $promotion->getOffer()->getConfiguration());
@@ -223,6 +221,28 @@ class PromotionTest extends OrderKernelTestBase {
     $duplicate_promotion = $promotion->createDuplicate();
     $this->assertEquals('10% off', $duplicate_promotion->label());
     $this->assertFalse($duplicate_promotion->hasCoupons());
+  }
+
+  /**
+   * @covers ::isMultipleCouponsAllowed
+   */
+  public function testAllowMultipleCouponsField() {
+    // Create a promotion with allow_multiple_coupons enabled.
+    $promotion = Promotion::create([
+      'name' => 'Test Promotion',
+      'start_date' => '2025-02-17T00:00:00',
+      'end_date' => '2025-03-17T00:00:00',
+      'allow_multiple_coupons' => TRUE,
+    ]);
+    $this->assertTrue($promotion->isMultipleCouponsAllowed(), 'The allow_multiple_coupons field is correctly set to TRUE.');
+    $promotion->set('allow_multiple_coupons', FALSE);
+    $this->assertFalse($promotion->isMultipleCouponsAllowed());
+
+    // Create a promotion without explicitly setting allow_multiple_coupons.
+    $promotion = Promotion::create([
+      'name' => 'Default Promotion',
+    ]);
+    $this->assertFalse($promotion->isMultipleCouponsAllowed(), 'The default value for allow_multiple_coupons is FALSE.');
   }
 
 }

@@ -3,7 +3,3 @@ services:
     class: Drupal\csv_serialization\Encoder\CsvEncoder
     tags:
       - { name: encoder, format: csv }
-  csv_serialization.csvsubscriber:
-    class: Drupal\csv_serialization\EventSubscriber\CsvSubscriber
-    tags:
-      - { name: event_subscriber }

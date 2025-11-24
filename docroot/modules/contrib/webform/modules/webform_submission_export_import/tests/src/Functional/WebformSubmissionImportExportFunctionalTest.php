@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\webform_submission_export_import\Functional;
 
+use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\file\Entity\File;
 use Drupal\Tests\webform\Functional\WebformBrowserTestBase;
 use Drupal\webform\Entity\Webform;
@@ -261,6 +262,12 @@ class WebformSubmissionImportExportFunctionalTest extends WebformBrowserTestBase
     // not treated as errors.
     $actual_stats = $importer->import();
     WebformElementHelper::convertRenderMarkupToStrings($actual_stats);
+    $validation_error = DeprecationHelper::backwardsCompatibleCall(
+      currentVersion: \Drupal::VERSION,
+      deprecatedVersion: '10.2',
+      currentCallable: fn() => 'The email address <em class="placeholder">not an email address</em> is not valid. Use the format user@example.com.',
+      deprecatedCallable: fn() => 'The email address <em class="placeholder">not an email address</em> is not valid.',
+    );
     $expected_stats = [
       'created' => 1,
       'updated' => 1,
@@ -278,8 +285,8 @@ class WebformSubmissionImportExportFunctionalTest extends WebformBrowserTestBase
         1 => [],
         2 => [],
         3 => [
-          0 => 'The email address <em class="placeholder">not an email address</em> is not valid.',
-          1 => 'The email address <em class="placeholder">not an email address</em> is not valid.',
+          0 => $validation_error,
+          1 => $validation_error,
           2 => (floatval(\Drupal::VERSION) >= 10.1)
             ? 'The submitted value <em class="placeholder">invalid</em> in the <em class="placeholder">checkboxes</em> element is not allowed.'
             : 'An illegal choice has been detected. Please contact the site administrator.',

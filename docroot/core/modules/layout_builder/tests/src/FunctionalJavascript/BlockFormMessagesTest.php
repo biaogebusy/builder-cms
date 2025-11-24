@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\layout_builder\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
@@ -46,10 +48,7 @@ class BlockFormMessagesTest extends WebDriverTestBase {
   /**
    * Tests that validation messages are shown on the block form.
    */
-  public function testValidationMessage() {
-    // @todo Work out why this fixes random fails in this test.
-    //   https://www.drupal.org/project/drupal/issues/3055982
-    $this->getSession()->resizeWindow(800, 1000);
+  public function testValidationMessage(): void {
     $assert_session = $this->assertSession();
     $page = $this->getSession()->getPage();
 
@@ -78,7 +77,6 @@ class BlockFormMessagesTest extends WebDriverTestBase {
 
     // Ensure that message are displayed when configuring an existing block.
     $this->drupalGet('node/1/layout');
-    $assert_session->assertWaitOnAjaxRequest();
     $this->clickContextualLink($block_css_locator, 'Configure', TRUE);
     $this->assertNotEmpty($assert_session->waitForElementVisible('css', '#drupal-off-canvas [name="settings[label]"]'));
     $page->findField('Title')->setValue('');

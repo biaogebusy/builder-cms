@@ -2,18 +2,19 @@
 
 namespace Drupal\jsonapi_extras\Plugin\jsonapi\FieldEnhancer;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\jsonapi_extras\Attribute\ResourceFieldEnhancer;
 use Drupal\jsonapi_extras\Plugin\ResourceFieldEnhancerBase;
 use Shaper\Util\Context;
 
 /**
  * Perform additional manipulations to date fields.
- *
- * @ResourceFieldEnhancer(
- *   id = "nested",
- *   label = @Translation("Single Nested Property"),
- *   description = @Translation("Extracts or wraps nested properties from an object.")
- * )
  */
+#[ResourceFieldEnhancer(
+  id: 'nested',
+  label: new TranslatableMarkup('Single Nested Property'),
+  description: new TranslatableMarkup('Extracts or wraps nested properties from an object.'),
+)]
 class SingleNestedEnhancer extends ResourceFieldEnhancerBase {
 
   /**

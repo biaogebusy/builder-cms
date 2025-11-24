@@ -2,12 +2,12 @@
 
 namespace Drupal\Tests\devel_generate\Traits;
 
-use Drupal\comment\Tests\CommentTestTrait;
-use Drupal\Tests\field\Traits\EntityReferenceTestTrait;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Language\Language;
-use Drupal\taxonomy\Entity\Vocabulary;
+use Drupal\Tests\field\Traits\EntityReferenceFieldCreationTrait;
+use Drupal\comment\Tests\CommentTestTrait;
 use Drupal\language\Entity\ConfigurableLanguage;
+use Drupal\taxonomy\Entity\Vocabulary;
 
 /**
  * Provides methods to assist Devel Generate testing.
@@ -17,7 +17,7 @@ use Drupal\language\Entity\ConfigurableLanguage;
 trait DevelGenerateSetupTrait {
 
   use CommentTestTrait;
-  use EntityReferenceTestTrait;
+  use EntityReferenceFieldCreationTrait;
 
   /**
    * Vocabulary for testing generation of terms.
@@ -36,7 +36,7 @@ trait DevelGenerateSetupTrait {
   /**
    * General set-up for all tests.
    */
-  public function setUpData() {
+  public function setUpData(): void {
     // Create user with devel_generate permissions and access to admin/content.
     $admin_user = $this->drupalCreateUser([
       'administer devel_generate',
@@ -80,7 +80,7 @@ trait DevelGenerateSetupTrait {
       ],
       'auto_create' => TRUE,
     ];
-    $this->createEntityReferenceField('node', 'article', $field_name, NULL, 'taxonomy_term', 'default', $handler_settings, FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
+    $this->createEntityReferenceField('node', 'article', $field_name, '', 'taxonomy_term', 'default', $handler_settings, FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
 
     $entity_type_manager->getStorage('entity_form_display')
       ->load('node.article.default')

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Component\Utility;
 
 use Drupal\Component\Utility\Rectangle;
@@ -16,7 +18,7 @@ class RectangleTest extends TestCase {
    *
    * @covers ::rotate
    */
-  public function testWrongWidth() {
+  public function testWrongWidth(): void {
     $this->expectException(\InvalidArgumentException::class);
     $rect = new Rectangle(-40, 20);
   }
@@ -26,7 +28,7 @@ class RectangleTest extends TestCase {
    *
    * @covers ::rotate
    */
-  public function testWrongHeight() {
+  public function testWrongHeight(): void {
     $this->expectException(\InvalidArgumentException::class);
     $rect = new Rectangle(40, 0);
   }
@@ -51,7 +53,7 @@ class RectangleTest extends TestCase {
    *
    * @dataProvider providerPhp55RotateDimensions
    */
-  public function testRotateDimensions($width, $height, $angle, $exp_width, $exp_height) {
+  public function testRotateDimensions($width, $height, $angle, $exp_width, $exp_height): void {
     $rect = new Rectangle($width, $height);
     $rect->rotate($angle);
     $this->assertEquals($exp_width, $rect->getBoundingWidth());
@@ -77,13 +79,10 @@ class RectangleTest extends TestCase {
    *   protected function rotateResults($width, $height, $angle, &$new_width, &$new_height) {
    *     $image = \Drupal::service('image.factory')->get(NULL, 'gd');
    *     $image->createNew($width, $height);
-   *     $old_res = $image->getToolkit()->getResource();
+   *     $old = $image->getToolkit()->getGdImage();
    *     $image->rotate($angle);
    *     $new_width = $image->getWidth();
    *     $new_height = $image->getHeight();
-   *     if (is_resource($old_res)) {
-   *       imagedestroy($old_res);
-   *     }
    *   }
    * @endcode
    *
@@ -97,7 +96,7 @@ class RectangleTest extends TestCase {
    *
    * @see testRotateDimensions()
    */
-  public function providerPhp55RotateDimensions() {
+  public static function providerPhp55RotateDimensions() {
     // The dataset is stored in a .json file because it is very large and causes
     // problems for PHPCS.
     return json_decode(file_get_contents(__DIR__ . '/fixtures/RectangleTest.json'));

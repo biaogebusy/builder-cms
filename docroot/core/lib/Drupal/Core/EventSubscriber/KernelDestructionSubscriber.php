@@ -11,6 +11,9 @@ use Symfony\Component\HttpKernel\KernelEvents;
 /**
  * Destructs services that are initiated and tagged with "needs_destruction".
  *
+ * @deprecated in drupal:10.3.0 and is removed from drupal:11.0.0. There is no
+ * replacement.
+ * @see https://www.drupal.org/node/3416021
  * @see \Drupal\Core\DestructableInterface
  */
 class KernelDestructionSubscriber implements EventSubscriberInterface, ContainerAwareInterface {
@@ -59,7 +62,7 @@ class KernelDestructionSubscriber implements EventSubscriberInterface, Container
    * @return array
    *   An array of event listener definitions.
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     $events[KernelEvents::TERMINATE][] = ['onKernelTerminate', 100];
     return $events;
   }

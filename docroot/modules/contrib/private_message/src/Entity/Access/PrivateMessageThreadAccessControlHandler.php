@@ -1,11 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\private_message\Entity\Access;
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Entity\EntityAccessControlHandler;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\private_message\Entity\PrivateMessageThreadInterface;
 
 /**
  * Access control handler for private message thread entities.
@@ -15,7 +19,8 @@ class PrivateMessageThreadAccessControlHandler extends EntityAccessControlHandle
   /**
    * {@inheritdoc}
    */
-  protected function checkAccess(EntityInterface $entity, $operation, AccountInterface $account) {
+  protected function checkAccess(EntityInterface $entity, $operation, AccountInterface $account): AccessResultInterface {
+    assert($entity instanceof PrivateMessageThreadInterface);
 
     if ($account->hasPermission('administer private messages')) {
       return AccessResult::allowed();
@@ -30,17 +35,15 @@ class PrivateMessageThreadAccessControlHandler extends EntityAccessControlHandle
               return AccessResult::allowed();
             }
           }
-
           break;
 
         case 'delete':
-          // Allow delete if we are member of this thread
-          // And if we have permission to delete thread for everyone.
+          // Allow to delete if we are member of this thread and if we have
+          // permission to delete thread for everyone.
           if ($entity->isMember($account->id())
             && $account->hasPermission('delete private message thread for all')) {
             return AccessResult::allowed();
           }
-
           break;
 
         case 'clear_personal_history':
@@ -48,7 +51,6 @@ class PrivateMessageThreadAccessControlHandler extends EntityAccessControlHandle
           if ($entity->isMember($account->id())) {
             return AccessResult::allowed();
           }
-
           break;
       }
     }
@@ -62,7 +64,7 @@ class PrivateMessageThreadAccessControlHandler extends EntityAccessControlHandle
    * Separate from the checkAccess because the entity does not yet exist, it
    * will be created during the 'add' process.
    */
-  protected function checkCreateAccess(AccountInterface $account, array $context, $entity_bundle = NULL) {
+  protected function checkCreateAccess(AccountInterface $account, array $context, $entity_bundle = NULL): AccessResultInterface {
     return AccessResult::allowedIfHasPermission($account, 'use private messaging system');
   }
 

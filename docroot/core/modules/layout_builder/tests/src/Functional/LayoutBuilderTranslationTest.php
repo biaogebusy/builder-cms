@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\layout_builder\Functional;
 
 use Drupal\Tests\content_translation\Functional\ContentTranslationTestBase;
@@ -41,6 +43,7 @@ class LayoutBuilderTranslationTest extends ContentTranslationTestBase {
    */
   protected function setUp(): void {
     parent::setUp();
+    $this->doSetup();
     $this->setUpViewDisplay();
     $this->setUpEntities();
   }
@@ -48,7 +51,7 @@ class LayoutBuilderTranslationTest extends ContentTranslationTestBase {
   /**
    * Tests that layout overrides work when created after a translation.
    */
-  public function testTranslationBeforeLayoutOverride() {
+  public function testTranslationBeforeLayoutOverride(): void {
     $assert_session = $this->assertSession();
 
     $this->addEntityTranslation();
@@ -88,7 +91,7 @@ class LayoutBuilderTranslationTest extends ContentTranslationTestBase {
   /**
    * Tests that layout overrides work when created before a translation.
    */
-  public function testLayoutOverrideBeforeTranslation() {
+  public function testLayoutOverrideBeforeTranslation(): void {
     $assert_session = $this->assertSession();
 
     $entity_url = $this->entity->toUrl()->toString();

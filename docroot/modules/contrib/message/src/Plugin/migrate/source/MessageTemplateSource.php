@@ -57,7 +57,7 @@ class MessageTemplateSource extends DrupalSqlBase {
       'name' => $this->t('Unique message type name.'),
       'category' => $this->t('Message type category.'),
       'description' => $this->t('Message type description.'),
-      'argument_keys' => $this->t('Message type argumented keys.'),
+      'argument_keys' => $this->t('Message type augmented keys.'),
       'language' => $this->t('Message type language.'),
       'status' => $this->t('Message type status.'),
       'module' => $this->t('Message type module.'),
@@ -66,7 +66,7 @@ class MessageTemplateSource extends DrupalSqlBase {
       'message_text_value' => $this->t('Message text value.'),
       'message_text_format' => $this->t('Message text format.'),
       'delta' => $this->t('Message text number.'),
-      'concat_id' => $this->t('Concats the id of the message type and the delta of the message text.'),
+      'concat_id' => $this->t('Concat the id of the message type and the delta of the message text.'),
     ];
   }
 

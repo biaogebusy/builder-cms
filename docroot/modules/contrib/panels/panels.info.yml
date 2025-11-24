@@ -2,7 +2,7 @@ name: Panels
 description: 'Core Panels display functions; provides no external UI, at least one other Panels module should be enabled.'
 type: module
 package: Panels
-core_version_requirement: '^9.2 || ^10'
+core_version_requirement: '^9.5 || ^10 || ^11'
 configure: panels.admin
 dependencies:
   - ctools:ctools
@@ -10,7 +10,7 @@ dependencies:
 test_dependencies:
   - page_manager:page_manager
 
-# Information added by Drupal.org packaging script on 2022-11-16
-version: '8.x-4.7'
+# Information added by Drupal.org packaging script on 2025-04-09
+version: '8.x-4.9'
 project: 'panels'
-datestamp: 1668632923
+datestamp: 1744174389

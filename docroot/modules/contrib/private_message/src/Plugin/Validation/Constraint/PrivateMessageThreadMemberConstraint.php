@@ -1,18 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\private_message\Plugin\Validation\Constraint;
 
-use Symfony\Component\Validator\Constraint;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\Validation\Attribute\Constraint;
+use Symfony\Component\Validator\Constraint as SymfonyConstraint;
 
 /**
  * Checks that members of the thread have permission to use private messages.
- *
- * @Constraint(
- *   id = "private_message_thread_member",
- *   label = @Translation("Private Message Thread Member", context = "Validation"),
- * )
  */
-class PrivateMessageThreadMemberConstraint extends Constraint {
+#[Constraint(
+  id: 'private_message_thread_member',
+  label: new TranslatableMarkup('Private Message Thread Member', [], ['context' => 'Validation']),
+)]
+class PrivateMessageThreadMemberConstraint extends SymfonyConstraint {
+
   /**
    * Constraint violation error.
    *

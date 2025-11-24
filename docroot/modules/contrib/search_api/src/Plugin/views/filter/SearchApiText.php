@@ -2,13 +2,14 @@
 
 namespace Drupal\search_api\Plugin\views\filter;
 
+use Drupal\views\Attribute\ViewsFilter;
+
 /**
  * Defines a filter for filtering on fulltext fields.
  *
  * @ingroup views_filter_handlers
- *
- * @ViewsFilter("search_api_text")
  */
+#[ViewsFilter('search_api_text')]
 class SearchApiText extends SearchApiString {
 
   /**

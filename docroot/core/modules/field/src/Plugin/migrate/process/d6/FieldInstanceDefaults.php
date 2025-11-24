@@ -2,6 +2,7 @@
 
 namespace Drupal\field\Plugin\migrate\process\d6;
 
+use Drupal\migrate\Attribute\MigrateProcess;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\ProcessPluginBase;
 use Drupal\migrate\Row;
@@ -9,10 +10,9 @@ use Drupal\migrate\Row;
 // cspell:ignore imagefield
 
 /**
- * @MigrateProcessPlugin(
- *   id = "d6_field_instance_defaults"
- * )
+ * Determines the default field settings.
  */
+#[MigrateProcess('d6_field_instance_defaults')]
 class FieldInstanceDefaults extends ProcessPluginBase {
 
   /**
@@ -34,7 +34,7 @@ class FieldInstanceDefaults extends ProcessPluginBase {
         break;
 
       case 'imagefield_widget':
-        // @todo, load the image and populate the defaults.
+        // @todo load the image and populate the defaults.
         // $default['default_image'] = $widget_settings['default_image'];
         break;
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\redirect\Functional;
 
 use Drupal\language\Entity\ConfigurableLanguage;
@@ -51,7 +53,7 @@ class RedirectUILanguageTest extends RedirectUITest {
     // Add a redirect for english.
     $this->drupalGet('admin/config/search/redirect/add');
     $this->submitForm([
-      'redirect_source[0][path]' => 'langpath',
+      'redirect_source[0][path]' => 'lang-path',
       'redirect_redirect[0][uri]' => '/user',
       'language[0][value]' => 'en',
     ], 'Save');
@@ -59,40 +61,40 @@ class RedirectUILanguageTest extends RedirectUITest {
     // Add a redirect for germany.
     $this->drupalGet('admin/config/search/redirect/add');
     $this->submitForm([
-      'redirect_source[0][path]' => 'langpath',
+      'redirect_source[0][path]' => 'lang-path',
       'redirect_redirect[0][uri]' => '<front>',
       'language[0][value]' => 'de',
     ], 'Save');
 
     // Check redirect for english.
-    $this->assertRedirect('langpath', '/user', 301);
+    $this->assertRedirect('lang-path', '/user', 301);
 
     // Check redirect for germany.
-    $this->assertRedirect('de/langpath', '/de', 301);
+    $this->assertRedirect('de/lang-path', '/de', 301);
 
     // Check no redirect for spanish.
-    $this->assertRedirect('es/langpath', NULL, 404);
+    $this->assertRedirect('es/lang-path', NULL, 404);
   }
 
   /**
    * Test non-language specific redirect.
    */
-  public function testUndefinedLangugageRedirects() {
+  public function testUndefinedLanguageRedirects() {
     $this->drupalLogin($this->adminUser);
 
     // Add a redirect for english.
     $this->drupalGet('admin/config/search/redirect/add');
     $this->submitForm([
-      'redirect_source[0][path]' => 'langpath',
+      'redirect_source[0][path]' => 'lang-path',
       'redirect_redirect[0][uri]' => '/user',
       'language[0][value]' => 'und',
     ], 'Save');
 
     // Check redirect for english.
-    $this->assertRedirect('langpath', '/user', 301);
+    $this->assertRedirect('lang-path', '/user', 301);
 
     // Check redirect for spanish.
-    $this->assertRedirect('es/langpath', '/es/user', 301);
+    $this->assertRedirect('es/lang-path', '/es/user', 301);
   }
 
   /**
@@ -104,16 +106,16 @@ class RedirectUILanguageTest extends RedirectUITest {
     // Add a redirect for english.
     $this->drupalGet('admin/config/search/redirect/add');
     $this->submitForm([
-      'redirect_source[0][path]' => 'langpath',
+      'redirect_source[0][path]' => 'lang-path',
       'redirect_redirect[0][uri]' => '/user',
       'language[0][value]' => 'en',
     ], 'Save');
 
     // Check redirect for english.
-    $this->assertRedirect('langpath', '/user', 301);
+    $this->assertRedirect('lang-path', '/user', 301);
 
     // Check that redirect for Germany is not working.
-    $this->assertRedirect('de/langpath', NULL, 404);
+    $this->assertRedirect('de/lang-path', NULL, 404);
 
     // Edit the redirect and change the language.
     $this->drupalGet('admin/config/search/redirect');
@@ -121,10 +123,10 @@ class RedirectUILanguageTest extends RedirectUITest {
     $this->submitForm(['language[0][value]' => 'de'], 'Save');
 
     // Check redirect for english is NOT working now.
-    $this->assertRedirect('langpath', NULL, 404);
+    $this->assertRedirect('lang-path', NULL, 404);
 
     // Check that redirect for Germany is now working.
-    $this->assertRedirect('de/langpath', '/de/user', 301);
+    $this->assertRedirect('de/lang-path', '/de/user', 301);
   }
 
 }

@@ -1,0 +1,31 @@
+<?php
+
+/**
+ * @file
+ * Install/uninstall or update functions for Admin Toolbar Links Access Filter.
+ */
+
+/**
+ * Implements hook_requirements().
+ */
+function admin_toolbar_links_access_filter_requirements($phase) {
+  $requirements = [];
+
+  if ($phase == 'runtime') {
+    // Display an error message on the status report page if the module is
+    // enabled and the core version is 10.3.0 or higher.
+    if (version_compare(\Drupal::VERSION, '10.3.0', '>=')) {
+      $requirements['admin_toolbar_links_access_filter'] = [
+        'title' => t('Admin Toolbar Links Access Filter'),
+        'value' => t('The features of the <em>Admin Toolbar Links Access Filter</em> module are included in Drupal core since version 10.3 and therefore <strong>it should be uninstalled</strong>.<br>Since the module is no longer needed, it <em>will</em> be removed in future releases of <em>Admin Toolbar</em> when support for versions lower than 10.3 is dropped.<br>
+See issues: <a href=":issue_url1">#3463291</a> and <a href=":issue_url2">#3487246</a>.',
+        [
+          ':issue_url1' => 'https://www.drupal.org/node/3463291',
+          ':issue_url2' => 'https://www.drupal.org/node/3487246',
+        ]),
+        'severity' => REQUIREMENT_ERROR,
+      ];
+    }
+  }
+  return $requirements;
+}

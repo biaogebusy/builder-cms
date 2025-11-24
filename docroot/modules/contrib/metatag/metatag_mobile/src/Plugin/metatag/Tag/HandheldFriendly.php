@@ -20,5 +20,23 @@ use Drupal\metatag\Plugin\metatag\Tag\MetaNameBase;
  * )
  */
 class HandheldFriendly extends MetaNameBase {
-  // Nothing here yet. Just a placeholder class for a plugin.
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTestOutputExistsXpath(): array {
+    // @todo The output from this meta tag is not overriding core.
+    // @see metatag_mobile_page_attachments_alter()
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTestOutputValuesXpath(array $values): array {
+    // @todo The output from this meta tag is not overriding core.
+    // @see metatag_mobile_page_attachments_alter()
+    return [];
+  }
+
 }

@@ -2,25 +2,25 @@
 
 namespace Drupal\system\Plugin\Block;
 
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Drupal\system\Form\SystemBrandingOffCanvasForm;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a block to display 'Site branding' elements.
- *
- * @Block(
- *   id = "system_branding_block",
- *   admin_label = @Translation("Site branding"),
- *   forms = {
- *     "settings_tray" = "Drupal\system\Form\SystemBrandingOffCanvasForm",
- *   },
- * )
  */
+#[Block(
+  id: "system_branding_block",
+  admin_label: new TranslatableMarkup("Site branding"),
+  forms: ['settings_tray' => SystemBrandingOffCanvasForm::class]
+)]
 class SystemBrandingBlock extends BlockBase implements ContainerFactoryPluginInterface {
 
   /**
@@ -36,7 +36,7 @@ class SystemBrandingBlock extends BlockBase implements ContainerFactoryPluginInt
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory

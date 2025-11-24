@@ -2,14 +2,15 @@
 
 namespace Drupal\xmlsitemap_engines\Form;
 
-use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Component\Utility\UrlHelper;
+use Drupal\Core\Form\ConfigFormBase;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Datetime\DateFormatterInterface;
+use Drupal\Core\Config\TypedConfigManagerInterface;
+use Drupal\Core\State\StateInterface;
 use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\State\StateInterface;
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Datetime\DateFormatterInterface;
-use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Configure xmlsitemap engines settings for this site.
@@ -35,13 +36,15 @@ class XmlSitemapEnginesSettingsForm extends ConfigFormBase {
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The factory for configuration objects.
+   * @param \Drupal\Core\Config\TypedConfigManagerInterface $typedConfigManager
+   *   The typed config manager.
    * @param \Drupal\Core\Datetime\DateFormatterInterface $date
    *   The date service.
    * @param \Drupal\Core\State\StateInterface $state
    *   The state store service.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, DateFormatterInterface $date, StateInterface $state) {
-    parent::__construct($config_factory);
+  public function __construct(ConfigFactoryInterface $config_factory, TypedConfigManagerInterface $typedConfigManager, DateFormatterInterface $date, StateInterface $state) {
+    parent::__construct($config_factory, $typedConfigManager);
 
     $this->date = $date;
     $this->state = $state;
@@ -53,6 +56,7 @@ class XmlSitemapEnginesSettingsForm extends ConfigFormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('config.factory'),
+      $container->get('config.typed'),
       $container->get('date.formatter'),
       $container->get('state')
     );

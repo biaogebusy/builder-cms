@@ -5,9 +5,9 @@ image.style.*:
   label: 'Image style'
   mapping:
     name:
-      type: string
+      type: machine_name
     label:
-      type: label
+      type: required_label
       label: 'Label'
     effects:
       type: sequence
@@ -18,8 +18,12 @@ image.style.*:
             type: uuid
           id:
             type: string
+            constraints:
+              PluginExists:
+                manager: plugin.manager.image.effect
+                interface: 'Drupal\image\ImageEffectInterface'
           weight:
-            type: integer
+            type: weight
           data:
             type: image.effect.[%parent.id]
 
@@ -83,10 +87,18 @@ image.effect.image_scale_and_crop:
 
 image.settings:
   type: config_object
+  constraints:
+    FullyValidatable: ~
   mapping:
     preview_image:
       type: string
       label: 'Preview image'
+      constraints:
+        NotBlank: []
+        # We need to use Symfony's Image constraint because it will accept a file
+        # path as a string, whereas the File module's FileIsImage constraint expects
+        # a full file entity.
+        Image: []
     allow_insecure_derivatives:
       type: boolean
       label: 'Allow insecure image derivatives'
@@ -108,10 +120,10 @@ field.field_settings.image:
   mapping:
     max_resolution:
       type: string
-      label: 'Maximum image resolution'
+      label: 'Maximum image dimensions'
     min_resolution:
       type: string
-      label: 'Minimum image resolution'
+      label: 'Minimum image dimensions'
     alt_field:
       type: boolean
       label: 'Enable Alt field'

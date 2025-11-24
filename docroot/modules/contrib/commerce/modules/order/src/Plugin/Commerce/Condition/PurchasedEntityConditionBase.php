@@ -2,13 +2,13 @@
 
 namespace Drupal\commerce_order\Plugin\Commerce\Condition;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\commerce\EntityUuidMapperInterface;
 use Drupal\commerce\Plugin\Commerce\Condition\ConditionBase;
 use Drupal\commerce\Plugin\Commerce\Condition\PurchasableEntityConditionInterface;
 use Drupal\commerce\PurchasableEntityInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 abstract class PurchasedEntityConditionBase extends ConditionBase implements PurchasableEntityConditionInterface, ContainerFactoryPluginInterface {
@@ -129,7 +129,7 @@ abstract class PurchasedEntityConditionBase extends ConditionBase implements Pur
    * @return bool
    *   Whether the given purchasable entity is "valid".
    */
-  protected function isValid(PurchasableEntityInterface $purchasable_entity = NULL): bool {
+  protected function isValid(?PurchasableEntityInterface $purchasable_entity = NULL): bool {
     return $purchasable_entity !== NULL &&
       $purchasable_entity->getEntityTypeId() === $this->getPurchasableEntityType() &&
       in_array($purchasable_entity->uuid(), $this->configuration['entities'], TRUE);

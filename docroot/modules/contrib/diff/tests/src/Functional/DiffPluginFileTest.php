@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\diff\Functional;
 
 use Drupal\field\Entity\FieldConfig;
@@ -86,21 +88,23 @@ class DiffPluginFileTest extends DiffPluginTestBase {
     // Upload a file to the article.
     $test_files = $this->drupalGetTestFiles('text');
     $edit['files[field_file_0]'] = $this->fileSystem->realpath($test_files['0']->uri);
-    $this->drupalGet('node/' . $node->id() . '/edit');
+    $nodeEditUrl = $node->toUrl('edit-form');
+    $this->drupalGet($nodeEditUrl);
     $this->submitForm($edit, 'Upload');
     $edit['revision'] = TRUE;
-    $this->drupalPostNodeForm('node/' . $node->id() . '/edit', $edit, 'Save');
-    $node = $this->drupalGetNodeByTitle('Test article', TRUE);
+    $this->drupalGet($nodeEditUrl);
+    $this->submitForm($edit, 'Save');
 
     // Replace the file by a different one.
-    $this->drupalGet('node/' . $node->id() . '/edit');
+    $this->drupalGet($nodeEditUrl);
     $this->submitForm([], 'Remove');
     $this->submitForm(['revision' => FALSE], 'Save');
     $edit['files[field_file_0]'] = $this->fileSystem->realpath($test_files['1']->uri);
-    $this->drupalGet($node->toUrl('edit-form'));
+    $this->drupalGet($nodeEditUrl);
     $this->submitForm($edit, 'Upload');
     $edit['revision'] = TRUE;
-    $this->drupalPostNodeForm('node/' . $node->id() . '/edit', $edit, 'Save');
+    $this->drupalGet($nodeEditUrl);
+    $this->submitForm($edit, 'Save');
     $node = $this->drupalGetNodeByTitle('Test article', TRUE);
     $revision3 = $node->getRevisionId();
 
@@ -121,47 +125,23 @@ class DiffPluginFileTest extends DiffPluginTestBase {
     $this->assertSession()->pageTextContains('File');
     $this->assertSession()->pageTextContains('File: text-1_0.txt');
     $this->assertSession()->pageTextContains('File ID: 4');
+
+    // Delete the file and ensure we don't get a 500.
+    $file = $node->get($file_field_name)->entity;
+    $file->delete();
+    $this->getSession()->reload();
+    $this->assertSession()->statusCodeEquals(200);
+    $this->assertSession()->pageTextContains('File: deleted');
   }
 
   /**
-   * Tests the Image plugin.
+   * Tests the Image plugin for singe value fields.
    *
    * @see \Drupal\diff\Plugin\diff\Field\ImageFieldBuilder
    */
-  public function testImagePlugin(): void {
+  public function testImagePluginSingleValue(): void {
     // Add image field to the article content type.
-    $image_field_name = 'field_image';
-    FieldStorageConfig::create([
-      'field_name' => $image_field_name,
-      'entity_type' => 'node',
-      'type' => 'image',
-      'settings' => [],
-      'cardinality' => 1,
-    ])->save();
-
-    $field_config = FieldConfig::create([
-      'field_name' => $image_field_name,
-      'label' => 'Image',
-      'entity_type' => 'node',
-      'bundle' => 'article',
-      'required' => FALSE,
-      'settings' => ['alt_field' => 1],
-    ]);
-    $field_config->save();
-
-    $this->formDisplay->load('node.article.default')
-      ->setComponent($image_field_name, [
-        'type' => 'image_image',
-        'settings' => [],
-      ])
-      ->save();
-
-    $this->viewDisplay->load('node.article.default')
-      ->setComponent($image_field_name, [
-        'type' => 'image',
-        'settings' => [],
-      ])
-      ->save();
+    $this->setUpImageField('field_image');
 
     // Create an article.
     $node = $this->drupalCreateNode([
@@ -173,20 +153,22 @@ class DiffPluginFileTest extends DiffPluginTestBase {
     // Upload an image to the article.
     $test_files = $this->drupalGetTestFiles('image');
     $edit = ['files[field_image_0]' => $this->fileSystem->realpath($test_files['1']->uri)];
-    $this->drupalPostNodeForm('node/' . $node->id() . '/edit', $edit, 'Save');
+    $nodeEditUrl = $node->toUrl('edit-form');
+    $this->drupalGet($nodeEditUrl);
+    $this->submitForm($edit, 'Upload');
     $edit = [
       'field_image[0][alt]' => 'Image alt',
       'revision' => TRUE,
     ];
     $this->submitForm($edit, 'Save');
-    $node = $this->drupalGetNodeByTitle('Test article', TRUE);
 
     // Replace the image by a different one.
-    $this->drupalGet('node/' . $node->id() . '/edit');
+    $this->drupalGet($nodeEditUrl);
     $this->submitForm([], 'Remove');
     $this->submitForm(['revision' => FALSE], 'Save');
     $edit = ['files[field_image_0]' => $this->fileSystem->realpath($test_files['1']->uri)];
-    $this->drupalPostNodeForm('node/' . $node->id() . '/edit', $edit, 'Save');
+    $this->drupalGet($nodeEditUrl);
+    $this->submitForm($edit, 'Upload');
     $edit = [
       'field_image[0][alt]' => 'Image alt updated',
       'revision' => TRUE,
@@ -219,7 +201,8 @@ class DiffPluginFileTest extends DiffPluginTestBase {
       'revision' => TRUE,
       'field_image[0][title]' => 'Image title updated',
     ];
-    $this->drupalPostNodeForm('node/' . $node->id() . '/edit', $edit, 'Save');
+    $this->drupalGet($nodeEditUrl);
+    $this->submitForm($edit, 'Save');
     $this->drupalGet('node/' . $node->id() . '/revisions');
     $this->submitForm([], 'Compare selected revisions');
 
@@ -240,33 +223,24 @@ class DiffPluginFileTest extends DiffPluginTestBase {
     $this->submitForm([], 'Save');
     $this->drupalGet('node/' . $node->id() . '/revisions');
     $this->submitForm([], 'Compare selected revisions');
-    // Alt and title must be hidden.
     $this->assertSession()->pageTextContains('File ID: 2');
 
     // Disable alt image fields.
-    $this->drupalGet('admin/config/content/diff/fields');
-    $this->submitForm([], 'node__field_image_settings_edit');
-    $edit = [
-      'fields[node__field_image][settings_edit_form][settings][compare_alt_field]' => FALSE,
-    ];
-    $this->submitForm($edit, 'node__field_image_plugin_settings_update');
-    $this->submitForm([], 'Save');
+    \Drupal::configFactory()->getEditable('diff.plugins')
+      ->set('fields.node.field_image.settings.compare_alt_field', FALSE)
+      ->save();
     $this->drupalGet('node/' . $node->id() . '/revisions');
     $this->submitForm([], 'Compare selected revisions');
-    // Alt and title must be hidden.
+    // Alt must be hidden.
     $this->assertSession()->pageTextNotContains('Alt: Image alt updated');
     $this->assertSession()->pageTextNotContains('Alt: Image alt updated new');
     $this->assertSession()->pageTextContains('Title: Image title updated');
 
     // Disable title image fields, reenable alt.
-    $this->drupalGet('admin/config/content/diff/fields');
-    $this->submitForm([], 'node__field_image_settings_edit');
-    $edit = [
-      'fields[node__field_image][settings_edit_form][settings][compare_alt_field]' => TRUE,
-      'fields[node__field_image][settings_edit_form][settings][compare_title_field]' => FALSE,
-    ];
-    $this->submitForm($edit, 'node__field_image_plugin_settings_update');
-    $this->submitForm([], 'Save');
+    \Drupal::configFactory()->getEditable('diff.plugins')
+      ->set('fields.node.field_image.settings.compare_title_field', FALSE)
+      ->set('fields.node.field_image.settings.compare_alt_field', TRUE)
+      ->save();
     $this->drupalGet('node/' . $node->id() . '/revisions');
     $this->submitForm([], 'Compare selected revisions');
     $this->assertSession()->pageTextContains('Alt: Image alt updated');
@@ -278,13 +252,9 @@ class DiffPluginFileTest extends DiffPluginTestBase {
     $this->assertSession()->responseContains($image_url);
 
     // Disable thumbnail image field.
-    $this->drupalGet('admin/config/content/diff/fields');
-    $this->submitForm([], 'node__field_image_settings_edit');
-    $edit = [
-      'fields[node__field_image][settings_edit_form][settings][show_thumbnail]' => FALSE,
-    ];
-    $this->submitForm($edit, 'node__field_image_plugin_settings_update');
-    $this->submitForm([], 'Save');
+    \Drupal::configFactory()->getEditable('diff.plugins')
+      ->set('fields.node.field_image.settings.show_thumbnail', FALSE)
+      ->save();
     $this->drupalGet('node/' . $node->id() . '/revisions');
     $this->submitForm([], 'Compare selected revisions');
 
@@ -292,6 +262,106 @@ class DiffPluginFileTest extends DiffPluginTestBase {
     $img1_url = \Drupal::service('file_url_generator')->generateAbsoluteString(\Drupal::token()->replace("public://styles/thumbnail/public/[date:custom:Y]-[date:custom:m]/" . $test_files['1']->name));
     $image_url = \Drupal::service('file_url_generator')->transformRelative($img1_url);
     $this->assertSession()->responseNotContains($image_url);
+
+    // Delete the image and ensure we don't get a 500.
+    \Drupal::configFactory()->getEditable('diff.plugins')
+      ->set('fields.node.field_image.settings.show_thumbnail', TRUE)
+      ->save();
+    $image = $node->get('field_image')->entity;
+    $image->delete();
+    $this->getSession()->reload();
+    $this->assertSession()->statusCodeEquals(200);
+    $this->assertSession()->pageTextContains('Image: deleted');
+  }
+
+  /**
+   * Tests the Image plugin for multi value fields.
+   *
+   * @see \Drupal\diff\Plugin\diff\Field\ImageFieldBuilder
+   */
+  public function testImagePluginMultiValue(): void {
+    // Add image field to the article content type.
+    $this->setUpImageField('field_image', 10);
+
+    // Create an article.
+    $node = $this->drupalCreateNode([
+      'type' => 'article',
+      'title' => 'Test article',
+    ]);
+
+    // Upload first image to the article.
+    $test_files = $this->drupalGetTestFiles('image');
+    $edit = ['files[field_image_0][]' => $this->fileSystem->realpath($test_files['1']->uri)];
+    $nodeEditUrl = $node->toUrl('edit-form');
+    $this->drupalGet($nodeEditUrl);
+    $this->submitForm($edit, 'Upload');
+    $edit = [
+      'field_image[0][alt]' => 'Image alt',
+      'revision' => TRUE,
+    ];
+    $this->submitForm($edit, 'Save');
+
+    // Upload new image to the article.
+    $edit = ['files[field_image_1][]' => $this->fileSystem->realpath($test_files['2']->uri)];
+    $this->drupalGet($nodeEditUrl);
+    $this->submitForm($edit, 'Upload');
+    $edit = [
+      'field_image[1][alt]' => 'Image two alt',
+      'revision' => TRUE,
+    ];
+    $this->submitForm($edit, 'Save');
+
+    $this->drupalGet('node/' . $node->id() . '/revisions');
+    $this->submitForm([], 'Compare selected revisions');
+    // Assert alt text of both images are visible. First image added in previous
+    // revision would have its alt text visible twice on both sides as context.
+    // Alt text of the second image should only be present once on right.
+    $this->assertSession()->pageTextMatchesCount(2, '/Alt: Image alt/');
+    $this->assertSession()->pageTextMatchesCount(1, '/Alt: Image two alt/');
+  }
+
+  /**
+   * Sets image with on the "article".
+   *
+   * @param string $field_name
+   *   Field name.
+   * @param int $cardinality
+   *   Field cardinality.
+   * @param string $label
+   *   Field label.
+   */
+  protected function setUpImageField(string $field_name, int $cardinality = 1, string $label = 'Image'): void {
+    FieldStorageConfig::create([
+      'field_name' => $field_name,
+      'entity_type' => 'node',
+      'type' => 'image',
+      'settings' => [],
+      'cardinality' => $cardinality,
+    ])->save();
+
+    $field_config = FieldConfig::create([
+      'field_name' => $field_name,
+      'label' => $label,
+      'entity_type' => 'node',
+      'bundle' => 'article',
+      'required' => FALSE,
+      'settings' => ['alt_field' => 1],
+    ]);
+    $field_config->save();
+
+    $this->formDisplay->load('node.article.default')
+      ->setComponent($field_name, [
+        'type' => 'image_image',
+        'settings' => [],
+      ])
+      ->save();
+
+    $this->viewDisplay->load('node.article.default')
+      ->setComponent($field_name, [
+        'type' => 'image',
+        'settings' => [],
+      ])
+      ->save();
   }
 
 }

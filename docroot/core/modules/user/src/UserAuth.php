@@ -33,6 +33,7 @@ class UserAuth implements UserAuthInterface {
    *   The password service.
    */
   public function __construct(EntityTypeManagerInterface $entity_type_manager, PasswordInterface $password_checker) {
+    @trigger_error(__CLASS__ . ' is deprecated in drupal:10.3.0 and will be removed from drupal:12.0.0. Implement \Drupal\user\UserAuthenticationInterface instead. See https://www.drupal.org/node/3411040');
     $this->entityTypeManager = $entity_type_manager;
     $this->passwordChecker = $password_checker;
   }
@@ -40,7 +41,8 @@ class UserAuth implements UserAuthInterface {
   /**
    * {@inheritdoc}
    */
-  public function authenticate($username, $password) {
+  public function authenticate($username, #[\SensitiveParameter] $password) {
+    @trigger_error(__METHOD__ . ' is deprecated in drupal:10.3.0 and will be removed from drupal:12.0.0. Implement \Drupal\user\UserAuthenticationInterface instead. See https://www.drupal.org/node/3411040');
     $uid = FALSE;
 
     if (!empty($username) && strlen($password) > 0) {

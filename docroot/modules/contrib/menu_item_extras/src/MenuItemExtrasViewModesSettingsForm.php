@@ -4,18 +4,18 @@ namespace Drupal\menu_item_extras;
 
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
 use Drupal\Core\Entity\EntityForm;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Menu\MenuLinkTreeElement;
 use Drupal\Core\Menu\MenuLinkTreeInterface;
 use Drupal\Core\Menu\MenuTreeParameters;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Utility\LinkGeneratorInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\menu_item_extras\Service\MenuLinkTreeHandlerInterface;
-use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Base form for menu view modes settings edit forms.
@@ -128,6 +128,7 @@ class MenuItemExtrasViewModesSettingsForm extends EntityForm {
       $this->logger('menu')->notice('Menu %label has been updated.', ['%label' => $menu->label()]);
     }
     $form_state->setRedirectUrl($this->entity->toUrl('view-modes-settings'));
+    return $status;
   }
 
   /**

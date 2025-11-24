@@ -10,11 +10,9 @@
     ],
     "homepage": "https://www.drupal.org/project/queue_ui",
     "minimum-stability": "dev",
-    "require": {
-        "drupal/core": "^9.2 || ^10"
-    },
     "require-dev": {
-        "drupal/queue_order": "^2"
+        "drupal/queue_order": "^2",
+        "drush/drush": "^12.0 || ^13.0"
     },
     "authors": [
         {
@@ -44,7 +42,7 @@
     "extra": {
         "drush": {
             "services": {
-                "drush.services.yml": "^9 || ^10 || ^11"
+                "drush.services.yml": "^12.0 || ^13.0"
             }
         }
     }

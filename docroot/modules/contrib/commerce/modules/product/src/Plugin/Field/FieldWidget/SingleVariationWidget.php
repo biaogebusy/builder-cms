@@ -2,28 +2,25 @@
 
 namespace Drupal\commerce_product\Plugin\Field\FieldWidget;
 
-use Drupal\commerce\InlineFormManager;
 use Drupal\Component\Utility\NestedArray;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Field\Attribute\FieldWidget;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Plugin implementation of the 'commerce_product_single_variation' widget.
- *
- * @FieldWidget(
- *   id = "commerce_product_single_variation",
- *   label = @Translation("Single variation (Product information)"),
- *   field_types = {
- *     "entity_reference"
- *   },
- *   multiple_values = true
- * )
  */
+#[FieldWidget(
+  id: "commerce_product_single_variation",
+  label: new TranslatableMarkup("Single variation (Product information)"),
+  field_types: ["entity_reference"],
+  multiple_values: TRUE,
+)]
 class SingleVariationWidget extends WidgetBase implements ContainerFactoryPluginInterface {
 
   /**
@@ -41,43 +38,77 @@ class SingleVariationWidget extends WidgetBase implements ContainerFactoryPlugin
   protected $inlineFormManager;
 
   /**
-   * Constructs a new SingleVariationWidget object.
+   * The entity display repository.
    *
-   * @param string $plugin_id
-   *   The plugin_id for the widget.
-   * @param mixed $plugin_definition
-   *   The plugin implementation definition.
-   * @param \Drupal\Core\Field\FieldDefinitionInterface $field_definition
-   *   The definition of the field to which the widget is associated.
-   * @param array $settings
-   *   The widget settings.
-   * @param array $third_party_settings
-   *   Any third party settings.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
-   * @param \Drupal\commerce\InlineFormManager $inline_form_manager
-   *   The inline form manager.
+   * @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface
    */
-  public function __construct($plugin_id, $plugin_definition, FieldDefinitionInterface $field_definition, array $settings, array $third_party_settings, EntityTypeManagerInterface $entity_type_manager, InlineFormManager $inline_form_manager) {
-    parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $third_party_settings);
-
-    $this->entityTypeManager = $entity_type_manager;
-    $this->inlineFormManager = $inline_form_manager;
-  }
+  protected $entityDisplayRepository;
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $plugin_id,
-      $plugin_definition,
-      $configuration['field_definition'],
-      $configuration['settings'],
-      $configuration['third_party_settings'],
-      $container->get('entity_type.manager'),
-      $container->get('plugin.manager.commerce_inline_form')
-    );
+    $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
+    $instance->entityTypeManager = $container->get('entity_type.manager');
+    $instance->inlineFormManager = $container->get('plugin.manager.commerce_inline_form');
+    $instance->entityDisplayRepository = $container->get('entity_display.repository');
+    return $instance;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function defaultSettings() {
+    return [
+      'form_mode' => 'default',
+      'field_title_text' => 'Product information',
+    ] + parent::defaultSettings();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function settingsForm(array $form, FormStateInterface $form_state) {
+    $entity_type_id = $this->getFieldSetting('target_type');
+    $element = [];
+    $element['form_mode'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Form mode'),
+      '#default_value' => $this->getSetting('form_mode'),
+      '#options' => $this->entityDisplayRepository->getFormModeOptions($entity_type_id),
+      '#required' => TRUE,
+    ];
+    $element['field_title_text'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Field title text'),
+      '#default_value' => $this->getSetting('field_title_text'),
+      '#required' => TRUE,
+    ];
+
+    return $element;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function settingsSummary() {
+    $summary = [];
+
+    $form_mode = $this->getSetting('form_mode');
+    $form_mode_label = $this->t('Default');
+
+    if ($form_mode !== 'default') {
+      $entity_type_id = $this->getFieldSetting('target_type');
+      $form_mode = $this->entityTypeManager->getStorage('entity_form_mode')->load($entity_type_id . '.' . $form_mode);
+      $form_mode_label = $form_mode->label();
+    }
+
+    $summary[] = $this->t('Form mode: @mode', ['@mode' => $form_mode_label]);
+    $summary[] = $this->t('Field title: "@text"', [
+      '@text' => $this->getSetting('field_title_text'),
+    ]);
+
+    return $summary;
   }
 
   /**
@@ -103,7 +134,8 @@ class SingleVariationWidget extends WidgetBase implements ContainerFactoryPlugin
         'langcode' => $items->getEntity()->language()->getId(),
       ]);
     }
-    $inline_form = $this->inlineFormManager->createInstance('content_entity', [], $variation);
+
+    $inline_form = $this->inlineFormManager->createInstance('content_entity', ['form_mode' => $this->getSetting('form_mode')], $variation);
 
     $element = [
       '#type' => 'details',
@@ -112,7 +144,7 @@ class SingleVariationWidget extends WidgetBase implements ContainerFactoryPlugin
       '#required' => FALSE,
       // Use a custom title for the widget because "Variations" doesn't make
       // sense in a single variation context.
-      '#field_title' => $this->t('Product information'),
+      '#field_title' => $this->t($this->getSetting('field_title_text')),
       '#after_build' => [
         [get_class($this), 'removeTranslatabilityClue'],
       ],

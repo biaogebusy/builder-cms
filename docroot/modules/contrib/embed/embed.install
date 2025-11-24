@@ -26,7 +26,7 @@ function embed_requirements($phase): array {
       }
       if (!empty($button_icons_not_svg)) {
         $requirements['embed_buttons_ckeditor5'] = [
-          'title' => t('Embed button CKEditor5 compatiblity'),
+          'title' => t('Embed button CKEditor5 compatibility'),
           'value' => t('The following embed button(s) are not using SVG icons and will not be compatible with CKEditor5'),
           'description' => [
             '#theme' => 'item_list',

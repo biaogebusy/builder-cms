@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\EventSubscriber;
 
 use Drupal\Core\EventSubscriber\OptionsRequestSubscriber;
@@ -20,7 +22,7 @@ class OptionsRequestSubscriberTest extends UnitTestCase {
   /**
    * @covers ::onRequest
    */
-  public function testWithNonOptionRequest() {
+  public function testWithNonOptionRequest(): void {
     $kernel = $this->prophesize(HttpKernelInterface::class);
     $request = Request::create('/example', 'GET');
 
@@ -28,7 +30,7 @@ class OptionsRequestSubscriberTest extends UnitTestCase {
     $route_provider->getRouteCollectionForRequest($request)->shouldNotBeCalled();
 
     $subscriber = new OptionsRequestSubscriber($route_provider->reveal());
-    $event = new RequestEvent($kernel->reveal(), $request, HttpKernelInterface::MASTER_REQUEST);
+    $event = new RequestEvent($kernel->reveal(), $request, HttpKernelInterface::MAIN_REQUEST);
     $subscriber->onRequest($event);
 
     $this->assertFalse($event->hasResponse());
@@ -37,7 +39,7 @@ class OptionsRequestSubscriberTest extends UnitTestCase {
   /**
    * @covers ::onRequest
    */
-  public function testWithoutMatchingRoutes() {
+  public function testWithoutMatchingRoutes(): void {
     $kernel = $this->prophesize(HttpKernelInterface::class);
     $request = Request::create('/example', 'OPTIONS');
 
@@ -45,7 +47,7 @@ class OptionsRequestSubscriberTest extends UnitTestCase {
     $route_provider->getRouteCollectionForRequest($request)->willReturn(new RouteCollection())->shouldBeCalled();
 
     $subscriber = new OptionsRequestSubscriber($route_provider->reveal());
-    $event = new RequestEvent($kernel->reveal(), $request, HttpKernelInterface::MASTER_REQUEST);
+    $event = new RequestEvent($kernel->reveal(), $request, HttpKernelInterface::MAIN_REQUEST);
     $subscriber->onRequest($event);
 
     $this->assertFalse($event->hasResponse());
@@ -55,7 +57,7 @@ class OptionsRequestSubscriberTest extends UnitTestCase {
    * @covers ::onRequest
    * @dataProvider providerTestOnRequestWithOptionsRequest
    */
-  public function testWithOptionsRequest(RouteCollection $collection, $expected_header) {
+  public function testWithOptionsRequest(RouteCollection $collection, $expected_header): void {
     $kernel = $this->prophesize(HttpKernelInterface::class);
     $request = Request::create('/example', 'OPTIONS');
 
@@ -63,7 +65,7 @@ class OptionsRequestSubscriberTest extends UnitTestCase {
     $route_provider->getRouteCollectionForRequest($request)->willReturn($collection)->shouldBeCalled();
 
     $subscriber = new OptionsRequestSubscriber($route_provider->reveal());
-    $event = new RequestEvent($kernel->reveal(), $request, HttpKernelInterface::MASTER_REQUEST);
+    $event = new RequestEvent($kernel->reveal(), $request, HttpKernelInterface::MAIN_REQUEST);
     $subscriber->onRequest($event);
 
     $this->assertTrue($event->hasResponse());
@@ -72,7 +74,7 @@ class OptionsRequestSubscriberTest extends UnitTestCase {
     $this->assertEquals($expected_header, $response->headers->get('Allow'));
   }
 
-  public function providerTestOnRequestWithOptionsRequest() {
+  public static function providerTestOnRequestWithOptionsRequest() {
     $data = [];
 
     foreach (['GET', 'POST', 'PATCH', 'PUT', 'DELETE'] as $method) {

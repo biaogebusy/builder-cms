@@ -101,6 +101,7 @@ class EckEntityTypeListBuilder extends ConfigEntityListBuilder {
 
       $contentExists = (bool) $this->entityTypeManager->getStorage($entity->id())
         ->getQuery()
+        ->accessCheck(FALSE)
         ->range(0, 1)
         ->execute();
       if ($contentExists) {

@@ -113,7 +113,7 @@ class ThemeExperimentalConfirmForm extends ConfirmFormBase {
     $items = [];
     if (!empty($dependencies)) {
       // Display a list of required themes that have to be installed as well.
-      $items[] = $this->formatPlural(count($dependencies), 'You must enable the @required theme to install @theme.', 'You must enable the @required themes to install @theme.', [
+      $items[] = $this->formatPlural(count($dependencies), 'You must install the @required theme to install @theme.', 'You must install the @required themes to install @theme.', [
         '@theme' => $get_label($theme),
         // It is safe to implode this because theme names are not translated
         // markup and so will not be double-escaped.
@@ -150,7 +150,7 @@ class ThemeExperimentalConfirmForm extends ConfirmFormBase {
           $admin_theme = $config->get('admin');
           if (!empty($admin_theme) && $admin_theme !== $theme) {
             $this->messenger()
-              ->addStatus($this->t('Please note that the administration theme is still set to the %admin_theme theme; consequently, the theme on this page remains unchanged. All non-administrative sections of the site, however, will show the selected %selected_theme theme by default.', [
+              ->addStatus($this->t('Note that the administration theme is still set to the %admin_theme theme; consequently, the theme on this page remains unchanged. All non-administrative sections of the site, however, will show the selected %selected_theme theme by default.', [
                 '%admin_theme' => $themes[$admin_theme]->info['name'],
                 '%selected_theme' => $themes[$theme]->info['name'],
               ]));

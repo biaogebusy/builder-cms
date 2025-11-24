@@ -15,6 +15,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class PanelsContentForm extends FormBase {
 
   use AjaxFormTrait;
+  use PanelsStyleTrait;
 
   /**
    * Tempstore factory.
@@ -103,6 +104,7 @@ class PanelsContentForm extends FormBase {
       '#description' => $this->t('Configure the page title that will be used for this display.'),
       '#default_value' => $variant_plugin->getConfiguration()['page_title'] ?: '',
     ];
+    $form += $this->getCssStyleForm($variant_plugin->getConfiguration());
     $pattern_plugin = $variant_plugin->getPattern();
     $machine_name = $pattern_plugin->getMachineName($cached_values);
 
@@ -264,12 +266,23 @@ class PanelsContentForm extends FormBase {
         $variant_plugin->updateBlock($block_id, $block_values);
       }
     }
+    $configuration = $variant_plugin->getConfiguration();
     // Page Variant title handling.
     if ($form_state->hasValue('page_title')) {
-      $configuration = $variant_plugin->getConfiguration();
       $configuration['page_title'] = $form_state->getValue('page_title');
       $variant_plugin->setConfiguration($configuration);
     }
+    // Page Variant CSS classes, Id, styles handling.
+    if ($form_state->hasValue('css_classes')) {
+      $configuration['css_classes'] = preg_split('/\s+/', trim($form_state->getValue('css_classes')));
+    }
+    if ($form_state->hasValue('html_id')) {
+      $configuration['html_id'] = $form_state->getValue('html_id');
+    }
+    if ($form_state->hasValue('css_styles')) {
+      $configuration['css_styles'] = $form_state->getValue('css_styles');
+    }
+    $variant_plugin->setConfiguration($configuration);
   }
 
   /**

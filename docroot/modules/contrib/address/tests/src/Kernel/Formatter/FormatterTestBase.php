@@ -24,6 +24,7 @@ abstract class FormatterTestBase extends KernelTestBase {
     'entity_test',
     'user',
     'address',
+    'content_translation',
   ];
 
   /**
@@ -54,8 +55,10 @@ abstract class FormatterTestBase extends KernelTestBase {
     $this->installConfig(['text']);
     $this->installConfig(['address']);
     $this->installEntitySchema('entity_test');
+    $this->installEntitySchema('entity_test_mul');
 
     $this->fieldName = mb_strtolower($this->randomMachineName());
+    $this->container->get('content_translation.manager')->setEnabled('entity_test_mul', 'entity_test_mul', TRUE);
   }
 
   /**
@@ -69,19 +72,19 @@ abstract class FormatterTestBase extends KernelTestBase {
   protected function createField($field_type, $formatter_id) {
     $field_storage = FieldStorageConfig::create([
       'field_name' => $this->fieldName,
-      'entity_type' => 'entity_test',
+      'entity_type' => 'entity_test_mul',
       'type' => $field_type,
     ]);
     $field_storage->save();
 
     $field = FieldConfig::create([
       'field_storage' => $field_storage,
-      'bundle' => 'entity_test',
+      'bundle' => 'entity_test_mul',
       'label' => $this->randomMachineName(),
     ]);
     $field->save();
 
-    $this->display = \Drupal::service('entity_display.repository')->getViewDisplay('entity_test', 'entity_test', 'default');
+    $this->display = \Drupal::service('entity_display.repository')->getViewDisplay('entity_test_mul', 'entity_test_mul', 'default');
     $this->display->setComponent($this->fieldName, [
       'type' => $formatter_id,
       'settings' => [],

@@ -2,6 +2,7 @@
 
 namespace Drupal\shs\Plugin\Field\FieldFormatter;
 
+use Drupal\Core\Entity\Exception\MissingBundleClassException;
 use Drupal\Core\Entity\Exception\UndefinedLinkTemplateException;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
@@ -9,7 +10,6 @@ use Drupal\Core\Field\Plugin\Field\FieldFormatter\EntityReferenceLabelFormatter;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\shs\StringTranslationTrait;
 use Drupal\taxonomy\TermStorageInterface;
-use Drupal\Core\Entity\Exception\MissingBundleClassException;
 
 /**
  * Plugin implementation of the 'entity reference taxonomy term SHS' formatter.

@@ -116,9 +116,8 @@ function range_field_views_data_argument(array &$data, FieldStorageConfigInterfa
     'entity_type' => $field_storage->getTargetEntityTypeId(),
     'empty field name' => t('- No value -'),
     'additional fields' => $additional_fields,
-    // Temporarily make argument of a string type,
-    // until https://www.drupal.org/node/2799201 and
-    // https://www.drupal.org/node/2595025 end up in core.
+    // Temporarily make argument of a string type, until
+    // https://www.drupal.org/node/2595025 ends up in core.
     'numeric' => FALSE,
     'break_phrase' => FALSE,
   ];

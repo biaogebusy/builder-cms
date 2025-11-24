@@ -1,14 +1,6 @@
 parameters:
-  reportUnmatchedIgnoredErrors: false
-  customRulesetUsed: true
-  checkMissingIterableValueType: false
-  fileExtensions:
-    - module
-    - theme
-    - profile
-    - install
+  level: 0
+  excludePaths:
+    - *DynamicEntityReferenceFieldBuilder.php
   ignoreErrors:
     - '#Plugin definitions cannot be altered.#'
-includes:
-  - vendor/mglaman/phpstan-drupal/extension.neon
-  - vendor/phpstan/phpstan-deprecation-rules/rules.neon

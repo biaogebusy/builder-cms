@@ -100,6 +100,14 @@ class Captcha extends WebformElementBase {
       $element['#captcha_admin_mode'] = TRUE;
     }
 
+    // Hide and solve the element if the user is exempt by IP address.
+    $is_exempt = function_exists('captcha_whitelist_ip_whitelisted')
+      && captcha_whitelist_ip_whitelisted();
+    if ($is_exempt) {
+      $element['#access'] = FALSE;
+      $element['#captcha_admin_mode'] = TRUE;
+    }
+
     // Always enable admin mode for test.
     $is_test = (strpos($this->routeMatch->getRouteName(), '.webform.test_form') !== FALSE) ? TRUE : FALSE;
     if ($is_test) {

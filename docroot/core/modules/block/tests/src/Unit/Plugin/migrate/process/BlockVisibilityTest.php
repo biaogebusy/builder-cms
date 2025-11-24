@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\block\Unit\Plugin\migrate\process;
 
 use Drupal\block\Plugin\migrate\process\BlockVisibility;
@@ -38,7 +40,7 @@ class BlockVisibilityTest extends MigrateProcessTestCase {
   /**
    * @covers ::transform
    */
-  public function testTransformNoData() {
+  public function testTransformNoData(): void {
     $transformed_value = $this->plugin->transform([0, '', []], $this->migrateExecutable, $this->row, 'destination_property');
     $this->assertEmpty($transformed_value);
   }
@@ -46,7 +48,7 @@ class BlockVisibilityTest extends MigrateProcessTestCase {
   /**
    * @covers ::transform
    */
-  public function testTransformSinglePageWithFront() {
+  public function testTransformSinglePageWithFront(): void {
     $visibility = $this->plugin->transform([0, '<front>', []], $this->migrateExecutable, $this->row, 'destination_property');
     $this->assertSame('request_path', $visibility['request_path']['id']);
     $this->assertTrue($visibility['request_path']['negate']);
@@ -56,7 +58,7 @@ class BlockVisibilityTest extends MigrateProcessTestCase {
   /**
    * @covers ::transform
    */
-  public function testTransformMultiplePagesWithFront() {
+  public function testTransformMultiplePagesWithFront(): void {
     $visibility = $this->plugin->transform([1, "foo\n/bar\rbaz\r\n<front>", []], $this->migrateExecutable, $this->row, 'destination_property');
     $this->assertSame('request_path', $visibility['request_path']['id']);
     $this->assertFalse($visibility['request_path']['negate']);
@@ -66,7 +68,7 @@ class BlockVisibilityTest extends MigrateProcessTestCase {
   /**
    * @covers ::transform
    */
-  public function testTransformPhpEnabled() {
+  public function testTransformPhpEnabled(): void {
     $this->moduleHandler->moduleExists('php')->willReturn(TRUE);
     $visibility = $this->plugin->transform([2, '<?php', []], $this->migrateExecutable, $this->row, 'destination_property');
     $this->assertSame('php', $visibility['php']['id']);
@@ -77,7 +79,7 @@ class BlockVisibilityTest extends MigrateProcessTestCase {
   /**
    * @covers ::transform
    */
-  public function testTransformPhpDisabled() {
+  public function testTransformPhpDisabled(): void {
     $this->moduleHandler->moduleExists('php')->willReturn(FALSE);
     $transformed_value = $this->plugin->transform([2, '<?php', []], $this->migrateExecutable, $this->row, 'destination_property');
     $this->assertEmpty($transformed_value);
@@ -86,7 +88,7 @@ class BlockVisibilityTest extends MigrateProcessTestCase {
   /**
    * @covers ::transform
    */
-  public function testTransformException() {
+  public function testTransformException(): void {
     $this->moduleHandler->moduleExists('php')->willReturn(FALSE);
     $migrate_lookup = $this->prophesize(MigrateLookupInterface::class);
     $this->row = $this->getMockBuilder('Drupal\migrate\Row')

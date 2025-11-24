@@ -2,6 +2,7 @@
 
 namespace Drupal\search_api\Plugin\views\filter;
 
+use Drupal\views\Attribute\ViewsFilter;
 use Drupal\user\Plugin\views\filter\Name;
 
 /**
@@ -10,9 +11,8 @@ use Drupal\user\Plugin\views\filter\Name;
  * Based on \Drupal\user\Plugin\views\filter\Name.
  *
  * @ingroup views_filter_handlers
- *
- * @ViewsFilter("search_api_user")
  */
+#[ViewsFilter('search_api_user')]
 class SearchApiUser extends Name {
 
   use SearchApiFilterTrait;

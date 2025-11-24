@@ -1,0 +1,14 @@
+{
+    "name": "drupal/menu_breadcrumb",
+    "type": "drupal-module",
+    "description": "Create breadcrumbs from nested menu titles and/or taxonomy membership..",
+    "homepage": "https://www.drupal.org/project/menu_breadcrumb",
+    "license": "GPL-2.0-or-later",
+    "support": {
+        "issues": "https://www.drupal.org/project/issues/menu_breadcrumb",
+        "source": "https://git.drupalcode.org/project/menu_breadcrumb"
+    },
+    "require": {
+        "drupal/core": "^9 || ^10 || ^11"
+    }
+}

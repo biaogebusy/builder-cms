@@ -89,6 +89,7 @@ final class Locale
         'en-GH' => 'en-001',
         'en-GI' => 'en-001',
         'en-GM' => 'en-001',
+        'en-GS' => 'en-001',
         'en-GY' => 'en-001',
         'en-HK' => 'en-001',
         'en-ID' => 'en-001',
@@ -151,12 +152,22 @@ final class Locale
         'en-AT' => 'en-150',
         'en-BE' => 'en-150',
         'en-CH' => 'en-150',
+        'en-CZ' => 'en-150',
         'en-DE' => 'en-150',
         'en-DK' => 'en-150',
+        'en-ES' => 'en-150',
         'en-FI' => 'en-150',
+        'en-FR' => 'en-150',
+        'en-HU' => 'en-150',
+        'en-IT' => 'en-150',
         'en-NL' => 'en-150',
+        'en-NO' => 'en-150',
+        'en-PL' => 'en-150',
+        'en-PT' => 'en-150',
+        'en-RO' => 'en-150',
         'en-SE' => 'en-150',
         'en-SI' => 'en-150',
+        'en-SK' => 'en-150',
         'hi-Latn' => 'en-IN',
         'es-AR' => 'es-419',
         'es-BO' => 'es-419',
@@ -204,7 +215,9 @@ final class Locale
         'en-Dsrt' => 'und',
         'en-Shaw' => 'und',
         'iu-Latn' => 'und',
+        'kaa-Latn' => 'und',
         'kk-Arab' => 'und',
+        'kok-Latn' => 'und',
         'ks-Deva' => 'und',
         'ku-Arab' => 'und',
         'kxv-Deva' => 'und',
@@ -282,7 +295,7 @@ final class Locale
      *
      * @throws UnknownLocaleException
      */
-    public static function resolve(array $availableLocales, string $locale, string $fallbackLocale = null): string
+    public static function resolve(array $availableLocales, string $locale, ?string $fallbackLocale = null): string
     {
         $locale = self::canonicalize($locale);
         $resolvedLocale = null;
@@ -353,7 +366,7 @@ final class Locale
      *
      * @return array An array of all variants of a locale.
      */
-    public static function getCandidates(string $locale, string $fallbackLocale = null): array
+    public static function getCandidates(string $locale, ?string $fallbackLocale = null): array
     {
         $locale = self::replaceAlias($locale);
         $candidates = [$locale];

@@ -7,33 +7,13 @@ use Drupal\search_api\IndexInterface;
 use Drupal\search_api\ParseMode\ParseModePluginManager;
 use Drupal\search_api\Query\Query;
 use Drupal\search_api\Query\ResultSetInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Provides methods for creating search queries and statically caching results.
  */
 class QueryHelper implements QueryHelperInterface {
-
-  /**
-   * The request stack.
-   *
-   * @var \Symfony\Component\HttpFoundation\RequestStack
-   */
-  protected $requestStack;
-
-  /**
-   * The module handler.
-   *
-   * @var \Drupal\Core\Extension\ModuleHandlerInterface
-   */
-  protected $moduleHandler;
-
-  /**
-   * The parse mode manager.
-   *
-   * @var \Drupal\search_api\ParseMode\ParseModePluginManager
-   */
-  protected $parseModeManager;
 
   /**
    * Storage for the results, keyed by request and search ID.
@@ -49,20 +29,12 @@ class QueryHelper implements QueryHelperInterface {
    */
   protected $null;
 
-  /**
-   * Constructs a QueryHelper object.
-   *
-   * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
-   *   The request stack.
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $moduleHandler
-   *   The module handler.
-   * @param \Drupal\search_api\ParseMode\ParseModePluginManager $parseModeManager
-   *   The parse mode manager.
-   */
-  public function __construct(RequestStack $requestStack, ModuleHandlerInterface $moduleHandler, ParseModePluginManager $parseModeManager) {
-    $this->requestStack = $requestStack;
-    $this->moduleHandler = $moduleHandler;
-    $this->parseModeManager = $parseModeManager;
+  public function __construct(
+    protected RequestStack $requestStack,
+    protected ModuleHandlerInterface $moduleHandler,
+    #[Autowire(service: 'plugin.manager.search_api.parse_mode')]
+    protected ParseModePluginManager $parseModeManager,
+  ) {
     $this->results = new \SplObjectStorage();
     $this->null = (object) [];
   }

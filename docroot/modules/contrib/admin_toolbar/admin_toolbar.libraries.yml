@@ -3,8 +3,47 @@ toolbar.tree:
     theme:
       css/admin.toolbar.css: {}
   js:
-    js/jquery.hoverIntent.js: {}
     js/admin_toolbar.js: {}
   dependencies:
-    - core/jquery
-    - core/drupal
+    # Require the Core Toolbar module library for the 'ToolbarModel' class.
+    - toolbar/toolbar
+
+toolbar.tree.hoverintent:
+  js:
+    js/jquery.hoverIntent.js: {}
+    js/admin_toolbar.hoverintent.js: {}
+  dependencies:
+    - admin_toolbar/toolbar.tree
+
+toolbar.tree.hover:
+  js:
+    js/admin_toolbar.hover.js: {}
+  dependencies:
+    - admin_toolbar/toolbar.tree
+
+# Disable toolbar sticky behavior.
+toolbar.disable_sticky:
+  css:
+    theme:
+      css/admin_toolbar.disable_sticky.css: {}
+
+# Enable toolbar custom sticky behavior.
+toolbar.sticky_behavior:
+  css:
+    theme:
+      css/admin_toolbar.sticky_behavior.css: {}
+  js:
+    js/admin_toolbar.sticky_behavior.js: {}
+  dependencies:
+    - admin_toolbar/toolbar.tree
+
+# Enable toolbar toggle keyboard shortcut.
+toolbar.toggle_shortcut:
+  css:
+    theme:
+      css/admin_toolbar.sticky_behavior.css: {}
+      css/admin_toolbar.toggle_shortcut.css: {}
+  js:
+    js/admin_toolbar.toggle_shortcut.js: {}
+  dependencies:
+    - admin_toolbar/toolbar.tree

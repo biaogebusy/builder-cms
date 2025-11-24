@@ -18,10 +18,13 @@ use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Ajax\RemoveCommand;
 use Drupal\Core\Asset\AttachedAssetsInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Url;
-use Symfony\Component\Validator\Constraints\Choice;
+use Drupal\editor\EditorInterface;
+
+// cspell:ignore multiblock
 
 /**
  * Implements hook_help().
@@ -30,12 +33,12 @@ function ckeditor5_help($route_name, RouteMatchInterface $route_match) {
   switch ($route_name) {
     case 'help.page.ckeditor5':
       $output = '';
-      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<h2>' . t('About') . '</h2>';
       $output .= '<p>' . t('The CKEditor 5 module provides a highly-accessible, highly-usable visual text editor and adds a toolbar to text fields. Users can use buttons to format content and to create semantically correct and valid HTML. The CKEditor module uses the framework provided by the <a href=":text_editor">Text Editor module</a>. It requires JavaScript to be enabled in the browser. For more information, see the <a href=":doc_url">online documentation for the CKEditor 5 module</a> and the <a href=":cke5_url">CKEditor 5 website</a>.', [':doc_url' => 'https://www.drupal.org/docs/contributed-modules/ckeditor-5', ':cke5_url' => 'https://ckeditor.com/ckeditor-5/', ':text_editor' => Url::fromRoute('help.page', ['name' => 'editor'])->toString()]) . '</p>';
-      $output .= '<h3>' . t('Uses') . '</h3>';
+      $output .= '<h2>' . t('Uses') . '</h2>';
       $output .= '<dl>';
       $output .= '<dt>' . t('Enabling CKEditor 5 for individual text formats') . '</dt>';
-      $output .= '<dd>' . t('CKEditor 5 has to be enabled and configured separately for individual text formats from the <a href=":formats">Text formats and editors page</a> because the filter settings for each text format can be different. For more information, see the <a href=":text_editor">Text Editor help page</a> and <a href=":filter">Filter help page</a>.', [':formats' => Url::fromRoute('filter.admin_overview')->toString(), ':text_editor' => Url::fromRoute('help.page', ['name' => 'editor'])->toString(), ':filter' => Url::fromRoute('help.page', ['name' => 'filter'])->toString()]) . '</dd>';
+      $output .= '<dd>' . t('CKEditor 5 has to be installed and configured separately for individual text formats from the <a href=":formats">Text formats and editors page</a> because the filter settings for each text format can be different. For more information, see the <a href=":text_editor">Text Editor help page</a> and <a href=":filter">Filter help page</a>.', [':formats' => Url::fromRoute('filter.admin_overview')->toString(), ':text_editor' => Url::fromRoute('help.page', ['name' => 'editor'])->toString(), ':filter' => Url::fromRoute('help.page', ['name' => 'filter'])->toString()]) . '</dd>';
       $output .= '<dt>' . t('Configuring the toolbar') . '</dt>';
       $output .= '<dd>' . t('When CKEditor 5 is chosen from the <em>Text editor</em> drop-down menu, its toolbar configuration is displayed. You can add and remove buttons from the <em>Active toolbar</em> by dragging and dropping them. Separators and rows can be added to organize the buttons.') . '</dd>';
       $output .= '<dt>' . t('Filtering HTML content') . '</dt>';
@@ -57,7 +60,7 @@ function ckeditor5_help($route_name, RouteMatchInterface $route_match) {
       $output .= '</ul>';
       $output .= '</dd>';
       $output .= '</dl>';
-      $output .= '<h3 id="migration-settings">' . t('Migrating an Existing Text Format to CKEditor 5') . '</h3>';
+      $output .= '<h3 id="migration-settings">' . t('Migrating an Existing Text Format to CKEditor 5') . '</h2>';
       $output .= '<p>' . t('When switching an existing text format to use CKEditor 5, an automatic process is initiated that helps text formats switching to CKEditor 5 from CKEditor 4 (or no text editor) to do so with minimal effort and zero data loss.') . '</p>';
       $output .= '<p>' . t("This process is designed for there to be no data loss risk in switching to CKEditor 5. However some of your editor's functionality may not be 100% equivalent to what was available previously. In most cases, these changes are minimal. After the process completes, status and/or warning messages will summarize any changes that occurred, and more detailed information will be available in the site's logs.") . '</p>';
       $output .= '<p>' . t('CKEditor 5 will attempt to enable plugins that provide equivalent toolbar items to those used prior to switching to CKEditor 5. All core CKEditor 4 plugins and many popular contrib plugins already have CKEditor 5 equivalents. In some cases, functionality that required contrib modules is now built into CKEditor 5. In instances where a plugin does not have an equivalent, no data loss will occur but elements previously provided via the plugin may need to be added manually as HTML via source editing.') . '</p>';
@@ -182,66 +185,46 @@ function ckeditor5_form_filter_format_form_alter(array &$form, FormStateInterfac
     ];
   }
 
-  if (!function_exists('_add_ajax_listeners_to_plugin_inputs')) {
-
-    /**
-     * Recursively adds AJAX listeners to plugin settings elements.
-     *
-     * These are added so allowed tags and other fields that have values
-     * dependent on plugin settings can be updated via AJAX when these settings
-     * are changed in the editor form.
-     *
-     * @param array $plugins_config_form
-     *   The plugins config subform render array.
-     */
-    function _add_ajax_listeners_to_plugin_inputs(array &$plugins_config_form): void {
-      $field_types = [
-        'checkbox',
-        'select',
-        'radios',
-        'textarea',
+  /**
+   * Recursively adds AJAX listeners to plugin settings elements.
+   *
+   * These are added so allowed tags and other fields that have values
+   * dependent on plugin settings can be updated via AJAX when these settings
+   * are changed in the editor form.
+   *
+   * @param array $plugins_config_form
+   *   The plugins config subform render array.
+   */
+  $add_listener = function (array &$plugins_config_form) use (&$add_listener): void {
+    $field_types = [
+      'checkbox',
+      'select',
+      'radios',
+      'textarea',
+    ];
+    if (isset($plugins_config_form['#type']) && in_array($plugins_config_form['#type'], $field_types) && !isset($plugins_config_form['#ajax'])) {
+      $plugins_config_form['#ajax'] = [
+        'callback' => '_update_ckeditor5_html_filter',
+        'trigger_as' => ['name' => 'editor_configure'],
+        'event' => 'change',
+        'ckeditor5_only' => 'true',
       ];
-      if (isset($plugins_config_form['#type']) && in_array($plugins_config_form['#type'], $field_types) && !isset($plugins_config_form['#ajax'])) {
-        $plugins_config_form['#ajax'] = [
-          'callback' => '_update_ckeditor5_html_filter',
-          'trigger_as' => ['name' => 'editor_configure'],
-          'event' => 'change',
-          'ckeditor5_only' => 'true',
-        ];
-      }
-
-      foreach ($plugins_config_form as $key => &$value) {
-        if (is_array($value) && strpos((string) $key, '#') === FALSE) {
-          _add_ajax_listeners_to_plugin_inputs($value);
-        }
-      }
     }
 
-  }
+    foreach ($plugins_config_form as $key => &$value) {
+      if (is_array($value) && !str_contains((string) $key, '#')) {
+        $add_listener($value);
+      }
+    }
+  };
 
   if (isset($form['editor']['settings']['subform']['plugins'])) {
-    _add_ajax_listeners_to_plugin_inputs($form['editor']['settings']['subform']['plugins']);
+    $add_listener($form['editor']['settings']['subform']['plugins']);
   }
 
   // Add an ID to the filter settings vertical tabs wrapper to facilitate AJAX
   // updates.
   $form['filter_settings']['#wrapper_attributes']['id'] = 'filter-settings-wrapper';
-
-  // Add an ID to the editor settings vertical tabs wrapper so it can be easily
-  // targeted by JavaScript. If there are no configurable plugins, render an
-  // empty container with the same ID instead.
-  // @todo consider moving this to editor.module when this module is moved to
-  //   Drupal core https://www.drupal.org/project/ckeditor5/issues/3231322.
-  if (!empty($form['editor']['settings']['subform']['plugins'])) {
-    $form['editor']['settings']['subform']['plugin_settings']['#wrapper_attributes']['id'] = 'plugin-settings-wrapper';
-  }
-  else {
-    $form['editor']['settings']['subform']['plugin_settings'] = [
-      '#type' => 'container',
-      '#attributes' => ['id' => 'plugin-settings-wrapper'],
-    ];
-  }
-
   $form['#after_build'][] = [CKEditor5::class, 'assessActiveTextEditorAfterBuild'];
   $form['#validate'][] = [CKEditor5::class, 'validateSwitchingToCKEditor5'];
   array_unshift($form['actions']['submit']['#submit'], 'ckeditor5_filter_format_edit_form_submit');
@@ -289,7 +272,17 @@ function _update_ckeditor5_html_filter(array $form, FormStateInterface $form_sta
   // latency.
   $renderedField = $renderer->render($form['editor']['settings']);
   if ($form_state->get('ckeditor5_is_active') && $form_state->get('ckeditor5_is_selected')) {
-    $response->addCommand(new ReplaceCommand('#plugin-settings-wrapper', $form['editor']['settings']['subform']['plugin_settings']['#markup']));
+    $plugin_settings_markup = $form['editor']['settings']['subform']['plugin_settings']['#markup'];
+    // If no configurable plugins are enabled, render an empty container with
+    // the same ID instead. Otherwise it'll be impossible to render plugin
+    // settings vertical tabs in the correct location when such a plugin is
+    // enabled.
+    // @see \Drupal\Core\Render\Element\VerticalTabs::preRenderVerticalTabs
+    $markup = $plugin_settings_markup ?? [
+      '#type' => 'container',
+      '#attributes' => ['id' => 'plugin-settings-wrapper'],
+    ];
+    $response->addCommand(new ReplaceCommand('#plugin-settings-wrapper', $markup));
   }
   else {
     $response->addCommand(new ReplaceCommand('#editor-settings-wrapper', $renderedField));
@@ -334,31 +327,27 @@ function _update_ckeditor5_html_filter(array $form, FormStateInterface $form_sta
   $response->addCommand(new InvokeCommand('[data-drupal-selector="edit-editor-editor"]', $ckeditor5_selected_but_errors ? 'addClass' : 'removeClass', ['error']));
   $response->addCommand(new InvokeCommand('[data-drupal-selector="edit-editor-editor"]', $ckeditor5_selected_but_errors ? 'attr' : 'removeAttr', ['data-error-switching-to-ckeditor5', TRUE]));
 
-  if (!function_exists('_add_attachments_to_editor_update_response')) {
-
-    /**
-     * Recursively find #attach items in the form and add as attachments to the
-     * AJAX response.
-     *
-     * @param array $form
-     *   A form array.
-     * @param \Drupal\Core\Ajax\AjaxResponse $response
-     *   The AJAX response attachments will be added to.
-     */
-    function _add_attachments_to_editor_update_response(array $form, AjaxResponse &$response): void {
-      foreach ($form as $key => $value) {
-        if ($key === "#attached") {
-          $response->addAttachments(array_diff_key($value, ['placeholders' => '']));
-        }
-        elseif (is_array($value) && strpos((string) $key, '#') === FALSE) {
-          _add_attachments_to_editor_update_response($value, $response);
-        }
+  /**
+   * Recursively find #attach items in the form and add as attachments to the
+   * AJAX response.
+   *
+   * @param array $form
+   *   A form array.
+   * @param \Drupal\Core\Ajax\AjaxResponse $response
+   *   The AJAX response attachments will be added to.
+   */
+  $attach = function (array $form, AjaxResponse &$response) use (&$attach): void {
+    foreach ($form as $key => $value) {
+      if ($key === "#attached") {
+        $response->addAttachments(array_diff_key($value, ['placeholders' => '']));
+      }
+      elseif (is_array($value) && !str_contains((string) $key, '#')) {
+        $attach($value, $response);
       }
     }
+  };
 
-  }
-
-  _add_attachments_to_editor_update_response($form, $response);
+  $attach($form, $response);
 
   return $response;
 }
@@ -366,7 +355,7 @@ function _update_ckeditor5_html_filter(array $form, FormStateInterface $form_sta
 /**
  * Returns a list of language codes supported by CKEditor 5.
  *
- * @param $lang
+ * @param string|bool $lang
  *   The Drupal langcode to match.
  *
  * @return array|mixed|string
@@ -411,7 +400,6 @@ function _ckeditor5_get_langcode_mapping($lang = FALSE) {
       unset($langcodes[$langcode]);
     }
   }
-
   if ($lang) {
     return $langcodes[$lang] ?? 'en';
   }
@@ -423,7 +411,6 @@ function _ckeditor5_get_langcode_mapping($lang = FALSE) {
  */
 function ckeditor5_library_info_alter(&$libraries, $extension) {
   if ($extension === 'filter') {
-    $libraries['drupal.filter.admin']['dependencies'][] = 'ckeditor5/internal.ie11.filter.warnings';
     $libraries['drupal.filter.admin']['dependencies'][] = 'ckeditor5/internal.drupal.ckeditor5.filter.admin';
   }
 
@@ -536,7 +523,7 @@ function ckeditor5_library_info_alter(&$libraries, $extension) {
 /**
  * Implements hook_js_alter().
  */
-function ckeditor5_js_alter(&$javascript, AttachedAssetsInterface $assets) {
+function ckeditor5_js_alter(&$javascript, AttachedAssetsInterface $assets, LanguageInterface $language) {
   // This file means CKEditor 5 translations are in use on the page.
   // @see locale_js_alter()
   $placeholder_file = 'core/assets/vendor/ckeditor5/translation.js';
@@ -558,8 +545,7 @@ function ckeditor5_js_alter(&$javascript, AttachedAssetsInterface $assets) {
       return;
     }
 
-    $language_interface = \Drupal::languageManager()->getCurrentLanguage()->getId();
-    $ckeditor5_language = _ckeditor5_get_langcode_mapping($language_interface);
+    $ckeditor5_language = _ckeditor5_get_langcode_mapping($language->getId());
 
     // Remove all CKEditor 5 translations files that are not in the current
     // language.
@@ -580,24 +566,6 @@ function ckeditor5_js_alter(&$javascript, AttachedAssetsInterface $assets) {
         unset($javascript[$index]);
       }
     }
-  }
-}
-
-/**
- * Implements hook_validation_constraint_alter().
- */
-function ckeditor5_validation_constraint_alter(array &$definitions) {
-  // Add the Symfony validation constraints that Drupal core does not add in
-  // \Drupal\Core\Validation\ConstraintManager::registerDefinitions() for
-  // unknown reasons. Do it defensively, to not break when this changes.
-  if (!isset($definitions['Choice'])) {
-    $definitions['Choice'] = [
-      'label' => 'Choice',
-      'class' => Choice::class,
-      'type' => FALSE,
-      'provider' => 'core',
-      'id' => 'Choice',
-    ];
   }
 }
 
@@ -640,11 +608,11 @@ function _ckeditor5_theme_css($theme = NULL): array {
     if (isset($info['ckeditor5-stylesheets']) && $info['ckeditor5-stylesheets'] !== FALSE) {
       $css = $info['ckeditor5-stylesheets'];
       foreach ($css as $key => $url) {
-        // CSS url is external or relative to Drupal root.
+        // CSS URL is external or relative to Drupal root.
         if (UrlHelper::isExternal($url) || $url[0] === '/') {
           $css[$key] = $url;
         }
-        // CSS url is relative to theme.
+        // CSS URL is relative to theme.
         else {
           $css[$key] = '/' . $theme_path . '/' . $url;
         }
@@ -655,4 +623,80 @@ function _ckeditor5_theme_css($theme = NULL): array {
     }
   }
   return $css;
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_presave() for editor entities.
+ */
+function ckeditor5_editor_presave(EditorInterface $editor) {
+  if ($editor->getEditor() === 'ckeditor5') {
+    $settings = $editor->getSettings();
+    // @see ckeditor5_post_update_code_block()
+    if (in_array('codeBlock', $settings['toolbar']['items'], TRUE) && !isset($settings['plugins']['ckeditor5_codeBlock'])) {
+      // @see \Drupal\ckeditor5\Plugin\CKEditor5Plugin\CodeBlock::defaultConfiguration()
+      $settings['plugins']['ckeditor5_codeBlock'] = [
+        'languages' => [
+          ['label' => 'Plain text', 'language' => 'plaintext'],
+          ['label' => 'C', 'language' => 'c'],
+          ['label' => 'C#', 'language' => 'cs'],
+          ['label' => 'C++', 'language' => 'cpp'],
+          ['label' => 'CSS', 'language' => 'css'],
+          ['label' => 'Diff', 'language' => 'diff'],
+          ['label' => 'HTML', 'language' => 'html'],
+          ['label' => 'Java', 'language' => 'java'],
+          ['label' => 'JavaScript', 'language' => 'javascript'],
+          ['label' => 'PHP', 'language' => 'php'],
+          ['label' => 'Python', 'language' => 'python'],
+          ['label' => 'Ruby', 'language' => 'ruby'],
+          ['label' => 'TypeScript', 'language' => 'typescript'],
+          ['label' => 'XML', 'language' => 'xml'],
+        ],
+      ];
+    }
+
+    // @see ckeditor5_post_update_list_multiblock()
+    if (array_key_exists('ckeditor5_list', $settings['plugins']) && !array_key_exists('properties', $settings['plugins']['ckeditor5_list'])) {
+      // Update to the new config structure.
+      $settings['plugins']['ckeditor5_list'] = [
+        'properties' => $settings['plugins']['ckeditor5_list'],
+        'multiBlock' => TRUE,
+      ];
+    }
+
+    // @see ckeditor5_post_update_list_start_reversed()
+    if (in_array('numberedList', $settings['toolbar']['items'], TRUE) && array_key_exists('ckeditor5_sourceEditing', $settings['plugins'])) {
+      $source_edited = HTMLRestrictions::fromString(implode(' ', $settings['plugins']['ckeditor5_sourceEditing']['allowed_tags']));
+      $format_restrictions = HTMLRestrictions::fromTextFormat($editor->getFilterFormat());
+
+      // If <ol start> is not allowed through Source Editing (the only way it
+      // could possibly be supported until now), and it is not an unrestricted
+      // text format (such as "Full HTML"), then set the new "startIndex"
+      // setting for the List plugin to false.
+      // Except … that this update path was added too late, and many sites have
+      // in the meantime edited their text editor configuration through the UI,
+      // in which case they may already have set it. If that is the case: do not
+      // override it.
+      $ol_start = HTMLRestrictions::fromString('<ol start>');
+      if (!array_key_exists('ckeditor5_list', $settings['plugins']) || !array_key_exists('startIndex', $settings['plugins']['ckeditor5_list']['properties'])) {
+        $settings['plugins']['ckeditor5_list']['properties']['startIndex'] = $ol_start->diff($source_edited)
+          ->allowsNothing() || $format_restrictions->isUnrestricted();
+      }
+      // Same for <ol reversed> and "reversed".
+      $ol_reversed = HTMLRestrictions::fromString('<ol reversed>');
+      if (!array_key_exists('ckeditor5_list', $settings['plugins']) || !array_key_exists('reversed', $settings['plugins']['ckeditor5_list']['properties'])) {
+        $settings['plugins']['ckeditor5_list']['properties']['reversed'] = $ol_reversed->diff($source_edited)
+          ->allowsNothing() || $format_restrictions->isUnrestricted();
+      }
+      // Match the sort order in ListPlugin::defaultConfiguration().
+      ksort($settings['plugins']['ckeditor5_list']['properties']);
+
+      // Update the Source Editing configuration too.
+      $settings['plugins']['ckeditor5_sourceEditing']['allowed_tags'] = $source_edited
+        ->diff($ol_start)
+        ->diff($ol_reversed)
+        ->toCKEditor5ElementsArray();
+    }
+
+    $editor->setSettings($settings);
+  }
 }

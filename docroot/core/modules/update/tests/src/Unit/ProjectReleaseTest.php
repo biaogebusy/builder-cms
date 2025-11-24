@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\update\Unit;
 
 use Drupal\Tests\UnitTestCase;
@@ -61,7 +63,7 @@ class ProjectReleaseTest extends UnitTestCase {
    * @return mixed
    *   Test cases for testCreateFromArray().
    */
-  public function providerCreateFromArray(): array {
+  public static function providerCreateFromArray(): array {
     return [
       'default valid' => [
         'data' => [],
@@ -149,7 +151,7 @@ class ProjectReleaseTest extends UnitTestCase {
   /**
    * Data provider for testCreateFromArrayMissingField().
    */
-  public function providerCreateFromArrayMissingField(): array {
+  public static function providerCreateFromArrayMissingField(): array {
     return [
       'status' => ['status'],
       'version' => ['version'],
@@ -186,7 +188,7 @@ class ProjectReleaseTest extends UnitTestCase {
   /**
    * Data provider for testCreateFromArrayInvalidField().
    */
-  public function providerCreateFromArrayInvalidField(): array {
+  public static function providerCreateFromArrayInvalidField(): array {
     return [
       'status other' => [
         'invalid_field' => 'status',
@@ -245,9 +247,9 @@ class ProjectReleaseTest extends UnitTestCase {
   protected function getValidData(): array {
     return [
       'status' => 'published',
-      'release_link' => 'https://drupal.org/release-link',
+      'release_link' => 'https://example.com/release-link',
       'version' => '8.0.0',
-      'download_link' => 'https://drupal.org/download-link',
+      'download_link' => 'https://example.com/download-link',
       'core_compatibility_message' => 'This is compatible',
       'date' => 1452229200,
       'terms' => [

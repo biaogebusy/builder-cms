@@ -1,12 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Kernel;
 
 use Drupal\Core\Database\Database;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\language\Entity\ConfigurableLanguage;
-use Drupal\user\Entity\User;
 use Drupal\field\Entity\FieldStorageConfig;
 
 /**
@@ -78,9 +79,11 @@ class NodeAccessLanguageAwareTest extends NodeAccessTestBase {
     // Create a normal authenticated user.
     $this->webUser = $this->drupalCreateUser(['access content']);
 
-    // Load the user 1 user for later use as an admin user with permission to
-    // see everything.
-    $this->adminUser = User::load(1);
+    // Create a user as an admin user with permission bypass node access
+    // to see everything.
+    $this->adminUser = $this->drupalCreateUser([
+      'bypass node access',
+    ]);
 
     // Add Hungarian and Catalan.
     ConfigurableLanguage::createFromLangcode('hu')->save();
@@ -151,7 +154,7 @@ class NodeAccessLanguageAwareTest extends NodeAccessTestBase {
   /**
    * Tests node access and node access queries with multiple node languages.
    */
-  public function testNodeAccessLanguageAware() {
+  public function testNodeAccessLanguageAware(): void {
     // The node_access_test_language module only grants view access.
     $expected_node_access = ['view' => TRUE, 'update' => FALSE, 'delete' => FALSE];
     $expected_node_access_no_access = ['view' => FALSE, 'update' => FALSE, 'delete' => FALSE];

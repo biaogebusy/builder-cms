@@ -18,7 +18,8 @@ use League\OAuth2\Client\Token\AccessTokenInterface;
 /**
  * Functional test class for import with "OAuth" authorization.
  *
- * @group no_drupalci
+ * @group entity_share
+ * @group entity_share_client
  */
 class AuthenticationOAuthTest extends AuthenticationTestBase {
 
@@ -88,6 +89,10 @@ class AuthenticationOAuthTest extends AuthenticationTestBase {
    * {@inheritdoc}
    */
   protected function setUp(): void {
+    // This test is skipped because it is broken.
+    // @see https://www.drupal.org/project/entity_share/issues/3524220
+    $this->markTestSkipped();
+
     parent::setUp();
 
     $this->keyService = $this->container->get('entity_share_client.key_provider');
@@ -95,7 +100,7 @@ class AuthenticationOAuthTest extends AuthenticationTestBase {
     // Give admin user access to all channels (channel user already has it).
     foreach ($this->channels as $channel) {
       $authorized_users = $channel->get('authorized_users');
-      $authorized_users = array_merge($authorized_users, [$this->adminUser->uuid()]);
+      $authorized_users = \array_merge($authorized_users, [$this->adminUser->uuid()]);
       $channel->set('authorized_users', $authorized_users);
       $channel->save();
     }
@@ -154,16 +159,11 @@ class AuthenticationOAuthTest extends AuthenticationTestBase {
     ];
 
     $access_token = '';
-    try {
-      $access_token = $plugin->initializeToken($remote, $credentials);
-    }
-    catch (\Exception $e) {
-      $this->fail('The access token had not been generated.');
-    }
+    $access_token = $plugin->initializeToken($remote, $credentials);
 
     // Remove the username and password.
-    unset($credentials['username']);
-    unset($credentials['password']);
+    unset($credentials['username'], $credentials['password']);
+
     $storage_key = $configuration['uuid'];
     $this->keyValueStore->set($storage_key, $credentials);
     // Save the token.
@@ -188,7 +188,7 @@ class AuthenticationOAuthTest extends AuthenticationTestBase {
     // In this run we are also testing the access to private physical files.
     // First, assert that files didn't exist before import.
     foreach (static::$filesData as $file_data) {
-      $this->assertFalse(file_exists($file_data['uri']), 'The physical file ' . $file_data['filename'] . ' has been deleted.');
+      $this->assertFalse(\file_exists($file_data['uri']), 'The physical file ' . $file_data['filename'] . ' has been deleted.');
     }
 
     // Pull channel and test that all nodes and file entities are there.
@@ -197,8 +197,8 @@ class AuthenticationOAuthTest extends AuthenticationTestBase {
 
     // Some stronger assertions for the uploaded private file.
     foreach (static::$filesData as $file_definition) {
-      $this->assertTrue(file_exists($file_definition['uri']), 'The physical file ' . $file_definition['filename'] . ' has been pulled and recreated.');
-      $this->assertEquals($file_definition['file_content'], file_get_contents($file_definition['uri']), 'The content of physical file ' . $file_definition['filename'] . ' is correct.');
+      $this->assertTrue(\file_exists($file_definition['uri']), 'The physical file ' . $file_definition['filename'] . ' has been pulled and recreated.');
+      $this->assertEquals($file_definition['file_content'], \file_get_contents($file_definition['uri']), 'The content of physical file ' . $file_definition['filename'] . ' is correct.');
     }
 
     // 2. Test as a non-administrative user who can't access unpublished nodes.
@@ -215,8 +215,7 @@ class AuthenticationOAuthTest extends AuthenticationTestBase {
     }
     // There is no need to test the physical files anymore, so we will remove
     // them from the entity array.
-    unset($this->entitiesData['file']);
-    unset($this->entitiesData['node']['en']['es_test_node_import_published']['field_es_test_file']);
+    unset($this->entitiesData['file'], $this->entitiesData['node']['en']['es_test_node_import_published']['field_es_test_file']);
 
     // Since the remote ID remains the same, we need to reset some of
     // remote manager's cached values.
@@ -234,10 +233,10 @@ class AuthenticationOAuthTest extends AuthenticationTestBase {
     $entity_storage = $this->entityTypeManager->getStorage('node');
 
     $published = $entity_storage->loadByProperties(['uuid' => 'es_test_node_import_published']);
-    $this->assertEquals(1, count($published), 'The published node was imported.');
+    $this->assertEquals(1, \count($published), 'The published node was imported.');
 
     $not_published = $entity_storage->loadByProperties(['uuid' => 'es_test_node_import_not_published']);
-    $this->assertEquals(0, count($not_published), 'The unpublished node was not imported.');
+    $this->assertEquals(0, \count($not_published), 'The unpublished node was not imported.');
 
     // 3. Test as non-administrative user, but with credentials stored using
     // Key module.
@@ -253,10 +252,10 @@ class AuthenticationOAuthTest extends AuthenticationTestBase {
     $entity_storage = $this->entityTypeManager->getStorage('node');
 
     $published = $entity_storage->loadByProperties(['uuid' => 'es_test_node_import_published']);
-    $this->assertEquals(1, count($published), 'The published node was imported.');
+    $this->assertEquals(1, \count($published), 'The published node was imported.');
 
     $not_published = $entity_storage->loadByProperties(['uuid' => 'es_test_node_import_not_published']);
-    $this->assertEquals(0, count($not_published), 'The unpublished node was not imported.');
+    $this->assertEquals(0, \count($not_published), 'The unpublished node was not imported.');
   }
 
   /**
@@ -275,7 +274,7 @@ class AuthenticationOAuthTest extends AuthenticationTestBase {
     /** @var \League\OAuth2\Client\Token\AccessTokenInterface $access_token */
     $access_token = $this->keyValueStore->get($configuration['uuid'] . '-' . $plugin->getPluginId());
     $this->assertFalse($access_token->hasExpired(), 'The access token has not expired yet.');
-    sleep(30);
+    \sleep(30);
     $this->assertTrue($access_token->hasExpired(), 'The access token has expired.');
 
     // 2. Access token has expired but refresh token is still valid.
@@ -285,7 +284,7 @@ class AuthenticationOAuthTest extends AuthenticationTestBase {
     $this->assertEquals(200, $response->getStatusCode());
 
     // Ensure refresh token has expired.
-    sleep(120);
+    \sleep(120);
 
     // 3. Both access and refresh tokens have expired, so use
     // client_credentials as a last resort.
@@ -316,12 +315,8 @@ class AuthenticationOAuthTest extends AuthenticationTestBase {
     $credentials['username'] = $account->getAccountName();
     $credentials['password'] = $account->passRaw;
     $access_token = '';
-    try {
-      $access_token = $plugin->initializeToken($this->remote, $credentials);
-    }
-    catch (\Exception $e) {
-      $this->fail('The access token had not been generated.');
-    }
+    $access_token = $plugin->initializeToken($this->remote, $credentials);
+
     // Save the obtained key.
     $this->keyValueStore->set($configuration['uuid'] . '-' . $plugin->getPluginId(), $access_token);
 
@@ -443,11 +438,11 @@ class AuthenticationOAuthTest extends AuthenticationTestBase {
     ];
     $output = '';
     foreach ($credentials as $name => $value) {
-      $output .= "\"$name\": \"$value\"\n";
+      $output .= "\"{$name}\": \"{$value}\"\n";
     }
     $key_value = <<<EOT
 {
-  $output}
+  {$output}}
 EOT;
     $this->testKey->setKeyValue($key_value);
     $this->testKey->save();

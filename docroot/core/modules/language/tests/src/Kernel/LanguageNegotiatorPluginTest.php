@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\language\Kernel;
 
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
@@ -23,7 +25,7 @@ class LanguageNegotiatorPluginTest extends KernelTestBase {
   /**
    * Tests for PluginNotFoundException.
    */
-  public function testLanguageNegotiatorNoPlugin() {
+  public function testLanguageNegotiatorNoPlugin(): void {
     $logger = new BufferingLogger();
     $logger_factory = $this->createMock(LoggerChannelFactory::class);
     $logger_factory->expects($this->once())

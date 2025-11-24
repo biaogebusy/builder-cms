@@ -2,10 +2,10 @@
 
 namespace Drupal\commerce_payment_example\PluginForm\OffsiteRedirect;
 
-use Drupal\commerce_payment\Exception\PaymentGatewayException;
-use Drupal\commerce_payment\PluginForm\PaymentOffsiteForm as BasePaymentOffsiteForm;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Drupal\commerce_payment\Exception\PaymentGatewayException;
+use Drupal\commerce_payment\PluginForm\PaymentOffsiteForm as BasePaymentOffsiteForm;
 
 class PaymentOffsiteForm extends BasePaymentOffsiteForm {
 
@@ -36,7 +36,7 @@ class PaymentOffsiteForm extends BasePaymentOffsiteForm {
       // Simulate an API call failing and throwing an exception, for test purposes.
       // See PaymentCheckoutTest::testFailedCheckoutWithOffsiteRedirectGet().
       if ($order->getBillingProfile()->get('address')->family_name == 'FAIL') {
-        throw new PaymentGatewayException('Could not get the redirect URL.');
+        throw PaymentGatewayException::createForPayment($payment, 'Could not get the redirect URL.');
       }
       $redirect_url = Url::fromRoute('commerce_payment_example.dummy_redirect_302', [], ['absolute' => TRUE])->toString();
     }

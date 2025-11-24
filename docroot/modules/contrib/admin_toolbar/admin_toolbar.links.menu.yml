@@ -1,0 +1,6 @@
+admin_toolbar.settings:
+  title: 'Admin Toolbar'
+  description: 'Configure the Admin Toolbar module.'
+  route_name: admin_toolbar.settings
+  parent: system.admin_config_ui
+  weight: -1

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Traits;
 
 use Drupal\node\Entity\Node;
@@ -20,8 +22,8 @@ trait NodeCreationTrait {
    * @param $reset
    *   (optional) Whether to reset the entity cache.
    *
-   * @return \Drupal\node\NodeInterface
-   *   A node entity matching $title.
+   * @return \Drupal\node\NodeInterface|false
+   *   A node entity matching $title, FALSE when node with $title is not found.
    */
   public function getNodeByTitle($title, $reset = FALSE) {
     if ($reset) {
@@ -46,19 +48,19 @@ trait NodeCreationTrait {
    *   in the array, for example:
    *
    *   @code
-   *     $this->drupalCreateNode(array(
+   *     $this->drupalCreateNode([
    *       'title' => t('Hello, world!'),
    *       'type' => 'article',
-   *     ));
+   *     ]);
    *   @endcode
    *   The following defaults are provided, if the node has the field in
    *   question:
    *   - body: Random string using the default filter format:
    *     @code
-   *       $values['body'][0] = array(
+   *       $values['body'][0] = [
    *         'value' => $this->randomMachineName(32),
    *         'format' => filter_default_format(),
-   *       );
+   *       ];
    *     @endcode
    *   - title: Random string.
    *   - type: 'page'.

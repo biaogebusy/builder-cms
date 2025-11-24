@@ -2,7 +2,6 @@
 
 namespace Drupal\Tests\page_manager\Unit;
 
-use Prophecy\PhpUnit\ProphecyTrait;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Plugin\Context\Context;
@@ -13,6 +12,7 @@ use Drupal\page_manager\Context\ContextDefinitionFactory;
 use Drupal\page_manager\Context\EntityLazyLoadContext;
 use Drupal\page_manager\ContextMapper;
 use Drupal\Tests\UnitTestCase;
+use Prophecy\PhpUnit\ProphecyTrait;
 
 /**
  * @coversDefaultClass \Drupal\page_manager\ContextMapper
@@ -30,11 +30,15 @@ class ContextMapperTest extends UnitTestCase {
   protected $typedDataManager;
 
   /**
+   * Entity Repository Service.
+   *
    * @var \Drupal\Core\Entity\EntityRepositoryInterface|\Prophecy\Prophecy\ProphecyInterface
    */
   protected $entityRepository;
 
   /**
+   * The Static Context Mapper.
+   *
    * @var \Drupal\page_manager\ContextMapper
    */
   protected $staticContext;

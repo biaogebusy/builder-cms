@@ -2,26 +2,27 @@
 
 namespace Drupal\commerce_order\Plugin\Commerce\Condition;
 
-use Drupal\commerce\EntityUuidMapperInterface;
-use Drupal\commerce\Plugin\Commerce\Condition\ConditionBase;
-use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce\Attribute\CommerceCondition;
+use Drupal\commerce\EntityUuidMapperInterface;
+use Drupal\commerce\Plugin\Commerce\Condition\ConditionBase;
+use Drupal\commerce_order\Entity\OrderInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides the customer condition for orders.
- *
- * @CommerceCondition(
- *   id = "order_customer",
- *   label = @Translation("Customer ID"),
- *   category = @Translation("Customer"),
- *   entity_type = "commerce_order",
- *   weight = -2,
- * )
  */
+#[CommerceCondition(
+  id: "order_customer",
+  label: new TranslatableMarkup("Customer ID"),
+  entity_type: "commerce_order",
+  category: new TranslatableMarkup("Customer"),
+  weight: -2,
+)]
 class OrderCustomer extends ConditionBase implements ContainerFactoryPluginInterface {
 
   /**

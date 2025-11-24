@@ -9,7 +9,6 @@
  */
 
 use Drupal\Core\Routing\RouteMatchInterface;
-use Drupal\redis\ClientFactory;
 
 /**
  * Implements hook_help().
@@ -17,8 +16,11 @@ use Drupal\redis\ClientFactory;
 function redis_help($route_name, RouteMatchInterface $route_match) {
   switch ($route_name) {
     case 'help.page.redis':
-      if (ClientFactory::hasClient()) {
-        $messages = '<p><strong>' . t("Current connected client uses the <em>@name</em> library.", ['@name' => ClientFactory::getClientName()]) . '</strong></p>';
+
+      $factory = \Drupal::service('redis.factory');
+
+      if ($factory->hasClient()) {
+        $messages = '<p><strong>' . t("Current connected client uses the <em>@name</em> library.", ['@name' => $factory->getClientName()]) . '</strong></p>';
       }
       else {
         $messages = '<p><strong>' . t('No redis connection configured.') . '</strong></p>';

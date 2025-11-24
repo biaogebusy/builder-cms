@@ -2,10 +2,29 @@
 
 namespace Drupal\redirect\Form;
 
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
+/**
+ * Redirect configuration form.
+ */
 class RedirectSettingsForm extends ConfigFormBase {
+
+  /**
+   * The module handler service.
+   */
+  protected ModuleHandlerInterface $moduleHandler;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    $form = parent::create($container);
+    $form->moduleHandler = $container->get('module_handler');
+    return $form;
+  }
 
   /**
    * {@inheritdoc}
@@ -13,6 +32,7 @@ class RedirectSettingsForm extends ConfigFormBase {
   public function getFormId() {
     return 'redirect_settings_form';
   }
+
   /**
    * {@inheritdoc}
    */
@@ -29,7 +49,7 @@ class RedirectSettingsForm extends ConfigFormBase {
       '#type' => 'checkbox',
       '#title' => $this->t('Automatically create redirects when URL aliases are changed.'),
       '#default_value' => $config->get('auto_redirect'),
-      '#disabled' => !\Drupal::moduleHandler()->moduleExists('path'),
+      '#disabled' => $this->moduleHandler->moduleExists('path'),
     ];
     $form['redirect_passthrough_querystring'] = [
       '#type' => 'checkbox',
@@ -69,7 +89,7 @@ class RedirectSettingsForm extends ConfigFormBase {
     $form['globals']['redirect_access_check'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Check access to the redirected page'),
-      '#description' => $this->t('This helps to stop redirection on protected pages and avoids giving away <em>secret</em> URL\'s. <strong>By default this feature is disabled to avoid any unexpected behavior</strong>'),
+      '#description' => $this->t("This helps to stop redirection on protected pages and avoids giving away <em>secret</em> URL's. <strong>By default this feature is disabled to avoid any unexpected behavior</strong>"),
       '#default_value' => $config->get('access_check'),
     ];
 
@@ -82,7 +102,7 @@ class RedirectSettingsForm extends ConfigFormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $config = $this->config('redirect.settings');
     foreach ($form_state->getValues() as $key => $value) {
-      if (strpos($key, 'redirect_') !== FALSE) {
+      if (str_contains($key, 'redirect_')) {
         $config->set(str_replace('redirect_', '', $key), $value);
       }
     }

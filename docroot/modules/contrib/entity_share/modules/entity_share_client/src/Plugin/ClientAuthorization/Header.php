@@ -27,7 +27,7 @@ class Header extends ClientAuthorizationPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function getClient($url) {
+  public function getClient($url, $login_path) {
     $credentials = $this->keyService->getCredentials($this);
     return $this->httpClientFactory->fromOptions([
       'base_uri' => $url . '/',

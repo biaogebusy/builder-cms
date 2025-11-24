@@ -15,7 +15,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *
  * @see \Drupal\message\Entity\MessageTemplate
  */
-class MessageTemplateListBuilder extends ConfigEntityListBuilder {
+final class MessageTemplateListBuilder extends ConfigEntityListBuilder {
 
   /**
    * Creates a Message Template ListBuilder.
@@ -30,7 +30,8 @@ class MessageTemplateListBuilder extends ConfigEntityListBuilder {
   public function __construct(
     EntityTypeInterface $entity_type,
     EntityStorageInterface $storage,
-    TranslationInterface $string_translation) {
+    TranslationInterface $string_translation,
+  ) {
     parent::__construct($entity_type, $storage);
 
     $this->setStringTranslation($string_translation);
@@ -40,7 +41,7 @@ class MessageTemplateListBuilder extends ConfigEntityListBuilder {
    * {@inheritdoc}
    */
   public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
-    return new static(
+    return new self(
       $entity_type,
       $container->get('entity_type.manager')->getStorage($entity_type->id()),
       $container->get('string_translation')

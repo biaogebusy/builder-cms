@@ -17,39 +17,24 @@ class ElementInfoController extends ControllerBase {
 
   /**
    * Element info manager service.
-   *
-   * @var \Drupal\Core\Render\ElementInfoManagerInterface
    */
-  protected $elementInfo;
+  protected ElementInfoManagerInterface $elementInfo;
 
   /**
    * The dumper service.
-   *
-   * @var \Drupal\devel\DevelDumperManagerInterface
    */
-  protected $dumper;
-
-  /**
-   * EventInfoController constructor.
-   *
-   * @param \Drupal\Core\Render\ElementInfoManagerInterface $element_info
-   *   Element info manager service.
-   * @param \Drupal\devel\DevelDumperManagerInterface $dumper
-   *   The dumper service.
-   */
-  public function __construct(ElementInfoManagerInterface $element_info, DevelDumperManagerInterface $dumper) {
-    $this->elementInfo = $element_info;
-    $this->dumper = $dumper;
-  }
+  protected DevelDumperManagerInterface $dumper;
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
-    return new static(
-      $container->get('element_info'),
-      $container->get('devel.dumper')
-    );
+  public static function create(ContainerInterface $container): static {
+    $instance = parent::create($container);
+    $instance->elementInfo = $container->get('element_info');
+    $instance->dumper = $container->get('devel.dumper');
+    $instance->stringTranslation = $container->get('string_translation');
+
+    return $instance;
   }
 
   /**
@@ -58,7 +43,7 @@ class ElementInfoController extends ControllerBase {
    * @return array
    *   A render array as expected by the renderer.
    */
-  public function elementList() {
+  public function elementList(): array {
     $headers = [
       $this->t('Name'),
       $this->t('Provider'),
@@ -133,7 +118,7 @@ class ElementInfoController extends ControllerBase {
    * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
    *   If the requested element is not defined.
    */
-  public function elementDetail($element_name) {
+  public function elementDetail($element_name): array {
     if (!$element = $this->elementInfo->getDefinition($element_name, FALSE)) {
       throw new NotFoundHttpException();
     }

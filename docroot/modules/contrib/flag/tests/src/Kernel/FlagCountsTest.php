@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\flag\Kernel;
 
 use Drupal\flag\Entity\Flag;
@@ -77,7 +79,7 @@ class FlagCountsTest extends FlagKernelTestBase {
   protected function setUp(): void {
     parent::setUp();
 
-    $this->installSchema('user', 'users_data');
+    $this->installSchema('user', ['users_data']);
 
     // Create the anonymous role.
     $this->installConfig(['user']);
@@ -123,7 +125,7 @@ class FlagCountsTest extends FlagKernelTestBase {
     ]);
 
     // Grant the anonymous role permission to flag.
-    /* @var \Drupal\user\RoleInterface $anonymous_role */
+    /** @var \Drupal\user\RoleInterface $anonymous_role */
     $anonymous_role = Role::load(Role::ANONYMOUS_ID);
     $anonymous_role->grantPermission('flag ' . $this->flag->id());
     $anonymous_role->grantPermission('unflag ' . $this->flag->id());
@@ -171,7 +173,7 @@ class FlagCountsTest extends FlagKernelTestBase {
     // Get the counts of all flaggings on the entity. The other node is also
     // flagged, but should not be included in the count.
     $flag_get_counts = $this->flagCountService->getEntityFlagCounts($this->node);
-    $this->assertEquals(2,$flag_get_counts[$this->flag->id()], "getEntityFlagCounts() returns the expected count.");
+    $this->assertEquals(2, $flag_get_counts[$this->flag->id()], "getEntityFlagCounts() returns the expected count.");
     $this->assertEquals(1, $flag_get_counts[$this->otherFlag->id()], "getEntityFlagCounts() returns the expected count.");
 
     // Get the number of entities for the flag. Two users have flagged one node

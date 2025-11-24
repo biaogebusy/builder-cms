@@ -1,11 +1,11 @@
 <?php
 
-declare(strict_types = 1);
-
 /**
  * @file
  * Install, update and uninstall functions for SMS Framework.
  */
+
+declare(strict_types = 1);
 
 use Drupal\sms\Direction;
 
@@ -18,7 +18,8 @@ function sms_requirements($phase) {
   if ($phase == 'runtime') {
     $base_query = \Drupal::entityTypeManager()
       ->getStorage('sms')
-      ->getQuery();
+      ->getQuery()
+      ->accessCheck(FALSE);
 
     $query = clone $base_query;
     $count = $query
@@ -34,7 +35,7 @@ function sms_requirements($phase) {
       'value' => \Drupal::translation()->formatPlural(
         $count,
         'There are @count messages in the incoming queue.',
-        'There are @count messages in the incoming queue.'
+        'There are @count messages in the incoming queue.',
       ),
     ];
 
@@ -52,7 +53,7 @@ function sms_requirements($phase) {
       'value' => \Drupal::translation()->formatPlural(
         $count,
         'There are @count messages in the outgoing queue.',
-        'There are @count messages in the outgoing queue.'
+        'There are @count messages in the outgoing queue.',
       ),
     ];
   }

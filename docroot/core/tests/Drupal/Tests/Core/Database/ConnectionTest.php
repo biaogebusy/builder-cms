@@ -1,9 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Database;
 
 use Composer\Autoload\ClassLoader;
-use Drupal\Core\Database\Statement;
+use Drupal\Core\Database\Database;
+use Drupal\Core\Database\StatementPrefetch;
+use Drupal\Core\Database\StatementPrefetchIterator;
 use Drupal\Tests\Core\Database\Stub\StubConnection;
 use Drupal\Tests\Core\Database\Stub\StubPDO;
 use Drupal\Tests\UnitTestCase;
@@ -24,21 +28,20 @@ class ConnectionTest extends UnitTestCase {
    *   - Arguments to pass to Connection::setPrefix().
    *   - Expected result from Connection::tablePrefix().
    */
-  public function providerPrefixRoundTrip() {
+  public static function providerPrefixRoundTrip() {
     return [
       [
-        ['' => 'test_'],
+        [
+          '' => 'test_',
+        ],
         'test_',
       ],
       [
         [
           'fooTable' => 'foo_',
-          'barTable' => 'bar_',
+          'barTable' => 'foo_',
         ],
-        [
-          'fooTable' => 'foo_',
-          'barTable' => 'bar_',
-        ],
+        'foo_',
       ],
     ];
   }
@@ -48,20 +51,19 @@ class ConnectionTest extends UnitTestCase {
    *
    * @dataProvider providerPrefixRoundTrip
    */
-  public function testPrefixRoundTrip($expected, $prefix_info) {
+  public function testPrefixRoundTrip($expected, $prefix_info): void {
     $mock_pdo = $this->createMock('Drupal\Tests\Core\Database\Stub\StubPDO');
     $connection = new StubConnection($mock_pdo, []);
 
     // setPrefix() is protected, so we make it accessible with reflection.
     $reflection = new \ReflectionClass('Drupal\Tests\Core\Database\Stub\StubConnection');
     $set_prefix = $reflection->getMethod('setPrefix');
-    $set_prefix->setAccessible(TRUE);
 
     // Set the prefix data.
     $set_prefix->invokeArgs($connection, [$prefix_info]);
     // Check the round-trip.
     foreach ($expected as $table => $prefix) {
-      $this->assertEquals($prefix, $connection->tablePrefix($table));
+      $this->assertEquals($prefix, $connection->getPrefix());
     }
   }
 
@@ -75,7 +77,7 @@ class ConnectionTest extends UnitTestCase {
    *   - Query to be prefixed.
    *   - Quote identifier.
    */
-  public function providerTestPrefixTables() {
+  public static function providerTestPrefixTables() {
     return [
       [
         'SELECT * FROM test_table',
@@ -109,7 +111,7 @@ class ConnectionTest extends UnitTestCase {
    *
    * @dataProvider providerTestPrefixTables
    */
-  public function testPrefixTables($expected, $prefix_info, $query, array $quote_identifier = ['"', '"']) {
+  public function testPrefixTables($expected, $prefix_info, $query, array $quote_identifier = ['"', '"']): void {
     $mock_pdo = $this->createMock('Drupal\Tests\Core\Database\Stub\StubPDO');
     $connection = new StubConnection($mock_pdo, ['prefix' => $prefix_info], $quote_identifier);
     $this->assertEquals($expected, $connection->prefixTables($query));
@@ -124,7 +126,7 @@ class ConnectionTest extends UnitTestCase {
    *   - Namespace.
    *   - Class name without namespace.
    */
-  public function providerGetDriverClass() {
+  public static function providerGetDriverClass() {
     return [
       [
         'nonexistent_class',
@@ -136,178 +138,178 @@ class ConnectionTest extends UnitTestCase {
         NULL,
         'Select',
       ],
-      // Tests with the corefake database driver. This driver has no custom
+      // Tests with the CoreFake database driver. This driver has no custom
       // driver classes.
       [
         'Drupal\Core\Database\Query\Condition',
-        'Drupal\corefake\Driver\Database\corefake',
+        'Drupal\CoreFake\Driver\Database\CoreFake',
         'Condition',
       ],
       [
         'Drupal\Core\Database\Query\Delete',
-        'Drupal\corefake\Driver\Database\corefake',
+        'Drupal\CoreFake\Driver\Database\CoreFake',
         'Delete',
       ],
       [
         'Drupal\Core\Database\ExceptionHandler',
-        'Drupal\corefake\Driver\Database\corefake',
+        'Drupal\CoreFake\Driver\Database\CoreFake',
         'ExceptionHandler',
       ],
       [
         'Drupal\Core\Database\Query\Insert',
-        'Drupal\corefake\Driver\Database\corefake',
+        'Drupal\CoreFake\Driver\Database\CoreFake',
         'Insert',
       ],
       [
         'Drupal\Core\Database\Query\Merge',
-        'Drupal\corefake\Driver\Database\corefake',
+        'Drupal\CoreFake\Driver\Database\CoreFake',
         'Merge',
       ],
       [
         'PagerSelectExtender',
-        'Drupal\corefake\Driver\Database\corefake',
+        'Drupal\CoreFake\Driver\Database\CoreFake',
         'PagerSelectExtender',
       ],
       [
         'Drupal\Core\Database\Schema',
-        'Drupal\corefake\Driver\Database\corefake',
+        'Drupal\CoreFake\Driver\Database\CoreFake',
         'Schema',
       ],
       [
         'SearchQuery',
-        'Drupal\corefake\Driver\Database\corefake',
+        'Drupal\CoreFake\Driver\Database\CoreFake',
         'SearchQuery',
       ],
       [
         'Drupal\Core\Database\Query\Select',
-        'Drupal\corefake\Driver\Database\corefake',
+        'Drupal\CoreFake\Driver\Database\CoreFake',
         'Select',
       ],
       [
         'Drupal\Core\Database\Transaction',
-        'Drupal\corefake\Driver\Database\corefake',
+        'Drupal\CoreFake\Driver\Database\CoreFake',
         'Transaction',
       ],
       [
         'TableSortExtender',
-        'Drupal\corefake\Driver\Database\corefake',
+        'Drupal\CoreFake\Driver\Database\CoreFake',
         'TableSortExtender',
       ],
       [
         'Drupal\Core\Database\Query\Truncate',
-        'Drupal\corefake\Driver\Database\corefake',
+        'Drupal\CoreFake\Driver\Database\CoreFake',
         'Truncate',
       ],
       [
         'Drupal\Core\Database\Query\Update',
-        'Drupal\corefake\Driver\Database\corefake',
+        'Drupal\CoreFake\Driver\Database\CoreFake',
         'Update',
       ],
       [
         'Drupal\Core\Database\Query\Upsert',
-        'Drupal\corefake\Driver\Database\corefake',
+        'Drupal\CoreFake\Driver\Database\CoreFake',
         'Upsert',
       ],
-      // Tests with the corefakeWithAllCustomClasses database driver. This
+      // Tests with the CoreFakeWithAllCustomClasses database driver. This
       // driver has custom driver classes for all classes.
       [
-        'Drupal\corefake\Driver\Database\corefakeWithAllCustomClasses\Condition',
-        'Drupal\corefake\Driver\Database\corefakeWithAllCustomClasses',
+        'Drupal\core_fake\Driver\Database\CoreFakeWithAllCustomClasses\Condition',
+        'Drupal\core_fake\Driver\Database\CoreFakeWithAllCustomClasses',
         'Condition',
       ],
       [
-        'Drupal\corefake\Driver\Database\corefakeWithAllCustomClasses\Delete',
-        'Drupal\corefake\Driver\Database\corefakeWithAllCustomClasses',
+        'Drupal\core_fake\Driver\Database\CoreFakeWithAllCustomClasses\Delete',
+        'Drupal\core_fake\Driver\Database\CoreFakeWithAllCustomClasses',
         'Delete',
       ],
       [
-        'Drupal\corefake\Driver\Database\corefakeWithAllCustomClasses\ExceptionHandler',
-        'Drupal\corefake\Driver\Database\corefakeWithAllCustomClasses',
+        'Drupal\core_fake\Driver\Database\CoreFakeWithAllCustomClasses\ExceptionHandler',
+        'Drupal\core_fake\Driver\Database\CoreFakeWithAllCustomClasses',
         'ExceptionHandler',
       ],
       [
-        'Drupal\corefake\Driver\Database\corefakeWithAllCustomClasses\Insert',
-        'Drupal\corefake\Driver\Database\corefakeWithAllCustomClasses',
+        'Drupal\core_fake\Driver\Database\CoreFakeWithAllCustomClasses\Insert',
+        'Drupal\core_fake\Driver\Database\CoreFakeWithAllCustomClasses',
         'Insert',
       ],
       [
-        'Drupal\corefake\Driver\Database\corefakeWithAllCustomClasses\Merge',
-        'Drupal\corefake\Driver\Database\corefakeWithAllCustomClasses',
+        'Drupal\core_fake\Driver\Database\CoreFakeWithAllCustomClasses\Merge',
+        'Drupal\core_fake\Driver\Database\CoreFakeWithAllCustomClasses',
         'Merge',
       ],
       [
-        'Drupal\corefake\Driver\Database\corefakeWithAllCustomClasses\PagerSelectExtender',
-        'Drupal\corefake\Driver\Database\corefakeWithAllCustomClasses',
+        'Drupal\core_fake\Driver\Database\CoreFakeWithAllCustomClasses\PagerSelectExtender',
+        'Drupal\core_fake\Driver\Database\CoreFakeWithAllCustomClasses',
         'PagerSelectExtender',
       ],
       [
-        'Drupal\corefake\Driver\Database\corefakeWithAllCustomClasses\Schema',
-        'Drupal\corefake\Driver\Database\corefakeWithAllCustomClasses',
+        'Drupal\core_fake\Driver\Database\CoreFakeWithAllCustomClasses\Schema',
+        'Drupal\core_fake\Driver\Database\CoreFakeWithAllCustomClasses',
         'Schema',
       ],
       [
-        'Drupal\corefake\Driver\Database\corefakeWithAllCustomClasses\SearchQuery',
-        'Drupal\corefake\Driver\Database\corefakeWithAllCustomClasses',
+        'Drupal\core_fake\Driver\Database\CoreFakeWithAllCustomClasses\SearchQuery',
+        'Drupal\core_fake\Driver\Database\CoreFakeWithAllCustomClasses',
         'SearchQuery',
       ],
       [
-        'Drupal\corefake\Driver\Database\corefakeWithAllCustomClasses\Select',
-        'Drupal\corefake\Driver\Database\corefakeWithAllCustomClasses',
+        'Drupal\core_fake\Driver\Database\CoreFakeWithAllCustomClasses\Select',
+        'Drupal\core_fake\Driver\Database\CoreFakeWithAllCustomClasses',
         'Select',
       ],
       [
-        'Drupal\corefake\Driver\Database\corefakeWithAllCustomClasses\TableSortExtender',
-        'Drupal\corefake\Driver\Database\corefakeWithAllCustomClasses',
+        'Drupal\core_fake\Driver\Database\CoreFakeWithAllCustomClasses\TableSortExtender',
+        'Drupal\core_fake\Driver\Database\CoreFakeWithAllCustomClasses',
         'TableSortExtender',
       ],
       [
-        'Drupal\corefake\Driver\Database\corefakeWithAllCustomClasses\Transaction',
-        'Drupal\corefake\Driver\Database\corefakeWithAllCustomClasses',
+        'Drupal\core_fake\Driver\Database\CoreFakeWithAllCustomClasses\Transaction',
+        'Drupal\core_fake\Driver\Database\CoreFakeWithAllCustomClasses',
         'Transaction',
       ],
       [
-        'Drupal\corefake\Driver\Database\corefakeWithAllCustomClasses\Truncate',
-        'Drupal\corefake\Driver\Database\corefakeWithAllCustomClasses',
+        'Drupal\core_fake\Driver\Database\CoreFakeWithAllCustomClasses\Truncate',
+        'Drupal\core_fake\Driver\Database\CoreFakeWithAllCustomClasses',
         'Truncate',
       ],
       [
-        'Drupal\corefake\Driver\Database\corefakeWithAllCustomClasses\Update',
-        'Drupal\corefake\Driver\Database\corefakeWithAllCustomClasses',
+        'Drupal\core_fake\Driver\Database\CoreFakeWithAllCustomClasses\Update',
+        'Drupal\core_fake\Driver\Database\CoreFakeWithAllCustomClasses',
         'Update',
       ],
       [
-        'Drupal\corefake\Driver\Database\corefakeWithAllCustomClasses\Upsert',
-        'Drupal\corefake\Driver\Database\corefakeWithAllCustomClasses',
+        'Drupal\core_fake\Driver\Database\CoreFakeWithAllCustomClasses\Upsert',
+        'Drupal\core_fake\Driver\Database\CoreFakeWithAllCustomClasses',
         'Upsert',
       ],
       [
         'Drupal\Core\Database\Query\PagerSelectExtender',
-        'Drupal\corefake\Driver\Database\corefakeWithAllCustomClasses',
+        'Drupal\core_fake\Driver\Database\CoreFakeWithAllCustomClasses',
         'Drupal\Core\Database\Query\PagerSelectExtender',
       ],
       [
         '\Drupal\Core\Database\Query\PagerSelectExtender',
-        'Drupal\corefake\Driver\Database\corefakeWithAllCustomClasses',
+        'Drupal\core_fake\Driver\Database\CoreFakeWithAllCustomClasses',
         '\Drupal\Core\Database\Query\PagerSelectExtender',
       ],
       [
         'Drupal\Core\Database\Query\TableSortExtender',
-        'Drupal\corefake\Driver\Database\corefakeWithAllCustomClasses',
+        'Drupal\core_fake\Driver\Database\CoreFakeWithAllCustomClasses',
         'Drupal\Core\Database\Query\TableSortExtender',
       ],
       [
         '\Drupal\Core\Database\Query\TableSortExtender',
-        'Drupal\corefake\Driver\Database\corefakeWithAllCustomClasses',
+        'Drupal\core_fake\Driver\Database\CoreFakeWithAllCustomClasses',
         '\Drupal\Core\Database\Query\TableSortExtender',
       ],
       [
         'Drupal\search\SearchQuery',
-        'Drupal\corefake\Driver\Database\corefakeWithAllCustomClasses',
+        'Drupal\core_fake\Driver\Database\CoreFakeWithAllCustomClasses',
         'Drupal\search\SearchQuery',
       ],
       [
         '\Drupal\search\SearchQuery',
-        'Drupal\corefake\Driver\Database\corefakeWithAllCustomClasses',
+        'Drupal\core_fake\Driver\Database\CoreFakeWithAllCustomClasses',
         '\Drupal\search\SearchQuery',
       ],
     ];
@@ -316,15 +318,31 @@ class ConnectionTest extends UnitTestCase {
   /**
    * @covers ::getDriverClass
    * @dataProvider providerGetDriverClass
+   * @group legacy
    */
-  public function testGetDriverClass($expected, $namespace, $class) {
+  public function testGetDriverClass($expected, $namespace, $class): void {
     $additional_class_loader = new ClassLoader();
-    $additional_class_loader->addPsr4("Drupal\\corefake\\Driver\\Database\\corefake\\", __DIR__ . "/../../../../../tests/fixtures/database_drivers/module/corefake/src/Driver/Database/corefake");
-    $additional_class_loader->addPsr4("Drupal\\corefake\\Driver\\Database\\corefakeWithAllCustomClasses\\", __DIR__ . "/../../../../../tests/fixtures/database_drivers/module/corefake/src/Driver/Database/corefakeWithAllCustomClasses");
+    $additional_class_loader->addPsr4("Drupal\\core_fake\\Driver\\Database\\CoreFake\\", __DIR__ . "/../../../../../tests/fixtures/database_drivers/module/core_fake/src/Driver/Database/CoreFake");
+    $additional_class_loader->addPsr4("Drupal\\core_fake\\Driver\\Database\\CoreFakeWithAllCustomClasses\\", __DIR__ . "/../../../../../tests/fixtures/database_drivers/module/core_fake/src/Driver/Database/CoreFakeWithAllCustomClasses");
     $additional_class_loader->register(TRUE);
 
     $mock_pdo = $this->createMock('Drupal\Tests\Core\Database\Stub\StubPDO');
     $connection = new StubConnection($mock_pdo, ['namespace' => $namespace]);
+    match($class) {
+      'Install\\Tasks',
+      'ExceptionHandler',
+      'Select',
+      'Insert',
+      'Merge',
+      'Upsert',
+      'Update',
+      'Delete',
+      'Truncate',
+      'Schema',
+      'Condition',
+      'Transaction' => $this->expectDeprecation('Calling Drupal\\Core\\Database\\Connection::getDriverClass() for \'' . $class . '\' is deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. Use standard autoloading in the methods that return database operations. See https://www.drupal.org/node/3217534'),
+      default => NULL,
+    };
     $this->assertEquals($expected, $connection->getDriverClass($class));
   }
 
@@ -337,7 +355,7 @@ class ConnectionTest extends UnitTestCase {
    *   - Driver for PDO connection.
    *   - Namespace for connection.
    */
-  public function providerSchema() {
+  public static function providerSchema() {
     return [
       [
         'Drupal\\Tests\\Core\\Database\\Stub\\Driver\\Schema',
@@ -352,56 +370,11 @@ class ConnectionTest extends UnitTestCase {
    *
    * @dataProvider providerSchema
    */
-  public function testSchema($expected, $driver, $namespace) {
+  public function testSchema($expected, $driver, $namespace): void {
     $mock_pdo = $this->createMock('Drupal\Tests\Core\Database\Stub\StubPDO');
     $connection = new StubConnection($mock_pdo, ['namespace' => $namespace]);
     $connection->driver = $driver;
     $this->assertInstanceOf($expected, $connection->schema());
-  }
-
-  /**
-   * Tests Connection::destroy().
-   *
-   * @group legacy
-   */
-  public function testDestroy() {
-    $this->expectDeprecation('Drupal\Core\Database\Connection::destroy() is deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. Move custom database destruction logic to __destruct(). See https://www.drupal.org/node/3142866');
-    $mock_pdo = $this->createMock('Drupal\Tests\Core\Database\Stub\StubPDO');
-    // Mocking StubConnection gives us access to the $schema attribute.
-    $connection = new StubConnection($mock_pdo, ['namespace' => 'Drupal\\Tests\\Core\\Database\\Stub\\Driver']);
-    // Generate a schema object in order to verify that we've NULLed it later.
-    $this->assertInstanceOf(
-      'Drupal\\Tests\\Core\\Database\\Stub\\Driver\\Schema',
-      $connection->schema()
-    );
-    $connection->destroy();
-
-    $reflected_schema = (new \ReflectionObject($connection))->getProperty('schema');
-    $reflected_schema->setAccessible(TRUE);
-    $this->assertNull($reflected_schema->getValue($connection));
-  }
-
-  /**
-   * Tests Connection::__destruct().
-   *
-   * @group legacy
-   */
-  public function testDestructBcLayer() {
-    $this->expectDeprecation('Drupal\Core\Database\Connection::destroy() is deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. Move custom database destruction logic to __destruct(). See https://www.drupal.org/node/3142866');
-    $mock_pdo = $this->createMock(StubPDO::class);
-    $fake_connection = new class($mock_pdo, ['namespace' => Driver::class]) extends StubConnection {
-
-      public function destroy() {
-        parent::destroy();
-      }
-
-    };
-    // Destroy the object which will result in the Connection::__destruct()
-    // calling Connection::destroy() and a deprecation error being triggered.
-    // @see \Drupal\KernelTests\Core\Database\ConnectionUnitTest for tests that
-    // connection object destruction does not trigger deprecations unless
-    // Connection::destroy() is overridden.
-    $fake_connection = NULL;
   }
 
   /**
@@ -412,7 +385,7 @@ class ConnectionTest extends UnitTestCase {
    *   - Expected filtered comment.
    *   - Arguments for Connection::makeComment().
    */
-  public function providerMakeComments() {
+  public static function providerMakeComments() {
     return [
       [
         '/*  */ ',
@@ -434,7 +407,7 @@ class ConnectionTest extends UnitTestCase {
    *
    * @dataProvider providerMakeComments
    */
-  public function testMakeComments($expected, $comment_array) {
+  public function testMakeComments($expected, $comment_array): void {
     $mock_pdo = $this->createMock('Drupal\Tests\Core\Database\Stub\StubPDO');
     $connection = new StubConnection($mock_pdo, []);
     $this->assertEquals($expected, $connection->makeComment($comment_array));
@@ -448,7 +421,7 @@ class ConnectionTest extends UnitTestCase {
    *   - Expected filtered comment.
    *   - Comment to filter.
    */
-  public function providerFilterComments() {
+  public static function providerFilterComments() {
     return [
       ['', ''],
       ['Exploit  *  / DROP TABLE node. --', 'Exploit * / DROP TABLE node; --'],
@@ -461,14 +434,13 @@ class ConnectionTest extends UnitTestCase {
    *
    * @dataProvider providerFilterComments
    */
-  public function testFilterComments($expected, $comment) {
+  public function testFilterComments($expected, $comment): void {
     $mock_pdo = $this->createMock('Drupal\Tests\Core\Database\Stub\StubPDO');
     $connection = new StubConnection($mock_pdo, []);
 
     // filterComment() is protected, so we make it accessible with reflection.
     $reflection = new \ReflectionClass('Drupal\Tests\Core\Database\Stub\StubConnection');
     $filter_comment = $reflection->getMethod('filterComment');
-    $filter_comment->setAccessible(TRUE);
 
     $this->assertEquals(
       $expected,
@@ -484,7 +456,7 @@ class ConnectionTest extends UnitTestCase {
    *   testEscapeField. The first value is the expected value, and the second
    *   value is the value to test.
    */
-  public function providerEscapeTables() {
+  public static function providerEscapeTables() {
     return [
       ['nocase', 'nocase'],
       ['camelCase', 'camelCase'],
@@ -504,7 +476,7 @@ class ConnectionTest extends UnitTestCase {
    * @covers ::escapeTable
    * @dataProvider providerEscapeTables
    */
-  public function testEscapeTable($expected, $name, array $identifier_quote = ['"', '"']) {
+  public function testEscapeTable($expected, $name, array $identifier_quote = ['"', '"']): void {
     $mock_pdo = $this->createMock(StubPDO::class);
     $connection = new StubConnection($mock_pdo, [], $identifier_quote);
 
@@ -519,7 +491,7 @@ class ConnectionTest extends UnitTestCase {
    *   - Expected escaped string.
    *   - String to escape.
    */
-  public function providerEscapeAlias() {
+  public static function providerEscapeAlias() {
     return [
       ['!nocase!', 'nocase', ['!', '!']],
       ['`backtick`', 'backtick', ['`', '`']],
@@ -535,7 +507,7 @@ class ConnectionTest extends UnitTestCase {
    * @covers ::escapeAlias
    * @dataProvider providerEscapeAlias
    */
-  public function testEscapeAlias($expected, $name, array $identifier_quote = ['"', '"']) {
+  public function testEscapeAlias($expected, $name, array $identifier_quote = ['"', '"']): void {
     $mock_pdo = $this->createMock(StubPDO::class);
     $connection = new StubConnection($mock_pdo, [], $identifier_quote);
 
@@ -550,7 +522,7 @@ class ConnectionTest extends UnitTestCase {
    *   - Expected escaped string.
    *   - String to escape.
    */
-  public function providerEscapeFields() {
+  public static function providerEscapeFields() {
     return [
       ['/title/', 'title', ['/', '/']],
       ['`backtick`', 'backtick', ['`', '`']],
@@ -569,7 +541,7 @@ class ConnectionTest extends UnitTestCase {
    * @covers ::escapeField
    * @dataProvider providerEscapeFields
    */
-  public function testEscapeField($expected, $name, array $identifier_quote = ['"', '"']) {
+  public function testEscapeField($expected, $name, array $identifier_quote = ['"', '"']): void {
     $mock_pdo = $this->createMock(StubPDO::class);
     $connection = new StubConnection($mock_pdo, [], $identifier_quote);
 
@@ -584,11 +556,11 @@ class ConnectionTest extends UnitTestCase {
    *   testEscapeField. The first value is the expected value, and the second
    *   value is the value to test.
    */
-  public function providerEscapeDatabase() {
+  public static function providerEscapeDatabase() {
     return [
       ['/name/', 'name', ['/', '/']],
       ['`backtick`', 'backtick', ['`', '`']],
-      ['testname', 'test.name', ['', '']],
+      ['anything', 'any.thing', ['', '']],
       ['"name"', 'name'],
       ['[name]', 'name', ['[', ']']],
     ];
@@ -598,7 +570,7 @@ class ConnectionTest extends UnitTestCase {
    * @covers ::escapeDatabase
    * @dataProvider providerEscapeDatabase
    */
-  public function testEscapeDatabase($expected, $name, array $identifier_quote = ['"', '"']) {
+  public function testEscapeDatabase($expected, $name, array $identifier_quote = ['"', '"']): void {
     $mock_pdo = $this->createMock(StubPDO::class);
     $connection = new StubConnection($mock_pdo, [], $identifier_quote);
 
@@ -607,18 +579,8 @@ class ConnectionTest extends UnitTestCase {
 
   /**
    * @covers ::__construct
-   * @group legacy
    */
-  public function testIdentifierQuotesDeprecation() {
-    $this->expectDeprecation('In drupal:10.0.0 not setting the $identifierQuotes property in the concrete Connection class will result in an RuntimeException. See https://www.drupal.org/node/2986894');
-    $mock_pdo = $this->createMock(StubPDO::class);
-    new StubConnection($mock_pdo, [], NULL);
-  }
-
-  /**
-   * @covers ::__construct
-   */
-  public function testIdentifierQuotesAssertCount() {
+  public function testIdentifierQuotesAssertCount(): void {
     $this->expectException(\AssertionError::class);
     $this->expectExceptionMessage('\Drupal\Core\Database\Connection::$identifierQuotes must contain 2 string values');
     $mock_pdo = $this->createMock(StubPDO::class);
@@ -628,7 +590,7 @@ class ConnectionTest extends UnitTestCase {
   /**
    * @covers ::__construct
    */
-  public function testIdentifierQuotesAssertString() {
+  public function testIdentifierQuotesAssertString(): void {
     $this->expectException(\AssertionError::class);
     $this->expectExceptionMessage('\Drupal\Core\Database\Connection::$identifierQuotes must contain 2 string values');
     $mock_pdo = $this->createMock(StubPDO::class);
@@ -638,25 +600,10 @@ class ConnectionTest extends UnitTestCase {
   /**
    * @covers ::__construct
    */
-  public function testNamespaceDefault() {
+  public function testNamespaceDefault(): void {
     $mock_pdo = $this->createMock(StubPDO::class);
     $connection = new StubConnection($mock_pdo, []);
     $this->assertSame('Drupal\Tests\Core\Database\Stub', $connection->getConnectionOptions()['namespace']);
-  }
-
-  /**
-   * Tests deprecation of the Statement class.
-   *
-   * @group legacy
-   */
-  public function testStatementDeprecation() {
-    if (PHP_VERSION_ID >= 80000) {
-      $this->markTestSkipped('Drupal\Core\Database\Statement is incompatible with PHP 8.0. Remove in https://www.drupal.org/node/3177490');
-    }
-    $this->expectDeprecation('\Drupal\Core\Database\Statement is deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. Database drivers should use or extend StatementWrapper instead, and encapsulate client-level statement objects. See https://www.drupal.org/node/3177488');
-    $mock_statement = $this->getMockBuilder(Statement::class)
-      ->disableOriginalConstructor()
-      ->getMock();
   }
 
   /**
@@ -664,12 +611,11 @@ class ConnectionTest extends UnitTestCase {
    *
    * @dataProvider provideQueriesToTrim
    */
-  public function testQueryTrim($expected, $query, $options) {
+  public function testQueryTrim($expected, $query, $options): void {
     $mock_pdo = $this->getMockBuilder(StubPdo::class)->getMock();
     $connection = new StubConnection($mock_pdo, []);
 
     $preprocess_method = new \ReflectionMethod($connection, 'preprocessStatement');
-    $preprocess_method->setAccessible(TRUE);
     $this->assertSame($expected, $preprocess_method->invoke($connection, $query, $options));
   }
 
@@ -682,7 +628,7 @@ class ConnectionTest extends UnitTestCase {
    *   - Padded query.
    *   - Query options.
    */
-  public function provideQueriesToTrim() {
+  public static function provideQueriesToTrim() {
     return [
       'remove_non_breaking_space' => [
         'SELECT * FROM test',
@@ -718,30 +664,333 @@ class ConnectionTest extends UnitTestCase {
   }
 
   /**
-   * Tests the deprecation of Drupal 8 style database drivers.
+   * Tests that the proper caller is retrieved from the backtrace.
    *
-   * @group legacy
+   * @covers ::findCallerFromDebugBacktrace
+   * @covers ::removeDatabaseEntriesFromDebugBacktrace
+   * @covers ::getDebugBacktrace
    */
-  public function testLegacyDatabaseDriverInRootDriversDirectory() {
-    $this->expectDeprecation('Support for database drivers located in the "drivers/lib/Drupal/Driver/Database" directory is deprecated in drupal:9.1.0 and is removed in drupal:10.0.0. Contributed and custom database drivers should be provided by modules and use the namespace "Drupal\MODULE_NAME\Driver\Database\DRIVER_NAME". See https://www.drupal.org/node/3123251');
-    $namespace = 'Drupal\\Driver\\Database\\Stub';
-    $mock_pdo = $this->createMock(StubPDO::class);
-    $connection = new StubConnection($mock_pdo, ['namespace' => $namespace], ['"', '"']);
-    $this->assertEquals($namespace, $connection->getConnectionOptions()['namespace']);
+  public function testFindCallerFromDebugBacktrace(): void {
+    Database::addConnectionInfo('default', 'default', [
+      'driver' => 'test',
+      'namespace' => 'Drupal\Tests\Core\Database\Stub',
+    ]);
+    $connection = new StubConnection($this->createMock(StubPDO::class), []);
+    $result = $connection->findCallerFromDebugBacktrace();
+    $this->assertSame([
+      'file' => __FILE__,
+      'line' => __LINE__ - 3,
+      'function' => 'testFindCallerFromDebugBacktrace',
+      'class' => 'Drupal\Tests\Core\Database\ConnectionTest',
+      'type' => '->',
+      'args' => [],
+    ], $result);
   }
 
   /**
-   * Tests the deprecation of \Drupal\Core\Database\Connection::$statementClass.
+   * Tests that a log called by a custom database driver returns proper caller.
+   *
+   * @param string $driver_namespace
+   *   The driver namespace to be tested.
+   * @param array $stack
+   *   A test debug_backtrace stack.
+   * @param array $expected_entry
+   *   The expected stack entry.
+   *
+   * @covers ::findCallerFromDebugBacktrace
+   * @covers ::removeDatabaseEntriesFromDebugBacktrace
+   *
+   * @dataProvider providerMockedBacktrace
    *
    * @group legacy
    */
-  public function testPdoStatementClass() {
-    if (PHP_VERSION_ID >= 80000) {
-      $this->markTestSkipped('Drupal\Core\Database\Statement is incompatible with PHP 8.0. Remove in https://www.drupal.org/node/3177490');
-    }
-    $this->expectDeprecation('\Drupal\Core\Database\Connection::$statementClass is deprecated in drupal:9.1.0 and is removed from drupal:10.0.0. Database drivers should use or extend StatementWrapper instead, and encapsulate client-level statement objects. See https://www.drupal.org/node/3177488');
+  public function testFindCallerFromDebugBacktraceWithMockedBacktrace(string $driver_namespace, array $stack, array $expected_entry): void {
+    $mock_builder = $this->getMockBuilder(StubConnection::class);
+    $connection = $mock_builder
+      ->onlyMethods(['getDebugBacktrace', 'getConnectionOptions'])
+      ->setConstructorArgs([$this->createMock(StubPDO::class), []])
+      ->getMock();
+    $connection->expects($this->once())
+      ->method('getConnectionOptions')
+      ->willReturn([
+        'driver' => 'test',
+        'namespace' => $driver_namespace,
+      ]);
+    $connection->expects($this->once())
+      ->method('getDebugBacktrace')
+      ->willReturn($stack);
+
+    $result = $connection->findCallerFromDebugBacktrace();
+    $this->assertEquals($expected_entry, $result);
+  }
+
+  /**
+   * Provides data for testFindCallerFromDebugBacktraceWithMockedBacktrace.
+   *
+   * @return array[]
+   *   A associative array of simple arrays, each having the following elements:
+   *   - the contrib driver PHP namespace
+   *   - a test debug_backtrace stack
+   *   - the stack entry expected to be returned.
+   *
+   * @see ::testFindCallerFromDebugBacktraceWithMockedBacktrace()
+   */
+  public static function providerMockedBacktrace(): array {
+    $stack = [
+      [
+        'file' => '/var/www/core/lib/Drupal/Core/Database/Log.php',
+        'line' => 125,
+        'function' => 'findCaller',
+        'class' => 'Drupal\\Core\\Database\\Log',
+        'object' => 'test',
+        'type' => '->',
+        'args' => [
+          0 => 'test',
+        ],
+      ],
+      [
+        'file' => '/var/www/libraries/test/lib/Statement.php',
+        'line' => 264,
+        'function' => 'log',
+        'class' => 'Drupal\\Core\\Database\\Log',
+        'object' => 'test',
+        'type' => '->',
+        'args' => [
+          0 => 'test',
+        ],
+      ],
+      [
+        'file' => '/var/www/libraries/test/lib/Connection.php',
+        'line' => 213,
+        'function' => 'execute',
+        'class' => 'Drupal\\Driver\\Database\\dbal\\Statement',
+        'object' => 'test',
+        'type' => '->',
+        'args' => [
+          0 => 'test',
+        ],
+      ],
+      [
+        'file' => '/var/www/core/tests/Drupal/KernelTests/Core/Database/LoggingTest.php',
+        'line' => 23,
+        'function' => 'query',
+        'class' => 'Drupal\\Driver\\Database\\dbal\\Connection',
+        'object' => 'test',
+        'type' => '->',
+        'args' => [
+          0 => 'test',
+        ],
+      ],
+      [
+        'file' => '/var/www/vendor/phpunit/phpunit/src/Framework/TestCase.php',
+        'line' => 1154,
+        'function' => 'testEnableLogging',
+        'class' => 'Drupal\\KernelTests\\Core\\Database\\LoggingTest',
+        'object' => 'test',
+        'type' => '->',
+        'args' => [
+          0 => 'test',
+        ],
+      ],
+      [
+        'file' => '/var/www/vendor/phpunit/phpunit/src/Framework/TestCase.php',
+        'line' => 842,
+        'function' => 'runTest',
+        'class' => 'PHPUnit\\Framework\\TestCase',
+        'object' => 'test',
+        'type' => '->',
+        'args' => [
+          0 => 'test',
+        ],
+      ],
+      [
+        'file' => '/var/www/vendor/phpunit/phpunit/src/Framework/TestResult.php',
+        'line' => 693,
+        'function' => 'runBare',
+        'class' => 'PHPUnit\\Framework\\TestCase',
+        'object' => 'test',
+        'type' => '->',
+        'args' => [
+          0 => 'test',
+        ],
+      ],
+      [
+        'file' => '/var/www/vendor/phpunit/phpunit/src/Framework/TestCase.php',
+        'line' => 796,
+        'function' => 'run',
+        'class' => 'PHPUnit\\Framework\\TestResult',
+        'object' => 'test',
+        'type' => '->',
+        'args' => [
+          0 => 'test',
+        ],
+      ],
+      [
+        'file' => 'Standard input code',
+        'line' => 57,
+        'function' => 'run',
+        'class' => 'PHPUnit\\Framework\\TestCase',
+        'object' => 'test',
+        'type' => '->',
+        'args' => [
+          0 => 'test',
+        ],
+      ],
+      [
+        'file' => 'Standard input code',
+        'line' => 111,
+        'function' => '__phpunit_run_isolated_test',
+        'args' => [
+          0 => 'test',
+        ],
+      ],
+    ];
+
+    return [
+      // Test that if the driver namespace is in the stack trace, the first
+      // non-database entry is returned.
+      'contrib driver namespace' => [
+        'Drupal\\Driver\\Database\\dbal',
+        $stack,
+        [
+          'class' => 'Drupal\\KernelTests\\Core\\Database\\LoggingTest',
+          'function' => 'testEnableLogging',
+          'file' => '/var/www/core/tests/Drupal/KernelTests/Core/Database/LoggingTest.php',
+          'line' => 23,
+          'type' => '->',
+          'args' => [
+            0 => 'test',
+          ],
+        ],
+      ],
+      // Extreme case, should not happen at normal runtime - if the driver
+      // namespace is not in the stack trace, the first entry to a method
+      // in core database namespace is returned.
+      'missing driver namespace' => [
+        'Drupal\\Driver\\Database\\fake',
+        $stack,
+        [
+          'class' => 'Drupal\\Driver\\Database\\dbal\\Statement',
+          'function' => 'execute',
+          'file' => '/var/www/libraries/test/lib/Statement.php',
+          'line' => 264,
+          'type' => '->',
+          'args' => [
+            0 => 'test',
+          ],
+        ],
+      ],
+    ];
+  }
+
+  /**
+   * Tests deprecation of the StatementWrapper class.
+   *
+   * @group legacy
+   */
+  public function testStatementWrapperDeprecation(): void {
+    $this->expectDeprecation('\\Drupal\\Core\\Database\\StatementWrapper is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use \\Drupal\\Core\\Database\\StatementWrapperIterator instead. See https://www.drupal.org/node/3265938');
     $mock_pdo = $this->createMock(StubPDO::class);
-    new StubConnection($mock_pdo, ['namespace' => 'Drupal\\Tests\\Core\\Database\\Stub\\Driver'], ['"', '"'], Statement::class);
+    $connection = new StubConnection($mock_pdo, []);
+    $this->expectError();
+    $connection->prepareStatement('boing', []);
+  }
+
+  /**
+   * Tests deprecation of the StatementPrefetch class.
+   *
+   * @group legacy
+   */
+  public function testStatementPrefetchDeprecation(): void {
+    $this->expectDeprecation('\\Drupal\\Core\\Database\\StatementPrefetch is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use \Drupal\Core\Database\StatementPrefetchIterator instead. See https://www.drupal.org/node/3265938');
+    $mockPdo = $this->createMock(StubPDO::class);
+    $mockConnection = new StubConnection($mockPdo, []);
+    $statement = new StatementPrefetch($mockPdo, $mockConnection, '');
+    $this->assertInstanceOf(StatementPrefetch::class, $statement);
+  }
+
+  /**
+   * Provides data for testSupportedFetchModes.
+   *
+   * @return array
+   *   An associative array of simple arrays, each having the following
+   *   elements:
+   *   - a PDO fetch mode.
+   */
+  public static function providerSupportedFetchModes(): array {
+    return [
+      'FETCH_ASSOC' => [\PDO::FETCH_ASSOC],
+      'FETCH_CLASS' => [\PDO::FETCH_CLASS],
+      'FETCH_CLASS | FETCH_PROPS_LATE' => [\PDO::FETCH_CLASS | \PDO::FETCH_PROPS_LATE],
+      'FETCH_COLUMN' => [\PDO::FETCH_COLUMN],
+      'FETCH_NUM' => [\PDO::FETCH_NUM],
+      'FETCH_OBJ' => [\PDO::FETCH_OBJ],
+    ];
+  }
+
+  /**
+   * Tests supported fetch modes.
+   *
+   * @dataProvider providerSupportedFetchModes
+   */
+  public function testSupportedFetchModes(int $mode): void {
+    $mockPdo = $this->createMock(StubPDO::class);
+    $mockConnection = new StubConnection($mockPdo, []);
+    $statement = new StatementPrefetchIterator($mockPdo, $mockConnection, '');
+    $this->assertInstanceOf(StatementPrefetchIterator::class, $statement);
+    $statement->setFetchMode($mode);
+  }
+
+  /**
+   * Provides data for testDeprecatedFetchModes.
+   *
+   * @return array
+   *   An associative array of simple arrays, each having the following
+   *   elements:
+   *   - a PDO fetch mode.
+   */
+  public static function providerDeprecatedFetchModes(): array {
+    return [
+      'FETCH_DEFAULT' => [\PDO::FETCH_DEFAULT],
+      'FETCH_LAZY' => [\PDO::FETCH_LAZY],
+      'FETCH_BOTH' => [\PDO::FETCH_BOTH],
+      'FETCH_BOUND' => [\PDO::FETCH_BOUND],
+      'FETCH_INTO' => [\PDO::FETCH_INTO],
+      'FETCH_FUNC' => [\PDO::FETCH_FUNC],
+      'FETCH_NAMED' => [\PDO::FETCH_NAMED],
+      'FETCH_KEY_PAIR' => [\PDO::FETCH_KEY_PAIR],
+      'FETCH_CLASS | FETCH_CLASSTYPE' => [\PDO::FETCH_CLASS | \PDO::FETCH_CLASSTYPE],
+    ];
+  }
+
+  /**
+   * Tests deprecated fetch modes.
+   *
+   * @todo in drupal:11.0.0, do not remove this test but convert it to expect
+   *   exceptions instead of deprecations.
+   *
+   * @dataProvider providerDeprecatedFetchModes
+   *
+   * @group legacy
+   */
+  public function testDeprecatedFetchModes(int $mode): void {
+    $this->expectDeprecation('Fetch mode %A is deprecated in drupal:10.2.0 and is removed from drupal:11.0.0. Use supported modes only. See https://www.drupal.org/node/3377999');
+    $mockPdo = $this->createMock(StubPDO::class);
+    $mockConnection = new StubConnection($mockPdo, []);
+    $statement = new StatementPrefetchIterator($mockPdo, $mockConnection, '');
+    $this->assertInstanceOf(StatementPrefetchIterator::class, $statement);
+    $statement->setFetchMode($mode);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function tearDown(): void {
+    parent::tearDown();
+
+    // Removes the default connection added by the
+    // testFindCallerFromDebugBacktrace test.
+    Database::removeConnection('default');
   }
 
 }

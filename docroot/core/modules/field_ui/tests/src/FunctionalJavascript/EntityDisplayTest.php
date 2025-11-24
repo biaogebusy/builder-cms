@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\field_ui\FunctionalJavascript;
 
 use Drupal\entity_test\Entity\EntityTest;
@@ -49,7 +51,7 @@ class EntityDisplayTest extends WebDriverTestBase {
   /**
    * Tests the use of regions for entity form displays.
    */
-  public function testEntityForm() {
+  public function testEntityForm(): void {
     $this->drupalGet('entity_test/manage/1/edit');
     $this->assertSession()->fieldExists('field_test_text[0][value]');
 
@@ -58,7 +60,6 @@ class EntityDisplayTest extends WebDriverTestBase {
     $this->getSession()->getPage()->pressButton('Show row weights');
     $this->assertSession()->waitForElementVisible('css', '[name="fields[field_test_text][region]"]');
     $this->getSession()->getPage()->selectFieldOption('fields[field_test_text][region]', 'hidden');
-    $this->assertSession()->assertWaitOnAjaxRequest();
     $this->assertTrue($this->assertSession()->optionExists('fields[field_test_text][region]', 'hidden')->isSelected());
 
     $this->submitForm([], 'Save');
@@ -72,7 +73,7 @@ class EntityDisplayTest extends WebDriverTestBase {
   /**
    * Tests the use of regions for entity view displays.
    */
-  public function testEntityView() {
+  public function testEntityView(): void {
     $this->drupalGet('entity_test/1');
     $this->assertSession()->pageTextNotContains('The field test text value');
 
@@ -83,7 +84,6 @@ class EntityDisplayTest extends WebDriverTestBase {
     $this->assertTrue($this->assertSession()->optionExists('fields[field_test_text][region]', 'hidden')->isSelected());
 
     $this->getSession()->getPage()->selectFieldOption('fields[field_test_text][region]', 'content');
-    $this->assertSession()->assertWaitOnAjaxRequest();
     $this->assertTrue($this->assertSession()->optionExists('fields[field_test_text][region]', 'content')->isSelected());
 
     $this->submitForm([], 'Save');
@@ -97,7 +97,7 @@ class EntityDisplayTest extends WebDriverTestBase {
   /**
    * Tests extra fields.
    */
-  public function testExtraFields() {
+  public function testExtraFields(): void {
     entity_test_create_bundle('bundle_with_extra_fields');
     $this->drupalGet('entity_test/structure/bundle_with_extra_fields/display');
     $this->assertSession()->waitForElement('css', '.tabledrag-handle');

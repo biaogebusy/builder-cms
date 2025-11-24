@@ -1,0 +1,41 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"JS",
+		"Wuxi Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Beitang Qu": {
+			"local_name": "北塘区"
+		},
+		"Binhu Qu": {
+			"local_name": "滨湖区"
+		},
+		"Chong'an Qu": {
+			"local_name": "崇安区"
+		},
+		"Huishan Qu": {
+			"local_name": "惠山区"
+		},
+		"Jiangyin Shi": {
+			"local_name": "江阴市"
+		},
+		"Liangxi Qu": {
+			"local_name": "梁溪区"
+		},
+		"Nanchang Qu": {
+			"local_name": "南长区"
+		},
+		"Xishan Qu": {
+			"local_name": "锡山区"
+		},
+		"Xinwu Qu": {
+			"local_name": "新吴区"
+		},
+		"Yixing Shi": {
+			"local_name": "宜兴市"
+		}
+	}
+}

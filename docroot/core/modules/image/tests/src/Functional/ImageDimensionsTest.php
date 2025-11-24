@@ -1,8 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\image\Functional;
 
-use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\File\FileExists;
 use Drupal\image\Entity\ImageStyle;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\Tests\TestFileCreationTrait;
@@ -20,9 +22,7 @@ class ImageDimensionsTest extends BrowserTestBase {
   }
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['image', 'image_module_test'];
 
@@ -31,19 +31,22 @@ class ImageDimensionsTest extends BrowserTestBase {
    */
   protected $defaultTheme = 'stark';
 
+  /**
+   * {@inheritdoc}
+   */
   protected $profile = 'testing';
 
   /**
    * Tests styled image dimensions cumulatively.
    */
-  public function testImageDimensions() {
+  public function testImageDimensions(): void {
     $image_factory = $this->container->get('image.factory');
     // Create a working copy of the file.
     $files = $this->drupalGetTestFiles('image');
     $file = reset($files);
     /** @var \Drupal\Core\File\FileSystemInterface $file_system */
     $file_system = \Drupal::service('file_system');
-    $original_uri = $file_system->copy($file->uri, 'public://', FileSystemInterface::EXISTS_RENAME);
+    $original_uri = $file_system->copy($file->uri, 'public://', FileExists::Rename);
 
     // Create a style.
     /** @var \Drupal\image\ImageStyleInterface $style */
@@ -279,7 +282,7 @@ class ImageDimensionsTest extends BrowserTestBase {
     $this->assertEquals(100, $image_file->getHeight());
     // GIF original image. Should be resized to 50x50.
     $file = $files[1];
-    $original_uri = $file_system->copy($file->uri, 'public://', FileSystemInterface::EXISTS_RENAME);
+    $original_uri = $file_system->copy($file->uri, 'public://', FileExists::Rename);
     $generated_uri = 'public://styles/test_uri/public/' . $file_system->basename($original_uri);
     $url = $file_url_generator->transformRelative($style->buildUrl($original_uri));
     $variables['#uri'] = $original_uri;
@@ -303,8 +306,8 @@ class ImageDimensionsTest extends BrowserTestBase {
    * method and pass each time a fresh array so that $variables won't get
    * altered and the element is re-rendered each time.
    */
-  protected function getImageTag($variables) {
-    return str_replace("\n", '', \Drupal::service('renderer')->renderRoot($variables));
+  protected function getImageTag($variables): string {
+    return str_replace("\n", '', (string) \Drupal::service('renderer')->renderRoot($variables));
   }
 
 }

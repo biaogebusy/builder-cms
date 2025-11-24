@@ -2,9 +2,9 @@
 
 namespace Drupal\blazy\Plugin\Field\FieldFormatter;
 
+use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\blazy\BlazyDefault;
 use Drupal\blazy\Field\BlazyEntitySvgBase;
-use Drupal\Core\Field\FieldDefinitionInterface;
 
 /**
  * Base class for blazy-related media ER formatters.

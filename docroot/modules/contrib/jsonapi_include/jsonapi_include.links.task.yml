@@ -1,0 +1,4 @@
+jsonapi_include.settings:
+  title: 'JSON:API Include'
+  route_name: jsonapi_include.settings
+  base_route: jsonapi.settings

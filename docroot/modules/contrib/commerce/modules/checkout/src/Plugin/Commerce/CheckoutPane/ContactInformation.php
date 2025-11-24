@@ -3,17 +3,18 @@
 namespace Drupal\commerce_checkout\Plugin\Commerce\CheckoutPane;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\commerce_checkout\Attribute\CommerceCheckoutPane;
 
 /**
  * Provides the contact information pane.
- *
- * @CommerceCheckoutPane(
- *   id = "contact_information",
- *   label = @Translation("Contact information"),
- *   default_step = "order_information",
- *   wrapper_element = "fieldset",
- * )
  */
+#[CommerceCheckoutPane(
+  id: "contact_information",
+  label: new TranslatableMarkup('Contact information'),
+  default_step: "order_information",
+  wrapper_element: "fieldset",
+)]
 class ContactInformation extends CheckoutPaneBase implements CheckoutPaneInterface {
 
   /**
@@ -22,6 +23,7 @@ class ContactInformation extends CheckoutPaneBase implements CheckoutPaneInterfa
   public function defaultConfiguration() {
     return [
       'double_entry' => FALSE,
+      'always_display' => FALSE,
     ] + parent::defaultConfiguration();
   }
 
@@ -29,14 +31,22 @@ class ContactInformation extends CheckoutPaneBase implements CheckoutPaneInterfa
    * {@inheritdoc}
    */
   public function buildConfigurationSummary() {
+    $parent_summary = parent::buildConfigurationSummary();
     if (!empty($this->configuration['double_entry'])) {
       $summary = $this->t('Require double entry of email: Yes');
     }
     else {
       $summary = $this->t('Require double entry of email: No');
     }
+    $summary .= '<br>';
+    if (!empty($this->configuration['always_display'])) {
+      $summary .= $this->t('Always display email fields: Yes');
+    }
+    else {
+      $summary .= $this->t('Always display email fields: No');
+    }
 
-    return $summary;
+    return $parent_summary ? implode('<br>', [$parent_summary, $summary]) : $summary;
   }
 
   /**
@@ -49,6 +59,12 @@ class ContactInformation extends CheckoutPaneBase implements CheckoutPaneInterfa
       '#title' => $this->t('Require double entry of email'),
       '#description' => $this->t('Forces anonymous users to enter their email in two consecutive fields, which must have identical values.'),
       '#default_value' => $this->configuration['double_entry'],
+    ];
+    $form['always_display'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Always display email fields'),
+      '#description' => $this->t('Allows authenticated users to view and change their email address for the order.'),
+      '#default_value' => $this->configuration['always_display'],
     ];
 
     return $form;
@@ -63,6 +79,7 @@ class ContactInformation extends CheckoutPaneBase implements CheckoutPaneInterfa
     if (!$form_state->getErrors()) {
       $values = $form_state->getValue($form['#parents']);
       $this->configuration['double_entry'] = !empty($values['double_entry']);
+      $this->configuration['always_display'] = !empty($values['always_display']);
     }
   }
 
@@ -70,8 +87,7 @@ class ContactInformation extends CheckoutPaneBase implements CheckoutPaneInterfa
    * {@inheritdoc}
    */
   public function isVisible() {
-    // Show the pane only for guest checkout.
-    return empty($this->order->getCustomerId());
+    return !empty($this->configuration['always_display']) || $this->order->getCustomer()->isAnonymous();
   }
 
   /**
@@ -120,6 +136,11 @@ class ContactInformation extends CheckoutPaneBase implements CheckoutPaneInterfa
    */
   public function submitPaneForm(array &$pane_form, FormStateInterface $form_state, array &$complete_form) {
     $values = $form_state->getValue($pane_form['#parents']);
+    if (!$this->order->getCustomer()->isAnonymous()) {
+      // Custom flag used in the OrderRefresh service to ensure the email
+      // isn't synced with the customer email.
+      $this->order->setData('customer_email_overridden', TRUE);
+    }
     $this->order->setEmail($values['email']);
   }
 

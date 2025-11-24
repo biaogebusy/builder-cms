@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalJavascriptTests\Theme;
 
 use Drupal\FunctionalJavascriptTests\TableDrag\TableDragTest;
@@ -31,7 +33,7 @@ class ClaroTableDragTest extends TableDragTest {
   /**
    * Ensures that there are no duplicate tabledrag handles.
    */
-  public function testNoDuplicates() {
+  public function testNoDuplicates(): void {
     $this->drupalGet('tabledrag_test_nested');
     $this->assertCount(1, $this->findRowById(1)->findAll('css', '.tabledrag-handle'));
   }

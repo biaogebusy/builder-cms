@@ -8,6 +8,12 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a base class for Views displays.
+ *
+ * Display plugins extending this class should use the
+ * \Drupal\search_api\Attribute\SearchApiViewsDisplay attribute for their plugin
+ * definitions.
+ *
+ * @see \Drupal\search_api\Attribute\SearchApiViewsDisplay
  */
 abstract class ViewsDisplayBase extends DisplayPluginBase {
 
@@ -62,7 +68,7 @@ abstract class ViewsDisplayBase extends DisplayPluginBase {
     // Recreating a link when a contextual filter is used in the display's path
     // is not possible. So instead we return NULL, which forces most
     // implementations to use the current request's path instead.
-    if ($path && strpos($path, '%') !== FALSE) {
+    if ($path && str_contains($path, '%')) {
       return NULL;
     }
 

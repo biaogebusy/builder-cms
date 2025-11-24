@@ -3,10 +3,10 @@
 namespace Drupal\flag\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
-use Drupal\flag\FlagInterface;
-use Drupal\Flag\FlagServiceInterface;
-use Drupal\flag\FlaggingInterface;
 use Drupal\Core\Session\SessionManagerInterface;
+use Drupal\flag\FlagInterface;
+use Drupal\flag\FlagServiceInterface;
+use Drupal\flag\FlaggingInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -18,7 +18,7 @@ class FieldEntryFormController extends ControllerBase {
   /**
    * The flag service.
    *
-   * @var \Drupal\Flag\FlagServiceInterface
+   * @var \Drupal\flag\FlagServiceInterface
    */
   protected $flagService;
 
@@ -34,7 +34,7 @@ class FieldEntryFormController extends ControllerBase {
    *
    * @param \Drupal\Core\Session\SessionManagerInterface $session_manager
    *   The session manager.
-   * @param \Drupal\Flag\FlagServiceInterface $flag_service
+   * @param \Drupal\flag\FlagServiceInterface $flag_service
    *   The flag service.
    */
   public function __construct(SessionManagerInterface $session_manager, FlagServiceInterface $flag_service) {
@@ -66,8 +66,6 @@ class FieldEntryFormController extends ControllerBase {
    * @see \Drupal\flag\Plugin\ActionLink\AJAXactionLink
    */
   public function flag(FlagInterface $flag, $entity_id) {
-    $flag_id = $flag->id();
-
     // Set account and session ID to NULL to get the current user.
     $account = $session_id = NULL;
     $this->flagService->populateFlaggerDefaults($account, $session_id);
@@ -161,6 +159,7 @@ class FieldEntryFormController extends ControllerBase {
    *   The flag field entry form title.
    */
   public function flagTitle(FlagInterface $flag, $entity_id) {
+    /** @var \Drupal\flag\Plugin\ActionLink\FormEntryTypeBase $link_type */
     $link_type = $flag->getLinkTypePlugin();
     return $link_type->getFlagQuestion();
   }
@@ -177,6 +176,7 @@ class FieldEntryFormController extends ControllerBase {
    *   The flag field entry form title.
    */
   public function editTitle(FlagInterface $flag, $entity_id) {
+    /** @var \Drupal\flag\Plugin\ActionLink\FormEntryTypeBase $link_type */
     $link_type = $flag->getLinkTypePlugin();
     return $link_type->getEditFlaggingTitle();
   }

@@ -1,28 +1,35 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace DrupalCodeGenerator\Command\Test;
 
 use DrupalCodeGenerator\Application;
-use DrupalCodeGenerator\Command\ModuleGenerator;
+use DrupalCodeGenerator\Asset\AssetCollection as Assets;
+use DrupalCodeGenerator\Attribute\Generator;
+use DrupalCodeGenerator\Command\BaseGenerator;
+use DrupalCodeGenerator\GeneratorType;
+use DrupalCodeGenerator\Validator\RequiredClassName;
 
-/**
- * Implements test:webdriver command.
- */
-final class WebDriver extends ModuleGenerator {
-
-  protected string $name = 'test:webdriver';
-  protected string $description = 'Generates a test that supports JavaScript';
-  protected string $alias = 'webdriver-test';
-  protected string $label = 'WebDriver';
-  protected string $templatePath = Application::TEMPLATE_PATH . '/test/webdriver';
+#[Generator(
+  name: 'test:webdriver',
+  description: 'Generates a test that supports JavaScript',
+  aliases: ['webdriver-test'],
+  templatePath: Application::TEMPLATE_PATH . '/Test/_webdriver',
+  type: GeneratorType::MODULE_COMPONENT,
+  label: 'WebDriver',
+)]
+final class WebDriver extends BaseGenerator {
 
   /**
    * {@inheritdoc}
    */
-  protected function generate(array &$vars): void {
-    $this->collectDefault($vars);
-    $vars['class'] = $this->ask('Class', 'ExampleTest', '::validateRequiredClassName');
-    $this->addFile('tests/src/FunctionalJavascript/{class}.php', 'webdriver');
+  protected function generate(array &$vars, Assets $assets): void {
+    $ir = $this->createInterviewer($vars);
+    $vars['machine_name'] = $ir->askMachineName();
+    $vars['name'] = $ir->askName();
+    $vars['class'] = $ir->ask('Class', 'ExampleTest', new RequiredClassName());
+    $assets->addFile('tests/src/FunctionalJavascript/{class}.php', 'webdriver.twig');
   }
 
 }

@@ -117,7 +117,7 @@ class FieldComparatorParagraphReference extends FieldComparatorDefault implement
           //   1. Check that paragraphs removed from server haven't changed in
           //      local version compared to original.
           //   2. Common paragraphs haven't changed as well.
-          // Remote and Local conlict: if one of both conditions is not
+          // Remote and Local conflict: if one of both conditions is not
           // fulfilled.
           $conflict_type = $this->getConflictTypeForCommonParagraphs($local, $server, $original) ?: $conflict_type;
         }

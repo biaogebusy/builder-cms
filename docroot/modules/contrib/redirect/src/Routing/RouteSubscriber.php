@@ -23,6 +23,12 @@ class RouteSubscriber extends RouteSubscriberBase {
     if ($route = $collection->get('system.files')) {
       $route->setDefault('_disable_route_normalizer', TRUE);
     }
+    if ($route = $collection->get('system.js_asset')) {
+      $route->setDefault('_disable_route_normalizer', TRUE);
+    }
+    if ($route = $collection->get('system.css_asset')) {
+      $route->setDefault('_disable_route_normalizer', TRUE);
+    }
   }
 
 }

@@ -3,8 +3,8 @@
 namespace Drupal\Tests\dynamic_entity_reference\Kernel;
 
 use Drupal\Core\Entity\ContentEntityTypeInterface;
-use Drupal\KernelTests\KernelTestBase;
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\KernelTests\KernelTestBase;
 
 /**
  * Tests for dynamic entity reference field dependencies.

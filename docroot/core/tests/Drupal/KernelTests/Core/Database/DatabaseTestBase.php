@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\Database;
 
 use Drupal\Core\Database\Database;
@@ -16,6 +18,9 @@ abstract class DatabaseTestBase extends KernelTestBase {
   use DatabaseTestSchemaDataTrait;
   use DatabaseTestSchemaInstallTrait;
 
+  /**
+   * {@inheritdoc}
+   */
   protected static $modules = ['database_test'];
 
   /**
@@ -28,7 +33,7 @@ abstract class DatabaseTestBase extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
     $this->connection = Database::getConnection();
     $this->installSampleSchema();
@@ -46,7 +51,7 @@ abstract class DatabaseTestBase extends KernelTestBase {
         'age' => 25,
       ])
       ->values([
-        'name' => 'Fozzie',
+        'name' => 'Ernie',
         'age' => NULL,
       ])
       ->values([

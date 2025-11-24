@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\redirect_404\Unit;
 
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\redirect_404\SqlRedirectNotFoundStorage;
@@ -22,6 +25,13 @@ class SqlRedirectNotFoundStorageTest extends UnitTestCase {
   protected $database;
 
   /**
+   * Mock time service.
+   *
+   * @var \Drupal\Component\Datetime\TimeInterface|\PHPUnit\Framework\MockObject\MockObject
+   */
+  protected $time;
+
+  /**
    * Mock config factory.
    *
    * @var \Drupal\Core\Config\ConfigFactoryInterface|\PHPUnit\Framework\MockObject\MockObject
@@ -34,6 +44,7 @@ class SqlRedirectNotFoundStorageTest extends UnitTestCase {
   protected function setUp(): void {
     parent::setUp();
     $this->database = $this->createMock(Connection::class);
+    $this->time = $this->createMock(TimeInterface::class);
   }
 
   /**
@@ -42,7 +53,7 @@ class SqlRedirectNotFoundStorageTest extends UnitTestCase {
   public function testLongPath() {
     $this->database->expects($this->never())
       ->method('merge');
-    $storage = new SqlRedirectNotFoundStorage($this->database, $this->getConfigFactoryStub());
+    $storage = new SqlRedirectNotFoundStorage($this->database, $this->getConfigFactoryStub(), $this->time);
     $storage->logRequest($this->randomMachineName(SqlRedirectNotFoundStorage::MAX_PATH_LENGTH + 1), LanguageInterface::LANGCODE_DEFAULT);
   }
 
@@ -52,7 +63,7 @@ class SqlRedirectNotFoundStorageTest extends UnitTestCase {
   public function testInvalidUtf8Path() {
     $this->database->expects($this->never())
       ->method('merge');
-    $storage = new SqlRedirectNotFoundStorage($this->database, $this->getConfigFactoryStub());
+    $storage = new SqlRedirectNotFoundStorage($this->database, $this->getConfigFactoryStub(), $this->time);
     $storage->logRequest("Caf\xc3", LanguageInterface::LANGCODE_DEFAULT);
   }
 
@@ -67,7 +78,7 @@ class SqlRedirectNotFoundStorageTest extends UnitTestCase {
         ],
       ]
     );
-    $storage = new SqlRedirectNotFoundStorage($this->database, $this->configFactory);
+    $storage = new SqlRedirectNotFoundStorage($this->database, $this->configFactory, $this->time);
     $storage->purgeOldRequests();
     $this->database->expects($this->never())
       ->method('select');

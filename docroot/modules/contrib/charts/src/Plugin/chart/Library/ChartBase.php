@@ -4,8 +4,10 @@ namespace Drupal\charts\Plugin\chart\Library;
 
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Base class Chart plugins.
@@ -13,6 +15,48 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 abstract class ChartBase extends PluginBase implements ChartInterface {
 
   use StringTranslationTrait;
+
+  /**
+   * The module handler service.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
+
+  /**
+   * Constructs a Base Chart object.
+   *
+   * @param array $configuration
+   *   A configuration array containing information about the plugin instance.
+   * @param string $plugin_id
+   *   The plugin_id for the plugin instance.
+   * @param mixed $plugin_definition
+   *   The plugin implementation definition.
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface|null $module_handler
+   *   The module handler service.
+   */
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, ?ModuleHandlerInterface $module_handler = NULL) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+
+    if (empty($module_handler)) {
+      // @phpstan-ignore-next-line
+      $module_handler = \Drupal::service('module_handler');
+      @trigger_error('Calling ChartBase::__construct() without the $module_handler as an instance of ModuleHandlerInterface is deprecated in charts:5.1.6 and is required in charts:6.0.0. See https://www.drupal.org/project/charts/issues/3518027', E_USER_DEPRECATED);
+    }
+    $this->moduleHandler = $module_handler;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('module_handler'),
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -27,8 +71,8 @@ abstract class ChartBase extends PluginBase implements ChartInterface {
   public function getSupportedChartTypes(): array {
     $types = $this->pluginDefinition['types'];
     $chart_plugin_id = $this->getPluginId();
-    // @todo Add dependency injection for the next major version.
-    \Drupal::moduleHandler()->alter('charts_plugin_supported_chart_types', $types, $chart_plugin_id);
+    $this->moduleHandler->alter('charts_plugin_supported_chart_types', $types, $chart_plugin_id);
+
     return $types;
   }
 
@@ -78,6 +122,14 @@ abstract class ChartBase extends PluginBase implements ChartInterface {
    * {@inheritdoc}
    */
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function addBaseSettingsElementOptions(array &$element, array $options, FormStateInterface $form_state, array &$complete_form = []): void {
+    // Hide the fieldset by default.
+    $element['#access'] = FALSE;
   }
 
   /**

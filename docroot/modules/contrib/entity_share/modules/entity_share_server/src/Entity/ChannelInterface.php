@@ -14,7 +14,7 @@ interface ChannelInterface extends ConfigEntityInterface {
   /**
    * Permission to access channels list.
    */
-  const CHANNELS_ACCESS_PERMISSION = 'entity_share_server_access_channels';
+  public const CHANNELS_ACCESS_PERMISSION = 'entity_share_server_access_channels';
 
   /**
    * Remove an authorized role if present. Do not save the entity.

@@ -36,7 +36,7 @@ abstract class ImageToolkitOperationBase extends PluginBase implements ImageTool
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param array $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\Core\ImageToolkit\ImageToolkitInterface $toolkit
@@ -184,6 +184,9 @@ abstract class ImageToolkitOperationBase extends PluginBase implements ImageTool
    *
    * @return bool
    *   TRUE if the operation was performed successfully, FALSE otherwise.
+   *
+   * @throws \RuntimeException
+   *   If the operation can not be performed.
    */
   abstract protected function execute(array $arguments);
 

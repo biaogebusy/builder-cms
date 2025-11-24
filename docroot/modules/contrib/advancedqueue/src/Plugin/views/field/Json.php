@@ -2,10 +2,10 @@
 
 namespace Drupal\advancedqueue\Plugin\views\field;
 
+use Drupal\Component\Serialization\Json as JsonDecoder;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\Plugin\views\field\FieldPluginBase;
 use Drupal\views\ResultRow;
-use Drupal\Component\Serialization\Json as JsonDecoder;
 
 /**
  * Field handler to show data of json stored fields.

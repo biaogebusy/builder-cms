@@ -15,7 +15,7 @@ class GuardsPass implements CompilerPassInterface {
    *
    * Passes the grouped service IDs of guards to the guard factory.
    */
-  public function process(ContainerBuilder $container) {
+  public function process(ContainerBuilder $container): void {
     $guards = [];
     $priorities = [];
     foreach ($container->findTaggedServiceIds('state_machine.guard') as $id => $attributes) {

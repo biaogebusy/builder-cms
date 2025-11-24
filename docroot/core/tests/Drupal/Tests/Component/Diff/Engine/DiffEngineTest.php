@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Component\Diff\Engine;
 
 use Drupal\Component\Diff\Engine\DiffEngine;
@@ -8,6 +10,7 @@ use Drupal\Component\Diff\Engine\DiffOpCopy;
 use Drupal\Component\Diff\Engine\DiffOpChange;
 use Drupal\Component\Diff\Engine\DiffOpDelete;
 use PHPUnit\Framework\TestCase;
+use Symfony\Bridge\PhpUnit\ExpectDeprecationTrait;
 
 /**
  * Test DiffEngine class.
@@ -15,8 +18,11 @@ use PHPUnit\Framework\TestCase;
  * @coversDefaultClass \Drupal\Component\Diff\Engine\DiffEngine
  *
  * @group Diff
+ * @group legacy
  */
 class DiffEngineTest extends TestCase {
+
+  use ExpectDeprecationTrait;
 
   /**
    * @return array
@@ -25,7 +31,7 @@ class DiffEngineTest extends TestCase {
    *   - An array of strings to change from.
    *   - An array of strings to change to.
    */
-  public function provideTestDiff() {
+  public static function provideTestDiff() {
     return [
       'empty' => [[], [], []],
       'add' => [[DiffOpAdd::class], [], ['a']],
@@ -66,6 +72,24 @@ class DiffEngineTest extends TestCase {
         ['a', 'b', 'd'],
         ['a'],
       ],
+      'change-copy' => [
+        [
+          DiffOpChange::class,
+          DiffOpCopy::class,
+        ],
+        ['aa', 'bb', 'cc', 'd'],
+        ['a', 'c', 'd'],
+      ],
+      'copy-change-copy-change' => [
+        [
+          DiffOpCopy::class,
+          DiffOpChange::class,
+          DiffOpCopy::class,
+          DiffOpChange::class,
+        ],
+        ['a', 'bb', 'd', 'ee'],
+        ['a', 'b', 'c', 'd', 'e'],
+      ],
     ];
   }
 
@@ -75,7 +99,8 @@ class DiffEngineTest extends TestCase {
    * @covers ::diff
    * @dataProvider provideTestDiff
    */
-  public function testDiff($expected, $from, $to) {
+  public function testDiff($expected, $from, $to): void {
+    $this->expectDeprecation('Drupal\Component\Diff\Engine\DiffEngine is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use sebastianbergmann/diff instead. See https://www.drupal.org/node/3337942');
     $diff_engine = new DiffEngine();
     $diff = $diff_engine->diff($from, $to);
     // Make sure we have the same number of results as expected.
@@ -91,7 +116,8 @@ class DiffEngineTest extends TestCase {
    *
    * @covers ::diff
    */
-  public function testDiffInfiniteLoop() {
+  public function testDiffInfiniteLoop(): void {
+    $this->expectDeprecation('Drupal\Component\Diff\Engine\DiffEngine is deprecated in drupal:10.1.0 and is removed from drupal:11.0.0. Use sebastianbergmann/diff instead. See https://www.drupal.org/node/3337942');
     $from = explode("\n", file_get_contents(__DIR__ . '/fixtures/file1.txt'));
     $to = explode("\n", file_get_contents(__DIR__ . '/fixtures/file2.txt'));
     $diff_engine = new DiffEngine();
@@ -99,7 +125,7 @@ class DiffEngineTest extends TestCase {
     $this->assertCount(4, $diff);
     $this->assertEquals($diff[0], new DiffOpDelete(['    - image.style.max_650x650']));
     $this->assertEquals($diff[1], new DiffOpCopy(['    - image.style.max_325x325']));
-    $this->assertEquals($diff[2], new DiffOpAdd(['    - image.style.max_650x650', '_core:', '  default_config_hash: 3mjM9p-kQ8syzH7N8T0L9OnCJDSPvHAZoi3q6jcXJKM']));
+    $this->assertEquals($diff[2], new DiffOpAdd(['    - image.style.max_650x650', '_core:', '  default_config_hash: random_hash_string_here']));
     $this->assertEquals($diff[3], new DiffOpCopy(['fallback_image_style: max_325x325', '']));
   }
 

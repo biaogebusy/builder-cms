@@ -12,11 +12,18 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
- * Implements hook_form_FORM_ID_alter() on behalf of ckeditor.module.
+ * Implements hook_form_FORM_ID_alter().
  *
- * @todo Remove this once CKEditor4 support is dropped.
+ * This hook is implemented on behalf of ckeditor.module.
+ *
+ * @deprecated in embed:8.x-1.9 and is removed from embed:2.0.0. There is no
+ *   replacement.
+ *
+ * @see https://www.drupal.org/node/3467748
  */
+// @phpcs:disable
 function ckeditor_form_embed_button_add_form_alter(array &$form, FormStateInterface $form_state): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in embed:8.x-1.9 and is removed from embed:2.0.0. There is no replacement. See https://www.drupal.org/node/3467748', E_USER_DEPRECATED);
   $form['#validate'][] = 'ckeditor_form_embed_button_add_form_validate';
 }
 
@@ -26,9 +33,13 @@ function ckeditor_form_embed_button_add_form_alter(array &$form, FormStateInterf
  * Checks to make sure that when adding a new embed button, its ID will not
  * conflict with any existing CKEditor buttons.
  *
- * @todo Remove this once CKEditor4 support is dropped.
+ * @deprecated in embed:8.x-1.9 and is removed from embed:2.0.0. There is no
+ *   replacement.
+ *
+ * @see https://www.drupal.org/node/3467748
  */
 function ckeditor_form_embed_button_add_form_validate(array &$form, FormStateInterface $form_state): void {
+  @trigger_error(__FUNCTION__ . '() is deprecated in embed:8.x-1.9 and is removed from embed:2.0.0. There is no replacement. See https://www.drupal.org/node/3467748', E_USER_DEPRECATED);
   /** @var \Drupal\ckeditor\CKEditorPluginManager $ckeditor_plugin_manager */
   $ckeditor_plugin_manager = \Drupal::service('plugin.manager.ckeditor.plugin');
 
@@ -125,6 +136,7 @@ function embed_filter_format_edit_form_validate($form, FormStateInterface $form_
     }
   }
 }
+// @phpcs:enable
 
 /**
  * Implements hook_ENTITY_TYPE_presave().

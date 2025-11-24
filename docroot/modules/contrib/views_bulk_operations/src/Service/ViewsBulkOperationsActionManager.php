@@ -2,13 +2,14 @@
 
 namespace Drupal\views_bulk_operations\Service;
 
+use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Core\Action\ActionManager;
 use Drupal\Core\Cache\CacheBackendInterface;
-use Drupal\Core\Extension\ModuleHandlerInterface;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Symfony\Component\EventDispatcher\Event;
-use Drupal\Component\Plugin\Exception\PluginNotFoundException;
+use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\views_bulk_operations\ActionAlterDefinitionsEvent;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Defines Views Bulk Operations action manager.
@@ -18,28 +19,14 @@ use Drupal\Component\Plugin\Exception\PluginNotFoundException;
  */
 class ViewsBulkOperationsActionManager extends ActionManager {
 
-  const ALTER_ACTIONS_EVENT = 'views_bulk_operations.action_definitions';
-
-  /**
-   * Event dispatcher service.
-   *
-   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
-   */
-  protected $eventDispatcher;
-
-  /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
+  public const ALTER_ACTIONS_EVENT = 'views_bulk_operations.action_definitions';
 
   /**
    * Additional parameters passed to alter event.
    *
    * @var array
    */
-  protected $alterParameters;
+  protected array $alterParameters;
 
   /**
    * Service constructor.
@@ -57,16 +44,15 @@ class ViewsBulkOperationsActionManager extends ActionManager {
    *   Entity type manager.
    */
   public function __construct(
+    #[Autowire(service: 'container.namespaces')]
     \Traversable $namespaces,
+    #[Autowire(service: 'cache.discovery')]
     CacheBackendInterface $cacheBackend,
     ModuleHandlerInterface $moduleHandler,
-    EventDispatcherInterface $eventDispatcher,
-    EntityTypeManagerInterface $entityTypeManager
+    protected readonly EventDispatcherInterface $eventDispatcher,
+    protected readonly EntityTypeManagerInterface $entityTypeManager
   ) {
     parent::__construct($namespaces, $cacheBackend, $moduleHandler);
-
-    $this->eventDispatcher = $eventDispatcher;
-    $this->entityTypeManager = $entityTypeManager;
 
     $this->setCacheBackend($cacheBackend, 'views_bulk_operations_action_info');
   }
@@ -99,7 +85,7 @@ class ViewsBulkOperationsActionManager extends ActionManager {
       // shouldn't be the case in core. Luckily, core also has useful actions
       // without the workaround, like node_assign_owner_action or
       // comment_unpublish_by_keyword_action.
-      if (!in_array('Drupal\views_bulk_operations\Action\ViewsBulkOperationsActionInterface', class_implements($definition['class']))) {
+      if (!\in_array('Drupal\views_bulk_operations\Action\ViewsBulkOperationsActionInterface', \class_implements($definition['class']))) {
         if (
           !empty($definition['confirm_form_route_name']) ||
           empty($definition['type'])
@@ -114,12 +100,16 @@ class ViewsBulkOperationsActionManager extends ActionManager {
     foreach ($definitions as $plugin_id => $plugin_definition) {
       // If the plugin definition is an object, attempt to convert it to an
       // array, if that is not possible, skip further processing.
-      if (is_object($plugin_definition) && !($plugin_definition = (array) $plugin_definition)) {
+      if (\is_object($plugin_definition) && !($plugin_definition = (array) $plugin_definition)) {
         continue;
       }
       // If this plugin was provided by a module that does not exist, remove the
       // plugin definition.
-      if (isset($plugin_definition['provider']) && !in_array($plugin_definition['provider'], ['core', 'component']) && !$this->providerExists($plugin_definition['provider'])) {
+      if (
+        isset($plugin_definition['provider']) &&
+        !\in_array($plugin_definition['provider'], ['core', 'component']) &&
+        !$this->providerExists($plugin_definition['provider'])
+      ) {
         unset($definitions[$plugin_id]);
       }
     }
@@ -174,33 +164,7 @@ class ViewsBulkOperationsActionManager extends ActionManager {
       return NULL;
     }
 
-    throw new PluginNotFoundException($plugin_id, sprintf('The "%s" plugin does not exist.', $plugin_id));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function processDefinition(&$definition, $plugin_id) {
-    // Only arrays can be operated on.
-    if (!is_array($definition)) {
-      return;
-    }
-
-    if (!empty($this->defaults) && is_array($this->defaults)) {
-      $definition = NestedArray::mergeDeep($this->defaults, $definition);
-    }
-
-    // Merge in defaults.
-    $definition += [
-      'confirm' => FALSE,
-    ];
-
-    // Add default confirmation form if confirm set to TRUE
-    // and not explicitly set.
-    if ($definition['confirm'] && empty($definition['confirm_form_route_name'])) {
-      $definition['confirm_form_route_name'] = 'views_bulk_operations.confirm';
-    }
-
+    throw new PluginNotFoundException($plugin_id, \sprintf('The "%s" plugin does not exist.', $plugin_id));
   }
 
   /**
@@ -209,10 +173,11 @@ class ViewsBulkOperationsActionManager extends ActionManager {
   protected function alterDefinitions(&$definitions) {
     // Let other modules change definitions.
     // Main purpose: Action permissions bridge.
-    $event = new Event();
+    $event = new ActionAlterDefinitionsEvent();
     $event->alterParameters = $this->alterParameters;
     $event->definitions = &$definitions;
-    $this->eventDispatcher->dispatch(static::ALTER_ACTIONS_EVENT, $event);
+
+    $this->eventDispatcher->dispatch($event, self::ALTER_ACTIONS_EVENT);
 
     // Include the expected behaviour (hook system) to avoid security issues.
     parent::alterDefinitions($definitions);

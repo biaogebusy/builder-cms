@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\config\Functional;
 
 use Drupal\FunctionalTests\Installer\InstallerTestBase;
@@ -46,15 +48,22 @@ class ConfigInstallProfileUnmetDependenciesTest extends InstallerTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp(): void {
+  public function setUpSettings() {
     // During set up an UnmetDependenciesException should be thrown, which will
     // be re-thrown by TestHttpClientMiddleware as a standard Exception.
     try {
-      parent::setUp();
+      parent::setUpSettings();
     }
     catch (\Exception $exception) {
       $this->expectedException = $exception;
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setUpSite() {
+    // This step can no longer be reached.
   }
 
   /**
@@ -73,7 +82,7 @@ class ConfigInstallProfileUnmetDependenciesTest extends InstallerTestBase {
         mkdir($dest . DIRECTORY_SEPARATOR . $iterator->getSubPathName());
       }
       else {
-        copy($item, $dest . DIRECTORY_SEPARATOR . $iterator->getSubPathName());
+        copy((string) $item, $dest . DIRECTORY_SEPARATOR . $iterator->getSubPathName());
       }
     }
 
@@ -87,7 +96,7 @@ class ConfigInstallProfileUnmetDependenciesTest extends InstallerTestBase {
   /**
    * Confirms that the installation succeeded.
    */
-  public function testInstalled() {
+  public function testInstalled(): void {
     if ($this->expectedException) {
       $this->assertStringContainsString('Configuration objects provided by <em class="placeholder">testing_config_overrides</em> have unmet dependencies: <em class="placeholder">system.action.user_block_user_action (does_not_exist)</em>', $this->expectedException->getMessage());
       $this->assertStringContainsString('Drupal\Core\Config\UnmetDependenciesException', $this->expectedException->getMessage());

@@ -2,11 +2,13 @@
 
 namespace Drupal\file_test\Form;
 
+use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\State\StateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -71,11 +73,11 @@ class FileTestSaveUploadFromForm extends FormBase {
       '#type' => 'select',
       '#title' => $this->t('Replace existing image'),
       '#options' => [
-        FileSystemInterface::EXISTS_RENAME => $this->t('Appends number until name is unique'),
-        FileSystemInterface::EXISTS_REPLACE => $this->t('Replace the existing file'),
-        FileSystemInterface::EXISTS_ERROR => $this->t('Fail with an error'),
+        FileExists::Rename->name => new TranslatableMarkup('Appends number until name is unique'),
+        FileExists::Replace->name => new TranslatableMarkup('Replace the existing file'),
+        FileExists::Error->name => new TranslatableMarkup('Fail with an error'),
       ],
-      '#default_value' => FileSystemInterface::EXISTS_RENAME,
+      '#default_value' => FileExists::Rename->name,
     ];
     $form['file_subdir'] = [
       '#type' => 'textfield',
@@ -141,18 +143,18 @@ class FileTestSaveUploadFromForm extends FormBase {
     // Setup validators.
     $validators = [];
     if ($form_state->getValue('is_image_file')) {
-      $validators['file_validate_is_image'] = [];
+      $validators['FileIsImage'] = [];
     }
 
     $allow = $form_state->getValue('allow_all_extensions');
     if ($allow === 'empty_array') {
-      $validators['file_validate_extensions'] = [];
+      $validators['FileExtension'] = [];
     }
     elseif ($allow === 'empty_string') {
-      $validators['file_validate_extensions'] = [''];
+      $validators['FileExtension'] = ['extensions' => ''];
     }
     elseif (!$form_state->isValueEmpty('extensions')) {
-      $validators['file_validate_extensions'] = [$form_state->getValue('extensions')];
+      $validators['FileExtension'] = ['extensions' => $form_state->getValue('extensions')];
     }
 
     // The test for \Drupal::service('file_system')->moveUploadedFile()
@@ -166,7 +168,7 @@ class FileTestSaveUploadFromForm extends FormBase {
     $form['file_test_upload']['#upload_location'] = $destination;
 
     $this->messenger->addStatus($this->t('Number of error messages before _file_save_upload_from_form(): @count.', ['@count' => count($this->messenger->messagesByType(MessengerInterface::TYPE_ERROR))]));
-    $file = _file_save_upload_from_form($form['file_test_upload'], $form_state, 0, $form_state->getValue('file_test_replace'));
+    $file = _file_save_upload_from_form($form['file_test_upload'], $form_state, 0, static::fileExistsFromName($form_state->getValue('file_test_replace')));
     $this->messenger->addStatus($this->t('Number of error messages after _file_save_upload_from_form(): @count.', ['@count' => count($this->messenger->messagesByType(MessengerInterface::TYPE_ERROR))]));
 
     if ($file) {
@@ -185,5 +187,16 @@ class FileTestSaveUploadFromForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {}
+
+  /**
+   * Get a FileExists enum from its name.
+   */
+  protected static function fileExistsFromName(string $name): FileExists {
+    return match ($name) {
+      FileExists::Replace->name => FileExists::Replace,
+      FileExists::Error->name => FileExists::Error,
+      default => FileExists::Rename,
+    };
+  }
 
 }

@@ -8,6 +8,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityReferenceSelection\SelectionInterface;
 use Drupal\Core\Entity\EntityReferenceSelection\SelectionWithAutocreateInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Attribute\FormElement;
 use Drupal\Core\Render\Element\Textfield;
 use Drupal\Core\Site\Settings;
 
@@ -62,9 +63,8 @@ use Drupal\Core\Site\Settings;
  * @endcode
  *
  * @see \Drupal\Core\Entity\Plugin\EntityReferenceSelection\DefaultSelection
- *
- * @FormElement("entity_autocomplete")
  */
+#[FormElement('entity_autocomplete')]
 class EntityAutocomplete extends Textfield {
 
   /**
@@ -173,6 +173,12 @@ class EntityAutocomplete extends Textfield {
     // Store the selection settings in the key/value store and pass a hashed key
     // in the route parameters.
     $selection_settings = $element['#selection_settings'] ?? [];
+    // Don't serialize the entity, it will be added explicitly afterwards.
+    if (isset($selection_settings['entity']) && ($selection_settings['entity'] instanceof EntityInterface)) {
+      $element['#autocomplete_query_parameters']['entity_type'] = $selection_settings['entity']->getEntityTypeId();
+      $element['#autocomplete_query_parameters']['entity_id'] = $selection_settings['entity']->id();
+      unset($selection_settings['entity']);
+    }
     $data = serialize($selection_settings) . $element['#target_type'] . $element['#selection_handler'];
     $selection_settings_key = Crypt::hmacBase64($data, Settings::getHashSalt());
 
@@ -197,7 +203,8 @@ class EntityAutocomplete extends Textfield {
   public static function validateEntityAutocomplete(array &$element, FormStateInterface $form_state, array &$complete_form) {
     $value = NULL;
 
-    if (!empty($element['#value'])) {
+    // Check the value for emptiness, but allow the use of (string) "0".
+    if (!empty($element['#value']) || (is_string($element['#value']) && strlen($element['#value']))) {
       $options = $element['#selection_settings'] + [
         'target_type' => $element['#target_type'],
         'handler' => $element['#selection_handler'],

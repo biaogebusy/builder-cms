@@ -28,7 +28,7 @@ settings:
   entity_id: ''
 visibility:
   node_type:
-    id: node_type
+    id: entity_bundle:node
     bundles:
       webform_demo_event: webform_demo_event
     negate: false

@@ -2,7 +2,7 @@
 
 namespace Drupal\Core\Plugin;
 
-use Drupal\Component\Plugin\PluginHelper;
+use Drupal\Component\Plugin\ConfigurableInterface;
 use Drupal\Component\Plugin\PluginManagerInterface;
 use Drupal\Component\Plugin\LazyPluginCollection;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
@@ -67,7 +67,7 @@ class DefaultSingleLazyPluginCollection extends LazyPluginCollection {
    */
   public function getConfiguration() {
     $plugin = $this->get($this->instanceId);
-    if (PluginHelper::isConfigurable($plugin)) {
+    if ($plugin instanceof ConfigurableInterface) {
       return $plugin->getConfiguration();
     }
     else {
@@ -79,9 +79,14 @@ class DefaultSingleLazyPluginCollection extends LazyPluginCollection {
    * {@inheritdoc}
    */
   public function setConfiguration($configuration) {
+    if (!is_array($configuration)) {
+      @trigger_error('Calling ' . __METHOD__ . '() with a non-array argument is deprecated in drupal:10.3.0 and will fail in drupal:11.0.0. See https://www.drupal.org/node/3406191', E_USER_DEPRECATED);
+      $configuration = [];
+    }
+
     $this->configuration = $configuration;
     $plugin = $this->get($this->instanceId);
-    if (PluginHelper::isConfigurable($plugin)) {
+    if ($plugin instanceof ConfigurableInterface) {
       $plugin->setConfiguration($configuration);
     }
     return $this;

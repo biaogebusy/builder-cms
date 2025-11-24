@@ -4,12 +4,14 @@ namespace Drupal\Tests\search_api\Kernel\Index;
 
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\search_api\Utility\Utility;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests whether importing of index configuration works correctly.
  *
  * @group search_api
  */
+#[RunTestsInSeparateProcesses]
 class IndexImportTest extends KernelTestBase {
 
   /**

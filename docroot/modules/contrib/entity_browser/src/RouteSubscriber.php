@@ -47,7 +47,7 @@ class RouteSubscriber {
     $collection = new RouteCollection();
 
     foreach ($this->getBrowserIDsWithRoute() as $id) {
-      /** @var $browser \Drupal\entity_browser\EntityBrowserInterface */
+      /** @var \Drupal\entity_browser\EntityBrowserInterface $browser */
       $browser = $this->browserStorage->load($id);
       if ($route = $browser->route()) {
         $collection->add('entity_browser.' . $browser->id(), $route);

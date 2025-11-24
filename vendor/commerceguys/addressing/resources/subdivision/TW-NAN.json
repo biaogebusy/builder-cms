@@ -1,0 +1,49 @@
+{
+	"country_code": "TW",
+	"parents": [
+		"TW",
+		"NAN"
+	],
+	"locale": "zh-Hant",
+	"subdivisions": {
+		"Zhongliao Township": {
+			"local_name": "中寮鄉"
+		},
+		"Ren'ai Township": {
+			"local_name": "仁愛鄉"
+		},
+		"Shuili Township": {
+			"local_name": "水里鄉"
+		},
+		"Mingjian Township": {
+			"local_name": "名間鄉"
+		},
+		"Zhushan Township": {
+			"local_name": "竹山鎮"
+		},
+		"Xinyi Township": {
+			"local_name": "信義鄉"
+		},
+		"Nantou City": {
+			"local_name": "南投市"
+		},
+		"Puli Township": {
+			"local_name": "埔里鎮"
+		},
+		"Caotun Township": {
+			"local_name": "草屯鎮"
+		},
+		"Guoxing Township": {
+			"local_name": "國姓鄉"
+		},
+		"Yuchi Township": {
+			"local_name": "魚池鄉"
+		},
+		"Lugu Township": {
+			"local_name": "鹿谷鄉"
+		},
+		"Jiji Township": {
+			"local_name": "集集鎮"
+		}
+	}
+}

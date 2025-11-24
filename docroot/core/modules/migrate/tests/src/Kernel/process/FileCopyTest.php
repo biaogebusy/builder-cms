@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\migrate\Kernel\process;
 
 use Drupal\Core\StreamWrapper\StreamWrapperInterface;
@@ -44,7 +46,7 @@ class FileCopyTest extends FileTestBase {
   /**
    * Tests successful imports/copies.
    */
-  public function testSuccessfulCopies() {
+  public function testSuccessfulCopies(): void {
     $file = $this->createUri(NULL, NULL, 'temporary');
     $file_absolute = $this->fileSystem->realpath($file);
     $data_sets = [
@@ -84,7 +86,7 @@ class FileCopyTest extends FileTestBase {
    * @param string $destination_path
    *   The destination path to copy to.
    */
-  public function testSuccessfulReuse($source_path, $destination_path) {
+  public function testSuccessfulReuse($source_path, $destination_path): void {
     $file_reuse = $this->doTransform($source_path, $destination_path);
     clearstatcache(TRUE, $destination_path);
 
@@ -109,15 +111,15 @@ class FileCopyTest extends FileTestBase {
   /**
    * Provides the source and destination path files.
    */
-  public function providerSuccessfulReuse() {
+  public static function providerSuccessfulReuse() {
     return [
       [
-        'local_source_path' => static::getDrupalRoot() . '/core/tests/fixtures/files/image-test.jpg',
-        'local_destination_path' => 'public://file1.jpg',
+        'source_path' => static::getDrupalRoot() . '/core/tests/fixtures/files/image-test.jpg',
+        'destination_path' => 'public://file1.jpg',
       ],
       [
-        'remote_source_path' => 'https://www.drupal.org/favicon.ico',
-        'remote_destination_path' => 'public://file2.jpg',
+        'source_path' => 'https://www.drupal.org/favicon.ico',
+        'destination_path' => 'public://file2.jpg',
       ],
     ];
   }
@@ -125,7 +127,7 @@ class FileCopyTest extends FileTestBase {
   /**
    * Tests successful moves.
    */
-  public function testSuccessfulMoves() {
+  public function testSuccessfulMoves(): void {
     $file_1 = $this->createUri(NULL, NULL, 'temporary');
     $file_1_absolute = $this->fileSystem->realpath($file_1);
     $file_2 = $this->createUri(NULL, NULL, 'temporary');
@@ -160,7 +162,7 @@ class FileCopyTest extends FileTestBase {
   /**
    * Tests that non-existent files throw an exception.
    */
-  public function testNonExistentSourceFile() {
+  public function testNonExistentSourceFile(): void {
     $source = '/non/existent/file';
     $this->expectException(MigrateException::class);
     $this->expectExceptionMessage("File '/non/existent/file' does not exist");
@@ -172,7 +174,7 @@ class FileCopyTest extends FileTestBase {
    *
    * @covers ::transform
    */
-  public function testNonWritableDestination() {
+  public function testNonWritableDestination(): void {
     $source = $this->createUri('file.txt', NULL, 'temporary');
 
     // Create the parent location.
@@ -197,7 +199,7 @@ class FileCopyTest extends FileTestBase {
   /**
    * Tests the 'rename' overwrite mode.
    */
-  public function testRenameFile() {
+  public function testRenameFile(): void {
     $source = $this->createUri(NULL, NULL, 'temporary');
     $destination = $this->createUri('foo.txt', NULL, 'public');
     $expected_destination = 'public://foo_0.txt';
@@ -209,7 +211,7 @@ class FileCopyTest extends FileTestBase {
   /**
    * Tests that remote URIs are delegated to the download plugin.
    */
-  public function testDownloadRemoteUri() {
+  public function testDownloadRemoteUri(): void {
     $download_plugin = $this->createMock(MigrateProcessInterface::class);
     $download_plugin->expects($this->once())->method('transform');
 

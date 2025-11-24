@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_moderation\Kernel;
 
 use Drupal\content_moderation\Entity\ContentModerationState;
@@ -46,6 +48,7 @@ class ContentModerationStateStorageSchemaTest extends KernelTestBase {
 
     NodeType::create([
       'type' => 'example',
+      'name' => 'Example',
     ])->save();
     $workflow = $this->createEditorialWorkflow();
     $workflow->getTypePlugin()->addEntityTypeAndBundle('node', 'example');
@@ -57,7 +60,7 @@ class ContentModerationStateStorageSchemaTest extends KernelTestBase {
    *
    * @covers ::getEntitySchema
    */
-  public function testUniqueKeys() {
+  public function testUniqueKeys(): void {
     // Create a node which will create a new ContentModerationState entity.
     $node = Node::create([
       'title' => 'Test title',

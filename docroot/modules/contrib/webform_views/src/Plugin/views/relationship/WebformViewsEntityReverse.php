@@ -15,6 +15,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class WebformViewsEntityReverse extends RelationshipPluginBase {
 
+  protected ViewsHandlerManager $joinManager;
+  protected string $first_alias;
+
   /**
    * WebformViewsEntityReverse constructor.
    *

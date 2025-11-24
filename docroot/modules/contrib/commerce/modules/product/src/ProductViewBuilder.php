@@ -10,8 +10,8 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityViewBuilder;
 use Drupal\Core\Language\LanguageManagerInterface;
-use Drupal\layout_builder\Entity\LayoutEntityDisplayInterface;
 use Drupal\Core\Theme\Registry;
+use Drupal\layout_builder\Entity\LayoutEntityDisplayInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -29,7 +29,7 @@ class ProductViewBuilder extends EntityViewBuilder {
   /**
    * The product field variation renderer.
    *
-   * @var \Drupal\commerce_product\ProductVariationFieldRenderer
+   * @var \Drupal\commerce_product\ProductVariationFieldRendererInterface
    */
   protected $variationFieldRenderer;
 
@@ -48,10 +48,10 @@ class ProductViewBuilder extends EntityViewBuilder {
    *   The entity display repository.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
-   * @param \Drupal\commerce_product\ProductVariationFieldRenderer $variation_field_renderer
+   * @param \Drupal\commerce_product\ProductVariationFieldRendererInterface $variation_field_renderer
    *   The product variation field renderer.
    */
-  public function __construct(EntityTypeInterface $entity_type, EntityRepositoryInterface $entity_repository, LanguageManagerInterface $language_manager, Registry $theme_registry, EntityDisplayRepositoryInterface $entity_display_repository, EntityTypeManagerInterface $entity_type_manager, ProductVariationFieldRenderer $variation_field_renderer) {
+  public function __construct(EntityTypeInterface $entity_type, EntityRepositoryInterface $entity_repository, LanguageManagerInterface $language_manager, Registry $theme_registry, EntityDisplayRepositoryInterface $entity_display_repository, EntityTypeManagerInterface $entity_type_manager, ProductVariationFieldRendererInterface $variation_field_renderer) {
     parent::__construct($entity_type, $entity_repository, $language_manager, $theme_registry, $entity_display_repository);
 
     $this->entityTypeManager = $entity_type_manager;

@@ -3,7 +3,6 @@
 namespace Drupal\blazy\Field;
 
 use Drupal\blazy\BlazyDefault;
-use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Base class for all entity reference formatters with field details.
@@ -30,19 +29,22 @@ abstract class BlazyEntityReferenceBase extends BlazyEntityMediaBase {
   /**
    * {@inheritdoc}
    */
-  public function settingsForm(array $form, FormStateInterface $form_state) {
-    $element = parent::settingsForm($form, $form_state);
+  protected function getScopedDefinition(array $form): array {
+    $definition   = parent::getScopedDefinition($form);
+    $existings    = $definition['additional_descriptions'] ?? [];
+    $descriptions = [
+      'layout' => [
+        'description' => $this->t('Create a dedicated List (text - max number 1) field related to the caption placement to have unique layout per slide with the following supported keys: top, right, bottom, left, center, center-top, etc. Be sure its formatter is Key.'),
+        'placement' => 'before',
+      ],
+      'overlay' => [
+        'description' => $this->t('The formatter/renderer is managed by the child formatter.'),
+        'placement' => 'after',
+      ],
+    ];
 
-    if (isset($element['layout'])) {
-      $layout_description = $element['layout']['#description'];
-      $element['layout']['#description'] = $this->t('Create a dedicated List (text - max number 1) field related to the caption placement to have unique layout per slide with the following supported keys: top, right, bottom, left, center, center-top, etc. Be sure its formatter is Key.') . ' ' . $layout_description;
-    }
-
-    if (isset($element['overlay']['#description'])) {
-      $element['overlay']['#description'] .= ' ' . $this->t('The formatter/renderer is managed by the child formatter.');
-    }
-
-    return $element;
+    $definition['additional_descriptions'] = $this->manager->merge($descriptions, $existings);
+    return $definition;
   }
 
   /**

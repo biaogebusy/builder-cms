@@ -6,6 +6,7 @@ namespace Drupal\Tests\sms_blast\Functional;
 
 use Drupal\Core\Url;
 use Drupal\sms\Entity\PhoneNumberSettingsInterface;
+use Drupal\sms\Entity\SmsGatewayInterface;
 use Drupal\Tests\sms\Functional\SmsFrameworkBrowserTestBase;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\field\Entity\FieldConfig;
@@ -26,14 +27,10 @@ final class SmsBlastBrowserTest extends SmsFrameworkBrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  protected $defaultTheme = 'classy';
+  protected $defaultTheme = 'stark';
 
-  /**
-   * Phone number settings of user entity type.
-   *
-   * @var \Drupal\sms\Entity\PhoneNumberSettingsInterface
-   */
-  protected PhoneNumberSettingsInterface $phoneNumberSettings;
+  private PhoneNumberSettingsInterface $phoneNumberSettings;
+  private SmsGatewayInterface $gateway;
 
   /**
    * {@inheritdoc}
@@ -103,7 +100,7 @@ final class SmsBlastBrowserTest extends SmsFrameworkBrowserTestBase {
     $this->assertSession()->pageTextContains('Message sent to 3 users.');
 
     // Get the resulting message that was sent and confirm.
-    $this->assertCount(3, $this->getTestMessages($this->gateway), 'Sent three messages.');
+    static::assertCount(3, $this->getTestMessages($this->gateway), 'Sent three messages.');
   }
 
 }

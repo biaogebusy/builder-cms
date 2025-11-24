@@ -1,0 +1,26 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"SX",
+		"Yangquan Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Cheng Qu": {
+			"local_name": "城区"
+		},
+		"Jiao Qu": {
+			"local_name": "郊区"
+		},
+		"Kuang Qu": {
+			"local_name": "矿区"
+		},
+		"Pingding Xian": {
+			"local_name": "平定县"
+		},
+		"Yu Xian": {
+			"local_name": "盂县"
+		}
+	}
+}

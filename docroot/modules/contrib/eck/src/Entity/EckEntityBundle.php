@@ -21,6 +21,11 @@ use Drupal\eck\EckEntityBundleInterface;
  *     },
  *     "list_builder" = "Drupal\eck\Controller\EckEntityBundleListBuilder",
  *   },
+ *   config_export = {
+ *     "name",
+ *     "type",
+ *     "description",
+ *   },
  *   admin_permission = "administer eck entity bundles",
  *   entity_keys = {
  *     "id" = "bundle",
@@ -144,10 +149,30 @@ class EckEntityBundle extends ConfigEntityBundleBase implements EckEntityBundleI
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public static function create(array $values = []) {
+    $entity_type_manager = \Drupal::entityTypeManager();
+    $storage = $entity_type_manager->getStorage('eck_entity_bundle');
+    return $storage->create($values);
+  }
+
+  /**
    * @return null|string
    */
   public function getEckEntityTypeMachineName() {
     return $this->getEntityType()->getBundleOf();
+  }
+
+  /**
+   * Define empty to string method.
+   *
+   * See: Issue #2943901: Devel Tokens tab Broken for ECKs.
+   *
+   * @see https://www.drupal.org/project/eck/issues/2943901
+   */
+  public function __toString() {
+    return '';
   }
 
 }

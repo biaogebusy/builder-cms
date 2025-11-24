@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\ckeditor5\Kernel;
 
 use Drupal\ckeditor5\Plugin\CKEditor5PluginDefinition;
@@ -44,7 +46,7 @@ class ConfigurablePluginTest extends KernelTestBase {
   /**
    * Tests default settings for configurable CKEditor 5 plugins.
    */
-  public function testDefaults() {
+  public function testDefaults(): void {
     $all_definitions = $this->manager->getDefinitions();
     $configurable_definitions = array_filter($all_definitions, function (CKEditor5PluginDefinition $definition): bool {
       return $definition->isConfigurable();
@@ -70,9 +72,30 @@ class ConfigurablePluginTest extends KernelTestBase {
       'ckeditor5_sourceEditing' => [
         'allowed_tags' => [],
       ],
+      'ckeditor5_codeBlock' => [
+        'languages' => [
+          ['language' => 'plaintext', 'label' => 'Plain text'],
+          ['language' => 'c', 'label' => 'C'],
+          ['language' => 'cs', 'label' => 'C#'],
+          ['language' => 'cpp', 'label' => 'C++'],
+          ['language' => 'css', 'label' => 'CSS'],
+          ['language' => 'diff', 'label' => 'Diff'],
+          ['language' => 'html', 'label' => 'HTML'],
+          ['language' => 'java', 'label' => 'Java'],
+          ['language' => 'javascript', 'label' => 'JavaScript'],
+          ['language' => 'php', 'label' => 'PHP'],
+          ['language' => 'python', 'label' => 'Python'],
+          ['language' => 'ruby', 'label' => 'Ruby'],
+          ['language' => 'typescript', 'label' => 'TypeScript'],
+          ['language' => 'xml', 'label' => 'XML'],
+        ],
+      ],
       'ckeditor5_list' => [
-        'reversed' => TRUE,
-        'startIndex' => TRUE,
+        'properties' => [
+          'reversed' => TRUE,
+          'startIndex' => TRUE,
+        ],
+        'multiBlock' => TRUE,
       ],
       'ckeditor5_alignment' => [
         'enabled_alignments' => [

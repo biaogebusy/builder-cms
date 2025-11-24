@@ -22,7 +22,6 @@
  * @see claro_preprocess_status_messages().
  */
 #}
-{{ attach_library('gin/gin_messages') }}
 <div data-drupal-messages class="messages-list">
   <div class="messages__wrapper">
     {% for type, messages in message_list %}
@@ -41,33 +40,30 @@
       %}
 
       <div role="contentinfo" aria-labelledby="{{ title_ids[type] }}"{{ attributes.addClass(classes)|without('role', 'aria-label') }}>
-        {% if type == 'error' %}
-          <div role="alert">
-        {% endif %}
-          {% if is_message_with_title or is_message_with_icon %}
-            <div class="messages__header">
-              {% if is_message_with_title %}
-                <h2 id="{{ title_ids[type] }}" class="messages__title">
-                  {{ status_headings[type] }}
-                </h2>
-              {% endif %}
-            </div>
-          {% endif %}
-          <button type="button" class="button button--dismiss" title="{{ 'Dismiss'|t }}"><span class="icon-close"></span>{{ 'Close'|t }}</button>
-          <div class="messages__content">
-            {% if messages|length > 1 %}
-              <ul class="messages__list">
-                {% for message in messages %}
-                  <li class="messages__item">{{ message }}</li>
-                {% endfor %}
-              </ul>
-            {% else %}
-              {{ messages|first }}
+        {% if is_message_with_title or is_message_with_icon %}
+          <div class="messages__header">
+            {% if is_message_with_title %}
+              <h2 id="{{ title_ids[type] }}" class="messages__title">
+                {{ status_headings[type] }}
+              </h2>
             {% endif %}
           </div>
-        {% if type == 'error' %}
-          </div>
         {% endif %}
+        <div class="messages__content">
+          {% if messages|length > 1 %}
+            <ul class="messages__list">
+              {% for message in messages %}
+                <li class="messages__item">{{ message }}</li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            {{ messages|first }}
+          {% endif %}
+        </div>
+        <button type="button" class="button button--dismiss js-message-button-hide" title="{{ 'Hide'|t }}">
+          <span class="icon-close"></span>
+          {{ 'Hide'|t }}
+        </button>
       </div>
       {# Remove type specific classes. #}
       {% set attributes = attributes.removeClass(classes) %}

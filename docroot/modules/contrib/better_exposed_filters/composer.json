@@ -29,9 +29,6 @@
     }
   ],
   "require": {
-    "drupal/jquery_ui": "^1.6",
-    "drupal/jquery_ui_slider": "^2.0.0",
-    "drupal/jquery_ui_touch_punch": "^1.0",
-    "drupal/jquery_ui_datepicker": "^2.0"
+    "drupal/nouislider_js": "^15.8"
   }
 }

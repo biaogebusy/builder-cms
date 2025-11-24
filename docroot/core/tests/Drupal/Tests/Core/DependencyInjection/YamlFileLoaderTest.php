@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\DependencyInjection;
 
 use Drupal\Component\FileCache\FileCacheFactory;
@@ -7,6 +9,9 @@ use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\DependencyInjection\YamlFileLoader;
 use Drupal\Tests\UnitTestCase;
 use org\bovigo\vfs\vfsStream;
+use Symfony\Component\DependencyInjection\Argument\ServiceClosureArgument;
+use Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument;
+use Symfony\Component\DependencyInjection\Reference;
 
 /**
  * @coversDefaultClass \Drupal\Core\DependencyInjection\YamlFileLoader
@@ -23,7 +28,7 @@ class YamlFileLoaderTest extends UnitTestCase {
     FileCacheFactory::setPrefix('example');
   }
 
-  public function testParseDefinitionsWithProvider() {
+  public function testParseDefinitionsWithProvider(): void {
     $yml = <<<YAML
 services:
   example_service_1:
@@ -33,6 +38,12 @@ services:
     class: \Drupal\Core\ExampleClass
     public: false
   Drupal\Core\ExampleClass: ~
+  example_tagged_iterator:
+    class: \Drupal\Core\ExampleClass
+    arguments: [!tagged_iterator foo.bar]
+  example_service_closure:
+    class: \Drupal\Core\ExampleClass
+    arguments: [!service_closure '@example_service_1']
 YAML;
 
     vfsStream::setup('drupal', NULL, [
@@ -56,12 +67,20 @@ YAML;
     $this->assertFalse($builder->has('example_private_service'));
     $this->assertTrue($builder->has('Drupal\Core\ExampleClass'));
     $this->assertSame('Drupal\Core\ExampleClass', $builder->getDefinition('Drupal\Core\ExampleClass')->getClass());
+    $this->assertInstanceOf(TaggedIteratorArgument::class, $builder->getDefinition('example_tagged_iterator')->getArgument(0));
+
+    // Test service closures.
+    $service_closure = $builder->getDefinition('example_service_closure')->getArgument(0);
+    $this->assertInstanceOf(ServiceClosureArgument::class, $service_closure);
+    $ref = $service_closure->getValues()[0];
+    $this->assertInstanceOf(Reference::class, $ref);
+    $this->assertEquals('example_service_1', $ref);
   }
 
   /**
    * @dataProvider providerTestExceptions
    */
-  public function testExceptions($yml, $message) {
+  public function testExceptions($yml, $message): void {
     vfsStream::setup('drupal', NULL, [
       'modules' => [
         'example' => [
@@ -78,7 +97,7 @@ YAML;
     $yaml_file_loader->load('vfs://drupal/modules/example/example.yml');
   }
 
-  public function providerTestExceptions() {
+  public static function providerTestExceptions() {
     return [
       '_defaults must be an array' => [<<<YAML
 services:
@@ -91,7 +110,7 @@ services:
   _defaults:
     invalid: string
 YAML,
-        'The configuration key "invalid" cannot be used to define a default value in "vfs://drupal/modules/example/example.yml". Allowed keys are "public", "tags", "autowire".',
+        'The configuration key "invalid" cannot be used to define a default value in "vfs://drupal/modules/example/example.yml". Allowed keys are "public", "tags", "autowire", "autoconfigure".',
       ],
       'default tags must be an array' => [<<<YAML
 services:
@@ -168,6 +187,50 @@ services:
   service: string
 YAML,
         'A service definition must be an array or a string starting with "@" but string found for service "service" in vfs://drupal/modules/example/example.yml. Check your YAML syntax.',
+      ],
+      'YAML must be valid' => [<<<YAML
+   do not:
+      do: this: for the love of Foo Bar!
+YAML,
+        'The file "vfs://drupal/modules/example/example.yml" does not contain valid YAML',
+      ],
+      'YAML must have expected keys' => [<<<YAML
+      "do not":
+        do: this
+      YAML,
+        'The service file "vfs://drupal/modules/example/example.yml" is not valid: it contains invalid root key(s) "do not". Services have to be added under "services" and Parameters under "parameters".',
+      ],
+      'decorates must be without @' => [<<<YAML
+      services:
+        example_service_1:
+          class: \Drupal\Core\ExampleClass
+        example_decoration:
+          class: \Drupal\Core\ExampleClass
+          decorates: "@example_service_1"
+      YAML,
+        'The value of the "decorates" option for the "example_decoration" service must be the id of the service without the "@" prefix (replace "@example_service_1" with "example_service_1").',
+      ],
+      'decorates_on_invalid may not be "null" with quotes' => [<<<YAML
+      services:
+        example_service_1:
+          class: \Drupal\Core\ExampleClass
+        example_decoration:
+          class: \Drupal\Core\ExampleClass
+          decorates: example_service_1
+          decoration_on_invalid: "null"
+      YAML,
+        'Invalid value "null" for attribute "decoration_on_invalid" on service "example_decoration". Did you mean null (without quotes) in "vfs://drupal/modules/example/example.yml"?',
+      ],
+      'decoration_on_invalid must be valid' => [<<<YAML
+      services:
+        example_service_1:
+          class: \Drupal\Core\ExampleClass
+        example_decoration:
+          class: \Drupal\Core\ExampleClass
+          decorates: example_service_1
+          decoration_on_invalid: foo
+      YAML,
+        'Invalid value "foo" for attribute "decoration_on_invalid" on service "example_decoration". Did you mean "exception", "ignore" or null in "vfs://drupal/modules/example/example.yml"?',
       ],
     ];
   }

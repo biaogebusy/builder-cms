@@ -42,7 +42,7 @@ trait AutosaveFormAlterTrait {
         '#name' => AutosaveFormInterface::AUTOSAVE_RESTORE_ELEMENT_NAME,
         '#value' => $this->t('Autosave restore'),
         '#limit_validation_errors' => [],
-        '#attributes' => ['class' => ['autosave-form-restore', 'visually-hidden']],
+        '#attributes' => ['class' => ['autosave-form-restore', 'hidden'], 'style' => ['display: none;']],
         '#submit' => [[$this, 'autosaveFormRestoreSubmit']],
         '#autosave_form_state_timestamp' => $autosave_form_state_timestamp,
       ];
@@ -51,7 +51,7 @@ trait AutosaveFormAlterTrait {
         '#name' => 'autosave_form_reject',
         '#value' => $this->t('Autosave reject'),
         '#limit_validation_errors' => [],
-        '#attributes' => ['class' => ['autosave-form-reject', 'visually-hidden']],
+        '#attributes' => ['class' => ['autosave-form-reject', 'hidden'], 'style' => ['display: none;']],
         '#submit' => [[$this, 'autosaveFormRejectSubmit']],
         '#ajax' => [
           'callback' => [$this, 'autosaveFormRejectAjax'],
@@ -91,7 +91,7 @@ trait AutosaveFormAlterTrait {
       '#type' => 'submit',
       '#name' => AutosaveFormInterface::AUTOSAVE_ELEMENT_NAME,
       '#value' => $this->t('Autosave save'),
-      '#attributes' => ['class' => ['autosave-form-save', 'visually-hidden']],
+      '#attributes' => ['class' => ['autosave-form-save', 'hidden'], 'style' => ['display: none;']],
       '#submit' => [[$this, 'autosaveFormSubmit']],
       '#ajax' => [
         'callback' => [$this, 'autosaveFormAjax'],

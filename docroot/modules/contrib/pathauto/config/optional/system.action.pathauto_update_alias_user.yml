@@ -10,3 +10,4 @@ dependencies:
       - user
   module:
     - pathauto
+configuration: { }

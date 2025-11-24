@@ -1,4 +1,5 @@
-ckeditor.plugin.video_embed:
+# CKE5
+ckeditor5.plugin.video_embed_wysiwyg_video_embed:
   label: 'Video Embed'
   type: mapping
   mapping:
@@ -22,3 +23,9 @@ ckeditor.plugin.video_embed:
             height:
               label: 'Height'
               type: string
+            title_format:
+              type: label
+              label: 'Title format'
+            title_fallback:
+              type: boolean
+              label: 'Use a fallback title'

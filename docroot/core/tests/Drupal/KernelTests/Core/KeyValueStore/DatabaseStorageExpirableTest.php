@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\KernelTests\Core\KeyValueStore;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
@@ -13,9 +15,7 @@ use Drupal\Core\KeyValueStore\KeyValueFactory;
 class DatabaseStorageExpirableTest extends StorageTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = ['system'];
 
@@ -40,7 +40,7 @@ class DatabaseStorageExpirableTest extends StorageTestBase {
   /**
    * Tests CRUD functionality with expiration.
    */
-  public function testCRUDWithExpiration() {
+  public function testCRUDWithExpiration(): void {
     $stores = $this->createStorage();
 
     // Verify that an item can be stored with setWithExpire().
@@ -119,7 +119,7 @@ class DatabaseStorageExpirableTest extends StorageTestBase {
   /**
    * Tests data expiration.
    */
-  public function testExpiration() {
+  public function testExpiration(): void {
     $stores = $this->createStorage();
     $day = 604800;
 

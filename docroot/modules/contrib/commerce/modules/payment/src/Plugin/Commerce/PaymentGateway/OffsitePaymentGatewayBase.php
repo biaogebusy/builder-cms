@@ -2,8 +2,8 @@
 
 namespace Drupal\commerce_payment\Plugin\Commerce\PaymentGateway;
 
-use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\Core\Url;
+use Drupal\commerce_order\Entity\OrderInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**

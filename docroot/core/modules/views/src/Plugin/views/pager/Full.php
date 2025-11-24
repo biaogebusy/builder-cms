@@ -3,21 +3,22 @@
 namespace Drupal\views\Plugin\views\pager;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\views\Attribute\ViewsPager;
 
 /**
  * The plugin to handle full pager.
  *
  * @ingroup views_pager_plugins
- *
- * @ViewsPager(
- *   id = "full",
- *   title = @Translation("Paged output, full pager"),
- *   short_title = @Translation("Full"),
- *   help = @Translation("Paged output, full Drupal style"),
- *   theme = "pager",
- *   register_theme = FALSE
- * )
  */
+#[ViewsPager(
+  id: "full",
+  title: new TranslatableMarkup("Paged output, full pager"),
+  short_title: new TranslatableMarkup("Full"),
+  help: new TranslatableMarkup("Paged output, full Drupal style"),
+  theme: "pager",
+  register_theme: FALSE
+)]
 class Full extends SqlBase {
 
   /**
@@ -86,10 +87,12 @@ class Full extends SqlBase {
       3 => $this->options['tags']['next'],
       4 => $this->options['tags']['last'],
     ];
+
     return [
       '#theme' => $this->themeFunctions(),
       '#tags' => $tags,
       '#element' => $this->options['id'],
+      '#pagination_heading_level' => parent::getHeadingLevel(),
       '#parameters' => $input,
       '#quantity' => $this->options['quantity'],
       '#route_name' => !empty($this->view->live_preview) ? '<current>' : '<none>',

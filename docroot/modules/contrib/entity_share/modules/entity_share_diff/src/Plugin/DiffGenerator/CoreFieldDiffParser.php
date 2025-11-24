@@ -55,7 +55,7 @@ class CoreFieldDiffParser extends DiffGeneratorPluginBase {
           // For some reason local numbers are represented as strings,
           // while remote numbers are indeed numbers. In order to avoid fake
           // differences, simply cast all numbers to strings.
-          elseif (in_array($type, ['float', 'integer', 'decimal', 'timestamp'])) {
+          elseif (\in_array($type, ['float', 'integer', 'decimal', 'timestamp'], TRUE)) {
             $result[$field_key] = (string) $result[$field_key];
           }
         }

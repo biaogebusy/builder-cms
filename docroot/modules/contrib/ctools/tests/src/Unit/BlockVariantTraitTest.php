@@ -40,7 +40,7 @@ class BlockVariantTraitTest extends UnitTestCase {
   /**
    *
    */
-  public function providerTestGetRegionAssignments() {
+  public static function providerTestGetRegionAssignments() {
     return [
       [
         [

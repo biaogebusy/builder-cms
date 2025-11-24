@@ -1,7 +1,6 @@
 /vendor/
 vendor
 /web/
-web
 /node_modules/
 .env
 composer.lock
@@ -34,3 +33,4 @@ docker-compose.override.yml
 .envrc
 .envrc.local
 .composer-plugin.env
+.idea/

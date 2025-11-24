@@ -2,9 +2,9 @@
 
 namespace Drupal\commerce_payment\Annotation;
 
-use Drupal\commerce_payment\CreditCard;
 use Drupal\Component\Annotation\Plugin;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\commerce_payment\CreditCard;
 
 /**
  * Defines the payment gateway plugin annotation object.
@@ -71,8 +71,18 @@ class CommercePaymentGateway extends Plugin {
    * The JS library ID.
    *
    * @var string
+   *
+   * @deprecated in commerce:3.0.0 and is removed from commerce:4.0.0. Use ::libraries instead.
+   * @see https://www.drupal.org/project/commerce/issues/3465875
    */
   public $js_library;
+
+  /**
+   * The list of library IDs to be attached.
+   *
+   * @var array
+   */
+  public $libraries = [];
 
   /**
    * The payment type used by the payment gateway.

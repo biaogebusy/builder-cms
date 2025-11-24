@@ -7,11 +7,17 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 
+/**
+ * Form for selecting page parameters.
+ */
 class PageParametersForm extends FormBase {
 
   /**
+   * Machine Name of the Parameter.
+   *
    * @var string
    */
+  //phpcs:ignore
   protected $machine_name;
 
   /**
@@ -45,6 +51,9 @@ class PageParametersForm extends FormBase {
     return $form;
   }
 
+  /**
+   * Render the rows for available page parameters.
+   */
   protected function renderRows($cached_values, array &$form, FormStateInterface $form_state) {
     $rows = [];
     /** @var \Drupal\page_manager\Entity\Page $page */
@@ -85,14 +94,6 @@ class PageParametersForm extends FormBase {
 
   /**
    * Operations for Page Parameters form.
-   *
-   * @param $route_name_base
-   *   The base route name.
-   * @param array $route_parameters
-   *   The route parameters.
-   *
-   * @return array
-   *   The set of operations for the form.
    */
   protected function getOperations($route_name_base, array $route_parameters = []) {
     $operations['edit'] = [
@@ -122,22 +123,12 @@ class PageParametersForm extends FormBase {
 
   /**
    * Get Operation Route Information.
-   *
-   * @param $cached_values
-   *   The Cached Values.
-   * @param $machine_name
-   *   Machine name of the route.
-   * @param $row
-   *   The row being operated on.
-   *
-   * @return array
-   *
    */
   protected function getOperationsRouteInfo($cached_values, $machine_name, $row) {
     return [
       'page_manager.parameter', [
         'machine_name' => $machine_name,
-        'name' => $row
+        'name' => $row,
       ],
     ];
   }

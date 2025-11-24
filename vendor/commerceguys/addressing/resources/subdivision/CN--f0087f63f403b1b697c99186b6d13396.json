@@ -1,0 +1,44 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"GD",
+		"Guangzhou Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Baiyun Qu": {
+			"local_name": "白云区"
+		},
+		"Conghua Qu": {
+			"local_name": "从化区"
+		},
+		"Panyu Qu": {
+			"local_name": "番禺区"
+		},
+		"Haizhu Qu": {
+			"local_name": "海珠区"
+		},
+		"Huadu Qu": {
+			"local_name": "花都区"
+		},
+		"Huangpu Qu": {
+			"local_name": "黄埔区"
+		},
+		"Liwan Qu": {
+			"local_name": "荔湾区"
+		},
+		"Nansha Qu": {
+			"local_name": "南沙区"
+		},
+		"Tianhe Qu": {
+			"local_name": "天河区"
+		},
+		"Yuexiu Qu": {
+			"local_name": "越秀区"
+		},
+		"Zengcheng Qu": {
+			"local_name": "增城区"
+		}
+	}
+}

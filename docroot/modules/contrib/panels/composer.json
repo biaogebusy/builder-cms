@@ -21,13 +21,13 @@
   "support": {
     "issues": "https://www.drupal.org/project/issues/panels",
     "irc": "irc://irc.freenode.org/drupal-scotch",
-    "source": "http://git.drupal.org/project/panels.git"
+    "source": "https://git.drupalcode.org/project/panels"
   },
   "license": "GPL-2.0+",
   "minimum-stability": "dev",
   "require": {
-    "drupal/ctools": "^3.12",
-    "drupal/jquery_ui_droppable": "^1.5"
+    "drupal/ctools": "^3.15 || ^4.1",
+    "drupal/jquery_ui_droppable": "^1.0 || ^2.0"
   },
   "require-dev": {
     "drupal/page_manager": "^4"

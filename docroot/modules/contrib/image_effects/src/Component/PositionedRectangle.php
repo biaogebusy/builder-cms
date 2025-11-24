@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Component;
 
 /**
@@ -22,35 +24,27 @@ class PositionedRectangle {
    * Additional points can be added through the setPoint() method. These will
    * be subject to translation/rotation with the rest of the points when
    * getTranslatedRectangle() method is executed.
-   *
-   * @var array
    */
-  protected $points = [];
+  protected array $points = [];
 
   /**
    * The width of the rectangle.
    *
    * The width is not influenced by rotation/translation.
-   *
-   * @var int
    */
-  protected $width = 0;
+  protected int $width = 0;
 
   /**
    * The height of the rectangle.
    *
    * The height is not influenced by rotation/translation.
-   *
-   * @var int
    */
-  protected $height = 0;
+  protected int $height = 0;
 
   /**
    * The angle at which the rectangle has been rotated.
-   *
-   * @var float
    */
-  protected $angle = 0;
+  protected float $angle = 0;
 
   /**
    * The offset needed to reposition the rectangle fully into first quadrant.
@@ -59,20 +53,10 @@ class PositionedRectangle {
    * results in some of its corners to shift to other quadrants. The x/y
    * offset required to reposition it fully in the first quadrant is stored
    * here.
-   *
-   * @var array
    */
-  protected $rotationOffset = [0, 0];
+  protected array $rotationOffset = [0, 0];
 
-  /**
-   * Constructs a new PositionedRectangle object.
-   *
-   * @param int $width
-   *   (Optional) The width of the rectangle.
-   * @param int $height
-   *   (Optional) The height of the rectangle.
-   */
-  public function __construct($width = 0, $height = 0) {
+  public function __construct(int $width = 0, int $height = 0) {
     if ($width !== 0 && $height !== 0) {
       $this->setFromDimensions($width, $height);
     }
@@ -88,7 +72,7 @@ class PositionedRectangle {
    *
    * @return $this
    */
-  public function setFromDimensions($width, $height) {
+  public function setFromDimensions(int $width, int $height): static {
     $this->setFromCorners([
       'c_a' => [0, 0],
       'c_b' => [$width - 1, 0],
@@ -112,7 +96,7 @@ class PositionedRectangle {
    *
    * @return $this
    */
-  public function setFromCorners(array $corners) {
+  public function setFromCorners(array $corners): static {
     $this
       ->setPoint('c_a', $corners['c_a'])
       ->setPoint('c_b', $corners['c_b'])
@@ -149,7 +133,7 @@ class PositionedRectangle {
    *
    * @return $this
    */
-  public function addGrid($id, $x, $y, $width, $height, $rows, $columns) {
+  public function addGrid(string $id, int $x, int $y, int $width, int $height, int $rows, int $columns): static {
     $cell_width = (int) ($width / $columns);
     $width_remainder = $width - $cell_width * $columns;
     $width_midpoint = ((int) $columns / 2) - ((int) $width_remainder / 2);
@@ -197,7 +181,7 @@ class PositionedRectangle {
    * @return int[]
    *   An array with width and height of the protion of the grid.
    */
-  public function getSubGridDimensions($id, $x, $y, $rows_span, $columns_span) {
+  public function getSubGridDimensions(string $id, int $x, int $y, int $rows_span, int $columns_span): array {
     $coord_tl = $this->getPoint($id . '_' . $x . '_' . $y);
     $coord_br = $this->getPoint($id . '_' . ($x + $rows_span) . '_' . ($y + $columns_span));
     return [
@@ -216,7 +200,9 @@ class PositionedRectangle {
    *
    * @return $this
    */
-  public function setPoint($id, array $coords = [0, 0]) {
+  public function setPoint(string $id, array $coords = [0, 0]): static {
+    assert(is_int($coords[0]));
+    assert(is_int($coords[1]));
     $this->points[$id] = $coords;
     return $this;
   }
@@ -230,7 +216,7 @@ class PositionedRectangle {
    * @return array
    *   An array of x, y coordinates.
    */
-  public function getPoint($id) {
+  public function getPoint(string $id): array {
     return $this->points[$id];
   }
 
@@ -240,7 +226,7 @@ class PositionedRectangle {
    * @return array
    *   An array of points, keyed by id.
    */
-  public function getPoints() {
+  public function getPoints(): array {
     return $this->points;
   }
 
@@ -250,7 +236,7 @@ class PositionedRectangle {
    * @return int
    *   The width of the rectangle.
    */
-  public function getWidth() {
+  public function getWidth(): int {
     return $this->width;
   }
 
@@ -271,7 +257,7 @@ class PositionedRectangle {
    *   The x/y offset required to reposition the rectangle fully in the first
    *   quadrant after it has been rotated.
    */
-  public function getRotationOffset() {
+  public function getRotationOffset(): array {
     return $this->rotationOffset;
   }
 
@@ -281,7 +267,7 @@ class PositionedRectangle {
    * @return int
    *   The bounding width of the rotated rectangle.
    */
-  public function getBoundingWidth() {
+  public function getBoundingWidth(): int {
     return $this->points['o_c'][0] - $this->points['o_a'][0] + 1;
   }
 
@@ -291,7 +277,7 @@ class PositionedRectangle {
    * @return int
    *   The bounding height of the rotated rectangle.
    */
-  public function getBoundingHeight() {
+  public function getBoundingHeight(): int {
     return $this->points['o_c'][1] - $this->points['o_a'][1] + 1;
   }
 
@@ -305,7 +291,9 @@ class PositionedRectangle {
    *
    * @return $this
    */
-  protected function translatePoint(array &$point, array $offset) {
+  protected function translatePoint(array &$point, array $offset): static {
+    assert(is_int($offset[0]));
+    assert(is_int($offset[1]));
     $point[0] += $offset[0];
     $point[1] += $offset[1];
     return $this;
@@ -321,15 +309,15 @@ class PositionedRectangle {
    *
    * @return $this
    */
-  protected function rotatePoint(array &$point, $angle) {
+  protected function rotatePoint(array &$point, float $angle): static {
     $rad = deg2rad($angle);
     $sin = sin($rad);
     $cos = cos($rad);
-    list($x, $y) = $point;
+    [$x, $y] = $point;
     $tx = round(($x * $cos + $y * -$sin), 3);
     $ty = round(($y * $cos - $x * -$sin), 3);
-    $point[0] = ($tx >= 0) ? ceil($tx) : -ceil(-$tx);
-    $point[1] = ($ty >= 0) ? ceil($ty) : -ceil(-$ty);
+    $point[0] = ($tx >= 0) ? (int) ceil($tx) : (int) -ceil(-$tx);
+    $point[1] = ($ty >= 0) ? (int) ceil($ty) : (int) -ceil(-$ty);
     return $this;
   }
 
@@ -339,7 +327,7 @@ class PositionedRectangle {
    * @param float $angle
    *   Rotation angle.
    */
-  public function rotate($angle) {
+  public function rotate(float $angle): static {
     if ($angle) {
       $this->angle = $angle;
       foreach ($this->points as &$point) {
@@ -359,11 +347,11 @@ class PositionedRectangle {
    *
    * @return $this
    */
-  public function translate(array $offset) {
-    if ($offset[0] || $offset[1]) {
-      foreach ($this->points as &$point) {
-        $this->translatePoint($point, $offset);
-      }
+  public function translate(array $offset): static {
+    assert(is_int($offset[0]));
+    assert(is_int($offset[1]));
+    foreach ($this->points as &$point) {
+      $this->translatePoint($point, $offset);
     }
     return $this;
   }
@@ -378,7 +366,7 @@ class PositionedRectangle {
    *
    * @return $this
    */
-  public function resize($width, $height) {
+  public function resize(int $width, int $height): static {
     $width_multiplier = $width / $this->getWidth();
     $height_multiplier = $height / $this->getHeight();
     foreach ($this->points as &$point) {
@@ -399,7 +387,7 @@ class PositionedRectangle {
    *
    * @return $this
    */
-  protected function determineBoundingCorners() {
+  protected function determineBoundingCorners(): static {
     $this
       ->setPoint('o_a', [
         min($this->points['c_a'][0], $this->points['c_b'][0], $this->points['c_c'][0], $this->points['c_d'][0]),

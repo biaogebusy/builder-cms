@@ -1,12 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\path_alias\Functional;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;
-use Drupal\taxonomy\Entity\Term;
 use Drupal\Tests\Traits\Core\PathAliasTestTrait;
 
 /**
@@ -19,11 +19,9 @@ class UrlAlterFunctionalTest extends BrowserTestBase {
   use PathAliasTestTrait;
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
-  protected static $modules = ['path', 'forum', 'url_alter_test'];
+  protected static $modules = ['path', 'url_alter_test'];
 
   /**
    * {@inheritdoc}
@@ -33,7 +31,7 @@ class UrlAlterFunctionalTest extends BrowserTestBase {
   /**
    * Tests that URL altering works and that it occurs in the correct order.
    */
-  public function testUrlAlter() {
+  public function testUrlAlter(): void {
     // Ensure that the path_alias table exists after Drupal installation.
     $this->assertTrue(Database::getConnection()->schema()->tableExists('path_alias'), 'The path_alias table exists after Drupal installation.');
 
@@ -69,22 +67,6 @@ class UrlAlterFunctionalTest extends BrowserTestBase {
     $uid++;
     $this->assertUrlOutboundAlter("/user/$uid", "/user/$uid");
 
-    // Test that 'forum' is altered to 'community' correctly, both at the root
-    // level and for a specific existing forum.
-    $this->drupalGet('community');
-    $this->assertSession()->pageTextContains('General discussion');
-    $this->assertUrlOutboundAlter('/forum', '/community');
-    $forum_vid = $this->config('forum.settings')->get('vocabulary');
-    $term_name = $this->randomMachineName();
-    $term = Term::create([
-      'name' => $term_name,
-      'vid' => $forum_vid,
-    ]);
-    $term->save();
-    $this->drupalGet("community/" . $term->id());
-    $this->assertSession()->pageTextContains($term_name);
-    $this->assertUrlOutboundAlter("/forum/" . $term->id(), "/community/" . $term->id());
-
     // Test outbound query string altering.
     $url = Url::fromRoute('user.login');
     $this->assertSame(\Drupal::request()->getBaseUrl() . '/user/login?foo=bar', $url->toString());
@@ -103,7 +85,7 @@ class UrlAlterFunctionalTest extends BrowserTestBase {
   protected function assertUrlOutboundAlter(string $original, string $final): void {
     // Test outbound altering.
     $result = $this->container->get('path_processor_manager')->processOutbound($original);
-    $this->assertSame($final, $result, new FormattableMarkup('Altered outbound URL %original, expected %final, and got %result.', ['%original' => $original, '%final' => $final, '%result' => $result]));
+    $this->assertSame($final, $result, "Altered outbound URL $original, expected $final, and got $result.");
   }
 
   /**
@@ -119,7 +101,7 @@ class UrlAlterFunctionalTest extends BrowserTestBase {
   protected function assertUrlInboundAlter(string $original, string $final): void {
     // Test inbound altering.
     $result = $this->container->get('path_alias.manager')->getPathByAlias($original);
-    $this->assertSame($final, $result, new FormattableMarkup('Altered inbound URL %original, expected %final, and got %result.', ['%original' => $original, '%final' => $final, '%result' => $result]));
+    $this->assertSame($final, $result, "Altered inbound URL $original, expected $final, and got $result.");
   }
 
 }

@@ -1,20 +1,20 @@
 path_encoded_test.colon:
-  path: '/hi/llamma:party'
+  path: '/hi/llama:party'
   defaults:
     _title: 'Colon'
     _controller: '\Drupal\path_encoded_test\Controller\PathEncodedTestController::simple'
   requirements:
     _access: 'TRUE'
 
-path_encoded_test.atsign:
-  path: '/bloggy/@Dries'
+path_encoded_test.at_sign:
+  path: '/blog/@Dries'
   defaults:
     _title: 'At sign'
     _controller: '\Drupal\path_encoded_test\Controller\PathEncodedTestController::simple'
   requirements:
     _access: 'TRUE'
 
-path_encoded_test.parens:
+path_encoded_test.parentheses:
   path: '/cat(box)'
   defaults:
     _title: 'At sign'

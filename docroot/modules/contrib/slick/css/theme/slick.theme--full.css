@@ -67,7 +67,10 @@
     bottom: 0;
   }
 
-  .slick--has-arrow-down .slide--caption--bottom .slide__constrained > .slide__caption {
+  .slick--has-arrow-down
+    .slide--caption--bottom
+    .slide__constrained
+    > .slide__caption {
     padding-bottom: 80px;
   }
 
@@ -80,24 +83,48 @@
     transform: translateX(-50%);
   }
 
-  .slide--caption--stage-left .slide__constrained > .slide__caption > .slide__data,
-  .slide--caption--stage-zebra:nth-child(odd) .slide__constrained > .slide__caption > .slide__data {
+  .slide--caption--stage-left
+    .slide__constrained
+    > .slide__caption
+    > .slide__data,
+  .slide--caption--stage-zebra:nth-child(odd)
+    .slide__constrained
+    > .slide__caption
+    > .slide__data {
     margin-right: 56%;
   }
 
-  .slide--caption--stage-right .slide__constrained > .slide__caption > .slide__data,
-  .slide--caption--stage-zebra:nth-child(even) .slide__constrained > .slide__caption > .slide__data {
+  .slide--caption--stage-right
+    .slide__constrained
+    > .slide__caption
+    > .slide__data,
+  .slide--caption--stage-zebra:nth-child(even)
+    .slide__constrained
+    > .slide__caption
+    > .slide__data {
     margin-left: 56%;
   }
 
-  .slide--caption--stage-left .slide__constrained > .slide__caption > .slide__overlay,
-  .slide--caption--stage-zebra:nth-child(odd) .slide__constrained > .slide__caption > .slide__overlay {
+  .slide--caption--stage-left
+    .slide__constrained
+    > .slide__caption
+    > .slide__overlay,
+  .slide--caption--stage-zebra:nth-child(odd)
+    .slide__constrained
+    > .slide__caption
+    > .slide__overlay {
     float: right;
     width: 52%;
   }
 
-  .slide--caption--stage-right .slide__constrained > .slide__caption > .slide__overlay,
-  .slide--caption--stage-zebra:nth-child(even) .slide__constrained > .slide__caption > .slide__overlay {
+  .slide--caption--stage-right
+    .slide__constrained
+    > .slide__caption
+    > .slide__overlay,
+  .slide--caption--stage-zebra:nth-child(even)
+    .slide__constrained
+    > .slide__caption
+    > .slide__overlay {
     float: left;
     width: 52%;
   }

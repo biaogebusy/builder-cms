@@ -2,11 +2,11 @@
 
 namespace Drupal\commerce_number_pattern;
 
-use Drupal\commerce_number_pattern\Annotation\CommerceNumberPattern;
-use Drupal\commerce_number_pattern\Plugin\Commerce\NumberPattern\NumberPatternInterface;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
+use Drupal\commerce_number_pattern\Attribute\CommerceNumberPattern;
+use Drupal\commerce_number_pattern\Plugin\Commerce\NumberPattern\NumberPatternInterface;
 
 /**
  * Manages discovery and instantiation of number pattern plugins.
@@ -29,7 +29,11 @@ class NumberPatternManager extends DefaultPluginManager {
    */
   public function __construct(\Traversable $namespaces, CacheBackendInterface $cache_backend, ModuleHandlerInterface $module_handler) {
     parent::__construct(
-      'Plugin/Commerce/NumberPattern', $namespaces, $module_handler, NumberPatternInterface::class, CommerceNumberPattern::class
+      'Plugin/Commerce/NumberPattern',
+      $namespaces,
+      $module_handler, NumberPatternInterface::class,
+      CommerceNumberPattern::class,
+      'Drupal\commerce_number_pattern\Annotation\CommerceNumberPattern',
     );
 
     $this->alterInfo('commerce_number_pattern_info');

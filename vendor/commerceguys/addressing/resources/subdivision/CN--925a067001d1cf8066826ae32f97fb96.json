@@ -1,0 +1,60 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"HE",
+		"Cangzhou Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Cang Xian": {
+			"local_name": "沧县"
+		},
+		"Dongguang Xian": {
+			"local_name": "东光县"
+		},
+		"Haixing Xian": {
+			"local_name": "海兴县"
+		},
+		"Hejian Shi": {
+			"local_name": "河间市"
+		},
+		"Huanghua Shi": {
+			"local_name": "黄骅市"
+		},
+		"Mengcun Xian": {
+			"local_code": "孟村回族自治县",
+			"local_name": "孟村县"
+		},
+		"Nanpi Xian": {
+			"local_name": "南皮县"
+		},
+		"Botou Shi": {
+			"local_name": "泊头市"
+		},
+		"Qing Xian": {
+			"local_name": "青县"
+		},
+		"Renqiu Shi": {
+			"local_name": "任丘市"
+		},
+		"Suning Xian": {
+			"local_name": "肃宁县"
+		},
+		"Wuqiao Xian": {
+			"local_name": "吴桥县"
+		},
+		"Xian Xian": {
+			"local_name": "献县"
+		},
+		"Xinhua Qu": {
+			"local_name": "新华区"
+		},
+		"Yanshan Xian": {
+			"local_name": "盐山县"
+		},
+		"Yunhe Qu": {
+			"local_name": "运河区"
+		}
+	}
+}

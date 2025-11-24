@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\block\Unit;
 
 use Drupal\block\BlockRepository;
@@ -76,7 +78,7 @@ class BlockRepositoryTest extends UnitTestCase {
    *
    * @dataProvider providerBlocksConfig
    */
-  public function testGetVisibleBlocksPerRegion(array $blocks_config, array $expected_blocks) {
+  public function testGetVisibleBlocksPerRegion(array $blocks_config, array $expected_blocks): void {
     $blocks = [];
     foreach ($blocks_config as $block_id => $block_config) {
       $block = $this->createMock('Drupal\block\BlockInterface');
@@ -110,7 +112,7 @@ class BlockRepositoryTest extends UnitTestCase {
     $this->assertEquals($expected_blocks, $result);
   }
 
-  public function providerBlocksConfig() {
+  public static function providerBlocksConfig() {
     $blocks_config = [
       'block1' => [
         AccessResult::allowed(), 'top', 0,
@@ -147,7 +149,7 @@ class BlockRepositoryTest extends UnitTestCase {
    *
    * @covers ::getVisibleBlocksPerRegion
    */
-  public function testGetVisibleBlocksPerRegionWithContext() {
+  public function testGetVisibleBlocksPerRegionWithContext(): void {
     $block = $this->createMock('Drupal\block\BlockInterface');
     $block->expects($this->once())
       ->method('access')

@@ -2,28 +2,30 @@
 
 namespace Drupal\metatag\Plugin\Field\FieldWidget;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Field\Attribute\FieldWidget;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\metatag\MetatagManagerInterface;
 use Drupal\metatag\MetatagTagPluginManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Advanced widget for metatag field.
- *
- * @FieldWidget(
- *   id = "metatag_firehose",
- *   label = @Translation("Advanced meta tags form"),
- *   field_types = {
- *     "metatag"
- *   }
- * )
  */
+#[FieldWidget(
+  id: 'metatag_firehose',
+  label: new TranslatableMarkup('Advanced meta tags form'),
+  field_types: [
+    'metatag'
+  ]
+)]
 class MetatagFirehose extends WidgetBase implements ContainerFactoryPluginInterface {
 
   use StringTranslationTrait;
@@ -142,7 +144,7 @@ class MetatagFirehose extends WidgetBase implements ContainerFactoryPluginInterf
     // Retrieve the values for each metatag from the serialized array.
     $values = [];
     if (!empty($item->value)) {
-      $values = unserialize($item->value, ['allowed_classes' => FALSE]);
+      $values = metatag_data_decode($item->value);
     }
 
     // Make sure that this variable is always an array to avoid problems when
@@ -166,8 +168,10 @@ class MetatagFirehose extends WidgetBase implements ContainerFactoryPluginInterf
     $entity_type_groups = $settings->get('entity_type_groups');
 
     // Find the current entity type and bundle.
-    $entity_type = $item->getEntity()->getentityTypeId();
-    $entity_bundle = $item->getEntity()->bundle();
+    /** @var \Drupal\Core\Entity\FieldableEntityInterface $get_entity */
+    $get_entity = $item->getEntity();
+    $entity_type = $get_entity->getentityTypeId();
+    $entity_bundle = $get_entity->bundle();
 
     // See if there are requested groups for this entity type and bundle.
     $groups = [];
@@ -234,7 +238,7 @@ class MetatagFirehose extends WidgetBase implements ContainerFactoryPluginInterf
           }
         }
       }
-      $value = serialize($flattened_value);
+      $value = Json::encode($flattened_value);
     }
 
     return $values;

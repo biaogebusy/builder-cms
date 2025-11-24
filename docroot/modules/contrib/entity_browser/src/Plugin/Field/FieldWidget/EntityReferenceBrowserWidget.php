@@ -2,6 +2,7 @@
 
 namespace Drupal\entity_browser\Plugin\Field\FieldWidget;
 
+use Drupal\Component\Utility\Crypt;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Entity\ContentEntityInterface;
@@ -136,7 +137,7 @@ class EntityReferenceBrowserWidget extends WidgetBase {
       }
     }
 
-    $id = Html::getId($this->fieldDefinition->getName()) . '-field-widget-display-settings-ajax-wrapper-' . md5($this->fieldDefinition->getUniqueIdentifier());
+    $id = Html::getId($this->fieldDefinition->getName()) . '-field-widget-display-settings-ajax-wrapper-' . Crypt::hashBase64($this->fieldDefinition->getUniqueIdentifier());
     $element['field_widget_display'] = [
       '#title' => $this->t('Entity display plugin'),
       '#type' => 'radios',
@@ -367,7 +368,10 @@ class EntityReferenceBrowserWidget extends WidgetBase {
         '#type' => 'hidden',
         '#id' => $hidden_id,
         // We need to repeat ID here as it is otherwise skipped when rendering.
-        '#attributes' => ['id' => $hidden_id],
+        // And need to add attribute 'autocomplete'='off' for Firefox browser,
+        // because it will remember the user input every time, and it will break
+        // entity item list.
+        '#attributes' => ['id' => $hidden_id, 'autocomplete' => 'off'],
         '#default_value' => implode(' ', array_map(
             function (EntityInterface $item) {
               return $item->getEntityTypeId() . ':' . $item->id();
@@ -421,8 +425,10 @@ class EntityReferenceBrowserWidget extends WidgetBase {
    * Render API callback: Processes the entity browser element.
    */
   public static function processEntityBrowser(&$element, FormStateInterface $form_state, &$complete_form) {
-    $uuid = key($element['#attached']['drupalSettings']['entity_browser']);
-    $element['#attached']['drupalSettings']['entity_browser'][$uuid]['selector'] = '#' . $element['#custom_hidden_id'];
+    if (!empty($element['#attached']['drupalSettings']['entity_browser'])) {
+      $uuid = key($element['#attached']['drupalSettings']['entity_browser']);
+      $element['#attached']['drupalSettings']['entity_browser'][$uuid]['selector'] = '#' . $element['#custom_hidden_id'];
+    }
     return $element;
   }
 
@@ -582,7 +588,7 @@ class EntityReferenceBrowserWidget extends WidgetBase {
                 'wrapper' => $details_id,
               ],
               '#submit' => [[get_class($this), 'removeItemSubmit']],
-              '#name' => $this->fieldDefinition->getName() . '_remove_' . $entity->id() . '_' . $row_id . '_' . md5(json_encode($field_parents)),
+              '#name' => $this->fieldDefinition->getName() . '_remove_' . $entity->id() . '_' . $row_id . '_' . Crypt::hashBase64(json_encode($field_parents)),
               '#limit_validation_errors' => [array_merge($field_parents, [$this->fieldDefinition->getName()])],
               '#attributes' => [
                 'data-entity-id' => $entity->getEntityTypeId() . ':' . $entity->id(),
@@ -599,7 +605,7 @@ class EntityReferenceBrowserWidget extends WidgetBase {
                 'wrapper' => $details_id,
               ],
               '#submit' => [[get_class($this), 'removeItemSubmit']],
-              '#name' => $this->fieldDefinition->getName() . '_replace_' . $entity->id() . '_' . $row_id . '_' . md5(json_encode($field_parents)),
+              '#name' => $this->fieldDefinition->getName() . '_replace_' . $entity->id() . '_' . $row_id . '_' . Crypt::hashBase64(json_encode($field_parents)),
               '#limit_validation_errors' => [array_merge($field_parents, [$this->fieldDefinition->getName()])],
               '#attributes' => [
                 'data-entity-id' => $entity->getEntityTypeId() . ':' . $entity->id(),
@@ -611,7 +617,7 @@ class EntityReferenceBrowserWidget extends WidgetBase {
             'edit_button' => [
               '#type' => 'submit',
               '#value' => $this->t('Edit'),
-              '#name' => $this->fieldDefinition->getName() . '_edit_button_' . $entity->id() . '_' . $row_id . '_' . md5(json_encode($field_parents)),
+              '#name' => $this->fieldDefinition->getName() . '_edit_button_' . $entity->id() . '_' . $row_id . '_' . Crypt::hashBase64(json_encode($field_parents)),
               '#ajax' => [
                 'url' => Url::fromRoute(
                   'entity_browser.edit_form', [
@@ -776,11 +782,12 @@ class EntityReferenceBrowserWidget extends WidgetBase {
         // need to check if submit came from this instance.
         $field_name_key = end($trigger['#parents']) === 'target_id' ? 2 : static::$deleteDepth + 1;
         $field_name_key = count($trigger['#parents']) - $field_name_key;
-        $is_relevant_submit &= ($trigger['#parents'][$field_name_key] === $this->fieldDefinition->getName()) &&
+        $is_relevant_submit &= isset($trigger['#parents'][$field_name_key]) &&
+          ($trigger['#parents'][$field_name_key] === $this->fieldDefinition->getName()) &&
           (array_slice($trigger['#parents'], 0, count($element['#field_parents'])) == $element['#field_parents']) &&
           (array_slice($trigger['#parents'], 0, $field_name_key) == $element['#field_parents']);
       }
-    };
+    }
 
     if ($is_relevant_submit) {
       // Submit was triggered by hidden "target_id" element when entities were
@@ -878,7 +885,7 @@ class EntityReferenceBrowserWidget extends WidgetBase {
       return FALSE;
     }
 
-    // TODO Figure out how to avoid using raw user input.
+    // @todo Figure out how to avoid using raw user input.
     $current_user_input = NestedArray::getValue($form_state->getUserInput(), $target_id_element_path);
     if (!is_array($current_user_input)) {
       $entities = EntityBrowserElement::processEntityIds($current_user_input);

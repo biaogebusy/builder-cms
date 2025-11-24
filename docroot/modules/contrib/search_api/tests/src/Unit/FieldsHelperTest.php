@@ -61,29 +61,29 @@ class FieldsHelperTest extends UnitTestCase {
     $field_data_definition = $this->createMock(ComplexDataDefinitionInterface::class);
     $field_data_definition->expects($this->any())
       ->method('isList')
-      ->will($this->returnValue(FALSE));
+      ->willReturn(FALSE);
 
     $field_data_definition->expects($this->any())
       ->method('getMainPropertyName')
-      ->will($this->returnValue('value'));
+      ->willReturn('value');
 
     $field_data->expects($this->any())
       ->method('getDataDefinition')
-      ->will($this->returnValue($field_data_definition));
+      ->willReturn($field_data_definition);
 
     $value_definition = $this->createMock(DataDefinitionInterface::class);
     $value_definition->expects($this->any())
       ->method('isList')
-      ->will($this->returnValue(FALSE));
+      ->willReturn(FALSE);
 
     $value = $this->createMock(TypedDataInterface::class);
     $value->expects($this->any())
       ->method('getValue')
-      ->will($this->returnValue('asd'));
+      ->willReturn('asd');
 
     $value->expects($this->any())
       ->method('getDataDefinition')
-      ->will($this->returnValue($value_definition));
+      ->willReturn($value_definition);
 
     // Mock variants for with and without computed data.
     $field_data->expects($this->any())

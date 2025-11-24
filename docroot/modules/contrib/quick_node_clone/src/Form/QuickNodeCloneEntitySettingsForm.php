@@ -5,6 +5,7 @@ namespace Drupal\quick_node_clone\Form;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\field\Entity\FieldConfig;
@@ -39,6 +40,13 @@ abstract class QuickNodeCloneEntitySettingsForm extends ConfigFormBase implement
   protected $entityTypeBundleInfo;
 
   /**
+   * The Module Handler.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
+
+  /**
    * The machine name of the entity type.
    *
    * @var string
@@ -53,7 +61,9 @@ abstract class QuickNodeCloneEntitySettingsForm extends ConfigFormBase implement
     return new static(
       $container->get('config.factory'),
       $container->get('entity_field.manager'),
-      $container->get('entity_type.bundle.info')
+      $container->get('entity_type.bundle.info'),
+      $container->get('module_handler'),
+      $container->get('config.typed') ?? NULL
     );
   }
 
@@ -87,12 +97,17 @@ abstract class QuickNodeCloneEntitySettingsForm extends ConfigFormBase implement
    *   The entity field manager service.
    * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entityTypeBundleInfo
    *   The entity type bundle info provider.
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $moduleHandler
+   *   The module handler service.
+   * @param \Drupal\Core\Config\TypedConfigManagerInterface|null $typedConfigManager
+   *   The typed config manager.
    */
-  public function __construct(ConfigFactoryInterface $configFactory, EntityFieldManagerInterface $entityFieldManager, EntityTypeBundleInfoInterface $entityTypeBundleInfo) {
-    parent::__construct($configFactory);
+  public function __construct(ConfigFactoryInterface $configFactory, EntityFieldManagerInterface $entityFieldManager, EntityTypeBundleInfoInterface $entityTypeBundleInfo, ModuleHandlerInterface $moduleHandler, $typedConfigManager) {
+    parent::__construct($configFactory, $typedConfigManager);
     $this->configFactory = $configFactory;
     $this->entityFieldManager = $entityFieldManager;
     $this->entityTypeBundleInfo = $entityTypeBundleInfo;
+    $this->moduleHandler = $moduleHandler;
   }
 
   /**
@@ -100,6 +115,13 @@ abstract class QuickNodeCloneEntitySettingsForm extends ConfigFormBase implement
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
 
+    $form['create_group_relationships'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Create group relationships?'),
+      '#default_value' => $this->getSettings('create_group_relationships'),
+      '#description' => $this->t('If the checkbox is selected and the Group module is enabled, group relationships will be created.'),
+      '#disabled' => !$this->moduleHandler->moduleExists('gnode'),
+    ];
     $form['exclude'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Exclusion list'),
@@ -129,7 +151,7 @@ abstract class QuickNodeCloneEntitySettingsForm extends ConfigFormBase implement
       '#ajax' => [
         'callback' => 'Drupal\quick_node_clone\Form\QuickNodeCloneEntitySettingsForm::fieldsCallback',
         'wrapper' => 'fields-list-' . $this->getEntityTypeId(),
-        'method' => 'replace',
+        'method' => 'replaceWith',
       ],
     ];
 
@@ -187,7 +209,10 @@ abstract class QuickNodeCloneEntitySettingsForm extends ConfigFormBase implement
     }
 
     // Save config.
-    $this->config('quick_node_clone.settings')->set('exclude.' . $this->getEntityTypeId(), $bundle_names)->save();
+    $this->config('quick_node_clone.settings')
+      ->set('exclude.' . $this->getEntityTypeId(), $bundle_names)
+      ->set('create_group_relationships', $form_values['create_group_relationships'])
+      ->save();
 
     // Display a success message depending on form_id.
     if ($form['#form_id'] === 'quick_node_clone_paragraph_setting_form') {

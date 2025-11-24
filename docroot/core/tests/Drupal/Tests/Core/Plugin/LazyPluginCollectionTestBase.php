@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Plugin;
 
 use Drupal\Core\Plugin\DefaultLazyPluginCollection;
@@ -46,7 +48,9 @@ abstract class LazyPluginCollectionTestBase extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
+    parent::setUp();
+
     $this->pluginManager = $this->createMock('Drupal\Component\Plugin\PluginManagerInterface');
     $this->pluginManager->expects($this->any())
       ->method('getDefinitions')
@@ -62,7 +66,7 @@ abstract class LazyPluginCollectionTestBase extends UnitTestCase {
    *   called. For example, $this->any(), $this->once(), $this->exactly(6).
    *   Defaults to $this->never().
    */
-  protected function setupPluginCollection(InvocationOrder $create_count = NULL) {
+  protected function setupPluginCollection(?InvocationOrder $create_count = NULL) {
     $this->pluginInstances = [];
     $map = [];
     foreach ($this->getPluginDefinitions() as $plugin_id => $definition) {

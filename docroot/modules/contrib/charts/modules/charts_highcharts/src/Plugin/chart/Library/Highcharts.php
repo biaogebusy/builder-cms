@@ -2,41 +2,46 @@
 
 namespace Drupal\charts_highcharts\Plugin\chart\Library;
 
+use Drupal\charts_highcharts\Form\ColorChanger;
+use Drupal\charts\Attribute\Chart;
 use Drupal\charts\Element\Chart as ChartElement;
 use Drupal\charts\Plugin\chart\Library\ChartBase;
 use Drupal\charts\TypeManager;
-use Drupal\charts_highcharts\Form\ColorChanger;
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
-use Drupal\Core\Form\FormBuilder;
+use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Render\ElementInfoManagerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Defines a concrete class for a Highcharts.
- *
- * @Chart(
- *   id = "highcharts",
- *   name = @Translation("Highcharts"),
- *   types = {
- *     "area",
- *     "bar",
- *     "bubble",
- *     "column",
- *     "donut",
- *     "gauge",
- *     "line",
- *     "pie",
- *     "scatter",
- *     "solidgauge",
- *     "spline",
- *   },
- * )
+ * The 'Highcharts' chart type attribute.
  */
+#[Chart(
+  id: "highcharts",
+  name: new TranslatableMarkup("Highcharts"),
+  types: [
+    "area",
+    "arearange",
+    "bar",
+    "boxplot",
+    "bubble",
+    "column",
+    "donut",
+    "gauge",
+    "heatmap",
+    "line",
+    "pie",
+    "scatter",
+    "solidgauge",
+    "spline",
+  ]
+)]
 class Highcharts extends ChartBase implements ContainerFactoryPluginInterface {
 
   /**
@@ -56,7 +61,7 @@ class Highcharts extends ChartBase implements ContainerFactoryPluginInterface {
   /**
    * The chart type manager.
    *
-   * @var \Drupal\Core\Form\FormBuilder
+   * @var \Drupal\Core\Form\FormBuilderInterface
    */
   protected $formBuilder;
 
@@ -73,11 +78,13 @@ class Highcharts extends ChartBase implements ContainerFactoryPluginInterface {
    *   The element info manager.
    * @param \Drupal\charts\TypeManager $chart_type_manager
    *   The chart type manager.
-   * @param \Drupal\Core\Form\FormBuilder $form_builder
+   * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
    *   The form builder.
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface|null $module_handler
+   *   The module handler service.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, ElementInfoManagerInterface $element_info, TypeManager $chart_type_manager, FormBuilder $form_builder) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, ElementInfoManagerInterface $element_info, TypeManager $chart_type_manager, FormBuilderInterface $form_builder, ?ModuleHandlerInterface $module_handler = NULL) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $module_handler);
     $this->elementInfo = $element_info;
     $this->chartTypeManager = $chart_type_manager;
     $this->formBuilder = $form_builder;
@@ -94,6 +101,7 @@ class Highcharts extends ChartBase implements ContainerFactoryPluginInterface {
       $container->get('element_info'),
       $container->get('plugin.manager.charts_type'),
       $container->get('form_builder'),
+      $container->get('module_handler'),
     );
   }
 
@@ -112,8 +120,18 @@ class Highcharts extends ChartBase implements ContainerFactoryPluginInterface {
           'overflow' => '',
         ],
       ],
+      '3d_library' => TRUE,
+      'accessibility_library' => TRUE,
+      'annotations_library' => FALSE,
+      'boost_library' => FALSE,
+      'coloraxis_library' => FALSE,
+      'data_library' => FALSE,
       'exporting_library' => TRUE,
-      'texture_library' => TRUE,
+      'heatmap_library' => FALSE,
+      'no_data_library' => FALSE,
+      'texture_library' => FALSE,
+      'solidgauge_library' => FALSE,
+      'disable_default_css_library' => FALSE,
       'global_options' => static::defaultGlobalOptions(),
     ] + parent::defaultConfiguration();
 
@@ -138,17 +156,100 @@ class Highcharts extends ChartBase implements ContainerFactoryPluginInterface {
       '#markup' => $this->t('<p>Charts is designed to be generic enough to work with multiple charting libraries. If you would like settings that apply to all Highcharts charts, you can <a href="https://www.drupal.org/project/issues/charts" target="_blank">submit a ticket</a> to have a setting added here, in the Highcharts-specific settings.</p>'),
     ];
 
+    $form['3d_library'] = [
+      '#title' => $this->t('Enable Highcharts\' "3D" library'),
+      '#type' => 'checkbox',
+      '#default_value' => !empty($this->configuration['3d_library']),
+      '#description' => $this->t('Highcharts 3D module is a separate library that enables 3D charts. See <a href="https://www.highcharts.com/docs/chart-concepts/3d-charts" target="_blank">Highcharts 3D documentation</a> for more information.'),
+    ];
+
+    $form['accessibility_library'] = [
+      '#title' => $this->t('Enable Highcharts\' "Accessibility" library'),
+      '#type' => 'checkbox',
+      '#default_value' => !empty($this->configuration['accessibility_library']),
+      '#description' => $this->t('Highcharts Accessibility module is a separate library that enables accessibility features. See <a href="https://www.highcharts.com/docs/chart-concepts/accessibility" target="_blank">Highcharts Accessibility documentation</a> for more information.'),
+    ];
+
+    $form['annotations_library'] = [
+      '#title' => $this->t('Enable Highcharts\' "Annotations" library'),
+      '#type' => 'checkbox',
+      '#default_value' => !empty($this->configuration['annotations_library']),
+      '#description' => $this->t('Highcharts Annotations module is a separate library that enables annotations. See <a href="https://www.highcharts.com/docs/advanced-chart-features/annotations-module" target="_blank">Highcharts Annotations documentation</a> for more information.'),
+    ];
+
+    $form['boost_library'] = [
+      '#title' => $this->t('Enable Highcharts\' "Boost" library'),
+      '#type' => 'checkbox',
+      '#default_value' => !empty($this->configuration['boost_library']),
+      '#description' => $this->t('Highcharts Boost module is a separate library that enables faster rendering of charts. See <a href="https://www.highcharts.com/docs/advanced-chart-features/boost-module" target="_blank">Highcharts Boost documentation</a> for more information.'),
+    ];
+
+    $form['coloraxis_library'] = [
+      '#title' => $this->t('Enable Highcharts\' "Color Axis" library'),
+      '#type' => 'checkbox',
+      '#default_value' => !empty($this->configuration['coloraxis_library']),
+      '#description' => $this->t('Highcharts Color Axis module is a separate library that enables color axis. See <a href="https://www.highcharts.com/docs/chart-and-series-types/color-axis" target="_blank">Highcharts Color Axis documentation</a> for more information.'),
+    ];
+
+    $form['data_library'] = [
+      '#title' => $this->t('Enable Highcharts\' "Data" library'),
+      '#type' => 'checkbox',
+      '#default_value' => !empty($this->configuration['data_library']),
+      '#description' => $this->t('Highcharts Data module is a separate library that enables data import and export. See <a href="https://www.highcharts.com/docs/working-with-data/data-module" target="_blank">Highcharts Data documentation</a> for more information.'),
+    ];
+
     $form['exporting_library'] = [
       '#title' => $this->t('Enable Highcharts\' "Exporting" library'),
       '#type' => 'checkbox',
       '#default_value' => !empty($this->configuration['exporting_library']),
+      '#description' => $this->t('Highcharts Exporting module is a separate library that enables exporting charts. See <a href="https://www.highcharts.com/docs/export-module/export-module-overview" target="_blank">Highcharts Exporting documentation</a> for more information.'),
+    ];
+
+    $form['heatmap_library'] = [
+      '#title' => $this->t('Enable Highcharts\' "Heatmap" library'),
+      '#type' => 'checkbox',
+      '#default_value' => !empty($this->configuration['heatmap_library']),
+      '#description' => $this->t('Highcharts Heatmap module is a separate library that enables heatmap charts. See <a href="https://www.highcharts.com/docs/chart-and-series-types/heatmap-series" target="_blank">Highcharts Heatmap documentation</a> for more information.'),
+    ];
+
+    $form['no_data_library'] = [
+      '#title' => $this->t('Enable Highcharts\' "No Data" library'),
+      '#type' => 'checkbox',
+      '#default_value' => !empty($this->configuration['no_data_library']),
+      '#description' => $this->t('Highcharts No Data module is a separate library that enables no data message. See <a href="https://api.highcharts.com/highcharts/noData" target="_blank">Highcharts No Data documentation</a> for more information.'),
     ];
 
     $form['texture_library'] = [
       '#title' => $this->t('Enable Highcharts\' "Texture" library'),
       '#type' => 'checkbox',
       '#default_value' => !empty($this->configuration['texture_library']),
+      '#description' => $this->t('Highcharts Texture module is a separate library that enables texture fill. See <a href="https://www.highcharts.com/docs/chart-design-and-style/pattern-fills" target="_blank">Highcharts Texture documentation</a> for more information.'),
     ];
+
+    $form['solidgauge_library'] = [
+      '#title' => $this->t('Enable Highcharts\' "Solid Gauge" library'),
+      '#type' => 'checkbox',
+      '#default_value' => !empty($this->configuration['solidgauge_library']),
+      '#description' => $this->t('Highcharts Texture module is a separate library that enables texture fill. See <a href="https://api.highcharts.com/highcharts/series.solidgauge" target="_blank">Solid Gauge documentation</a> for more information.'),
+    ];
+
+    // Provide option to disable adding the default Highcharts CSS library.
+    if (!empty($this->configuration['global_options']['chart']['styled_mode'])) {
+      $form['disable_default_css_library'] = [
+        '#title' => $this->t("Disable the default Highcharts' CSS library"),
+        '#type' => 'checkbox',
+        '#default_value' => !empty($this->configuration['disable_default_css_library']),
+        '#description' => $this->t('When styledMode is enabled in the global chart options, the default highcharts.css library is added by default. Check this box to disable adding the default CSS.'),
+      ];
+    }
+    else {
+      // Provide default value to the submit handler, if styled_mode
+      // is not enabled.
+      $form['disable_default_css_library'] = [
+        '#type' => 'value',
+        '#value' => $this->defaultConfiguration()['disable_default_css_library'],
+      ];
+    }
 
     $legend_configuration = $this->configuration['legend'] ?? [];
     $form['legend'] = [
@@ -159,6 +260,7 @@ class Highcharts extends ChartBase implements ContainerFactoryPluginInterface {
       '#title' => $this->t('Legend layout'),
       '#type' => 'select',
       '#options' => [
+        '' => $this->t('Auto'),
         'vertical' => $this->t('Vertical'),
         'horizontal' => $this->t('Horizontal'),
       ],
@@ -388,7 +490,7 @@ class Highcharts extends ChartBase implements ContainerFactoryPluginInterface {
     $form['global_options']['lang']['numeric_symbols'] = [
       '#type' => 'details',
       '#title' => 'Numeric symbols',
-      '#description' => 'The numeric symbols.',
+      '#description' => t('The numeric symbols.'),
       '#collapsible' => TRUE,
       '#tree' => TRUE,
     ];
@@ -402,6 +504,21 @@ class Highcharts extends ChartBase implements ContainerFactoryPluginInterface {
         '#required' => TRUE,
       ];
     }
+    // Add global options for the chart property.
+    $form['global_options']['chart'] = [
+      '#title' => $this->t('Chart'),
+      '#type' => 'details',
+      '#collapsible' => TRUE,
+      '#tree' => TRUE,
+    ];
+    $form['global_options']['chart']['styled_mode'] = [
+      '#title' => $this->t('Enable styled mode'),
+      '#description' => $this->t('Enables styledMode for the chart. This will include the default highcharts.css and apply styles from the CSS files instead of inline styles. For example for dark mode support. See <a href=":url" target="_blank">chart.styledMode</a> for more information.', [
+        ':url' => 'https://api.highcharts.com/highcharts/chart.styledMode',
+      ]),
+      '#type' => 'checkbox',
+      '#default_value' => !empty($this->configuration['global_options']['chart']['styled_mode']),
+    ];
 
     return $form;
   }
@@ -420,10 +537,172 @@ class Highcharts extends ChartBase implements ContainerFactoryPluginInterface {
     if (!$form_state->getErrors()) {
       $values = $form_state->getValue($form['#parents']);
       $this->configuration['legend'] = $values['legend'];
+      $this->configuration['3d_library'] = $values['3d_library'];
+      $this->configuration['accessibility_library'] = $values['accessibility_library'];
+      $this->configuration['annotations_library'] = $values['annotations_library'];
+      $this->configuration['boost_library'] = $values['boost_library'];
+      $this->configuration['coloraxis_library'] = $values['coloraxis_library'];
+      $this->configuration['data_library'] = $values['data_library'];
       $this->configuration['exporting_library'] = $values['exporting_library'];
+      $this->configuration['heatmap_library'] = $values['heatmap_library'];
+      $this->configuration['no_data_library'] = $values['no_data_library'];
       $this->configuration['texture_library'] = $values['texture_library'];
+      $this->configuration['solidgauge_library'] = $values['solidgauge_library'];
+      $this->configuration['disable_default_css_library'] = $values['disable_default_css_library'];
       $this->configuration['global_options'] = $values['global_options'];
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function addBaseSettingsElementOptions(array &$element, array $options, FormStateInterface $form_state, array &$complete_form = []): void {
+
+    // The types to be processed in this method.
+    $extra_options_types = [
+      'bar',
+      'column',
+      'donut',
+      'pie',
+      'solidgauge',
+    ];
+
+    if (!in_array($element['#chart_type'], $extra_options_types)) {
+      parent::addBaseSettingsElementOptions($element, $options, $form_state, $complete_form);
+      return;
+    }
+
+    // Settings for solidgauge.
+    if ($element['#chart_type'] === 'solidgauge') {
+      $this->processSolidGaugeOptions($element, $options);
+    }
+
+    // Settings for donut and pie.
+    if (in_array($element['#chart_type'], ['donut', 'pie'])) {
+      $this->processDonutPieOptions($element, $options);
+    }
+
+    // Settings for bar and column.
+    if (in_array($element['#chart_type'], ['bar', 'column'])) {
+      $element['enable_stacklabels'] = [
+        '#title' => $this->t('Enable stackLabels'),
+        '#type' => 'checkbox',
+        '#default_value' => !empty($options['enable_stacklabels']),
+        '#description' => $this->t('Enable stackLabels for stacked bar or column charts.'),
+      ];
+    }
+  }
+
+  /**
+   * Process solid gauge options.
+   *
+   * @param array $element
+   *   The form element.
+   * @param array $options
+   *   The options array.
+   */
+  private function processSolidGaugeOptions(array &$element, array &$options) {
+    $solidgauge_options = $options + [
+      'max' => 100,
+      'min' => 0,
+      'stops' => [
+        ['position' => 0, 'color' => ''],
+        ['position' => 0.25, 'color' => ''],
+        ['position' => 0.5, 'color' => ''],
+        ['position' => 1, 'color' => ''],
+      ],
+    ];
+    $element['max'] = [
+      '#title' => $this->t('Solid gauge maximum value'),
+      '#type' => 'number',
+      '#default_value' => $solidgauge_options['max'],
+    ];
+    $element['min'] = [
+      '#title' => $this->t('Solid gauge minimum value'),
+      '#type' => 'number',
+      '#default_value' => $solidgauge_options['min'],
+    ];
+    $element['stops'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Stops'),
+      '#tree' => TRUE,
+    ];
+    foreach (range(0, 3) as $stop_index) {
+      $element['stops'][$stop_index] = [
+        '#type' => 'fieldset',
+        '#title' => $this->t('Stop @index', ['@index' => $stop_index + 1]),
+      ];
+      $element['stops'][$stop_index]['position'] = [
+        '#type' => 'number',
+        '#title' => $this->t('Position'),
+        '#description' => $this->t('Value between 0 and 1'),
+        '#min' => 0,
+        '#max' => 1,
+        '#step' => '.01',
+        '#size' => 5,
+        '#default_value' => $solidgauge_options['stops'][$stop_index]['position'],
+        '#wrapper_attributes' => [
+          'style' => 'display: inline-block; margin-right: 20px; vertical-align: top;',
+        ],
+      ];
+      $element['stops'][$stop_index]['color'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Color'),
+        '#attributes' => [
+          'TYPE' => 'color',
+          'style' => 'min-width:50px;',
+        ],
+        '#size' => 10,
+        '#maxlength' => 7,
+        '#default_value' => $solidgauge_options['stops'][$stop_index]['color'],
+        '#wrapper_attributes' => [
+          'style' => 'display: inline-block; vertical-align: top;',
+        ],
+      ];
+    }
+  }
+
+  /**
+   * Process donut/pie options.
+   *
+   * @param array $element
+   *   The form element.
+   * @param array $options
+   *   The options array.
+   */
+  private function processDonutPieOptions(array &$element, array &$options) {
+    $element['coloraxis'] = [
+      '#title' => $this->t('Enable colorAxis'),
+      '#type' => 'checkbox',
+      '#default_value' => !empty($options['coloraxis']),
+      '#description' => $this->t('Enable color axis for pie charts.'),
+    ];
+    // Minimum color value.
+    $element['min_color'] = [
+      '#title' => $this->t('Minimum color'),
+      '#type' => 'textfield',
+      '#size' => 10,
+      '#maxlength' => 7,
+      '#attributes' => [
+        'placeholder' => '#FFFFFF',
+        'TYPE' => 'color',
+      ],
+      '#description' => $this->t('The color to use for the minimum value. Leave blank for no minimum color.'),
+      '#default_value' => $options['min_color'] ?? '#FFFFFF',
+    ];
+    // Maximum color value.
+    $element['max_color'] = [
+      '#title' => $this->t('Maximum color'),
+      '#type' => 'textfield',
+      '#size' => 10,
+      '#maxlength' => 7,
+      '#attributes' => [
+        'placeholder' => '#000000',
+        'TYPE' => 'color',
+      ],
+      '#description' => $this->t('The color to use for the maximum value. Leave blank for no maximum color.'),
+      '#default_value' => $options['max_color'] ?? '#000000',
+    ];
   }
 
   /**
@@ -456,11 +735,48 @@ class Highcharts extends ChartBase implements ContainerFactoryPluginInterface {
     }
 
     $element['#attached']['library'][] = 'charts_highcharts/highcharts';
+    if (!empty($this->configuration['3d_library'])) {
+      $element['#attached']['library'][] = 'charts_highcharts/3d';
+    }
+    if (!empty($this->configuration['accessibility_library'])) {
+      $element['#attached']['library'][] = 'charts_highcharts/accessibility';
+    }
+    if (!empty($this->configuration['annotations_library'])) {
+      $element['#attached']['library'][] = 'charts_highcharts/annotations';
+    }
+    if (!empty($this->configuration['boost_library'])) {
+      $element['#attached']['library'][] = 'charts_highcharts/boost';
+    }
+    if (!empty($this->configuration['coloraxis_library'])) {
+      $element['#attached']['library'][] = 'charts_highcharts/coloraxis';
+      if (!empty($chart_definition['colorAxis'])) {
+        // Unset the color property from the series data.
+        foreach ($chart_definition['series'] as &$series_to_clean) {
+          if (isset($series_to_clean['data'])) {
+            foreach ($series_to_clean['data'] as &$data_to_clean) {
+              unset($data_to_clean['color']);
+            }
+          }
+        }
+      }
+    }
+    if (!empty($this->configuration['data_library'])) {
+      $element['#attached']['library'][] = 'charts_highcharts/data';
+    }
     if (!empty($this->configuration['exporting_library'])) {
-      $element['#attached']['library'][] = 'charts_highcharts/highcharts_exporting';
+      $element['#attached']['library'][] = 'charts_highcharts/exporting';
+    }
+    if (!empty($this->configuration['heatmap_library'])) {
+      $element['#attached']['library'][] = 'charts_highcharts/heatmap';
+    }
+    if (!empty($this->configuration['no_data_library'])) {
+      $element['#attached']['library'][] = 'charts_highcharts/no_data';
     }
     if (!empty($this->configuration['texture_library'])) {
       $element['#attached']['library'][] = 'charts_highcharts/texture';
+    }
+    if (!empty($this->configuration['solidgauge_library'])) {
+      $element['#attached']['library'][] = 'charts_highcharts/solidgauge';
     }
     $element['#attributes']['class'][] = 'charts-highchart';
     $element['#chart_definition'] = $chart_definition;
@@ -479,6 +795,12 @@ class Highcharts extends ChartBase implements ContainerFactoryPluginInterface {
 
     // Setting global options.
     $element['#attached']['drupalSettings']['charts']['highcharts']['global_options'] = $this->processedGlobalOptions();
+
+    // Add default Highcharts CSS library if global styled mode option
+    // is enabled.
+    if (!empty($this->configuration['global_options']['chart']['styled_mode']) && empty($this->configuration['disable_default_css_library'])) {
+      $element['#attached']['library'][] = 'charts_highcharts/highcharts_default_css';
+    }
 
     return $element;
   }
@@ -553,7 +875,7 @@ class Highcharts extends ChartBase implements ContainerFactoryPluginInterface {
           'Tue',
           'Wed',
           'Thurs',
-          'Frid',
+          'Fri',
           'Sat',
         ],
         'export_data' => [
@@ -569,6 +891,9 @@ class Highcharts extends ChartBase implements ContainerFactoryPluginInterface {
           'P',
           'E',
         ],
+      ],
+      'chart' => [
+        'styledMode' => FALSE,
       ],
     ];
   }
@@ -628,33 +953,73 @@ class Highcharts extends ChartBase implements ContainerFactoryPluginInterface {
     $chart_definition['plotOptions']['series']['stacking'] = $element['#stacking'] ?? '';
     $chart_definition['plotOptions']['series']['dataLabels']['enabled'] = (bool) $element['#data_labels'];
     $chart_definition['plotOptions']['series']['marker']['enabled'] = (bool) $element['#data_markers'];
+    $chart_definition['plotOptions']['series']['connectNulls'] = !empty($element['#connect_nulls']);
     if ($element['#chart_type'] === 'gauge') {
       $chart_definition['yAxis']['plotBands'][] = [
-        'from' => $element['#gauge']['red_from'],
-        'to' => $element['#gauge']['red_to'],
+        'from' => (int) $element['#gauge']['red_from'],
+        'to' => (int) $element['#gauge']['red_to'],
         'color' => 'red',
       ];
       $chart_definition['yAxis']['plotBands'][] = [
-        'from' => $element['#gauge']['yellow_from'],
-        'to' => $element['#gauge']['yellow_to'],
+        'from' => (int) $element['#gauge']['yellow_from'],
+        'to' => (int) $element['#gauge']['yellow_to'],
         'color' => 'yellow',
       ];
       $chart_definition['yAxis']['plotBands'][] = [
-        'from' => $element['#gauge']['green_from'],
-        'to' => $element['#gauge']['green_to'],
+        'from' => (int) $element['#gauge']['green_from'],
+        'to' => (int) $element['#gauge']['green_to'],
         'color' => 'green',
       ];
       $chart_definition['yAxis']['min'] = (int) $element['#gauge']['min'];
       $chart_definition['yAxis']['max'] = (int) $element['#gauge']['max'];
     }
+    if ($element['#chart_type'] === 'solidgauge') {
+      $chart_definition['yAxis']['min'] = (int) $element['#library_type_options']['min'];
+      $chart_definition['yAxis']['max'] = (int) $element['#library_type_options']['max'];
+      // Loop through the stops and add them to the chart definition.
+      $stops = array_values($element['#library_type_options']['stops']);
+      foreach (range(0, 3) as $stop_index) {
+        $chart_definition['yAxis']['stops'][$stop_index] = [
+          (float) $stops[$stop_index]['position'],
+          $stops[$stop_index]['color'],
+        ];
+      }
+      $chart_definition['pane'] = [
+        'center' => ['50%', '85%'],
+        'size' => '140%',
+        'startAngle' => -90,
+        'endAngle' => 90,
+        'background' => [
+          'backgroundColor' => '#fafafa',
+          'innerRadius' => '60%',
+          'outerRadius' => '100%',
+          'shape' => 'arc',
+        ],
+      ];
+      $chart_definition['plotOptions']['solidgauge']['dataLabels']['borderWidth'] = 0;
+      $chart_definition['plotOptions']['solidgauge']['dataLabels']['y'] = -25;
+      $chart_definition['plotOptions']['solidgauge']['dataLabels']['style']['fontSize'] = '24px';
+      $chart_definition['plotOptions']['solidgauge']['dataLabels']['color'] = $element['#title_color'];
+    }
+    if (!empty($element['#library_type_options']['enable_stacklabels'])) {
+      $chart_definition['yAxis']['stackLabels']['enabled'] = TRUE;
+    }
 
     // These changes are for consistency with Google. Perhaps too specific?
-    if ($element['#chart_type'] === 'pie') {
+    if (in_array($element['#chart_type'], ['donut', 'pie'])) {
       $chart_definition['plotOptions']['pie']['dataLabels']['distance'] = -30;
       $chart_definition['plotOptions']['pie']['dataLabels']['color'] = 'white';
       $chart_definition['plotOptions']['pie']['dataLabels']['format'] = '{percentage:.1f}%';
 
       $chart_definition['tooltip']['pointFormat'] = '<b>{point.y} ({point.percentage:.1f}%)</b><br/>';
+
+      // Check if colorAxis is enabled.
+      if (!empty($element['#library_type_options']['coloraxis'])) {
+        $chart_definition['colorAxis'] = [
+          'minColor' => $element['#library_type_options']['min_color'],
+          'maxColor' => $element['#library_type_options']['max_color'],
+        ];
+      }
     }
 
     if ($element['#legend'] === TRUE) {
@@ -1060,6 +1425,17 @@ class Highcharts extends ChartBase implements ContainerFactoryPluginInterface {
 
       $language_options[$transformed_key] = $value;
       unset($language_options[$option_key]);
+    }
+    // Add global chart options, such as styledMode for dark mode support.
+    $global_options['chart'] = $global_options['chart'] ?? [];
+    $global_options['chart'] += static::defaultGlobalOptions()['chart'];
+    foreach ($global_options['chart'] as $option_key => $value) {
+      $transformed_key = $this->transformSnakeCaseToCamelCase($option_key);
+      // Use boolean value for styledMode option.
+      if ($option_key === 'styled_mode') {
+        $value = (bool) $value;
+      }
+      $global_options['chart'][$transformed_key] = $value;
     }
     return $global_options;
   }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\redirect\Functional;
 
 use Drupal\Core\Language\Language;
@@ -33,7 +35,7 @@ class RedirectUITest extends BrowserTestBase {
   protected $repository;
 
   /**
-   * The Sql conntent entity storage.
+   * The Sql content entity storage.
    *
    * @var \Drupal\Core\Entity\Sql\SqlContentEntityStorage
    */
@@ -142,26 +144,17 @@ class RedirectUITest extends BrowserTestBase {
     // Test if the automatically created redirect works.
     $this->assertRedirect('term_test_alias', 'term_test_alias_updated');
 
-    if (version_compare(\Drupal::VERSION, '8.8', '>=')) {
-      $path_field = 'path[0][value]';
-      $alias_field = 'alias[0][value]';
-    }
-    else {
-      $path_field = 'source';
-      $alias_field = 'alias';
-    }
-
     // Test the path alias update via the admin path form.
     $this->drupalGet('admin/config/search/path/add');
     $this->submitForm([
-      $path_field => '/node',
-      $alias_field => '/aaa_path_alias',
+      'path[0][value]' => '/node',
+      'alias[0][value]' => '/aaa_path_alias',
     ], 'Save');
     // Note that here we rely on fact that we land on the path alias list page
     // and the default sort is by the alias, which implies that the first edit
     // link leads to the edit page of the aaa_path_alias.
     $this->clickLink('Edit');
-    $this->submitForm([$alias_field => '/aaa_path_alias_updated'], 'Save');
+    $this->submitForm(['alias[0][value]' => '/aaa_path_alias_updated'], 'Save');
     $redirect = $this->repository->findMatchingRedirect('aaa_path_alias', [], 'en');
     $this->assertEquals(Url::fromUri('base:aaa_path_alias_updated')->toString(), $redirect->getRedirectUrl()->toString());
     // Test if the automatically created redirect works.
@@ -171,6 +164,41 @@ class RedirectUITest extends BrowserTestBase {
     $this->drupalGet('admin/config/search/redirect/edit/' . $redirect->id());
     $this->assertSession()->fieldValueEquals('redirect_source[0][path]', 'aaa_path_alias');
     $this->assertSession()->fieldValueEquals('redirect_redirect[0][uri]', '/node');
+  }
+
+  /**
+   * Tests redirect form with invalid URLs.
+   *
+   * This test ensures that redirect URLS entered via query parameters or the
+   * form element work the same way.
+   */
+  public function testInvalidUrls() {
+    $this->drupalLogin($this->adminUser);
+
+    $invalid_urls = [
+      // Not a valid URL.
+      'http://ex!ample.com',
+      // No route for this internal URL exists.
+      '/does_not_exist',
+    ];
+    foreach ($invalid_urls as $i => $invalid_url) {
+      $this->drupalGet('admin/config/search/redirect/add', [
+        'query' => [
+          'redirect' => $invalid_url,
+        ],
+      ]);
+      $this->submitForm([
+        'redirect_source[0][path]' => 'bar' . $i,
+      ], 'Save');
+      $this->assertSession()->pageTextContains('The redirect has been saved.');
+
+      $this->drupalGet('admin/config/search/redirect/add');
+      $this->submitForm([
+        'redirect_source[0][path]' => 'foo' . $i,
+        'redirect_redirect[0][uri]' => $invalid_url,
+      ], 'Save');
+      $this->assertSession()->pageTextContains('The redirect has been saved.');
+    }
   }
 
   /**
@@ -249,41 +277,10 @@ class RedirectUITest extends BrowserTestBase {
   }
 
   /**
-   * Test cache tags.
-   *
-   * @todo Not sure this belongs in a UI test, but a full web test is needed.
-   */
-  public function testCacheTags() {
-    /** @var \Drupal\redirect\Entity\Redirect $redirect1 */
-    $redirect1 = $this->storage->create();
-    $redirect1->setSource('test-redirect');
-    $redirect1->setRedirect('node');
-    $redirect1->setStatusCode(301);
-    $redirect1->save();
-
-    $response = $this->assertRedirect('test-redirect', 'node');
-    // Note, self::assertCacheTag() cannot be used here since it only looks at
-    // the final set of headers.
-    $expected = 'http_response ' . implode(' ', $redirect1->getCacheTags());
-    $this->assertEquals($expected, $response->getHeader('x-drupal-cache-tags')[0], 'Redirect cache tags properly set.');
-
-    // First request should be a cache MISS.
-    $this->assertEquals('MISS', $response->getHeader('x-drupal-cache')[0], 'First request to the redirect was not cached.');
-
-    // Second request should be cached.
-    $response = $this->assertRedirect('test-redirect', 'node');
-    $this->assertEquals('HIT', $response->getHeader('x-drupal-cache')[0], 'The second request to the redirect was cached.');
-
-    // Ensure that the redirect has been cleared from cache when deleted.
-    $redirect1->delete();
-    $this->drupalGet('test-redirect');
-    $this->assertSession()->statusCodeEquals(404);
-  }
-
-  /**
    * Test external destinations.
    */
   public function testExternal() {
+    /** @var \Drupal\redirect\Entity\Redirect $redirect */
     $redirect = $this->storage->create();
     $redirect->setSource('a-path');
     // @todo Redirect::setRedirect() assumes that all redirects are internal.

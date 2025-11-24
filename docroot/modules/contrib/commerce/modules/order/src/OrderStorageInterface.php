@@ -2,8 +2,8 @@
 
 namespace Drupal\commerce_order;
 
-use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\Core\Entity\ContentEntityStorageInterface;
+use Drupal\commerce_order\Entity\OrderInterface;
 
 /**
  * Defines the interface for order storage.
@@ -30,5 +30,21 @@ interface OrderStorageInterface extends ContentEntityStorageInterface {
    *   Thrown if the lock could not be acquired.
    */
   public function loadForUpdate(int $order_id): ?OrderInterface;
+
+  /**
+   * Release the order lock.
+   *
+   * In the normal scenario, the lock will be released automatically when the
+   * order is saved. There may be times, however, when we want to release the
+   * lock without a save. One is if we waited for the lock and then determined
+   * the order is not in a state we can't process. e.g. We wanted to process
+   * a draft order, but another process has completed or cancelled the order.
+   * Another scenario is if an exception occurs, in which case, we want to
+   * release the lock.
+   *
+   * @param int $order_id
+   *   The order ID.
+   */
+  public function releaseLock(int $order_id): void;
 
 }

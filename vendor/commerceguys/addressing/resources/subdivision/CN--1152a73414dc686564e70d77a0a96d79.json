@@ -1,0 +1,33 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"LN",
+		"Anshan Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Haicheng Shi": {
+			"local_name": "海城市"
+		},
+		"Lishan Qu": {
+			"local_name": "立山区"
+		},
+		"Qianshan Qu": {
+			"local_name": "千山区"
+		},
+		"Tai'an Xian": {
+			"local_name": "台安县"
+		},
+		"Tiedong Qu": {
+			"local_name": "铁东区"
+		},
+		"Tiexi Qu": {
+			"local_name": "铁西区"
+		},
+		"Xiuyan Xian": {
+			"local_code": "岫岩满族自治县",
+			"local_name": "岫岩县"
+		}
+	}
+}

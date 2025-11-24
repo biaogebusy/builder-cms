@@ -13,7 +13,6 @@ body.is-flybox--open {
   bottom: 0;
   left: 0;
   min-height: 236px;
-  transition: transform 0.6s, min-height 0.6s;
   transform: translate3d(0, 400%, 0);
   backface-visibility: hidden;
 }
@@ -38,6 +37,7 @@ body.is-flybox--open {
 
 .is-flybox--open .b-flybox {
   z-index: 9999;
+  transition: transform 0.6s, min-height 0.6s;
   transform: translateY(0);
 }
 

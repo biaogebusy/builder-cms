@@ -1,4 +1,6 @@
 services:
+  _defaults:
+    autoconfigure: true
   access_check.cron:
     class: Drupal\system\Access\CronAccessCheck
     tags:
@@ -7,9 +9,20 @@ services:
     class: Drupal\system\Access\DbUpdateAccessCheck
     tags:
       - { name: access_check, applies_to: _access_system_update }
+  access_check.admin_menu_block_page:
+    class: Drupal\system\Access\SystemAdminMenuBlockAccessCheck
+    arguments: ['@access_manager', '@menu.link_tree', '@router', '@plugin.manager.menu.link']
+    tags:
+      - { name: access_check, applies_to: _access_admin_menu_block_page }
+  access_check.admin_overview_page:
+    class: Drupal\system\Access\SystemAdminMenuBlockAccessCheck
+    arguments: [ '@access_manager', '@menu.link_tree', '@router', '@plugin.manager.menu.link' ]
+    tags:
+      - { name: access_check, applies_to: _access_admin_overview_page }
   system.manager:
     class: Drupal\system\SystemManager
     arguments: ['@module_handler', '@request_stack', '@menu.link_tree', '@menu.active_trail']
+  Drupal\system\SystemManager: '@system.manager'
   system.breadcrumb.default:
     class: Drupal\system\PathBasedBreadcrumbBuilder
     arguments: ['@router.request_context', '@access_manager', '@router', '@path_processor_manager', '@config.factory',  '@title_resolver', '@current_user', '@path.current', '@path.matcher']
@@ -21,8 +34,6 @@ services:
       - { name: path_processor_inbound, priority: 200 }
   system.admin_path.route_subscriber:
     class: Drupal\system\EventSubscriber\AdminRouteSubscriber
-    tags:
-      - { name: event_subscriber }
   theme.negotiator.system.batch:
     class: Drupal\system\Theme\BatchNegotiator
     arguments: ['@batch.storage', '@request_stack']
@@ -36,31 +47,35 @@ services:
   system.config_subscriber:
     class: Drupal\system\SystemConfigSubscriber
     arguments: ['@router.builder']
-    tags:
-      - { name: event_subscriber }
   system.config_cache_tag:
     class: Drupal\system\EventSubscriber\ConfigCacheTag
-    arguments: ['@theme_handler', '@cache_tags.invalidator']
-    tags:
-      - { name: event_subscriber }
+    arguments: ['@theme_handler', '@cache_tags.invalidator', '@theme.registry']
   system.timezone_resolver:
     class: Drupal\system\TimeZoneResolver
     arguments: ['@current_user', '@config.factory']
-    tags:
-      - { name: event_subscriber }
   system.file_event.subscriber:
     class: Drupal\system\EventSubscriber\SecurityFileUploadEventSubscriber
     arguments: ['@config.factory']
-    tags:
-      - { name: event_subscriber }
   logger.channel.system:
     parent: logger.channel_base
     arguments: ['system']
   system.sa_fetcher:
     class: Drupal\system\SecurityAdvisories\SecurityAdvisoriesFetcher
     arguments: ['@config.factory', '@keyvalue.expirable', '@http_client', '@extension.list.module', '@extension.list.theme', '@extension.list.profile', '@logger.channel.system', '@settings']
+  Drupal\system\SecurityAdvisories\SecurityAdvisoriesFetcher: '@system.sa_fetcher'
   system.advisories_config_subscriber:
     class: Drupal\system\EventSubscriber\AdvisoriesConfigSubscriber
     arguments: ['@system.sa_fetcher']
-    tags:
-      - { name: event_subscriber }
+  Drupal\system\Routing\MenuLinksetRoutes: '@system.menus.route_subscriber'
+  system.menus.route_subscriber:
+    class: Drupal\system\Routing\MenuLinksetRoutes
+    arguments: ['%authentication_providers%', '@config.factory', '@router.builder']
+  Drupal\system\ModuleAdminLinksHelper: '@system.module_admin_links_helper'
+  system.module_admin_links_helper:
+    class: Drupal\system\ModuleAdminLinksHelper
+    arguments: ['@menu.link_tree', '@system.module_admin_links_memory_cache']
+  system.module_admin_links_memory_cache:
+    class: Drupal\Core\Cache\MemoryCache\MemoryCache
+    arguments: ['@datetime.time']
+  system.access_route_alter_subscriber:
+    class: Drupal\system\EventSubscriber\AccessRouteAlterSubscriber

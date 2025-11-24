@@ -5,9 +5,9 @@
  * Install, update and uninstall functions for the commerce_log module.
  */
 
-use Drupal\commerce_log\LogStorageSchema;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Site\Settings;
+use Drupal\commerce_log\LogStorageSchema;
 
 /**
  * Add a "source_entity" index and reduce the "source_entity_type" maxlength.

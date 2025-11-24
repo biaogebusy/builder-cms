@@ -21,3 +21,11 @@ advancedqueue.job.retry:
     _title: Retry job
   requirements:
     _permission: 'administer advancedqueue'
+
+advancedqueue.bulk_action_confirm:
+  path: /admin/config/system/queues/bulk_action/{action}
+  defaults:
+    _form: \Drupal\advancedqueue\Form\BulkActionConfirmForm
+  requirements:
+    _permission: 'administer advancedqueue'
+    action: (delete)|(release)|(retry)

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Component\ClassFinder;
 
 use Composer\Autoload\ClassLoader;
@@ -15,7 +17,7 @@ class ClassFinderTest extends TestCase {
   /**
    * @covers ::findFile
    */
-  public function testFindFile() {
+  public function testFindFile(): void {
     $finder = new ClassFinder();
 
     // The full path is returned therefore only tests with

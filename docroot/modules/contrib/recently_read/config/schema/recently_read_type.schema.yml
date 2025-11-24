@@ -14,4 +14,4 @@ recently_read.recently_read_type.*:
       type: sequence
       label: 'Types'
       sequence:
-        - type: string
+        type: string

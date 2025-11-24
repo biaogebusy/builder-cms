@@ -2,15 +2,15 @@
 
 namespace Drupal\blazy\Plugin\Filter;
 
+use Drupal\Component\Utility\Unicode;
+use Drupal\Component\Utility\Xss;
 // @todo use Drupal\media\MediaInterface;
 use Drupal\blazy\Blazy;
 use Drupal\blazy\BlazyDefault as Defaults;
 use Drupal\blazy\Field\BlazyElementTrait;
-use Drupal\blazy\internals\Internals;
 use Drupal\blazy\Media\BlazyFile as File;
 use Drupal\blazy\Media\BlazyImage as Image;
-use Drupal\Component\Utility\Unicode;
-use Drupal\Component\Utility\Xss;
+use Drupal\blazy\internals\Internals;
 // @todo use Drupal\blazy\Media\BlazyMedia;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -42,7 +42,7 @@ abstract class BlazyFilterBase extends TextFilterBase implements BlazyFilterInte
     ContainerInterface $container,
     array $configuration,
     $plugin_id,
-    $plugin_definition
+    $plugin_definition,
   ) {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
 
@@ -69,9 +69,8 @@ abstract class BlazyFilterBase extends TextFilterBase implements BlazyFilterInte
 
     $blazies = $this->manager->verifySafely($settings);
 
-    // @todo remove $settings post 2.17.
-    $settings['plugin_id'] = $plugin_id = $this->getPluginId();
-    $settings['id'] = $id = AttributeParser::getId($plugin_id);
+    $plugin_id = $this->getPluginId();
+    $id = AttributeParser::getId($plugin_id);
 
     $definitions = $this->entityFieldManager->getFieldDefinitions('media', 'remote_video');
     $is_media_library = $definitions && isset($definitions['field_media_oembed_video']);
@@ -94,6 +93,7 @@ abstract class BlazyFilterBase extends TextFilterBase implements BlazyFilterInte
     $this->init($settings, $text);
 
     // Allows sub-modules to add return type hints.
+    /* @phpstan-ignore-next-line */
     if (method_exists($this, 'preSettings')) {
       $this->preSettings($settings, $text);
     }
@@ -197,33 +197,6 @@ abstract class BlazyFilterBase extends TextFilterBase implements BlazyFilterInte
     // @todo remove all ImageItem references at 3.x for blazies as object.
     $item = $this->manager->toHashtag($build, 'item', NULL);
 
-    /*
-    if ($item) {
-    // @todo remove after another check at BlazyOEmbed.
-    // Hardcoded values are the only sources at filter when all fails.
-    // Dimensions are more reliable from Imagefactory than hardcoded ones.
-    foreach (['width', 'height'] as $key) {
-    if (!isset($item->{$key}) && isset($attrs[$key])) {
-    $item->{$key} = $attrs[$key];
-    }
-    }
-
-    // Alt and title are more reliable from users than Imagefactory.
-    foreach (['alt', 'title'] as $key) {
-    if ($value = $attrs[$key] ?? NULL) {
-    $item->{$key} = $value;
-    }
-    }
-
-    // Supports hard-coded image url without file API.
-    if (!$blazies->get('image.uri')) {
-    if ($uri = File::uri($item)) {
-    $blazies->set('image.uri', $uri);
-    }
-    }
-    }
-     */
-
     // @todo remove all ImageItem references at 3.x for blazies as object.
     $build['#item'] = $item;
 
@@ -286,10 +259,8 @@ abstract class BlazyFilterBase extends TextFilterBase implements BlazyFilterInte
    *
    * @return \DOMElement|null
    *   The HTML DOM object, or null if not found.
-   *
-   * @todo add return type after sub-modules: ?\DOMElement.
    */
-  protected function getCaptionElement($node) {
+  protected function getCaptionElement($node): ?\DOMElement {
     if ($node->parentNode) {
       if ($node->parentNode->tagName === 'figure') {
         $caption = $node->parentNode->getElementsByTagName('figcaption');
@@ -456,8 +427,6 @@ abstract class BlazyFilterBase extends TextFilterBase implements BlazyFilterInte
    * Provides the shortcode ITEM|SLIDE attributes, and caption. Not IMG/IFRAME.
    */
   protected function buildItemAttributes(array &$build, $node, $delta = 0): void {
-    $this->manager->hashtag($build);
-
     $sets    = &$build['#settings'];
     $blazies = $sets['blazies'];
 
@@ -497,15 +466,8 @@ abstract class BlazyFilterBase extends TextFilterBase implements BlazyFilterInte
         $blazies->set('grid.item_content_attributes.class', $classes);
       }
       else {
-        // At 3.x, with use_theme_blazy option.
-        if ($blazies->use('theme_blazy')) {
-          // Consumed at $manager::toBlazy() to pass back to theme_blazy().
-          $blazies->set('item.wrapper_attributes.class', $classes);
-        }
-        else {
-          // @todo remove at 3.x, sub-modules no longer has this, nor blazy:
-          $build['#content_attributes']['class'] = $classes;
-        }
+        // Consumed at $manager::toBlazy() to pass back to theme_blazy().
+        $blazies->set('item.wrapper_attributes.class', $classes);
       }
 
       unset($attrs['class']);
@@ -516,15 +478,8 @@ abstract class BlazyFilterBase extends TextFilterBase implements BlazyFilterInte
       $blazies->set('grid.item_attributes', $attrs);
     }
     else {
-      // At 3.x, with use_theme_blazy option, but processed at
-      // [slick|splide]_slide for their .slide element.
-      if ($blazies->use('theme_blazy')) {
-        $blazies->set('item.attributes', $attrs);
-      }
-      else {
-        // @todo remove old approach at 3.x:
-        $build['#attributes'] = $attrs;
-      }
+      // Processed at [slick|splide]_slide for their .slide element.
+      $blazies->set('item.attributes', $attrs);
     }
   }
 
@@ -580,20 +535,19 @@ abstract class BlazyFilterBase extends TextFilterBase implements BlazyFilterInte
       unset($attrs[$key]);
     }
 
-    // Ensures iframe attributes are not passed through since item_attributes
-    // is dedicated for image. No biggies, just irrelevant for now.
+    // Ensures relevant attributes are passed through.
     $type = 'image';
     $safe_attrs = Blazy::sanitize($attrs);
     if ($tag == 'img') {
-      // Pass anything else even dangerous attributes.
-      $build['#item_attributes'] = $attrs;
-      $blazies->set('item.safe_attributes', $safe_attrs);
+      $blazies->set('image.attributes', $safe_attrs);
     }
     elseif ($tag == 'iframe') {
       $type = 'video';
+
       Internals::toPlayable($blazies)
         ->set('media.bundle', 'remote_video');
-      $blazies->set('item.iframe_attributes', $safe_attrs);
+
+      $blazies->set('iframe.attributes', $safe_attrs);
     }
     $blazies->set('media.type', $type);
   }
@@ -652,8 +606,6 @@ abstract class BlazyFilterBase extends TextFilterBase implements BlazyFilterInte
    *   The item index.
    */
   protected function buildItemContent(array &$build, $node, $delta = 0): void {
-    $this->manager->hashtag($build);
-
     // To minimize dups, or misses, for something obvious.
     $build['#delta'] = $delta;
 
@@ -695,7 +647,7 @@ abstract class BlazyFilterBase extends TextFilterBase implements BlazyFilterInte
       ],
       '#empty_option' => $this->t('- None -'),
       '#default_value' => $this->settings['media_switch'] ?? '',
-      '#description' => $this->t('<ul><li><b>Image to iframe</b> will play video when toggled.</li><li><b>Image to lightbox</b> (Colorbox, Photobox, PhotoSwipe, Slick Lightbox, Zooming, Intense, etc.) will display media in lightbox.</li></ul>Both can stand alone or grouped as a gallery. To build a gallery, use the grid shortcodes.'),
+      '#description' => $this->t('<ul><li><b>Image to iframe</b> will play video when toggled.</li><li><b>Image to lightbox</b> (Colorbox, Splidebox, PhotoSwipe, Slick Lightbox, Zooming, Intense, etc.) will display media in lightbox.</li></ul>Both can stand alone or grouped as a gallery. To build a gallery, use the grid shortcodes.'),
     ];
 
     if (!empty($lightboxes)) {
@@ -743,14 +695,6 @@ abstract class BlazyFilterBase extends TextFilterBase implements BlazyFilterInte
       '#default_value' => $this->settings['box_caption'] ?? '',
       '#description' => $this->t('Automatic will search for Alt text first, then Title text. <br>Image styles only work for uploaded images, not hand-coded ones. Caption filter will use <code>data-caption</code> normally managed by Caption filter, will not work for shortcode without [item] element.'),
     ];
-  }
-
-  /**
-   * Extracts setting from attributes.
-   */
-  protected function prepareSettings(\DOMElement $node, array &$settings) {
-    @trigger_error('prepareSettings is deprecated in blazy:8.x-2.9 and is removed from blazy:3.0.0. Use self::extractSettings() instead. See https://www.drupal.org/node/3103018', E_USER_DEPRECATED);
-    $this->extractSettings($node, $settings);
   }
 
 }

@@ -3,7 +3,7 @@
  * ALIPAY API: ant.merchant.expand.apprecommend.account.delete request
  *
  * @author auto create
- * @since 1.0, 2024-01-19 14:31:56
+ * @since 1.0, 2025-08-13 15:12:39
  */
 class AntMerchantExpandApprecommendAccountDeleteRequest
 {

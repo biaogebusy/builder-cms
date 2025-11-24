@@ -66,7 +66,7 @@ class RevisionTest extends EntityShareClientFunctionalTestBase {
   protected function editContentAndRepopulate(int $version) {
     foreach ($this->entities as $entities_per_type) {
       foreach ($entities_per_type as $entity) {
-        $entity->set('title', $entity->label() . " V$version")->save();
+        $entity->set('title', $entity->label() . " V{$version}")->save();
       }
     }
     foreach ($this->visitedUrlsDuringSetup as $url) {
@@ -130,7 +130,7 @@ class RevisionTest extends EntityShareClientFunctionalTestBase {
     // Verify that pulled entity has just one revision.
     $imported_node = $this->loadEntity('node', 'es_test');
     $revision_ids = $this->entityTypeManager->getStorage('node')->revisionIds($imported_node);
-    $this->assertEquals(1, count($revision_ids), "After the initial import, node " . $imported_node->uuid() . " has only one revision.");
+    $this->assertEquals(1, \count($revision_ids), 'After the initial import, node ' . $imported_node->uuid() . ' has only one revision.');
 
     $this->importService->getRuntimeImportContext()->clearImportedEntities();
 
@@ -150,7 +150,7 @@ class RevisionTest extends EntityShareClientFunctionalTestBase {
     // Verify that pulled entity has two revisions.
     $imported_node = $this->loadEntity('node', 'es_test');
     $revision_ids = $this->entityTypeManager->getStorage('node')->revisionIds($imported_node);
-    $this->assertEquals(2, count($revision_ids), "After the second import, node " . $imported_node->uuid() . " has two revisions.");
+    $this->assertEquals(2, \count($revision_ids), 'After the second import, node ' . $imported_node->uuid() . ' has two revisions.');
 
     // Disable the import plugin.
     $this->removePluginFromImportConfig('revision');
@@ -168,7 +168,7 @@ class RevisionTest extends EntityShareClientFunctionalTestBase {
     $this->pullEveryChannels();
     $imported_node = $this->loadEntity('node', 'es_test');
     $revision_ids = $this->entityTypeManager->getStorage('node')->revisionIds($imported_node);
-    $this->assertEquals(1, count($revision_ids), "After the initial import, node " . $imported_node->uuid() . " has only one revision.");
+    $this->assertEquals(1, \count($revision_ids), 'After the initial import, node ' . $imported_node->uuid() . ' has only one revision.');
 
     $import_context = new ImportContext($this->remote->id(), $channel_id, $this::IMPORT_CONFIG_ID);
     $channel_infos = $this->remoteManager->getChannelsInfos($this->remote);
@@ -179,7 +179,7 @@ class RevisionTest extends EntityShareClientFunctionalTestBase {
 
     $imported_node = $this->loadEntity('node', 'es_test');
     $revision_ids = $this->entityTypeManager->getStorage('node')->revisionIds($imported_node);
-    $this->assertEquals(1, count($revision_ids), "After the second import, node " . $imported_node->uuid() . " has only one revision.");
+    $this->assertEquals(1, \count($revision_ids), 'After the second import, node ' . $imported_node->uuid() . ' has only one revision.');
   }
 
 }

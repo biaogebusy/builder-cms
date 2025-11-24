@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\settings_tray\Unit\Access;
 
 use Drupal\block\BlockInterface;
@@ -10,6 +12,7 @@ use Drupal\Core\Block\BlockPluginInterface;
 use Drupal\Core\Plugin\PluginWithFormsInterface;
 use Drupal\settings_tray\Access\BlockPluginHasSettingsTrayFormAccessCheck;
 use Drupal\Tests\UnitTestCase;
+use Drupal\TestTools\Random;
 use Prophecy\Argument;
 
 /**
@@ -23,7 +26,7 @@ class BlockPluginHasSettingsTrayFormAccessCheckTest extends UnitTestCase {
    * @covers ::accessBlockPlugin
    * @dataProvider providerTestAccess
    */
-  public function testAccess($with_forms, array $plugin_definition, AccessResultInterface $expected_access_result) {
+  public function testAccess($with_forms, array $plugin_definition, AccessResultInterface $expected_access_result): void {
     $block_plugin = $this->prophesize()->willImplement(BlockPluginInterface::class);
 
     if ($with_forms) {
@@ -44,10 +47,10 @@ class BlockPluginHasSettingsTrayFormAccessCheckTest extends UnitTestCase {
   /**
    * Provides test data for ::testAccess().
    */
-  public function providerTestAccess() {
+  public static function providerTestAccess() {
     $annotation_forms_settings_tray_class = [
       'forms' => [
-        'settings_tray' => $this->randomMachineName(),
+        'settings_tray' => Random::machineName(),
       ],
     ];
     $annotation_forms_settings_tray_not_set = [];

@@ -12,6 +12,7 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Url;
 use Drupal\path_alias\PathAliasInterface;
 use Drupal\redirect\Entity\Redirect;
+use Symfony\Component\Routing\Exception\MissingMandatoryParametersException;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
 
 /**
@@ -20,9 +21,7 @@ use Symfony\Component\Routing\Exception\RouteNotFoundException;
 function redirect_hook_info() {
   $hooks = [
     'redirect_load',
-    'redirect_load_by_source_alter',
     'redirect_access',
-    'redirect_prepare',
     'redirect_validate',
     'redirect_presave',
     'redirect_insert',
@@ -61,7 +60,6 @@ function redirect_help($route_name, RouteMatchInterface $route_match) {
       $output .= '<dd>' . t('The <a href=":settings">"Settings"</a> page presents you with a number of means to adjust redirect settings.', [':settings' => Url::fromRoute('redirect.settings')->toString()]) . '</dd>';
       $output .= '</dl>';
       return $output;
-      break;
   }
 }
 
@@ -77,7 +75,7 @@ function redirect_entity_delete(EntityInterface $entity) {
       redirect_delete_by_path('entity:' . $entity->getEntityTypeId() . '/' . $entity->id());
     }
   }
-  catch (RouteNotFoundException $e) {
+  catch (RouteNotFoundException | MissingMandatoryParametersException) {
     // This can happen if a module incorrectly defines a link template, ignore
     // such errors.
   }
@@ -117,36 +115,6 @@ function redirect_path_alias_update(PathAliasInterface $path_alias) {
 function redirect_path_alias_insert(PathAliasInterface $path_alias) {
   // Delete all redirects having the same source as this alias.
   redirect_delete_by_path($path_alias->getAlias(), $path_alias->language()->getId(), FALSE);
-}
-
-/**
- * Implements hook_page_build().
- *
- * Adds an action on 404 pages to create a redirect.
- *
- * @todo hook_page_build() can no longer be used for this. Find a different way.
- */
-function redirect_page_build(&$page) {
-  if (redirect_is_current_page_404() && \Drupal::currentUser()->hasPermission('administer redirects')) {
-    if (!isset($page['content']['system_main']['actions'])) {
-      $page['content']['system_main']['actions'] = [
-        '#theme' => 'links',
-        '#links' => [],
-        '#attributes' => ['class' => ['action-links']],
-        '#weight' => -100,
-      ];
-    }
-    // We cannot simply use current_path() because if a 404 path is set, then
-    // that value overrides whatever is in $_GET['q']. The
-    // drupal_deliver_html_page() function thankfully puts the original current
-    // path into $_GET['destination'].
-    $destination = \Drupal::destination()->getAsArray();
-    $page['content']['system_main']['actions']['#links']['add_redirect'] = [
-      'title' => t('Add URL redirect from this page to another location'),
-      'href' => 'admin/config/search/redirect/add',
-      'query' => ['source' => $destination['destination']] + \Drupal::destination()->getAsArray(),
-    ];
-  }
 }
 
 /**
@@ -204,14 +172,14 @@ function redirect_delete_by_path($path, $langcode = NULL, $match_subpaths_and_re
 }
 
 /**
- * Sort an array recusively.
+ * Sort an array recursively.
  *
- * @param $array
+ * @param array $array
  *   The array to sort, by reference.
- * @param $callback
+ * @param callable $callback
  *   The sorting callback to use (e.g. 'sort', 'ksort', 'asort').
  *
- * @return
+ * @return bool
  *   TRUE on success or FALSE on failure.
  */
 function redirect_sort_recursive(&$array, $callback = 'sort') {
@@ -234,23 +202,13 @@ function redirect_status_code_options($code = NULL) {
     305 => t('305 Use Proxy'),
     307 => t('307 Temporary Redirect'),
   ];
-  return isset($codes[$code]) ? $codes[$code] : $codes;
+  return $codes[$code] ?? $codes;
 }
 
 /**
- * Returns if the current page request is a page not found (404 status error).
+ * Implements hook_form_FORM_ID_alter().
  *
- * Why the fuck do we have to do this? Why is there not an easier way???
- *
- * @return
- *   TRUE if the current page is a 404, or FALSE otherwise.
- */
-function redirect_is_current_page_404() {
-  return drupal_get_http_header('Status') == '404 Not Found';
-}
-
-/**
- * Implements hook_form_FORM_ID_alter() on behalf of locale.module.
+ * (on behalf of locale.module)
  */
 function locale_form_redirect_edit_form_alter(array &$form, FormStateInterface $form_state) {
   $form['language'] = [
@@ -296,8 +254,10 @@ function redirect_entity_extra_field_info() {
  * Implements hook_form_node_form_alter().
  */
 function redirect_form_node_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  /** @var \Drupal\Core\Entity\EntityFormInterface $form_object */
+  $form_object = $form_state->getFormObject();
   /** @var \Drupal\node\NodeInterface $node */
-  $node = $form_state->getFormObject()->getEntity();
+  $node = $form_object->getEntity();
   if (!$node->isNew() && \Drupal::currentUser()->hasPermission('administer redirects')) {
 
     $nid = $node->id();

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\FunctionalTests\Installer;
 
 /**
@@ -22,7 +24,7 @@ class InstallerPostInstallTest extends InstallerTestBase {
   /**
    * Confirms that visiting the installer does not break things post-install.
    */
-  public function testVisitInstallerPostInstall() {
+  public function testVisitInstallerPostInstall(): void {
     \Drupal::service('module_installer')->install(['system_test']);
     // Clear caches to ensure that system_test's routes are available.
     $this->resetAll();

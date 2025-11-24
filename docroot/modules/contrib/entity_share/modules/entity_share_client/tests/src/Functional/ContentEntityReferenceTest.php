@@ -278,7 +278,7 @@ class ContentEntityReferenceTest extends EntityShareClientFunctionalTestBase {
     // A little trick to dynamically get the correct value of referenced
     // entity, because our mock content UUID's respect this rule.
     // Otherwise we would need to add a new parameter to 'checker_callback'.
-    $level = (int) str_replace('es_test_level_', '', $entity->uuid());
+    $level = (int) \str_replace('es_test_level_', '', $entity->uuid());
     $target_uuid = 'es_test_level_' . ($level + 1);
     return [
       [

@@ -36,65 +36,22 @@ use Symfony\Component\DependencyInjection\Container;
 class FieldsHelper implements FieldsHelperInterface {
 
   /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
-   * The entity field manager.
-   *
-   * @var \Drupal\Core\Entity\EntityFieldManagerInterface
-   */
-  protected $entityFieldManager;
-
-  /**
-   * The entity type bundle info service.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeBundleInfoInterface
-   */
-  protected $entityBundleInfo;
-
-  /**
-   * The data type plugin manager.
-   *
-   * @var \Drupal\search_api\Utility\DataTypeHelperInterface
-   */
-  protected $dataTypeHelper;
-
-  /**
    * The theme switcher.
-   *
-   * @var \Drupal\search_api\Utility\ThemeSwitcherInterface
    */
-  protected $themeSwitcher;
+  protected ThemeSwitcherInterface $themeSwitcher;
 
-  /**
-   * Constructs a FieldsHelper object.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
-   *   The entity type manager.
-   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entityFieldManager
-   *   The entity field manager.
-   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entityBundleInfo
-   *   The entity type bundle info service.
-   * @param \Drupal\search_api\Utility\DataTypeHelperInterface $dataTypeHelper
-   *   The data type helper service.
-   * @param \Drupal\search_api\Utility\ThemeSwitcherInterface $themeSwitcher
-   *   The theme switcher service.
-   */
   public function __construct(
-    EntityTypeManagerInterface $entityTypeManager,
-    EntityFieldManagerInterface $entityFieldManager,
-    EntityTypeBundleInfoInterface $entityBundleInfo,
-    DataTypeHelperInterface $dataTypeHelper,
-    ThemeSwitcherInterface $themeSwitcher
+    protected EntityTypeManagerInterface $entityTypeManager,
+    protected EntityFieldManagerInterface $entityFieldManager,
+    protected EntityTypeBundleInfoInterface $entityBundleInfo,
+    protected DataTypeHelperInterface $dataTypeHelper,
+    ?ThemeSwitcherInterface $themeSwitcher = NULL,
   ) {
-    $this->entityTypeManager = $entityTypeManager;
-    $this->entityFieldManager = $entityFieldManager;
-    $this->entityBundleInfo = $entityBundleInfo;
-    $this->dataTypeHelper = $dataTypeHelper;
+    if (!$themeSwitcher) {
+      @trigger_error('Constructing \Drupal\search_api\Utility\FieldsHelper without the $themeSwitcher parameter is deprecated in search_api:8.x-1.31 and it will be required in search_api:2.0.0. See https://www.drupal.org/node/3320841',
+        E_USER_DEPRECATED);
+      $themeSwitcher = \Drupal::service('search_api.theme_switcher');
+    }
     $this->themeSwitcher = $themeSwitcher;
   }
 
@@ -124,7 +81,7 @@ class FieldsHelper implements FieldsHelperInterface {
     $directFields = [];
     $nestedFields = [];
     foreach (array_keys($fields) as $key) {
-      if (strpos($key, ':') !== FALSE) {
+      if (str_contains($key, ':')) {
         [$direct, $nested] = explode(':', $key, 2);
         $nestedFields[$direct][$nested] = $fields[$key];
       }
@@ -245,6 +202,13 @@ class FieldsHelper implements FieldsHelperInterface {
 
         $properties = $index->getPropertyDefinitions($datasource_id);
         foreach ($required_properties[$datasource_id] as $property_path => $combined_id) {
+          // Extract a field ID the caller might have added to the property
+          // path.
+          $field_id = NULL;
+          if (strpos($property_path, '|') !== FALSE) {
+            [$property_path, $field_id] = explode('|', $property_path, 2);
+          }
+
           $item_values[$combined_id] = [];
 
           // If a field with the right property path is already set on the item,
@@ -252,9 +216,13 @@ class FieldsHelper implements FieldsHelperInterface {
           // already been processed in some way, or use a data type that
           // transformed their original value. But that will hopefully not be a
           // problem in most situations.
-          foreach ($this->filterForPropertyPath($item->getFields(FALSE), $datasource_id, $property_path) as $field) {
+          // In case of duplicates (for configurable fields, mostly) we prefer
+          // the one matching the given $combined_id, since several callers (for
+          // instance, the Highlight processor) pass the field ID there.
+          $field = $this->findField($item->getFields(FALSE), $datasource_id, $property_path, $combined_id);
+          if ($field) {
             $item_values[$combined_id] = $field->getValues();
-            continue 2;
+            continue;
           }
 
           // There are no values present on the item for this property. If we
@@ -283,9 +251,17 @@ class FieldsHelper implements FieldsHelperInterface {
               // If the index contains a field with that property, just use the
               // configuration from there instead of the default configuration.
               // This will probably be what users expect in most situations.
-              foreach ($this->filterForPropertyPath($index->getFields(), $datasource_id, $property_path) as $field) {
-                $field_info['configuration'] = $field->getConfiguration();
-                break;
+              // If the caller passed the field ID with the property path, even
+              // better.
+              if ($field_id && $index->getField($field_id)) {
+                $field_info['configuration'] = $index->getField($field_id)
+                  ->getConfiguration();
+              }
+              else {
+                $field = $this->findField($index->getFields(), $datasource_id, $property_path, $combined_id);
+                if ($field) {
+                  $field_info['configuration'] = $field->getConfiguration();
+                }
               }
             }
             $processor_fields[] = $this->createField($index, $combined_id, $field_info);
@@ -297,7 +273,7 @@ class FieldsHelper implements FieldsHelperInterface {
         }
       }
       if ($missing_fields) {
-        $this->extractFields($item->getOriginalObject(), $missing_fields);
+        $this->extractFields($item->getOriginalObject(), $missing_fields, $item->getLanguage());
         foreach ($missing_fields as $property_fields) {
           foreach ($property_fields as $field) {
             $item_values[$field->getFieldIdentifier()] = $field->getValues();
@@ -323,6 +299,36 @@ class FieldsHelper implements FieldsHelperInterface {
     }
 
     return $extracted_values;
+  }
+
+  /**
+   * Finds a field within an array of fields.
+   *
+   * @param \Drupal\search_api\Item\FieldInterface[] $fields
+   *   The fields to search.
+   * @param string|null $datasource_id
+   *   The datasource ID of the field that should be found.
+   * @param string $property_path
+   *   The property path of the field that should be found.
+   * @param string|null $preferred_field_id
+   *   (optional) The preferred field ID: if multiple fields are found matching
+   *   the given datasource and property path, but one has this field ID, then
+   *   that field is returned. Otherwise, the returned field is undefined.
+   *
+   * @return \Drupal\search_api\Item\FieldInterface|null
+   *   The found field, or NULL if it couldn't be found.
+   */
+  protected function findField(array $fields, ?string $datasource_id, string $property_path, ?string $preferred_field_id = NULL): ?FieldInterface {
+    $return = NULL;
+    foreach ($this->filterForPropertyPath($fields, $datasource_id, $property_path) as $field) {
+      if ($field->getFieldIdentifier() === $preferred_field_id) {
+        return $field;
+      }
+      elseif (!$return) {
+        $return = $field;
+      }
+    }
+    return $return;
   }
 
   /**
@@ -400,7 +406,7 @@ class FieldsHelper implements FieldsHelperInterface {
       $definition = $this->entityTypeManager->getDefinition($entity_type_id);
       return $definition->entityClassImplements(ContentEntityInterface::class);
     }
-    catch (PluginNotFoundException $e) {
+    catch (PluginNotFoundException) {
       return FALSE;
     }
   }
@@ -409,25 +415,31 @@ class FieldsHelper implements FieldsHelperInterface {
    * {@inheritdoc}
    */
   public function isFieldIdReserved($fieldId) {
-    return substr($fieldId, 0, 11) == 'search_api_';
+    return str_starts_with($fieldId, 'search_api_');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function createItem(IndexInterface $index, $id, DatasourceInterface $datasource = NULL) {
+  public function createItem(IndexInterface $index, $id, ?DatasourceInterface $datasource = NULL) {
     return new Item($index, $id, $datasource);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function createItemFromObject(IndexInterface $index, ComplexDataInterface $originalObject, $id = NULL, DatasourceInterface $datasource = NULL) {
+  public function createItemFromObject(IndexInterface $index, ComplexDataInterface $originalObject, $id = NULL, ?DatasourceInterface $datasource = NULL) {
     if (!isset($id)) {
       if (!isset($datasource)) {
         throw new \InvalidArgumentException('Need either an item ID or the datasource to create a search item from an object.');
       }
-      $id = Utility::createCombinedId($datasource->getPluginId(), $datasource->getItemId($originalObject));
+
+      $item_id = $datasource->getItemId($originalObject);
+      if (!$item_id) {
+        throw new \InvalidArgumentException('Object does not belong to the datasource.');
+      }
+
+      $id = Utility::createCombinedId($datasource->getPluginId(), $item_id);
     }
     $item = $this->createItem($index, $id, $datasource);
     $item->setOriginalObject($originalObject);

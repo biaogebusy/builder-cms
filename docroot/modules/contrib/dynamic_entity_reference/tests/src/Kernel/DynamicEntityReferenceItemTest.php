@@ -3,8 +3,8 @@
 namespace Drupal\Tests\dynamic_entity_reference\Kernel;
 
 use Drupal\Component\Render\FormattableMarkup;
-use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FieldItemInterface;
+use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\entity_test\Entity\EntityTest;
@@ -406,7 +406,7 @@ class DynamicEntityReferenceItemTest extends FieldKernelTestBase {
     ]);
     $errors = $entity->validate();
     $this->assertCount(1, $errors);
-    $this->assertEquals($errors[0]->getMessage(), (string) new FormattableMarkup('%property should not be null.', ['%property' => 'target_id']));
+    $this->assertEquals((string) $errors[0]->getMessage(), (string) new FormattableMarkup('%property should not be null.', ['%property' => 'target_id']));
     $this->assertEquals($errors[0]->getPropertyPath(), 'field_der.0.target_id');
     // This should rectify the issue, favoring the entity over the target_id.
     $entity->save();

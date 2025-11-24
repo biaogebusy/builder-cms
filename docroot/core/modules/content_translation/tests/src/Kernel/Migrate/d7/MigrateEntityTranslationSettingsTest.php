@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_translation\Kernel\Migrate\d7;
 
 use Drupal\Core\Language\LanguageInterface;
@@ -57,7 +59,7 @@ class MigrateEntityTranslationSettingsTest extends MigrateDrupal7TestBase {
   /**
    * Tests entity translation settings migration.
    */
-  public function testEntityTranslationSettingsMigration() {
+  public function testEntityTranslationSettingsMigration(): void {
     // Tests 'comment_node_test_content_type' entity translation settings.
     $config = $this->config('language.content_settings.comment.comment_node_test_content_type');
     $this->assertSame($config->get('target_entity_type_id'), 'comment');

@@ -107,20 +107,17 @@ class ParagraphsUiTest extends ParagraphsTestBase {
     ], 'Save and manage fields');
 
     // Add a new paragraphs field to the content type.
-    if (version_compare(\Drupal::VERSION, '10.1', '>=')) {
-      $this->clickLink('Create a new field');
+    $this->clickLink('Create a new field');
+
+    $this->getSession()->getPage()->fillField('new_storage_type', 'field_ui:entity_reference_revisions:paragraph');
+    if ($this->coreVersion('10.3')) {
+      $this->getSession()->getPage()->pressButton('Continue');
     }
-    else {
-      $this->clickLink('Add field');
-    }
-    $this->submitForm([
-      'new_storage_type' => 'field_ui:entity_reference_revisions:paragraph',
+    $edit = [
       'label' => 'Paragraph',
       'field_name' => 'paragraph',
-    ], $this->coreVersion('10.2') ? 'Continue' : 'Save and continue');
-    if (!$this->coreVersion('10.2')) {
-      $this->submitForm([], 'Save field settings');
-    }
+    ];
+    $this->submitForm($edit, 'Continue');
     $this->submitForm([], 'Save settings');
 
     // Visit the "Manage form display" page of the new content type.

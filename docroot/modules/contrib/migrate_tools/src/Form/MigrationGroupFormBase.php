@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\migrate_tools\Form;
 
 use Drupal\Core\Entity\EntityForm;
@@ -27,7 +29,7 @@ class MigrationGroupFormBase extends EntityForm {
    * @return array
    *   An associative array containing the migration group add/edit form.
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state): array {
     // Get anything we need from the base class.
     $form = parent::buildForm($form, $form_state);
 
@@ -84,7 +86,7 @@ class MigrationGroupFormBase extends EntityForm {
    * @return bool
    *   TRUE if this format already exists, FALSE otherwise.
    */
-  public function exists($entity_id, array $element, FormStateInterface $form_state) {
+  public function exists($entity_id, array $element, FormStateInterface $form_state): bool {
     $query = $this->entityTypeManager->getStorage('migration_group')
       ->getQuery()
       ->accessCheck(TRUE);
@@ -108,8 +110,8 @@ class MigrationGroupFormBase extends EntityForm {
    * @return array
    *   An array of supported actions for the current entity form.
    */
-  protected function actions(array $form, FormStateInterface $form_state) {
-    // Get the basic actins from the base class.
+  protected function actions(array $form, FormStateInterface $form_state): array {
+    // Get the basic actions from the base class.
     $actions = parent::actions($form, $form_state);
 
     // Change the submit button text.
@@ -122,7 +124,7 @@ class MigrationGroupFormBase extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function save(array $form, FormStateInterface $form_state) {
+  public function save(array $form, FormStateInterface $form_state): void {
     $migration_group = $this->getEntity();
     $status = $migration_group->save();
 

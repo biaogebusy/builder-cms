@@ -2,12 +2,12 @@
 
 namespace Drupal\Tests\commerce_order\Kernel\Formatter;
 
+use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 use Drupal\commerce_price\Price;
 use Drupal\commerce_product\Entity\Product;
 use Drupal\commerce_product\Entity\ProductVariation;
 use Drupal\commerce_promotion\Entity\Promotion;
 use Drupal\commerce_tax\Entity\TaxType;
-use Drupal\Tests\commerce_order\Kernel\OrderKernelTestBase;
 
 /**
  * Tests the calculated price formatter.
@@ -121,7 +121,7 @@ class PriceCalculatedFormatterTest extends OrderKernelTestBase {
     $this->firstVariation = $this->reloadEntity($first_variation);
     $this->secondVariation = $this->reloadEntity($second_variation);
 
-    $user = $this->createUser(['mail' => 'user1@example.com']);
+    $user = $this->createUser();
     $this->container->get('current_user')->setAccount($user);
 
     $this->viewBuilder = $this->container->get('entity_type.manager')->getViewBuilder('commerce_product_variation');

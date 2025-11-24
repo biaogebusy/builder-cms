@@ -3,20 +3,19 @@
 namespace Drupal\commerce\Plugin\Field\FieldWidget;
 
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Field\Attribute\FieldWidget;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Plugin implementation of the 'commerce_plugin_radios' widget.
- *
- * @FieldWidget(
- *   id = "commerce_plugin_radios",
- *   label = @Translation("Plugin radios"),
- *   field_types = {
- *     "commerce_plugin_item"
- *   },
- *  )
  */
+#[FieldWidget(
+  id: "commerce_plugin_radios",
+  label: new TranslatableMarkup("Plugin radios"),
+  field_types: ["commerce_plugin_item"],
+)]
 class PluginRadiosWidget extends PluginSelectWidget {
 
   /**

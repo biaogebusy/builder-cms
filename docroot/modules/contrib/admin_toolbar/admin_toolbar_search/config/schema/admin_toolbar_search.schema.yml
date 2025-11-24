@@ -1,0 +1,10 @@
+admin_toolbar_search.settings:
+  type: config_object
+  label: 'Admin Toolbar Search settings'
+  mapping:
+    display_menu_item:
+      type: boolean
+      label: 'How the search input will be displayed'
+    enable_keyboard_shortcut:
+      type: boolean
+      label: 'Enable keyboard shortcut'

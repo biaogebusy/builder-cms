@@ -40,9 +40,9 @@ class ChangedTime extends ImportProcessorPluginBase {
     }
 
     if (
-      $changed_public_name &&
-      !empty($entity_json_data['attributes'][$changed_public_name]) &&
-      method_exists($processed_entity, 'setChangedTime')
+      $changed_public_name
+      && !empty($entity_json_data['attributes'][$changed_public_name])
+      && \method_exists($processed_entity, 'setChangedTime')
     ) {
       $remote_changed_value = $entity_json_data['attributes'][$changed_public_name];
       $remote_changed_timestamp = EntityShareUtility::convertChangedTime($remote_changed_value);

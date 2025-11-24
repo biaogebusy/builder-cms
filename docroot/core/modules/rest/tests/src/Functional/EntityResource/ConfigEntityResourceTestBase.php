@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\rest\Functional\EntityResource;
 
 /**
@@ -19,8 +21,8 @@ abstract class ConfigEntityResourceTestBase extends EntityResourceTestBase {
   /**
    * {@inheritdoc}
    */
-  public function setUp() {
-    if (in_array($this->getName(), static::SKIP_METHODS, TRUE)) {
+  protected function setUp(): void {
+    if (in_array($this->name(), static::SKIP_METHODS, TRUE)) {
       // Skip before installing Drupal to prevent unnecessary use of resources.
       $this->markTestSkipped("Not yet supported for config entities.");
     }

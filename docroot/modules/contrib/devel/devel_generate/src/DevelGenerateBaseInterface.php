@@ -17,13 +17,18 @@ use Drupal\Core\Form\FormStateInterface;
  */
 interface DevelGenerateBaseInterface extends PluginInspectionInterface {
 
+  public function __construct(array $configuration, $plugin_id, $plugin_definition);
+
   /**
    * Returns the array of settings, including defaults for missing settings.
    *
-   * @return array
-   *   The array of settings.
+   * @param string $key
+   *   The setting name.
+   *
+   * @return array|int|string|bool|null
+   *   The setting.
    */
-  public function getSetting($key);
+  public function getSetting(string $key);
 
   /**
    * Returns the default settings for the plugin.
@@ -31,7 +36,7 @@ interface DevelGenerateBaseInterface extends PluginInspectionInterface {
    * @return array
    *   The array of default setting values, keyed by setting names.
    */
-  public function getDefaultSettings();
+  public function getDefaultSettings(): array;
 
   /**
    * Returns the current settings for the plugin.
@@ -39,7 +44,7 @@ interface DevelGenerateBaseInterface extends PluginInspectionInterface {
    * @return array
    *   The array of current setting values, keyed by setting names.
    */
-  public function getSettings();
+  public function getSettings(): array;
 
   /**
    * Returns the form for the plugin.
@@ -47,7 +52,7 @@ interface DevelGenerateBaseInterface extends PluginInspectionInterface {
    * @return array
    *   The array of default setting values, keyed by setting names.
    */
-  public function settingsForm(array $form, FormStateInterface $form_state);
+  public function settingsForm(array $form, FormStateInterface $form_state): array;
 
   /**
    * Form validation handler.
@@ -57,7 +62,7 @@ interface DevelGenerateBaseInterface extends PluginInspectionInterface {
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The current state of the form.
    */
-  public function settingsFormValidate(array $form, FormStateInterface $form_state);
+  public function settingsFormValidate(array $form, FormStateInterface $form_state): void;
 
   /**
    * Execute the instructions in common for all DevelGenerate plugin.
@@ -65,7 +70,7 @@ interface DevelGenerateBaseInterface extends PluginInspectionInterface {
    * @param array $values
    *   The input values from the settings form.
    */
-  public function generate(array $values);
+  public function generate(array $values): void;
 
   /**
    * Responsible for validating Drush params.
@@ -78,6 +83,6 @@ interface DevelGenerateBaseInterface extends PluginInspectionInterface {
    * @return array
    *   An array of values ready to be used for generateElements().
    */
-  public function validateDrushParams(array $args, array $options = []);
+  public function validateDrushParams(array $args, array $options = []): array;
 
 }

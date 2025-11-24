@@ -1,0 +1,10 @@
+name: RDF
+type: module
+description: 'Enriches your content with metadata to let other applications (e.g. search engines, aggregators) better understand its relationships and attributes.'
+package: Web services
+core_version_requirement: ^10.3 || ^11.0
+
+# Information added by Drupal.org packaging script on 2024-07-21
+version: '3.0.0-beta2'
+project: 'rdf'
+datestamp: 1721596084

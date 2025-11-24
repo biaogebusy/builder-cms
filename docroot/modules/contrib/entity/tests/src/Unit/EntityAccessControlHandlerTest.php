@@ -51,7 +51,17 @@ class EntityAccessControlHandlerTest extends UnitTestCase {
    *
    * @dataProvider accessProvider
    */
-  public function testAccess(EntityInterface $entity, $operation, $account, $allowed, $cache_contexts) {
+  public function testAccess(array $entity_mock_args, $operation, array $user_mock_args, $allowed, $cache_contexts) {
+
+    $entity_type = $this->prophesize(ContentEntityTypeInterface::class);
+    $entity_type->id()->willReturn('green_entity');
+    $entity_type->getAdminPermission()->willReturn('administer green_entity');
+    $entity_type->hasHandlerClass('permission_provider')->willReturn(TRUE);
+    $entity_type->getHandlerClass('permission_provider')->willReturn(EntityPermissionProvider::class);
+    $entity = $this->buildMockEntity(...array_merge([$entity_type->reveal()], $entity_mock_args))->reveal();
+
+    $account = $this->buildMockUser(...$user_mock_args)->reveal();
+
     $handler = new EntityAccessControlHandler($entity->getEntityType());
     $handler->setStringTranslation($this->getStringTranslationStub());
     $result = $handler->access($entity, $operation, $account, TRUE);
@@ -64,8 +74,17 @@ class EntityAccessControlHandlerTest extends UnitTestCase {
    *
    * @dataProvider createAccessProvider
    */
-  public function testCreateAccess(EntityTypeInterface $entity_type, $bundle, $account, $allowed, $cache_contexts) {
-    $handler = new EntityAccessControlHandler($entity_type);
+  public function testCreateAccess($bundle, array $account_mock_args, $allowed, $cache_contexts) {
+
+    $entity_type = $this->prophesize(ContentEntityTypeInterface::class);
+    $entity_type->id()->willReturn('green_entity');
+    $entity_type->getAdminPermission()->willReturn('administer green_entity');
+    $entity_type->hasHandlerClass('permission_provider')->willReturn(TRUE);
+    $entity_type->getHandlerClass('permission_provider')->willReturn(EntityPermissionProvider::class);
+
+    $account = $this->buildMockUser(...$account_mock_args)->reveal();
+
+    $handler = new EntityAccessControlHandler($entity_type->reveal());
     $handler->setStringTranslation($this->getStringTranslationStub());
     $result = $handler->createAccess($bundle, $account, [], TRUE);
     $this->assertEquals($allowed, $result->isAllowed());
@@ -78,73 +97,68 @@ class EntityAccessControlHandlerTest extends UnitTestCase {
    * @return array
    *   A list of testAccess method arguments.
    */
-  public function accessProvider() {
-    $entity_type = $this->prophesize(ContentEntityTypeInterface::class);
-    $entity_type->id()->willReturn('green_entity');
-    $entity_type->getAdminPermission()->willReturn('administer green_entity');
-    $entity_type->hasHandlerClass('permission_provider')->willReturn(TRUE);
-    $entity_type->getHandlerClass('permission_provider')->willReturn(EntityPermissionProvider::class);
-    $entity = $this->buildMockEntity($entity_type->reveal(), 6);
+  public static function accessProvider() {
+    $entity_mock_args = [6];
 
     $data = [];
     // Admin permission.
-    $admin_user = $this->buildMockUser(5, 'administer green_entity');
-    $data['admin user, view'] = [$entity->reveal(), 'view', $admin_user->reveal(), TRUE, ['user.permissions']];
-    $data['admin user, update'] = [$entity->reveal(), 'update', $admin_user->reveal(), TRUE, ['user.permissions']];
-    $data['admin user, duplicate'] = [$entity->reveal(), 'duplicate', $admin_user->reveal(), TRUE, ['user.permissions']];
-    $data['admin user, delete'] = [$entity->reveal(), 'delete', $admin_user->reveal(), TRUE, ['user.permissions']];
+    $admin_user_mock_args = [5, 'administer green_entity'];
+    $data['admin user, view'] = [$entity_mock_args, 'view', $admin_user_mock_args, TRUE, ['user.permissions']];
+    $data['admin user, update'] = [$entity_mock_args, 'update', $admin_user_mock_args, TRUE, ['user.permissions']];
+    $data['admin user, duplicate'] = [$entity_mock_args, 'duplicate', $admin_user_mock_args, TRUE, ['user.permissions']];
+    $data['admin user, delete'] = [$entity_mock_args, 'delete', $admin_user_mock_args, TRUE, ['user.permissions']];
 
     // View, update, duplicate, delete permissions, entity without an owner.
-    $second_entity = $this->buildMockEntity($entity_type->reveal());
+    $second_entity_mock_args = [];
     foreach (['view', 'update', 'duplicate', 'delete'] as $operation) {
-      $first_user = $this->buildMockUser(6, $operation . ' green_entity');
-      $second_user = $this->buildMockUser(7, 'access content');
+      $first_user_mock_args = [6, $operation . ' green_entity'];
+      $second_user_mock_args = [7, 'access content'];
 
-      $data["first user, $operation, entity without owner"] = [$second_entity->reveal(), $operation, $first_user->reveal(), TRUE, ['user.permissions']];
-      $data["second user, $operation, entity without owner"] = [$second_entity->reveal(), $operation, $second_user->reveal(), FALSE, ['user.permissions']];
+      $data["first user, $operation, entity without owner"] = [$second_entity_mock_args, $operation, $first_user_mock_args, TRUE, ['user.permissions']];
+      $data["second user, $operation, entity without owner"] = [$second_entity_mock_args, $operation, $second_user_mock_args, FALSE, ['user.permissions']];
     }
 
     // Update, duplicate, and delete permissions.
     foreach (['update', 'duplicate', 'delete'] as $operation) {
       // Owner, non-owner, user with "any" permission.
-      $first_user = $this->buildMockUser(6, $operation . ' own green_entity');
-      $second_user = $this->buildMockUser(7, $operation . ' own green_entity');
-      $third_user = $this->buildMockUser(8, $operation . ' any green_entity');
+      $first_user_mock_args = [6, $operation . ' own green_entity'];
+      $second_user_mock_args = [7, $operation . ' own green_entity'];
+      $third_user_mock_args = [8, $operation . ' any green_entity'];
 
-      $data["first user, $operation, entity with owner"] = [$entity->reveal(), $operation, $first_user->reveal(), TRUE, ['user', 'user.permissions']];
-      $data["second user, $operation, entity with owner"] = [$entity->reveal(), $operation, $second_user->reveal(), FALSE, ['user', 'user.permissions']];
-      $data["third user, $operation, entity with owner"] = [$entity->reveal(), $operation, $third_user->reveal(), TRUE, ['user.permissions']];
+      $data["first user, $operation, entity with owner"] = [$entity_mock_args, $operation, $first_user_mock_args, TRUE, ['user', 'user.permissions']];
+      $data["second user, $operation, entity with owner"] = [$entity_mock_args, $operation, $second_user_mock_args, FALSE, ['user', 'user.permissions']];
+      $data["third user, $operation, entity with owner"] = [$entity_mock_args, $operation, $third_user_mock_args, TRUE, ['user.permissions']];
     }
 
     // View permissions.
-    $first_user = $this->buildMockUser(9, 'view green_entity');
-    $second_user = $this->buildMockUser(10, 'view first green_entity');
-    $third_user = $this->buildMockUser(14, 'view own unpublished green_entity');
-    $fourth_user = $this->buildMockUser(14, 'access content');
+    $first_user_mock_args = [9, 'view green_entity'];
+    $second_user_mock_args = [10, 'view first green_entity'];
+    $third_user_mock_args = [14, 'view own unpublished green_entity'];
+    $fourth_user_mock_args = [14, 'access content'];
 
-    $first_entity = $this->buildMockEntity($entity_type->reveal(), 1, 'first');
-    $second_entity = $this->buildMockEntity($entity_type->reveal(), 1, 'second');
-    $third_entity = $this->buildMockEntity($entity_type->reveal(), 14, 'first', FALSE);
+    $first_entity_mock_args = [1, 'first'];
+    $second_entity_mock_args = [1, 'second'];
+    $third_entity_mock_args = [14, 'first', FALSE];
 
     // The first user can view the two published entities.
-    $data['first user, view, first entity'] = [$first_entity->reveal(), 'view', $first_user->reveal(), TRUE, ['user.permissions']];
-    $data['first user, view, second entity'] = [$second_entity->reveal(), 'view', $first_user->reveal(), TRUE, ['user.permissions']];
-    $data['first user, view, third entity'] = [$third_entity->reveal(), 'view', $first_user->reveal(), FALSE, ['user']];
+    $data['first user, view, first entity'] = [$first_entity_mock_args, 'view', $first_user_mock_args, TRUE, ['user.permissions']];
+    $data['first user, view, second entity'] = [$second_entity_mock_args, 'view', $first_user_mock_args, TRUE, ['user.permissions']];
+    $data['first user, view, third entity'] = [$third_entity_mock_args, 'view', $first_user_mock_args, FALSE, ['user']];
 
     // The second user can only view published entities of bundle "first".
-    $data['second user, view, first entity'] = [$first_entity->reveal(), 'view', $second_user->reveal(), TRUE, ['user.permissions']];
-    $data['second user, view, second entity'] = [$second_entity->reveal(), 'view', $second_user->reveal(), FALSE, ['user.permissions']];
-    $data['second user, view, third entity'] = [$third_entity->reveal(), 'view', $second_user->reveal(), FALSE, ['user']];
+    $data['second user, view, first entity'] = [$first_entity_mock_args, 'view', $second_user_mock_args, TRUE, ['user.permissions']];
+    $data['second user, view, second entity'] = [$second_entity_mock_args, 'view', $second_user_mock_args, FALSE, ['user.permissions']];
+    $data['second user, view, third entity'] = [$third_entity_mock_args, 'view', $second_user_mock_args, FALSE, ['user']];
 
     // The third user can view their own unpublished entity.
-    $data['third user, view, first entity'] = [$first_entity->reveal(), 'view', $third_user->reveal(), FALSE, ['user.permissions']];
-    $data['third user, view, second entity'] = [$second_entity->reveal(), 'view', $third_user->reveal(), FALSE, ['user.permissions']];
-    $data['third user, view, third entity'] = [$third_entity->reveal(), 'view', $third_user->reveal(), TRUE, ['user', 'user.permissions']];
+    $data['third user, view, first entity'] = [$first_entity_mock_args, 'view', $third_user_mock_args, FALSE, ['user.permissions']];
+    $data['third user, view, second entity'] = [$second_entity_mock_args, 'view', $third_user_mock_args, FALSE, ['user.permissions']];
+    $data['third user, view, third entity'] = [$third_entity_mock_args, 'view', $third_user_mock_args, TRUE, ['user', 'user.permissions']];
 
     // The fourth user can't view anything.
-    $data['fourth user, view, first entity'] = [$first_entity->reveal(), 'view', $fourth_user->reveal(), FALSE, ['user.permissions']];
-    $data['fourth user, view, second entity'] = [$second_entity->reveal(), 'view', $fourth_user->reveal(), FALSE, ['user.permissions']];
-    $data['fourth user, view, third entity'] = [$third_entity->reveal(), 'view', $fourth_user->reveal(), FALSE, ['user', 'user.permissions']];
+    $data['fourth user, view, first entity'] = [$first_entity_mock_args, 'view', $fourth_user_mock_args, FALSE, ['user.permissions']];
+    $data['fourth user, view, second entity'] = [$second_entity_mock_args, 'view', $fourth_user_mock_args, FALSE, ['user.permissions']];
+    $data['fourth user, view, third entity'] = [$third_entity_mock_args, 'view', $fourth_user_mock_args, FALSE, ['user', 'user.permissions']];
 
     return $data;
   }
@@ -155,30 +169,24 @@ class EntityAccessControlHandlerTest extends UnitTestCase {
    * @return array
    *   A list of testCreateAccess method arguments.
    */
-  public function createAccessProvider() {
+  public static function createAccessProvider() {
     $data = [];
 
-    $entity_type = $this->prophesize(ContentEntityTypeInterface::class);
-    $entity_type->id()->willReturn('green_entity');
-    $entity_type->getAdminPermission()->willReturn('administer green_entity');
-    $entity_type->hasHandlerClass('permission_provider')->willReturn(TRUE);
-    $entity_type->getHandlerClass('permission_provider')->willReturn(EntityPermissionProvider::class);
-
     // User with the admin permission.
-    $account = $this->buildMockUser('6', 'administer green_entity');
-    $data['admin user'] = [$entity_type->reveal(), NULL, $account->reveal(), TRUE, ['user.permissions']];
+    $account_mock_args = ['6', 'administer green_entity'];
+    $data['admin user'] = [NULL, $account_mock_args, TRUE, ['user.permissions']];
 
     // Ordinary user.
-    $account = $this->buildMockUser('6', 'create green_entity');
-    $data['regular user'] = [$entity_type->reveal(), NULL, $account->reveal(), TRUE, ['user.permissions']];
+    $account_mock_args = ['6', 'create green_entity'];
+    $data['regular user'] = [NULL, $account_mock_args, TRUE, ['user.permissions']];
 
     // Ordinary user, entity with a bundle.
-    $account = $this->buildMockUser('6', 'create first_bundle green_entity');
-    $data['regular user, entity with bundle'] = [$entity_type->reveal(), 'first_bundle', $account->reveal(), TRUE, ['user.permissions']];
+    $account_mock_args = ['6', 'create first_bundle green_entity'];
+    $data['regular user, entity with bundle'] = ['first_bundle', $account_mock_args, TRUE, ['user.permissions']];
 
     // User with no permissions.
-    $account = $this->buildMockUser('6', 'access content');
-    $data['user without permission'] = [$entity_type->reveal(), NULL, $account->reveal(), FALSE, ['user.permissions']];
+    $account_mock_args = ['6', 'access content'];
+    $data['user without permission'] = [NULL, $account_mock_args, FALSE, ['user.permissions']];
 
     return $data;
   }
@@ -225,6 +233,7 @@ class EntityAccessControlHandlerTest extends UnitTestCase {
     $entity->getCacheContexts()->willReturn([]);
     $entity->getCacheTags()->willReturn([]);
     $entity->getCacheMaxAge()->willReturn(Cache::PERMANENT);
+    $entity->isDefaultRevision()->willReturn(TRUE);
 
     return $entity;
   }

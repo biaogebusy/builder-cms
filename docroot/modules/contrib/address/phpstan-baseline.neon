@@ -1,0 +1,24 @@
+parameters:
+	ignoreErrors:
+		# @todo Fix these undefined property access errors for real.
+		# @see https://www.drupal.org/project/address/issues/3413883
+		-
+			message: "#^Access to an undefined property Drupal\\\\address\\\\Plugin\\\\Field\\\\FieldType\\\\AddressItem\\:\\:\\$country_code\\.$#"
+			count: 1
+			path: src/Plugin/Field/FieldType/AddressItem.php
+
+		-
+			message: "#^Access to an undefined property Drupal\\\\address\\\\Plugin\\\\Field\\\\FieldType\\\\AddressItem\\:\\:\\$langcode\\.$#"
+			count: 2
+			path: src/Plugin/Field/FieldType/AddressItem.php
+
+		-
+			message: "#^Access to an undefined property Drupal\\\\address\\\\Plugin\\\\Field\\\\FieldType\\\\ZoneItem\\:\\:\\$value\\.$#"
+			count: 1
+			path: src/Plugin/Field/FieldType/ZoneItem.php
+		# @todo Use proper DI for this views plugin.
+		# @see https://www.drupal.org/project/address/issues/3414148
+		-
+			message: "#^\\\\Drupal calls should be avoided in classes, use dependency injection instead$#"
+			count: 2
+			path: src/Plugin/views/filter/AdministrativeArea.php

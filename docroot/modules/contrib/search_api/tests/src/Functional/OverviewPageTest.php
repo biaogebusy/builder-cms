@@ -7,12 +7,14 @@ use Drupal\Component\Utility\Html;
 use Drupal\Core\Url;
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api\ServerInterface;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests the Search API overview page.
  *
  * @group search_api
  */
+#[RunTestsInSeparateProcesses]
 class OverviewPageTest extends SearchApiBrowserTestBase {
 
   /**
@@ -195,7 +197,7 @@ class OverviewPageTest extends SearchApiBrowserTestBase {
     $this->clickLink('Enable');
     $this->drupalGet($this->overviewPageUrl);
     $rows = $this->xpath('//tr[contains(@class,"' . $row_class . '") and contains(@class, "search-api-list-enabled")]');
-    $this->assertNotEmpty($rows, 'The entity has benn enabled.');
+    $this->assertNotEmpty($rows, 'The entity has been enabled.');
   }
 
   /**
@@ -279,7 +281,7 @@ class OverviewPageTest extends SearchApiBrowserTestBase {
       [$url, $title] = $action;
       // SimpleXML gives us the unescaped text, not the actual escaped markup,
       // so use a pattern instead to check the raw content.
-      // This behaviour is a bug in libxml, see
+      // This behavior is a bug in libxml, see
       // https://bugs.php.net/bug.php?id=49437.
       $this->assertSession()->responseMatches('@<a [^>]*class="[^"]*button-action[^"]*"[^>]*>' . preg_quote($title, '@') . '</@');
       $this->assertEquals($url->toString(), $elements[$index++]->getAttribute('href'));

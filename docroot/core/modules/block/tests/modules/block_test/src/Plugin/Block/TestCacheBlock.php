@@ -2,23 +2,24 @@
 
 namespace Drupal\block_test\Plugin\Block;
 
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Block\BlockBase;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Provides a block to test caching.
- *
- * @Block(
- *   id = "test_cache",
- *   admin_label = @Translation("Test block caching")
- * )
  */
+#[Block(
+  id: "test_cache",
+  admin_label: new TranslatableMarkup("Test block caching")
+)]
 class TestCacheBlock extends BlockBase {
 
   /**
    * {@inheritdoc}
    */
   public function build() {
-    $content = \Drupal::state()->get('block_test.content');
+    $content = \Drupal::keyValue('block_test')->get('content');
 
     $build = [];
     if (!empty($content)) {

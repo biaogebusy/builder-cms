@@ -157,7 +157,7 @@
                     "installer-name": "jquery.icheck"
                 },
                 "dist": {
-                    "url": "https://github.com/dargullin/icheck/archive/refs/tags/1.0.2.zip",
+                    "url": "https://api.github.com/repos/drgullin/icheck/zipball/8a6eb37bd7dab1e843c1b630c91c6398ff409d05",
                     "type": "zip"
                 },
                 "license": "MIT"

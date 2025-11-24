@@ -4,6 +4,7 @@ namespace Drupal\shs\Plugin\Field\FieldWidget;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Entity\FieldableEntityInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\Plugin\Field\FieldWidget\OptionsSelectWidget;
@@ -268,13 +269,8 @@ class OptionsShsWidget extends OptionsSelectWidget implements ContainerFactoryPl
       'classes' => shs_get_class_definitions($element['#field_name'], $context),
     ];
     $element['#attached'] = $element['#attached'] ?: [];
-    $element['#attached'] = array_merge($element['#attached'], [
-      'drupalSettings' => [
-        'shs' => [
-          $element_key => $element['#shs'],
-        ],
-      ],
-    ]);
+    $element['#attached']['drupalSettings']['shs'] = [$element_key => $element['#shs']];
+    unset($element['#maxlength']);
 
     return $element;
   }
@@ -387,6 +383,17 @@ class OptionsShsWidget extends OptionsSelectWidget implements ContainerFactoryPl
       return $value;
     }
     return $options[$value];
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  protected function getOptions(FieldableEntityInterface $entity): array {
+    // We request data when the widget loads in the frontend, the
+    // OptionsSelectWidget::formElement() calls this method which fetches the options
+    // that are never used on the first load, thus we can return an empty array
+    // here.
+    return $this->options = [];
   }
 
 }

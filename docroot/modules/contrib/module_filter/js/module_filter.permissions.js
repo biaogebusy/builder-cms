@@ -17,9 +17,6 @@
         const selector = 'tbody tr';
         let lastModuleItem;
 
-        // Move location of filter input to before the permissions table.
-        $(wrapperId).parent().prepend($input.closest('.table-filter'));
-
         $input.winnow(`${wrapperId} ${selector}`, {
           // Match on module name or permission text.
           textSelector: 'td.module, div.permission',
@@ -29,7 +26,7 @@
               item.isModule = item.element.has('.module').length;
 
               if (item.isModule) {
-                // This is a module so initialise the children array to store
+                // This is a module so initialize the children array to store
                 // the permission items.
                 item.children = [];
                 lastModuleItem = item;

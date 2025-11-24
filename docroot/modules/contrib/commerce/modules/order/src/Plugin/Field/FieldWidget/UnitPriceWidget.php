@@ -2,31 +2,30 @@
 
 namespace Drupal\commerce_order\Plugin\Field\FieldWidget;
 
+use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Field\Attribute\FieldWidget;
+use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Field\WidgetBase;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\commerce\Context;
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_order\Entity\OrderItemInterface;
 use Drupal\commerce_order\Form\OrderForm;
 use Drupal\commerce_price\Price;
 use Drupal\commerce_price\Resolver\ChainPriceResolverInterface;
-use Drupal\Component\Utility\NestedArray;
-use Drupal\Core\Field\FieldDefinitionInterface;
-use Drupal\Core\Field\FieldItemListInterface;
-use Drupal\Core\Field\WidgetBase;
-use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Plugin implementation of the 'commerce_unit_price' widget.
- *
- * @FieldWidget(
- *   id = "commerce_unit_price",
- *   label = @Translation("Unit price"),
- *   field_types = {
- *     "commerce_price",
- *   }
- * )
  */
+#[FieldWidget(
+  id: "commerce_unit_price",
+  label: new TranslatableMarkup("Unit price"),
+  field_types: ["commerce_price"],
+)]
 class UnitPriceWidget extends WidgetBase implements ContainerFactoryPluginInterface {
 
   /**
@@ -157,7 +156,13 @@ class UnitPriceWidget extends WidgetBase implements ContainerFactoryPluginInterf
     $values = NestedArray::getValue($form_state->getValues(), $path);
     $order_item = $items->getEntity();
     assert($order_item instanceof OrderItemInterface);
-    $unit_price = NULL;
+
+    // Whenever the "Override unit price" checkbox is unchecked, clear the
+    // "overridden_unit_price" flag.
+    if ($order_item->isUnitPriceOverridden() && empty($values['override'])) {
+      $order_item->set('overridden_unit_price', FALSE);
+      return;
+    }
 
     if (!empty($values['override']) || !$this->getSetting('require_confirmation')) {
       // Verify the passed number was numeric before trying to set it.
@@ -175,17 +180,11 @@ class UnitPriceWidget extends WidgetBase implements ContainerFactoryPluginInterf
     elseif ($order_item->isNew() && !$order_item->getUnitPrice()) {
       $purchased_entity = $order_item->getPurchasedEntity();
       if ($purchased_entity !== NULL) {
-        $order = $order_item->getOrder();
-        if ($order === NULL) {
-          $form_object = $form_state->getFormObject();
-          if ($form_object instanceof OrderForm) {
-            $order = $form_object->getEntity();
-            if ($order instanceof OrderInterface) {
-              $context = new Context($order->getCustomer(), $order->getStore());
-              $unit_price = $this->chainPriceResolver->resolve($purchased_entity, $order_item->getQuantity(), $context);
-              $order_item->setUnitPrice($unit_price, FALSE);
-            }
-          }
+        $order = $this->extractOrder($order_item, $form_state);
+        if ($order instanceof OrderInterface) {
+          $context = new Context($order->getCustomer(), $order->getStore());
+          $unit_price = $this->chainPriceResolver->resolve($purchased_entity, $order_item->getQuantity(), $context);
+          $order_item->setUnitPrice($unit_price, FALSE);
         }
       }
     }
@@ -204,6 +203,29 @@ class UnitPriceWidget extends WidgetBase implements ContainerFactoryPluginInterf
     $entity_type = $field_definition->getTargetEntityTypeId();
     $field_name = $field_definition->getName();
     return $entity_type === 'commerce_order_item' && $field_name === 'unit_price';
+  }
+
+  /**
+   * Extracts the order entity from the order item or the form context.
+   *
+   * @param \Drupal\commerce_order\Entity\OrderItemInterface $order_item
+   *   The order item entity the widget belongs to.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The current state of the form.
+   *
+   * @return \Drupal\commerce_order\Entity\OrderInterface|null
+   *   The order if available. NULL otherwise.
+   */
+  protected function extractOrder(OrderItemInterface $order_item, FormStateInterface $form_state) {
+    if ($order = $order_item->getOrder()) {
+      return $order;
+    }
+
+    $form_object = $form_state->getFormObject();
+    if ($form_object instanceof OrderForm) {
+      return $form_object->getEntity();
+    }
+    return NULL;
   }
 
 }

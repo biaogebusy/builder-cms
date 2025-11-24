@@ -8,7 +8,7 @@ use Drupal\Core\Link;
 use Drupal\Core\Url;
 
 /**
- * Class SettingsForm.
+ * Defines a form for configuring the Content Lock Timeout module.
  *
  * @package Drupal\content_lock_timeout\Form
  */

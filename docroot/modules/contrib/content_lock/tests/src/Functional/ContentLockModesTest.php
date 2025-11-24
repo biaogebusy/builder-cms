@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\content_lock\Functional;
 
 /**
@@ -30,11 +32,11 @@ class ContentLockModesTest extends ContentLockTestBase {
     $this->drupalLogin($this->admin);
     $edit = [
       'entity_test_mul_changed[bundles][*]' => 1,
-      'entity_test_mul_changed[settings][form_op_lock][mode]' => 1,
+      'entity_test_mul_changed[settings][form_op_lock][mode]' => '1',
       'entity_test_mul_changed[settings][form_op_lock][values][default]' => 'default',
     ];
     $this->drupalGet('admin/config/content/content_lock');
-    $this->submitForm($edit, t('Save configuration'));
+    $this->submitForm($edit, 'Save configuration');
     $lockService = \Drupal::service('content_lock');
 
     // Login user 1.
@@ -73,11 +75,11 @@ class ContentLockModesTest extends ContentLockTestBase {
     $this->drupalLogin($this->admin);
     $edit = [
       'entity_test_mul_changed[bundles][*]' => 1,
-      'entity_test_mul_changed[settings][form_op_lock][mode]' => 2,
+      'entity_test_mul_changed[settings][form_op_lock][mode]' => '2',
       'entity_test_mul_changed[settings][form_op_lock][values][default]' => 'default',
     ];
     $this->drupalGet('admin/config/content/content_lock');
-    $this->submitForm($edit, t('Save configuration'));
+    $this->submitForm($edit, 'Save configuration');
     $lockService = \Drupal::service('content_lock');
 
     // Login user 1.
@@ -117,7 +119,7 @@ class ContentLockModesTest extends ContentLockTestBase {
       'entity_test_mul_changed[bundles][*]' => 1,
     ];
     $this->drupalGet('admin/config/content/content_lock');
-    $this->submitForm($edit, t('Save configuration'));
+    $this->submitForm($edit, 'Save configuration');
     $lockService = \Drupal::service('content_lock');
 
     // Login user 1.

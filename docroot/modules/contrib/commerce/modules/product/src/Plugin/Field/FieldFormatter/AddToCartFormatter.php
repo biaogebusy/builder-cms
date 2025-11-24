@@ -2,22 +2,21 @@
 
 namespace Drupal\commerce_product\Plugin\Field\FieldFormatter;
 
+use Drupal\Core\Field\Attribute\FieldFormatter;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Plugin implementation of the 'commerce_add_to_cart' formatter.
- *
- * @FieldFormatter(
- *   id = "commerce_add_to_cart",
- *   label = @Translation("Add to cart form"),
- *   field_types = {
- *     "entity_reference",
- *   },
- * )
  */
+#[FieldFormatter(
+  id: "commerce_add_to_cart",
+  label: new TranslatableMarkup("Add to cart form"),
+  field_types: ["entity_reference"],
+)]
 class AddToCartFormatter extends FormatterBase {
 
   /**

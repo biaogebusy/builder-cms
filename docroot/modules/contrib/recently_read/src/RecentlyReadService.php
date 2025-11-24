@@ -67,7 +67,7 @@ class RecentlyReadService implements RecentlyReadServiceInterface {
     AccountInterface $current_user,
     EntityTypeManagerInterface $entity_type_manager,
     SessionManager $sessionManager,
-    ConfigFactory $configFactory
+    ConfigFactory $configFactory,
   ) {
     $this->currentUser = $current_user;
     $this->entityTypeManager = $entity_type_manager;
@@ -79,7 +79,7 @@ class RecentlyReadService implements RecentlyReadServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function insertEntity(EntityInterface $entity, AccountInterface $user = NULL) {
+  public function insertEntity(EntityInterface $entity, ?AccountInterface $user = NULL): void {
     // Get configuration and check if RR delete options is count based.
     $config = $this->configFactory->getEditable('recently_read.configuration');
     $maxRecords = NULL;
@@ -94,7 +94,7 @@ class RecentlyReadService implements RecentlyReadServiceInterface {
     if ($user->isAnonymous()) {
       // Ensure something is in $_SESSION, otherwise the session ID will
       // not persist.
-      // TODO: Replace this with something cleaner once core provides it.
+      // @todo Replace this with something cleaner once core provides it.
       // See https://www.drupal.org/node/2865991.
       if (!isset($_SESSION['recently_read'])) {
         $_SESSION['recently_read'] = TRUE;
@@ -116,7 +116,9 @@ class RecentlyReadService implements RecentlyReadServiceInterface {
     // If exists then update created else create new.
     if (!empty($exists)) {
       foreach ($exists as $entry) {
-        $entry->setCreatedTime(time())->save();
+        if (method_exists($entry, 'setCreatedTime')) {
+          $entry->setCreatedTime(time())->save();
+        }
       }
     }
     else {
@@ -141,7 +143,7 @@ class RecentlyReadService implements RecentlyReadServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function deleteRecords(array $records) {
+  public function deleteRecords(array $records): void {
     foreach ($records as $rid) {
       // Delete data.
       $recently_read = $this->recentlyReadStorage->load($rid);
@@ -152,16 +154,18 @@ class RecentlyReadService implements RecentlyReadServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function getRecords($user_id) {
+  public function getRecords($user_id): int|array {
     if ($user_id != 0) {
       $records = $this->recentlyReadStorage->getQuery()
         ->condition('user_id', $user_id)
+        ->accessCheck(TRUE)
         ->sort('created', 'DESC')
         ->execute();
     }
     else {
       $records = $this->recentlyReadStorage->getQuery()
         ->condition('session_id', session_id())
+        ->accessCheck(TRUE)
         ->sort('created', 'DESC')
         ->execute();
     }
@@ -171,7 +175,7 @@ class RecentlyReadService implements RecentlyReadServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function deleteEntityRecords(EntityInterface $entity, AccountInterface $user = NULL) {
+  public function deleteEntityRecords(EntityInterface $entity, ?AccountInterface $user = NULL): void {
     $properties = [
       'type' => $entity->getEntityTypeId(),
       'entity_id' => $entity->id(),

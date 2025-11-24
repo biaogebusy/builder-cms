@@ -4,6 +4,8 @@ namespace Drupal\jsonapi_include;
 
 use Drupal\Component\Serialization\Json;
 use Drupal\Component\Utility\NestedArray;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -12,6 +14,13 @@ use Symfony\Component\HttpFoundation\Response;
  * @package Drupal\jsonapi_include
  */
 class JsonapiParse implements JsonapiParseInterface {
+
+  /**
+   * The request stack service.
+   *
+   * @var \Symfony\Component\HttpFoundation\RequestStack
+   */
+  protected $requestStack;
 
   /**
    * The variable store included data.
@@ -28,12 +37,31 @@ class JsonapiParse implements JsonapiParseInterface {
   protected $allowed;
 
   /**
+   * Constructs the JSON:API parse service.
+   *
+   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
+   *   The request stack service.
+   */
+  public function __construct(RequestStack $request_stack) {
+    $this->requestStack = $request_stack;
+  }
+
+  /**
+   * Standard create function.
+   */
+  public static function create(ContainerInterface $container) {
+    return new self(
+      $container->get('request_stack'),
+    );
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function parse($response) {
-    // @todo Remove in the release 2.0 with removed the deprecated srings input.
+    // @todo Remove in the release 2.0 with removed the deprecated strings input.
     if (!$response instanceof Response) {
-      @trigger_error('Parsing strings is deprecated deprecated in jsonapi_include:8.x-1.7 and is removed from jsonapi_include:8.x-2.0. Pass the full Response object instead. See https://www.drupal.org/project/jsonapi_include/issues/3374410', E_USER_DEPRECATED);
+      @trigger_error('Parsing strings is deprecated in jsonapi_include:8.x-1.7 and is removed from jsonapi_include:8.x-2.0. Pass the full Response object instead. See https://www.drupal.org/project/jsonapi_include/issues/3374410', E_USER_DEPRECATED);
       $content = $this->parseJsonContent($response);
       return Json::encode($content);
     }
@@ -100,6 +128,8 @@ class JsonapiParse implements JsonapiParseInterface {
    *
    * @param array|mixed $resource
    *   The resource.
+   * @param string $key
+   *   The key.
    *
    * @return array
    *   The result.
@@ -123,7 +153,6 @@ class JsonapiParse implements JsonapiParseInterface {
    *
    * @param array|mixed $resource
    *   The resource to verify.
-   *
    * @param string $key
    *   Relationship key.
    *
@@ -143,7 +172,6 @@ class JsonapiParse implements JsonapiParseInterface {
    *
    * @param array|mixed $data
    *   The data for resolve.
-   *
    * @param string $key
    *   Relationship key.
    *
@@ -164,7 +192,6 @@ class JsonapiParse implements JsonapiParseInterface {
    *
    * @param array|mixed $links
    *   The data for resolve.
-   *
    * @param string $key
    *   Relationship key.
    *
@@ -192,7 +219,6 @@ class JsonapiParse implements JsonapiParseInterface {
    *
    * @param array|mixed $resource
    *   The data for resolve.
-   *
    * @param string $parent_key
    *   The parent key for relationship.
    *
@@ -257,7 +283,7 @@ class JsonapiParse implements JsonapiParseInterface {
       return $response;
     }
     $this->included = $this->groupIncludes($content);
-    $include_parameter = \Drupal::request()->query->get('include');
+    $include_parameter = $this->requestStack->getCurrentRequest()->query->get('include');
     $this->allowed = array_map('trim', explode(',', $include_parameter ?? ''));
     $data = [];
     if (!$this->isAssoc($content['data'])) {
@@ -277,7 +303,7 @@ class JsonapiParse implements JsonapiParseInterface {
       $response->setContent(Json::encode($content));
       return $response;
     }
-    // @todo Remove in the release 2.0 with removed the deprecated srings input.
+    // @todo Remove in the release 2.0 with removed the deprecated strings input.
     else {
       return $content;
     }

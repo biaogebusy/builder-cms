@@ -1,6 +1,6 @@
-import { execSync } from 'child_process';
-import { URL } from 'url';
-import { commandAsWebserver } from '../globals';
+const { execSync } = require('child_process');
+const { URL } = require('url');
+const { commandAsWebserver } = require('../globals');
 
 /**
  * Installs a Drupal test site.
@@ -51,6 +51,9 @@ exports.command = function drupalInstall(
       path: url.pathname,
       domain: url.host,
     });
+    // Set the HTTP_USER_AGENT environment variable to detect the test
+    // environment in the command line.
+    process.env.HTTP_USER_AGENT = installData.user_agent;
   } catch (error) {
     this.assert.fail(error);
   }

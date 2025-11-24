@@ -467,10 +467,10 @@ webform.settings:
       label: 'Email default settings'
       mapping:
         default_to_mail:
-          type: email
+          type: string
           label: 'Default to email'
         default_from_mail:
-          type: email
+          type: string
           label: 'Default from email'
         default_from_name:
           type: label
@@ -482,7 +482,7 @@ webform.settings:
           type: label
           label: 'Default return path email'
         default_sender_mail:
-          type: email
+          type: string
           label: 'Default sender email'
         default_sender_name:
           type: label

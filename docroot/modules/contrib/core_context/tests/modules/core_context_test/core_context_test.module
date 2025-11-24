@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * @file
+ * Contains hooks for testing Core Context.
+ */
+
 use Drupal\core_context\SettingsContextHandler;
 
 /**

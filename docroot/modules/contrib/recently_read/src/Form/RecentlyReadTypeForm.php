@@ -9,7 +9,7 @@ use Drupal\Core\Messenger\MessengerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Class RecentlyReadTypeForm.
+ * Provides form for recently read type settings.
  */
 class RecentlyReadTypeForm extends EntityForm {
 
@@ -43,9 +43,9 @@ class RecentlyReadTypeForm extends EntityForm {
   /**
    * RecentlyReadTypeForm create function.
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): self {
     // Instantiates this form class.
-    return new static(
+    return new self(
     // Load the service required to construct this class.
       $container->get('messenger'),
       $container->get('entity_type.bundle.info')
@@ -55,7 +55,7 @@ class RecentlyReadTypeForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function form(array $form, FormStateInterface $form_state) {
+  public function form(array $form, FormStateInterface $form_state): array {
     $form = parent::form($form, $form_state);
 
     $entity = $this->entity;
@@ -101,7 +101,7 @@ class RecentlyReadTypeForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
-  public function save(array $form, FormStateInterface $form_state) {
+  public function save(array $form, FormStateInterface $form_state): void {
     $recently_read_type = $this->entity;
     $status = $recently_read_type->save();
 

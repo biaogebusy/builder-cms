@@ -5,7 +5,6 @@ namespace Drupal\address\Element;
 use CommerceGuys\Addressing\AddressFormat\AddressField;
 use CommerceGuys\Addressing\AddressFormat\AddressFormat;
 use CommerceGuys\Addressing\AddressFormat\AddressFormatHelper;
-use CommerceGuys\Addressing\AddressFormat\FieldOverride;
 use CommerceGuys\Addressing\AddressFormat\FieldOverrides;
 use CommerceGuys\Addressing\Locale;
 use Drupal\address\FieldHelper;
@@ -61,8 +60,6 @@ class Address extends FormElement {
       '#available_countries' => [],
       // FieldOverride constants keyed by AddressField constants.
       '#field_overrides' => [],
-      // Deprecated. Use #field_overrides instead.
-      '#used_fields' => [],
 
       '#input' => TRUE,
       '#multiple' => FALSE,
@@ -97,9 +94,9 @@ class Address extends FormElement {
   public static function applyDefaults(array $value) {
     $properties = [
       'given_name', 'additional_name', 'family_name', 'organization',
-      'address_line1', 'address_line2', 'postal_code', 'sorting_code',
-      'dependent_locality', 'locality', 'administrative_area',
-      'country_code', 'langcode',
+      'address_line1', 'address_line2', 'address_line3', 'postal_code',
+      'sorting_code', 'dependent_locality', 'locality',
+      'administrative_area', 'country_code', 'langcode',
     ];
     foreach ($properties as $property) {
       if (!isset($value[$property])) {
@@ -151,18 +148,9 @@ class Address extends FormElement {
    *   The processed element.
    *
    * @throws \InvalidArgumentException
-   *   Thrown when #used_fields is malformed.
+   *   Thrown when #field_overrides is malformed.
    */
   public static function processAddress(array &$element, FormStateInterface $form_state, array &$complete_form) {
-    // Convert #used_fields into #field_overrides.
-    if (!empty($element['#used_fields']) && is_array($element['#used_fields'])) {
-      $unused_fields = array_diff(AddressField::getAll(), $element['#used_fields']);
-      $element['#field_overrides'] = [];
-      foreach ($unused_fields as $field) {
-        $element['#field_overrides'][$field] = FieldOverride::HIDDEN;
-      }
-      unset($element['#used_fields']);
-    }
     // Validate and parse #field_overrides.
     if (!is_array($element['#field_overrides'])) {
       throw new \InvalidArgumentException('The #field_overrides property must be an array.');
@@ -251,7 +239,7 @@ class Address extends FormElement {
         ];
       }
 
-      foreach ($line_fields as $field_index => $field) {
+      foreach ($line_fields as $field) {
         $property = FieldHelper::getPropertyName($field);
         $class = str_replace('_', '-', $property);
 
@@ -272,9 +260,12 @@ class Address extends FormElement {
         }
       }
     }
-    // Hide the label for the second address line.
+    // Hide the label for the second and third address lines.
     if (isset($element['address_line2'])) {
       $element['address_line2']['#title_display'] = 'invisible';
+    }
+    if (isset($element['address_line3'])) {
+      $element['address_line3']['#title_display'] = 'invisible';
     }
     // Add predefined options to the created subdivision elements.
     $element = static::processSubdivisionElements($element, $value, $address_format);
@@ -378,7 +369,7 @@ class Address extends FormElement {
     // the subdivision elements.
     if ($triggering_element_name == 'country_code') {
       array_pop($parents);
-    };
+    }
     $address_element = NestedArray::getValue($form, $parents);
 
     return $address_element;

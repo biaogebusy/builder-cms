@@ -11,7 +11,7 @@
 
 .upgrade-status-summary > summary {
   background-color: transparent;
-  border-bottom: 1px solid transparent;
+  border-block-end: 1px solid transparent;
 }
 
 .upgrade-status-summary tr.not-scanned > td.status-info,
@@ -37,27 +37,8 @@
   height: 20px;
   display: inline-block;
   position: absolute;
-  margin-top: 2px;
-}
-
-[dir="ltr"] .upgrade-status-summary tr.not-scanned > td.status-info:before,
-[dir="ltr"] .upgrade-status-error-list tr.no-known-error > td.status-info:before,
-[dir="ltr"] .upgrade-status-summary tr.no-known-error > td.status-info:before,
-[dir="ltr"] .upgrade-status-error-list tr.known-warnings > td.status-info:before,
-[dir="ltr"] .upgrade-status-summary tr.known-warnings > td.status-info:before,
-[dir="ltr"] .upgrade-status-error-list tr.known-errors > td.status-info:before,
-[dir="ltr"] .upgrade-status-summary tr.known-errors > td.status-info:before {
-  left: var(--gin-spacing-xs);
-}
-
-[dir="rtl"] .upgrade-status-summary tr.not-scanned > td.status-info:before,
-[dir="rtl"] .upgrade-status-error-list tr.no-known-error > td.status-info:before,
-[dir="rtl"] .upgrade-status-summary tr.no-known-error > td.status-info:before,
-[dir="rtl"] .upgrade-status-error-list tr.known-warnings > td.status-info:before,
-[dir="rtl"] .upgrade-status-summary tr.known-warnings > td.status-info:before,
-[dir="rtl"] .upgrade-status-error-list tr.known-errors > td.status-info:before,
-[dir="rtl"] .upgrade-status-summary tr.known-errors > td.status-info:before {
-  right: var(--gin-spacing-xs);
+  inset-inline-start: var(--gin-spacing-xs);
+  margin-block-start: 2px;
 }
 
 .upgrade-status-counter__status-icon--not-scanned:before {
@@ -65,16 +46,9 @@
           mask-size: 24px 24px;
 }
 
-[dir="ltr"] .upgrade-status-summary .select-all,
-[dir="ltr"] .upgrade-status-summary th.project-label,
-[dir="ltr"] .upgrade-status-summary th.requirement-label {
-  border-left: var(--gin-border-m) solid var(--gin-bg-header);
-}
-
-[dir="rtl"] .upgrade-status-summary .select-all,
-[dir="rtl"] .upgrade-status-summary th.project-label,
-[dir="rtl"] .upgrade-status-summary th.requirement-label {
-  border-right: var(--gin-border-m) solid var(--gin-bg-header);
+.upgrade-status-summary .select-all,
+.upgrade-status-summary th.project-label, .upgrade-status-summary th.requirement-label {
+  border-inline-start: var(--gin-border-m) solid var(--gin-bg-header);
 }
 
 .upgrade-status-error-list tr.rector-covered,
@@ -88,7 +62,7 @@
 .upgrade-status-summary > summary,
 .upgrade-status-summary-environment > summary {
   background-color: transparent;
-  border-bottom: 0 none;
+  border-block-end: 0 none;
 }
 
 .drupal-upgrade-status-summary-form tr.no-known-error {

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\flag\Functional;
 
 /**
@@ -9,9 +11,32 @@ namespace Drupal\Tests\flag\Functional;
  */
 class LinkTypeConfirmFormTest extends FlagTestBase {
 
+  /**
+   * Flag Confirm Message.
+   *
+   * @var string
+   */
   protected $flagConfirmMessage = 'Flag test label 123?';
+
+  /**
+   * Unflag Confirm Message.
+   *
+   * @var string
+   */
   protected $unflagConfirmMessage = 'Unflag test label 123?';
+
+  /**
+   * Create Button Text.
+   *
+   * @var string
+   */
   protected $createButtonText = 'Create flagging 123?';
+
+  /**
+   * Delete Button Text.
+   *
+   * @var string
+   */
   protected $deleteButtonText = 'Delete flagging 123?';
 
   /**
@@ -66,10 +91,10 @@ class LinkTypeConfirmFormTest extends FlagTestBase {
     // Get the flag count before the flagging, querying the database directly.
     $flag_count_pre = \Drupal::database()->query('SELECT count FROM {flag_counts}
       WHERE flag_id = :flag_id AND entity_type = :entity_type AND entity_id = :entity_id', [
-      ':flag_id' => $flag_id,
-      ':entity_type' => 'node',
-      ':entity_id' => $node_id,
-    ])->fetchField();
+        ':flag_id' => $flag_id,
+        ':entity_type' => 'node',
+        ':entity_id' => $node_id,
+      ])->fetchField();
 
     // Click the flag link.
     $this->drupalGet('node/' . $node_id);
@@ -89,10 +114,10 @@ class LinkTypeConfirmFormTest extends FlagTestBase {
     // Check the flag count was incremented.
     $flag_count_flagged = \Drupal::database()->query('SELECT count FROM {flag_counts}
       WHERE flag_id = :flag_id AND entity_type = :entity_type AND entity_id = :entity_id', [
-      ':flag_id' => $flag_id,
-      ':entity_type' => 'node',
-      ':entity_id' => $node_id,
-    ])->fetchField();
+        ':flag_id' => $flag_id,
+        ':entity_type' => 'node',
+        ':entity_id' => $node_id,
+      ])->fetchField();
     $this->assertEquals($flag_count_pre + 1, $flag_count_flagged, "The flag count was incremented.");
 
     // Unflag the node.
@@ -111,10 +136,10 @@ class LinkTypeConfirmFormTest extends FlagTestBase {
     // Check the flag count was decremented.
     $flag_count_unflagged = \Drupal::database()->query('SELECT count FROM {flag_counts}
       WHERE flag_id = :flag_id AND entity_type = :entity_type AND entity_id = :entity_id', [
-      ':flag_id' => $flag_id,
-      ':entity_type' => 'node',
-      ':entity_id' => $node_id,
-    ])->fetchField();
+        ':flag_id' => $flag_id,
+        ':entity_type' => 'node',
+        ':entity_id' => $node_id,
+      ])->fetchField();
     $this->assertEquals($flag_count_flagged - 1, $flag_count_unflagged, "The flag count was decremented.");
   }
 

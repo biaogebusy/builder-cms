@@ -4,12 +4,14 @@ namespace Drupal\Tests\search_api\Functional;
 
 use Drupal\search_api\Entity\Index;
 use Drupal\search_api_test\PluginTestTrait;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests integration of events.
  *
  * @group search_api
  */
+#[RunTestsInSeparateProcesses]
 class EventsTest extends SearchApiBrowserTestBase {
 
   use PluginTestTrait;
@@ -119,6 +121,7 @@ class EventsTest extends SearchApiBrowserTestBase {
     $this->assertSession()->pageTextContains('Stormy');
 
     // The ItemsIndexed event was invoked.
+    // cspell:disable-next-line
     $this->assertSession()->pageTextContains('Please set me at ease');
 
     // The Reindex event was invoked.

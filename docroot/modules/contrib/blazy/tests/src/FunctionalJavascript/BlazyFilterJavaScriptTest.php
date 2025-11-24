@@ -2,18 +2,17 @@
 
 namespace Drupal\Tests\blazy\FunctionalJavascript;
 
-use Drupal\blazy\Blazy;
-use Drupal\blazy\internals\Internals;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Render\RenderContext;
-use Drupal\filter\Entity\FilterFormat;
-use Drupal\filter\FilterPluginCollection;
-use Drupal\filter\FilterProcessResult;
 use Drupal\FunctionalJavascriptTests\DrupalSelenium2Driver;
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
 use Drupal\Tests\blazy\Traits\BlazyCreationTestTrait;
 use Drupal\Tests\blazy\Traits\BlazyUnitTestTrait;
+use Drupal\blazy\Blazy;
+use Drupal\filter\Entity\FilterFormat;
+use Drupal\filter\FilterPluginCollection;
+use Drupal\filter\FilterProcessResult;
 
 /**
  * Tests the Blazy Filter JavaScript using Selenium, or Chromedriver.
@@ -57,7 +56,7 @@ class BlazyFilterJavaScriptTest extends WebDriverTestBase {
 
     $this->setUpVariables();
 
-    $this->root                   = Internals::root($this->container);
+    $this->root                   = $this->container->getParameter('app.root');
     $this->fileSystem             = $this->container->get('file_system');
     $this->entityFieldManager     = $this->container->get('entity_field.manager');
     $this->formatterPluginManager = $this->container->get('plugin.manager.field.formatter');
@@ -147,6 +146,7 @@ class BlazyFilterJavaScriptTest extends WebDriverTestBase {
     $this->assertSession()->elementNotContains('css', '.media-wrapper--blazy', 'data-unblazy');
 
     // Verifies that one of the images is there once loaded.
+    // @phpstan-ignore-next-line
     $loaded = $this->assertSession()->waitForElement('css', '.b-loaded');
     $this->assertNotEmpty($loaded);
 

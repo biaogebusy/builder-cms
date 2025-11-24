@@ -128,16 +128,6 @@
   padding-top: 0.55em;
 }
 
-#drupal-off-canvas .inline-block-create-button {
-  display: block;
-  padding: 24px;
-  padding-left: 44px;
-  color: #eee;
-  border-bottom: 1px solid #333;
-  background: url(../../../../misc/icons/bebebe/plus.svg) transparent 16px no-repeat;
-  font-size: 16px;
-}
-
 #drupal-off-canvas .inline-block-create-button,
 #drupal-off-canvas .inline-block-list__item {
   margin: 0 -20px;
@@ -171,7 +161,7 @@
 }
 .layout-builder__add-block.is-layout-builder-highlighted,
 .layout-builder__add-section.is-layout-builder-highlighted,
-.layout-builder__layout.is-layout-builder-highlighted:before,
+.layout-builder__layout.is-layout-builder-highlighted::before,
 .layout-builder__layout.is-layout-builder-highlighted,
 .layout-builder-block.is-layout-builder-highlighted {
   border: 4px solid #000;

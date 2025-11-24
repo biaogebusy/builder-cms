@@ -2,18 +2,18 @@
 
 namespace Drupal\commerce_cart\Plugin\views\area;
 
-use Drupal\commerce_cart\CartManagerInterface;
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\commerce_cart\CartManagerInterface;
+use Drupal\views\Attribute\ViewsArea;
 use Drupal\views\Plugin\views\area\AreaPluginBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Defines an area handler for the "Empty cart" button.
- *
- * @ViewsArea("commerce_order_empty_cart_button")
  */
+#[ViewsArea("commerce_order_empty_cart_button")]
 class EmptyCartButton extends AreaPluginBase {
 
   /**

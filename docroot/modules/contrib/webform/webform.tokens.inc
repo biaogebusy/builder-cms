@@ -22,6 +22,7 @@ use Drupal\webform\Plugin\WebformElementManagerInterface;
 use Drupal\webform\Utility\WebformDateHelper;
 use Drupal\webform\Utility\WebformHtmlHelper;
 use Drupal\webform\Utility\WebformLogicHelper;
+use Drupal\webform\Utility\WebformUserHelper;
 use Drupal\webform\WebformInterface;
 use Drupal\webform\WebformSubmissionInterface;
 
@@ -416,7 +417,7 @@ function webform_token_info() {
     ];
 
     $webform_role = [];
-    $role_names = array_map('\Drupal\Component\Utility\Html::escape', user_role_names(TRUE));
+    $role_names = array_map('\Drupal\Component\Utility\Html::escape', WebformUserHelper::getRoleNames(TRUE));
     if (!in_array('authenticated', $roles)) {
       $role_names = array_intersect_key($role_names, array_combine($roles, $roles));
     }

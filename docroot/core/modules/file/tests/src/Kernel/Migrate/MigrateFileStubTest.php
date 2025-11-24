@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\file\Kernel\Migrate;
 
 use Drupal\Tests\migrate_drupal\Kernel\MigrateDrupalTestBase;
@@ -30,7 +32,7 @@ class MigrateFileStubTest extends MigrateDrupalTestBase {
   /**
    * Tests creation of file stubs.
    */
-  public function testStub() {
+  public function testStub(): void {
     $this->performStubTest('file');
   }
 

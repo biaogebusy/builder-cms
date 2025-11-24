@@ -2,9 +2,9 @@
 
 namespace Drupal\commerce_test\EventSubscriber;
 
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\commerce\Event\CommerceEvents;
 use Drupal\commerce\Event\ReferenceablePluginTypesEvent;
-use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class ReferenceablePluginTypesSubscriber implements EventSubscriberInterface {
@@ -14,7 +14,7 @@ class ReferenceablePluginTypesSubscriber implements EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     $events[CommerceEvents::REFERENCEABLE_PLUGIN_TYPES][] = ['onPluginTypes'];
     return $events;
   }

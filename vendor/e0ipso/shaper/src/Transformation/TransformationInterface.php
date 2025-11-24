@@ -28,6 +28,6 @@ interface TransformationInterface {
    * @throws \TypeError
    *   When the transformation cannot be applied.
    */
-  public function transform($data, Context $context = NULL);
+  public function transform($data, ?Context $context = NULL);
 
 }

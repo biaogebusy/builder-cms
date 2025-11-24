@@ -17,7 +17,7 @@ class HreflangDeriver extends DeriverBase {
   /**
    * {@inheritdoc}
    */
-  public function getDerivativeDefinitions($base_plugin_definition) {
+  public function getDerivativeDefinitions($base_plugin_definition): array {
     // Get a list of all defined languages.
     $languages = \Drupal::languageManager()
       ->getLanguages(LanguageInterface::STATE_ALL);

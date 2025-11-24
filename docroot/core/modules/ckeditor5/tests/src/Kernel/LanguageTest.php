@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Drupal\Tests\ckeditor5\Kernel;
 
@@ -8,6 +8,7 @@ use Drupal\editor\Entity\Editor;
 use Drupal\filter\Entity\FilterFormat;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\language\Entity\ConfigurableLanguage;
+use Drupal\TestTools\Random;
 use Symfony\Component\Yaml\Yaml;
 
 /**
@@ -94,26 +95,26 @@ class LanguageTest extends KernelTestBase {
   /**
    * Provides a list of language code pairs.
    *
-   * @return \string[][]
+   * @return string[][]
    */
-  public function provider(): array {
-    $random_langcode = $this->randomMachineName();
+  public static function provider(): array {
+    $random_langcode = Random::machineName();
     return [
       'Language code transformed from browser mappings' => [
         'drupal_langcode' => 'pt-pt',
-        'cke_langcode' => 'pt',
+        'cke5_langcode' => 'pt',
       ],
       'Language code transformed from browser mappings 2' => [
         'drupal_langcode' => 'zh-hans',
-        'cke_langcode' => 'zh-cn',
+        'cke5_langcode' => 'zh-cn',
       ],
       'Language code both in Drupal and CKEditor' => [
         'drupal_langcode' => 'fi',
-        'cke_langcode' => 'fi',
+        'cke5_langcode' => 'fi',
       ],
       'Language code not in Drupal but in CKEditor 5 requires new language.mappings entry' => [
         'drupal_langcode' => $random_langcode,
-        'cke_langcode' => 'de-ch',
+        'cke5_langcode' => 'de-ch',
         'is_missing_mapping' => TRUE,
       ],
     ];

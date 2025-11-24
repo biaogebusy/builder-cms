@@ -56,19 +56,24 @@ class EntityReferenceItemNormalizer extends FieldItemNormalizer {
       $entity = \Drupal::service('entity.repository')->getTranslationFromContext($entity);
     }
     $sub_context = [
-      'entity_widget' => $context['entity_widget'],
+      'entity_widget' => $context['entity_widget'] ?? '',
       'entity' => $entity,
-      'attach_mode' => $context['attach_mode'],
-      'level' => $context['level'] + 1,
+      'attach_mode' => $context['attach_mode'] ?? '',
+      'level' => ($context['level'] ?? 0) + 1,
     ];
+    if(isset($context['#no_render'])) {
+      $sub_context['#no_render'] = $context['#no_render'];
+    }
+    if(isset($context['#ignore_fields'])) {
+      $sub_context['#ignore_fields'] = $context['#ignore_fields'];
+    }
     if($variables = $this->serializer->normalize($entity, $format, $sub_context)) {
       $data = array_merge($data, $variables);
     }
-    if(empty($context['attach_mode']) && !empty($entity)) {
+    if(empty($context['attach_mode']) && !empty($entity) && empty($context['#no_render'])) {
       try {
         $data['render'] = $this->entityTypeManager->getViewBuilder($entity->getEntityTypeId())->view($entity);
-      } catch (\Exception $e) {
-      }
+      } catch (\Exception $e) {}
     }
     switch ($entity->getEntityTypeId()) {
       case 'menu':
@@ -78,7 +83,6 @@ class EntityReferenceItemNormalizer extends FieldItemNormalizer {
         $data['#cache']['tags'][] = 'config:system.menu.' . $entity->id();
         break;
     }
-    //dump($data);
     return $data;
   }
 }

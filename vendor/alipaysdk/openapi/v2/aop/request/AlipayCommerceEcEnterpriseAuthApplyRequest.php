@@ -3,7 +3,7 @@
  * ALIPAY API: alipay.commerce.ec.enterprise.auth.apply request
  *
  * @author auto create
- * @since 1.0, 2024-03-18 16:21:58
+ * @since 1.0, 2024-07-22 17:40:42
  */
 class AlipayCommerceEcEnterpriseAuthApplyRequest
 {

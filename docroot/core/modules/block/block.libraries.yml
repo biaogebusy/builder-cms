@@ -6,7 +6,6 @@ drupal.block:
     - core/jquery
     - core/drupal
     - core/once
-    - core/jquery.once.bc
 
 drupal.block.admin:
   version: VERSION
@@ -21,6 +20,6 @@ drupal.block.admin:
     - core/drupal.announce
     - core/drupal.debounce
     - core/drupal.dialog.ajax
-    - core/drupal.string.includes
+    - core/drupal.tabledrag
+    - core/drupal.vertical-tabs
     - core/once
-    - core/jquery.once.bc

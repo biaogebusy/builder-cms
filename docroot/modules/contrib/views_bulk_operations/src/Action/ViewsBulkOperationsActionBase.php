@@ -5,8 +5,8 @@ namespace Drupal\views_bulk_operations\Action;
 use Drupal\Component\Plugin\ConfigurableInterface;
 use Drupal\Core\Action\ActionBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\views\ViewExecutable;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\views\ViewExecutable;
 
 /**
  * Views Bulk Operations action plugin base.
@@ -16,32 +16,32 @@ use Drupal\Core\Session\AccountInterface;
  */
 abstract class ViewsBulkOperationsActionBase extends ActionBase implements ViewsBulkOperationsActionInterface, ConfigurableInterface {
 
+  use ViewsBulkOperationsActionCompletedTrait;
+
   /**
    * Action context.
    *
-   * @var array
-   *   Contains view data and optionally batch operation context.
+   * Contains view data and optionally batch operation context.
    */
-  protected $context;
+  protected array $context;
 
   /**
    * The processed view.
-   *
-   * @var \Drupal\views\ViewExecutable
    */
-  protected $view;
+  protected ViewExecutable $view;
 
   /**
    * Configuration array.
    *
    * @var array
+   *   NOTE: Don't add a type hint due to parent declaration unless changed.
    */
   protected $configuration;
 
   /**
    * {@inheritdoc}
    */
-  public function setContext(array &$context) {
+  public function setContext(array &$context): void {
     $this->context['sandbox'] = &$context['sandbox'];
     foreach ($context as $key => $item) {
       if ($key === 'sandbox') {
@@ -54,7 +54,7 @@ abstract class ViewsBulkOperationsActionBase extends ActionBase implements Views
   /**
    * {@inheritdoc}
    */
-  public function setView(ViewExecutable $view) {
+  public function setView(ViewExecutable $view): void {
     $this->view = $view;
   }
 
@@ -135,7 +135,7 @@ abstract class ViewsBulkOperationsActionBase extends ActionBase implements Views
    * @return bool
    *   Has access.
    */
-  public static function customAccess(AccountInterface $account, ViewExecutable $view) {
+  public static function customAccess(AccountInterface $account, ViewExecutable $view): bool {
     return TRUE;
   }
 

@@ -1,12 +1,12 @@
 name: 'Serialization (CSV)'
 type: module
 description: 'Provides CSV as a serialization format.'
-core_version_requirement: ^9.4
+core_version_requirement: ^10 || ^11
 package: Web services
 dependencies:
-  - drupal:serialization (>=8.0.4)
+  - drupal:serialization
 
-# Information added by Drupal.org packaging script on 2023-10-30
-version: '3.0.1'
+# Information added by Drupal.org packaging script on 2024-08-12
+version: '4.0.1'
 project: 'csv_serialization'
-datestamp: 1698701637
+datestamp: 1723473164

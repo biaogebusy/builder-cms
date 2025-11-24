@@ -3,6 +3,8 @@
 namespace Drupal\core_context_test\Plugin\Block;
 
 /**
+ * Defines a block plugin that accepts optional context values.
+ *
  * @Block(
  *   id = "context_block_optional",
  *   admin_label = @Translation("Optional context block"),

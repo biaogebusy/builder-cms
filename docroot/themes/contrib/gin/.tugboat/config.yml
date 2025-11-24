@@ -13,6 +13,8 @@ services:
         # Check out a branch using the unique Tugboat ID for this repository, to
         # ensure we don't clobber an existing branch.
         git checkout -b $TUGBOAT_REPO_ID
+        # Set PHP LIMIT up to 512MB.
+        echo "memory_limit = 512M" >> /usr/local/etc/php/conf.d/my-php.ini
         # Composer is hungry. You need a Tugboat project with a pretty sizeable
         # chunk of memory.
         export COMPOSER_MEMORY_LIMIT=-1
@@ -25,9 +27,11 @@ services:
         # Require Gin Toolbar
         composer require 'drupal/gin_toolbar:^1.0@beta'
         # Require Gin Login
-        composer require 'drupal/gin_login:^1.0@RC'
+        composer require 'drupal/gin_login:^2.1'
         # Require Admin Toolbar
         composer require 'drupal/admin_toolbar:^3.0'
+        # Require Project Browser
+        composer require 'drupal/project_browser:^1.0@beta'
         # Now we can require Gin, specifing the branch name we created
         # above that uses the $TUGBOAT_REPO_ID environment variable.
         composer require drupal/gin:dev-$TUGBOAT_REPO_ID
@@ -53,6 +57,8 @@ services:
         vendor/bin/drush --yes en gin_toolbar
         # Enable gin_login Module.
         vendor/bin/drush --yes en gin_login
+        # Enable project_browser Module.
+        vendor/bin/drush --yes en project_browser
       build: |
         set -eux
         # Delete and re-check out this branch in case this is built from a Base Preview.

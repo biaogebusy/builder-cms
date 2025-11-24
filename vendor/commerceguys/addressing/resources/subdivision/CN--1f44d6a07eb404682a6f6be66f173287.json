@@ -1,0 +1,35 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"XJ",
+		"Hotan Diqu"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Qira Xian": {
+			"local_name": "策勒县"
+		},
+		"Hotan Shi": {
+			"local_name": "和田市"
+		},
+		"Hotan Xian": {
+			"local_name": "和田县"
+		},
+		"Lop Xian": {
+			"local_name": "洛浦县"
+		},
+		"Minfeng Xian": {
+			"local_name": "民丰县"
+		},
+		"Moyu Xian": {
+			"local_name": "墨玉县"
+		},
+		"Pishan Xian": {
+			"local_name": "皮山县"
+		},
+		"Yutian Xian": {
+			"local_name": "于田县"
+		}
+	}
+}

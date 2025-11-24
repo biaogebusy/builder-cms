@@ -1,0 +1,38 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"HN",
+		"Changsha Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Furong Qu": {
+			"local_name": "芙蓉区"
+		},
+		"Kaifu Qu": {
+			"local_name": "开福区"
+		},
+		"Liuyang Shi": {
+			"local_name": "浏阳市"
+		},
+		"Ningxiang Xian": {
+			"local_name": "宁乡县"
+		},
+		"Tianxin Qu": {
+			"local_name": "天心区"
+		},
+		"Wangcheng Qu": {
+			"local_name": "望城区"
+		},
+		"Yuhua Qu": {
+			"local_name": "雨花区"
+		},
+		"Yuelu Qu": {
+			"local_name": "岳麓区"
+		},
+		"Changsha Xian": {
+			"local_name": "长沙县"
+		}
+	}
+}

@@ -2,6 +2,8 @@
 
 namespace Drupal\page_manager\Entity;
 
+use Drupal\Component\Plugin\Exception\ContextException;
+use Drupal\Component\Plugin\Exception\MissingValueContextException;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Condition\ConditionAccessResolverTrait;
 use Drupal\Core\Entity\EntityAccessControlHandler;
@@ -54,6 +56,7 @@ class PageAccess extends EntityAccessControlHandler implements EntityHandlerInte
    * Wraps the context handler.
    *
    * @return \Drupal\Core\Plugin\Context\ContextHandlerInterface
+   *   The context handler.
    */
   protected function contextHandler() {
     return $this->contextHandler;
@@ -68,15 +71,40 @@ class PageAccess extends EntityAccessControlHandler implements EntityHandlerInte
       if (!$entity->status()) {
         return AccessResult::forbidden()->addCacheableDependency($entity);
       }
-
+      $missing_value = FALSE;
+      $missing_context = FALSE;
       $contexts = $entity->getContexts();
       $conditions = $entity->getAccessConditions();
       foreach ($conditions as $condition) {
         if ($condition instanceof ContextAwarePluginInterface) {
-          $this->contextHandler()->applyContextMapping($condition, $contexts);
+          try {
+            $this->contextHandler->applyContextMapping($condition, $contexts);
+          }
+          catch (MissingValueContextException $e) {
+            $missing_value = TRUE;
+          }
+          catch (ContextException $e) {
+            $missing_context = TRUE;
+          }
         }
       }
-      return AccessResult::allowedIf($this->resolveConditions($conditions, $entity->getAccessLogic()));
+
+      if ($missing_context) {
+        // If any context is missing then we might be missing cacheable
+        // metadata, and don't know based on what conditions the block is
+        // accessible or not. Make sure the result cannot be cached.
+        $access = AccessResult::forbidden()->setCacheMaxAge(0);
+      }
+      elseif ($missing_value) {
+        // The contexts exist but have no value. Deny access without
+        // disabling caching. For example the node type condition will have a
+        // missing context on any non-node route like the frontpage.
+        $access = AccessResult::forbidden();
+      }
+      else {
+        $access = AccessResult::allowedIf($this->resolveConditions($conditions, $entity->getAccessLogic()));
+      }
+      return $access;
     }
     return parent::checkAccess($entity, $operation, $account);
   }

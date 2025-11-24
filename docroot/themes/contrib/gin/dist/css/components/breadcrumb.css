@@ -14,17 +14,9 @@
   width: auto;
   text-overflow: ellipsis;
   overflow: hidden;
-  margin-top: 0;
-}
-
-[dir="ltr"] .gin-breadcrumb__list {
-  padding-left: var(--gin-spacing-xxs);
-  margin-left: calc(var(--gin-spacing-xxs) * -1);
-}
-
-[dir="rtl"] .gin-breadcrumb__list {
-  padding-right: var(--gin-spacing-xxs);
-  margin-right: calc(var(--gin-spacing-xxs) * -1);
+  padding-inline-start: var(--gin-spacing-xxs);
+  margin-block-start: 0;
+  margin-inline-start: calc(var(--gin-spacing-xxs) * -1);
 }
 
 .gin-breadcrumb__item, .gin-breadcrumb__link, .gin-breadcrumb__text {
@@ -57,21 +49,15 @@
 
 .gin-breadcrumb__item:first-of-type .gin-breadcrumb__link {
   position: relative;
-}
-
-[dir="ltr"] .gin-breadcrumb__item:first-of-type .gin-breadcrumb__link {
-  padding-left: 1.75em;
-}
-
-[dir="rtl"] .gin-breadcrumb__item:first-of-type .gin-breadcrumb__link {
-  padding-right: 1.75em;
+  padding-inline-start: 1.75em;
 }
 
 .gin-breadcrumb__item:first-of-type .gin-breadcrumb__link::before {
   content: "";
   display: inline-block;
   position: absolute;
-  top: calc(50% - 1px);
+  inset-block-start: calc(50% - 1px);
+  inset-inline-start: 0;
   width: var(--gin-icon-size-toolbar-secondary);
   height: var(--gin-icon-size-toolbar-secondary);
   transform: translateY(-50%);
@@ -82,14 +68,6 @@
           mask-size: 100% 100%;
   -webkit-mask-position: center center;
           mask-position: center center;
-}
-
-[dir="ltr"] .gin-breadcrumb__item:first-of-type .gin-breadcrumb__link::before {
-  left: 0;
-}
-
-[dir="rtl"] .gin-breadcrumb__item:first-of-type .gin-breadcrumb__link::before {
-  right: 0;
 }
 
 @media (forced-colors: active) {
@@ -111,22 +89,12 @@
 .gin-breadcrumb__item:first-of-type + .gin-breadcrumb__item::before {
   content: "";
   opacity: .3;
+  border-inline-end: 1px solid var(--gin-color-text);
   width: 1px;
   height: 20px;
-}
-
-[dir="ltr"] .gin-breadcrumb__item:first-of-type + .gin-breadcrumb__item::before {
-  border-right: 1px solid var(--gin-color-text);
-  padding-left: .75em;
-  padding-right: 0;
-  margin-right: .75em;
-}
-
-[dir="rtl"] .gin-breadcrumb__item:first-of-type + .gin-breadcrumb__item::before {
-  border-left: 1px solid var(--gin-color-text);
-  padding-right: .75em;
-  padding-left: 0;
-  margin-left: .75em;
+  padding-inline-start: .75em;
+  padding-inline-end: 0;
+  margin-inline-end: .75em;
 }
 
 @media (forced-colors: active) {

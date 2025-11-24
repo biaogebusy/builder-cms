@@ -101,6 +101,8 @@ class PathautoSettingsFormWebTest extends BrowserTestBase {
       'administer pathauto',
       'notify of path changes',
       'administer url aliases',
+      'bulk delete aliases',
+      'bulk update aliases',
       'create url aliases',
       'bypass node access',
     ];

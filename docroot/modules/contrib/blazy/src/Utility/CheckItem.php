@@ -2,13 +2,13 @@
 
 namespace Drupal\blazy\Utility;
 
+use Drupal\Component\Utility\UrlHelper;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\blazy\Blazy;
-use Drupal\blazy\internals\Internals;
 use Drupal\blazy\Media\BlazyFile;
 use Drupal\blazy\Media\BlazyImage;
 use Drupal\blazy\Theme\Attributes;
-use Drupal\Component\Utility\UrlHelper;
-use Drupal\Core\Entity\EntityInterface;
+use Drupal\blazy\internals\Internals;
 
 /**
  * Provides feature check methods at item level.
@@ -268,7 +268,7 @@ class CheckItem {
     $switch    = $settings['media_switch'] ?? NULL;
     $switch    = $blazies->get('switch', $switch);
     $provider  = $blazies->get('media.provider');
-    $type      = $blazies->get('media.type') ?: $settings['type'] ?? 'image';
+    $type      = $blazies->get('media.type', 'image');
     $embed_url = $settings['embed_url'] ?? '';
     $embed_url = $blazies->get('media.embed_url') ?: $embed_url;
     $is_vef    = $type == 'video';
@@ -330,10 +330,6 @@ class CheckItem {
         $blazies->set('switch', NULL);
       }
     }
-
-    // @todo remove deprecated dup is for use at 3.x.
-    $blazies->set('is.iframe', $is_iframe)
-      ->set('is.player', $is_player);
 
     $_type = str_replace([':'], '_', $type);
     $multimedia = $blazies->is('multimedia', $is_remote);

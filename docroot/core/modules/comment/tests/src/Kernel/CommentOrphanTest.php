@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\comment\Kernel;
 
 use Drupal\Core\Datetime\Entity\DateFormat;
@@ -37,7 +39,7 @@ class CommentOrphanTest extends EntityKernelTestBase {
    *
    * @dataProvider providerTestOrphan
    */
-  public function testOrphan($property) {
+  public function testOrphan($property): void {
 
     DateFormat::create([
       'id' => 'fallback',
@@ -98,7 +100,7 @@ class CommentOrphanTest extends EntityKernelTestBase {
     $comments = $comment_storage->loadMultiple();
     foreach ($comments as $comment) {
       $built = $this->buildEntityView($comment, 'full', NULL);
-      $renderer->renderPlain($built);
+      $renderer->renderInIsolation($built);
     }
 
     // Make comment 2 an orphan by setting the property to an invalid value.
@@ -113,18 +115,18 @@ class CommentOrphanTest extends EntityKernelTestBase {
     $comments = $comment_storage->loadMultiple();
     foreach ($comments as $comment) {
       $built = $this->buildEntityView($comment, 'full', NULL);
-      $renderer->renderPlain($built);
+      $renderer->renderInIsolation($built);
     }
 
     $node = $node_storage->load($node->id());
     $built = $this->buildEntityView($node, 'full', NULL);
-    $renderer->renderPlain($built);
+    $renderer->renderInIsolation($built);
   }
 
   /**
    * Provides test data for testOrphan.
    */
-  public function providerTestOrphan() {
+  public static function providerTestOrphan() {
     return [
       ['entity_id'],
       ['uid'],

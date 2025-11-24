@@ -9,6 +9,7 @@ use Drupal\search_api\IndexInterface;
 use Drupal\search_api\SearchApiException;
 use Drupal\search_api\ServerInterface;
 use Drupal\search_api\Task\TaskInterface;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 
 /**
  * Tests whether the Search API task system works correctly.
@@ -17,6 +18,7 @@ use Drupal\search_api\Task\TaskInterface;
  *
  * @group search_api
  */
+#[RunTestsInSeparateProcesses]
 class TaskTest extends KernelTestBase {
 
   /**
@@ -167,35 +169,34 @@ class TaskTest extends KernelTestBase {
    * Tests that duplicate tasks won't be created.
    */
   public function testTaskDuplicates() {
-    // @todo Use named parameters here once we depend on PHP 8.0+.
     $data = ['foo' => 'bar', 1];
     $task1 = $this->addTask('success');
-    $task2 = $this->addTask('success', NULL, NULL, NULL, TRUE);
+    $task2 = $this->addTask('success', duplicate: TRUE);
     $this->assertEquals($task1->id(), $task2->id());
-    $task1 = $this->addTask('success', NULL, NULL, $data);
-    $task2 = $this->addTask('success', NULL, NULL, $data, TRUE);
+    $task1 = $this->addTask('success', data: $data);
+    $task2 = $this->addTask('success', data: $data, duplicate: TRUE);
     $this->assertEquals($task1->id(), $task2->id());
     $task1 = $this->addTask('success', $this->server);
-    $task2 = $this->addTask('success', $this->server, NULL, NULL, TRUE);
+    $task2 = $this->addTask('success', $this->server, duplicate: TRUE);
     $this->assertEquals($task1->id(), $task2->id());
-    $task1 = $this->addTask('success', $this->server, NULL, $data);
-    $task2 = $this->addTask('success', $this->server, NULL, $data, TRUE);
+    $task1 = $this->addTask('success', $this->server, data: $data);
+    $task2 = $this->addTask('success', $this->server, data: $data, duplicate: TRUE);
     $this->assertEquals($task1->id(), $task2->id());
-    $task1 = $this->addTask('success', NULL, $this->index);
-    $task2 = $this->addTask('success', NULL, $this->index, NULL, TRUE);
+    $task1 = $this->addTask('success', index: $this->index);
+    $task2 = $this->addTask('success', index: $this->index, duplicate: TRUE);
     $this->assertEquals($task1->id(), $task2->id());
-    $task1 = $this->addTask('success', NULL, $this->index, $data);
-    $task2 = $this->addTask('success', NULL, $this->index, $data, TRUE);
+    $task1 = $this->addTask('success', index: $this->index, data: $data);
+    $task2 = $this->addTask('success', index: $this->index, data: $data, duplicate: TRUE);
     $this->assertEquals($task1->id(), $task2->id());
     $task1 = $this->addTask('success', $this->server, $this->index);
-    $task2 = $this->addTask('success', $this->server, $this->index, NULL, TRUE);
+    $task2 = $this->addTask('success', $this->server, $this->index, duplicate: TRUE);
     $this->assertEquals($task1->id(), $task2->id());
     $task1 = $this->addTask('success', $this->server, $this->index, $data);
     $task2 = $this->addTask('success', $this->server, $this->index, $data, TRUE);
     $this->assertEquals($task1->id(), $task2->id());
     $data[] = 2;
-    $task1 = $this->addTask('success', NULL, NULL, $data);
-    $task2 = $this->addTask('success', NULL, NULL, $data, TRUE);
+    $task1 = $this->addTask('success', data: $data);
+    $task2 = $this->addTask('success', data: $data, duplicate: TRUE);
     $this->assertEquals($task1->id(), $task2->id());
   }
 
@@ -209,11 +210,11 @@ class TaskTest extends KernelTestBase {
     $tasks = [];
     $tasks[0] = $this->addTask('success', $this->server, $this->index, ['foo' => 1, 'bar']);
     $tasks[6] = $this->addTask('fail');
-    $tasks[1] = $this->addTask('success', $this->server, NULL, TRUE);
-    $tasks[4] = $this->addTask('success', NULL, NULL, 1);
+    $tasks[1] = $this->addTask('success', $this->server, data: TRUE);
+    $tasks[4] = $this->addTask('success', data: 1);
     $tasks[2] = $this->addTask('fail', $this->server, $this->index);
     $tasks[5] = $this->addTask('success');
-    $tasks[3] = $this->addTask('success', NULL, $this->index);
+    $tasks[3] = $this->addTask('success', index: $this->index);
 
     $num = count($tasks);
     $this->assertEquals($num, $this->taskManager->getTasksCount());
@@ -251,10 +252,10 @@ class TaskTest extends KernelTestBase {
     $this->assertEquals($num -= 2, $this->taskManager->getTasksCount());
 
     // Need to include some data so the new task won't count as a duplicate.
-    $tasks[7] = $this->addTask('success', NULL, NULL, 1);
-    $tasks[8] = $this->addTask('success', NULL, NULL, 2);
-    $tasks[9] = $this->addTask('fail', NULL, NULL, 3);
-    $tasks[10] = $this->addTask('success', NULL, NULL, 4);
+    $tasks[7] = $this->addTask('success', data: 1);
+    $tasks[8] = $this->addTask('success', data: 2);
+    $tasks[9] = $this->addTask('fail', data: 3);
+    $tasks[10] = $this->addTask('success', data: 4);
     $num += 4;
 
     try {
@@ -309,13 +310,13 @@ class TaskTest extends KernelTestBase {
    * @return \Drupal\search_api\Task\TaskInterface
    *   The task returned by the task manager.
    */
-  protected function addTask($type, ServerInterface $server = NULL, IndexInterface $index = NULL, $data = NULL, bool $duplicate = FALSE) {
+  protected function addTask($type, ?ServerInterface $server = NULL, ?IndexInterface $index = NULL, $data = NULL, bool $duplicate = FALSE) {
     $type = "search_api_test_tasks.$type";
     $count_before = $this->taskManager->getTasksCount();
     $conditions = [
       'type' => $type,
-      'server_id' => $server ? $server->id() : NULL,
-      'index_id' => $index ? $index->id() : NULL,
+      'server_id' => $server?->id(),
+      'index_id' => $index?->id(),
     ];
     $conditions = array_filter($conditions);
     $count_before_conditions = $this->taskManager->getTasksCount($conditions);

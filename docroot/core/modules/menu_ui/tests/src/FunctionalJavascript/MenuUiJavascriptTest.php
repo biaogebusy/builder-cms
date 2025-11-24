@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\menu_ui\FunctionalJavascript;
 
 use Drupal\FunctionalJavascriptTests\WebDriverTestBase;
@@ -37,7 +39,7 @@ class MenuUiJavascriptTest extends WebDriverTestBase {
   /**
    * Tests the contextual links on a menu block.
    */
-  public function testBlockContextualLinks() {
+  public function testBlockContextualLinks(): void {
     $this->drupalLogin($this->drupalCreateUser([
       'administer menu',
       'access contextual links',
@@ -75,7 +77,7 @@ class MenuUiJavascriptTest extends WebDriverTestBase {
   protected function addCustomMenu() {
     // Try adding a menu using a menu_name that is too long.
     $label = $this->randomMachineName(16);
-    $menu_id = strtolower($this->randomMachineName(MenuStorage::MAX_ID_LENGTH + 1));
+    $menu_id = $this->randomMachineName(MenuStorage::MAX_ID_LENGTH + 1);
 
     $this->drupalGet('admin/structure/menu/add');
     $page = $this->getSession()->getPage();

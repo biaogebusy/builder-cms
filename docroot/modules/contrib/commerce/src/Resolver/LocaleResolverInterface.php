@@ -4,6 +4,8 @@ namespace Drupal\commerce\Resolver;
 
 /**
  * Defines the interface for locale resolvers.
+ *
+ * Interface for services tagged as 'commerce.locale_resolver'.
  */
 interface LocaleResolverInterface {
 

@@ -2,7 +2,6 @@
 
 namespace Drupal\Tests\page_manager\Unit;
 
-use Prophecy\PhpUnit\ProphecyTrait;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -10,6 +9,7 @@ use Drupal\page_manager\ContextMapperInterface;
 use Drupal\page_manager\Entity\PageVariant;
 use Drupal\page_manager\PageInterface;
 use Drupal\Tests\UnitTestCase;
+use Prophecy\PhpUnit\ProphecyTrait;
 
 /**
  * @coversDefaultClass \Drupal\page_manager\Entity\PageVariant
@@ -20,16 +20,22 @@ class PageVariantTest extends UnitTestCase {
 
   use ProphecyTrait;
   /**
+   * The Page variant entity.
+   *
    * @var \Drupal\page_manager\Entity\PageVariant
    */
   protected $pageVariant;
 
   /**
+   * The Page Object.
+   *
    * @var \Drupal\page_manager\PageInterface|\Prophecy\Prophecy\ProphecyInterface
    */
   protected $page;
 
   /**
+   * The Context Mapper.
+   *
    * @var \Drupal\page_manager\ContextMapperInterface|\Prophecy\Prophecy\ProphecyInterface
    */
   protected $contextMapper;
@@ -71,7 +77,10 @@ class PageVariantTest extends UnitTestCase {
     $this->assertSame($expected, $contexts);
   }
 
-  public function providerTestGetContexts() {
+  /**
+   * Data provider for testGetContexts.
+   */
+  public static function providerTestGetContexts() {
     $data = [];
     $data['empty'] = [
       [],

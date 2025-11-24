@@ -1,9 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\Core\Common;
 
 use Drupal\Component\Utility\Tags;
 use Drupal\Tests\UnitTestCase;
+
+// cspell:ignore sloopal troopal
 
 /**
  * Tests explosion and implosion of autocomplete tags.
@@ -22,40 +26,23 @@ class TagsTest extends UnitTestCase {
   /**
    * Explodes a series of tags.
    */
-  public function explodeTags() {
+  public function testExplodeTags(): void {
     $string = implode(', ', array_keys($this->validTags));
     $tags = Tags::explode($string);
-    $this->assertTags($tags);
+    $this->assertEquals(array_values($this->validTags), $tags);
   }
 
   /**
    * Implodes a series of tags.
    */
-  public function testImplodeTags() {
+  public function testImplodeTags(): void {
     $tags = array_values($this->validTags);
     // Let's explode and implode to our heart's content.
     for ($i = 0; $i < 10; $i++) {
       $string = Tags::implode($tags);
       $tags = Tags::explode($string);
     }
-    $this->assertTags($tags);
-  }
-
-  /**
-   * Helper function: asserts that the ending array of tags is what we wanted.
-   *
-   * @internal
-   */
-  protected function assertTags(array $tags): void {
-    $original = $this->validTags;
-    foreach ($tags as $tag) {
-      $key = array_search($tag, $original);
-      $this->assertTrue((bool) $key, $tag, sprintf('Make sure tag %s shows up in the final tags array (originally %s)', $tag, $key));
-      unset($original[$key]);
-    }
-    foreach ($original as $leftover) {
-      $this->fail(sprintf('Leftover tag %s was left over.', $leftover));
-    }
+    $this->assertEquals(array_values($this->validTags), $tags);
   }
 
 }

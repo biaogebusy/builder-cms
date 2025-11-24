@@ -4,12 +4,8 @@ services:
     arguments: ['@plugin.message_notify.notifier.manager']
   plugin.message_notify.notifier.manager:
     class: Drupal\message_notify\Plugin\Notifier\Manager
-    arguments:
-      - Plugin/Notifier
-      - '@container.namespaces'
-      - '@module_handler'
-      - Drupal\message_notify\Plugin\Notifier\MessageNotifierInterface
-      - Drupal\message_notify\Annotation\Notifier
+    parent: default_plugin_manager
+    arguments: ['@service_container']
   logger.channel.message_notify:
     parent: logger.channel_base
     arguments: ['message_notify']

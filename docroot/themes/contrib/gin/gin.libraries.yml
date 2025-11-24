@@ -4,7 +4,8 @@ gin:
       dist/css/base/gin.css: { minified: false }
   dependencies:
     - gin/gin_base
-    - gin/legacy_css
+
+# Base
 
 gin_base:
   css:
@@ -13,9 +14,10 @@ gin_base:
       dist/css/theme/variables.css: { minified: false }
   dependencies:
     - gin/tabs
-    - gin/dialog
+    - gin/gin_dialog
 
 # Legacy
+
 gin_ckeditor:
   dependencies:
     - gin/ckeditor
@@ -27,6 +29,14 @@ gin_init:
   dependencies:
     - core/drupalSettings
 
+# Top bar
+top_bar:
+  css:
+    component:
+      dist/css/components/top_bar.css: { minified: false }
+
+# Navigation
+
 navigation:
   css:
     component:
@@ -34,21 +44,41 @@ navigation:
       dist/css/components/toolbar_secondary.css: { minified: false }
     theme:
       dist/css/layout/navigation.css: { minified: false }
+      dist/css/components/tooltip.css: { minified: false }
   js:
-    js/navigation/vendor/floating-ui/floating-ui.core.umd.js: { minified: true }
-    js/navigation/vendor/floating-ui/floating-ui.dom.umd.js: { minified: true }
-    js/navigation/sidebar.js: { minified: false }
+    js/navigation/navigation.js: { minified: false }
   dependencies:
-  - gin/coffee
-  - gin/node_preview
-  - gin/responsive_preview
-  - gin/contextual_links
-  - gin/breadcrumb
-  - gin/settings_tray
-  - gin/settings_tray_edit
-  - core/drupalSettings
-  - core/once
-  - core/drupal.displace
+    - gin/floating-ui
+    - gin/escape_admin
+    - gin/coffee
+    - gin/node_preview
+    - gin/responsive_preview
+    - gin/contextual_links
+    - gin/breadcrumb
+    - gin/settings_tray
+    - gin/settings_tray_edit
+    - core/drupalSettings
+    - core/once
+    - core/drupal.displace
+
+core_navigation:
+  css:
+    component:
+      dist/css/components/toolbar.css: { minified: false }
+      dist/css/components/toolbar_secondary.css: { minified: false }
+    theme:
+      dist/css/layout/core_navigation.css: { minified: false }
+  js:
+    dist/js/core_navigation.js: { minified: false }
+  dependencies:
+    - gin/escape_admin
+    - gin/coffee
+    - gin/node_preview
+    - gin/responsive_preview
+    - gin/contextual_links
+    - gin/breadcrumb
+    - gin/settings_tray
+    - gin/settings_tray_edit
 
 gin_toolbar:
   css:
@@ -60,6 +90,7 @@ gin_toolbar:
   js:
     dist/js/toolbar.js: { minified: false }
   dependencies:
+    - gin/escape_admin
     - gin/coffee
     - gin/node_preview
     - gin/responsive_preview
@@ -81,6 +112,7 @@ gin_horizontal_toolbar:
   js:
     dist/js/toolbar.js: { minified: false }
   dependencies:
+    - gin/escape_admin
     - gin/coffee
     - gin/node_preview
     - gin/responsive_preview
@@ -99,12 +131,15 @@ gin_classic_toolbar:
   js:
     dist/js/toolbar.js: { minified: false }
   dependencies:
+    - gin/escape_admin
     - gin/coffee
     - gin/node_preview
     - gin/contextual_links
     - gin/breadcrumb
     - gin/settings_tray_edit
     - core/once
+
+# Accent
 
 gin_accent:
   css:
@@ -116,13 +151,14 @@ gin_accent:
     - core/drupalSettings
     - core/once
 
+# Libraries
+
 gin_dialog:
   css:
     theme:
       dist/css/theme/dialog.css: { minified: false }
   dependencies:
     - gin/dialog
-    - gin/gin_base
     - gin/gin_accent
 
 gin_description_toggle:
@@ -132,9 +168,21 @@ gin_description_toggle:
   js:
     dist/js/description_toggle.js: { minified: false }
 
-gin_messages:
+escape_admin:
+  js:
+    dist/js/escape_admin.js: { minified: false }
+  dependencies:
+    - core/once
+
+messages:
   js:
     dist/js/messages.js: { minified: false }
+  dependencies:
+    - core/once
+
+dropbutton:
+  js:
+    dist/js/dropbutton.js: { minified: false }
   dependencies:
     - core/once
 
@@ -143,17 +191,34 @@ gin_messages:
 gin_custom_css:
   css:
     theme:
-      public://gin-custom.css: { preprocess: false, minified: false, weight: 100 }
+      public://gin-custom.css: { preprocess: false, minified: false, weight: 50 }
 
-# Overrides
+# Libs
 
 once:
   js:
-    js/libs/once.js: { minified: false, weight: -1 }
+    js/libs/once.js: { minified: true, weight: -1 }
+
+scrollsync:
+  js:
+    js/libs/scrollsync.js: { minified: true, weight: -1 }
+
+floating-ui:
+  js:
+    js/navigation/vendor/floating-ui/floating-ui.core.umd.js: { minified: true }
+    js/navigation/vendor/floating-ui/floating-ui.dom.umd.js: { minified: true }
+  dependencies:
+    - core/once
+
+# Overrides
 
 gin_media_embed_ckeditor_theme:
   js:
-    js/overrides/media_embed_ckeditor.theme.js: {}
+    js/overrides/media_embed_ckeditor.theme.js: { minified: false }
+
+webform_ui:
+  js:
+    js/overrides/webform_ui.js: { minified: false }
 
 # Components
 
@@ -161,6 +226,7 @@ sticky:
   js:
     dist/js/sticky.js: { minified: false }
   dependencies:
+    - gin/tooltip
     - core/drupal.displace
     - core/once
 
@@ -190,20 +256,38 @@ tableselect:
 tableheader:
   js:
     dist/js/tableheader.js: { minified: false }
+  dependencies:
+    - core/once
+    - gin/scrollsync
 
 tabs:
   css:
     component:
       dist/css/components/tabs.css: { minified: false, weight: 99 }
 
-edit_form:
+tooltip:
   js:
-    dist/js/edit_form.js: { minified: false }
+    dist/js/tooltip.js: { minified: false }
+  css:
+    component:
+      dist/css/components/tooltip.css: { minified: false }
+  dependencies:
+    - gin/floating-ui
+    - core/once
+
+more_actions:
+  js:
+    dist/js/more_actions.js: { minified: false }
+  css:
+    layout:
+      dist/css/components/more_actions.css: { minified: false }
+  dependencies:
+    - core/once
+
+edit_form:
   css:
     layout:
       dist/css/components/edit_form.css: { minified: false }
-  dependencies:
-    - core/once
 
 media_library:
   css:
@@ -274,6 +358,16 @@ settings_tray_edit:
   css:
     component:
       dist/css/components/settings_tray_edit.css: { minified: false }
+
+maintenance_page:
+  css:
+    theme:
+      dist/css/components/maintenance_page.css: { minified: false }
+  dependencies:
+    - system/maintenance
+    - gin/gin
+    - gin/gin_accent
+    - gin/gin_init
 
 # Modules
 
@@ -352,6 +446,11 @@ linkit:
     component:
       dist/css/components/linkit.css: { minified: false }
 
+term_reference_tree:
+  css:
+    component:
+      dist/css/components/term_reference_tree.css: { minified: false }
+
 # Legacy
 
 legacy_css:
@@ -363,3 +462,9 @@ workspaces:
   css:
     component:
       dist/css/components/workspaces.css: { minified: false }
+
+project_browser:
+  css:
+    theme:
+      dist/css/deprecated/project_browser.css: { minified: false }
+  deprecated: The project_browser library is deprecated in Gin 4.0.6 and will be removed in Gin 5.0.0. Consider upgrading to Project browser 2.0.0-alpha10+, see https://www.drupal.org/project/gin/issues/3508067

@@ -1,0 +1,55 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"GZ",
+		"Zunyi Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Chishui Shi": {
+			"local_name": "赤水市"
+		},
+		"Daozhen Xian": {
+			"local_code": "道真仡佬族苗族自治县",
+			"local_name": "道真县"
+		},
+		"Fenggang Xian": {
+			"local_name": "凤冈县"
+		},
+		"Honghuagang Qu": {
+			"local_name": "红花岗区"
+		},
+		"Huichuan Qu": {
+			"local_name": "汇川区"
+		},
+		"Meitan Xian": {
+			"local_name": "湄潭县"
+		},
+		"Renhuai Shi": {
+			"local_name": "仁怀市"
+		},
+		"Suiyang Xian": {
+			"local_name": "绥阳县"
+		},
+		"Tongzi Xian": {
+			"local_name": "桐梓县"
+		},
+		"Wuchuan Xian": {
+			"local_code": "务川仡佬族苗族自治县",
+			"local_name": "务川县"
+		},
+		"Xishui Xian": {
+			"local_name": "习水县"
+		},
+		"Yuqing Xian": {
+			"local_name": "余庆县"
+		},
+		"Zheng'an Xian": {
+			"local_name": "正安县"
+		},
+		"Zunyi Xian": {
+			"local_name": "遵义县"
+		}
+	}
+}

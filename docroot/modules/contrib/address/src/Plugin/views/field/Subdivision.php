@@ -89,6 +89,8 @@ class Subdivision extends FieldPluginBase {
     $entity = $this->getEntity($values);
     /** @var \Drupal\address\AddressInterface $address */
     $address = $entity->{$this->definition['field_name']}->first();
+    $code = '';
+    $parents = [];
     switch ($this->definition['property']) {
       case 'administrative_area':
         $code = $address->getAdministrativeArea();
@@ -113,6 +115,7 @@ class Subdivision extends FieldPluginBase {
           $address->getLocality(),
         ];
         break;
+
     }
     /** @var \CommerceGuys\Addressing\Subdivision\Subdivision $subdivision */
     $subdivision = $this->subdivisionRepository->get($code, $parents);

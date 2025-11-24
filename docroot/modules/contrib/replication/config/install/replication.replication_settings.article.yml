@@ -1,9 +1,0 @@
-langcode: en
-status: true
-dependencies: {  }
-id: article
-label: Replicate only article entities
-filter_id: entity_type
-parameters:
-  types:
-    - node.article

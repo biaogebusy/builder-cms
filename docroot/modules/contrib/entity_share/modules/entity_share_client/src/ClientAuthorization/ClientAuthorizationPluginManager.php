@@ -4,9 +4,9 @@ declare(strict_types = 1);
 
 namespace Drupal\entity_share_client\ClientAuthorization;
 
-use Drupal\Core\Plugin\DefaultPluginManager;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Plugin\DefaultPluginManager;
 
 /**
  * Provides the Client authorization plugin manager.
@@ -37,10 +37,10 @@ class ClientAuthorizationPluginManager extends DefaultPluginManager {
    * @param string $uuid
    *   Allow the uuid to be explicitly set.
    *
+   * @throws \Drupal\Component\Plugin\Exception\PluginException
+   *
    * @return \Drupal\entity_share_client\ClientAuthorization\ClientAuthorizationInterface[]
    *   The array of plugins.
-   *
-   * @throws \Drupal\Component\Plugin\Exception\PluginException
    */
   public function getAvailablePlugins($uuid = '') {
     $plugins = [];

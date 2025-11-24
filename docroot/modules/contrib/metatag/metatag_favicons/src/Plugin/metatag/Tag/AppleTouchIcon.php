@@ -20,5 +20,24 @@ use Drupal\metatag\Plugin\metatag\Tag\LinkRelBase;
  * )
  */
 class AppleTouchIcon extends LinkRelBase {
-  // Nothing here yet. Just a placeholder class for a plugin.
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTestOutputExistsXpath(): array {
+    // This is the one "apple touch" icon that doesn't have a size attribute.
+    return ["//link[@rel='{$this->name}' and not(@sizes)]"];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTestOutputValuesXpath(array $values): array {
+    $xpath_strings = [];
+    foreach ($values as $value) {
+      $xpath_strings[] = "//link[@rel='{$this->name}' and not(@sizes) and @" . $this->htmlValueAttribute . "='{$value}']";
+    }
+    return $xpath_strings;
+  }
+
 }

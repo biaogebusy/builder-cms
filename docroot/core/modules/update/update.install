@@ -19,7 +19,7 @@ use Drupal\update\UpdateManagerInterface;
  * there is no update data, only one record will be returned, indicating that
  * the status of core can't be determined. If data is available, there will be
  * two records: one for core, and another for all of contrib (assuming there
- * are any contributed modules or themes enabled on the site). In addition to
+ * are any contributed modules or themes installed on the site). In addition to
  * the fields expected by hook_requirements ('value', 'severity', and
  * optionally 'description'), this array will contain a 'reason' attribute,
  * which is an integer constant to indicate why the given status is being
@@ -126,7 +126,7 @@ function _update_requirement_check($project, $type) {
     $requirement['description'][] = ['#markup' => _update_message_text($type, $status)];
     if (!in_array($status, [UpdateFetcherInterface::UNKNOWN, UpdateFetcherInterface::NOT_CHECKED, UpdateFetcherInterface::NOT_FETCHED, UpdateFetcherInterface::FETCH_PENDING])) {
       if (_update_manager_access()) {
-        $requirement['description'][] = ['#prefix' => ' ', '#markup' => t('See the <a href=":available_updates">available updates</a> page for more information and to install your missing updates.', [':available_updates' => Url::fromRoute('update.report_update')->toString()])];
+        $requirement['description'][] = ['#prefix' => ' ', '#markup' => t('See the <a href=":available_updates">available updates</a> page for more information and to update your software.', [':available_updates' => Url::fromRoute('update.report_update')->toString()])];
       }
       else {
         $requirement['description'][] = ['#prefix' => ' ', '#markup' => t('See the <a href=":available_updates">available updates</a> page for more information.', [':available_updates' => Url::fromRoute('update.status')->toString()])];
@@ -155,7 +155,7 @@ function _update_requirement_check($project, $type) {
     case UpdateFetcherInterface::NOT_CHECKED:
     case UpdateFetcherInterface::NOT_FETCHED:
     case UpdateFetcherInterface::FETCH_PENDING:
-      $requirement_label = isset($project['reason']) ? $project['reason'] : t('Can not determine status');
+      $requirement_label = $project['reason'] ?? t('Can not determine status');
       $requirement['severity'] = REQUIREMENT_WARNING;
       break;
 

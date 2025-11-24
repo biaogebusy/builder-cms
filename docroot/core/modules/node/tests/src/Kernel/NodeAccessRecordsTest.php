@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\node\Kernel;
 
-use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Database\Database;
 use Drupal\node\Entity\Node;
 
@@ -23,7 +24,7 @@ class NodeAccessRecordsTest extends NodeAccessTestBase {
   /**
    * Creates a node and tests the creation of node access rules.
    */
-  public function testNodeAccessRecords() {
+  public function testNodeAccessRecords(): void {
     // Create an article node.
     $node1 = $this->drupalCreateNode(['type' => 'article']);
     $this->assertNotEmpty(Node::load($node1->id()), 'Article node created.');
@@ -39,9 +40,9 @@ class NodeAccessRecordsTest extends NodeAccessTestBase {
     $this->assertEquals('test_article_realm', $records[0]->realm, 'Grant with article_realm acquired for node without alteration.');
     $this->assertEquals(1, $records[0]->gid, 'Grant with gid = 1 acquired for node without alteration.');
 
-    // Create an unpromoted "Basic page" node.
+    // Create an un-promoted "Basic page" node.
     $node2 = $this->drupalCreateNode(['type' => 'page', 'promote' => 0]);
-    $this->assertNotEmpty(Node::load($node2->id()), 'Unpromoted basic page node created.');
+    $this->assertNotEmpty(Node::load($node2->id()), 'Un-promoted basic page node created.');
 
     // Check to see if grants added by node_test_node_access_records made it in.
     $records = $connection->select('node_access', 'na')
@@ -53,9 +54,9 @@ class NodeAccessRecordsTest extends NodeAccessTestBase {
     $this->assertEquals('test_page_realm', $records[0]->realm, 'Grant with page_realm acquired for node without alteration.');
     $this->assertEquals(1, $records[0]->gid, 'Grant with gid = 1 acquired for node without alteration.');
 
-    // Create an unpromoted, unpublished "Basic page" node.
+    // Create an un-promoted, unpublished "Basic page" node.
     $node3 = $this->drupalCreateNode(['type' => 'page', 'promote' => 0, 'status' => 0]);
-    $this->assertNotEmpty(Node::load($node3->id()), 'Unpromoted, unpublished basic page node created.');
+    $this->assertNotEmpty(Node::load($node3->id()), 'Un-promoted, unpublished basic page node created.');
 
     // Check to see if grants added by node_test_node_access_records made it in.
     $records = $connection->select('node_access', 'na')
@@ -90,7 +91,7 @@ class NodeAccessRecordsTest extends NodeAccessTestBase {
       $grants = node_test_node_grants($web_user, $op);
       $altered_grants = $grants;
       \Drupal::moduleHandler()->alter('node_grants', $altered_grants, $web_user, $op);
-      $this->assertNotEquals($grants, $altered_grants, new FormattableMarkup('Altered the %op grant for a user.', ['%op' => $op]));
+      $this->assertNotEquals($grants, $altered_grants, "Altered the $op grant for a user.");
     }
 
     // Check that core does not grant access to an unpublished node when an

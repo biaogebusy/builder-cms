@@ -7,6 +7,9 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\RedirectDestinationTrait;
 use Drupal\Core\Url;
 use Drupal\rest\Plugin\views\style\Serializer;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\Serializer\Encoder\XmlEncoder;
+use Symfony\Component\Serializer\SerializerInterface;
 
 /**
  * A style plugin for data export views.
@@ -32,6 +35,37 @@ class DataExport extends Serializer {
   protected $defaultFieldLabels = TRUE;
 
   /**
+   * The module handler service.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandler
+   */
+  protected $moduleHandler;
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('serializer'),
+      $container->getParameter('serializer.formats'),
+      $container->getParameter('serializer.format_providers'),
+      $container->get('module_handler')
+    );
+  }
+
+  /**
+   * Constructs a Plugin object.
+   */
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, SerializerInterface $serializer, array $serializer_formats, array $serializer_format_providers, $module_handler) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $serializer, $serializer_formats, $serializer_format_providers);
+
+    $this->moduleHandler = $module_handler;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function defineOptions() {
@@ -48,6 +82,14 @@ class DataExport extends Serializer {
       'encoding' => ['default' => 'utf8'],
       'utf8_bom' => ['default' => FALSE],
       'use_serializer_encode_only' => ['default' => FALSE],
+      'output_header' => ['default' => TRUE],
+    ];
+
+    $options['xml_settings']['contains'] = [
+      'encoding' => ['default' => 'UTF-8'],
+      'root_node_name' => ['default' => 'response'],
+      'item_node_name' => ['default' => 'item'],
+      'format_output' => ['default' => FALSE],
     ];
 
     return $options;
@@ -135,10 +177,86 @@ class DataExport extends Serializer {
               '#description' => $this->t('Skips the symfony data normalize method when rendering data export to increase performance on large datasets. <strong>(Only use when not exporting nested data)</strong>'),
               '#default_value' => $csv_options['use_serializer_encode_only'],
             ],
+            'output_header' => [
+              '#type' => 'checkbox',
+              '#title' => $this->t("Show the header row"),
+              '#default_value' => $csv_options['output_header'],
+            ],
+          ];
+        }
+
+        if (in_array('xml', $format_options)) {
+          $form['xml_settings'] = [
+            '#type' => 'details',
+            '#open' => TRUE,
+            '#title' => $this->t('XML settings'),
+            '#tree' => TRUE,
+            '#states' => [
+              'visible' => [
+                ':input[name="style_options[formats]"]' => [
+                  ['value' => 'xml'],
+                ],
+              ],
+            ],
+          ];
+
+          $xml_options = $this->options['xml_settings'];
+          // Add our default options for backwards compatibility.
+          $xml_options += [
+            'encoding' => 'UTF-8',
+            'root_node_name' => 'response',
+            'item_node_name' => 'item',
+            'format_output' => FALSE,
+          ];
+          $form['xml_settings']['encoding'] = [
+            '#type' => 'select',
+            '#title' => $this->t('Encoding'),
+            '#default_value' => $xml_options['encoding'],
+            '#options' => [
+              '' => $this->t('None specified'),
+              'UTF-8' => $this->t('UTF-8'),
+            ],
+          ];
+          // @todo widen this regex to support all possible XML tags, while making sure it can still work in the browser.
+          $xml_tag_regex = '[A-Za-z_][A-Za-z0-9_.:\\-]*';
+          $form['xml_settings']['root_node_name'] = [
+            '#type' => 'textfield',
+            '#title' => $this->t('Root node name'),
+            '#description' => $this->t('This should be a valid XML node name.'),
+            '#default_value' => $xml_options['root_node_name'],
+            '#pattern' => $xml_tag_regex,
+            '#states' => [
+              'required' => [
+                ':input[name="style_options[formats]"]' => [
+                  ['value' => 'xml'],
+                ],
+              ],
+            ],
+          ];
+          $form['xml_settings']['item_node_name'] = [
+            '#type' => 'textfield',
+            '#title' => $this->t('Item node name'),
+            '#description' => $this->t('This should be a valid XML node name.'),
+            '#default_value' => $xml_options['item_node_name'],
+            '#pattern' => $xml_tag_regex,
+            '#states' => [
+              'required' => [
+                ':input[name="style_options[formats]"]' => [
+                  ['value' => 'xml'],
+                ],
+              ],
+            ],
+          ];
+          $form['xml_settings']['format_output'] = [
+            '#type' => 'checkbox',
+            '#title' => $this->t('Pretty-print output'),
+            '#description' => $this->t('If the XML file is going to be consumed by humans, you might want to have it formatted with line breaks and indents.'),
+            '#default_value' => $xml_options['format_output'],
           ];
         }
         break;
     }
+
   }
 
   /**
@@ -167,7 +285,6 @@ class DataExport extends Serializer {
     if ($pager = $this->view->getPager()) {
       $url_options['query']['page'] = $pager->getCurrentPage();
     }
-    $url_options['absolute'] = TRUE;
     if (!empty($this->options['formats'])) {
       $url_options['query']['_format'] = reset($this->options['formats']);
     }
@@ -180,12 +297,14 @@ class DataExport extends Serializer {
       '#theme' => 'export_icon',
       '#url' => $url,
       '#format' => mb_strtoupper($format),
+      '#title' => $title,
       '#theme_wrappers' => [
         'container' => [
           '#attributes' => [
             'class' => [
               Html::cleanCssIdentifier($format) . '-feed',
               'views-data-export-feed',
+              Html::cleanCssIdentifier('views-data-export-feed--' . $this->displayHandler->display['id']),
             ],
           ],
         ],
@@ -238,7 +357,7 @@ class DataExport extends Serializer {
     foreach ($this->view->result as $row_index => $row) {
       $this->view->row_index = $row_index;
       $output = $this->view->rowPlugin->render($row);
-      \Drupal::moduleHandler()->alter('views_data_export_row', $output, $row, $this->view);
+      $this->moduleHandler->alter('views_data_export_row', $output, $row, $this->view);
       $rows[] = $output;
     }
 
@@ -259,10 +378,64 @@ class DataExport extends Serializer {
     if ($format === 'csv' && $this->options['csv_settings']['use_serializer_encode_only'] == 1) {
       return $this->serializer->encode($rows, $format, ['views_style_plugin' => $this]);
     }
+
+    if ($format === 'xml') {
+      return $this->renderXmlStyle($rows);
+    }
     else {
       return $this->serializer->serialize($rows, $format, ['views_style_plugin' => $this]);
     }
 
+  }
+
+  /**
+   * Renders the style using the XML format.
+   *
+   * @param array $rows
+   *   The rows to render.
+   *
+   * @return string
+   *   The rendered style.
+   */
+  protected function renderXmlStyle(array $rows) {
+    $options = $this->options['xml_settings'] ?? [];
+    // Add our default options for backwards compatibility.
+    $options += [
+      'encoding' => 'UTF-8',
+      'root_node_name' => 'response',
+      'item_node_name' => 'item',
+      'format_output' => FALSE,
+    ];
+    $context = [
+      'views_style_plugin' => $this,
+    ];
+
+    if ($options['root_node_name']) {
+      // @todo We can rely on the constant being defined once we drop support for Drupal 9.
+      $context[defined('XmlEncoder::ROOT_NODE_NAME') ? XmlEncoder::ROOT_NODE_NAME : 'xml_root_node_name'] = $options['root_node_name'];
+    }
+    if ($options['encoding']) {
+      // @todo We can rely on the constant being defined once we drop support for Drupal 9.
+      $context[defined('XmlEncoder::ENCODING') ? XmlEncoder::ENCODING : 'xml_encoding'] = $options['encoding'];
+    }
+    if ($options['format_output']) {
+      // @todo We can rely on the constant being defined once we drop support for Drupal 9.
+      $context[defined('XmlEncoder::FORMAT_OUTPUT') ? XmlEncoder::FORMAT_OUTPUT : 'xml_format_output'] = $options['format_output'];
+    }
+
+    $item_node_name = $options['item_node_name'] ?: 'item';
+    if ($item_node_name != 'item') {
+      $new_rows = [];
+      foreach ($rows as $k => $row) {
+        $new_rows[$item_node_name][] = [
+          '@key' => $k,
+          '#' => $row,
+        ];
+      }
+      $rows = $new_rows;
+    }
+
+    return $this->serializer->serialize($rows, 'xml', $context);
   }
 
 }

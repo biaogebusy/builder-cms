@@ -1,4 +1,3 @@
-
 What's this, now?
 =================
 VotingAPI provides a flexible, easy-to-use framework for rating, voting,
@@ -31,7 +30,7 @@ How Data Is Stored
 VotingAPI manages a raw 'pool' of vote data -- it doesn't keep track of any
 content directly. Instead, it lets modules store each vote with a 'content type'
 and 'content id', so that the same APIs can be used to rate nodes, comments,
-users, aggregator items, or even other votes (in a Slashdot-esque
+users, aggregator items, or even other votes (in a Slashdot-like
 meta-moderation system). It can also be used by modules that need to store and
 calculate custom data like polling results -- using a custom entity_type ensures
 that other modules won't trample on your module's voting data.
@@ -176,7 +175,7 @@ comments. If your module casts other types of votes that should be made
 available via Views, it needs to implement hook_votingapi_relationships().
 
 
-function mymodule_votingapi_relationships() {
+function my_module_votingapi_relationships() {
   $relationships[] = [
     // 'description' is used to construct the field description in the Views UI.
     'description' => t('nodes'),
@@ -193,8 +192,7 @@ function mymodule_votingapi_relationships() {
     // VotingAPI constructs pseudo-tables so that multiple relationships can
     // point to the same base table (normal and translation-based votes nodes
     // for example. These two columns allow you to override the names of the
-    // pseudo-tables. You probably don't need to change this part unless you're
-    // nedjo.
+    // pseudo-tables. You probably don't need to change this part.
     'pseudo_vote' => 'votingapi_vote',
     'pseudo_cache' => 'votingapi_cache',
   ];
@@ -210,11 +208,11 @@ given VotingAPI view field. For the View field that's passed in, your hook
 should return an array of key => value pairs, where the key is a the name of a
 callback function that will format the values from the database.
 
-function mymodule_votingapi_views_formatters($field) {
+function my_module_votingapi_views_formatters($field) {
   if ($field->field == 'value') {
-    return ['mymodule_funky_formatter' => t('MyModule value formatter')];
+    return ['my_module_funky_formatter' => t('MyModule value formatter')];
   }
   if ($field->field == 'tag') {
-    return ['mymodule_funky_tags' => t('MyModule tag formatter')];
+    return ['my_module_funky_tags' => t('MyModule tag formatter')];
   }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\config\Functional;
 
 use Drupal\Core\Serialization\Yaml;
@@ -13,9 +15,7 @@ use Drupal\Tests\BrowserTestBase;
 class ConfigSingleImportExportTest extends BrowserTestBase {
 
   /**
-   * Modules to enable.
-   *
-   * @var array
+   * {@inheritdoc}
    */
   protected static $modules = [
     'block',
@@ -43,7 +43,7 @@ class ConfigSingleImportExportTest extends BrowserTestBase {
   /**
    * Tests importing a single configuration file.
    */
-  public function testImport() {
+  public function testImport(): void {
     $storage = \Drupal::entityTypeManager()->getStorage('config_test');
     $uuid = \Drupal::service('uuid');
 
@@ -190,27 +190,15 @@ EOD;
     ];
     $this->drupalGet('admin/config/development/configuration/single/import');
     $this->submitForm($edit, 'Import');
-    if (extension_loaded('yaml')) {
-      // If the yaml extension is loaded it will work but not create the PHP
-      // object.
-      $this->assertSession()->pageTextContains('Are you sure you want to update the second test configuration?');
-      $this->submitForm([], 'Confirm');
-      $entity = $storage->load('second');
-      $this->assertSession()->pageTextContains('The configuration was imported successfully.');
-      $this->assertIsString($entity->label());
-      $this->assertStringContainsString('ObjectSerialization', $entity->label(), 'Label contains serialized object');
-    }
-    else {
-      // If the Symfony parser is used there will be an error.
-      $this->assertSession()->responseContains('The import failed with the following message:');
-      $this->assertSession()->responseContains('Object support when parsing a YAML file has been disabled');
-    }
+    // @see \Drupal\Tests\Component\Serialization\YamlSymfonyTest:: testDecodeObjectSupportDisabled()
+    $this->assertSession()->responseContains('The import failed with the following message:');
+    $this->assertSession()->responseContains('Object support when parsing a YAML file has been disabled');
   }
 
   /**
    * Tests importing a simple configuration file.
    */
-  public function testImportSimpleConfiguration() {
+  public function testImportSimpleConfiguration(): void {
     $this->drupalLogin($this->drupalCreateUser(['import configuration']));
     $config = $this->config('system.site')->set('name', 'Test simple import');
 
@@ -253,7 +241,7 @@ EOD;
   /**
    * Tests exporting a single configuration file.
    */
-  public function testExport() {
+  public function testExport(): void {
     $this->drupalLogin($this->drupalCreateUser(['export configuration']));
 
     // Verify that the simple configuration option is selected when specified
@@ -266,6 +254,7 @@ EOD;
     $this->assertSession()->optionExists('config_name', 'user.settings');
 
     $this->drupalGet('admin/config/development/configuration/single/export/system.simple/system.image');
+    // cspell:disable-next-line
     $this->assertSession()->fieldValueEquals('export', "_core:\n  default_config_hash: durWHaKeBaq4d9Wpi4RqwADj1OufDepcnJuhVLmKN24\ntoolkit: gd\n");
 
     // Verify that the date format entity type is selected when specified in
@@ -277,7 +266,7 @@ EOD;
     // Verify that the fallback date format config entity is selected when
     // specified in the URL.
     $this->drupalGet('admin/config/development/configuration/single/export/date_format/fallback');
-    $option_node = $this->assertSession()->optionExists("config_name", 'Fallback date format (fallback)');
+    $option_node = $this->assertSession()->optionExists("config_name", 'fallback (Fallback date format)');
     $this->assertTrue($option_node->isSelected());
     $fallback_date = \Drupal::entityTypeManager()->getStorage('date_format')->load('fallback');
     $yaml_text = $this->assertSession()->fieldExists('export')->getValue();

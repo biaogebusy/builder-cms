@@ -1,0 +1,88 @@
+{
+	"country_code": "TW",
+	"parents": [
+		"TW",
+		"CHA"
+	],
+	"locale": "zh-Hant",
+	"subdivisions": {
+		"Ershui Township": {
+			"local_name": "二水鄉"
+		},
+		"Erlin Township": {
+			"local_name": "二林鎮"
+		},
+		"Dacun Township": {
+			"local_name": "大村鄉"
+		},
+		"Dacheng Township": {
+			"local_name": "大城鄉"
+		},
+		"Beidou Township": {
+			"local_name": "北斗鎮"
+		},
+		"Yongjing Township": {
+			"local_name": "永靖鄉"
+		},
+		"Tianzhong Township": {
+			"local_name": "田中鎮"
+		},
+		"Tianwei Township": {
+			"local_name": "田尾鄉"
+		},
+		"Zhutang Township": {
+			"local_name": "竹塘鄉"
+		},
+		"Shengang Township": {
+			"local_name": "伸港鄉"
+		},
+		"Xiushui Township": {
+			"local_name": "秀水鄉"
+		},
+		"Hemei Township": {
+			"local_name": "和美鎮"
+		},
+		"Shetou Township": {
+			"local_name": "社頭鄉"
+		},
+		"Fenyuan Township": {
+			"local_name": "芬園鄉"
+		},
+		"Huatan Township": {
+			"local_name": "花壇鄉"
+		},
+		"Fangyuan Township": {
+			"local_name": "芳苑鄉"
+		},
+		"Yuanlin City": {
+			"local_name": "員林市"
+		},
+		"Puxin Township": {
+			"local_name": "埔心鄉"
+		},
+		"Puyan Township": {
+			"local_name": "埔鹽鄉"
+		},
+		"Pitou Township": {
+			"local_name": "埤頭鄉"
+		},
+		"Lukang Township": {
+			"local_name": "鹿港鎮"
+		},
+		"Xizhou Township": {
+			"local_name": "溪州鄉"
+		},
+		"Xihu Township": {
+			"local_name": "溪湖鎮"
+		},
+		"Changhua City": {
+			"local_name": "彰化市"
+		},
+		"Fuxing Township": {
+			"local_name": "福興鄉"
+		},
+		"Xianxi Township": {
+			"local_name": "線西鄉"
+		}
+	}
+}

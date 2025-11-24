@@ -6,19 +6,21 @@ use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableDependencyInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Path\CurrentPathStack;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\path_alias\AliasManagerInterface;
+use Drupal\views\Attribute\ViewsArgumentDefault;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Default argument plugin to use the raw value from the URL.
  *
  * @ingroup views_argument_default_plugins
- *
- * @ViewsArgumentDefault(
- *   id = "raw",
- *   title = @Translation("Raw value from URL")
- * )
  */
+#[ViewsArgumentDefault(
+  id: 'raw',
+  title: new TranslatableMarkup('Raw value from URL'),
+)]
+
 class Raw extends ArgumentDefaultPluginBase implements CacheableDependencyInterface {
 
   /**
@@ -41,7 +43,7 @@ class Raw extends ArgumentDefaultPluginBase implements CacheableDependencyInterf
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
+   *   The plugin ID for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
    * @param \Drupal\path_alias\AliasManagerInterface $alias_manager

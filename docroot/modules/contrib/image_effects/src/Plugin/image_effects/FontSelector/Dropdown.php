@@ -1,23 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Plugin\image_effects\FontSelector;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
+use Drupal\image_effects\Plugin\Attribute\FontSelector;
 
 /**
  * Dropdown font selector plugin.
  *
  * Provides access to a list of fonts stored in a directory, specified in
  * configuration.
- *
- * @Plugin(
- *   id = "dropdown",
- *   title = @Translation("Dropdown font selector"),
- *   short_title = @Translation("Dropdown"),
- *   help = @Translation("Access a list of fonts stored in the directory specified in configuration.")
- * )
  */
+#[FontSelector(
+  id: "dropdown",
+  title: new TranslatableMarkup("Dropdown font selector"),
+  shortTitle: new TranslatableMarkup("Dropdown"),
+  help: new TranslatableMarkup("Access a list of fonts stored in the directory specified in configuration."),
+)]
 class Dropdown extends Basic {
 
   /**
@@ -45,7 +48,7 @@ class Dropdown extends Basic {
   /**
    * Validation handler for the 'path' element.
    */
-  public function validatePath($element, FormStateInterface $form_state, $form) {
+  public function validatePath(array $element, FormStateInterface $form_state, array $form): void {
     if (!is_dir($element['#value'])) {
       $form_state->setErrorByName(implode('][', $element['#parents']), $this->t('Invalid directory specified.'));
     }
@@ -54,7 +57,7 @@ class Dropdown extends Basic {
   /**
    * {@inheritdoc}
    */
-  public function selectionElement(array $options = []) {
+  public function selectionElement(array $options = []): array {
     // Get list of font names.
     $fonts_list = $this->getList();
     if (empty($fonts_list)) {
@@ -83,7 +86,7 @@ class Dropdown extends Basic {
   /**
    * Validation handler for the selection element.
    */
-  public function validateSelectorUri($element, FormStateInterface $form_state, $form) {
+  public function validateSelectorUri(array $element, FormStateInterface $form_state, array $form): void {
     if (!empty($element['#value'])) {
       if (file_exists($file_path = $this->configuration['path'] . '/' . $element['#value'])) {
         $form_state->setValueForElement($element, $file_path);
@@ -100,10 +103,10 @@ class Dropdown extends Basic {
    * Scans through files available in the directory specified through
    * configuration.
    *
-   * @return array
+   * @return string[]
    *   Array of font names.
    */
-  protected function getList() {
+  protected function getList(): array {
     $filelist = [];
     if (is_dir($this->configuration['path']) && $handle = opendir($this->configuration['path'])) {
       while ($file_name = readdir($handle)) {

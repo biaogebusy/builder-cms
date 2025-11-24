@@ -1,38 +1,37 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects_module_test\Plugin\ImageEffect;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Image\ImageInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\image\Attribute\ImageEffect;
 use Drupal\image\ConfigurableImageEffectBase;
 use Drupal\image_effects\Plugin\ImageEffectsPluginBaseInterface;
+use Drupal\image_effects\Plugin\ImageSelectorPluginManager;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Test effect that uses the image selector plugin to get an image.
- *
- * @ImageEffect(
- *   id = "image_effects_module_test_image_selection",
- *   label = @Translation("Image selection test image effect")
- * )
  */
+#[ImageEffect(
+  id: 'image_effects_module_test_image_selection',
+  label: new TranslatableMarkup('Image selection test image effect'),
+)]
 class ImageSelectionImageEffect extends ConfigurableImageEffectBase implements ContainerFactoryPluginInterface {
 
-  /**
-   * The image selector plugin.
-   *
-   * @var \Drupal\image_effects\Plugin\ImageEffectsPluginBaseInterface
-   */
-  protected $imageSelector;
-
-  /**
-   * {@inheritdoc}
-   */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, LoggerInterface $logger, ImageEffectsPluginBaseInterface $image_selector_plugin) {
+  public function __construct(
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+    LoggerInterface $logger,
+    protected readonly ImageEffectsPluginBaseInterface $imageSelector,
+  ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $logger);
-    $this->imageSelector = $image_selector_plugin;
   }
 
   /**
@@ -44,7 +43,7 @@ class ImageSelectionImageEffect extends ConfigurableImageEffectBase implements C
       $plugin_id,
       $plugin_definition,
       $container->get('logger.factory')->get('image'),
-      $container->get('plugin.manager.image_effects.image_selector')->getPlugin()
+      $container->get(ImageSelectorPluginManager::class)->getPlugin()
     );
   }
 

@@ -27,13 +27,16 @@ class TaxNumberConstraintValidator extends ConstraintValidator {
       // Type not yet known.
       return;
     }
+    assert($constraint instanceof TaxNumberConstraint);
 
     if (!$tax_number_type->validate($item->value)) {
       // Show examples, if available, to demonstrate the right format.
       $examples = $tax_number_type->getFormattedExamples();
-      $message_name = $examples ? 'invalidMessageWithExamples' : 'invalidMessage';
+      $violation_message = $examples
+        ? $constraint->invalidMessageWithExamples
+        : $constraint->invalidMessage;
 
-      $this->context->buildViolation($constraint->{$message_name})
+      $this->context->buildViolation($violation_message)
         ->atPath('value')
         ->setParameter('%name', $item->getFieldDefinition()->getLabel())
         ->setParameter('@examples', $examples)

@@ -2,8 +2,8 @@
 
 namespace Drupal\page_manager_ui\Form;
 
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Display\VariantManager;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -64,6 +64,34 @@ class PageGeneralForm extends FormBase {
     $cached_values = $form_state->getTemporaryValue('wizard');
     /** @var \Drupal\page_manager\Entity\Page $page */
     $page = $cached_values['page'];
+
+    // Only add the label and machine name fields if the page has already been
+    // created or it will end up on the add page form.
+    if (!$page->isNew()) {
+      $form['label'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Administrative title'),
+        '#required' => TRUE,
+        '#size' => 32,
+        '#default_value' => $cached_values['label'] ?? $page->label(),
+        '#maxlength' => 255,
+      ];
+
+      $form['id'] = [
+        '#type' => 'machine_name',
+        '#maxlength' => 128,
+        '#machine_name' => [
+          'exists' => ['Drupal\page_manager\Entity\Page', 'load'],
+          'source' => ['label'],
+        ],
+        '#description' => $this->t('A unique machine-readable name for this @entity_type. It must only contain lowercase letters, numbers, and underscores.', [
+          '@entity_type' => $cached_values['label'] ?? $page->label(),
+        ]),
+        '#default_value' => $cached_values['id'] ?? $page->id(),
+        '#disabled' => TRUE,
+      ];
+    }
+
     $form['description'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Administrative description'),
@@ -125,6 +153,12 @@ class PageGeneralForm extends FormBase {
     $cached_values = $form_state->getTemporaryValue('wizard');
     /** @var \Drupal\page_manager\Entity\Page $page */
     $page = $cached_values['page'];
+
+    // The label must be set to the temporary form state instead of directly
+    // on the page entity since the ctools form wizard will override it
+    // with the cached values.
+    $form_state->setTemporaryValue(['wizard', 'label'], $form_state->getValue('label'));
+
     $page->set('description', $form_state->getValue('description'));
     $page->set('path', $form_state->getValue('path'));
     $page->set('use_admin_theme', $form_state->getValue('use_admin_theme'));
@@ -175,6 +209,7 @@ class PageGeneralForm extends FormBase {
 
       // Ensure each path is unique.
       $path_query = $this->pageStorage->getQuery()
+        ->accessCheck(FALSE)
         ->condition('path', $value);
       if (!$page->isNew()) {
         $path_query->condition('id', $page->id(), '<>');

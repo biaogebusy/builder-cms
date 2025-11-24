@@ -1,0 +1,23 @@
+{
+	"country_code": "CN",
+	"parents": [
+		"CN",
+		"SN",
+		"Tongchuan Shi"
+	],
+	"locale": "zh-Hans",
+	"subdivisions": {
+		"Wangyi Qu": {
+			"local_name": "王益区"
+		},
+		"Yaozhou Qu": {
+			"local_name": "耀州区"
+		},
+		"Yijun Xian": {
+			"local_name": "宜君县"
+		},
+		"Yintai Qu": {
+			"local_name": "印台区"
+		}
+	}
+}

@@ -2,13 +2,11 @@
 
 namespace Drupal\book\Cache;
 
-use Drupal\Core\DependencyInjection\DeprecatedServicePropertyTrait;
+use Drupal\book\BookManagerInterface;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Cache\Context\CacheContextInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\node\NodeInterface;
-use Symfony\Component\DependencyInjection\ContainerAwareInterface;
-use Symfony\Component\DependencyInjection\ContainerAwareTrait;
 
 /**
  * Defines the book navigation cache context service.
@@ -18,14 +16,8 @@ use Symfony\Component\DependencyInjection\ContainerAwareTrait;
  * This allows for book navigation location-aware caching. It depends on:
  * - whether the current route represents a book node at all
  * - and if so, where in the book hierarchy we are
- *
- * This class is container-aware to avoid initializing the 'book.manager'
- * service when it is not necessary.
  */
-class BookNavigationCacheContext implements CacheContextInterface, ContainerAwareInterface {
-
-  use ContainerAwareTrait;
-  use DeprecatedServicePropertyTrait;
+class BookNavigationCacheContext implements CacheContextInterface {
 
   /**
    * The current route match.
@@ -35,22 +27,19 @@ class BookNavigationCacheContext implements CacheContextInterface, ContainerAwar
   protected $routeMatch;
 
   /**
-   * {@inheritdoc}
-   */
-  protected $deprecatedProperties = ['request_stack' => 'request_stack'];
-
-  /**
    * Constructs a new BookNavigationCacheContext service.
    *
    * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
    *   The current route match.
+   * @param \Drupal\book\BookManagerInterface|null $bookManagerService
+   *   The book manager service.
    */
-  public function __construct($route_match) {
-    if (!$route_match instanceof RouteMatchInterface) {
-      @trigger_error('Passing the request_stack service to ' . __METHOD__ . '() is deprecated in drupal:9.2.0 and will be removed before drupal:10.0.0. The parameter should be an instance of \Drupal\Core\Routing\RouteMatchInterface instead.', E_USER_DEPRECATED);
-      $route_match = \Drupal::routeMatch();
-    }
+  public function __construct(RouteMatchInterface $route_match, public ?BookManagerInterface $bookManagerService = NULL) {
     $this->routeMatch = $route_match;
+    if ($this->bookManagerService === NULL) {
+      @trigger_error('Calling ' . __METHOD__ . ' without the $bookManagerService argument is deprecated in drupal:10.2.0 and it will be required in drupal:11.0.0. See https://www.drupal.org/node/3397515', E_USER_DEPRECATED);
+      $this->bookManagerService = \Drupal::service('book.manager');
+    }
   }
 
   /**
@@ -77,7 +66,7 @@ class BookNavigationCacheContext implements CacheContextInterface, ContainerAwar
     }
 
     // If we're looking at a book node, get the trail for that node.
-    $active_trail = $this->container->get('book.manager')
+    $active_trail = $this->bookManagerService
       ->getActiveTrailIds($node->book['bid'], $node->book);
     return implode('|', $active_trail);
   }

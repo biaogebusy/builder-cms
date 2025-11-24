@@ -97,11 +97,11 @@ elements: |
     '#type': webform_section
     email:
       '#type': email
-      '#title': 'Primary E-mail Address'
+      '#title': 'Primary Email Address'
       '#description': 'Enter your primary email addresses, which will be used for all email communications.'
     emails:
       '#type': webform_email_multiple
-      '#title': 'Secondary E-mail Addresses'
+      '#title': 'Secondary Email Addresses'
       '#description': 'Enter multiple email addresses separated by commas.'
   regional_settings:
     '#title': 'Regional Settings'

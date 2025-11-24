@@ -4,10 +4,10 @@
   "type": "drupal-module",
   "license": "GPL-2.0-or-later",
   "require": {
-    "drupal/core": "^9 || ^10"
+    "drupal/core": "^9 || ^10 || ^11"
   },
   "require-dev": {
-    "drupal/diff": "1.x-dev"
+    "drupal/diff": "^1 || ^2"
   },
   "extra": {
     "drush": {

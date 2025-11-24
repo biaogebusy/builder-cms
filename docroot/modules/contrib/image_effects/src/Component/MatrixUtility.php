@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\image_effects\Component;
 
 /**
@@ -21,7 +23,7 @@ abstract class MatrixUtility {
    *
    * @see https://stackoverflow.com/questions/39937212/maximum-subarray-of-size-hxw-within-a-2d-matrix
    */
-  public static function cumulativeSum(array $matrix) {
+  public static function cumulativeSum(array $matrix): array {
     $matrix_rows = count($matrix);
     $matrix_columns = count($matrix[0]);
 
@@ -66,7 +68,7 @@ abstract class MatrixUtility {
    *
    * @see https://stackoverflow.com/questions/39937212/maximum-subarray-of-size-hxw-within-a-2d-matrix
    */
-  public static function findMaxSumSubmatrix(array $matrix, $rows, $columns) {
+  public static function findMaxSumSubmatrix(array $matrix, int $rows, int $columns): array {
     $matrix_rows = count($matrix);
     $matrix_columns = count($matrix[0]);
 

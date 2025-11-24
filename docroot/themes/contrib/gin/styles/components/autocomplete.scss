@@ -37,7 +37,9 @@ a.ui-button:active,
 }
 
 .js .form-autocomplete {
-  transition: var(--gin-transition), background-position none;
+  @media (prefers-reduced-motion: no-preference) {
+    transition: var(--gin-transition), background-position none;
+  }
 }
 
 .js .form-autocomplete.is-autocompleting,
@@ -53,22 +55,24 @@ div.autocomplete-deluxe-container div.autocomplete-deluxe-throbber.autocomplete-
   &::after {
     content: "";
     position: absolute;
-    top: 35px;
-    right: 12px;
+    inset-block-start: 35px;
+    inset-inline-end: 12px;
     display: block;
-    text-align: right;
+    text-align: end;
     border: 2px solid var(--gin-bg-input);
     border-radius: 50%;
-    border-top: 2px solid var(--gin-color-primary);
+    border-block-start: 2px solid var(--gin-color-primary);
     width: 14px;
     height: 14px;
-    animation: gin-throbber 1s linear infinite;
+    @media (prefers-reduced-motion: no-preference) {
+      animation: gin-throbber 1s linear infinite;
+    }
   }
 }
 
 div.autocomplete-deluxe-container div.autocomplete-deluxe-throbber.autocomplete-deluxe-open {
   &::after {
-    top: 2px;
+    inset-block-start: 2px;
   }
 }
 
@@ -79,7 +83,10 @@ div.autocomplete-deluxe-multiple {
   border: 1px solid var(--gin-border-color-form-element);
   border-radius: var(--gin-border-m);
   box-sizing: border-box;
-  transition: var(--gin-transition);
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition: var(--gin-transition);
+  }
 }
 
 .autocomplete-deluxe-container {
@@ -91,7 +98,9 @@ div.autocomplete-deluxe-multiple {
 
 .autocomplete-deluxe-item {
   color: var(--gin-color-primary-hover);
-  padding: 6px var(--gin-spacing-l) 6px 12px;
+  padding-block: 6px;
+  padding-inline: 12px var(--gin-spacing-l);
+
   background-color: var(--gin-color-primary-light-hover);
   border-radius: var(--gin-border-l);
   border: 0 none;
@@ -104,8 +113,8 @@ div.autocomplete-deluxe-multiple {
   }
 
   .autocomplete-deluxe-item-delete {
-    top: 6px;
-    right: 6px;
+    inset-block-start: 6px;
+    inset-inline-end: 6px;
     mask-image: icon("close");
     mask-size: 10px 10px;
     mask-repeat: no-repeat;

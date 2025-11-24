@@ -1,0 +1,17 @@
+bartik
+dependee
+dependee's
+dependees
+drupalci
+druplicon
+drush
+langcode
+langcodes
+lullabot
+mabe
+olivero
+olivero's
+simpletest
+tempstore
+umami
+validatable

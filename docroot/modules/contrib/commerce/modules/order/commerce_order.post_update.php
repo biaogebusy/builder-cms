@@ -5,10 +5,10 @@
  * Post update functions for Order.
  */
 
-use Drupal\profile\Entity\ProfileType;
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Core\Entity\Entity\EntityFormMode;
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\profile\Entity\ProfileType;
 
 /**
  * Revert Order views to fix broken Price fields.

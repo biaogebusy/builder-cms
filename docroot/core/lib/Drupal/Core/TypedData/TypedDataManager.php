@@ -8,11 +8,12 @@ use Drupal\Core\DependencyInjection\ClassResolverInterface;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
-use Drupal\Core\TypedData\Validation\ExecutionContextFactory;
+use Drupal\Core\TypedData\Attribute\DataType;
 use Drupal\Core\TypedData\Validation\RecursiveValidator;
 use Drupal\Core\Validation\ConstraintManager;
 use Drupal\Core\Validation\ConstraintValidatorFactory;
 use Drupal\Core\Validation\DrupalTranslator;
+use Drupal\Core\Validation\ExecutionContextFactory;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 /**
@@ -67,7 +68,14 @@ class TypedDataManager extends DefaultPluginManager implements TypedDataManagerI
     $this->setCacheBackend($cache_backend, 'typed_data_types_plugins');
     $this->classResolver = $class_resolver;
 
-    parent::__construct('Plugin/DataType', $namespaces, $module_handler, NULL, 'Drupal\Core\TypedData\Annotation\DataType');
+    parent::__construct(
+      'Plugin/DataType',
+      $namespaces,
+      $module_handler,
+      NULL,
+      DataType::class,
+      'Drupal\Core\TypedData\Annotation\DataType',
+    );
   }
 
   /**

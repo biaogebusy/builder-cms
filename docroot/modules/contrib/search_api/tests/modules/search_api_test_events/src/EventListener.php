@@ -42,7 +42,7 @@ class EventListener implements EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getSubscribedEvents() {
+  public static function getSubscribedEvents(): array {
     return [
       SearchApiEvents::DETERMINING_SERVER_FEATURES => 'serverFeaturesAlter',
       SearchApiEvents::GATHERING_BACKENDS => 'backendInfoAlter',
@@ -145,6 +145,7 @@ class EventListener implements EventSubscriberInterface {
    *   The items indexed event.
    */
   public function itemsIndexed(ItemsIndexedEvent $event) {
+    // cspell:disable-next-line
     $this->messenger->addStatus('Please set me at ease');
   }
 
