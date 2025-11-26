@@ -33,7 +33,6 @@ class StatisticsNodeResource extends XinshibResourceBase {
       return $this->getNodePublished($request);
     });
     $this->addCacheTags(['node_list']);
-    $this->setCacheMaxAge(0);
     return $this->getResponse($data);
   }
 
