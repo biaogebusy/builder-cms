@@ -29,6 +29,18 @@ class XinshibResourceBase extends ResourceBase {
   protected $entityTypeManager;
 
   /**
+   * 缓存时间
+   *
+   * @var integer
+   */
+  protected $cacheMaxAge = -1;
+
+  /**
+   * @var string[]
+   */
+  protected $cacheContexts = ['url', 'user.permissions'];
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
@@ -63,6 +75,29 @@ class XinshibResourceBase extends ResourceBase {
     $this->cacheTags = array_merge($this->cacheTags, $cacheTags);
   }
 
+
+  /**
+   * @return string[]
+   */
+  public function getCacheContexts(): array {
+    return $this->cacheContexts;
+  }
+
+  /**
+   * @param string[] $cacheContexts
+   */
+  public function setCacheContexts(array $cacheContexts): void {
+    $this->cacheContexts = $cacheContexts;
+  }
+
+  public function getCacheMaxAge() {
+    return $this->cacheMaxAge;
+  }
+
+  public function setCacheMaxAge($cacheMaxAge) {
+    $this->cacheMaxAge = $cacheMaxAge;
+  }
+
   /**
    * @param $data
    * @return ResourceResponse
@@ -70,7 +105,8 @@ class XinshibResourceBase extends ResourceBase {
   protected function getResponse($data) {
     $response = new ResourceResponse($data);
     $response->getCacheableMetadata()->addCacheTags($this->getCacheTags());
-    $response->getCacheableMetadata()->addCacheContexts(['url', 'user.permissions']);
+    $response->getCacheableMetadata()->addCacheContexts($this->getCacheContexts());
+    $response->getCacheableMetadata()->setCacheMaxAge($this->getCacheMaxAge());
     if ($this->config->get('debug')) {
       $response->getCacheableMetadata()->setCacheMaxAge(0);
     }
