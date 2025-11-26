@@ -32,6 +32,7 @@ class StatisticsNodeResource extends XinshibResourceBase {
       // triggers the code that we don't don't control that in turn triggers early rendering.
       return $this->getNodePublished($request);
     });
+    $this->addCacheTags(['node_list']);
     return $this->getResponse($data);
   }
 
@@ -57,6 +58,7 @@ class StatisticsNodeResource extends XinshibResourceBase {
     }
 
     return [
+      'total' => $this->statisticsNodeTotal($request),
       'count' => $count,
       'chart' => $chart,
     ];
@@ -89,5 +91,26 @@ class StatisticsNodeResource extends XinshibResourceBase {
       $data[$row->month] = (int) $row->total;
     }
     return $data;
+  }
+
+  /**
+   * 返回发文统计
+   * @param $date
+   * @param $end_date
+   * @return array
+   */
+  private function statisticsNodeTotal(Request $request) {
+    $db = \Drupal::database();
+    $query = $db->select('node_field_data', 'node_field_data');
+    $query->addExpression('count(node_field_data.nid)', 'total');
+    $query->condition('node_field_data.status', 1);
+    if (\Drupal::moduleHandler()->moduleExists('multiversion')) {
+      $query->condition('node_field_data._deleted', 0);
+    }
+    $type = $request->get('type') ? explode(' ', $request->get('type')) : [];
+    if ($type) {
+      $query->condition('node_field_data.type', $type, 'in');
+    }
+    return (int) $query->execute()->fetchField();
   }
 }
