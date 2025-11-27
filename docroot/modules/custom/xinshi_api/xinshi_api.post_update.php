@@ -15,8 +15,9 @@ function xinshi_api_post_update_views_date_field_strip_tags() {
     $display_options = &$view->getDisplay()->options;
     $changed = false;
     foreach ($display_options['fields'] as $field_name => &$field_info) {
-      if (isset($field_info['settings']['date_format']) && $field_info['settings']['date_format'] == 'custom') {
+      if (isset($field_info['settings']['date_format'])) {
         $field_info['alter']['strip_tags'] = true;
+        $field_info['alter']['trim_whitespace'] = true;
         $changed = true;
       }
     }
