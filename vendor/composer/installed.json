@@ -140,6 +140,76 @@
             "install-path": "../alibabacloud/credentials"
         },
         {
+            "name": "alibabacloud/darabonba",
+            "version": "v1.0.3",
+            "version_normalized": "1.0.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/alibabacloud-sdk-php/darabonba.git",
+                "reference": "200f0c9f8620c66fdf0fa2f4d73293cdc7515937"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/alibabacloud-sdk-php/darabonba/zipball/200f0c9f8620c66fdf0fa2f4d73293cdc7515937",
+                "reference": "200f0c9f8620c66fdf0fa2f4d73293cdc7515937",
+                "shasum": ""
+            },
+            "require": {
+                "adbario/php-dot-notation": "^2.4",
+                "alibabacloud/tea": "^3.2",
+                "ext-curl": "*",
+                "ext-json": "*",
+                "ext-libxml": "*",
+                "ext-mbstring": "*",
+                "ext-openssl": "*",
+                "ext-simplexml": "*",
+                "ext-xmlwriter": "*",
+                "guzzlehttp/guzzle": "^6.3|^7.0",
+                "php": ">=5.5",
+                "psr/http-message": "^0.11.0|^1.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^4.8.35|^5.4.3|^9.3",
+                "symfony/dotenv": "^3.4",
+                "symfony/var-dumper": "^3.4"
+            },
+            "suggest": {
+                "ext-sockets": "To use client-side monitoring"
+            },
+            "time": "2025-10-23T12:41:26+00:00",
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "AlibabaCloud\\Dara\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache-2.0"
+            ],
+            "authors": [
+                {
+                    "name": "Alibaba Cloud SDK",
+                    "email": "sdk-team@alibabacloud.com",
+                    "homepage": "http://www.alibabacloud.com"
+                }
+            ],
+            "description": "Client of Darabonba for PHP",
+            "homepage": "https://www.alibabacloud.com/",
+            "keywords": [
+                "alibabacloud",
+                "client",
+                "cloud",
+                "tea"
+            ],
+            "support": {
+                "issues": "https://github.com/aliyun/tea-php/issues",
+                "source": "https://github.com/aliyun/tea-php"
+            },
+            "install-path": "../alibabacloud/darabonba"
+        },
+        {
             "name": "alibabacloud/darabonba-openapi",
             "version": "0.2.17",
             "version_normalized": "0.2.17.0",
@@ -234,6 +304,50 @@
             "install-path": "../alibabacloud/dypnsapi-20170525"
         },
         {
+            "name": "alibabacloud/dysmsapi-20170525",
+            "version": "4.2.0",
+            "version_normalized": "4.2.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/alibabacloud-sdk-php/Dysmsapi-20170525.git",
+                "reference": "fcf6764d5d0d797fd5fbc20ecd940d22a81ea455"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/alibabacloud-sdk-php/Dysmsapi-20170525/zipball/fcf6764d5d0d797fd5fbc20ecd940d22a81ea455",
+                "reference": "fcf6764d5d0d797fd5fbc20ecd940d22a81ea455",
+                "shasum": ""
+            },
+            "require": {
+                "alibabacloud/darabonba": "^1.0.0",
+                "alibabacloud/openapi-core": "^1.0.0",
+                "php": ">5.5"
+            },
+            "time": "2025-09-17T02:17:53+00:00",
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "AlibabaCloud\\SDK\\Dysmsapi\\V20170525\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache-2.0"
+            ],
+            "authors": [
+                {
+                    "name": "Alibaba Cloud SDK",
+                    "email": "sdk-team@alibabacloud.com"
+                }
+            ],
+            "description": "Alibaba Cloud Dysmsapi (20170525) SDK Library for PHP",
+            "support": {
+                "source": "https://github.com/alibabacloud-sdk-php/Dysmsapi-20170525/tree/4.2.0"
+            },
+            "install-path": "../alibabacloud/dysmsapi-20170525"
+        },
+        {
             "name": "alibabacloud/endpoint-util",
             "version": "0.1.1",
             "version_normalized": "0.1.1.0",
@@ -320,6 +434,57 @@
                 "source": "https://github.com/alibabacloud-sdk-php/alibabacloud-gateway-spi/tree/1.0.0"
             },
             "install-path": "../alibabacloud/gateway-spi"
+        },
+        {
+            "name": "alibabacloud/openapi-core",
+            "version": "1.0.7",
+            "version_normalized": "1.0.7.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/alibabacloud-sdk-php/openapi-core.git",
+                "reference": "abbb087be7385f0339426c1607c8566174d516da"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/alibabacloud-sdk-php/openapi-core/zipball/abbb087be7385f0339426c1607c8566174d516da",
+                "reference": "abbb087be7385f0339426c1607c8566174d516da",
+                "shasum": ""
+            },
+            "require": {
+                "alibabacloud/credentials": "^1.2.2",
+                "alibabacloud/darabonba": "^1",
+                "alibabacloud/gateway-spi": "^1",
+                "php": ">5.5"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^4.8.35|^5.4.3|^9.3",
+                "symfony/dotenv": "^3.4",
+                "symfony/var-dumper": "^3.4"
+            },
+            "time": "2025-08-11T06:12:49+00:00",
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "Darabonba\\OpenApi\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache-2.0"
+            ],
+            "authors": [
+                {
+                    "name": "Alibaba Cloud SDK",
+                    "email": "sdk-team@alibabacloud.com"
+                }
+            ],
+            "description": "Alibaba Cloud OpenApi Client Core",
+            "support": {
+                "issues": "https://github.com/alibabacloud-sdk-php/openapi-core/issues",
+                "source": "https://github.com/alibabacloud-sdk-php/openapi-core/tree/1.0.7"
+            },
+            "install-path": "../alibabacloud/openapi-core"
         },
         {
             "name": "alibabacloud/openapi-util",
@@ -16987,27 +17152,27 @@
         },
         {
             "name": "psr/http-message",
-            "version": "2.0",
-            "version_normalized": "2.0.0.0",
+            "version": "1.1",
+            "version_normalized": "1.1.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/php-fig/http-message.git",
-                "reference": "402d35bcb92c70c026d1a6a9883f06b2ead23d71"
+                "reference": "cb6ce4845ce34a8ad9e68117c10ee90a29919eba"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/php-fig/http-message/zipball/402d35bcb92c70c026d1a6a9883f06b2ead23d71",
-                "reference": "402d35bcb92c70c026d1a6a9883f06b2ead23d71",
+                "url": "https://api.github.com/repos/php-fig/http-message/zipball/cb6ce4845ce34a8ad9e68117c10ee90a29919eba",
+                "reference": "cb6ce4845ce34a8ad9e68117c10ee90a29919eba",
                 "shasum": ""
             },
             "require": {
                 "php": "^7.2 || ^8.0"
             },
-            "time": "2023-04-04T09:54:51+00:00",
+            "time": "2023-04-04T09:50:52+00:00",
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "2.0.x-dev"
+                    "dev-master": "1.1.x-dev"
                 }
             },
             "installation-source": "dist",
@@ -17023,7 +17188,7 @@
             "authors": [
                 {
                     "name": "PHP-FIG",
-                    "homepage": "https://www.php-fig.org/"
+                    "homepage": "http://www.php-fig.org/"
                 }
             ],
             "description": "Common interface for HTTP messages",
@@ -17037,7 +17202,7 @@
                 "response"
             ],
             "support": {
-                "source": "https://github.com/php-fig/http-message/tree/2.0"
+                "source": "https://github.com/php-fig/http-message/tree/1.1"
             },
             "install-path": "../psr/http-message"
         },
