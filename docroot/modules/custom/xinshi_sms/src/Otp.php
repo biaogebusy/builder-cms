@@ -33,13 +33,13 @@ class Otp extends BaseOtp {
   public function generateOtp($mobile_number) {
     $current_time = $this->currentTime->getCurrentTime();
     // Generate 6 digit random OTP number.
-    $six_digit_random_number = mt_rand(100000, 999999);
+    $six_digit_random_number = (string)mt_rand(100000, 999999);
     // Send OTP SMS.
     $sms = (new SmsMessage())
       // Set the message.
       ->setMessage($six_digit_random_number)
       // Set recipient phone number.
-      ->addRecipient($mobile_number)
+      ->addRecipient((string)$mobile_number)
       ->setDirection(Direction::OUTGOING);
 
     $this->smsProvider->queue($sms);
@@ -173,5 +173,4 @@ class Otp extends BaseOtp {
     }
     return !empty($effective);
   }
-
 }
