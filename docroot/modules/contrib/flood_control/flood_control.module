@@ -1,0 +1,105 @@
+<?php
+
+/**
+ * @file
+ * Flood control module file.
+ */
+
+use Drupal\Core\Database\Query\Condition;
+use Drupal\migrate\Plugin\MigrateSourceInterface;
+use Drupal\migrate\Plugin\MigrationInterface;
+use Drupal\migrate\Row;
+
+/**
+ * Implements hook_migration_plugins_alter().
+ *
+ * Overwrite flood/limit and flood/interval in d7_contact_settings.
+ */
+function flood_control_migration_plugins_alter(array &$migrations) {
+  $flood_control_migrations = array_filter(
+    $migrations,
+      function ($definition) {
+        return $definition['id'] === 'd7_contact_settings';
+      }
+  );
+  foreach (array_keys($flood_control_migrations) as $plugin_id) {
+    $migrations[$plugin_id]['process']['flood/limit'] = 'flood_control_threshold_limit';
+    $migrations[$plugin_id]['process']['flood/interval'] = 'flood_control_threshold_window';
+  }
+}
+
+/**
+ * Implements hook_migrate_prepare_row().
+ *
+ * Allows adding data to a row before processing it.
+ */
+function flood_control_migrate_prepare_row(Row $row, MigrateSourceInterface $source, MigrationInterface $migration) {
+  if ($migration->getBaseId() != 'd7_contact_settings') {
+    return;
+  }
+  $condition_or = new Condition('OR');
+  $condition_or->condition('v.name', 'contact_threshold_limit');
+  $condition_or->condition('v.name', 'contact_threshold_window');
+  $query = $source->getDatabase()
+    ->select('variable', 'v')
+    ->fields('v', ['value'])
+    ->condition($condition_or)
+    ->execute();
+  $value = $query->fetchAll();
+  if (empty($value)) {
+    return;
+  }
+  $flood_control_string = array_reduce(
+    $value,
+    function (array $data, object $item) {
+      $data[] = (array) $item;
+      return $data;
+    },
+    []
+  );
+  $threshold_limit = unserialize($flood_control_string[0]['value'], ['allowed_classes' => FALSE]);
+  $threshold_window = unserialize($flood_control_string[1]['value'], ['allowed_classes' => FALSE]);
+  $row->setSourceProperty('flood_control_threshold_limit', $threshold_limit);
+  $row->setSourceProperty('flood_control_threshold_window', $threshold_window);
+}
+
+/**
+ * Parse and return whitelist IPs from config value.
+ *
+ * @param string $whitelistIpsValue
+ *   Optional. IP addresses to be whitelisted (string value from config).
+ *
+ * @return array[]
+ *   An array of whitelist of IPs addresses and ranges.
+ */
+function flood_control_get_whitelist_ips(string $whitelistIpsValue = '') {
+  if (!$whitelistIpsValue) {
+    $config = \Drupal::configFactory()->get('flood_control.settings');
+    $whitelistIpsValue = $config->get('ip_white_list') ?? '';
+  }
+
+  $whitelistIps = [
+    'ranges' => [],
+    'addresses' => [],
+  ];
+
+  // Ensure the IPs value is trimmed before moving onward.
+  $whitelistIpsValue = trim($whitelistIpsValue);
+
+  if (empty($whitelistIpsValue)) {
+    return $whitelistIps;
+  }
+
+  $valueRows = explode("\n", $whitelistIpsValue);
+  foreach ($valueRows as $valueRow) {
+    $valueRow = trim($valueRow);
+    if (str_contains($valueRow, '-')) {
+      $whitelistIps['ranges'][] = $valueRow;
+    }
+    else {
+      $whitelistIps['addresses'][] = $valueRow;
+    }
+  }
+
+  return $whitelistIps;
+}

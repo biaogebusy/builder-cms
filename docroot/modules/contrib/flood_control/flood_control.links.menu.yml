@@ -1,0 +1,11 @@
+flood_control.admin:
+  title: 'Flood control'
+  description: "Configure hidden flood control variables, like the login attempt limiters."
+  parent: user.admin_index
+  route_name: flood_control.settings
+  menu_name: admin
+
+flood_control.user.admin:
+  title: 'Flood unblock'
+  parent: entity.user.collection
+  route_name: flood_control.unblock_form

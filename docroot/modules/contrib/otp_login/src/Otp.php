@@ -89,7 +89,7 @@ class Otp {
     $this->smsProvider = $sms_provider;
     $this->userData = $user_data;
     $this->entityTypeManager = $entity_type_manager;
-    $this->config_factory = $config_factory;
+    $this->configFactory = $config_factory;
     $this->cipherMethod = 'AES-256-CBC';
     $this->separator = '::';
     $this->ivLength = openssl_cipher_iv_length($this->cipherMethod);
@@ -275,7 +275,7 @@ class Otp {
    * {@inheritdoc}
    */
   public function generateTiniyoOtp($mobile_number) {
-    $config = $this->config_factory->get('otp_login.settings');
+    $config = $this->configFactory->get('otp_login.settings');
     $base_uri = 'https://api.tiniyo.com/v1/Account/';
     $client = \Drupal::httpClient();
     $tiniyo_auth_id = $config->get('tiniyo_authid');

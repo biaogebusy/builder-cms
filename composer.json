@@ -70,6 +70,7 @@
         "drupal/field_validation": "^3.0@beta",
         "drupal/fivestar": "^1.0@alpha",
         "drupal/flag": "^4.0@beta",
+        "drupal/flood_control": "^3.0",
         "drupal/footable": "^1.0",
         "drupal/forms_steps": "^1.7",
         "drupal/fpa": "^4.0",
