@@ -1,0 +1,8 @@
+administer flood unblock:
+  title: 'Administer flood unblock settings'
+  description: 'Allows to access the flood unblock module settings page.'
+  restrict access: TRUE
+
+flood unblock ips:
+  title: 'Unblock blocked IPs'
+  description: 'Allows to access the blocked IP list and unblock IPs.'
