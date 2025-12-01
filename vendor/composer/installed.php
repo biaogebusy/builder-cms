@@ -3,7 +3,7 @@
         'name' => 'drupal/recommended-project',
         'pretty_version' => 'dev-master',
         'version' => 'dev-master',
-        'reference' => '675865cb671f409febf0090a89d8d9fa5bb2824f',
+        'reference' => 'c3ebcf49d7ad1a002b6de946899f0d735a3ee9be',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -1240,6 +1240,15 @@
             'aliases' => array(),
             'dev_requirement' => false,
         ),
+        'drupal/flood_control' => array(
+            'pretty_version' => '2.3.4',
+            'version' => '2.3.4.0',
+            'reference' => '2.3.4',
+            'type' => 'drupal-module',
+            'install_path' => __DIR__ . '/../../docroot/modules/contrib/flood_control',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
         'drupal/footable' => array(
             'pretty_version' => 'dev-2.x',
             'version' => 'dev-2.x',
@@ -1776,7 +1785,7 @@
         'drupal/recommended-project' => array(
             'pretty_version' => 'dev-master',
             'version' => 'dev-master',
-            'reference' => '675865cb671f409febf0090a89d8d9fa5bb2824f',
+            'reference' => 'c3ebcf49d7ad1a002b6de946899f0d735a3ee9be',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

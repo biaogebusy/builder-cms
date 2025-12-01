@@ -1,0 +1,57 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the flood_control module.
+ */
+
+use Drupal\user\Entity\Role;
+
+/**
+ * Assign newly added permissions to the appropriate roles.
+ */
+function flood_control_update_9201() {
+  $roles = user_role_names(FALSE, 'access flood unblock');
+  foreach ($roles as $roleKey => $roleName) {
+    user_role_grant_permissions($roleKey, [
+      'administer flood unblock',
+      'flood unblock ips',
+    ]);
+  }
+}
+
+/**
+ * Remove old permissions from the appropriate roles.
+ */
+function flood_control_update_9202() {
+  $permissions = [
+    'access flood control settings page',
+    'access flood unblock',
+  ];
+
+  foreach (Role::loadMultiple() as $role) {
+    $changed = FALSE;
+
+    foreach ($permissions as $permission) {
+      if ($role->hasPermission($permission)) {
+        $role->revokePermission($permission);
+        $changed = TRUE;
+      }
+    }
+
+    if ($changed) {
+      $role->save();
+    }
+  }
+}
+
+/**
+ * Add the default value for the IP Whitelist to the settings config.
+ */
+function flood_control_update_9203() {
+  $config = \Drupal::configFactory()->getEditable('flood_control.settings');
+  if ($config->get('ip_white_list') === NULL) {
+    $config->set('ip_white_list', '');
+    $config->save(TRUE);
+  }
+}

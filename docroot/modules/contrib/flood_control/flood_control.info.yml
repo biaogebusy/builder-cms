@@ -1,0 +1,11 @@
+name: 'Flood control'
+description: "Allows configuring hidden flood control options and unblocking IP addresses and user ID's that are blocked after multiple failed login attempts."
+configure: flood_control.settings
+package: 'Administration'
+type: module
+core_version_requirement: ^9 || ^10
+
+# Information added by Drupal.org packaging script on 2024-04-16
+version: '2.3.4'
+project: 'flood_control'
+datestamp: 1713292556

@@ -1,0 +1,5 @@
+flood_control.flood_unblock_task:
+  title: 'Flood Unblock'
+  route_name: flood_control.unblock_form
+  base_route: entity.user.collection
+  weight: 40
