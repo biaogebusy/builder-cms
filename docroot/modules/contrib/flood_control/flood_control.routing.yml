@@ -1,0 +1,16 @@
+flood_control.settings:
+ path: '/admin/config/people/flood-control'
+ defaults:
+   _title: 'Flood control'
+   _title_context: 'With components'
+   _form: 'Drupal\flood_control\Form\FloodControlSettingsForm'
+ requirements:
+   _permission: 'administer flood unblock'
+
+flood_control.unblock_form:
+  path: '/admin/people/flood-unblock'
+  defaults:
+    _form: '\Drupal\flood_control\Form\FloodUnblockAdminForm'
+    _title: 'Flood Unblock'
+  requirements:
+    _permission: 'flood unblock ips'

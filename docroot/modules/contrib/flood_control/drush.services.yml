@@ -1,0 +1,6 @@
+services:
+  flood_control.commands:
+    class: \Drupal\flood_control\Commands\FloodUnblockCommands
+    arguments: ['@flood_control.flood_unblock_manager']
+    tags:
+      - { name: drush.command }

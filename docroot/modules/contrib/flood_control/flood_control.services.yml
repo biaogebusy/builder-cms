@@ -1,0 +1,13 @@
+services:
+  flood_control.flood_unblock_manager:
+    class: Drupal\flood_control\FloodUnblockManager
+    arguments: ['@database', '@flood', '@config.factory', '@entity_type.manager', '@messenger', '@logger.factory']
+
+  flood_control.flood_whitelist:
+    class: Drupal\flood_control\FloodWhiteList
+    decorates: flood
+    decoration_priority: 9
+    public: false
+    arguments:
+      - '@flood_control.flood_whitelist.inner'
+      - '@request_stack'
