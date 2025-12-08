@@ -38,6 +38,7 @@
         "drupal/ckeditor_textindent": "^2.0",
         "drupal/codesnippet": "^1.9",
         "drupal/color": "^2.0@alpha",
+        "drupal/color_field": "^3.0",
         "drupal/colorbox": "^2.1",
         "drupal/colorbutton": "^1.5",
         "drupal/comment_delete": "^2.0",
