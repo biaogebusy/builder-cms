@@ -1,0 +1,10 @@
+<?php
+
+/**
+ * @file
+ * Provides a common interface to implement with social network services.
+ */
+
+/*
+ * @TODO add help text
+ */

@@ -1,0 +1,6 @@
+auth: []
+post_login: /user
+redirect_user_form: FALSE
+disable_admin_login: TRUE
+disabled_roles: []
+user_allowed: 'register'

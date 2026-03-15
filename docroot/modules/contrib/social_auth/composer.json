@@ -1,0 +1,48 @@
+{
+    "name": "drupal/social_auth",
+    "type": "drupal-module",
+    "description": "Social Auth ",
+    "keywords": ["Drupal"],
+    "license": "GPL-2.0-or-later",
+    "homepage": "https://www.drupal.org/project/social_auth",
+    "support": {
+        "issues": "https://www.drupal.org/project/issues/social_auth",
+        "source": "https://git.drupalcode.org/project/social_auth"
+    },
+    "authors": [
+        {
+            "name": "Getulio Valentin Sánchez (gvso)",
+            "email": "valentin2507@gmail.com"
+        },
+        {
+            "name": "Himansh Dixit (himanshu-dixit)",
+            "email": "hudixt@gmail.com"
+        },
+        {
+            "name": "Chrsitopher C. Wells (wells)",
+            "email": "drupal.org@chris-wells.net"
+        }
+    ],
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://packages.drupal.org/8"
+        }
+    ],
+    "require": {
+        "php": ">=8.1",
+        "drupal/core": "^9.5 || ^10 || ^11",
+        "drupal/social_api": "^4.0"
+    },
+    "require-dev": {
+        "drupal/coder": "^8.3",
+        "phpcompatibility/php-compatibility": "^9.3"
+    },
+    "minimum-stability": "dev",
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    }
+}

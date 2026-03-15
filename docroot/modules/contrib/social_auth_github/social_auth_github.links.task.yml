@@ -1,0 +1,6 @@
+social_auth_github.settings.tab:
+  title: 'GitHub'
+  route_name: social_auth.network.settings_form
+  route_parameters:
+    network: 'github'
+  base_route: social_auth.integrations

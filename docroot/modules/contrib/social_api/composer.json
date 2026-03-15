@@ -1,0 +1,49 @@
+{
+    "name": "drupal/social_api",
+    "type": "drupal-module",
+    "description": "Harmonizes social networking services in Drupal",
+    "keywords": ["Drupal"],
+    "license": "GPL-2.0-or-later",
+    "homepage": "https://www.drupal.org/project/social_api",
+    "support": {
+        "issues": "https://www.drupal.org/project/issues/social_api",
+        "source": "https://git.drupalcode.org/project/social_api"
+    },
+    "authors": [
+        {
+            "name": "Getulio Sánchez (gvso)",
+            "homepage": "https://www.drupal.org/u/gvso",
+            "role": "Maintainer"
+        },
+        {
+            "name": "Himansh Dixit (himanshu-dixit)",
+            "email": "hudixt@gmail.com"
+        },
+        {
+            "name": "Chrsitopher C. Wells (wells)",
+            "email": "drupal.org@chris-wells.net"
+        }
+    ],
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://packages.drupal.org/8"
+        }
+    ],
+    "require" : {
+        "ext-openssl": "*",
+        "league/oauth2-client": "^2.0",
+        "drupal/core": "^9.5 || ^10 || ^11"
+    },
+    "require-dev": {
+        "drupal/coder": "^8.3",
+        "phpcompatibility/php-compatibility": "^9.3"
+    },
+    "minimum-stability": "dev",
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    }
+}

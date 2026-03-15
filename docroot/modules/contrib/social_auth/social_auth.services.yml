@@ -1,0 +1,39 @@
+services:
+  social_auth.user_authenticator:
+    class: Drupal\social_auth\User\UserAuthenticator
+    arguments:
+      - '@current_user'
+      - '@messenger'
+      - '@logger.factory'
+      - '@social_auth.user_manager'
+      - '@social_auth.data_handler'
+      - '@config.factory'
+      - '@router.route_provider'
+      - '@event_dispatcher'
+
+  social_auth.user_manager:
+    class: Drupal\social_auth\User\UserManager
+    arguments:
+      - '@entity_type.manager'
+      - '@messenger'
+      - '@logger.factory'
+      - '@config.factory'
+      - '@entity_field.manager'
+      - '@transliteration'
+      - '@language_manager'
+      - '@event_dispatcher'
+      - '@token'
+      - '@file_system'
+      - '@password_generator'
+
+  social_auth.data_handler:
+    class: Drupal\social_auth\SocialAuthDataHandler
+    arguments:
+      - '@session'
+
+  paramconverter.network:
+    class: Drupal\social_auth\ParamConverter\NetworkConverter
+    arguments:
+      - '@plugin.network.manager'
+    tags:
+      - { name: paramconverter }

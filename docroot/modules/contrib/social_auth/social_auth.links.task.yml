@@ -1,0 +1,15 @@
+social_auth.integrations.tab:
+  title: 'Integrations'
+  route_name: social_auth.integrations
+  base_route: social_auth.integrations
+
+entity.social_auth.collection:
+  title: 'Social auth profiles'
+  route_name: entity.social_auth.collection
+  base_route: entity.user.collection
+
+social_auth.user.social_auth_profiles_task:
+  title: 'Social auth profiles'
+  route_name: social_auth.user.profiles
+  base_route: entity.user.canonical
+  weight: 5

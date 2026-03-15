@@ -1,0 +1,141 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for Social Auth.
+ */
+
+use Drupal\Core\Database\Database;
+use Drupal\views\Entity\View;
+use Symfony\Component\Yaml\Yaml;
+
+/**
+ * Add 'social_auth' table when the module is updated from 1.x to 2.x.
+ *
+ * Nothing changes if version 2.x is in use.
+ */
+function social_auth_update_8201() {
+  $schema = Database::getConnection()->schema();
+
+  if (!$schema->tableExists('social_auth')) {
+    $spec = [
+      'description' => 'The base table for social_auth entities.',
+      'fields' => [
+        'id' => [
+          'type' => 'serial',
+          'length' => 10,
+          'not null' => TRUE,
+          'unsigned' => TRUE,
+        ],
+        'uuid' => [
+          'type' => 'varchar_ascii',
+          'length' => 128,
+          'not null' => FALSE,
+        ],
+        'user_id' => [
+          'description' => 'The ID of the target entity.',
+          'type' => 'int',
+          'length' => 10,
+          'not null' => TRUE,
+          'unsigned' => TRUE,
+        ],
+        'plugin_id' => [
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+        ],
+        'provider_user_id' => [
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+        ],
+        'created' => [
+          'type' => 'int',
+          'length' => 11,
+          'not null' => TRUE,
+        ],
+        'changed' => [
+          'type' => 'int',
+          'length' => 11,
+          'not null' => TRUE,
+        ],
+        'token' => [
+          'type' => 'text',
+          'not null' => TRUE,
+          'size' => 'big',
+        ],
+        'additional_data' => [
+          'type' => 'text',
+          'not null' => TRUE,
+          'size' => 'big',
+        ],
+      ],
+      'primary key' => ['id'],
+      'unique keys' => ['social_auth_field__uuid__value' => ['uuid']],
+      'indexes' => ['social_auth_field__user_id__target_id' => ['user_id']],
+    ];
+
+    $schema->createTable('social_auth', $spec);
+  }
+}
+
+/**
+ * Update fields' properties.
+ *
+ * The updating fields are uuid, created, changed, token, and additional_data.
+ */
+function social_auth_update_8202() {
+  $schema = Database::getConnection()->schema();
+
+  $specs = [
+    'uuid' => [
+      'type' => 'varchar_ascii',
+      'length' => 128,
+      'not null' => TRUE,
+    ],
+    'created' => [
+      'type' => 'int',
+      'length' => 11,
+      'not null' => FALSE,
+    ],
+    'changed' => [
+      'type' => 'int',
+      'length' => 11,
+      'not null' => FALSE,
+    ],
+    'token' => [
+      'type' => 'text',
+      'not null' => FALSE,
+      'size' => 'big',
+    ],
+    'additional_data' => [
+      'type' => 'text',
+      'not null' => FALSE,
+      'size' => 'big',
+    ],
+  ];
+
+  foreach ($specs as $field => $spec) {
+    $schema->changeField('social_auth', $field, $field, $spec);
+  }
+
+}
+
+/**
+ * Import view to list social auths.
+ */
+function social_auth_update_8203() {
+  $message = NULL;
+  // Only create if the social auth profiles view doesn't exists
+  // and views is enabled.
+  if (\Drupal::moduleHandler()->moduleExists('views') && !View::load('social_auth_profiles')) {
+    $config_path = \Drupal::service('extension.list.module')->getPath('social_auth') . '/config/optional/views.view.social_auth_profiles.yml';
+    $data = Yaml::parseFile($config_path);
+    \Drupal::configFactory()->getEditable('views.view.social_auth_profiles')->setData($data)->save(TRUE);
+    $message = 'The new social auth profiles view has been created.';
+  }
+  else {
+    $message = 'Not creating a social auth profiles view since it already exists.';
+  }
+  return $message;
+}

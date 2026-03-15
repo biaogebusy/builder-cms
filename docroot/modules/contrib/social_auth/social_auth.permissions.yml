@@ -1,0 +1,6 @@
+delete own social auth profile:
+  title: 'Delete own social auth profile'
+  description: 'Allow the deletion of social authentication profiles for their account.'
+administer social auth profiles:
+  title: 'Administer social auth profiles'
+  description: 'Administer social auth profiles.'

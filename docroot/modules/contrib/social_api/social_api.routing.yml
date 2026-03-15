@@ -1,0 +1,7 @@
+social_api.admin_config:
+  path: '/admin/config/social-api'
+  defaults:
+    _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
+    _title: 'Social API'
+  requirements:
+    _permission: 'administer social api configuration'

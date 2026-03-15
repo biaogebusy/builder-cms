@@ -1,0 +1,7 @@
+social_auth_google.settings_form:
+  path: 'admin/config/social-api/social-auth/google'
+  defaults:
+    _title: 'Google user authentication'
+    _form: '\Drupal\social_auth_google\Form\GoogleAuthSettingsForm'
+  requirements:
+    _permission: 'administer social api authentication'

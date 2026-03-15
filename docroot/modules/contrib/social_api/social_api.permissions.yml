@@ -1,0 +1,15 @@
+administer social api authentication:
+  title: 'Administer Social API user authentication'
+  description: 'Perform administration tasks for Social API user authentication'
+administer social api autoposting:
+  title: 'Administer Social API autoposting'
+  description: 'Perform administration tasks for Social API Autoposting'
+administer social api blocks:
+  title: 'Administer Social API blocks'
+  description: 'Perform administration tasks for Social API Blocks'
+administer social api configuration:
+  title: 'Administer Social API admin configuration'
+  description: 'Perform administration tasks for Social API configuration'
+administer social api widgets:
+  title: 'Administer Social API widgets'
+  description: 'Perform administration tasks for Social API Plugins'

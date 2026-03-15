@@ -1,0 +1,15 @@
+name: Social Auth GitHub
+type: module
+description: 'Social Auth integration for GitHub.'
+core_version_requirement: ^9.5 || ^10 || ^11
+package: Social
+
+configure: social_auth_github.settings_form
+
+dependencies:
+  - social_auth:social_auth
+
+# Information added by Drupal.org packaging script on 2024-09-04
+version: '4.0.1'
+project: 'social_auth_github'
+datestamp: 1725491797

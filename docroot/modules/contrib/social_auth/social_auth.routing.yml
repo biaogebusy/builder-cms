@@ -1,0 +1,55 @@
+social_auth.integrations:
+  path: '/admin/config/social-api/social-auth'
+  defaults:
+    _controller: '\Drupal\social_api\Controller\SocialApiController::integrations'
+    _title: 'User authentication'
+    type: 'social_auth'
+  requirements:
+    _permission: 'administer social api authentication'
+
+social_auth.network.redirect:
+  path: 'user/login/{network}'
+  defaults:
+    _controller: '\Drupal\social_auth\Controller\OAuth2ControllerBase::redirectToProvider'
+  requirements:
+    # Anonymous users can log in, but authenticated users can also associate a new provider.
+    _access: 'TRUE'
+  options:
+    no_cache: TRUE
+    parameters:
+      network:
+        type: network
+
+social_auth.network.callback:
+  path: 'user/login/{network}/callback'
+  defaults:
+    _controller: '\Drupal\social_auth\Controller\OAuth2ControllerBase::callback'
+  requirements:
+    # Anonymous users can log in, but authenticated users can also associate a new provider.
+    _access: 'TRUE'
+  options:
+    no_cache: TRUE
+    parameters:
+      network:
+        type: network
+
+social_auth.network.settings_form:
+  path: 'admin/config/social-api/social-auth/{network}'
+  defaults:
+    _form: '\Drupal\social_auth\Form\SocialAuthSettingsForm'
+    _title_callback: '\Drupal\social_auth\Form\SocialAuthSettingsForm::getTitle'
+  requirements:
+    _permission: 'administer social api authentication'
+  options:
+    parameters:
+      network:
+        type: network
+
+social_auth.user.profiles:
+  path: '/user/{user}/social-auth/profiles'
+  defaults:
+    _controller: '\Drupal\social_auth\Controller\UserController::socialAuthProfiles'
+    _title: 'Social authentication profiles'
+  requirements:
+    _entity_access: 'user.update'
+    user: \d+

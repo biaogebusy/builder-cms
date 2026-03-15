@@ -1,0 +1,31 @@
+<?php
+
+/**
+ * @file
+ * Install, update, and uninstall functions for the Social Auth GitHub module.
+ */
+
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+
+/**
+ * Implements hook_update_N().
+ *
+ * The key api_calls was changed to endpoints. This update copies the values
+ * in 'api_calls' to 'endpoints'.
+ */
+function social_auth_github_update_8201(&$sandbox): void {
+  $config = \Drupal::configFactory()->getEditable('social_auth_github.settings');
+  $endpoints = $config->get('api_calls');
+  $config->set('endpoints', $endpoints)->save();
+}
+
+/**
+ * Narrow default scope to user:email. Previous scopes will be preserved.
+ */
+function social_auth_github_update_8301(&$sandbox): string {
+  $config = \Drupal::configFactory()->getEditable('social_auth_github.settings');
+  $scopes = array_filter(explode(',', $config->get('scopes') ?: NULL));
+  $config->set('scopes', implode(',', array_merge($scopes, ['user'])));
+  $config->save(TRUE);
+  return (string) new TranslatableMarkup("Social Auth GitHub now only requests 'user:email' scope by default.\n\tThe other prior default, 'user' has been appended to your requested scopes for backwards compatibility.\n\tConsider if you require this scope (you probably don't) and adjust your configuration accordingly.");
+}

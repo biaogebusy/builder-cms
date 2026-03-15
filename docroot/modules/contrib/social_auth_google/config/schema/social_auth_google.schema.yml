@@ -1,0 +1,19 @@
+social_auth_google.settings:
+  type: config_object
+  label: 'Social Auth Google settings'
+  mapping:
+    client_id:
+      type: string
+      label: 'Client ID'
+    client_secret:
+      type: string
+      label: 'Client Secret'
+    scopes:
+      type: string
+      label: 'Scopes to be requested'
+    endpoints:
+      type: string
+      label: 'API endpoints to be requested'
+    restricted_domain:
+      type: string
+      label: 'Restricted Domain'

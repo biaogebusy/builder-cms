@@ -1,0 +1,16 @@
+{% set module = 'social-auth' %}
+
+{{ attach_library('social_auth/auth-icons') }}
+
+{% for id, network in networks %}
+  {% if destination %}
+    {% set options = {'query': {'destination': destination}} %}
+  {% else %}
+    {% set options = {} %}
+  {% endif %}
+  <a class="{{ module }} auth-link" href="{{ network.getRedirectUrl(options).toString }}">
+    <img class="{{ module }} auth-icon"
+       src="{{ network.getProviderLogoPath }}"
+       alt="{{ 'Authenticate through @social_network_name' | t({'@social_network_name': network.getPluginDefinition.social_network}) }}">
+  </a>
+{% endfor %}

@@ -1,0 +1,32 @@
+/**
+ * Styles for the login form
+ */
+.social-auth.auth-link {
+  border-bottom: none;
+}
+.social-auth.auth-icon {
+  width: 3em;
+  margin-right: 5px;
+  -webkit-transition: all ease 0.3s;
+  -moz-transition: all ease 0.3s;
+  -o-transition: all ease 0.3s;
+  -ms-transition: all ease 0.3s;
+  transition: all ease 0.3s;
+}
+
+.social-auth.auth-icon:hover {
+  animation-name: grey;
+  animation-duration: 0.5s;
+  filter: grayscale(1);
+}
+
+@keyframes grey {
+  from {
+    webkit-filter: grayscale(0);
+    filter: grayscale(0);
+  }
+  to {
+    webkit-filter: grayscale(1);
+    filter: grayscale(1);
+  }
+}

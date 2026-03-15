@@ -1,0 +1,49 @@
+{
+    "name": "drupal/social_auth_google",
+    "type": "drupal-module",
+    "description": "Social Auth integration for Google.",
+    "keywords": ["Drupal"],
+    "license": "GPL-2.0-or-later",
+    "homepage": "https://www.drupal.org/project/social_auth_google",
+    "support": {
+        "issues": "https://www.drupal.org/project/issues/social_auth_google",
+        "source": "https://git.drupalcode.org/project/social_auth_google"
+    },
+    "authors": [
+        {
+            "name": "Getulio Valentin Sánchez (gvso)",
+            "email": "valentin2507@gmail.com"
+        },
+        {
+            "name": "Himanshu Dixit (himanshu-dixit)",
+            "email": "hudixt@gmail.com"
+        },
+        {
+            "name": "Christopher C. Wells (wells)",
+            "email": "drupal.org@chris-wells.net"
+        }
+    ],
+    "repositories": [
+        {
+            "type": "composer",
+            "url":  "https://packages.drupal.org/8"
+        }
+    ],
+    "require": {
+        "php": ">=8.1",
+        "league/oauth2-google": "^4.0",
+        "drupal/social_auth": "^4.1",
+        "drupal/core": "^9.5 || ^10 || ^11"
+    },
+    "require-dev": {
+        "drupal/coder": "^8.3",
+        "phpcompatibility/php-compatibility": "^9.3"
+    },
+    "minimum-stability": "dev",
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    }
+}

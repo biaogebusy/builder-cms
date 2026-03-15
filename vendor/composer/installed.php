@@ -3,7 +3,7 @@
         'name' => 'drupal/recommended-project',
         'pretty_version' => '10.x-dev',
         'version' => '10.9999999.9999999.9999999-dev',
-        'reference' => '44da4018334c077f6496f2bc796ce5a52aa3f7f5',
+        'reference' => '8917ea664ec3f3fddcc9d08615c58bcf21b92064',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -1651,7 +1651,7 @@
         'drupal/recommended-project' => array(
             'pretty_version' => '10.x-dev',
             'version' => '10.9999999.9999999.9999999-dev',
-            'reference' => '44da4018334c077f6496f2bc796ce5a52aa3f7f5',
+            'reference' => '8917ea664ec3f3fddcc9d08615c58bcf21b92064',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
@@ -1786,6 +1786,42 @@
             'reference' => '2.3.0',
             'type' => 'drupal-module',
             'install_path' => __DIR__ . '/../../docroot/modules/contrib/smsframework',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'drupal/social_api' => array(
+            'pretty_version' => '4.0.2',
+            'version' => '4.0.2.0',
+            'reference' => '4.0.2',
+            'type' => 'drupal-module',
+            'install_path' => __DIR__ . '/../../docroot/modules/contrib/social_api',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'drupal/social_auth' => array(
+            'pretty_version' => '4.1.2',
+            'version' => '4.1.2.0',
+            'reference' => '4.1.2',
+            'type' => 'drupal-module',
+            'install_path' => __DIR__ . '/../../docroot/modules/contrib/social_auth',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'drupal/social_auth_github' => array(
+            'pretty_version' => '4.0.1',
+            'version' => '4.0.1.0',
+            'reference' => '4.0.1',
+            'type' => 'drupal-module',
+            'install_path' => __DIR__ . '/../../docroot/modules/contrib/social_auth_github',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'drupal/social_auth_google' => array(
+            'pretty_version' => '4.0.3',
+            'version' => '4.0.3.0',
+            'reference' => '4.0.3',
+            'type' => 'drupal-module',
+            'install_path' => __DIR__ . '/../../docroot/modules/contrib/social_auth_google',
             'aliases' => array(),
             'dev_requirement' => false,
         ),
@@ -2149,6 +2185,24 @@
             'aliases' => array(),
             'dev_requirement' => false,
         ),
+        'league/oauth2-github' => array(
+            'pretty_version' => '3.1.1',
+            'version' => '3.1.1.0',
+            'reference' => '84211f62b757f7266fe605a0aa874a32f52c24fd',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../league/oauth2-github',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'league/oauth2-google' => array(
+            'pretty_version' => '4.2.0',
+            'version' => '4.2.0.0',
+            'reference' => '72be69505f890ea8b6d4e716f619b3c10a1f5010',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../league/oauth2-google',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
         'lizhichao/one-sm' => array(
             'pretty_version' => '1.10',
             'version' => '1.10.0.0',
@@ -2446,8 +2500,8 @@
         'psr/container-implementation' => array(
             'dev_requirement' => false,
             'provided' => array(
-                0 => '^1.0',
-                1 => '1.1|2.0',
+                0 => '1.1|2.0',
+                1 => '^1.0',
             ),
         ),
         'psr/event-dispatcher' => array(
@@ -2477,8 +2531,8 @@
         'psr/http-client-implementation' => array(
             'dev_requirement' => false,
             'provided' => array(
-                0 => '1.0',
-                1 => '*',
+                0 => '*',
+                1 => '1.0',
             ),
         ),
         'psr/http-factory' => array(
@@ -2493,8 +2547,8 @@
         'psr/http-factory-implementation' => array(
             'dev_requirement' => false,
             'provided' => array(
-                0 => '1.0',
-                1 => '*',
+                0 => '*',
+                1 => '1.0',
             ),
         ),
         'psr/http-message' => array(
@@ -2509,8 +2563,8 @@
         'psr/http-message-implementation' => array(
             'dev_requirement' => false,
             'provided' => array(
-                0 => '1.0',
-                1 => '*',
+                0 => '*',
+                1 => '1.0',
             ),
         ),
         'psr/log' => array(

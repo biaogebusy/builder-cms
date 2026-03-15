@@ -1,0 +1,7 @@
+services:
+  plugin.network.manager:
+    class: Drupal\social_api\Plugin\NetworkManager
+    arguments:
+      - '@container.namespaces'
+      - '@cache.discovery'
+      - '@module_handler'

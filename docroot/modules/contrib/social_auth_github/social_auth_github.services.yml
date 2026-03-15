@@ -1,0 +1,7 @@
+services:
+  social_auth_github.manager:
+    class: Drupal\social_auth_github\GitHubAuthManager
+    arguments:
+      - '@config.factory'
+      - '@logger.factory'
+      - '@request_stack'

@@ -1,0 +1,19 @@
+<?php
+
+/**
+ * @file
+ * Install, update, and uninstall functions for the Social Auth Google module.
+ */
+
+/**
+ * Implements hook_update_N().
+ *
+ * The key api_calls was changed to endpoints. This update copies the values
+ * in 'api_calls' to 'endpoints'.
+ */
+function social_auth_google_update_8201(&$sandbox) {
+  $config = \Drupal::configFactory()->getEditable('social_auth_google.settings');
+  $endpoints = $config->get('api_calls');
+
+  $config->set('endpoints', $endpoints)->save();
+}
