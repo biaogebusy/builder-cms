@@ -1,0 +1,56 @@
+simple_oauth.oauth2_token.bundle.*:
+  type: config_entity
+  label: 'OAuth2 token type'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    label:
+      type: label
+      label: 'Label'
+    description:
+      type: text
+      label: 'Description'
+    locked:
+      type: boolean
+      label: 'Locked'
+
+simple_oauth.settings:
+  type: config_object
+  label: 'Simple OAuth Settings'
+  mapping:
+    access_token_expiration:
+      type: integer
+      label: 'Access Token Expiration Time'
+      description: 'The default period in seconds while a access token is valid'
+    authorization_code_expiration:
+      type: integer
+      label: 'Authorization Code Expiration Time'
+      description: 'The default period in seconds while an authorization code is valid'
+    refresh_token_expiration:
+      type: integer
+      label: 'Refresh Token Expiration Time'
+      description: 'The default period in seconds while a refresh token is valid'
+    token_cron_batch_size:
+      type: integer
+      label: 'Token batch size'
+      description: 'The number of expired token to delete per batch during cron cron'
+    public_key:
+      type: path
+      label: 'Public Key'
+      description: 'The path to the public file.'
+    private_key:
+      type: path
+      label: 'Private Key'
+      description: 'The path to the private file.'
+    remember_clients:
+      type: boolean
+      label: 'Remember clients'
+    use_implicit:
+      type: boolean
+      label: 'Enable the implicit grant?'
+      description: 'Only use the implicit grant if you understand the security implications of using it.'
+    disable_openid_connect:
+      type: boolean
+      label: 'Disable OpenID Connect?'
+      description: 'OpenID Connect will be enabled, unless this flag is active.'

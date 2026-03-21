@@ -1,0 +1,8 @@
+# TODO Remove this file when minimum required Drush version is bumped to >=11.6.0
+# See: https://www.drush.org/12.x/dependency-injection/#create-method
+services:
+  simple_oauth_commands:
+    class: 'Drupal\simple_oauth\Drush\Commands\SimpleOauthCommands'
+    arguments: ['@simple_oauth.key.generator', '@file_system']
+    tags:
+      - { name: drush.command }

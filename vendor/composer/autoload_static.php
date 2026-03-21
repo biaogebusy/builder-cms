@@ -130,6 +130,7 @@ class ComposerStaticInit44033c99252b62cff2d1cf9c5baebcc8
             'Psr\\Http\\Client\\' => 16,
             'Psr\\EventDispatcher\\' => 20,
             'Psr\\Container\\' => 14,
+            'Psr\\Clock\\' => 10,
             'Psr\\Cache\\' => 10,
             'PhpParser\\' => 10,
             'PhpOffice\\PhpWord\\' => 18,
@@ -141,6 +142,7 @@ class ComposerStaticInit44033c99252b62cff2d1cf9c5baebcc8
         array (
             'OpenTelemetry\\Context\\' => 22,
             'OpenTelemetry\\API\\' => 18,
+            'OpenIDConnectServer\\' => 20,
             'OneSm\\' => 6,
         ),
         'M' =>
@@ -152,9 +154,14 @@ class ComposerStaticInit44033c99252b62cff2d1cf9c5baebcc8
         ),
         'L' =>
         array (
+            'League\\Uri\\' => 11,
+            'League\\OAuth2\\Server\\' => 21,
             'League\\OAuth2\\Client\\' => 21,
+            'League\\Event\\' => 13,
             'League\\Csv\\' => 11,
             'League\\Container\\' => 17,
+            'Lcobucci\\JWT\\' => 13,
+            'Lcobucci\\Clock\\' => 15,
             'Laravel\\Prompts\\' => 16,
         ),
         'J' =>
@@ -204,6 +211,7 @@ class ComposerStaticInit44033c99252b62cff2d1cf9c5baebcc8
             'Doctrine\\Common\\Annotations\\' => 28,
             'Doctrine\\Common\\' => 16,
             'Dflydev\\DotAccessData\\' => 22,
+            'Defuse\\Crypto\\' => 14,
             'Darabonba\\OpenApi\\' => 18,
             'Darabonba\\GatewaySpi\\' => 21,
         ),
@@ -486,6 +494,10 @@ class ComposerStaticInit44033c99252b62cff2d1cf9c5baebcc8
         array (
             0 => __DIR__ . '/..' . '/psr/container/src',
         ),
+        'Psr\\Clock\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/psr/clock/src',
+        ),
         'Psr\\Cache\\' =>
         array (
             0 => __DIR__ . '/..' . '/psr/cache/src',
@@ -518,6 +530,10 @@ class ComposerStaticInit44033c99252b62cff2d1cf9c5baebcc8
         array (
             0 => __DIR__ . '/..' . '/open-telemetry/api',
         ),
+        'OpenIDConnectServer\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/steverhoades/oauth2-openid-connect-server/src',
+        ),
         'OneSm\\' =>
         array (
             0 => __DIR__ . '/..' . '/lizhichao/one-sm/src',
@@ -538,11 +554,24 @@ class ComposerStaticInit44033c99252b62cff2d1cf9c5baebcc8
         array (
             0 => __DIR__ . '/..' . '/marc-mabe/php-enum/src',
         ),
+        'League\\Uri\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/league/uri',
+            1 => __DIR__ . '/..' . '/league/uri-interfaces',
+        ),
+        'League\\OAuth2\\Server\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/league/oauth2-server/src',
+        ),
         'League\\OAuth2\\Client\\' =>
         array (
             0 => __DIR__ . '/..' . '/league/oauth2-google/src',
             1 => __DIR__ . '/..' . '/league/oauth2-github/src',
             2 => __DIR__ . '/..' . '/league/oauth2-client/src',
+        ),
+        'League\\Event\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/league/event/src',
         ),
         'League\\Csv\\' =>
         array (
@@ -551,6 +580,14 @@ class ComposerStaticInit44033c99252b62cff2d1cf9c5baebcc8
         'League\\Container\\' =>
         array (
             0 => __DIR__ . '/..' . '/league/container/src',
+        ),
+        'Lcobucci\\JWT\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/lcobucci/jwt/src',
+        ),
+        'Lcobucci\\Clock\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/lcobucci/clock/src',
         ),
         'Laravel\\Prompts\\' =>
         array (
@@ -676,6 +713,10 @@ class ComposerStaticInit44033c99252b62cff2d1cf9c5baebcc8
         'Dflydev\\DotAccessData\\' =>
         array (
             0 => __DIR__ . '/..' . '/dflydev/dot-access-data/src',
+        ),
+        'Defuse\\Crypto\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/defuse/php-encryption/src',
         ),
         'Darabonba\\OpenApi\\' =>
         array (

@@ -1,0 +1,12 @@
+name: Simple OAuth Test
+type: module
+description: Test module for Simple OAuth
+package: Testing
+hidden: true
+dependencies:
+  - simple_oauth
+
+# Information added by Drupal.org packaging script on 2023-11-17
+version: '5.2.5'
+project: 'simple_oauth'
+datestamp: 1700206905

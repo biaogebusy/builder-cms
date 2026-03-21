@@ -1,0 +1,26 @@
+<?php
+
+/**
+ * @file
+ * Hooks for the consumers_test module.
+ */
+
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
+
+define('CONSUMERS_TEST_NODE_TYPE', 'test_content_type_name');
+
+/**
+ * Implements hook_entity_base_field_info().
+ */
+function consumers_test_entity_base_field_info(EntityTypeInterface $entity_type) {
+  $fields = [];
+  if ($entity_type->id() === 'node') {
+    $fields['consumer_client_id'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Consumer client id'))
+      ->setDescription(t('The client id of the consumer for test purposes.'))
+      ->setComputed(TRUE)
+      ->setClass('\Drupal\consumers_test\ConsumerClientIDTestField');
+  }
+  return $fields;
+}

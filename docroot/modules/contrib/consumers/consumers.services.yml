@@ -1,0 +1,24 @@
+services:
+  consumer.negotiator:
+    class: Drupal\consumers\Negotiator
+    arguments:
+      - '@request_stack'
+      - '@logger.channel.consumers'
+      - '@entity_type.manager'
+      - '@cache.default'
+  consumer.consumer.route_enhancer:
+    class: Drupal\consumers\ConsumerRouteEnhancer
+    public: false
+    arguments:
+      - '@module_handler'
+    tags:
+      - { name: route_enhancer }
+  consumer.vary_event_subscriber:
+    class: Drupal\consumers\EventSubscriber\ConsumerVaryEventSubscriber
+    arguments: ['@consumer.negotiator']
+    tags:
+      - { name: 'event_subscriber' }
+
+  logger.channel.consumers:
+    parent: logger.channel_base
+    arguments: ['consumers']

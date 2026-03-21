@@ -1,0 +1,250 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for Consumers.
+ */
+
+use Drupal\consumers\ConsumersStorageSchema;
+use Drupal\consumers\Entity\Consumer;
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+
+/**
+ * Implements hook_install().
+ */
+function consumers_install() {
+  Consumer::create([
+    'client_id' => 'default_consumer',
+    'label' => 'Default Consumer',
+    'description' => 'This is the default consumer. This was created programmatically when the Consumers module was first installed. Feel free to edit, or delete this.',
+    'is_default' => TRUE,
+  ])->save();
+}
+
+/**
+ * Add field 'third_party' when not exist.
+ */
+function consumers_update_8101() {
+  // Replaced by consumers_update_8102().
+}
+
+/**
+ * Add field 'third_party' using the entity system.
+ */
+function consumers_update_8102() {
+  $field_definition = BaseFieldDefinition::create('boolean')
+    ->setLabel(new TranslatableMarkup('Is this consumer 3rd party?'))
+    ->setDescription(new TranslatableMarkup('Mark this if the organization behind this consumer is not the same as the one behind the Drupal API.'))
+    ->setDisplayOptions('view', [
+      'label' => 'inline',
+      'type' => 'boolean',
+      'weight' => 4,
+    ])
+    ->setDisplayOptions('form', [
+      'weight' => 4,
+    ])
+    ->setRevisionable(TRUE)
+    ->setTranslatable(TRUE)
+    ->setDefaultValue(TRUE)
+    // Explicitly initialize existing entities with TRUE, to ensure a consistent
+    // consistent behavior.
+    ->setInitialValue(TRUE);
+
+  \Drupal::entityDefinitionUpdateManager()
+    ->installFieldStorageDefinition('third_party', 'consumer', 'consumers', $field_definition);
+}
+
+/**
+ * Make consumers translatable.
+ */
+function consumers_update_8103() {
+  // Replaced by consumers_post_update_make_consumer_entity_type_translatable().
+}
+
+/**
+ * Add field 'is_default'.
+ */
+function consumers_update_8104() {
+  $field_definition = BaseFieldDefinition::create('boolean')
+    ->setLabel(new TranslatableMarkup('Is this the default consumer?'))
+    ->setDescription(new TranslatableMarkup('There can only be one default consumer. Mark this to use this consumer when none other applies.'))
+    ->setDisplayOptions('view', [
+      'label' => 'inline',
+      'type' => 'boolean',
+      'weight' => 4,
+    ])
+    ->setDisplayOptions('form', [
+      'weight' => 4,
+    ])
+    ->setRevisionable(TRUE)
+    ->setTranslatable(TRUE)
+    ->setDefaultValue(FALSE)
+    ->setInitialValue(FALSE);
+
+  \Drupal::entityDefinitionUpdateManager()
+    ->installFieldStorageDefinition('is_default', 'consumer', 'consumers', $field_definition);
+}
+
+/**
+ * Create a default consumer.
+ */
+function consumers_update_8105() {
+  Consumer::create([
+    'label' => 'Default Consumer',
+    'description' => 'This is the default consumer. This was created programmatically when the Consumers module was first installed. Feel free to edit, or delete this.',
+    'is_default' => TRUE,
+  ])->save();
+}
+
+/**
+ * Update entity definition to add the "owner" key and adapt the field.
+ */
+function consumers_update_8106() {
+  $edum = \Drupal::entityDefinitionUpdateManager();
+  $entity_type = $edum->getEntityType('consumer');
+  $keys = $entity_type->getKeys();
+  $owner_key = 'owner_id';
+  $entity_type->set('entity_keys', $keys + ['owner' => $owner_key]);
+  $edum->updateEntityType($entity_type);
+  $field_definition = BaseFieldDefinition::create('entity_reference')
+    ->setLabel(new TranslatableMarkup('User ID'))
+    ->setSetting('target_type', 'user')
+    ->setTranslatable($entity_type->isTranslatable())
+    ->setDefaultValueCallback(Consumer::class . '::getDefaultEntityOwner');
+  $field_storage_definition = $field_definition
+    ->getFieldStorageDefinition();
+  $has_original = (bool) $edum->getFieldStorageDefinition(
+    $owner_key,
+    $field_storage_definition->getTargetEntityTypeId()
+  );
+  $has_original
+    ? $edum->updateFieldStorageDefinition($field_storage_definition)
+    : $edum->installFieldStorageDefinition('owner_id', 'consumer', 'consumers', $field_definition);
+}
+
+/**
+ * Fix image field widget plugin ID.
+ *
+ * Was image, should be image_image.
+ *
+ * @see https://www.drupal.org/project/consumers/issues/3105435
+ */
+function consumers_update_8107() {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $image_field = $definition_update_manager->getFieldStorageDefinition('image', 'consumer');
+  $options = $image_field->getDisplayOptions('form');
+  if ($options['type'] === 'image') {
+    $options['type'] = 'image_image';
+    $image_field->setDisplayOptions('form', $options);
+    $definition_update_manager->installFieldStorageDefinition('image', 'consumer', 'consumer', $image_field);
+  }
+}
+
+/**
+ * Add field 'client_id'.
+ */
+function consumers_update_8108() {
+  $field_definition = BaseFieldDefinition::create('string')
+    ->setLabel(new TranslatableMarkup('Client ID'))
+    ->setDescription(new TranslatableMarkup('The client ID associated with this consumer.'))
+    ->setRequired(TRUE)
+    ->setRevisionable(TRUE)
+    ->addConstraint('UniqueField')
+    ->setSetting('max_length', 255)
+    ->setDisplayOptions('form', [
+      'type' => 'string_textfield',
+      'weight' => -4,
+    ])
+    ->setDisplayConfigurable('form', TRUE);
+
+  \Drupal::entityDefinitionUpdateManager()
+    ->installFieldStorageDefinition('client_id', 'consumer', 'consumers', $field_definition);
+}
+
+/**
+ * Set uuid as client_id for existing consumers.
+ */
+function consumers_update_8109() {
+  $database = \Drupal::database();
+  $query = $database->select('consumer', 'c')
+    ->fields('c', ['id', 'uuid']);
+  $results = $query->execute()->fetchAllKeyed();
+
+  foreach ($results as $consumer_id => $consumer_uuid) {
+    $database->update('consumer_field_data')
+      ->fields(['client_id' => $consumer_uuid])
+      ->condition('id', $consumer_id)
+      ->execute();
+  }
+}
+
+/**
+ * Apply index to client ID column.
+ */
+function consumers_update_8110(): void {
+  $manager = \Drupal::entityDefinitionUpdateManager();
+  $entity_type = $manager->getEntityType('consumer')
+    ->setHandlerClass('storage_schema', ConsumersStorageSchema::class);
+  $manager->updateEntityType($entity_type);
+  $manager->updateFieldStorageDefinition(\Drupal::service('entity_field.manager')
+    ->getBaseFieldDefinitions('consumer')['client_id']);
+}
+
+/**
+ * Add field 'status'.
+ */
+function consumers_update_8111() {
+  $field_definition = BaseFieldDefinition::create('boolean')
+    ->setLabel(new TranslatableMarkup('Status'))
+    ->setDescription(new TranslatableMarkup('The status of the consumer.'))
+    ->setSetting('on_label', 'Enabled')
+    ->setDisplayOptions('form', [
+      'type' => 'boolean_checkbox',
+      'settings' => [
+        'display_label' => FALSE,
+      ],
+      'weight' => 100,
+    ])
+    ->setDisplayConfigurable('form', TRUE)
+    ->setDisplayOptions('view', [
+      'type' => 'boolean',
+      'label' => 'above',
+      'weight' => 100,
+      'settings' => [
+        'format' => 'enabled-disabled',
+      ],
+    ])
+    ->setDisplayConfigurable('view', TRUE)
+    ->setRevisionable(TRUE)
+    ->setDefaultValue(TRUE)
+    // Explicitly initialize existing entities with TRUE,
+    // to ensure a consistent behavior.
+    ->setInitialValue(TRUE);
+
+  \Drupal::entityDefinitionUpdateManager()
+    ->installFieldStorageDefinition('status', 'consumer', 'consumers', $field_definition);
+}
+
+/**
+ * Fix Consumer entity definition mismatch.
+ */
+function consumers_update_8112() {
+  // Step 1: Update entity type definition.
+  $manager = \Drupal::entityDefinitionUpdateManager();
+  $entity_type = \Drupal::entityTypeManager()->getDefinition('consumer');
+  $manager->updateEntityType($entity_type);
+
+  // Step 2: Hard-reset metadata registry.
+  \Drupal::service('entity.last_installed_schema.repository')->setLastInstalledDefinition($entity_type);
+  \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
+
+  // Step 3: Synchronize status field definition.
+  $storage_definition = $manager->getFieldStorageDefinition('status', 'consumer');
+  if ($storage_definition) {
+    $manager->updateFieldStorageDefinition($storage_definition);
+    return t('Consumer entity definition refreshed and status field synchronized.');
+  }
+
+  return t('Consumer entity definition refreshed but status field not found.');
+}

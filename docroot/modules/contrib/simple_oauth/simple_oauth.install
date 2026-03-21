@@ -1,0 +1,142 @@
+<?php
+
+/**
+ * @file
+ * Installation and updating routines.
+ */
+
+use Drupal\Core\Config\FileStorage;
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\simple_oauth\Entity\Oauth2TokenStorageSchema;
+
+/**
+ * Define the default batch size.
+ */
+function simple_oauth_update_8001() {
+  \Drupal::configFactory()
+    ->getEditable('simple_oauth.settings')
+    ->set('token_cron_batch_size', 0)
+    ->save();
+}
+
+/**
+ * Define the default authorization code expiration value.
+ */
+function simple_oauth_update_8401() {
+  \Drupal::configFactory()
+    ->getEditable('simple_oauth.settings')
+    ->set('authorization_code_expiration', 300)
+    ->save();
+}
+
+/**
+ * Install the PKCE basefield for consumer entities.
+ */
+function simple_oauth_update_8403() {
+
+  $field_storage_definition = BaseFieldDefinition::create('boolean')
+    ->setLabel(new TranslatableMarkup('Use PKCE?'))
+    ->setDescription(new TranslatableMarkup('A boolean indicating whether the client uses @pkce (e.g., a native client or SPA)'))
+    ->setRevisionable(TRUE)
+    ->setTranslatable(TRUE)
+    ->setDefaultValue(FALSE);
+
+  \Drupal::entityDefinitionUpdateManager()
+    ->installFieldStorageDefinition('pkce', 'consumer', 'simple_oauth', $field_storage_definition);
+
+  return t('Field pkce installed for the consumer entity.');
+}
+
+/**
+ * Merge simple_oauth_extras module into simple_oauth.
+ */
+function simple_oauth_update_8404() {
+  $use_implicit = \Drupal::config('simple_oauth_extras.settings')->get('use_implicit');
+  if ($use_implicit === NULL) {
+    $config_path = \Drupal::service('extension.list.module')->getPath('simple_oauth') . '/config/install';
+    // Because of custom config_path, we don't call service here.
+    $source = new FileStorage($config_path);
+    $config_default = $source->read('simple_oauth.settings');
+    $use_implicit = $config_default['use_implicit'];
+  }
+  else {
+    \Drupal::configFactory()
+      ->getEditable('simple_oauth_extras.settings')
+      ->delete();
+  }
+  \Drupal::configFactory()
+    ->getEditable('simple_oauth.settings')
+    ->set('use_implicit', $use_implicit)
+    ->save();
+  $deleted = \Drupal::database()->delete('key_value')
+    ->condition('collection', 'system.schema')
+    ->condition('name', 'simple_oauth_extras')
+    ->execute();
+  $field_names = ['redirect', 'user_id'];
+  $field_definitions = [
+    'redirect' => BaseFieldDefinition::create('uri')
+      ->setLabel(new TranslatableMarkup('Redirect URI'))
+      ->setDescription(new TranslatableMarkup('The URI this client will redirect to when needed.'))
+      ->setTranslatable(TRUE)
+      // URIs are not length limited by RFC 2616, but we can only store 255
+      // characters in our entity DB schema.
+      ->setSetting('max_length', 255)
+      ->setProvider('simple_oauth'),
+
+    'user_id' => BaseFieldDefinition::create('entity_reference')
+      ->setLabel(new TranslatableMarkup('User'))
+      ->setDescription(new TranslatableMarkup('When no specific user is authenticated Drupal will use this user as the author of all the actions made.'))
+      ->setRevisionable(TRUE)
+      ->setTranslatable(FALSE)
+      ->setCardinality(1)
+      ->setProvider('simple_oauth'),
+  ];
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  foreach ($field_names as $field_name) {
+    /** @var \Drupal\Core\Field\BaseFieldDefinition $field_definition */
+    $field_definition = $entity_definition_update_manager->getFieldStorageDefinition($field_name, 'consumer');
+    // If simple_oauth_extras was installed, we need at least to update field provider.
+    if ($field_definition && $deleted) {
+      $field_definition->setProvider('simple_oauth');
+      $entity_definition_update_manager->updateFieldStorageDefinition($field_definition);
+    }
+    // If the field storage definition is not installed, install it.
+    elseif (!$field_definition) {
+      $entity_definition_update_manager->installFieldStorageDefinition($field_name, 'consumer', 'simple_oauth', $field_definitions[$field_name]);
+    }
+    // If the field has been installed by a different module, don't interfere.
+  }
+}
+
+/**
+ * Set default value for the flag to disable OpenID Connect.
+ */
+function simple_oauth_update_8501(&$sandbox) {
+  $config = \Drupal::configFactory()
+    ->getEditable('simple_oauth.settings');
+  $config->set('disable_openid_connect', FALSE);
+  $config->save();
+}
+
+/**
+ * Add indexes to oauth2_token value field.
+ */
+function simple_oauth_update_8502() {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  $entity_type = $entity_type_manager->getDefinition('oauth2_token')
+    ->setHandlerClass('storage_schema', Oauth2TokenStorageSchema::class);
+  // Regenerate entity type indexes.
+  $definition_update_manager->updateEntityType($entity_type);
+}
+
+/**
+ * Resolve mismatched field definition for oauth2_token.
+ */
+function simple_oauth_update_8503() {
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $field_storage_definition = $definition_update_manager->getFieldStorageDefinition('value', 'oauth2_token');
+  $definition_update_manager->updateFieldStorageDefinition($field_storage_definition);
+}

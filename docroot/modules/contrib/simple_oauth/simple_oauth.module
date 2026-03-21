@@ -1,0 +1,237 @@
+<?php
+
+/**
+ * @file
+ * Contains simple_oauth.module.
+ */
+
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\consumers\Entity\ConsumerInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\Url;
+use Drupal\user\RoleInterface;
+use Drupal\Core\Link;
+
+/**
+ * Implements hook_cron().
+ */
+function simple_oauth_cron() {
+  /** @var \Drupal\simple_oauth\ExpiredCollector $collector */
+  $collector = \Drupal::service('simple_oauth.expired_collector');
+  $config = \Drupal::config('simple_oauth.settings');
+  $logger = \Drupal::logger('simple_oauth');
+  $token_cron_batch_size = $config->get('token_cron_batch_size');
+  // Deleting one batch of expired tokens.
+  if (!empty($expired_tokens = $collector->collect($token_cron_batch_size))) {
+    $collector->deleteMultipleTokens($expired_tokens);
+    $logger->notice('Deleted @limit expired tokens in cron.', [
+      '@limit' => $token_cron_batch_size,
+    ]);
+  }
+}
+
+/**
+ * Implements hook_entity_update().
+ */
+function simple_oauth_entity_update(EntityInterface $entity) {
+  /** @var \Drupal\simple_oauth\ExpiredCollector $collector */
+  $collector = \Drupal::service('simple_oauth.expired_collector');
+  // Collect the affected tokens and expire them.
+  if ($entity instanceof AccountInterface) {
+    $collector->deleteMultipleTokens($collector->collectForAccount($entity));
+  }
+  if ($entity instanceof ConsumerInterface) {
+    $collector->deleteMultipleTokens($collector->collectForClient($entity));
+  }
+}
+
+/**
+ * Implements hook_entity_base_field_info().
+ */
+function simple_oauth_entity_base_field_info(EntityTypeInterface $entity_type) {
+  $fields = [];
+  if ($entity_type->id() == 'consumer') {
+    $fields['secret'] = BaseFieldDefinition::create('password')
+      ->setLabel(new TranslatableMarkup('Secret'))
+      ->setDescription(new TranslatableMarkup('The secret key of this client (hashed).'));
+
+    $fields['confidential'] = BaseFieldDefinition::create('boolean')
+      ->setLabel(new TranslatableMarkup('Is Confidential?'))
+      ->setDescription(new TranslatableMarkup('A boolean indicating whether the client secret needs to be validated or not.'))
+      ->setDisplayOptions('view', [
+        'label' => 'inline',
+        'type' => 'boolean',
+        'weight' => 3,
+      ])
+      ->setDisplayOptions('form', [
+        'weight' => 3,
+      ])
+      ->setRevisionable(TRUE)
+      ->setTranslatable(TRUE)
+      ->setDefaultValue(TRUE);
+
+    $fields['roles'] = BaseFieldDefinition::create('entity_reference')
+      ->setLabel(new TranslatableMarkup('Scopes'))
+      ->setDescription(new TranslatableMarkup('The roles for this Consumer. OAuth2 scopes are implemented as Drupal roles.'))
+      ->setRevisionable(TRUE)
+      ->setSetting('target_type', 'user_role')
+      ->setSetting('handler', 'default')
+      ->setCardinality(FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED)
+      ->setTranslatable(FALSE)
+      ->setDisplayOptions('view', [
+        'label' => 'inline',
+        'type' => 'entity_reference_label',
+        'weight' => 5,
+      ])
+      ->setDisplayOptions('form', [
+        'type' => 'options_buttons',
+        'weight' => 5,
+      ]);
+    $fields['redirect'] = BaseFieldDefinition::create('uri')
+      ->setLabel(new TranslatableMarkup('Redirect URI'))
+      ->setDescription(new TranslatableMarkup('The URI this client will redirect to when needed.'))
+      ->setDisplayOptions('view', [
+        'label' => 'inline',
+        'weight' => 4,
+      ])
+      ->setDisplayOptions('form', [
+        'weight' => 4,
+      ])
+      ->setDisplayConfigurable('view', TRUE)
+      ->setTranslatable(TRUE)
+      // URIs are not length limited by RFC 2616, but we can only store 255
+      // characters in our entity DB schema.
+      ->setSetting('max_length', 255);
+
+    $fields['user_id'] = BaseFieldDefinition::create('entity_reference')
+      ->setLabel(new TranslatableMarkup('User'))
+      ->setDescription(new TranslatableMarkup('When no specific user is authenticated Drupal will use this user as the author of all the actions made.'))
+      ->setRevisionable(TRUE)
+      ->setSetting('target_type', 'user')
+      ->setSetting('handler', 'default')
+      ->setTranslatable(FALSE)
+      ->setDisplayOptions('view', [
+        'label' => 'inline',
+        'type' => 'entity_reference_label',
+        'weight' => 1,
+      ])
+      ->setCardinality(1)
+      ->setDisplayOptions('form', [
+        'type' => 'entity_reference_autocomplete',
+        'weight' => 0,
+        'settings' => [
+          'match_operator' => 'CONTAINS',
+          'size' => '60',
+          'autocomplete_type' => 'tags',
+          'placeholder' => '',
+        ],
+      ]);
+
+    $fields['pkce'] = BaseFieldDefinition::create('boolean')
+      ->setLabel(new TranslatableMarkup('Use PKCE?'))
+      ->setDescription(new TranslatableMarkup('A boolean indicating whether the client uses @pkce (e.g., a native client or SPA)'))
+      ->setDisplayOptions('view', [
+        'label' => 'inline',
+        'type' => 'boolean',
+        'weight' => 3,
+      ])
+      ->setDisplayOptions('form', ['weight' => 3])
+      ->setRevisionable(TRUE)
+      ->setTranslatable(TRUE)
+      ->setDefaultValue(FALSE);
+  }
+  return $fields;
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function simple_oauth_form_consumer_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  // Add a custom submit behavior.
+  $form['#entity_builders'][] = 'simple_oauth_form_consumer_form_submit';
+
+  /** @var \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager */
+  $entity_type_manager = \Drupal::service('entity_type.manager');
+  // Remove automatic roles and administrator roles.
+  unset($form['roles']['widget']['#options'][RoleInterface::ANONYMOUS_ID]);
+  unset($form['roles']['widget']['#options'][RoleInterface::AUTHENTICATED_ID]);
+  // Get the admin role.
+  $admin_roles = $entity_type_manager
+    ->getStorage('user_role')
+    ->getQuery()
+    ->condition('is_admin', TRUE)
+    ->accessCheck()
+    ->execute();
+  $default_value = reset($admin_roles);
+  unset($form['roles']['widget']['#options'][$default_value]);
+  $recommendation_text = t(
+    'Create a <a href=":url">role</a> for every logical group of permissions you want to make available to a consumer.',
+    [':url' => Url::fromRoute('entity.user_role.collection')->toString()]
+  );
+  $form['roles']['widget']['#description'] .= '<br>' . $recommendation_text;
+  if (empty($form['roles']['widget']['#options'])) {
+    \Drupal::service('messenger')->addMessage($recommendation_text, 'error');
+    $form['actions']['#disabled'] = TRUE;
+  }
+
+  $description = t(
+    'Use this field to create a hash of the secret key. This module will never store your consumer key, only a hash of it.'
+  );
+  $form['new_secret'] = [
+    '#type' => 'password',
+    '#title' => t('New Secret'),
+    '#description' => $description,
+  ];
+  $form['pkce']['#states']['visible'] = [
+    ':input[name="confidential[value]"]' => [
+      'checked' => FALSE,
+    ],
+  ];
+}
+
+/**
+ * Extra submit handler.
+ *
+ * @param array $form
+ *   The form.
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *   The state.
+ */
+function simple_oauth_form_consumer_form_submit($entity_type_id, ConsumerInterface $entity, array &$form, FormStateInterface $form_state) {
+  if ($entity_type_id !== 'consumer') {
+    return;
+  }
+  // If the secret was changed, then digest it before saving. If not, then
+  // leave it alone.
+  if ($new_secret = $form_state->getValue('new_secret')) {
+    $entity->get('secret')->value = $new_secret;
+  }
+}
+
+/**
+ * Implements hook_consumers_list_alter().
+ */
+function simple_oauth_consumers_list_alter(&$data, $context) {
+  if ($context['type'] === 'header') {
+    $data['redirect'] = t('Redirect');
+    $data['scopes'] = t('Scopes');
+  }
+  elseif ($context['type'] === 'row') {
+    $entity = $context['entity'];
+    $data['redirect'] = NULL;
+    if ($redirect_url = $context['entity']->get('redirect')->value) {
+      $data['redirect'] = Link::fromTextAndUrl($redirect_url, Url::fromUri($redirect_url));
+    }
+    $data['scopes'] = [
+      'data' => ['#theme' => 'item_list', '#items' => []],
+    ];
+    foreach ($entity->get('roles')->getValue() as $role) {
+      $data['scopes']['data']['#items'][] = $role['target_id'];
+    }
+  }
+}

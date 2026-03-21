@@ -1,0 +1,6 @@
+{
+    "name": "drupal/consumers",
+    "description": "Declare all the consumers of your API.",
+    "type": "drupal-module",
+    "license": "GPL-2.0+"
+}
