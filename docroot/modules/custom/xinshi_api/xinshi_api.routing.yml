@@ -14,6 +14,8 @@ xinshi_api.v3.landingPage.builder:
   requirements:
     _permission: 'create landing_page content'
   methods: [ POST ]
+  options:
+    _auth: [ 'oauth2', 'cookie' ]
 
 xinshi_api.v3.landingPage.canonical:
   path: '/api/v3/landingPage/json/{node}'
@@ -24,6 +26,7 @@ xinshi_api.v3.landingPage.canonical:
     _permission: 'access content'
     node: \d+
   options:
+    _auth: [ 'oauth2', 'cookie' ]
     parameters:
       node:
         type: 'entity:node'
@@ -38,6 +41,7 @@ xinshi_api.v3.landingPage.update:
     _entity_access: 'node.update'
     node: \d+
   options:
+    _auth: [ 'oauth2', 'cookie' ]
     parameters:
       node:
         type: 'entity:node'
@@ -52,6 +56,7 @@ xinshi_api.v3.landingPage.translations.add:
     _entity_access: 'node.update'
     node: \d+
   options:
+    _auth: [ 'oauth2', 'cookie' ]
     parameters:
       node:
         type: 'entity:node'
