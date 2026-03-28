@@ -139,7 +139,7 @@ class OtpSubmitResource extends ResourceBase {
     }
 
     // Validate required parameters.
-    if (empty($user_input['client_id']) || empty($user_input['client_secret'])) {
+    if (empty($user_input['client_id'])) {
       return NULL;
     }
 
