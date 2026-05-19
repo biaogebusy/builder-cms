@@ -382,6 +382,59 @@ class OpenApiUtilClientTest extends TestCase
         );
     }
 
+    public function testMapToFlatStyle()
+    {
+        // Test null
+        $this->assertNull(OpenApiUtilClient::mapToFlatStyle(null));
+
+        // Test simple array (list)
+        $list = ['a', 'b', 'c'];
+        $result = OpenApiUtilClient::mapToFlatStyle($list);
+        $this->assertEquals(['a', 'b', 'c'], $result);
+
+        // Test associative array (map)
+        $map = ['key' => 'value', 'name' => 'test'];
+        $result = OpenApiUtilClient::mapToFlatStyle($map);
+        $this->assertEquals([
+            '#3#key' => 'value',
+            '#4#name' => 'test'
+        ], $result);
+
+        // Test nested map
+        $nestedMap = [
+            'outer' => [
+                'inner' => 'value'
+            ]
+        ];
+        $result = OpenApiUtilClient::mapToFlatStyle($nestedMap);
+        $this->assertEquals([
+            '#5#outer' => [
+                '#5#inner' => 'value'
+            ]
+        ], $result);
+
+        // Test list with nested maps
+        $listWithMaps = [
+            ['key' => 'value1'],
+            ['key' => 'value2']
+        ];
+        $result = OpenApiUtilClient::mapToFlatStyle($listWithMaps);
+        $this->assertEquals([
+            ['#3#key' => 'value1'],
+            ['#3#key' => 'value2']
+        ], $result);
+
+        // Test Model with map field
+        $model = new ParseModel([
+            'str' => 'test',
+            'array' => ['key' => 'value']
+        ]);
+        $result = OpenApiUtilClient::mapToFlatStyle($model);
+        $this->assertInstanceOf(ParseModel::class, $result);
+        $this->assertEquals('test', $result->str);
+        $this->assertEquals(['#3#key' => 'value'], $result->array);
+    }
+
     private function parseData()
     {
         return [

@@ -3,3 +3,15 @@ oauth2_token.admin.config.people.settings:
   description: 'Configure the Simple OAuth settings and manage entities.'
   route_name: oauth2_token.settings
   parent: user.admin_index
+
+oauth2_scope.settings:
+  title: 'Scopes'
+  description: 'Configuration settings for OAuth2 scopes'
+  route_name: oauth2_scope.settings
+  parent: oauth2_token.admin.config.people.settings
+
+oauth2_scope.dynamic.collection:
+  title: 'Dynamic scopes'
+  parent: oauth2_scope.settings
+  description: 'Manage OAuth2 dynamic scopes.'
+  route_name: entity.oauth2_scope.collection

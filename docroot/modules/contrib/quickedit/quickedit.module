@@ -200,7 +200,7 @@ function quickedit_preprocess_field(&$variables) {
 
   // Fields that are computed fields are not editable.
   $definition = $entity->getFieldDefinition($element['#field_name']);
-  if (!$definition->isComputed()) {
+  if ($definition && !$definition->isComputed()) {
     $variables['attributes']['data-quickedit-field-id'] = $entity->getEntityTypeId() . '/' . $entity->id() . '/' . $element['#field_name'] . '/' . $element['#language'] . '/' . $element['#view_mode'];
   }
 }

@@ -3,11 +3,11 @@
 namespace Drupal\Tests\simple_oauth\Functional;
 
 use Drupal\Component\Serialization\Json;
-use Drupal\consumers\Entity\Consumer;
 use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;
-use Drupal\user\Entity\Role;
-use Drupal\user\RoleInterface;
+use Drupal\consumers\Entity\Consumer;
+use Drupal\simple_oauth\Entity\Oauth2Scope;
+use Drupal\simple_oauth\Oauth2ScopeInterface;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -27,9 +27,9 @@ abstract class TokenBearerFunctionalTestBase extends BrowserTestBase {
    */
   protected static $modules = [
     'image',
-    'node',
+    'options',
     'serialization',
-    'simple_oauth',
+    'simple_oauth_test',
     'text',
     'user',
   ];
@@ -44,7 +44,7 @@ abstract class TokenBearerFunctionalTestBase extends BrowserTestBase {
   /**
    * The client.
    *
-   * @var \Drupal\consumers\Entity\ConsumerInterface
+   * @var \Drupal\consumers\Entity\Consumer
    */
   protected $client;
 
@@ -70,18 +70,18 @@ abstract class TokenBearerFunctionalTestBase extends BrowserTestBase {
   protected $httpClient;
 
   /**
-   * Additional roles used during tests.
-   *
-   * @var \Drupal\user\RoleInterface[]
-   */
-  protected $additionalRoles;
-
-  /**
    * The request scope.
    *
    * @var string
    */
-  protected $scope;
+  protected string $scope;
+
+  /**
+   * The redirect URI.
+   *
+   * @var string
+   */
+  protected string $redirectUri;
 
   /**
    * {@inheritdoc}
@@ -100,57 +100,72 @@ abstract class TokenBearerFunctionalTestBase extends BrowserTestBase {
     $this->httpClient = $this->container->get('http_client_factory')
       ->fromOptions(['base_uri' => $this->baseUrl]);
 
-    $client_role = Role::create([
-      'id' => $this->randomMachineName(),
-      'label' => $this->getRandomGenerator()->word(5),
-      'is_admin' => FALSE,
-    ]);
-    $client_role->save();
-
-    $this->additionalRoles = [];
-    for ($i = 0; $i < mt_rand(1, 3); $i++) {
-      $role = Role::create([
-        'id' => $this->randomMachineName(),
-        'label' => $this->getRandomGenerator()->word(5),
-        'is_admin' => FALSE,
-      ]);
-      $role->save();
-      $this->additionalRoles[] = $role;
-    }
-
     $this->clientSecret = $this->randomString();
 
-    $this->client = Consumer::create([
-      'owner_id' => '',
-      'label' => $this->randomMachineName(),
-      'client_id' => $this->randomString(),
-      'secret' => $this->clientSecret,
-      'confidential' => TRUE,
-      'third_party' => TRUE,
-      'roles' => [['target_id' => $client_role->id()]],
-    ]);
-    $this->client->save();
+    $this->redirectUri = Url::fromRoute('oauth2_token.test_token', [], [
+      'absolute' => TRUE,
+    ])->toString();
 
     $this->user = $this->drupalCreateUser();
-    $this->grantPermissions(Role::load(RoleInterface::ANONYMOUS_ID), [
-      'access content',
-      'debug simple_oauth tokens',
-    ]);
-    $this->grantPermissions(Role::load(RoleInterface::AUTHENTICATED_ID), [
-      'access content',
-      'debug simple_oauth tokens',
-    ]);
 
     $this->setUpKeys();
 
-    $num_roles = mt_rand(1, count($this->additionalRoles));
-    $requested_roles = array_slice($this->additionalRoles, 0, $num_roles);
-    $scopes = array_map(function (RoleInterface $role) {
-      return $role->id();
-    }, $requested_roles);
-    $this->scope = implode(' ', $scopes);
+    $scope_1 = Oauth2Scope::create([
+      'name' => 'test:scope1',
+      'description' => 'Test scope 1 description',
+      'grant_types' => [
+        'authorization_code' => [
+          'status' => TRUE,
+          'description' => 'Test scope 1 description authorization_code',
+        ],
+        'client_credentials' => [
+          'status' => TRUE,
+          'description' => 'Test scope 1 description client_credentials',
+        ],
+      ],
+      'umbrella' => FALSE,
+      'granularity_id' => Oauth2ScopeInterface::GRANULARITY_PERMISSION,
+      'granularity_configuration' => [
+        'permission' => 'access content',
+      ],
+    ]);
+    $scope_2 = Oauth2Scope::create([
+      'name' => 'test:scope2',
+      'description' => 'Test scope 2 description',
+      'grant_types' => [
+        'authorization_code' => [
+          'status' => TRUE,
+          'description' => 'Test scope 2 description authorization_code',
+        ],
+        'client_credentials' => [
+          'status' => TRUE,
+          'description' => 'Test scope 2 description client_credentials',
+        ],
+      ],
+      'umbrella' => FALSE,
+      'granularity_id' => Oauth2ScopeInterface::GRANULARITY_PERMISSION,
+      'granularity_configuration' => [
+        'permission' => 'debug simple_oauth tokens',
+      ],
+    ]);
+    $scope_1->save();
+    $scope_2->save();
 
-    drupal_flush_all_caches();
+    $this->client = Consumer::create([
+      'client_id' => $this->randomString(),
+      'label' => $this->getRandomGenerator()->name(),
+      'secret' => $this->clientSecret,
+      'grant_types' => [
+        'authorization_code',
+        'client_credentials',
+        'refresh_token',
+      ],
+      'redirect' => [$this->redirectUri],
+      'scopes' => [$scope_1->id(), $scope_2->id()],
+    ]);
+    $this->client->save();
+
+    $this->scope = "{$scope_1->getName()} {$scope_2->getName()}";
   }
 
   /**
@@ -168,8 +183,7 @@ abstract class TokenBearerFunctionalTestBase extends BrowserTestBase {
     $this->assertEquals(200, $response->getStatusCode());
     $parsed_response = Json::decode((string) $response->getBody());
     $this->assertSame('Bearer', $parsed_response['token_type']);
-    $expiration = $this->config('simple_oauth.settings')
-      ->get('access_token_expiration');
+    $expiration = $this->client->get('access_token_expiration')->value;
     $this->assertLessThanOrEqual($expiration, $parsed_response['expires_in']);
     $this->assertGreaterThanOrEqual($expiration - 10, $parsed_response['expires_in']);
     $this->assertNotEmpty($parsed_response['access_token']);
@@ -181,6 +195,24 @@ abstract class TokenBearerFunctionalTestBase extends BrowserTestBase {
     }
 
     return $parsed_response;
+  }
+
+  /**
+   * Validates access token on test resource.
+   *
+   * @param string $access_token
+   *   The access token.
+   * @param int $status_code
+   *   The expected status code.
+   *
+   * @throws \Behat\Mink\Exception\ExpectationException
+   */
+  protected function assertAccessTokenOnResource(string $access_token, int $status_code = 200): void {
+    $resource_path = Url::fromRoute('oauth2_resource.test')->toString();
+    $this->drupalGet($resource_path, [], [
+      'Authorization' => "Bearer {$access_token}",
+    ]);
+    $this->assertSession()->statusCodeEquals($status_code);
   }
 
 }

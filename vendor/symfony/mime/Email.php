@@ -507,10 +507,10 @@ class Email extends Message
                 }
 
                 if ($name !== $part->getContentId()) {
-                    $html = str_replace('cid:'.$name, 'cid:'.$part->getContentId(), $html, $count);
+                    $html = str_replace('cid:'.$name, 'cid:'.$part->getContentId(), $html);
                 }
                 $relatedParts[$name] = $part;
-                $part->setName($part->getContentId())->asInline();
+                $part->setName($part->getName() ?? $part->getContentId())->asInline();
 
                 continue 2;
             }

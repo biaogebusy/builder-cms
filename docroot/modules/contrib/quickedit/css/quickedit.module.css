@@ -63,6 +63,7 @@
 .quickedit-form {
   position: absolute;
   z-index: 300;
+  display: table;
   max-width: 35em;
 }
 .quickedit-form .placeholder {

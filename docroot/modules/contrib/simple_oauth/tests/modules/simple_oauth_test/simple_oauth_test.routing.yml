@@ -1,0 +1,17 @@
+oauth2_token.test_token:
+  path: '/oauth/test'
+  defaults:
+    _controller: '\Drupal\simple_oauth_test\Controller\RedirectDebug::token'
+    _title: 'Test Route'
+  methods: [GET]
+  requirements:
+    _access: 'TRUE'
+
+oauth2_resource.test:
+  path: '/api/oauth-resource-test'
+  defaults:
+    _controller: '\Drupal\simple_oauth_test\Controller\Resource::get'
+    _title: 'Test resource'
+  methods: [ GET ]
+  requirements:
+    _permission: 'access content'

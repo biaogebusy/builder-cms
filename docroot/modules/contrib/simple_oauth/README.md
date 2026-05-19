@@ -12,31 +12,22 @@ This module uses the fantastic PHP library [OAuth 2.0 Server](http://oauth2.thep
 [![Quality Score](https://img.shields.io/scrutinizer/g/thephpleague/oauth2-server.svg?style=flat-square)](https://scrutinizer-ci.com/g/thephpleague/oauth2-server)
 [![Total Downloads](https://img.shields.io/packagist/dt/league/oauth2-server.svg?style=flat-square)](https://packagist.org/packages/league/oauth2-server)
 
-### Quick demo (Password Grant)
+### Quick demo (Client Credentials Grant)
 
-1. Install the module using Composer: `composer require drupal/simple_oauth:8.x-2.x`. You can use any other installation method, as long as you install the [OAuth2 Server](https://github.com/thephpleague/oauth2-server) composer package.
+1. Install the module using Composer: `composer require drupal/simple_oauth:6.0.x'`. You can use any other installation method, as long as you install the [OAuth2 Server](https://github.com/thephpleague/oauth2-server) composer package.
 2. Generate a pair of keys to encrypt the tokens. And store them outside of your document root for security reasons.
 ```
 openssl genrsa -out private.key 2048
 openssl rsa -in private.key -pubout > public.key
 ```
 3. Save the path to your keys in: `/admin/config/people/simple_oauth`.
-3. Go to [REST UI](https://drupal.org/project/restui) and enable the _oauth2_ authentication in your resource.
-4. Create a Client Application by going to: `/admin/config/services/consumer/add`.
-5. Create a token with your credentials by making a `POST` request to `/oauth/token`. See [the documentation](http://oauth2.thephpleague.com/authorization-server/resource-owner-password-credentials-grant/) about what fields your request should contain.
-6.  (Not shown) Permissions are set to only allow to view nodes via REST with the authenticated user.
-7.  Request a node via REST without authentication and watch it fail.
-8.  Request a node via REST with the header `Authorization: Bearer {YOUR_TOKEN}` and watch it succeed.
-
-![Simple OAuth animation](https://www.drupal.org/files/project-images/simple_oauth_2.gif)
-
-### Video tutorials
-
-[![](https://www.drupal.org/files/2015-12-10%2009-04-11.png)](https://youtu.be/kohs5MXESXc) Watch a detailed explanation on how to use this module in the video tutorials:
-
-1.  [Basic configuration.](https://youtu.be/kohs5MXESXc)
-2.  [Refresh your tokens.](https://youtu.be/E-wUKkQa1OM)
-3.  [Add extra security with resources.](https://youtu.be/PR0oBCCSxgE)
+4. Go to `/admin/modules` and enable the `JSON:API` module.
+5. Go to `/admin/people/permissions` and allow the permission `View published content` only for authenticated user.
+6. Create a scope by going to: `/admin/config/people/simple_oauth/oauth2_scope/dynamic/add`, enable the `Client Credentials` grant type and set permission to `access content`.
+7. Create a Client Application by going to: `/admin/config/services/consumer/add`, enable the `Client Credentials` grant type, set User under `Client Credentials settings` and set `Is Confidential?` to true.
+8. Create a token with your credentials by making a `POST` request to `/oauth/token`. See [the documentation](https://oauth2.thephpleague.com/authorization-server/client-credentials-grant/) about what fields your request should contain.
+9. Request a node via JSON:API without authentication and watch it fail, e.g: `/jsonapi/node/{bundle}?page[limit]=1`.
+10. Request a node via JSON:API with the header `Authorization: Bearer {YOUR_TOKEN}` and watch it succeed.
 
 ### My token has expired!
 

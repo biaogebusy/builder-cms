@@ -98,14 +98,14 @@ class Console
         $message = $prefix . $val . PHP_EOL;
         
         if ($stderr) {
-            // 使用自定义 stderr 流或默认的 stderr
+            // Use custom stderr stream or default stderr
             if (self::$stderrStream !== null) {
                 fwrite(self::$stderrStream, $message);
             } else {
                 file_put_contents('php://stderr', $message);
             }
         } else {
-            // 使用自定义 stdout 流或默认的 echo
+            // Use custom stdout stream or default echo
             if (self::$stdoutStream !== null) {
                 fwrite(self::$stdoutStream, $message);
             } else {

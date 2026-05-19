@@ -28,5 +28,23 @@ entity.oauth2_token.canonical:
 entity.oauth2_token.delete_form:
   route_name:  entity.oauth2_token.delete_form
   base_route:  entity.oauth2_token.canonical
-  title: Delete
+  title: 'Delete'
+  weight: 10
+
+# Scopes routing definition
+oauth2_scope.settings:
+  route_name: oauth2_scope.settings
+  title: 'Scopes'
+  description: 'List Scopes'
+  base_route: oauth2_token.settings
+
+entity.oauth2_scope.edit_form:
+  title: 'Edit'
+  route_name: entity.oauth2_scope.edit_form
+  base_route: entity.oauth2_scope.edit_form
+
+entity.oauth2_scope.delete_form:
+  route_name:  entity.oauth2_scope.delete_form
+  base_route:  entity.oauth2_scope.edit_form
+  title: 'Delete'
   weight: 10

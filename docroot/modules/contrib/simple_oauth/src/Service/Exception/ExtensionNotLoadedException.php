@@ -2,9 +2,9 @@
 
 namespace Drupal\simple_oauth\Service\Exception;
 
-use Exception;
-
 /**
+ * Provides an exception that indicates a missing PHP extension.
+ *
  * @internal
  */
-class ExtensionNotLoadedException extends Exception {}
+class ExtensionNotLoadedException extends \Exception {}

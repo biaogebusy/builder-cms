@@ -80,7 +80,7 @@ class QuickEditFieldForm extends FormBase {
    *
    * Builds a form for a single entity field.
    */
-  public function buildForm(array $form, FormStateInterface $form_state, EntityInterface $entity = NULL, $field_name = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?EntityInterface $entity = NULL, $field_name = NULL) {
     if (!$form_state->has('entity')) {
       $this->init($form_state, $entity, $field_name);
     }

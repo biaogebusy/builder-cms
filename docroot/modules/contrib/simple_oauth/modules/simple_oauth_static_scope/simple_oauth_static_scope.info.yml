@@ -1,0 +1,12 @@
+name: Simple OAuth static scope
+type: module
+description: 'Makes static (YAML) defined scopes available.'
+core_version_requirement: ^10.3 || ^11
+package: Authentication
+dependencies:
+  - simple_oauth:simple_oauth
+
+# Information added by Drupal.org packaging script on 2025-12-08
+version: '6.1.0'
+project: 'simple_oauth'
+datestamp: 1765191616

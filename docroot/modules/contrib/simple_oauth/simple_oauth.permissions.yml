@@ -22,3 +22,21 @@ debug simple_oauth tokens:
 grant simple_oauth codes:
   title: 'Grant OAuth2 codes'
   description: 'Allow using the AuthCode grant'
+
+view oauth2 scopes:
+  title: 'View OAuth2 scopes'
+  description: 'Allows to view OAuth2 scopes'
+
+add oauth2 scopes:
+  title: 'Create new OAuth2 scopes'
+
+edit oauth2 scopes:
+  title: 'Edit OAuth2 scopes'
+
+delete oauth scopes:
+  title: 'Delete OAuth2 scopes'
+
+administer oauth2 scopes:
+  title: 'Administer OAuth2 scopes'
+  description: 'Allow to manage the OAuth2 scopes.'
+  restrict access: TRUE

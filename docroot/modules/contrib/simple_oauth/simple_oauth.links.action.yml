@@ -1,5 +1,15 @@
+entity.oauth2_scope.add_form:
+  route_name: entity.oauth2_scope.add_form
+  title: 'Add Scope'
+  appears_on:
+    - entity.oauth2_scope.collection
 entity.simple_oauth.consumer.add_form:
   route_name: 'entity.consumer.add_form'
   title: 'Add Client'
   appears_on:
     - oauth2_token.settings
+simple_oauth.oauth2_token.create_client_credentials:
+  route_name: simple_oauth.oauth2_token.create_client_credentials
+  title: 'Create client credentials token'
+  appears_on:
+    - entity.oauth2_token.collection

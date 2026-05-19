@@ -1,0 +1,24 @@
+"deprecated:permission":
+  description: 'Test deprecated:permission description'
+  umbrella: false
+  grant_types:
+    authorization_code:
+      status: true
+      description: 'Test authorization_code description'
+    client_credentials:
+      status: true
+      description: 'Test client_credentials description'
+  granularity: 'permission'
+  permission: 'access content'
+"deprecated:role":
+  description: 'Test deprecated:role description'
+  umbrella: false
+  grant_types:
+    authorization_code:
+      status: true
+      description: 'Test authorization_code description'
+    client_credentials:
+      status: true
+      description: 'Test client_credentials description'
+  granularity: 'role'
+  role: 'authenticated'

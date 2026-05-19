@@ -15,26 +15,108 @@ simple_oauth.oauth2_token.bundle.*:
       type: boolean
       label: 'Locked'
 
+simple_oauth.oauth2_scope.*:
+  type: config_entity
+  label: 'OAuth2 scope'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    name:
+      type: string
+      label: 'Name'
+    description:
+      type: text
+      label: 'Description'
+    grant_types:
+      type: sequence
+      label: 'Grant types'
+      sequence:
+        type: grant_type.[%key]
+    umbrella:
+      type: boolean
+      label: 'Umbrella'
+    parent:
+      type: string
+      label: 'Parent'
+    granularity_id:
+      type: string
+      label: 'Granularity plugin ID'
+      constraints:
+        PluginExists:
+          manager: plugin.manager.scope_granularity
+          interface: 'Drupal\simple_oauth\Plugin\ScopeGranularityInterface'
+    granularity_configuration:
+      type: simple_oauth_scope_granularity.[%parent.granularity_id]
+      label: 'Granularity plugin configuration'
+    langcode:
+      type: string
+      label: 'Language code'
+
+simple_oauth_scope_granularity.*:
+  type: mapping
+  label: 'Fallback granularity configuration'
+  nullable: true
+  mapping: {  }
+
+simple_oauth_scope_granularity.permission:
+  type: mapping
+  label: 'Permission granularity configuration'
+  mapping:
+    permission:
+      type: string
+      label: 'Permission'
+
+simple_oauth_scope_granularity.role:
+  type: mapping
+  label: 'Role granularity configuration'
+  mapping:
+    role:
+      type: string
+      label: 'Role'
+
+grant_type.authorization_code:
+  type: grant_type.settings
+  label: 'Authorization code'
+
+grant_type.client_credentials:
+  type: grant_type.settings
+  label: 'Client credentials'
+
+grant_type.refresh_token:
+  type: grant_type.settings
+  label: 'Refresh Token'
+
+grant_type.settings:
+  type: mapping
+  mapping:
+    status:
+      type: boolean
+      label: 'Enabled'
+    description:
+      type: text
+      label: 'Description'
+
+field.field_settings.oauth2_scope_reference:
+  type: mapping
+  label: 'OAuth2 scope reference settings'
+  mapping:
+    filter_grant_type:
+      type: string
+      label: 'Filter by grant type'
+      description: 'Optionally filter available scopes to only those enabled for a specific grant type.'
+
 simple_oauth.settings:
   type: config_object
   label: 'Simple OAuth Settings'
   mapping:
-    access_token_expiration:
-      type: integer
-      label: 'Access Token Expiration Time'
-      description: 'The default period in seconds while a access token is valid'
-    authorization_code_expiration:
-      type: integer
-      label: 'Authorization Code Expiration Time'
-      description: 'The default period in seconds while an authorization code is valid'
-    refresh_token_expiration:
-      type: integer
-      label: 'Refresh Token Expiration Time'
-      description: 'The default period in seconds while a refresh token is valid'
+    scope_provider:
+      type: string
+      label: 'Scope provider'
     token_cron_batch_size:
       type: integer
       label: 'Token batch size'
-      description: 'The number of expired token to delete per batch during cron cron'
+      description: 'The number of expired token to delete per batch during cron. Use 0 for no limit.'
     public_key:
       type: path
       label: 'Public Key'
@@ -43,14 +125,31 @@ simple_oauth.settings:
       type: path
       label: 'Private Key'
       description: 'The path to the private file.'
-    remember_clients:
-      type: boolean
-      label: 'Remember clients'
-    use_implicit:
-      type: boolean
-      label: 'Enable the implicit grant?'
-      description: 'Only use the implicit grant if you understand the security implications of using it.'
     disable_openid_connect:
       type: boolean
       label: 'Disable OpenID Connect?'
       description: 'OpenID Connect will be enabled, unless this flag is active.'
+    access_token_expiration:
+      type: integer
+      label: 'Access Token Expiration Time'
+      description: 'The default period in seconds while a access token is valid'
+      deprecated: "The 'access_token_expiration' config is deprecated and migrated as BaseField to the consumer entity"
+    authorization_code_expiration:
+      type: integer
+      label: 'Authorization Code Expiration Time'
+      description: 'The default period in seconds while an authorization code is valid'
+      deprecated: "The 'authorization_code_expiration' config is deprecated and migrated as BaseField to the consumer entity"
+    refresh_token_expiration:
+      type: integer
+      label: 'Refresh Token Expiration Time'
+      description: 'The default period in seconds while a refresh token is valid'
+      deprecated: "The 'refresh_token_expiration' config is deprecated and migrated as BaseField to the consumer entity"
+    remember_clients:
+      type: boolean
+      label: 'Remember clients'
+      deprecated: "The 'remember_clients' config is deprecated and migrated as BaseField to the consumer entity"
+    use_implicit:
+      type: boolean
+      label: 'Enable the implicit grant?'
+      description: 'Only use the implicit grant if you understand the security implications of using it.'
+      deprecated: "The 'remember_clients' config is deprecated, the implicit flow is insecure as stated by the OAuth2 BP"
