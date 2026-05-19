@@ -124,7 +124,7 @@
         "drupal/select_or_other": "^4.2",
         "drupal/serial": "^2.1",
         "drupal/shs": "^2.0",
-        "drupal/simple_oauth": "^5.2",
+        "drupal/simple_oauth": "^6.1",
         "drupal/slick_entityreference": "^3.0",
         "drupal/smsframework": "^2.3",
         "drupal/social_auth": "^4.1",

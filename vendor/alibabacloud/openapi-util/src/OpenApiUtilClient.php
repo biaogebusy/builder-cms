@@ -262,6 +262,58 @@ class OpenApiUtilClient
     }
 
     /**
+     * Parse map with flat style.
+     *
+     * @param mixed $object the object to be flattened
+     *
+     * @return mixed the flattened object
+     */
+    public static function mapToFlatStyle($object)
+    {
+        if (null === $object) {
+            return $object;
+        }
+
+        if (\is_array($object) && array_keys($object) === range(0, count($object) - 1)) {
+            // It's a sequential array (list)
+            $list = [];
+            foreach ($object as $item) {
+                $list[] = self::mapToFlatStyle($item);
+            }
+            return $list;
+        } elseif ($object instanceof Model) {
+            // Handle TeaModel
+            $class = new \ReflectionClass($object);
+            foreach ($class->getProperties(\ReflectionProperty::IS_PUBLIC) as $property) {
+                if (!$property->isStatic()) {
+                    $name = $property->getName();
+                    $value = $property->getValue($object);
+                    if (\is_array($value) && !empty($value) && array_keys($value) !== range(0, count($value) - 1)) {
+                        // It's an associative array (map)
+                        $flatMap = [];
+                        foreach ($value as $k => $v) {
+                            $flatMap['#' . \strlen($k) . '#' . $k] = self::mapToFlatStyle($v);
+                        }
+                        $property->setValue($object, $flatMap);
+                    } else {
+                        $property->setValue($object, self::mapToFlatStyle($value));
+                    }
+                }
+            }
+            return $object;
+        } elseif (\is_array($object) && !empty($object)) {
+            // It's an associative array (map)
+            $flatMap = [];
+            foreach ($object as $key => $value) {
+                $flatMap['#' . \strlen($key) . '#' . $key] = self::mapToFlatStyle($value);
+            }
+            return $flatMap;
+        }
+
+        return $object;
+    }
+
+    /**
      * Encode raw with base16.
      *
      * @param int[] $raw encoding data

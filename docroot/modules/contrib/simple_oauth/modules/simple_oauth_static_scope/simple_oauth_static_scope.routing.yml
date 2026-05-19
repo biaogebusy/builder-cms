@@ -1,0 +1,15 @@
+plugin.oauth2_scope.collection:
+  path: '/admin/config/people/simple_oauth/oauth2_scope/static'
+  defaults:
+    _controller: '\Drupal\simple_oauth_static_scope\Controller\Oauth2ScopePluginController::listing'
+    _title: 'Static scopes'
+  requirements:
+    _permission: 'view oauth2 scopes'
+
+plugin.oauth2_scope.view:
+  path: '/admin/config/people/simple_oauth/oauth2_scope/static/{plugin_id}/view'
+  defaults:
+    _controller: '\Drupal\simple_oauth_static_scope\Controller\Oauth2ScopePluginController::view'
+    _title: 'View scope'
+  requirements:
+    _permission: 'view oauth2 scopes'

@@ -87,6 +87,7 @@ class PassConfig
             new CheckExceptionOnInvalidReferenceBehaviorPass(),
             new InlineServiceDefinitionsPass(new AnalyzeServiceReferencesPass()),
             new AnalyzeServiceReferencesPass(),
+            new CheckFactoryBuilderCircularReferencePass(),
             new DefinitionErrorExceptionPass(),
         ]];
 
@@ -97,7 +98,8 @@ class PassConfig
                 new AliasDeprecatedPublicServicesPass(),
             ],
             // Let build parameters be available as late as possible
-            -2048 => [new RemoveBuildParametersPass()],
+            // Don't remove array parameters since ResolveParameterPlaceHoldersPass doesn't resolve them
+            -2048 => [new RemoveBuildParametersPass(true)],
         ];
     }
 

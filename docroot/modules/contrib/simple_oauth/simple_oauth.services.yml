@@ -11,12 +11,23 @@ parameters:
     - updated_at
     - zoneinfo
 services:
+  _defaults:
+    autoconfigure: true
+  logger.channel.simple_oauth:
+    parent: logger.channel_base
+    arguments: [ 'simple_oauth' ]
   simple_oauth.authentication.simple_oauth:
     class: Drupal\simple_oauth\Authentication\Provider\SimpleOauthAuthenticationProvider
     arguments:
-      - '@simple_oauth.server.resource_server'
+      - '@simple_oauth.server.resource_server.factory'
       - '@entity_type.manager'
       - '@simple_oauth.page_cache_request_policy.disallow_oauth2_token_requests'
+      - '@psr7.http_message_factory'
+      - '@psr7.http_foundation_factory'
+      - '@path.validator'
+      - '@router.route_provider'
+      - '@request_stack'
+      - '@permission_checker'
     tags:
       - { name: authentication_provider, provider_id: oauth2, global: TRUE, priority: 35 }
   simple_oauth.page_cache_request_policy.disallow_oauth2_token_requests:
@@ -24,7 +35,28 @@ services:
     public: false
     tags:
       - { name: page_cache_request_policy }
-
+  Drupal\simple_oauth\EventSubscriber\ExceptionLoggingSubscriber:
+    decorates: 'exception.logger'
+    arguments:
+      - '@Drupal\simple_oauth\EventSubscriber\ExceptionLoggingSubscriber.inner'
+      - '@logger.channel.simple_oauth'
+  cache_context.oauth2_scopes:
+    class: Drupal\simple_oauth\Cache\Oauth2ScopeCacheContext
+    arguments: [ '@current_user' ]
+    tags:
+      - { name: cache.context }
+  access_policy.simple_oauth:
+    class: Drupal\simple_oauth\Access\Oauth2AccessPolicy
+    arguments: [ '@simple_oauth.oauth2_scope.provider', '@entity_type.manager' ]
+    tags:
+      - { name: access_policy }
+  simple_oauth.access_policy.user_roles:
+    class: Drupal\simple_oauth\Access\DecoratedUserRolesAccessPolicy
+    decorates: access_policy.user_roles
+    decoration_priority: 100
+    arguments: [ '@simple_oauth.access_policy.user_roles.inner', '@entity_type.manager' ]
+    tags:
+      - { name: access_policy }
   simple_oauth.normalizer.oauth2_token:
     class: Drupal\simple_oauth\Normalizer\TokenEntityNormalizer
     arguments: [ '@entity_type.manager' ]
@@ -34,25 +66,32 @@ services:
     class: Drupal\simple_oauth\Normalizer\RefreshTokenEntityNormalizer
     tags:
       - { name: normalizer, priority: 20 }
-  simple_oauth.server.resource_server:
-    class: Drupal\simple_oauth\Server\ResourceServer
+  simple_oauth.server.authorization_server.factory:
+    class: Drupal\simple_oauth\Server\AuthorizationServerFactory
     arguments:
-      - '@simple_oauth.repositories.access_token'
       - '@config.factory'
-      - '@psr7.http_message_factory'
-      - '@psr7.http_foundation_factory'
+      - '@file_system'
+      - '@plugin.manager.oauth2_grant.processor'
+      - '@simple_oauth.repositories.client'
+      - '@simple_oauth.repositories.scope'
+      - '@simple_oauth.repositories.access_token'
+      - '@simple_oauth.repositories.refresh_token'
+      - '@simple_oauth.server.response_type'
+  simple_oauth.server.resource_server.factory:
+    class: Drupal\simple_oauth\Server\ResourceServerFactory
+    arguments:
+      - '@config.factory'
+      - '@file_system'
+      - '@simple_oauth.repositories.access_token'
   simple_oauth.repositories.client:
     class: Drupal\simple_oauth\Repositories\ClientRepository
     arguments: [ '@entity_type.manager', '@password' ]
   simple_oauth.repositories.scope:
     class: Drupal\simple_oauth\Repositories\ScopeRepository
-    arguments: [ '@entity_type.manager' ]
-  simple_oauth.repositories.user:
-    class: Drupal\simple_oauth\Repositories\UserRepository
-    arguments: [ '@user.auth' ]
+    arguments: [ '@entity_type.manager', '@simple_oauth.oauth2_scope.provider' ]
   simple_oauth.repositories.access_token:
     class: Drupal\simple_oauth\Repositories\AccessTokenRepository
-    arguments: [ '@entity_type.manager', '@serializer' ]
+    arguments: [ '@entity_type.manager', '@serializer', '@class_resolver' ]
   simple_oauth.repositories.refresh_token:
     class: Drupal\simple_oauth\Repositories\RefreshTokenRepository
     arguments: [ '@entity_type.manager', '@serializer' ]
@@ -60,20 +99,26 @@ services:
     class: Drupal\simple_oauth\Repositories\AuthCodeRepository
     arguments: [ '@entity_type.manager', '@serializer' ]
   simple_oauth.server.response_type:
-    class: \OpenIDConnectServer\IdTokenResponse
+    class: Drupal\simple_oauth\OpenIdConnect\OpenIdConnectIdTokenResponse
     arguments:
       - '@Drupal\simple_oauth\OpenIdConnect\UserIdentityProvider'
       - '@OpenIDConnectServer\ClaimExtractor'
+      - '@language_manager'
+  simple_oauth.oauth2_scope.provider.factory:
+    class: Drupal\simple_oauth\Oauth2ScopeProviderFactory
+    arguments: [ '@config.factory', '@plugin.manager.scope_provider', '@entity_type.manager' ]
+  simple_oauth.oauth2_scope.provider:
+    class: Drupal\simple_oauth\Oauth2ScopeProvider
+    factory: [ '@simple_oauth.oauth2_scope.provider.factory', 'get' ]
+  plugin.manager.scope_provider:
+    class: Drupal\simple_oauth\Plugin\ScopeProviderManager
+    parent: default_plugin_manager
+  plugin.manager.scope_granularity:
+    class: Drupal\simple_oauth\Plugin\ScopeGranularityManager
+    parent: default_plugin_manager
   plugin.manager.oauth2_grant.processor:
     class: Drupal\simple_oauth\Plugin\Oauth2GrantManager
     parent: default_plugin_manager
-    arguments:
-      - '@simple_oauth.repositories.client'
-      - '@simple_oauth.repositories.scope'
-      - '@simple_oauth.repositories.access_token'
-      - '@simple_oauth.repositories.refresh_token'
-      - '@config.factory'
-      - '@simple_oauth.server.response_type'
   simple_oauth.expired_collector:
     class: Drupal\simple_oauth\ExpiredCollector
     arguments: [ '@entity_type.manager', '@datetime.time' ]
@@ -81,6 +126,10 @@ services:
     class: Drupal\simple_oauth\HttpMiddleware\BasicAuthSwap
     tags:
       - { name: http_middleware }
+  Drupal\simple_oauth\TokenExpiryTriggerHandlerInterface:
+    class: Drupal\simple_oauth\TokenExpiryTriggerHandler
+    arguments: [ '@config.factory', '@simple_oauth.expired_collector', '@logger.channel.simple_oauth' ]
+
   # Keys Generator Services
   simple_oauth.filesystem_checker:
     class: Drupal\simple_oauth\Service\Filesystem\FileSystemChecker
@@ -94,7 +143,7 @@ services:
 
   # Services for OpenID Connect.
   Drupal\simple_oauth\OpenIdConnect\UserIdentityProvider:
-    arguments: [ '@entity_type.manager' ]
+    arguments: [ '@entity_type.manager', '@serializer' ]
   OpenIDConnectServer\Entities\ClaimSetEntity:
     arguments: [ '%simple_oauth.openid.scope%', '%simple_oauth.openid.claims%' ]
     private: true

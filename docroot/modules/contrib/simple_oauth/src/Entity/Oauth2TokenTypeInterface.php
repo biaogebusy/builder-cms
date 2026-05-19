@@ -13,7 +13,7 @@ interface Oauth2TokenTypeInterface extends ConfigEntityLockableInterface {
    * @return string
    *   The description
    */
-  public function getDescription();
+  public function getDescription(): string;
 
   /**
    * Set the description.
@@ -21,6 +21,6 @@ interface Oauth2TokenTypeInterface extends ConfigEntityLockableInterface {
    * @param string $description
    *   The description.
    */
-  public function setDescription($description);
+  public function setDescription(string $description);
 
 }

@@ -6,8 +6,6 @@ entity.oauth2_token.canonical:
     _title: 'Access Token'
   requirements:
     _entity_access: 'oauth2_token.view'
-  options:
-    _admin_route: TRUE
 
 entity.oauth2_token.collection:
   path: '/admin/config/people/simple_oauth/oauth2_token'
@@ -16,9 +14,15 @@ entity.oauth2_token.collection:
     _title: 'Access Token list'
   requirements:
     _permission: 'administer simple_oauth entities'
-  options:
-    _admin_route: TRUE
-  base_route: system.admin_content
+
+simple_oauth.oauth2_token.create_client_credentials:
+  path: '/admin/config/people/simple_oauth/oauth2_token/create_client_credentials'
+  defaults:
+    _title: 'Create client credentials token'
+    _form: Drupal\simple_oauth\Form\Oauth2ClientCredentialsTokenCreateForm
+  requirements:
+    _permission: 'administer simple_oauth entities'
+    _custom_access: Drupal\simple_oauth\Form\Oauth2ClientCredentialsTokenCreateForm::access
 
 entity.oauth2_token.delete_form:
   path: '/admin/config/people/simple_oauth/oauth2_token/{oauth2_token}/delete'
@@ -27,19 +31,14 @@ entity.oauth2_token.delete_form:
     _title: 'Delete Access Token'
   requirements:
     _entity_access: 'oauth2_token.delete'
-  options:
-    _admin_route: TRUE
 
 oauth2_token.settings:
   path: '/admin/config/people/simple_oauth'
   defaults:
-   _form: '\Drupal\simple_oauth\Entity\Form\Oauth2TokenSettingsForm'
+   _form: '\Drupal\simple_oauth\Form\Oauth2TokenSettingsForm'
    _title: 'Simple OAuth Settings'
   requirements:
     _permission: 'administer simple_oauth entities'
-  options:
-    _admin_route: TRUE
-  base_route: entity.user.admin_form
 
 oauth2_token.settings.generate_key:
   path: '/admin/config/people/simple_oauth/generate_key'
@@ -48,8 +47,6 @@ oauth2_token.settings.generate_key:
     _controller: 'Drupal\simple_oauth\Controller\Oauth2GenerateKey::generateKeysModalAjaxResponse'
   requirements:
     _permission: 'administer simple_oauth entities'
-  options:
-    _admin_route: TRUE
 
 oauth2_token.token:
   path: '/oauth/token'
@@ -58,6 +55,7 @@ oauth2_token.token:
   methods: [POST]
   requirements:
     _access: 'TRUE'
+
 oauth2_token.authorize:
   path: '/oauth/authorize'
   defaults:
@@ -91,6 +89,7 @@ simple_oauth.userinfo:
     _role: 'authenticated'
   options:
     _auth: ['oauth2']
+
 simple_oauth.jwks:
   path: '/oauth/jwks'
   defaults:
@@ -98,9 +97,8 @@ simple_oauth.jwks:
     _title: 'OpenID Connect Key Store Info (JSON)'
   methods: [GET]
   requirements:
-    _role: 'authenticated'
-  options:
-    _auth: ['oauth2']
+    # Anonymous users can download the public keys, since they are public.
+    _access: 'TRUE'
 
 simple_oauth.settings.openid_connect:
   path: '/admin/config/people/simple_oauth/openid-connect'
@@ -109,6 +107,44 @@ simple_oauth.settings.openid_connect:
     _title: 'OpenID Connect'
   requirements:
     _permission: 'administer simple_oauth entities'
-  options:
-    _admin_route: TRUE
-  base_route: oauth2_token.settings
+
+# Oauth2Scope routing definition
+oauth2_scope.settings:
+  path: '/admin/config/people/simple_oauth/oauth2_scope'
+  defaults:
+    _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
+    _title: 'Scopes'
+  requirements:
+    _permission: 'view oauth2 scopes'
+
+entity.oauth2_scope.collection:
+  path: '/admin/config/people/simple_oauth/oauth2_scope/dynamic'
+  defaults:
+    _entity_list: oauth2_scope
+    _title: 'Dynamic scopes'
+  requirements:
+    _permission: 'view oauth2 scopes'
+
+entity.oauth2_scope.add_form:
+  path: '/admin/config/people/simple_oauth/oauth2_scope/dynamic/add'
+  defaults:
+    _entity_form: oauth2_scope.add
+    _title: 'Add scope'
+  requirements:
+    _entity_create_access: 'oauth2_scope'
+
+entity.oauth2_scope.edit_form:
+  path: '/admin/config/people/simple_oauth/oauth2_scope/dynamic/{oauth2_scope}/edit'
+  defaults:
+    _entity_form: oauth2_scope.edit
+    _title: 'Edit scope'
+  requirements:
+    _entity_access: 'oauth2_scope.update'
+
+entity.oauth2_scope.delete_form:
+  path: '/admin/config/people/simple_oauth/oauth2_scope/dynamic/{oauth2_scope}/delete'
+  defaults:
+    _entity_form: oauth2_scope.delete
+    _title: 'Delete Scope'
+  requirements:
+    _entity_access: 'oauth2_scope.delete'

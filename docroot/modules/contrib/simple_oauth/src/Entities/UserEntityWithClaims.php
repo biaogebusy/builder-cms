@@ -2,7 +2,6 @@
 
 namespace Drupal\simple_oauth\Entities;
 
-use Drupal\simple_oauth\Entities\UserEntity;
 use OpenIDConnectServer\Entities\ClaimSetInterface;
 
 /**

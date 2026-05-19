@@ -11,7 +11,7 @@ dependencies:
 test_dependencies:
   - drupal:ckeditor
 
-# Information added by Drupal.org packaging script on 2022-09-13
-version: '1.0.3'
+# Information added by Drupal.org packaging script on 2026-02-11
+version: '1.0.5'
 project: 'quickedit'
-datestamp: 1663069883
+datestamp: 1770802334

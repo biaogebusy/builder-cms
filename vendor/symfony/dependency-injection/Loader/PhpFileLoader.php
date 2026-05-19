@@ -57,6 +57,9 @@ class PhpFileLoader extends FileLoader
             return include $path;
         }, $this, ProtectedPhpFileLoader::class);
 
+        $instanceof = $this->instanceof;
+        $this->instanceof = [];
+
         try {
             $callback = $load($path, $this->env);
 
@@ -64,7 +67,7 @@ class PhpFileLoader extends FileLoader
                 $this->executeCallback($callback, new ContainerConfigurator($this->container, $this, $this->instanceof, $path, $resource, $this->env), $path);
             }
         } finally {
-            $this->instanceof = [];
+            $this->instanceof = $instanceof;
             $this->registerAliasesForSinglyImplementedInterfaces();
         }
 
@@ -182,7 +185,7 @@ class PhpFileLoader extends FileLoader
         }
 
         if (!$this->container->hasExtension($alias)) {
-            $extensions = array_filter(array_map(fn (ExtensionInterface $ext) => $ext->getAlias(), $this->container->getExtensions()));
+            $extensions = array_filter(array_map(static fn (ExtensionInterface $ext) => $ext->getAlias(), $this->container->getExtensions()));
             throw new InvalidArgumentException(\sprintf('There is no extension able to load the configuration for "%s". Looked for namespace "%s", found "%s".', $namespace, $alias, $extensions ? implode('", "', $extensions) : 'none'));
         }
 

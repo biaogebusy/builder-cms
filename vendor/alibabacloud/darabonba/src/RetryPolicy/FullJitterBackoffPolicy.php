@@ -16,7 +16,7 @@ class FullJitterBackoffPolicy extends BackoffPolicy {
             throw new DaraException("Period must be specified.");
         }
         $this->period = $option['period'];
-        // 默认值: 3 天
+        // Default: 3 days
         $this->cap = isset($option['cap']) ? $option['cap'] : 3 * 24 * 60 * 60 * 1000;
     }
 

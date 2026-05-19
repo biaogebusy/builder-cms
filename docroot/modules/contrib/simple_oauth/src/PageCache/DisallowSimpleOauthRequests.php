@@ -14,7 +14,7 @@ class DisallowSimpleOauthRequests implements SimpleOauthRequestPolicyInterface {
   /**
    * {@inheritdoc}
    */
-  public function isOauth2Request(Request $request) {
+  public function isOauth2Request(Request $request): bool {
     // Check the header. See: http://tools.ietf.org/html/rfc6750#section-2.1
     // We have to perform also an exact match, as if no token is provided then
     // the LWS might be stripped, but we still have to detect this as OAuth2

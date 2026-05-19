@@ -2,6 +2,9 @@
 
 namespace Drupal\simple_oauth\Entity;
 
+/**
+ * Provides a trait for entities that can be locked.
+ */
 trait ConfigEntityLockableTrait {
 
   /**

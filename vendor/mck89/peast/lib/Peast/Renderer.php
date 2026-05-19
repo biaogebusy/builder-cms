@@ -51,7 +51,8 @@ class Renderer
         "TryStatement",
         "WhileStatement",
         "WithStatement",
-        "MethodDefinition"
+        "MethodDefinition",
+        "BlockStatement"
     );
     
     /**
@@ -200,6 +201,10 @@ class Renderer
                 $code .= $codeRight;
             break;
             case "BlockStatement":
+                $code .= trim($this->renderStatementBlock(
+                    $node, $node->getBody(), true, false, true, true
+                ));
+            break;
             case "ClassBody":
             case "Program":
                 $code .= $this->renderStatementBlock(
@@ -1119,7 +1124,7 @@ class Renderer
      * 
      * @param Syntax\Node\Node  $node             Node
      * @param bool              $leading          False to render trailing comments
-     * @param bool|null         $blockContent     This paramater can have 3 values:
+     * @param bool|null         $blockContent     This parameter can have 3 values:
      *                                            - null: the node is not a block
      *                                            - false: the node is an empty block
      *                                            - true: the node is a block with content

@@ -7,8 +7,21 @@
 
 use Drupal\Core\Config\FileStorage;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\path_alias\Entity\PathAlias;
+use Drupal\simple_oauth\Entity\Oauth2Scope;
 use Drupal\simple_oauth\Entity\Oauth2TokenStorageSchema;
+use Drupal\simple_oauth\Oauth2ScopeInterface;
+use Drupal\simple_oauth\Plugin\Oauth2GrantManager;
+
+/**
+ * Implements hook_install().
+ */
+function simple_oauth_install() {
+  // Create path alias for JWKS endpoint to support /.well-known/jwks.json.
+  _simple_oauth_create_jwks_alias();
+}
 
 /**
  * Define the default batch size.
@@ -94,9 +107,9 @@ function simple_oauth_update_8404() {
   ];
   $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
   foreach ($field_names as $field_name) {
-    /** @var \Drupal\Core\Field\BaseFieldDefinition $field_definition */
     $field_definition = $entity_definition_update_manager->getFieldStorageDefinition($field_name, 'consumer');
-    // If simple_oauth_extras was installed, we need at least to update field provider.
+    // If simple_oauth_extras was installed, we need at least to update
+    // field provider.
     if ($field_definition && $deleted) {
       $field_definition->setProvider('simple_oauth');
       $entity_definition_update_manager->updateFieldStorageDefinition($field_definition);
@@ -112,7 +125,7 @@ function simple_oauth_update_8404() {
 /**
  * Set default value for the flag to disable OpenID Connect.
  */
-function simple_oauth_update_8501(&$sandbox) {
+function simple_oauth_update_8501() {
   $config = \Drupal::configFactory()
     ->getEditable('simple_oauth.settings');
   $config->set('disable_openid_connect', FALSE);
@@ -137,6 +150,376 @@ function simple_oauth_update_8502() {
  */
 function simple_oauth_update_8503() {
   $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
-  $field_storage_definition = $definition_update_manager->getFieldStorageDefinition('value', 'oauth2_token');
-  $definition_update_manager->updateFieldStorageDefinition($field_storage_definition);
+  foreach (['value', 'scopes'] as $field_name) {
+    $field_storage_definition = $definition_update_manager->getFieldStorageDefinition($field_name, 'oauth2_token');
+    $definition_update_manager->updateFieldStorageDefinition($field_storage_definition);
+  }
+}
+
+/**
+ * Set default value for the scope provider to dynamic (entity).
+ */
+function simple_oauth_update_8601() {
+  $config = \Drupal::configFactory()
+    ->getEditable('simple_oauth.settings');
+  $config
+    ->set('scope_provider', 'dynamic')
+    ->save();
+}
+
+/**
+ * Install new config entity type "oauth2_scope".
+ */
+function simple_oauth_update_8602() {
+  $type_manager = \Drupal::entityTypeManager();
+  $type_manager->clearCachedDefinitions();
+  $entity_type = $type_manager->getDefinition('oauth2_scope');
+  \Drupal::entityDefinitionUpdateManager()->installEntityType($entity_type);
+}
+
+/**
+ * Install/update/delete BaseFields for the consumer entity.
+ */
+function simple_oauth_update_8603() {
+  // This update requires the options module to be installed.
+  if (!\Drupal::moduleHandler()->moduleExists('options')) {
+    \Drupal::service('module_installer')->install(['options']);
+  }
+
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $entity_type_id = 'consumer';
+  $provider = 'simple_oauth';
+
+  // Add new fields.
+  $new_field_definitions['grant_types'] = BaseFieldDefinition::create('list_string')
+    ->setLabel(new TranslatableMarkup('Grant types'))
+    ->setDescription(new TranslatableMarkup('Enabled grant types.'))
+    ->setRevisionable(TRUE)
+    ->setTranslatable(FALSE)
+    ->setRequired(TRUE)
+    ->setCardinality(FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
+  $new_field_definitions['scopes'] = BaseFieldDefinition::create('oauth2_scope_reference')
+    ->setLabel(new TranslatableMarkup('Scopes'))
+    ->setDescription(new TranslatableMarkup('Here you can select scopes that would be the default scopes when authorizing.'))
+    ->setRevisionable(TRUE)
+    ->setTranslatable(FALSE)
+    ->setCardinality(FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
+  $new_field_definitions['automatic_authorization'] = BaseFieldDefinition::create('boolean')
+    ->setLabel(new TranslatableMarkup('Automatic authorization'))
+    ->setDescription(new TranslatableMarkup('This will cause the authorization form to be skipped.'))
+    ->setRevisionable(TRUE)
+    ->setTranslatable(FALSE)
+    ->setDefaultValue(FALSE);
+  $new_field_definitions['remember_approval'] = BaseFieldDefinition::create('boolean')
+    ->setLabel(new TranslatableMarkup('Remember previous approval'))
+    ->setDescription(new TranslatableMarkup('When enabled, if previous authorization request with the same scopes got approved, authorization will be automatically accepted.'))
+    ->setRevisionable(TRUE)
+    ->setTranslatable(FALSE)
+    ->setDefaultValue(TRUE);
+  $new_field_definitions['access_token_expiration'] = BaseFieldDefinition::create('integer')
+    ->setLabel(new TranslatableMarkup('Access token expiration time'))
+    ->setDescription(new TranslatableMarkup('The number of seconds that the access token will be valid.'))
+    ->setRevisionable(TRUE)
+    ->setTranslatable(FALSE)
+    ->setRequired(TRUE)
+    ->setSetting('unsigned', TRUE)
+    ->setDefaultValue(300);
+  $new_field_definitions['refresh_token_expiration'] = BaseFieldDefinition::create('integer')
+    ->setLabel(new TranslatableMarkup('Refresh token expiration time'))
+    ->setDescription(new TranslatableMarkup('The number of seconds that the refresh token will be valid.'))
+    ->setRevisionable(TRUE)
+    ->setTranslatable(FALSE)
+    ->setSetting('unsigned', TRUE)
+    ->setDefaultValue(1209600);
+
+  foreach ($new_field_definitions as $field_name => $field_definition) {
+    $entity_definition_update_manager->installFieldStorageDefinition($field_name, $entity_type_id, $provider, $field_definition);
+  }
+
+  // Update fields.
+  $update_field_definitions['confidential'] = $entity_definition_update_manager->getFieldStorageDefinition('confidential', $entity_type_id);
+  $update_field_definitions['confidential']->setTranslatable(FALSE);
+  $database = \Drupal::database();
+  $redirect_values = $database->select('consumer_field_data', 'c')
+    ->fields('c', ['id', 'redirect', 'langcode'])
+    ->isNotNull('c.redirect')
+    ->execute()
+    ->fetchAll();
+
+  if (!empty($redirect_values)) {
+    // Remove data from the storage.
+    $database->update('consumer_field_data')
+      ->fields(['redirect' => NULL])
+      ->execute();
+  }
+
+  $update_field_definitions['redirect'] = $entity_definition_update_manager->getFieldStorageDefinition('redirect', $entity_type_id);
+  $update_field_definitions['redirect']
+    ->setLabel(new TranslatableMarkup('Redirect URIs'))
+    ->setDescription(new TranslatableMarkup('The absolute URIs to validate against.'))
+    ->setCardinality(FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED)
+    ->setRequired(TRUE)
+    ->addConstraint('Oauth2RedirectUri');
+
+  $update_field_definitions['pkce'] = $entity_definition_update_manager->getFieldStorageDefinition('pkce', $entity_type_id);
+  $update_field_definitions['pkce']->setTranslatable(FALSE);
+
+  foreach ($update_field_definitions as $field_definition) {
+    $entity_definition_update_manager->updateFieldStorageDefinition($field_definition);
+  }
+
+  // Migrate redirect values.
+  $insert_query = $database->insert('consumer__redirect')
+    ->fields(['bundle', 'deleted', 'entity_id', 'revision_id', 'langcode', 'delta', 'redirect_value']);
+  foreach ($redirect_values as $redirect_value) {
+    $insert_query->values([
+      'consumer',
+      0,
+      $redirect_value->id,
+      $redirect_value->id,
+      $redirect_value->langcode,
+      0,
+      $redirect_value->redirect,
+    ]);
+  }
+  $insert_query->execute();
+}
+
+/**
+ * Migrate roles used as scope and migrate settings to the consumer.
+ */
+function simple_oauth_update_8604() {
+  // In case we are updating from 5.x to 6.0.6 or later, the authorization code
+  // scopes field does not exist yet in the database but is dynamically added in
+  // simple_oauth_entity_base_field_info(). This would cause a fatal error when
+  // trying to load consumer entities. Make sure the table exists.
+  simple_oauth_update_8608();
+
+  $consumers = \Drupal::entityTypeManager()->getStorage('consumer')->loadMultiple();
+  $grant_types = array_keys(Oauth2GrantManager::getAvailablePluginsAsOptions());
+  $config = \Drupal::configFactory()->get('simple_oauth.settings');
+
+  $database = \Drupal::database();
+  $role_values = $database->select('consumer__roles', 'r')
+    ->fields('r', ['entity_id', 'roles_target_id', 'langcode', 'delta', 'roles_target_id'])
+    ->execute()
+    ->fetchAll();
+
+  foreach ($role_values as $role_value) {
+    /** @var \Drupal\user\RoleInterface $role */
+    $role = \Drupal::entityTypeManager()->getStorage('user_role')->load($role_value->roles_target_id);
+    // Role doesn't exist, so don't do anything.
+    if (!$role) {
+      continue;
+    }
+    // Scope already exist.
+    if (\Drupal::entityTypeManager()->getStorage('oauth2_scope')->load($role->id())) {
+      continue;
+    }
+
+    // Scope doesn't exist, so we need to create one.
+    Oauth2Scope::create([
+      'name' => $role->id(),
+      'description' => $role->label(),
+      'grant_types' => [
+        'authorization_code' => ['status' => TRUE],
+        'client_credentials' => ['status' => TRUE],
+        'refresh_token' => ['status' => TRUE],
+      ],
+      'granularity' => Oauth2ScopeInterface::GRANULARITY_ROLE,
+      'role' => $role->id(),
+    ])->save();
+
+    $insert_query = $database->insert('consumer__scopes')
+      ->fields([
+        'bundle',
+        'deleted',
+        'entity_id',
+        'revision_id',
+        'langcode',
+        'delta',
+        'scopes_scope_id',
+      ]);
+    $insert_query->values([
+      'consumer',
+      0,
+      $role_value->entity_id,
+      $role_value->entity_id,
+      $role_value->langcode,
+      $role_value->delta,
+      $role->id(),
+    ]);
+    $insert_query->execute();
+  }
+
+  foreach ($consumers as $consumer) {
+    foreach ($grant_types as $delta => $grant_type) {
+      $grant_type_exist = $database->select('consumer__grant_types', 'gc')
+        ->fields('gc', ['entity_id'])
+        ->condition('gc.entity_id', $consumer->id())
+        ->condition('gc.langcode', $consumer->language()->getId())
+        ->condition('gc.grant_types_value', $grant_type)
+        ->execute()
+        ->fetchField();
+      // Grant type already exist.
+      if ($grant_type_exist) {
+        continue;
+      }
+      $insert_query = $database->insert('consumer__grant_types')
+        ->fields([
+          'bundle',
+          'deleted',
+          'entity_id',
+          'revision_id',
+          'langcode',
+          'delta',
+          'grant_types_value',
+        ]);
+      $insert_query->values([
+        'consumer',
+        0,
+        $consumer->id(),
+        $consumer->id(),
+        $consumer->language()->getId(),
+        $delta,
+        $grant_type,
+      ]);
+      $insert_query->execute();
+    }
+
+    $database->update('consumer_field_data')
+      ->fields([
+        'remember_approval' => (int) $config->get('remember_clients'),
+        'access_token_expiration' => (int) $config->get('access_token_expiration'),
+        'refresh_token_expiration' => (int) $config->get('refresh_token_expiration'),
+      ])
+      ->condition('id', $consumer->id())
+      ->execute();
+  }
+
+  // Remove roles field.
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $roles_field_definition = $entity_definition_update_manager->getFieldStorageDefinition('roles', 'consumer');
+  if ($roles_field_definition) {
+    $entity_definition_update_manager->uninstallFieldStorageDefinition($roles_field_definition);
+  }
+}
+
+/**
+ * Install/delete scopes BaseField for the oauth2_token entity.
+ */
+function simple_oauth_update_8605() {
+  $field_name = 'scopes';
+  $entity_type_id = 'oauth2_token';
+  $provider = 'simple_oauth';
+
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $field_definition = $entity_definition_update_manager->getFieldStorageDefinition($field_name, $entity_type_id);
+  // Remove existing scopes field.
+  $entity_definition_update_manager->uninstallFieldStorageDefinition($field_definition);
+
+  // Install new scopes field.
+  $field_definition = BaseFieldDefinition::create('oauth2_scope_reference')
+    ->setLabel(t('Scopes'))
+    ->setDescription(t('The scopes for this Access Token.'))
+    ->setRevisionable(TRUE)
+    ->setCardinality(FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED)
+    ->setTranslatable(FALSE);
+  $entity_definition_update_manager->installFieldStorageDefinition($field_name, $entity_type_id, $provider, $field_definition);
+}
+
+/**
+ * Add indexes to oauth2_token value field.
+ */
+function simple_oauth_update_8606() {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+
+  $entity_type = $entity_type_manager->getDefinition('oauth2_token')
+    ->setHandlerClass('storage_schema', Oauth2TokenStorageSchema::class);
+  // Regenerate entity type indexes.
+  $definition_update_manager->updateEntityType($entity_type);
+}
+
+/**
+ * Update dynamic scope granularity to new configuration structure.
+ */
+function simple_oauth_update_8607() {
+  $config_factory = \Drupal::configFactory();
+
+  $config_names = $config_factory->listAll('simple_oauth.oauth2_scope.');
+  foreach ($config_names as $config_name) {
+    $config = $config_factory->getEditable($config_name);
+
+    $granularity_id = $config->get('granularity');
+    $config->set('granularity_id', $granularity_id);
+    $config->clear('granularity');
+
+    $config->set('granularity_configuration', []);
+    if ($granularity_id === 'permission') {
+      $config->set('granularity_configuration.permission', $config->get('permission'));
+    }
+    elseif ($granularity_id === 'role') {
+      $config->set('granularity_configuration.role', $config->get('role'));
+    }
+    $config->clear('permission');
+    $config->clear('role');
+
+    $config->save(TRUE);
+  }
+}
+
+/**
+ * Helper function to create or update the JWKS path alias.
+ */
+function _simple_oauth_create_jwks_alias() {
+  $path = '/oauth/jwks';
+  $alias = '/.well-known/jwks.json';
+
+  // Check if alias already exists.
+  $existing_alias = \Drupal::entityTypeManager()
+    ->getStorage('path_alias')
+    ->loadByProperties(['alias' => $alias]);
+
+  if (empty($existing_alias)) {
+    // Create new alias.
+    PathAlias::create([
+      'path' => $path,
+      'alias' => $alias,
+      'langcode' => 'en',
+    ])->save();
+  }
+  else {
+    // Update existing alias to point to correct path.
+    /** @var \Drupal\path_alias\Entity\PathAlias $alias_entity */
+    $alias_entity = reset($existing_alias);
+    if ($alias_entity->getPath() !== $path) {
+      $alias_entity->setPath($path);
+      $alias_entity->save();
+    }
+  }
+}
+
+/**
+ * Add an authorization code scopes field.
+ */
+function simple_oauth_update_8608(): void {
+  $manager = \Drupal::entityDefinitionUpdateManager();
+  $definition = BaseFieldDefinition::create('oauth2_scope_reference')
+    ->setLabel(new TranslatableMarkup('Authorization code scopes'))
+    ->setDescription(new TranslatableMarkup('This selection can be overridden by scopes passed as parameters to the authorization requests.'))
+    ->setDisplayOptions('view', [
+      'label' => 'inline',
+      'type' => 'oauth2_scope_reference_label',
+      'weight' => -4,
+    ])
+    ->setDisplayOptions('form', [
+      'type' => 'oauth2_scope_reference',
+      'weight' => -4,
+    ])
+    ->setRevisionable(TRUE)
+    ->setTranslatable(FALSE)
+    ->setCardinality(FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
+
+  $manager->installFieldStorageDefinition('authorization_code_scopes', 'consumer', 'simple_oauth', $definition);
 }
