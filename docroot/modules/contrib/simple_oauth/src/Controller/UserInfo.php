@@ -3,7 +3,9 @@
 namespace Drupal\simple_oauth\Controller;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\simple_oauth\Authentication\TokenAuthUser;
 use Drupal\simple_oauth\Entities\UserEntityWithClaims;
@@ -24,21 +26,21 @@ class UserInfo implements ContainerInjectionInterface {
    *
    * @var \Drupal\Core\Session\AccountInterface
    */
-  private $user;
+  private AccountInterface $user;
 
   /**
    * The serializer.
    *
    * @var \Symfony\Component\Serializer\SerializerInterface
    */
-  private $serializer;
+  private SerializerInterface $serializer;
 
   /**
    * The configuration object.
    *
    * @var \Drupal\Core\Config\ImmutableConfig
    */
-  private $config;
+  private ImmutableConfig $config;
 
   /**
    * UserInfo constructor.

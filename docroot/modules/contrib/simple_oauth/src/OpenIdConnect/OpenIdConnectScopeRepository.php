@@ -20,7 +20,7 @@ class OpenIdConnectScopeRepository implements ScopeRepositoryInterface {
    *
    * @var \League\OAuth2\Server\Repositories\ScopeRepositoryInterface
    */
-  protected $innerScopeRepository;
+  protected ScopeRepositoryInterface $innerScopeRepository;
 
   /**
    * OpenIdConnectScopeRepository constructor.
@@ -35,11 +35,11 @@ class OpenIdConnectScopeRepository implements ScopeRepositoryInterface {
   /**
    * {@inheritdoc}
    */
-  public function getScopeEntityByIdentifier($identifier) {
-    // First check if this scope exists as a role.
-    $role_scope = $this->innerScopeRepository->getScopeEntityByIdentifier($identifier);
-    if ($role_scope) {
-      return $role_scope;
+  public function getScopeEntityByIdentifier($identifier): ?ScopeEntityInterface {
+    // First check if this scope exists.
+    $scope = $this->innerScopeRepository->getScopeEntityByIdentifier($identifier);
+    if ($scope) {
+      return $scope;
     }
 
     // Fall back to a fixed list of OpenID scopes.
@@ -54,14 +54,14 @@ class OpenIdConnectScopeRepository implements ScopeRepositoryInterface {
   /**
    * {@inheritdoc}
    */
-  public function finalizeScopes(array $scopes, $grantType, ClientEntityInterface $clientEntity, $userIdentifier = NULL) {
+  public function finalizeScopes(array $scopes, string $grantType, ClientEntityInterface $clientEntity, string|null $userIdentifier = NULL, ?string $authCodeId = NULL): array {
     $finalized_scopes = $this->innerScopeRepository->finalizeScopes($scopes, $grantType, $clientEntity, $userIdentifier);
 
     // Make sure that the openid scopes are in the user list.
     $openid_scopes = $this->getOpenIdScopes();
     foreach ($scopes as $scope) {
       if (isset($openid_scopes[$scope->getIdentifier()])) {
-        $finalized_scopes = $this->addRoleToScopes($finalized_scopes, new OpenIdConnectScopeEntity($scope->getIdentifier(), $openid_scopes[$scope->getIdentifier()]));
+        $finalized_scopes = $this->addScope($finalized_scopes, new OpenIdConnectScopeEntity($scope->getIdentifier(), $openid_scopes[$scope->getIdentifier()]));
       }
     }
     return $finalized_scopes;
@@ -71,21 +71,20 @@ class OpenIdConnectScopeRepository implements ScopeRepositoryInterface {
    * Returns fixed OpenID Connect scopes.
    *
    * @return array
-   *   A list of scope names keyed by their identifier.
+   *   A list of scope descriptions keyed by their identifier.
    */
-  protected function getOpenIdScopes() {
-    $openid_scopes = [
-      'openid' => $this->t('User information'),
-      'profile' => $this->t('Profile information'),
-      'email' => $this->t('E-Mail'),
-      'phone' => $this->t('Phone'),
-      'address' => $this->t('Address'),
+  protected function getOpenIdScopes(): array {
+    return [
+      'openid' => $this->t('View user information'),
+      'profile' => $this->t('View profile information'),
+      'email' => $this->t('View e-mail'),
+      'phone' => $this->t('View phone'),
+      'address' => $this->t('View address'),
     ];
-    return $openid_scopes;
   }
 
   /**
-   * Add an additional scope if it's not present.
+   * Add a scope if it's not present.
    *
    * @param \League\OAuth2\Server\Entities\ScopeEntityInterface[] $scopes
    *   The list of scopes.
@@ -95,14 +94,14 @@ class OpenIdConnectScopeRepository implements ScopeRepositoryInterface {
    * @return \League\OAuth2\Server\Entities\ScopeEntityInterface[]
    *   The modified list of scopes.
    */
-  protected function addRoleToScopes(array $scopes, ScopeEntityInterface $new_scope) {
-    // Only add the role if it's not already in the list.
+  protected function addScope(array $scopes, ScopeEntityInterface $new_scope): array {
+    // Only add the scope if it's not already in the list.
     $found = array_filter($scopes, function (ScopeEntityInterface $scope) use ($new_scope) {
       return $scope->getIdentifier() == $new_scope->getIdentifier();
     });
     if (empty($found)) {
       // If it's not there, then add it.
-      array_push($scopes, $new_scope);
+      $scopes[] = $new_scope;
     }
 
     return $scopes;

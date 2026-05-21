@@ -1,0 +1,12 @@
+name: Simple OAuth Static Scope Legacy Test
+type: module
+description: Test module for Simple OAuth Static Scope with legacy scope declarations
+package: Testing
+hidden: true
+dependencies:
+  - simple_oauth:simple_oauth_static_scope
+
+# Information added by Drupal.org packaging script on 2025-12-08
+version: '6.1.0'
+project: 'simple_oauth'
+datestamp: 1765191616

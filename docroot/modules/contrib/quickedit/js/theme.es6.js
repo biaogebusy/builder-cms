@@ -248,9 +248,9 @@
         `<div><label for="alt" class="${
           settings.alt_field_required ? 'required' : ''
         }">${Drupal.t('Alternative text')}</label>` +
-        `<input type="text" placeholder="${settings.alt}" value="${
-          settings.alt
-        }" name="alt" ${settings.alt_field_required ? 'required' : ''}/>` +
+        `<input type="text" placeholder="` + Drupal.checkPlain(settings.alt) + `" value="`
+        + Drupal.checkPlain(settings.alt) +
+        `" name="alt" ${settings.alt_field_required ? 'required' : ''}/>` +
         '  </div>';
     }
     if (settings.title_field) {
@@ -258,9 +258,9 @@
         `<div><label for="title" class="${
           settings.title_field_required ? 'form-required' : ''
         }">${Drupal.t('Title')}</label>` +
-        `<input type="text" placeholder="${settings.title}" value="${
-          settings.title
-        }" name="title" ${settings.title_field_required ? 'required' : ''}/>` +
+        `<input type="text" placeholder="` + Drupal.checkPlain(settings.title) + `" value="`
+        + Drupal.checkPlain(settings.title) +
+        `" name="title" ${settings.title_field_required ? 'required' : ''}/>` +
         '</div>';
     }
     html += '</form>';

@@ -2,39 +2,35 @@
 
 namespace Drupal\simple_oauth\Entities;
 
+use Drupal\Core\Cache\CacheableDependencyInterface;
 use Drupal\Core\Cache\RefinableCacheableDependencyTrait;
-use Drupal\user\RoleInterface;
+use Drupal\simple_oauth\Oauth2ScopeInterface;
 use League\OAuth2\Server\Entities\Traits\EntityTrait;
 
-class ScopeEntity implements ScopeEntityNameInterface {
+/**
+ * The scope entity class.
+ */
+class ScopeEntity implements ScopeEntityInterface, CacheableDependencyInterface {
 
   use EntityTrait, RefinableCacheableDependencyTrait;
 
   /**
-   * The name of this scope.
+   * The scope object.
    *
-   * @var string
+   * @var \Drupal\simple_oauth\Oauth2ScopeInterface
    */
-  protected $name;
-
-  /**
-   * The role associated to the scope.
-   *
-   * @var \Drupal\user\RoleInterface
-   */
-  protected $role;
+  protected Oauth2ScopeInterface $scope;
 
   /**
    * Construct a ScopeEntity instance.
    *
-   * @param \Drupal\user\RoleInterface $role
-   *   The role associated to the scope.
+   * @param \Drupal\simple_oauth\Oauth2ScopeInterface $scope
+   *   The associated scope.
    */
-  public function __construct(RoleInterface $role) {
-    $this->role = $role;
-    $this->setIdentifier($role->id());
-    $this->name = $role->label();
-    $this->addCacheableDependency($role);
+  public function __construct(Oauth2ScopeInterface $scope) {
+    $this->scope = $scope;
+    $this->setIdentifier($scope->getName());
+    $this->addCacheableDependency($scope);
   }
 
   /**
@@ -48,16 +44,26 @@ class ScopeEntity implements ScopeEntityNameInterface {
   /**
    * {@inheritdoc}
    */
-  public function getName() {
-    return $this->name;
+  public function getName(): string {
+    return $this->identifier;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getDescription() {
-    // Roles have no description.
-    return NULL;
+  public function getDescription(string $grant_type): string {
+    $grant_type_description = $this->scope->getGrantTypeDescription($grant_type);
+    return $grant_type_description ?: $this->scope->getDescription();
+  }
+
+  /**
+   * Returns the scope object.
+   *
+   * @return \Drupal\simple_oauth\Oauth2ScopeInterface
+   *   The scope object.
+   */
+  public function getScopeObject(): Oauth2ScopeInterface {
+    return $this->scope;
   }
 
 }

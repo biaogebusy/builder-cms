@@ -26,6 +26,6 @@ interface SimpleOauthRequestPolicyInterface extends RequestPolicyInterface {
    * @return bool
    *   A state whether the request has an OAuth2 access token.
    */
-  public function isOauth2Request(Request $request);
+  public function isOauth2Request(Request $request): bool;
 
 }

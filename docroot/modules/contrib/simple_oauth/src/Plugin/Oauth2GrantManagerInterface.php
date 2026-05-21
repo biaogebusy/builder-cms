@@ -2,24 +2,22 @@
 
 namespace Drupal\simple_oauth\Plugin;
 
-use Drupal\consumers\Entity\ConsumerInterface;
+use Drupal\Component\Plugin\PluginManagerInterface;
 
-interface Oauth2GrantManagerInterface {
+/**
+ * Manages the OAuth2 grant plugins.
+ */
+interface Oauth2GrantManagerInterface extends PluginManagerInterface {
 
   /**
-   * Gets the authorization server.
+   * Gets all grant type plugin instances.
    *
-   * @param string $grant_type
-   *   The grant type used as plugin ID.
-   * @param \Drupal\consumers\Entity\ConsumerInterface|null $client
-   *   The consumer entity. May be NULL for BC.
+   * @param array|null $ids
+   *   (optional) An array of plugin IDs, or NULL to load all plugins.
    *
-   * @throws \League\OAuth2\Server\Exception\OAuthServerException
-   *   When the grant cannot be found.
-   *
-   * @return \League\OAuth2\Server\AuthorizationServer
-   *   The authorization server.
+   * @return \Drupal\simple_oauth\Plugin\Oauth2GrantInterface[]
+   *   Returns array of all plugin instances.
    */
-  public function getAuthorizationServer($grant_type, ConsumerInterface $client = NULL);
+  public function getInstances(?array $ids = NULL): array;
 
 }

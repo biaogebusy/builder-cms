@@ -1,0 +1,13 @@
+simple_oauth_scope_granularity.test:
+  type: mapping
+  label: 'Test granularity configuration'
+  mapping:
+    min_length:
+      type: integer
+      label: 'Minimum length'
+      min: 1
+    max_length:
+      type: integer
+      label: 'Maximum length'
+      min: 1
+      nullable: true

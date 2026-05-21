@@ -13,8 +13,8 @@ declare(strict_types=1);
 
 namespace League\Uri;
 
-use League\Uri\Exceptions\ConversionFailed;
-use League\Uri\Exceptions\MissingFeature;
+use BackedEnum;
+use Deprecated;
 use League\Uri\Exceptions\SyntaxError;
 use League\Uri\Idna\Converter as IdnaConverter;
 use Stringable;
@@ -29,10 +29,7 @@ use function explode;
 use function filter_var;
 use function function_exists;
 use function implode;
-use function in_array;
-use function inet_pton;
 use function preg_match;
-use function rawurldecode;
 use function sprintf;
 use function str_replace;
 use function strpos;
@@ -40,7 +37,6 @@ use function strtolower;
 use function substr;
 
 use const FILTER_FLAG_IPV4;
-use const FILTER_FLAG_IPV6;
 use const FILTER_VALIDATE_IP;
 
 /**
@@ -119,44 +115,6 @@ final class UriString
     private const REGEXP_URI_SCHEME = '/^([a-z][a-z\d+.-]*)?$/i';
 
     /**
-     * IPvFuture regular expression.
-     *
-     * @link https://tools.ietf.org/html/rfc3986#section-3.2.2
-     * @var string
-     */
-    private const REGEXP_IP_FUTURE = '/^
-        v(?<version>[A-F0-9])+\.
-        (?:
-            (?<unreserved>[a-z0-9_~\-\.])|
-            (?<sub_delims>[!$&\'()*+,;=:])  # also include the : character
-        )+
-    $/ix';
-
-    /**
-     * General registered name regular expression.
-     *
-     * @link https://tools.ietf.org/html/rfc3986#section-3.2.2
-     * @var string
-     */
-    private const REGEXP_REGISTERED_NAME = '/(?(DEFINE)
-        (?<unreserved>[a-z0-9_~\-])   # . is missing as it is used to separate labels
-        (?<sub_delims>[!$&\'()*+,;=])
-        (?<encoded>%[A-F0-9]{2})
-        (?<reg_name>(?:(?&unreserved)|(?&sub_delims)|(?&encoded))*)
-    )
-    ^(?:(?&reg_name)\.)*(?&reg_name)\.?$/ix';
-
-    /**
-     * Invalid characters in host regular expression.
-     *
-     * @link https://tools.ietf.org/html/rfc3986#section-3.2.2
-     * @var string
-     */
-    private const REGEXP_INVALID_HOST_CHARS = '/
-        [:\/?#\[\]@ ]  # gen-delims characters as well as the space character
-    /ix';
-
-    /**
      * Invalid path for URI without scheme and authority regular expression.
      *
      * @link https://tools.ietf.org/html/rfc3986#section-3.3
@@ -171,30 +129,8 @@ final class UriString
      */
     private const REGEXP_HOST_PORT = ',^(?<host>\[.*\]|[^:]*)(:(?<port>.*))?$,';
 
-    /**
-     * IDN Host detector regular expression.
-     *
-     * @var string
-     */
-    private const REGEXP_IDN_PATTERN = '/[^\x20-\x7f]/';
-
     /** @var array<string,int> */
     private const DOT_SEGMENTS = ['.' => 1, '..' => 1];
-
-    /**
-     * Only the address block fe80::/10 can have a Zone ID attach to
-     * let's detect the link local significant 10 bits.
-     *
-     * @var string
-     */
-    private const ZONE_ID_ADDRESS_BLOCK = "\xfe\x80";
-
-    /**
-     * Maximum number of host cached.
-     *
-     * @var int
-     */
-    private const MAXIMUM_HOST_CACHED = 100;
 
     /**
      * Generate an IRI string representation (RFC3987) from its parsed representation
@@ -206,9 +142,9 @@ final class UriString
      * @link https://tools.ietf.org/html/rfc3986#section-5.3
      * @link https://tools.ietf.org/html/rfc3986#section-7.5
      */
-    public static function toIriString(Stringable|string $uri): string
+    public static function toIriString(BackedEnum|Stringable|string $uri): string
     {
-        $components = UriString::parse($uri);
+        $components = self::parse($uri);
         $port = null;
         if (isset($components['port'])) {
             $port = (int) $components['port'];
@@ -304,6 +240,9 @@ final class UriString
     public static function buildAuthority(array $components): ?string
     {
         if (!isset($components['host'])) {
+            (!isset($components['user']) && !isset($components['pass'])) || throw new SyntaxError('The user info component must not be set if the host is not defined.');
+            !isset($components['port']) || throw new SyntaxError('The port component must not be set if the host is not defined.');
+
             return null;
         }
 
@@ -386,7 +325,7 @@ final class UriString
             return null;
         }
 
-        $components = UriString::parseAuthority($authority);
+        $components = self::parseAuthority($authority);
         $components['host'] = self::normalizeHost($components['host'] ?? null);
         $components['user'] = Encoder::normalizeUser($components['user']);
         $components['pass'] = Encoder::normalizePassword($components['pass']);
@@ -407,48 +346,51 @@ final class UriString
      *
      * @throws SyntaxError if the BaseUri is not absolute or in absence of a BaseUri if the uri is not absolute
      */
-    public static function resolve(Stringable|string $uri, Stringable|string|null $baseUri = null): string
+    public static function resolve(BackedEnum|Stringable|string $uri, BackedEnum|Stringable|string|null $baseUri = null): string
     {
+        if ($uri instanceof BackedEnum) {
+            $uri = (string) $uri->value;
+        }
+
+        if ($baseUri instanceof BackedEnum) {
+            $baseUri = (string) $baseUri->value;
+        }
+
         $uri = (string) $uri;
         if ('' === $uri) {
-            $uri = $baseUri ?? throw new SyntaxError('The uri can not be the empty string when there\'s no base URI.');
+            $uri = $baseUri ?? throw new SyntaxError("The uri can not be the empty string when there's no base URI.");
         }
 
         $uriComponents = self::parse($uri);
         $baseUriComponents = $uriComponents;
-        if (null !== $baseUri && (string) $uri !== (string) $baseUri) {
+        if (null !== $baseUri && $uri !== (string) $baseUri) {
             $baseUriComponents = self::parse($baseUri);
         }
 
-        $hasLeadingSlash = str_starts_with($baseUriComponents['path'], '/');
-        if (null === $baseUriComponents['scheme']) {
-            throw new SyntaxError('The base URI must be an absolute URI or null; If the base URI is null the URI must be an absolute URI.');
-        }
+        null !== $baseUriComponents['scheme'] || throw new SyntaxError('The base URI must be an absolute URI or null; If the base URI is null the URI must be an absolute URI.');
 
-        if (null !== $uriComponents['scheme'] && '' !== $uriComponents['scheme']) {
-            $uriComponents['path'] = self::removeDotSegments($uriComponents['path']);
-
-            return UriString::build($uriComponents);
-        }
-
-        if (null !== self::buildAuthority($uriComponents)) {
-            $uriComponents['scheme'] = $baseUriComponents['scheme'];
-            $uriComponents['path'] = self::removeDotSegments($uriComponents['path']);
-
-            return UriString::build($uriComponents);
-        }
-
-        [$path, $query] = self::resolvePathAndQuery($uriComponents, $baseUriComponents);
-        $path = UriString::removeDotSegments($path);
-        if ('' !== $path && '/' !== $path[0] && $hasLeadingSlash) {
+        $authority = self::buildAuthority($uriComponents);
+        $path = self::removeDotSegments($uriComponents['path']);
+        if ('' !== $path && '/' !== $path[0] && (null !== $authority || $uriComponents['path'] !== $path)) {
             $path = '/'.$path;
         }
 
-        $baseUriComponents['path'] = $path;
-        $baseUriComponents['query'] = $query;
-        $baseUriComponents['fragment'] = $uriComponents['fragment'];
+        if (null !== $uriComponents['scheme'] && '' !== $uriComponents['scheme']) {
+            return self::buildUri($uriComponents['scheme'], $authority, $path, $uriComponents['query'], $uriComponents['fragment']);
+        }
 
-        return UriString::build($baseUriComponents);
+        if (null !== $authority) {
+            return self::buildUri($baseUriComponents['scheme'], $authority, $path, $uriComponents['query'], $uriComponents['fragment']);
+        }
+
+        [$resolvedPath, $query] = self::resolvePathAndQuery($uriComponents, $baseUriComponents);
+        $baseAuthority = self::buildAuthority($baseUriComponents);
+        $path = self::removeDotSegments($resolvedPath);
+        if ('' !== $path && '/' !== $path[0] && (null !== $baseAuthority || $resolvedPath !== $path)) {
+            $path = '/'.$path;
+        }
+
+        return self::buildUri($baseUriComponents['scheme'], $baseAuthority, $path, $query, $uriComponents['fragment']);
     }
 
     /**
@@ -572,8 +514,12 @@ final class UriString
      *
      * @return ComponentMap
      */
-    public static function parse(Stringable|string|int $uri): array
+    public static function parse(BackedEnum|Stringable|string|int $uri): array
     {
+        if ($uri instanceof BackedEnum) {
+            $uri = $uri->value;
+        }
+
         $uri = (string) $uri;
         if (isset(self::URI_SHORTCUTS[$uri])) {
             /** @var ComponentMap $components */
@@ -678,13 +624,16 @@ final class UriString
      *
      * @return AuthorityMap
      */
-    public static function parseAuthority(Stringable|string|null $authority): array
+    public static function parseAuthority(BackedEnum|Stringable|string|null $authority): array
     {
         $components = ['user' => null, 'pass' => null, 'host' => null, 'port' => null];
         if (null === $authority) {
             return $components;
         }
 
+        if ($authority instanceof BackedEnum) {
+            $authority = $authority->value;
+        }
         $authority = (string) $authority;
         $components['host'] = '';
         if ('' === $authority) {
@@ -730,123 +679,35 @@ final class UriString
      */
     private static function filterHost(Stringable|string|null $host): ?string
     {
-        if (null !== $host) {
-            $host = (string) $host;
+        try {
+            return HostRecord::from($host)->value;
+        } catch (Throwable) {
+            throw new SyntaxError(sprintf('Host `%s` is invalid : the IP host is malformed', $host));
         }
-
-        if (null === $host || '' === $host) {
-            return $host;
-        }
-
-        /** @var array<string, 1> $hostCache */
-        static $hostCache = [];
-        if (isset($hostCache[$host])) {
-            return $host;
-        }
-
-        if (self::MAXIMUM_HOST_CACHED < count($hostCache)) {
-            array_shift($hostCache);
-        }
-
-        if ('[' !== $host[0] || !str_ends_with($host, ']')) {
-            self::filterRegisteredName($host);
-            $hostCache[$host] = 1;
-
-            return $host;
-        }
-
-        if (self::isIpHost(substr($host, 1, -1))) {
-            $hostCache[$host] = 1;
-
-            return $host;
-        }
-
-        throw new SyntaxError(sprintf('Host `%s` is invalid : the IP host is malformed', $host));
     }
 
     /**
      * Tells whether the scheme component is valid.
      */
-    public static function isValidScheme(Stringable|string|null $scheme): bool
+    public static function isValidScheme(BackedEnum|Stringable|string|null $scheme): bool
     {
+        if ($scheme instanceof BackedEnum) {
+            $scheme = $scheme->value;
+        }
+
         return null === $scheme || 1 === preg_match('/^[A-Za-z]([-A-Za-z\d+.]+)?$/', (string) $scheme);
     }
 
-    /**
-     * Tells whether the host component is valid.
-     */
-    public static function isValidHost(Stringable|string|null $host): bool
+    private static function normalizeHost(BackedEnum|Stringable|string|null $host): ?string
     {
-        try {
-            self::filterHost($host);
-            return true;
-        } catch (Throwable) {
-            return false;
-        }
-    }
-
-    /**
-     * Throws if the host is not a registered name and not a valid IDN host.
-     *
-     * @link https://tools.ietf.org/html/rfc3986#section-3.2.2
-     *
-     * @throws SyntaxError if the registered name is invalid
-     * @throws MissingFeature if IDN support or ICU requirement, are not available or met.
-     * @throws ConversionFailed if the submitted IDN host cannot be converted to a valid ascii form
-     */
-    private static function filterRegisteredName(string $host): void
-    {
-        $formattedHost = rawurldecode($host);
-        if ($formattedHost !== $host) {
-            if (IdnaConverter::toAscii($formattedHost)->hasErrors()) {
-                throw new SyntaxError(sprintf('Host `%s` is invalid: the host is not a valid registered name', $host));
-            }
-
-            return;
+        if ($host instanceof BackedEnum) {
+            $host = $host->value;
         }
 
-        if (1 === preg_match(self::REGEXP_REGISTERED_NAME, $formattedHost)) {
-            return;
+        if (null !== $host) {
+            $host = (string) $host;
         }
 
-        //to test IDN host non-ascii characters must be present in the host
-        if (1 !== preg_match(self::REGEXP_IDN_PATTERN, $formattedHost)) {
-            throw new SyntaxError(sprintf('Host `%s` is invalid: the host is not a valid registered name', $host));
-        }
-
-        IdnaConverter::toAsciiOrFail($host);
-    }
-
-    /**
-     * Validates a IPv6/IPfuture host.
-     *
-     * @link https://tools.ietf.org/html/rfc3986#section-3.2.2
-     * @link https://tools.ietf.org/html/rfc6874#section-2
-     * @link https://tools.ietf.org/html/rfc6874#section-4
-     */
-    private static function isIpHost(string $ipHost): bool
-    {
-        if (false !== filter_var($ipHost, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
-            return true;
-        }
-
-        if (1 === preg_match(self::REGEXP_IP_FUTURE, $ipHost, $matches)) {
-            return !in_array($matches['version'], ['4', '6'], true);
-        }
-
-        $pos = strpos($ipHost, '%');
-        if (false === $pos || 1 === preg_match(self::REGEXP_INVALID_HOST_CHARS, rawurldecode(substr($ipHost, $pos)))) {
-            return false;
-        }
-
-        $ipHost = substr($ipHost, 0, $pos);
-
-        return false !== filter_var($ipHost, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)
-            && str_starts_with((string)inet_pton($ipHost), self::ZONE_ID_ADDRESS_BLOCK);
-    }
-
-    private static function normalizeHost(?string $host): ?string
-    {
         if (null === $host || false !== filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
             return $host;
         }
@@ -864,5 +725,20 @@ final class UriString
         }
 
         return $host;
+    }
+
+    /**
+     * DEPRECATION WARNING! This method will be removed in the next major point release.
+     *
+     * @deprecated Since version 7.6.0
+     * @codeCoverageIgnore
+     * @see HostRecoord::validate()
+     *
+     * Create a new instance from the environment.
+     */
+    #[Deprecated(message:'use League\Uri\HostRecord::validate() instead', since:'league/uri:7.6.0')]
+    public static function isValidHost(Stringable|string|null $host): bool
+    {
+        return HostRecord::isValid($host);
     }
 }

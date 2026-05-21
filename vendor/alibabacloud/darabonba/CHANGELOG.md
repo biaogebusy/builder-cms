@@ -1,148 +1,86 @@
 # CHANGELOG
 
-## 3.1.22 - 2021-05-11
+## [1.0.4] - 2025-12-15
 
-- Deprecate `stream_for` method.
+### Changed
+- Improved PHP version compatibility for multi-version support (PHP 5.6 - 8.x)
+- Refactored FileFormStream implementation with separate classes for different PHP versions
+- Updated test environment to use alibabacloud.com domains
+- Improved test assertions to verify HTTP status codes
+- Updated all code comments to English
 
-## 3.1.21 - 2021-03-15
+### Fixed
+- Fixed PHP 7.0 compatibility issues with nullable types and void return types
+- Fixed trait and interface return type conflicts
+- Fixed test assertions for random values in RandomBackoffPolicy
+- Fixed StreamUtil JSON parsing for HTML content
 
-- Supported set proxy&timeout on request.
+### Added
+- Added FileFormStreamTrait for shared stream implementation
+- Added FileFormStreamTyped for PHP 7.1+ with type declarations
+- Added comprehensive test coverage improvements
 
-## 3.1.20 - 2020-12-02
+## [1.0.3] - 2025-11-27
 
-- Fix the warning when the Tea::merge method received empty arguments.
+### Fixed
+- Fixed psr/http-message dependency version constraint
+- Locked psr/http-message to ^1.0 for PHP 5.5+ compatibility
 
-## 3.1.19 - 2020-10-09
+### Changed
+- Updated test domains from jsonplaceholder.typicode.com to alibabacloud.com
+- Updated API endpoints to use api.alibabacloud.com
+- Improved test validation to focus on HTTP status codes
 
-- Fix the error when the code value is a string.
+## [1.0.2] - 2025-10-23
 
-## 3.1.18 - 2020-09-28
+### Fixed
+- Fixed StreamUtil methods for better stream handling
+- Fixed stream reading and parsing functionality
 
-- Require Guzzle Version 7.0
+### Added
+- Added StreamUtilTest with comprehensive test coverage
 
-## 3.1.17 - 2020-09-24
+### Changed
+- Updated DaraRetryException.php (2025-07-30)
 
-- TeaUnableRetryError support get error info.
+## [1.0.1] - 2025-06-12
 
-## 3.1.16 - 2020-08-31
+### Changed
+- Removed monolog dependency to reduce package size and simplify dependencies
+- Refactored Console class to remove monolog dependency
+- Improved console output handling with custom stream support
 
-- Fix the Maximum function nesting level error when repeated network requests.
+### Added
+- Added ConsoleTest for comprehensive console functionality testing
 
-## 3.1.15 - 2020-07-28
+## [1.0.0] - 2025-01-15
 
-- Improved validatePattern method.
-
-## 3.1.14 - 2020-07-03
-
-- Supported set properties of TeaError with `ErrorInfo`.
-
-## 3.1.13 - 2020-06-09
-
-- Reduce dependencies.
-
-## 3.1.12 - 2020-05-13
-
-- Add validate method.
-- Supported validate maximun&minimun of property.
-
-## 3.1.11 - 2020-05-07
-
-- Fixed error when class is undefined.
-
-## 3.1.10 - 2020-05-07
-
-- Fixed error when '$item' of array is null
-
-## 3.1.9 - 2020-04-13
-
-- TeaUnableRetryError add $lastException param.
-
-## 3.1.8 - 2020-04-02
-
-- Added some static methods of Model to validate fields of Model.
-
-## 3.1.7 - 2020-03-27
-
-- Improve Tea::isRetryable method.
-
-## 3.1.6 - 2020-03-25
-
-- Fixed bug when body is StreamInterface.
-
-## 3.1.5 - 2020-03-25
-
-- Improve Model.toMap method.
-- Improve Tea.merge method.
-- Fixed tests.
-
-## 3.1.4 - 2020-03-20
-
-- Added Tea::merge method.
-- Change Tea::isRetryable method.
-
-## 3.1.3 - 2020-03-20
-
-- Model: added toModel method.
-
-## 3.1.2 - 2020-03-19
-
-- Model constructor supported array type parameter.
-
-## 3.1.1 - 2020-03-18
-
-- Fixed bug : set method failed.
-- Fixed bug : get empty contents form body.
-
-## 3.1.0 - 2020-03-13
-
-- TeaUnableRetryError add 'lastRequest' property.
-- Change Tea.send() method return.
-- Fixed Tea. allowRetry() method.
-
-## 3.0.0 - 2020-02-14
-- Rename package name.
-
-## 2.0.3 - 2020-02-14
-- Improved Exception.
-
-## 2.0.2 - 2019-09-11
-- Supported `String`.
-
-## 2.0.1 - 2019-08-15
-- Supported `IteratorAggregate`.
-
-## 2.0.0 - 2019-08-14
-- Design `Request` as a standard `PsrRequest`.
-
-## 1.0.10 - 2019-08-12
-- Added `__toString` for `Response`.
-
-## 1.0.9 - 2019-08-01
-- Updated `Middleware`.
-
-## 1.0.8 - 2019-07-29
-- Supported `TransferStats`.
-
-## 1.0.7 - 2019-07-27
-- Improved request.
-
-## 1.0.6 - 2019-07-23
-- Trim key for parameter.
-
-## 1.0.5 - 2019-07-23
-- Supported default protocol.
-
-## 1.0.4 - 2019-07-22
-- Added `toArray()`.
-
-## 1.0.3 - 2019-05-02
-- Improved `Request`.
-
-## 1.0.2 - 2019-05-02
-- Added getHeader/getHeaders.
-
-## 1.0.1 - 2019-04-02
-- Improved design.
-
-## 1.0.0 - 2019-05-02
-- Initial release of the AlibabaCloud Tea Version 1.0.0 on Packagist See <https://github.com/aliyun/tea-php> for more information.
+### Added
+- Initial release of Alibaba Cloud Darabonba SDK for PHP
+- Core SDK functionality for Alibaba Cloud Tea
+- Request/Response handling with PSR-7 compatibility
+- Model validation and serialization
+- Retry policy with multiple backoff strategies:
+  - FixedBackoffPolicy
+  - RandomBackoffPolicy
+  - ExponentialBackoffPolicy
+  - EqualJitterBackoffPolicy
+  - FullJitterBackoffPolicy
+- Exception handling:
+  - DaraException
+  - DaraRespException
+  - DaraRetryException
+  - DaraUnableRetryException
+- Utility modules:
+  - Date and time utilities
+  - File operations support
+  - Stream utilities
+  - XML and form data handling
+  - URL manipulation
+  - String and byte utilities
+  - Math utilities
+- Comprehensive test suite with PHPUnit
+- CI/CD integration with GitHub Actions
+- Code style configuration with PHP CS Fixer
+- Support for PHP 5.5+
+- Guzzle HTTP client integration (^6.3|^7.0)

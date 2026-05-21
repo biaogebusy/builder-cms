@@ -1,0 +1,5 @@
+oauth2_scope.static.collection:
+  title: 'Static scopes'
+  parent: oauth2_scope.settings
+  description: 'View OAuth2 static scopes.'
+  route_name: plugin.oauth2_scope.collection

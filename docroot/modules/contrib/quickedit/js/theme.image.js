@@ -18,11 +18,11 @@
     var html = '<form class="quickedit-image-field-info">';
 
     if (settings.alt_field) {
-      html += "<div><label for=\"alt\" class=\"".concat(settings.alt_field_required ? 'required' : '', "\">").concat(Drupal.t('Alternative text'), "</label>") + "<input type=\"text\" placeholder=\"".concat(settings.alt, "\" value=\"").concat(settings.alt, "\" name=\"alt\" ").concat(settings.alt_field_required ? 'required' : '', "/>") + '  </div>';
+      html += "<div><label for=\"alt\" class=\"".concat(settings.alt_field_required ? 'required' : '', "\">").concat(Drupal.t('Alternative text'), "</label>") + "<input type=\"text\" placeholder=\"".concat(Drupal.checkPlain(settings.alt), "\" value=\"").concat(Drupal.checkPlain(settings.alt), "\" name=\"alt\" ").concat(settings.alt_field_required ? 'required' : '', "/>") + '  </div>';
     }
 
     if (settings.title_field) {
-      html += "<div><label for=\"title\" class=\"".concat(settings.title_field_required ? 'form-required' : '', "\">").concat(Drupal.t('Title'), "</label>") + "<input type=\"text\" placeholder=\"".concat(settings.title, "\" value=\"").concat(settings.title, "\" name=\"title\" ").concat(settings.title_field_required ? 'required' : '', "/>") + '</div>';
+      html += "<div><label for=\"title\" class=\"".concat(settings.title_field_required ? 'form-required' : '', "\">").concat(Drupal.t('Title'), "</label>") + "<input type=\"text\" placeholder=\"".concat(Drupal.checkPlain(settings.title), "\" value=\"").concat(Drupal.checkPlain(settings.title), "\" name=\"title\" ").concat(settings.title_field_required ? 'required' : '', "/>") + '</div>';
     }
 
     html += '</form>';

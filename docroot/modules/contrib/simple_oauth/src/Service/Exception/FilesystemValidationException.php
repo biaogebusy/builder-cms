@@ -2,9 +2,9 @@
 
 namespace Drupal\simple_oauth\Service\Exception;
 
-use Exception;
-
 /**
+ * Provides an exception that indicates a problem with the filesystem.
+ *
  * @internal
  */
-class FilesystemValidationException extends Exception {}
+class FilesystemValidationException extends \Exception {}

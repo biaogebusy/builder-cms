@@ -3,10 +3,11 @@
 namespace Drupal\simple_oauth;
 
 use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\Query\QueryException;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\consumers\Entity\ConsumerInterface;
+use Drupal\consumers\Entity\Consumer;
 
 /**
  * Service in charge of deleting or expiring tokens that cannot be used anymore.
@@ -18,21 +19,21 @@ class ExpiredCollector {
    *
    * @var \Drupal\Core\Entity\EntityStorageInterface
    */
-  protected $tokenStorage;
+  protected EntityStorageInterface $tokenStorage;
 
   /**
    * The client storage.
    *
    * @var \Drupal\Core\Entity\EntityStorageInterface
    */
-  protected $clientStorage;
+  protected EntityStorageInterface $clientStorage;
 
   /**
    * The date time to collect tokens.
    *
    * @var \Drupal\Component\Datetime\TimeInterface
    */
-  protected $dateTime;
+  protected TimeInterface $dateTime;
 
   /**
    * ExpiredCollector constructor.
@@ -59,7 +60,7 @@ class ExpiredCollector {
    * @return \Drupal\simple_oauth\Entity\Oauth2TokenInterface[]
    *   The expired tokens.
    */
-  public function collect($limit = 0) {
+  public function collect(int $limit = 0): array {
     $query = $this->tokenStorage->getQuery();
     $query->accessCheck();
     $query->condition('expire', $this->dateTime->getRequestTime(), '<');
@@ -82,7 +83,9 @@ class ExpiredCollector {
    * @return \Drupal\simple_oauth\Entity\Oauth2TokenInterface[]
    *   The tokens.
    */
-  public function collectForAccount(AccountInterface $account) {
+  public function collectForAccount(AccountInterface $account): array {
+    $clients = [];
+    $output = [];
     $query = $this->tokenStorage->getQuery();
     $query->accessCheck();
     $query->condition('auth_user_id', $account->id());
@@ -117,16 +120,22 @@ class ExpiredCollector {
   /**
    * Collect all the tokens associated a particular client.
    *
-   * @param \Drupal\consumers\Entity\ConsumerInterface $client
+   * @param \Drupal\consumers\Entity\Consumer $client
    *   The account.
+   * @param bool $include_refresh
+   *   Include refresh tokens.
    *
    * @return \Drupal\simple_oauth\Entity\Oauth2TokenInterface[]
    *   The tokens.
    */
-  public function collectForClient(ConsumerInterface $client) {
+  public function collectForClient(Consumer $client, bool $include_refresh = FALSE): array {
     $query = $this->tokenStorage->getQuery();
     $query->accessCheck();
     $query->condition('client', $client->id());
+    // Only exclude refresh tokens if not explicitly included.
+    if (!$include_refresh) {
+      $query->condition('bundle', 'refresh_token', '!=');
+    }
     if (!$entity_ids = $query->execute()) {
       return [];
     }
@@ -140,6 +149,8 @@ class ExpiredCollector {
    *
    * @param \Drupal\simple_oauth\Entity\Oauth2TokenInterface[] $tokens
    *   The token entity IDs.
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
   public function deleteMultipleTokens(array $tokens = []) {
     $this->tokenStorage->delete($tokens);

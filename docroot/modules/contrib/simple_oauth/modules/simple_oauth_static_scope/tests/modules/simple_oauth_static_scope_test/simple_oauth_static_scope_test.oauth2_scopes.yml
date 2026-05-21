@@ -1,0 +1,56 @@
+"static_scope:child:child":
+  description: 'Test static:scope:child:child description'
+  umbrella: false
+  grant_types:
+    authorization_code:
+      status: true
+      description: 'Test authorization_code description'
+    client_credentials:
+      status: true
+      description: 'Test client_credentials description'
+  parent: 'static_scope:child'
+  granularity_id: 'permission'
+  granularity_configuration:
+    permission: 'access content'
+"static_scope:child":
+  description: 'Test static:scope:child description'
+  umbrella: false
+  grant_types:
+    authorization_code:
+      status: true
+      description: 'Test authorization_code description'
+    client_credentials:
+      status: true
+      description: 'Test client_credentials description'
+  parent: 'static_scope'
+  granularity_id: 'permission'
+  granularity_configuration:
+    permission: 'debug simple_oauth tokens'
+"static_scope":
+  description: 'Test static:scope description'
+  umbrella: true
+  grant_types:
+    authorization_code:
+      status: true
+      description: 'Test authorization_code description'
+"static_scope:role":
+  description: 'Test static_scope:role description'
+  umbrella: false
+  grant_types:
+    authorization_code:
+      status: true
+      description: 'Test authorization_code description'
+  granularity_id: 'role'
+  granularity_configuration:
+    role: 'authenticated'
+"static_scope:role:child":
+  description: 'Test static_scope:role:child description'
+  umbrella: false
+  grant_types:
+    authorization_code:
+      status: true
+      description: 'Test authorization_code description'
+  parent: 'static_scope:role'
+  granularity_id: 'permission'
+  granularity_configuration:
+    permission: 'debug simple_oauth tokens'
