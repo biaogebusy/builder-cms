@@ -186,6 +186,9 @@ class NodeJson extends EntityJsonBase {
     $data['title'] = \Drupal::token()->replace('[node:title] | [site:name]', ['node' => $this->entity]);
     if ($meta = $this->entity->get('meta_tags')->value) {
       $meta = unserialize($meta);
+      if (!is_array($meta)) {
+        return;
+      }
       foreach ($meta as $key => $value) {
         $content = \Drupal::token()->replace($value, ['node' => $this->entity]);
         if (empty($content)) {
