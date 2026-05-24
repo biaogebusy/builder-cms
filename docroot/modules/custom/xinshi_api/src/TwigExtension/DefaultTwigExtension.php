@@ -290,7 +290,7 @@ class DefaultTwigExtension extends AbstractExtension {
   public function nodeMate($nid, $vid) {
     $data = [];
     $storage = \Drupal::entityTypeManager()->getStorage('node');
-    $node = $storage->loadRevision($vid);
+    $node = !empty($vid) ? $storage->loadRevision($vid) : NULL;
     if (empty($node) || $node->id() != $nid) {
       $node = Node::load($nid);
     }
