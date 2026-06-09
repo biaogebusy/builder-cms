@@ -111,7 +111,6 @@ closethick
 codesniffer
 colgroups
 colinodell
-colour
 colspans
 columnschange
 comida
@@ -660,6 +659,7 @@ trgm
 truecolor
 twistie
 twocol
+ufffd
 uids
 unban
 uncacheable
