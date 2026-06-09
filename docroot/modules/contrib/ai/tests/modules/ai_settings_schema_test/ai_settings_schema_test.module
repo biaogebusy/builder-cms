@@ -1,0 +1,33 @@
+<?php
+
+/**
+ * @file
+ * Test hooks for AI settings schema extension coverage.
+ */
+
+use Drupal\Core\Hook\Attribute\LegacyHook;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+
+/**
+ * Implements hook_ai_operation_types_alter().
+ */
+#[LegacyHook]
+function ai_settings_schema_test_ai_operation_types_alter(array &$operation_types): void {
+  $operation_types['text_to_code'] = [
+    'id' => 'text_to_code',
+    'label' => new TranslatableMarkup('Text to Code'),
+    'actual_type' => 'text_to_code',
+    'filter' => [],
+  ];
+}
+
+/**
+ * Implements hook_config_schema_info_alter().
+ */
+#[LegacyHook]
+function ai_settings_schema_test_config_schema_info_alter(array &$definitions): void {
+  $definitions['ai.settings']['mapping']['default_providers']['mapping']['text_to_code'] = [
+    'label' => 'Default text to code provider',
+    'type' => 'ai_settings_schema_test.default_operation_provider',
+  ];
+}

@@ -1,0 +1,88 @@
+ai_setup_form:
+  css:
+    component:
+      assets/css/ai_setup_form.css: {}
+
+tools_library_item:
+  css:
+    component:
+      assets/css/ai_tools_library_item.css: {}
+
+tools_library:
+  css:
+    component:
+      assets/css/ai_tools_library.css: {}
+  js:
+    assets/js/ai_tools_library.js: { }
+  dependencies:
+    - core/drupal.ajax
+    - core/drupal.announce
+    - core/drupal.debounce
+    - core/once
+    - core/jquery
+    - core/tabbable
+    - ai/tools_library_item
+
+tools_library_form_element:
+  js:
+    assets/js/ai_tools_library_form_element.js: {  }
+  dependencies:
+    - core/jquery
+    - core/once
+    - core/drupal.dialog.ajax
+
+chat_history_element:
+  js:
+    assets/js/ai_chat_history_element.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+  css:
+    theme:
+      assets/css/ai_chat_history_element.css: {}
+
+ai_global:
+  js:
+    assets/js/ai_global.js: { }
+  dependencies:
+    - core/drupal
+    - core/once
+  css:
+    component:
+      assets/css/ai_global.css: {}
+
+# JS assets below require compilation on dev releases. See docs/contribute/testing/full_patch_test.md
+mdx_editor:
+  js:
+    ui/mdxeditor/dist/assets/main.js:
+      attributes: { type: module }
+      minified: true
+  css:
+    component:
+      ui/mdxeditor/dist/assets/index.css: {}
+
+# JS assets below require compilation on dev releases. See docs/contribute/testing/full_patch_test.md
+json_schema_editor:
+  js:
+    ui/json-schema-editor/dist/ai-json-schema.js:
+      attributes:
+        type: module
+  dependencies:
+    - core/once
+  css:
+    theme:
+      assets/css/ai_json_schema.css: {}
+
+ai_settings_form:
+  css:
+    component:
+      assets/css/ai_settings_form.css: {}
+
+default_tools_editor:
+  js:
+    ui/default-tools-editor/dist/assets/main.js:
+      attributes: { type: module }
+      minified: true
+  css:
+    component:
+      ui/default-tools-editor/dist/assets/index.css: {}

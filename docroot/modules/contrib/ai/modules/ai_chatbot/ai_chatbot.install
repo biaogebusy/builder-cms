@@ -1,0 +1,25 @@
+<?php
+
+/**
+ * @file
+ * Install and update hooks for the chatbot module.
+ */
+
+/**
+ * Implements hook_requirements().
+ */
+function ai_chatbot_requirements($phase): array {
+  if ($phase == 'runtime') {
+    if (!class_exists('League\CommonMark\CommonMarkConverter')) {
+      return [
+        'ai_chatbot' => [
+          'title' => t('League\CommonMark'),
+          'description' => t('Please install the league/commonmark library to allow the AI Chatbot messages to be formatted.'),
+          'severity' => REQUIREMENT_WARNING,
+        ],
+      ];
+    }
+  }
+
+  return [];
+}

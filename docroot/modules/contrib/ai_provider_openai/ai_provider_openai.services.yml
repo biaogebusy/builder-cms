@@ -1,0 +1,4 @@
+services:
+  ai_provider_openai.helper:
+    class: \Drupal\ai_provider_openai\OpenAiHelper
+    arguments: ['@messenger', '@config.factory']

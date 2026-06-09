@@ -1,0 +1,78 @@
+body.ai-chatbot-opened .block-ai-deepchat-block.ai-chatbot-exiting-fullscreen {
+  width: var(--toolbar-chatbot-width);
+  transition: opacity 300ms ease-in-out;
+}
+
+.sidebar-header--icon.expand[data-expansion-method="fullscreen"]::before {
+  mask-image: url('../assets/expand.svg');
+  mask-size: 16px;
+}
+
+/* Fullscreen modal styles */
+body.ai-chatbot-fullscreen.ai-chatbot-opened .block-ai-deepchat-block {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  opacity: 1;
+  transition: opacity 300ms ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+body.ai-chatbot-fullscreen.ai-chatbot-opened .block-ai-deepchat-block::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  opacity: 1;
+  transition: opacity 300ms ease-in-out;
+  z-index: -1;
+}
+
+@keyframes ai-chatbot-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ai-chatbot-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.block-ai-deepchat-block.ai-chatbot-fade-in {
+  animation: ai-chatbot-fade-in 300ms ease-in-out forwards;
+}
+
+.block-ai-deepchat-block.ai-chatbot-fade-out {
+  animation: ai-chatbot-fade-out 300ms ease-in-out forwards;
+  position: fixed;
+  inset: 0;
+}
+
+body.ai-chatbot-fullscreen.ai-chatbot-opened .chat-container {
+  width: 90vw;
+  max-width: 1200px;
+  max-height: 800px;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+/* Fullscreen expand button icon change */
+body.ai-chatbot-fullscreen .sidebar-header--icon.expand.active::before {
+  mask-image: url('../assets/collapse.svg');
+  mask-size: 18px;
+}
+
+body.ai-chatbot-fullscreen .sidebar-header--icon.expand {
+  display: flex;
+}

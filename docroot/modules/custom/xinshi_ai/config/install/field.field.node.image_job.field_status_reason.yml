@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_status_reason
+    - node.type.image_job
+id: node.image_job.field_status_reason
+field_name: field_status_reason
+entity_type: node
+bundle: image_job
+label: 'Status reason'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

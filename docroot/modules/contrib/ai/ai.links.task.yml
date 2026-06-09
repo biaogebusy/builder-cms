@@ -1,0 +1,28 @@
+entity.ai_prompt.collection:
+  title: 'AI Prompts'
+  route_name: entity.ai_prompt.collection
+  base_route: entity.ai_prompt.collection
+  weight: 0
+
+entity.ai_prompt_type.collection:
+  title: 'AI Prompt Types'
+  route_name: entity.ai_prompt_type.collection
+  base_route: entity.ai_prompt.collection
+  weight: 5
+
+entity.ai_guardrail.collection:
+  title: 'AI Guardrails'
+  route_name: entity.ai_guardrail.collection
+  base_route: entity.ai_guardrail.collection
+
+entity.ai_guardrail_set.collection:
+  title: 'AI Guardrail sets'
+  route_name: entity.ai_guardrail_set.collection
+  base_route: entity.ai_guardrail.collection
+  weight: 10
+
+ai.global_guardrails_settings:
+  title: 'Global guardrails'
+  route_name: ai.global_guardrails_settings
+  base_route: entity.ai_guardrail.collection
+  weight: 20

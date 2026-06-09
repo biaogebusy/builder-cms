@@ -1,0 +1,21 @@
+name: 'Xinshi AI'
+type: module
+description: 'AI 任务(图片/视频/音频生成等)统一后端:内容类型、自定义路由、SSE、业务层 Provider。'
+package: 'Xinshi'
+core_version_requirement: ^10.3 || ^11
+configure: xinshi_ai.settings
+dependencies:
+  - drupal:node
+  - drupal:media
+  - drupal:file
+  - drupal:jsonapi
+  - drupal:jsonapi_extras
+  - drupal:views
+  - drupal:rest
+  - drupal:serialization
+  - drupal:user
+  - drupal:options
+  - drupal:text
+  - drupal:xinshi_views
+  - ai:ai
+  - ai_provider_openai:ai_provider_openai

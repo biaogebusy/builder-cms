@@ -1,0 +1,18 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the AI CKEditor module.
+ */
+
+/**
+ * Add modify prompt configuration and enable the plugin in text formats.
+ */
+function ai_ckeditor_update_10001() {
+  // Add the modify prompt configuration.
+  $config = \Drupal::configFactory()->getEditable('ai_ckeditor.settings');
+  if (!$config->get('prompts.modify_prompt')) {
+    $config->set('prompts.modify_prompt', "Use the following instructions to process this text. Return only the processed text without explanations.\nInstructions: {{ modify_prompt }}\n\nText to process:")
+      ->save(TRUE);
+  }
+}

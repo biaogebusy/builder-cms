@@ -1,0 +1,97 @@
+ai_content_suggestions.settings:
+  type: config_object
+  label: 'AI Content Suggestions settings'
+  mapping:
+    field_widget_prompt:
+      type: text
+      label: 'System prompt for field widget based suggestions'
+    plugins:
+      type: sequence
+      label: Plugins
+      orderby: key
+      constraints:
+        NotNull: []
+      sequence:
+        type: string
+        label: 'Plugin ID'
+        constraints:
+          NotNull: []
+    entity_types:
+      type: sequence
+      label: 'Selected Entity Types'
+      orderby: key
+      constraints:
+        PluginExists:
+          manager: entity_type.manager
+          interface: Drupal\Core\Entity\ContentEntityInterface
+          plugin_id: '%key'
+      sequence:
+        type: mapping
+        mapping:
+          bundles:
+            type: sequence
+            label: 'Bundles'
+            constraints:
+              NotNull: []
+            sequence:
+              type: string
+              label: 'Bundle Machine Name'
+              constraints:
+                EntityBundleExists: '%parent.%key'
+          mode:
+            type: string
+            label: 'Mode for entity types'
+            constraints:
+              Choice:
+                - enable
+                - disable
+
+ai_content_suggestions.prompts:
+  type: config_object
+  label: 'AI Content Suggestions prompts'
+  mapping:
+    readability:
+      type: string
+      label: 'Readability prompt'
+    title_suggest:
+      type: string
+      label: 'Title suggestion prompt'
+    tone:
+      type: string
+      label: 'Tone modification prompt'
+    summarise:
+      type: string
+      label: 'Summarization prompt'
+    taxonomy_suggest_open:
+      type: string
+      label: 'Open taxonomy suggestion prompt'
+    taxonomy_suggest_from_voc:
+      type: string
+      label: 'Vocabulary-based taxonomy suggestion prompt'
+
+ai_content_suggestions.tone:
+  type: config_object
+  label: 'AI Content Suggestions tone settings'
+  mapping:
+    tone_taxonomy:
+      type: string
+      label: 'Tone taxonomy vocabulary'
+    tone_taxonomy_enabled:
+      type: boolean
+      label: 'Enable custom tone taxonomy'
+
+field_widget_action.plugin.prompt_content_suggestion:
+  type: field_widget_action_plugin_base
+  mapping:
+    settings:
+      type: mapping
+      mapping:
+        model:
+          type: string
+          label: 'AI Model to use'
+        prompt:
+          type: text
+          label: 'Prompt'
+        display_on_focus:
+          type: boolean
+          label: 'Display buttons on focus'

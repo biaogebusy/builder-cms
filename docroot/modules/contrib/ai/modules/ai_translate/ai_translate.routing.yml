@@ -1,0 +1,25 @@
+ai_translate.settings_form:
+  path: '/admin/config/ai/ai-translate'
+  defaults:
+    _form: '\Drupal\ai_translate\Form\AiTranslateSettingsForm'
+    _title: 'AI Translate Settings'
+  requirements:
+    _permission: 'manage ai translation prompts'
+
+ai_translate.translate_content:
+  path: '/ai_translate/translate/{entity_type}/{entity_id}/{lang_from}/{lang_to}'
+  defaults:
+    _controller: '\Drupal\ai_translate\Controller\AiTranslateController::translate'
+    _title: 'AI powered Translation'
+  requirements:
+    _permission: 'create ai content translation'
+
+ai_translate.translate_interface:
+  path: '/admin/ai-translate/interface-translate-callback'
+  defaults:
+    _controller: '\Drupal\ai_translate\Controller\AiTranslateInterfaceController::translateInterface'
+    _title: 'AI Translate Interface Callback'
+  requirements:
+    _permission: 'create ai interface translation'
+  options:
+    _admin_route: TRUE

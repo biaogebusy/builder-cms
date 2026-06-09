@@ -1,0 +1,119 @@
+{% if 'chat' in operation_types %}
+chat:
+  input:
+    description: 'Input provided to the model.'
+    type: 'array'
+    default:
+      - { role: "system", content: "You are a helpful assistant." }
+      - { role: "user", content: "Hello!" }
+    required: true
+  authentication:
+    description: 'API Key.'
+    type: 'string'
+    default: ''
+    required: true
+  configuration:
+    max_tokens:
+      label: 'Max Tokens'
+      description: 'Maximum number of tokens in the response.'
+      type: 'integer'
+      default: 1024
+      required: false
+    temperature:
+      label: 'Temperature'
+      description: 'Sampling temperature (0-2). Higher = more random.'
+      type: 'float'
+      default: 0.7
+      required: false
+      constraints:
+        min: 0
+        max: 2
+        step: 0.1
+{% endif %}
+{% if 'embeddings' in operation_types %}
+
+embeddings:
+  input:
+    description: 'Text to generate embeddings for.'
+    type: 'string'
+    default: 'Hello world'
+    required: true
+  authentication:
+    description: 'API Key.'
+    type: 'string'
+    default: ''
+    required: true
+  configuration: {}
+{% endif %}
+{% if 'text_to_image' in operation_types %}
+
+text_to_image:
+  input:
+    description: 'Text prompt for image generation.'
+    type: 'string'
+    default: 'A beautiful sunset over the ocean'
+    required: true
+  authentication:
+    description: 'API Key.'
+    type: 'string'
+    default: ''
+    required: true
+  configuration:
+    size:
+      label: 'Image Size'
+      description: 'The size of the generated image.'
+      type: 'string'
+      default: '1024x1024'
+      required: false
+{% endif %}
+{% if 'text_to_speech' in operation_types %}
+
+text_to_speech:
+  input:
+    description: 'Text to convert to speech.'
+    type: 'string'
+    default: 'Hello, how are you?'
+    required: true
+  authentication:
+    description: 'API Key.'
+    type: 'string'
+    default: ''
+    required: true
+  configuration:
+    voice:
+      label: 'Voice'
+      description: 'The voice to use for speech generation.'
+      type: 'string'
+      default: 'default'
+      required: false
+{% endif %}
+{% if 'speech_to_text' in operation_types %}
+
+speech_to_text:
+  input:
+    description: 'Audio file to transcribe.'
+    type: 'file'
+    default: ''
+    required: true
+  authentication:
+    description: 'API Key.'
+    type: 'string'
+    default: ''
+    required: true
+  configuration: {}
+{% endif %}
+{% if 'moderation' in operation_types %}
+
+moderation:
+  input:
+    description: 'Content to check for moderation.'
+    type: 'string'
+    default: 'Check this content'
+    required: true
+  authentication:
+    description: 'API Key.'
+    type: 'string'
+    default: ''
+    required: true
+  configuration: {}
+{% endif %}

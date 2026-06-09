@@ -1,0 +1,7 @@
+ai.external_moderation:
+  type: config_object
+  label: 'AI Moderation Settings'
+  mapping:
+    moderations:
+      type: ignore
+      label: 'The mappings of what should be moderated'

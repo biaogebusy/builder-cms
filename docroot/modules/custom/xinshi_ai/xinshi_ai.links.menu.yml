@@ -1,0 +1,6 @@
+xinshi_ai.settings:
+  title: 'Xinshi AI'
+  description: '配置信使 AI 网关、图片任务默认参数与 SSE。'
+  route_name: xinshi_ai.settings
+  parent: system.admin_config_services
+  weight: 10

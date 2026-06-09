@@ -1,0 +1,213 @@
+.ai-tools-library-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  margin-block-start: 0;
+  margin-inline: calc(var(--gin-spacing-xxs) * -1);
+}
+
+#drupal-modal .ai-tools-library-wrapper {
+  flex-wrap: nowrap;
+}
+
+[dir="rtl"] .ai-tools-library-wrapper {
+  margin-right: -1em;
+  margin-left: -1.5em;
+}
+
+.ai-tools-library-item label {
+  display: inline-block;
+}
+
+/**
+ * Style the ai tools library grid items.
+ */
+
+.ai-tools-library-item {
+  position: relative;
+}
+
+/**
+ * Ajax throbbers inside a ai tools library item.
+ */
+
+.ai-tools-library-item .ajax-progress.ajax-progress.ajax-progress {
+  position: absolute;
+  z-index: calc(var(--vertical-tabs-menu--z-index) + 1);
+  top: 50%;
+  left: 50%;
+  box-sizing: border-box;
+  width: 3rem; /* 56px */
+  height: 3rem;
+  margin: -1.5rem;
+  border: var(--input-border-size) solid var(--jui-dropdown-border-color);
+  border-radius: 3.5rem;
+  background: var(--color-white);
+  box-shadow: 0 0.25rem 0.625rem var(--jui-dropdown-shadow-color);
+}
+
+.ai-tools-library-item .ajax-progress__throbber {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin: -0.875rem;
+  border: 3px solid var(--color-absolutezero);
+  border-right: 3px dotted transparent;
+}
+
+.ai-tools-library-item .ajax-progress__message {
+  display: none;
+}
+
+.ai-tools-library-item--grid {
+  justify-content: center;
+  box-sizing: border-box;
+  width: 50%;
+  padding: 10px 25px;
+  vertical-align: top;
+  outline: none;
+  background: #fff;
+}
+
+.ai-tools-library-item--grid::before {
+  position: absolute;
+  top: 0.4375rem;
+  left: 0.4375rem;
+  width: calc(100% - 1rem);
+  height: calc(100% - 1rem);
+  content: "";
+  transition:
+    border-color 0.2s,
+    color 0.2s,
+    background 0.2s;
+  pointer-events: none;
+  border: 1px solid #dbdbdb;
+  border-radius: 10px;
+  box-shadow: var(--details-box-shadow);
+}
+
+/**
+* The ai tools library grid item focus border is moved to a child element to
+* improve padding.
+*/
+
+.ai-tools-library-item--grid:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.ai-tools-library-item--grid:focus .ai-tools-library-item__preview-wrapper {
+  outline: var(--focus-outline);
+  box-shadow: var(--focus-box-shadow);
+}
+
+/* Ai Tools library widget weight field styles. */
+
+.ai-tools-library-item--grid .form-item {
+  margin: 0.75em;
+}
+
+@media screen and (min-width: 45em) {
+  .ai-tools-library-item--grid {
+    width: 33.3%;
+  }
+
+  /* Change the width for the modal and widget since there is less space. */
+  .ai-tools-library-selection .ai-tools-library-item--grid {
+    width: 50%;
+  }
+
+  /* The selected items in the add form should be shown a bit smaller. */
+  .ai-tools-library-wrapper .ai-tools-library-item--small {
+    width: 25%;
+  }
+}
+
+@media screen and (min-width: 60em) {
+  .ai-tools-library-item--grid {
+    width: 25%;
+  }
+
+  /* Change the width for the modal and widget since there is less space. */
+  .ai-tools-library-selection .ai-tools-library-item--grid {
+    width: 33.3%;
+  }
+}
+
+@media screen and (min-width: 77em) {
+
+  /* Change the width for the modal and widget since there is less space. */
+  .ai-tools-library-selection .ai-tools-library-item--grid {
+    width: 25%;
+  }
+}
+
+.ai-tools-library-item--grid .field--name-thumbnail {
+  overflow: hidden;
+  text-align: center;
+  background-color: #ebebeb;
+}
+
+.ai-tools-library-item--grid .field--name-thumbnail img {
+  height: 11.25rem;
+  object-fit: contain;
+  object-position: center center;
+}
+
+.ai-tools-library-item--grid.is-hover::before,
+.ai-tools-library-item--grid.checked::before,
+.ai-tools-library-item--grid.is-focus::before {
+  top: 0.3125rem;
+  left: 0.3125rem;
+  border-width: 3px;
+  border-radius: 0.1875rem;
+}
+
+.ai-tools-library-item--grid.is-hover::before,
+.ai-tools-library-item--grid.checked.is-hover::before {
+  border-color: var(--color-absolutezero-hover);
+}
+
+.ai-tools-library-item--grid.is-focus::before {
+  border-color: var(--color-focus);
+}
+
+.ai-tools-library-item--grid.checked::before {
+  border-color: var(--button--focus-border-color);
+}
+
+.ai-tools-library-item--grid .form-boolean--type-checkbox:checked {
+  border-color: var(--button--focus-border-color);
+  background-color: var(--button--focus-border-color);
+}
+
+.ai-tools-library-item--grid.is-focus .ai-tools-library-item__name,
+.ai-tools-library-item--grid.checked .ai-tools-library-item__name {
+  white-space: normal;
+}
+
+/* Add negative margin for flex grid. */
+
+.ai-tools-library-selection {
+  margin: 1em -0.5rem;
+}
+
+/* Reserve space for the remove button so titles don't overlap it. */
+.ai-tools-library-item--grid h5 {
+  padding-right: 2rem;
+}
+
+/* Position the remove button (now using .ai-icon-button) in the top-right corner. */
+.ai-tools-library-item__remove {
+  position: absolute;
+  z-index: 1;
+  top: 0.625rem;
+  right: 0.625rem; /* LTR */
+  margin: 0.3125rem;
+}
+
+[dir="rtl"] .ai-tools-library-item__remove {
+  right: auto;
+  left: 0.625rem;
+}

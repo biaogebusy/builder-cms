@@ -1,0 +1,9 @@
+administer ai log:
+  title: 'Administer AI Log bundles, fields, and delete all'
+  description: 'Allows users to create bundles, manage fields, and delete AI Logs.'
+  restrict access: true
+
+view ai log:
+  title: 'View AI Logs'
+  description: 'Allows users to view AI Logs.'
+  restrict access: true

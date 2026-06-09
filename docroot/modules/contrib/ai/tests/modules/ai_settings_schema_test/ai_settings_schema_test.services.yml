@@ -1,0 +1,4 @@
+services:
+  Drupal\ai_settings_schema_test\Hook\AiSettingsSchemaTestHooks:
+    class: Drupal\ai_settings_schema_test\Hook\AiSettingsSchemaTestHooks
+    autowire: true

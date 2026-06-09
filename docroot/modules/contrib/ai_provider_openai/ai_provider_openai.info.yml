@@ -1,0 +1,14 @@
+name: OpenAI Provider
+description: This enables the use of OpenAI for the AI module.
+package: AI Providers
+type: module
+core_version_requirement: ^10.3 || ^11
+configure: ai_provider_openai.settings_form
+
+dependencies:
+  - ai:ai
+
+# Information added by Drupal.org packaging script on 2026-02-25
+version: '1.2.1'
+project: 'ai_provider_openai'
+datestamp: 1772029065

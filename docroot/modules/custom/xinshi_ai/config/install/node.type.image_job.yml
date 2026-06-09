@@ -1,0 +1,10 @@
+langcode: en
+status: true
+dependencies: {  }
+name: 'AI 图片任务'
+type: image_job
+description: '一次生图请求(text_to_image / image_edit / variation / upscale 等);1 job ↔ N image_asset。'
+help: null
+new_revision: false
+preview_mode: 0
+display_submitted: false

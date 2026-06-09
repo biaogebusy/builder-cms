@@ -1,0 +1,109 @@
+.chat-history-wrapper {
+  margin: 0 auto;
+  box-shadow: rgba(50, 50, 93, 0.25) 0px 6px 12px -2px, rgba(0, 0, 0, 0.3) 0px 3px 7px -3px;
+}
+
+.chat-history-wrapper>.chat-history-item {
+  border-radius: 1em;
+  padding: 0.25em 0.75em;
+  position: relative;
+  padding-right: 2.25em;
+}
+
+/* Ensure nested tool call containers are positioning contexts for their own remove buttons */
+.chat-history-wrapper .tool-call-item {
+  position: relative;
+  padding-right: 2.25em;
+}
+
+.chat-history-wrapper input[type="submit"] {
+  margin-left: 20px;
+}
+
+.chat-history-wrapper .form-item[class*="-weight"] {
+  display: none;
+}
+
+.chat-history-wrapper > .chat-history-item .form-item,
+.chat-history-wrapper > .chat-history-item > .tool-calls-details {
+  margin-block: 5px;
+}
+
+.chat-history-wrapper>.chat-history-item:hover,
+.chat-history-wrapper>.chat-history-item > .tool-calls-details:hover {
+  background-color: #f6f6f6;
+  transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.chat-history-wrapper > .chat-history-item :is(select, textarea, input[type="text"]),
+.chat-history-wrapper > .chat-history-item > .tool-calls-details :is(select, textarea, input[type="text"]) {
+  border: 1px solid rgba(0, 0, 0, 0);
+  margin-top: 0;
+  background: #f9fafb;
+}
+
+.chat-history-wrapper > .chat-history-item :is(select, textarea, input[type="text"]):hover,
+.chat-history-wrapper > .chat-history-item > .tool-calls-details :is(select, textarea, input[type="text"]):hover {
+  border: 1px solid #d1d5db;
+  transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  background-color: #f3f4f6;
+}
+
+.chat-history-wrapper > .chat-history-item :is(select, textarea, input[type="text"]):active,
+.chat-history-wrapper > .chat-history-item :is(select, textarea, input[type="text"]):focus-visible,
+.chat-history-wrapper > .chat-history-item > .tool-calls-details :is(select, textarea, input[type="text"]):active,
+.chat-history-wrapper > .chat-history-item > .tool-calls-details :is(select, textarea, input[type="text"]):focus-visible {
+  border: 1px solid #3b82f6;
+  background-color: #fff;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+/* Disabled and read-only states */
+.chat-history-wrapper > .chat-history-item :is(select, textarea, input[type="text"]):disabled,
+.chat-history-wrapper > .chat-history-item > .tool-calls-details :is(select, textarea, input[type="text"]):disabled {
+  background-color: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+.chat-history-wrapper > .chat-history-item :is(textarea, input[type="text"])[readonly],
+.chat-history-wrapper > .chat-history-item > .tool-calls-details :is(textarea, input[type="text"])[readonly] {
+  background-color: #f9fafb;
+  color: #6b7280;
+}
+
+/* Error/invalid states */
+.chat-history-wrapper > .chat-history-item :is(select, textarea, input[type="text"]):invalid,
+.chat-history-wrapper > .chat-history-item .form-item--error :is(select, textarea, input[type="text"]) {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+  background-color: #fff;
+}
+
+/* Position icon buttons (remove buttons) in chat history items */
+.chat-history-wrapper>.chat-history-item .ai-icon-button {
+  position: absolute;
+  right: 10px;
+  top: 5px;
+  z-index: 1;
+}
+
+/* Position remove buttons inside tool call items to their own top-right */
+.chat-history-wrapper .tool-call-item .ai-icon-button {
+  right: 6px;
+  top: 6px;
+}
+
+.chat-history-wrapper>.chat-history-item.dragging {
+  opacity: .5;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .chat-history-wrapper * {
+    transition: none !important;
+  }
+}
+

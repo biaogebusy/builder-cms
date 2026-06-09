@@ -1,0 +1,18 @@
+             | |
+             | |===( )   //////
+             |_|   |||  | o o|
+                    ||| ( c  )                  ____
+                     ||| \= /                  ||   \_
+                      ||||||                   ||     |
+                      ||||||                ...||__/|-"
+                      ||||||             __|________|__
+                        |||             |______________|
+                        |||             || ||      || ||
+                        |||             || ||      || ||
+------------------------|||-------------||-||------||-||-------
+                        |__>            || ||      || ||
+
+
+We are very thankful for your contributions, but could you please check the
+errors before contributing to the AI module and we would be even happier!
+

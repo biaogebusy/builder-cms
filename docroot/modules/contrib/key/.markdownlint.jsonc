@@ -1,0 +1,21 @@
+{
+    // Based on Drupal's README.md template
+    // @see https://www.drupal.org/docs/develop/managing-a-drupalorg-theme-module-or-distribution-project/documenting-your-project/readmemd-template
+    "default": true,
+    "single-h1": true,
+    "first-line-heading": true,
+    "heading-increment": true,
+    "header-style": {"style": "atx"},
+    "ul-style": {"style": "dash"},
+    "ul-indent": { "indent": 4 },
+    "no-trailing-spaces": true,
+    "line-length": {
+        "heading_line_length": 80,
+        "line_length": 80
+    },
+    "no-multiple-blanks": false,
+    "blanks-around-headings": {
+        "lines_above": 2
+    },
+    "no-bare-urls": true
+}

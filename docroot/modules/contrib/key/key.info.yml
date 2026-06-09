@@ -1,0 +1,11 @@
+name: Key
+type: module
+description: Provides the ability to manage site-wide keys.
+core_version_requirement: '^9.1 || ^10 || ^11'
+package: Security
+configure: entity.key.collection
+
+# Information added by Drupal.org packaging script on 2026-01-20
+version: '8.x-1.22'
+project: 'key'
+datestamp: 1768921254

@@ -1,0 +1,302 @@
+/**
+ * @file
+ * Global CSS utilities for AI module components.
+ *
+ * Uses Drupal core CSS custom properties for consistency across admin themes.
+ * All classes prefixed with 'ai-' to prevent conflicts.
+ */
+:root {
+  --ai-font-size-base: var(--font-size-base);
+  --ai-font-size-s: var(--font-size-s);
+  --ai-font-size-xs: var(--font-size-xs);
+  --ai-font-size-xxs: var(--font-size-xxs);
+
+  --ai-font-size-h1: var(--font-size-h1);
+  --ai-font-size-h2: var(--font-size-h2);
+  --ai-font-size-h3: var(--font-size-h3);
+  --ai-font-size-h4: var(--font-size-h4);
+  --ai-font-size-h5: var(--font-size-h5);
+  --ai-font-size-h6: var(--font-size-h6);
+
+  --ai-text-color-muted: var(--color-text-light);
+
+  /* Icon size scale (used by .ai-icon and .ai-icon-button). */
+  --ai-icon-size: 1.25rem;
+  --ai-icon-size-lg: 2rem;
+}
+
+/* ==========================================================================
+   Typography Utilities
+   ========================================================================== */
+
+/**
+ * Font size utilities matching Drupal CSS variable names.
+ */
+
+.ai-font-size-base {
+  font-size: var(--ai-font-size-base);
+}
+
+.ai-font-size-s {
+  font-size: var(--ai-font-size-s);
+}
+
+.ai-font-size-xs {
+  font-size: var(--ai-font-size-xs);
+}
+
+.ai-font-size-xxs {
+  font-size: var(--ai-font-size-xxs);
+}
+
+/**
+ * Color utility for muted/secondary text.
+ */
+.ai-text-muted {
+  color: var(--ai-text-color-muted);
+}
+
+/**
+ * Semantic class for description text.
+ * Combines font-size, muted color, and optimized text wrapping for helper text.
+ */
+.ai-description {
+  font-size: var(--ai-font-size-xs);
+  line-height: 1.25;
+  color: var(--ai-text-color-muted);
+  hyphens: none;
+  text-wrap: balance;
+}
+
+/**
+ * Heading size overrides.
+ * Use these to visually resize headings while keeping semantic HTML.
+ * Maps to Drupal core --font-size-h* variables.
+ */
+.ai-heading-h1 {
+  font-size: var(--ai-font-size-h1);
+}
+
+.ai-heading-h2 {
+  font-size: var(--ai-font-size-h2);
+}
+
+.ai-heading-h3 {
+  font-size: var(--ai-font-size-h3);
+}
+
+.ai-heading-h4 {
+  font-size: var(--ai-font-size-h4);
+}
+
+.ai-heading-h5 {
+  font-size: var(--ai-font-size-h5);
+}
+
+.ai-heading-h6 {
+  font-size: var(--ai-font-size-h6);
+}
+
+/**
+ * Select element width utilities.
+ * Uses select.class for specificity over theme styles while remaining class-based.
+ */
+select.ai-select,
+select.ai-select--narrow,
+select.ai-select--wide {
+  max-width: 200px;
+}
+
+select.ai-select--narrow {
+  max-width: 150px;
+}
+
+select.ai-select--wide {
+  max-width: 300px;
+}
+
+/* ==========================================================================
+   Icon button (IconButton pattern)
+   ========================================================================== */
+
+/**
+ * Base styles for icon-only button/link.
+ * Follows IconButton pattern with subtle default border:
+ * - Faint border by default for visibility
+ * - Background appears on hover/active
+ * - Clear focus ring for keyboard navigation
+ *
+ * Icon size matches Gin toolbar icons (20px optical).
+ * Use with .ai-icon--* for the icon. Uses Gin CSS variables with fallbacks.
+ */
+.ai-icon-button {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: calc(var(--ai-icon-size) + 0.5rem);
+  height: calc(var(--ai-icon-size) + 0.5rem);
+  padding: 0.25rem;
+  color: var(--gin-icon-color, var(--ai-text-color-muted));
+  text-decoration: none;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: var(--ai-icon-size) var(--ai-icon-size);
+  border: 1px solid var(--color-gray-200, rgba(0, 0, 0, 0.08));
+  border-radius: var(--gin-border-m, 0.5rem);
+  transition: background-color 0.15s var(--gin-easing, cubic-bezier(0.19, 1, 0.22, 1)),
+              border-color 0.15s var(--gin-easing, cubic-bezier(0.19, 1, 0.22, 1));
+  cursor: pointer;
+}
+
+/* Icon button states */
+.ai-icon-button:hover {
+  background-color: var(--color-gray-100, rgba(0, 0, 0, 0.06));
+  border-color: var(--color-gray-200, rgba(0, 0, 0, 0.08));
+}
+
+.ai-icon-button:focus {
+  outline: none;
+}
+
+.ai-icon-button:focus-visible {
+  background-color: var(--color-gray-100, rgba(0, 0, 0, 0.06));
+  outline: 2px solid var(--gin-color-focus, var(--color-focus, #007dfacc));
+  outline-offset: 2px;
+}
+
+.ai-icon-button:active {
+  background-color: var(--color-gray-200, rgba(0, 0, 0, 0.12));
+  border-color: var(--color-gray-300, rgba(0, 0, 0, 0.15));
+}
+
+.ai-icon-button--lg {
+  --ai-icon-size: var(--ai-icon-size-lg);
+}
+
+/**
+ * Icon block - universal icon modifiers (BEM).
+ * Icons are background-image only; use with a component that provides
+ * size and background positioning (e.g. .ai-icon-button) or with .ai-icon
+ * for standalone/inline use. Keeps icons reusable across contexts.
+ */
+.ai-icon {
+  display: inline-block;
+  flex-shrink: 0;
+  width: var(--ai-icon-size);
+  height: var(--ai-icon-size);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100%;
+}
+
+.ai-icon--lg {
+  --ai-icon-size: var(--ai-icon-size-lg);
+}
+
+.ai-icon--provider {
+  background-image: url('../icons/plugs.svg');
+}
+
+.ai-icon--model {
+  background-image: url('../icons/cube.svg');
+}
+
+.ai-icon--external {
+  background-image: url('../icons/external.svg');
+}
+
+.ai-icon--settings {
+  background-image: url('../icons/gear.svg');
+}
+
+.ai-icon--supported {
+  background-image: url('../icons/checkmark-circle.svg');
+}
+
+.ai-icon--not-supported {
+  background-image: url('../icons/x-circle.svg');
+}
+
+.ai-icon--warning {
+  background-image: url('../icons/warning.svg');
+}
+
+.ai-icon--option {
+  background-image: url('../icons/option.svg');
+}
+
+.ai-icon--arrow-left-up {
+  background-image: url('../icons/arrow-left-up.svg');
+}
+
+.ai-icon--cloud-arrow-down {
+  background-image: url('../icons/cloud-arrow-down.svg');
+}
+
+.ai-icon--file {
+  background-image: url('../icons/file.svg');
+}
+
+.ai-icon--trash {
+  background-image: url('../icons/trash.svg');
+}
+
+/* ==========================================================================
+   Pills
+   ========================================================================== */
+
+/**
+ * Pills.
+ */
+.ai-pill {
+  font-size: var(--gin-font-size-xxs, .75rem);
+  font-weight: var(--gin-font-weight-semibold, 600);
+  display: inline-block;
+  padding: .125em .75em;
+  vertical-align: .125em;
+  border: 1px solid transparent;
+  border-radius: var(--gin-border-l, .75rem);
+  color: var(--messages-fg-color);
+  background: var(--messages-bg-color);
+  text-transform: capitalize;
+}
+
+.ai-pill.light {
+  color: var(--gin-status-text, white);
+  background: var(--gin-status-bg, var(--color-gray-400));
+}
+
+.ai-pill.success {
+  color: var(--gin-status-success-text, var(--messages-fg-color));
+  background-color: var(--gin-status-success-bg, var(--messages--status-color));
+}
+
+.ai-pill.danger {
+  color: var(--gin-status-danger-text, var(--messages-fg-color));
+  background: var(--gin-status-danger-bg, var(--messages--error-color));
+}
+
+.ai-pill.warning {
+  color: var(--gin-status-warning-text, var(--messages-fg-color));
+  background: var(--gin-status-warning-bg, var(--messages--warning-color));
+}
+
+/* 
+ * Popover Tooltip 
+ */
+ .ai-tooltip {
+  margin: 0px;
+  inset: auto;
+  position-area: bottom right;
+  /* Prefer right; flip to left when no space. */
+  position-try-fallbacks: flip-inline;
+  border: 1px solid var(--gin-border-color, var(--color-gray-100, #dbdbdb));
+  padding: var(--gin-spacing-xxs, 4px) var(--gin-spacing-xs, 8px);
+  color: var(--gin-color-text-light, var(--color-gray-800, #55565b));
+  font-size: var(--font-size-xs);
+  border-radius: var(--gin-border-s, 6px);
+  box-shadow: 2px 4px 8px var(--gin-color-primary-light, rgba(0, 0, 0, 0.15));
+  max-width: 16rem;
+}

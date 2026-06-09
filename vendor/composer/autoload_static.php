@@ -32,6 +32,7 @@ class ComposerStaticInit44033c99252b62cff2d1cf9c5baebcc8
         '2cffec82183ee1cea088009cef9a6fc3' => __DIR__ . '/..' . '/ezyang/htmlpurifier/library/HTMLPurifier.composer.php',
         '9e4824c5afbdc1482b6025ce3d4dfde8' => __DIR__ . '/..' . '/league/csv/src/functions_include.php',
         'c7b4a5d8b94d270f0f9a84f81e1dd63d' => __DIR__ . '/..' . '/open-telemetry/api/Trace/functions.php',
+        '61ba3e92ef91a7a0f1cc260ebd9290e4' => __DIR__ . '/..' . '/openai-php/client/src/OpenAI.php',
         'a4a119a56e50fbb293281d9a48007e0e' => __DIR__ . '/..' . '/symfony/polyfill-php80/bootstrap.php',
         '47e1160838b5e5a10346ac4084b58c23' => __DIR__ . '/..' . '/laravel/prompts/src/helpers.php',
         'fbeead2280a8f3911a1fe6dd034f7d5e' => __DIR__ . '/..' . '/mkalkbrenner/php-htmldiff-advanced/src/HtmlDiffAdvancedInterface.php',
@@ -63,6 +64,10 @@ class ComposerStaticInit44033c99252b62cff2d1cf9c5baebcc8
         'Z' => 
         array (
             'ZipStream\\' => 10,
+        ),
+        'Y' => 
+        array (
+            'Yethee\\Tiktoken\\' => 16,
         ),
         'W' => 
         array (
@@ -144,6 +149,7 @@ class ComposerStaticInit44033c99252b62cff2d1cf9c5baebcc8
             'OpenTelemetry\\Context\\' => 22,
             'OpenTelemetry\\API\\' => 18,
             'OpenIDConnectServer\\' => 20,
+            'OpenAI\\' => 7,
             'OneSm\\' => 6,
         ),
         'M' => 
@@ -158,6 +164,7 @@ class ComposerStaticInit44033c99252b62cff2d1cf9c5baebcc8
             'League\\Uri\\' => 11,
             'League\\OAuth2\\Server\\' => 21,
             'League\\OAuth2\\Client\\' => 21,
+            'League\\HTMLToMarkdown\\' => 22,
             'League\\Event\\' => 13,
             'League\\Csv\\' => 11,
             'League\\Container\\' => 17,
@@ -172,6 +179,7 @@ class ComposerStaticInit44033c99252b62cff2d1cf9c5baebcc8
         'H' => 
         array (
             'Http\\Promise\\' => 13,
+            'Http\\Message\\MultipartStream\\' => 29,
             'Http\\Discovery\\' => 15,
             'Http\\Client\\' => 12,
         ),
@@ -284,6 +292,10 @@ class ComposerStaticInit44033c99252b62cff2d1cf9c5baebcc8
         'ZipStream\\' => 
         array (
             0 => __DIR__ . '/..' . '/maennchen/zipstream-php/src',
+        ),
+        'Yethee\\Tiktoken\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/yethee/tiktoken/src',
         ),
         'WeChatPay\\' => 
         array (
@@ -539,6 +551,10 @@ class ComposerStaticInit44033c99252b62cff2d1cf9c5baebcc8
         array (
             0 => __DIR__ . '/..' . '/steverhoades/oauth2-openid-connect-server/src',
         ),
+        'OpenAI\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/openai-php/client/src',
+        ),
         'OneSm\\' => 
         array (
             0 => __DIR__ . '/..' . '/lizhichao/one-sm/src',
@@ -574,6 +590,10 @@ class ComposerStaticInit44033c99252b62cff2d1cf9c5baebcc8
             1 => __DIR__ . '/..' . '/league/oauth2-github/src',
             2 => __DIR__ . '/..' . '/league/oauth2-google/src',
         ),
+        'League\\HTMLToMarkdown\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/league/html-to-markdown/src',
+        ),
         'League\\Event\\' => 
         array (
             0 => __DIR__ . '/..' . '/league/event/src',
@@ -605,6 +625,10 @@ class ComposerStaticInit44033c99252b62cff2d1cf9c5baebcc8
         'Http\\Promise\\' => 
         array (
             0 => __DIR__ . '/..' . '/php-http/promise/src',
+        ),
+        'Http\\Message\\MultipartStream\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/php-http/multipart-stream-builder/src',
         ),
         'Http\\Discovery\\' => 
         array (

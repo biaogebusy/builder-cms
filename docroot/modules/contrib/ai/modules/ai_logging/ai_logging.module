@@ -1,0 +1,26 @@
+<?php
+
+/**
+ * @file
+ * The AI Logging module to use cron.
+ */
+
+/**
+ * Implements hook_cron().
+ */
+function ai_logging_cron() {
+  // Run once per day.
+  $current_time = \Drupal::time()->getRequestTime();
+  $state = \Drupal::state();
+  $last_run = $state->get('ai_logging.last_cron_run', 0);
+  $interval = 86400;
+
+  if (($current_time - $last_run) >= $interval) {
+    // Get the service.
+    /** @var \Drupal\ai_logging\Cron\AiLogPruning $service */
+    $service = \Drupal::service('ai_logging.prune');
+    $service->pruneLogs();
+    // Set a new last run.
+    $state->set('ai_logging.last_cron_run', $current_time);
+  }
+}

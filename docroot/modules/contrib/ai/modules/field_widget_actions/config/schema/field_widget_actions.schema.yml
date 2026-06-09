@@ -1,0 +1,29 @@
+field_widget_action_plugin_base:
+  type: mapping
+  mapping:
+    plugin_id:
+      type: string
+      label: 'Plugin ID'
+      constraints:
+        PluginExists:
+          manager: plugin.manager.field_widget_actions
+          interface: 'Drupal\field_widget_actions\FieldWidgetActionInterface'
+    enabled:
+      type: boolean
+      label: Enabled
+    button_label:
+      type: label
+      label: 'Button Label'
+    weight:
+      type: integer
+      label: 'Weight'
+
+field_widget_action.plugin.*:
+  type: field_widget_action_plugin_base
+
+field.widget.third_party.field_widget_actions:
+  type: sequence
+  label: 'Actions'
+  sequence:
+    type: field_widget_action.plugin.[plugin_id]
+    label: 'Action settings'

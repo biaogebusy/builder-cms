@@ -1,0 +1,52 @@
+# Schema for the configuration files of the AI Test integration module.
+ai_test.settings:
+  type: config_object
+  label: 'AI Test integration settings'
+  mapping:
+    catch_results:
+      type: boolean
+      label: 'Catch results'
+      description: 'Whether to catch results from AI mock providers.'
+      default_value: false
+    catch_processing_time:
+      type: boolean
+      label: 'Catch processing time'
+      description: 'Whether to catch processing time from AI mock providers.'
+      default_value: false
+    provider_config:
+      type: ai.provider_config
+      label: 'AI provider configuration'
+
+# Settings schema for the test-only counting_stub_guardrail plugin.
+ai.guardrail.settings.counting_stub_guardrail:
+  type: mapping
+  label: 'Counting Stub Guardrail settings'
+  mapping:
+    tag:
+      type: string
+      label: 'State counter tag'
+    mode:
+      type: string
+      label: 'Result mode (pass or stop)'
+    message:
+      type: string
+      label: 'Result message'
+    score:
+      type: float
+      label: 'Stop result score'
+
+# Same shape as the deterministic variant; defined separately because guardrail
+# settings schemas key off the plugin id.
+ai.guardrail.settings.nondet_counting_stub_guardrail:
+  type: ai.guardrail.settings.counting_stub_guardrail
+  label: 'Non-Deterministic Counting Stub Guardrail settings'
+
+# Same shape; a separate id because the schema keys off the plugin id.
+ai.guardrail.settings.inner_chat_nondet_stub_guardrail:
+  type: ai.guardrail.settings.counting_stub_guardrail
+  label: 'Inner-Chat Non-Deterministic Stub Guardrail settings'
+
+# Same shape; used by the fiber isolation test.
+ai.guardrail.settings.fiber_suspending_nondet_stub_guardrail:
+  type: ai.guardrail.settings.counting_stub_guardrail
+  label: 'Fiber-Suspending Non-Deterministic Stub Guardrail settings'

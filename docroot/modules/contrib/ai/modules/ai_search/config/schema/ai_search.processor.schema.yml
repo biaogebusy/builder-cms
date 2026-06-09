@@ -1,0 +1,41 @@
+# Base definitions for processors
+
+plugin.plugin_configuration.search_api_processor.database_boost_by_ai_search:
+  type: search_api.default_processor_configuration
+  label: 'Database boost by AI Search processor configuration'
+  mapping:
+    search_api_ai_index:
+      type: string
+      label: 'AI Search Database to combine with'
+    minimum_relevance_score:
+      type: float
+      label: 'Minimum relevance score'
+    number_to_return:
+      type: integer
+      label: 'Number of results to return'
+    exact_phrase_action:
+      type: string
+      label: 'Exact phrase action'
+    exact_phrase_action_reduce_number:
+      type: integer
+      label: 'Number of results to return when an exact phrase is searched'
+
+plugin.plugin_configuration.search_api_processor.solr_boost_by_ai_search:
+  type: search_api.default_processor_configuration
+  label: 'SOLR boost by AI Search processor configuration'
+  mapping:
+    search_api_ai_index:
+      type: string
+      label: 'AI Search Database to combine with'
+    minimum_relevance_score:
+      type: float
+      label: 'Minimum relevance score'
+    number_to_return:
+      type: integer
+      label: 'Number of results to return'
+    exact_phrase_action:
+      type: string
+      label: 'Exact phrase action'
+    exact_phrase_action_reduce_number:
+      type: integer
+      label: 'Number of results to return when an exact phrase is searched'

@@ -1,0 +1,38 @@
+ai_ckeditor_ai:
+  ckeditor5:
+    plugins:
+      - aickeditor.AiCKEditor
+    config:
+      ai_ckeditor_ai:
+        openDialog:
+          func:
+            name: Drupal.aickeditor.openDialog
+            invoke: false
+        dialogSettings:
+          height: 750
+          width: 900
+          autoResize: 'min-width: 600px'
+          dialogClass: ai-ckeditor-modal
+          title: AI Assistant
+  drupal:
+    label: AI tools
+    library: ai_ckeditor/ai_ckeditor
+    admin_library: ai_ckeditor/admin.ai_ckeditor
+    toolbar_items:
+      aickeditor:
+        label: AI CKEditor
+    elements: false
+    class: Drupal\ai_ckeditor\Plugin\CKEditor5Plugin\AiCKEditor
+
+ai_ckeditor_balloon_menu:
+  ckeditor5:
+    plugins:
+      - ai_balloon_menu.AiBalloonMenu
+  drupal:
+    label: AI tools
+    library: ai_ckeditor/ai_balloon_menu
+    admin_library: ai_ckeditor/admin.ai_ckeditor
+    toolbar_items:
+      ai_balloon_menu:
+        label: AI Balloon Menu
+    elements: false

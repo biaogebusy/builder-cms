@@ -1,0 +1,186 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.image_job
+  module:
+    - jsonapi_extras
+id: node--image_job
+disabled: false
+path: node/image_job
+resourceType: node--image_job
+resourceFields:
+  field_prompt:
+    fieldName: field_prompt
+    publicName: prompt
+    enhancer:
+      id: ''
+    disabled: false
+  field_prompt_revised:
+    fieldName: field_prompt_revised
+    publicName: prompt_revised
+    enhancer:
+      id: ''
+    disabled: false
+  field_negative_prompt:
+    fieldName: field_negative_prompt
+    publicName: negative_prompt
+    enhancer:
+      id: ''
+    disabled: false
+  field_job_kind:
+    fieldName: field_job_kind
+    publicName: job_kind
+    enhancer:
+      id: ''
+    disabled: false
+  field_status:
+    fieldName: field_status
+    publicName: status
+    enhancer:
+      id: ''
+    disabled: false
+  field_status_reason:
+    fieldName: field_status_reason
+    publicName: status_reason
+    enhancer:
+      id: ''
+    disabled: false
+  field_platform:
+    fieldName: field_platform
+    publicName: platform
+    enhancer:
+      id: ''
+    disabled: false
+  field_model:
+    fieldName: field_model
+    publicName: model
+    enhancer:
+      id: ''
+    disabled: false
+  field_params:
+    fieldName: field_params
+    publicName: params
+    enhancer:
+      id: ''
+    disabled: false
+  field_n_requested:
+    fieldName: field_n_requested
+    publicName: n_requested
+    enhancer:
+      id: ''
+    disabled: false
+  field_n_succeeded:
+    fieldName: field_n_succeeded
+    publicName: n_succeeded
+    enhancer:
+      id: ''
+    disabled: false
+  field_input_image:
+    fieldName: field_input_image
+    publicName: input_image
+    enhancer:
+      id: ''
+    disabled: false
+  field_parent_job:
+    fieldName: field_parent_job
+    publicName: parent_job
+    enhancer:
+      id: ''
+    disabled: false
+  field_assets:
+    fieldName: field_assets
+    publicName: assets
+    enhancer:
+      id: ''
+    disabled: false
+  field_task_id:
+    fieldName: field_task_id
+    publicName: task_id
+    enhancer:
+      id: ''
+    disabled: false
+  field_started_at:
+    fieldName: field_started_at
+    publicName: started_at
+    enhancer:
+      id: ''
+    disabled: false
+  field_completed_at:
+    fieldName: field_completed_at
+    publicName: completed_at
+    enhancer:
+      id: ''
+    disabled: false
+  field_cost_tokens:
+    fieldName: field_cost_tokens
+    publicName: cost_tokens
+    enhancer:
+      id: ''
+    disabled: false
+  field_latency_ms:
+    fieldName: field_latency_ms
+    publicName: latency_ms
+    enhancer:
+      id: ''
+    disabled: false
+  field_input_tokens:
+    fieldName: field_input_tokens
+    publicName: input_tokens
+    enhancer:
+      id: ''
+    disabled: false
+  field_output_tokens:
+    fieldName: field_output_tokens
+    publicName: output_tokens
+    enhancer:
+      id: ''
+    disabled: false
+  field_provider_request_id:
+    fieldName: field_provider_request_id
+    publicName: provider_request_id
+    enhancer:
+      id: ''
+    disabled: false
+  field_error_code:
+    fieldName: field_error_code
+    publicName: error_code
+    enhancer:
+      id: ''
+    disabled: false
+  vid:
+    fieldName: vid
+    publicName: vid
+    enhancer:
+      id: ''
+    disabled: true
+  revision_timestamp:
+    fieldName: revision_timestamp
+    publicName: revision_timestamp
+    enhancer:
+      id: ''
+    disabled: true
+  revision_uid:
+    fieldName: revision_uid
+    publicName: revision_uid
+    enhancer:
+      id: ''
+    disabled: true
+  revision_log:
+    fieldName: revision_log
+    publicName: revision_log
+    enhancer:
+      id: ''
+    disabled: true
+  revision_translation_affected:
+    fieldName: revision_translation_affected
+    publicName: revision_translation_affected
+    enhancer:
+      id: ''
+    disabled: true
+  default_langcode:
+    fieldName: default_langcode
+    publicName: default_langcode
+    enhancer:
+      id: ''
+    disabled: true

@@ -1,0 +1,19 @@
+name: AI Logging
+description: This enables you to log any AI request and response as well as additional contextual information.
+package: AI
+type: module
+core_version_requirement: ^10.4 || ^11
+configure: ai_logging.settings_form
+tags:
+  - developer
+lifecycle: deprecated
+lifecycle_link: 'https://www.drupal.org/project/ai/issues/3552886'
+
+dependencies:
+  - ai:ai
+  - drupal:views
+
+# Information added by Drupal.org packaging script on 2026-06-03
+version: '1.4.1'
+project: 'ai'
+datestamp: 1780493209

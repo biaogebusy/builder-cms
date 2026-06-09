@@ -1,0 +1,11 @@
+name: Key test
+type: module
+description: 'Key test module'
+package: Testing
+dependencies:
+  - key:key
+
+# Information added by Drupal.org packaging script on 2026-01-20
+version: '8.x-1.22'
+project: 'key'
+datestamp: 1768921254

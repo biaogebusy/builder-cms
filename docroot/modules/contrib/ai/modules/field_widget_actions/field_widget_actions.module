@@ -1,0 +1,52 @@
+<?php
+
+/**
+ * @file
+ * Contains hooks for form_widget_actions module.
+ */
+
+use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\Core\Field\WidgetInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Hook\Attribute\LegacyHook;
+use Drupal\field_widget_actions\Hook\FieldWidgetAction;
+
+/**
+ * Implements hook_field_widget_third_party_settings_form().
+ */
+#[LegacyHook]
+function field_widget_actions_field_widget_third_party_settings_form(WidgetInterface $plugin, FieldDefinitionInterface $field_definition, $form_mode, array $form, FormStateInterface $form_state) {
+  return \Drupal::service(FieldWidgetAction::class)->fieldWidgetThirdPartySettingsForm($plugin, $field_definition, $form_mode, $form, $form_state);
+}
+
+/**
+ * Implements hook_field_widget_complete_form_alter().
+ */
+#[LegacyHook]
+function field_widget_actions_field_widget_complete_form_alter(array &$field_widget_complete_form, FormStateInterface $form_state, array $context) {
+  \Drupal::service(FieldWidgetAction::class)->fieldWidgetCompleteFormAlter($field_widget_complete_form, $form_state, $context);
+}
+
+/**
+ * Implements hook_field_widget_single_element_form_alter().
+ */
+#[LegacyHook]
+function field_widget_actions_field_widget_single_element_form_alter(array &$element, FormStateInterface $form_state, array $context) {
+  \Drupal::service(FieldWidgetAction::class)->fieldWidgetSingleElementFormAlter($element, $form_state, $context);
+}
+
+/**
+ * Implements hook_theme().
+ */
+#[LegacyHook]
+function field_widget_actions_theme() {
+  return \Drupal::service(FieldWidgetAction::class)->theme();
+}
+
+/**
+ * Implements hook_config_actions_alter().
+ */
+#[LegacyHook]
+function field_widget_actions_config_action_alter(array &$definitions) {
+  \Drupal::service(FieldWidgetAction::class)->configActionAlter($definitions);
+}

@@ -1,0 +1,6 @@
+dropai_provider.drop_ai_config:
+  title: DropAI Config
+  description: Setup Fictional DropAI Provider
+  route_name: dropai_provider.drop_ai_config
+  parent: ai.admin_providers
+  weight: 10

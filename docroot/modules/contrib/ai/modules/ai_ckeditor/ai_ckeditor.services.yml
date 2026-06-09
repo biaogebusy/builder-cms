@@ -1,0 +1,9 @@
+services:
+  plugin.manager.ai_ckeditor:
+    class: Drupal\ai_ckeditor\PluginManager\AiCKEditorPluginManager
+    parent: default_plugin_manager
+  ai_ckeditor.param_converter:
+    class: Drupal\ai_ckeditor\Routing\PluginIdParamConverter
+    arguments: ['@plugin.manager.ai_ckeditor']
+    tags:
+      - { name: paramconverter }

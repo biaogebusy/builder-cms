@@ -1,0 +1,208 @@
+/* Header Styling */
+.ai-deepchat--header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 15px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  color: white;
+  border: 1px solid #ccc;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  background: #333;
+  font-weight: bold;
+}
+
+.ai-deepchat--header:hover,
+.ai-deepchat--header.active {
+  background-color: #0056b3;
+}
+
+.ai-deepchat--header:focus {
+  outline: 2px solid #fff;
+}
+
+/* Toggle Icon Styling (Optional) */
+.ai-deepchat--header .toggle-icon {
+  transition: transform 0.3s ease;
+  font-size: 20px;
+}
+
+.ai-deepchat--header.active .toggle-icon {
+  transform: rotate(0deg);
+}
+
+.ai-deepchat--header .toggle-icon {
+  scale: 0.8;
+  transform: rotate(45deg);
+}
+
+.ai-deepchat--label {
+  width: 100%;
+  padding: 4px;
+}
+
+/* Using a pseudo-element for the bullet */
+.ai-deepchat--bullet::before {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin: 0 8px;
+  content: "";
+  border-radius: 50%;
+  background: #0bdd3b;
+}
+
+/* Chat Container Styling */
+.chat-container {
+  position: fixed;
+  /* Less then modals */
+  z-index: 1258;
+  bottom: 0;
+  /* Chat background */
+  overflow: hidden;
+  margin-bottom: 20px;
+  transition:
+    transform 0.3s ease-in-out,
+    opacity 0.3s ease-in-out;
+  border-radius: 8px 8px 0 0;
+  background-color: #fff;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Chat Container Positioning */
+.chat-container.bottom-right {
+  right: 20px;
+}
+
+/* Chat Container Positioning */
+.chat-container.bottom-left {
+  left: 20px;
+}
+
+/* On mobile, chat is full width */
+@media (max-width: 768px) {
+  .chat-container {
+    right: 0;
+    left: 0;
+    width: 100%;
+    height: 80%;
+    border-radius: 0;
+  }
+}
+
+/* When Chat is Open */
+.chat-container.chat-open {
+  transform: translateY(0);
+}
+
+/* When Chat is Collapsed */
+.chat-container.chat-collapsed {
+  margin-bottom: 50px;
+  transform: translateY(100%);
+}
+
+/* When Chat is Collapsed Minimal */
+.chat-collapsed-minimal {
+  background: none;
+}
+
+/* Chat Header Styling should be hidden on minimal */
+.chat-collapsed-minimal .ai-deepchat--header {
+  width: 20px;
+}
+
+/* Bottom right should be moved right on mininal */
+.chat-container.bottom-right.chat-collapsed-minimal .ai-deepchat--header {
+  float: right;
+}
+
+.chat-collapsed-minimal .ai-deepchat--label {
+  display: none;
+}
+
+.chat-collapsed-minimal .chat-dropdown {
+  display: none;
+}
+
+/* Chat Element Styling */
+.chat-element {
+  box-sizing: border-box;
+  width: 100%;
+  /* Initially hidden */
+  transition:
+    transform 0.3s ease-in-out,
+    opacity 0.3s ease-in-out;
+  opacity: 1;
+}
+
+.deepchat-element {
+  display: block;
+}
+
+.chat-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.chat-dropdown-button {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.625rem 0.875rem;
+  column-gap: 0.5rem;
+  cursor: pointer;
+  color: #fff;
+  border: none;
+  border-radius: 0.375rem;
+  background-color: rgba(0, 0, 0, 0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.25rem;
+}
+
+.chevron-icon {
+  width: 1rem;
+  height: 1rem;
+  transition: transform 0.3s ease;
+  transform: rotate(0);
+}
+
+.chevron-icon--rotate {
+  transform: rotate(-180deg);
+}
+
+.chat-dropdown-content {
+  position: absolute;
+  z-index: 99;
+  top: 3rem;
+  visibility: hidden;
+  width: 14rem;
+  transition: all 0.3s ease;
+  transform: scaleY(0);
+  transform-origin: top right;
+  opacity: 0;
+  border-radius: 0.375rem;
+  background: #fff;
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+}
+
+.chat-dropdown-link {
+  display: block;
+  padding: 20px;
+  color: #4a5568;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.chat-dropdown-link:hover {
+  color: #111827;
+  background: #f1f1f1;
+}
+
+.chat-dropdown.active .chat-dropdown-content {
+  visibility: visible;
+  transform: scaleY(1);
+  opacity: 1;
+}

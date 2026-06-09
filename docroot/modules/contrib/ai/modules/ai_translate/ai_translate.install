@@ -1,0 +1,120 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the ai_translate module.
+ */
+
+use Drupal\Core\Config\FileStorage;
+use Drupal\Core\Url;
+
+/**
+ * Implements hook_install().
+ */
+function ai_translate_hook_install($is_syncing) {
+  _ai_translate_check_default_provider_and_model();
+}
+
+/**
+ * Implements hook_requirements().
+ */
+function ai_translate_requirements($phase) {
+  $requirements = [];
+  if ($phase === 'runtime') {
+    $defaultProvider = \Drupal::service('ai.provider')
+      ->getDefaultProviderForOperationType('translate_text');
+    if (empty($defaultProvider)) {
+      $requirements['ai_translate_translate'] = [
+        'title' => t('AI Default Translate text Provider'),
+        'value' => t('Please provide a default provider for the text translation'),
+        'description' => t('The AI Translate module needs the default Translate Text provider to be configured in the <a href=":url">AI module settings</a>. Please configure a default Chat AI system.',
+          [':url' => Url::fromRoute('ai.settings_form')->toString()]),
+        'severity' => REQUIREMENT_ERROR,
+      ];
+    }
+    if (empty($defaultProvider) && empty(\Drupal::service('ai.provider')
+      ->getDefaultProviderForOperationType('chat'))) {
+      $requirements['ai_translate_chat'] = [
+        'title' => t('AI Default Chat Provider'),
+        'value' => t('Please provide a default Chat AI provider'),
+        'description' => t('The AI Translate module needs a default Chat provider to be setup to be able to proxy translation requests. This can be configured in the <a href=":url">AI module settings</a>.',
+          [':url' => Url::fromRoute('ai.settings_form')->toString()]),
+        'severity' => REQUIREMENT_WARNING,
+      ];
+    }
+  }
+  return $requirements;
+}
+
+/**
+ * Install default prompt for existing installations.
+ */
+function ai_translate_update_10001(&$sandbox) {
+  /** @var \Drupal\Core\Config\ConfigFactory $configFactory */
+  $configFactory = \Drupal::service('config.factory');
+  if ($configFactory->get('ai_translate.settings')->get('prompt')) {
+    // Prompt already exists, do nothing.
+    return;
+  }
+  $configPath = \Drupal::service('extension.path.resolver')
+    ->getPath('module', 'ai_translate') . '/config/install';
+  $source = new FileStorage($configPath);
+  $configFactory->getEditable('ai_translate.settings')
+    ->setData($source->read('ai_translate.settings'))
+    ->save();
+}
+
+/**
+ * Set chat proxy as default translate text provider when empty.
+ */
+function ai_translate_update_10002(&$sandbox) {
+  /** @var \Drupal\Core\Config\ConfigFactory $configFactory */
+  $configFactory = \Drupal::service('config.factory');
+  $config = $configFactory->getEditable('ai.settings');
+  $defaultProvider = $config->get('default_providers')['translate_text'];
+  if (!empty($defaultProvider['provider_id'])) {
+    return;
+  }
+  $config->set('default_providers.translate_text', [
+    'provider_id' => 'chat_translation',
+    'model_id' => $config->get('default_providers.chat.model_id') ?? 'default',
+  ])->save();
+}
+
+/**
+ * Set default to use AI translate for the "Translate" tab on all entities.
+ *
+ * This maintains the status quo for existing installations.
+ */
+function ai_translate_update_10003(&$sandbox) {
+  /** @var \Drupal\Core\Config\ConfigFactory $configFactory */
+  $configFactory = \Drupal::service('config.factory');
+  $configFactory->getEditable('ai_translate.settings')
+    ->set('use_ai_translate', TRUE)
+    ->save();
+}
+
+/**
+ * Update language prompts and models.
+ *
+ * Moves specific langcode model and prompt config,
+ * into a single config object.
+ */
+function ai_translate_update_10004(&$sandbox) {
+  /** @var \Drupal\Core\Config\ConfigFactory $configFactory */
+  $configFactory = \Drupal::service('config.factory');
+  $config = $configFactory->getEditable('ai_translate.settings');
+  $languages = \Drupal::languageManager()->getLanguages();
+  $installed_config = $config->getRawData();
+  $language_settings = [];
+  foreach (array_keys($languages) as $langcode) {
+    $language_settings[$langcode]['model'] = $config->get($langcode . '_model');
+    $language_settings[$langcode]['prompt'] = $config->get($langcode . '_prompt');
+    unset($installed_config[$langcode . '_model']);
+    unset($installed_config[$langcode . '_prompt']);
+  }
+  $config->delete();
+  $config->setData($installed_config);
+  $config->set('language_settings', $language_settings);
+  $config->save();
+}

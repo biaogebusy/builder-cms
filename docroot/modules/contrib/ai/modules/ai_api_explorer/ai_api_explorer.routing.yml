@@ -1,0 +1,7 @@
+ai_api_explorer.list_page:
+  path: '/admin/config/ai/explorers'
+  defaults:
+    _controller: '\Drupal\ai_api_explorer\Controller\ExplorerSetupList::list'
+    _title: 'AI API Explorers'
+  requirements:
+    _permission: 'access ai prompt'

@@ -1,0 +1,22 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_latency_ms
+    - node.type.image_job
+id: node.image_job.field_latency_ms
+field_name: field_latency_ms
+entity_type: node
+bundle: image_job
+label: 'Latency (ms)'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

@@ -1,0 +1,82 @@
+# This file is copied from ./core/phpstan.neon.dist then set to only
+# ignore errors applicable to this project rather than all errors ignored
+# from Core as phpstan throws errors when ignore lines here are unused.
+
+# Configuration file for PHPStan static code checking, see https://phpstan.org .
+# PHPStan is triggered on Drupal CI in commit-code-check.sh.
+includes:
+  - phar://phpstan.phar/conf/bleedingEdge.neon
+
+parameters:
+  level: 1
+
+  paths:
+    - .
+
+  fileExtensions:
+    - php
+    - module
+    - inc
+    - install
+
+  ignoreErrors:
+    # new static() is a best practice in Drupal, so we cannot fix that.
+    - "#^Unsafe usage of new static#"
+    -
+      message: "#extends @internal class Drupal\\\\Core\\\\Render\\\\Element\\\\FormElementBase#"
+      reportUnmatched: false
+    # As per https://drupal.slack.com/archives/C1BMUQ9U6/p1749477598489399
+    - "#Attribute class Drupal\\\\Core\\\\Hook\\\\Attribute\\\\Hook does not exist.#"
+    - "#Attribute class Drupal\\\\Core\\\\Hook\\\\Attribute\\\\LegacyHook does not exist.#"
+    - "#Attribute class PHPUnit\\\\Framework\\\\Attributes\\\\RunTestsInSeparateProcesses does not exist.#"
+
+    # Creator on plugin definitions should be handled by Symfony/Drupal
+    -
+      message: '#Method .*::create\(\) has parameter \$configuration with no value type specified in iterable type array#'
+    # Plugin configurations should be handled by Symfony/Drupal
+    - message: '#Method .*::defaultConfiguration\(\) return type has no value type specified#'
+    - message: '#Method .*::getConfiguration\(\) return type has no value type specified#'
+    - message: '#Method .*::setConfiguration\(\) has no return type specified#'
+    - message: '#Method .*::setConfiguration\(\) has parameter \$configuration with no value#'
+    # Route provider issues should be handled by Symfony/Drupal
+    - message: '#Method .*::getRoutes\(\) never returns array so it can be removed from the return type#'
+    - message: '#Method .*::getRoutes\(\) return type has no value type specified in iterable type#'
+    # ConfigFormBase issues should be handled by Symfony/Drupal
+    - message: '#Method .*::getEditableConfigNames\(\) return type has no value type specified in iterable type array.#'
+    - message: '#Method .*::buildForm\(\) has parameter \$form with no value type specified in iterable type array.#'
+    - message: '#Method .*::buildForm\(\) return type has no value type specified in iterable type array.#'
+    - message: '#Method .*::submitForm\(\) has parameter \$form with no value type specified in iterable type array.#'
+    - message: '#Method .*::validateForm\(\) has parameter \$form with no value type specified in iterable type array.#'
+    # Block plugin form methods - Drupal core signatures without value types.
+    - message: '#Method .*::blockForm\(\) .* no value type specified in iterable type array.#'
+    - message: '#Method .*::blockSubmit\(\) .* no value type specified in iterable type array.#'
+    - message: '#Method .*::blockSubmit\(\) has no return type specified.#'
+    - message: '#Method .*::build\(\) return type has no value type specified in iterable type array.#'
+    # PluginFormInterface::buildConfigurationForm - Drupal core signature.
+    - message: '#Method .*::buildConfigurationForm\(\) .* no value type specified in iterable type array.#'
+    - message: '#Method .*::validateConfigurationForm\(\) .* no value type specified in iterable type array.#'
+    - message: '#Method .*::submitConfigurationForm\(\) .* no value type specified in iterable type array.#'
+    # Plugin manager constructor - Drupal core pattern.
+    - message: '#Method .*PluginManager::__construct\(\) has parameter \$namespaces with no value type specified in iterable type Traversable.#'
+    # Plugin __construct configuration parameter - Drupal core pattern.
+    - message: '#Method .*::__construct\(\) has parameter \$configuration with no value type specified in iterable type array.#'
+    # Methods returning render/form arrays - Drupal pattern.
+    - message: '#Method .*::getDeepChatParameters\(\) return type has no value type specified in iterable type array.#'
+    - message: '#Method .*::getStyles\(\) return type has no value type specified in iterable type array.#'
+    - message: '#Method .*::getStylesFromPath\(\) return type has no value type specified in iterable type array.#'
+    - message: '#Method .*::updateForm\(\) .* no value type specified in iterable type array.#'
+    - message: '#Method .*::updatePluginConfiguration\(\) .* no value type specified in iterable type array.#'
+    # ChatProcessor plugin interface - array returns without value types.
+    - message: '#Method .*::getInputFiles\(\) return type has no value type specified in iterable type array.#'
+    - message: '#Method .*::allowedFileExtensions\(\) return type has no value type specified in iterable type array.#'
+    # DeepChatFormBlock - methods returning arrays without value types.
+    - message: '#Method .*::getStyleParameters\(\) return type has no value type specified in iterable type array.#'
+    # CommonMark optional dependency.
+    - message: '#on an unknown class League\\\\CommonMark\\\\CommonMarkConverter.#'
+    - message: '#has invalid return type League\\\\CommonMark\\\\CommonMarkConverter.#'
+
+  reportUnmatchedIgnoredErrors: false
+  excludePaths:
+    - modules/ai_search/tests/modules/test_ai_vdb_provider_mysql/src/TestVectorTable.php
+    - modules/ai_assistant_api/src/Service/AgentRunner.php
+    - modules/ai_assistant_api/src/Event/AiAssistantPassContextToAgentEvent.php

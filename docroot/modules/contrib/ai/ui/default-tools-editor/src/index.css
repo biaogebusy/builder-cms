@@ -1,0 +1,205 @@
+.form-item--default-information-tools {
+  padding: 1rem;
+  border: 1px solid var(--gin-border-color, var(--color-gray-100));
+  margin-bottom: 1rem;
+  border-radius: 0.5rem;
+}
+
+.tools-editor {
+  margin: 1rem 0;
+}
+
+.tools-editor .claro-details__summary {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.tools-editor__toggle {
+  padding: 0.375rem 0.75rem 1.0625rem 0.75rem;  
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: var(--ai-font-size-s);
+  color: var(--gin-color-text, var(--color-text));
+  font-weight: 700;
+  border-bottom: 1px solid var(--gin-border-color, var(--color-gray-100));
+  margin-bottom: 1rem;
+}
+
+.tools-editor__toggle--active,
+.tools-editor__toggle:is(:hover, :focus) {
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--gin-color-primary, var(--color-absolutezero));
+  color: var(--gin-color-primary, var(--color-absolutezero));
+  box-shadow: none !important;
+}
+
+.tools-editor__add {
+  padding: 1.125rem 0.875rem;
+  border: 1px dashed var(--gin-border-color, var(--color-gray-200));
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--gin-status-text, var(--color-gray-700));
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.tools-editor__add:hover {
+  color: var(--gin-color-primary, var(--color-absolutezero));
+  background-color: var(--gin-bg-item-hover);
+  border-color: var(--gin-color-primary, var(--color-gray-100));
+}
+
+.tool-item {
+  border: 1px solid var(--gin-border-color, var(--color-gray-100));
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  background: var(--gin-bg-layer);
+}
+
+.tool-item--collapsed {
+  padding: 0.5rem 0.75rem;
+}
+
+.tool-item__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.tool-item__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.5rem;
+}
+
+.tool-item__description {
+  font-size: var(--ai-font-size-xs);
+  color: var(--gin-color-text-light);
+  max-width: 420px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tool-item__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.tool-item__remove {
+  margin-left: auto;
+  box-sizing: content-box;
+}
+
+.tool-item__fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 0.5rem;
+  margin-bottom: 0.875rem;
+}
+
+.tool-item__field--full {
+  grid-column: 1 / -1;
+}
+
+.tool-item__params-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.tool-item__token-hint {
+  font-size: var(--ai-font-size-xs);
+  font-weight: normal;
+  color: var(--gin-color-text-light);
+}
+
+.tool-item__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  font-size: var(--ai-font-size-xs);
+  color: var(--gin-color-text-light);
+}
+
+
+.tool-item__params {
+  border-top: 1px solid var(--gin-border-color,var(--color-gray-100));
+  padding-top: 0.5rem;
+}
+
+.tool-item__params-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  font-size: var(--ai-font-size-xs);
+  font-weight: 600;
+}
+
+.tool-item__param-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.tool-item__param-label {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.tool-item__param-label .form-item__label {
+  font-size: var(--ai-font-size-xs);
+  font-weight: normal;
+}
+
+.tool-item__param-key,
+.tool-item__param-value {
+  width: 100%;
+  padding: 0.375rem 0.5rem;
+  border: 1px solid var(--gin-border-color, var(--color-gray-100));
+  border-radius: 0.375rem;
+  font-size: var(--ai-font-size-s);
+  color: var(--gin-color-text);
+  background: var(--gin-bg-app);
+}
+
+.tool-item__param-key:focus,
+.tool-item__param-value:focus {
+  outline: none;
+  border-color: var(--gin-color-primary, var(--color-absolutezero));
+  box-shadow: 0 0 0 2px rgba(0, 60, 197, 0.15);
+}
+
+.tool-item__param-remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  align-self: center;
+  padding-bottom: 0.375rem;
+  margin-bottom: 0.5rem;
+}
+
+.tool-item__field--error input {
+  border-color: var(--gin-status-danger-text, var(--color-red));
+}
+
+.tool-item__field-error {
+  color: var(--gin-status-danger-text, var(--color-red));
+  font-size: var(--ai-font-size-xs);
+}
+
+.tools-editor__error {
+  color: var(--gin-status-danger-text, var(--messages-fg-color));
+}

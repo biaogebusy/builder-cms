@@ -1,0 +1,9 @@
+create ai content translation:
+  title: 'Create AI translation'
+  description: 'Create AI translations for any content type'
+create ai interface translation:
+  title: 'Create AI Interface translations'
+  description: 'Use the AI Interface Translation options'
+manage ai translation prompts:
+  title: 'Manage AI translation prompts'
+  description: 'Manage the ai translation prompts'

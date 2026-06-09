@@ -1,0 +1,32 @@
+<p>This setting determines the number of tokens in each text chunk that will be stored in the vector database. Proper configuration of this field is crucial for optimizing search accuracy and database performance.</p>
+
+<p>You should do your own research and come to your own conclusions, but here is some general AI generated advice:</p>
+
+<p><strong>Smaller Chunk Size (e.g., 50-100 tokens):</strong></p>
+<ul>
+  <li>Use Cases: Ideal for highly granular search requirements, where detailed text segments need to be indexed and retrieved.</li>
+  <li>Advantages: Increases search precision, making it easier to find specific phrases or concepts within a text.</li>
+  <li>Disadvantages: Can lead to a larger number of chunks, potentially increasing the database size and processing time.</li>
+</ul>
+
+<p><strong>Larger Chunk Size (e.g., 200-500 tokens):</strong></p>
+<ul>
+  <li>Use Cases: Suitable for more general search requirements, where broader text segments are sufficient.</li>
+  <li>Advantages: Reduces the number of chunks, optimizing storage and search performance.</li>
+  <li>Disadvantages: May decrease search accuracy for highly specific queries, as larger chunks contain more diverse information.</li>
+</ul>
+
+<p><strong>Balance Between Size and Performance:</strong></p>
+<ul>
+  <li>Aim to balance chunk size to ensure a good mix of search accuracy and system performance.</li>
+  <li>Consider the nature of the texts being indexed and the typical search queries performed.</li>
+</ul>
+
+<p><strong>Additional Considerations:</strong></p>
+<ul>
+  <li>Text Complexity: For texts with complex or detailed information, smaller chunks might be more beneficial.</li>
+  <li>Search Behavior: Analyze the common search patterns of your users. If users often look for specific details, smaller chunks may be preferable. For broader searches, larger chunks can be more efficient.</li>
+  <li>System Resources: Larger chunks can reduce the load on the database, but at the cost of search granularity. Ensure your system can handle the chosen chunk size without performance degradation.</li>
+</ul>
+
+<p>By carefully selecting the appropriate text chunk size, you can enhance the efficiency and accuracy of your vector database, providing a better user experience for search functionalities.</p>

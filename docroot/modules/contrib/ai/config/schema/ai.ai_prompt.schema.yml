@@ -1,0 +1,23 @@
+ai.ai_prompt.*:
+  type: config_entity
+  label: 'AI Prompt'
+  constraints:
+    FullyValidatable: ~
+  mapping:
+    id:
+      type: machine_name
+      label: 'ID'
+    label:
+      type: required_label
+      label: 'Label'
+    type:
+      type: string
+      label: 'Prompt Type ID'
+      constraints:
+        ConfigExists:
+          prefix: 'ai.ai_prompt_type.'
+    prompt:
+      type: text
+      label: 'Prompt text'
+      constraints:
+        NotBlank: { }

@@ -1,0 +1,22 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the AI Observability module.
+ */
+
+/**
+ * Update hook: set the new OpenTelemetry-related config values.
+ */
+function ai_observability_update_10301() {
+  $config = \Drupal::service('config.factory')->getEditable('ai_observability.settings');
+
+  $config
+    ->set('logging_enabled', TRUE)
+    ->set('otel_enabled', FALSE)
+    ->set('otel_spans', TRUE)
+    ->set('otel_spans_store_input', FALSE)
+    ->set('otel_spans_store_output', FALSE)
+    ->set('otel_metrics', TRUE)
+    ->save(TRUE);
+}

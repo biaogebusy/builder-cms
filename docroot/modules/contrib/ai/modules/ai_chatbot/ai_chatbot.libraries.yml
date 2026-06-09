@@ -1,0 +1,59 @@
+chat-print:
+  css:
+    base:
+      css/chat-print.css: { media: print }
+chat:
+  css:
+    theme:
+      css/chat.css: {}
+  dependencies:
+    - ai_chatbot/chat-print
+form-stream:
+  js:
+    js/showdown.min.js: {}
+    js/form-stream.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/once
+deepchat:
+  js:
+    deepchat/deepchat.bundle.js:
+      attributes: { type: module }
+      minified: true
+    js/deepchat-init.js : {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/drupalSettings
+    - core/drupal.ajax
+    - core/drupal.dialog.ajax
+    - ai_chatbot/chat-print
+ai_chatbot:
+  css:
+    theme:
+      css/ai_chatbot.css: {}
+sticky-chatbot:
+  css:
+    theme:
+      css/sticky-chatbot.css: {}
+  js:
+    js/sticky-chatbot.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+toolbar-chatbot:
+  css:
+    theme:
+      css/toolbar-chatbot.css: {}
+      css/toolbar-button.css: {}
+  js:
+    js/toolbar-chatbot.js: {}
+  dependencies:
+    - core/drupal
+    - core/once
+
+toolbar-fullscreen:
+  css:
+    theme:
+      css/toolbar-fullscreen.css: {}

@@ -1,0 +1,7 @@
+ai_prompt_test.settings:
+  type: config_entity
+  label: 'AI Prompt Test Settings'
+  mapping:
+    my_prompt_value:
+      type: string
+      label: 'My Prompt Value'

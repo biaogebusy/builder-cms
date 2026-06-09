@@ -1,0 +1,10 @@
+name: AI Not Setup Provider
+type: module
+description: Adds a provider that is not set up for testing.
+package: Testing
+core_version_requirement: ^10.3 || ^11
+
+# Information added by Drupal.org packaging script on 2026-06-03
+version: '1.4.1'
+project: 'ai'
+datestamp: 1780493209

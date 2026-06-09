@@ -1,0 +1,12 @@
+services:
+  plugin.manager.ai_content_suggestions:
+    class: Drupal\ai_content_suggestions\AiContentSuggestionsPluginManager
+    parent: default_plugin_manager
+  ai_content_suggestions.form_alter:
+    class: Drupal\ai_content_suggestions\AiContentSuggestionsFormAlter
+    arguments: ['@plugin.manager.ai_content_suggestions', '@entity_type.manager', '@current_user', '@config.factory']
+  cache_context.ai_content_suggestions_plugins:
+    class: Drupal\ai_content_suggestions\Cache\Context\AiContentSuggestionsPluginsCacheContext
+    arguments: ['@plugin.manager.ai_content_suggestions']
+    tags:
+      - { name: cache.context }

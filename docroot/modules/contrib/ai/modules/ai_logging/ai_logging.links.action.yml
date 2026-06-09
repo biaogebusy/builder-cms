@@ -1,0 +1,11 @@
+ai_log_type.add_form:
+  title: 'Add AI Log Type'
+  route_name: entity.ai_log_type.add_form
+  appears_on:
+    - entity.ai_log_type.collection
+
+ai_log.add_page:
+  title: 'Test adding AI Log'
+  route_name: entity.ai_log.add_page
+  appears_on:
+    - entity.ai_log_type.collection

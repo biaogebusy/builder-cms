@@ -1,0 +1,60 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall function for AI assistant.
+ */
+
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+
+/**
+ * Implements hook_requirements().
+ */
+function ai_assistant_api_requirements(string $phase): array {
+  $requirements = [];
+
+  if ($phase === 'runtime') {
+    $advanced_enabled = \Drupal::service('settings')->get('ai_assistant_advanced_mode_enabled', FALSE);
+    $using_default = \Drupal::service('settings')->get('ai_assistant_custom_prompts', FALSE);
+    if ($advanced_enabled && $using_default) {
+      $requirements['ai_assistant_api_custom'] = [
+        'title' => new TranslatableMarkup('AI Assistant API Custom'),
+        'value' => new TranslatableMarkup('Advanced mode is enabled but the module is still using the default prompts (see <a href="https://project.pages.drupalcode.org/ai/modules/ai_assistant_api/#advanced-configuration" target="_blank">documentation</a> for more information). You can fix this by doing one of the following:'),
+        'description' => [
+          '#theme' => 'item_list',
+          '#items' => [
+            new TranslatableMarkup('Disabling advanced mode by changing the <code>ai_assistant_advanced_mode_enabled</code> setting to <code>FALSE</code>'),
+            new TranslatableMarkup('Enabling the custom prompts by changing the <code>ai_assistant_custom_prompts</code> setting to <code>TRUE</code>'),
+          ],
+        ],
+        'severity' => REQUIREMENT_WARNING,
+      ];
+    }
+  }
+
+  return $requirements;
+}
+
+/**
+ * Implements hook_update_N().
+ */
+function ai_assistant_api_update_10200() {
+  // Get all assistants.
+  $assistants = \Drupal::entityTypeManager()->getStorage('ai_assistant')->loadMultiple();
+  // Update all of them and set empty on the roles.
+  foreach ($assistants as $assistant) {
+    $assistant->set('roles', []);
+    $assistant->save();
+  }
+}
+
+/**
+ * Check for advanced usage and warn if in use.
+ */
+function ai_assistant_api_update_10201() {
+  $advanced_enabled = \Drupal::service('settings')->get('ai_assistant_advanced_mode_enabled', TRUE);
+  $using_default = \Drupal::service('settings')->get('ai_assistant_custom_prompts', TRUE);
+  if ($advanced_enabled && $using_default) {
+    \Drupal::messenger()->addWarning(new TranslatableMarkup('A new setting has been introduced. To continue using custom Pre Action or System Prompts with Advanced Mode you should enable the <code>ai_assistant_custom_prompts</code> setting. See the <a href="https://project.pages.drupalcode.org/ai/modules/ai_assistant_api/#advanced-configuration">documentation</a> for more information.'));
+  }
+}

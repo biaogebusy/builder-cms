@@ -1,0 +1,15 @@
+name: 'AI Content Suggestions'
+type: module
+description: 'Allows a configured AI to be passed content to suggest alterations'
+package: AI
+core_version_requirement: ^10.4 || ^11
+lifecycle: deprecated
+lifecycle_link: https://www.drupal.org/project/ai/issues/3552885
+configure: ai_content_suggestions.settings
+dependencies:
+  - ai:ai
+
+# Information added by Drupal.org packaging script on 2026-06-03
+version: '1.4.1'
+project: 'ai'
+datestamp: 1780493209

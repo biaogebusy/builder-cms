@@ -1,0 +1,16 @@
+name: AI Translate
+description: This module provides simple -one click- AI powered translations
+package: AI
+type: module
+core_version_requirement: ^10.4 || ^11
+configure: ai_translate.settings_form
+dependencies:
+  - ai:ai
+  - drupal:content_translation
+lifecycle: deprecated
+lifecycle_link: https://www.drupal.org/node/3570275
+
+# Information added by Drupal.org packaging script on 2026-06-03
+version: '1.4.1'
+project: 'ai'
+datestamp: 1780493209

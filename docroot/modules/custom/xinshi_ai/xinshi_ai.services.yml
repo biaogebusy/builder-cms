@@ -1,0 +1,58 @@
+services:
+  logger.channel.xinshi_ai:
+    parent: logger.channel_base
+    arguments: ['xinshi_ai']
+
+  plugin.manager.xinshi_ai_task:
+    class: Drupal\xinshi_ai\AiTaskManager
+    parent: default_plugin_manager
+
+  xinshi_ai.model_registry:
+    class: Drupal\xinshi_ai\Service\ModelRegistryService
+    arguments: ['@config.factory', '@cache.default']
+    tags:
+      - { name: backend_overridable }
+
+  xinshi_ai.provider_resolver:
+    class: Drupal\xinshi_ai\Service\ProviderResolver
+    arguments: ['@ai.provider', '@config.factory']
+
+  xinshi_ai.provider_error_mapper:
+    class: Drupal\xinshi_ai\Service\ProviderErrorMapper
+
+  xinshi_ai.job_lifecycle:
+    class: Drupal\xinshi_ai\Service\JobLifecycleService
+    arguments: ['@entity_type.manager', '@datetime.time']
+
+  xinshi_ai.media_upload:
+    class: Drupal\xinshi_ai\Service\MediaUploadService
+    arguments: ['@entity_type.manager', '@file.repository', '@file_system']
+
+  xinshi_ai.event_stream:
+    class: Drupal\xinshi_ai\Service\EventStreamService
+    arguments: ['@cache.default']
+
+  xinshi_ai.event_ticket:
+    class: Drupal\xinshi_ai\Service\EventTicketService
+    arguments: ['@private_key', '@config.factory']
+
+  xinshi_ai.normalizer.image_job:
+    class: Drupal\xinshi_ai\Normalizer\ImageJobNormalizer
+    arguments: ['@entity_type.manager']
+    tags:
+      - { name: normalizer, priority: 20 }
+
+  xinshi_ai.image_job_cache_subscriber:
+    class: Drupal\xinshi_ai\EventSubscriber\ImageJobCacheSubscriber
+    tags:
+      - { name: event_subscriber }
+
+  xinshi_ai.immediate_job_runner:
+    class: Drupal\xinshi_ai\Service\ImmediateJobRunner
+    arguments: ['@queue', '@plugin.manager.queue_worker', '@logger.channel.xinshi_ai']
+
+  xinshi_ai.immediate_job_subscriber:
+    class: Drupal\xinshi_ai\EventSubscriber\ImmediateJobSubscriber
+    arguments: ['@xinshi_ai.immediate_job_runner']
+    tags:
+      - { name: event_subscriber }

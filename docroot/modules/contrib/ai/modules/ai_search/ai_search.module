@@ -1,0 +1,94 @@
+<?php
+
+/**
+ * @file
+ * AI Search module file.
+ */
+
+use Drupal\Core\Database\Query\AlterableInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\ai_search\Plugin\search_api\processor\DatabaseBoostByAiSearch;
+use Drupal\search_api\IndexInterface;
+
+/**
+ * Implements hook_entity_type_alter().
+ */
+function ai_search_entity_type_alter(array &$entity_types) {
+  if (isset($entity_types['search_api_index'])) {
+    /** @var \Drupal\Core\Config\Entity\ConfigEntityTypeInterface $entity_type */
+    $entity_type = $entity_types['search_api_index'];
+    $entity_type->setFormClass('fields', 'Drupal\ai_search\Form\AiSearchIndexFieldsForm');
+  }
+}
+
+/**
+ * Implements hook_query_TAG_alter().
+ */
+function ai_search_query_search_api_db_search_alter(AlterableInterface $query) {
+  DatabaseBoostByAiSearch::queryAlter($query);
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_delete().
+ */
+function ai_search_search_api_index_delete(EntityInterface $entity) {
+  if ($entity instanceof IndexInterface) {
+    $config_factory = \Drupal::configFactory();
+    if ($config = $config_factory->getEditable('ai_search.index.' . $entity->id())) {
+      $config->delete();
+    }
+  }
+}
+
+/**
+ * Implements hook_preprocess_search_api_index().
+ */
+function ai_search_preprocess_search_api_index(array &$variables) {
+  // Get the index.
+  /** @var \Drupal\search_api\IndexInterface $index */
+  $index = $variables['index'];
+  $backend = $index->hasValidServer() ? $index->getServerInstance()->getBackendId() : NULL;
+  if (
+    $backend === 'search_api_ai_search'
+    && !empty($variables['table']['#rows'])
+  ) {
+
+    // Add warning explaining how Vector Database count of rows check does
+    // not follow the same pattern as database or SOLR based searches (for
+    // example).
+    foreach ($variables['table']['#rows'] as $key => $row) {
+      if (
+        !isset($row['data'][0]['data'])
+        || (string) $row['data'][0]['data'] !== (string) t('Server index status')
+      ) {
+        continue;
+      }
+
+      $variables['table']['#rows'][$key]['data'][1] = t('This statistic normally counts the rows of data in your actual index by querying your database with no filters. Vector databases require a vector to compare against so that approach does not work here. Please see the Search API Server "View" page to check on the status of your connection in general.');
+    }
+
+    // Add a row to check if Indexing Options have been set up in the Search
+    // API Field configuration.
+    /** @var \Drupal\Core\Config\ConfigFactoryInterface $config_factory */
+    $config_factory = \Drupal::configFactory();
+    $index_config = $config_factory->get('ai_search.index.' . $index->id())->getRawData();
+    $new_row = [
+      'data' => [
+        [
+          'header' => TRUE,
+          'data' => t('Indexing options configured'),
+        ],
+      ],
+      'class' => [],
+    ];
+    if (empty($index_config['indexing_options'])) {
+      $new_row['class'][] = 'warning';
+      $new_row['class'][] = 'color-warning';
+      $new_row['data'][1] = t('Indexing options must be configured in the Fields tab first for indexing to work correctly.');
+    }
+    else {
+      $new_row['data'][1] = t('Indexing options have been configured.');
+    }
+    $variables['table']['#rows'][] = $new_row;
+  }
+}

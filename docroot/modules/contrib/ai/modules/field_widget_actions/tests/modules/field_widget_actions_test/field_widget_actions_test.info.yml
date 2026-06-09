@@ -1,0 +1,10 @@
+name: 'Field Widget Actions Test'
+description: 'Test module for Field Widget Actions'
+package: Testing
+type: module
+core_version_requirement: ^10.3 || ^11.1
+
+# Information added by Drupal.org packaging script on 2026-06-03
+version: '1.4.1'
+project: 'ai'
+datestamp: 1780493209

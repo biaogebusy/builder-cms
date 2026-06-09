@@ -24,6 +24,8 @@
         "drupal/address": "^2.0",
         "drupal/admin_toolbar": "^3.6",
         "drupal/advancedqueue": "^1.5",
+        "drupal/ai": "^1.4",
+        "drupal/ai_provider_openai": "^1.2",
         "drupal/allowed_formats": "^3.0",
         "drupal/autocomplete_deluxe": "^2.1",
         "drupal/autologout": "^2.0",

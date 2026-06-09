@@ -1,0 +1,3 @@
+ai_settings_schema_test.default_operation_provider:
+  type: ai.default_operation_provider
+  label: 'Third-party default provider'

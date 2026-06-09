@@ -1,0 +1,15 @@
+.field-widget-action-element summary {
+  cursor: grab;
+}
+
+.field-widget-action-element.sortable-chosen summary {
+  cursor: grabbing;
+}
+
+.field-widget-action-element.sortable-chosen.sortable-ghost summary {
+  cursor: move;
+}
+
+.field-widget-actions-select {
+  display: inline;
+}

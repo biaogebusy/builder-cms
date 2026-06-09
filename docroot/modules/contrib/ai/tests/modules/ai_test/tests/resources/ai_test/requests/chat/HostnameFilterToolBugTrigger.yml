@@ -1,0 +1,28 @@
+request:
+  messages:
+  - role: user
+    text: "hostname-filter-tool-bug-test-trigger"
+  debug_data: {}
+  chat_tools: null
+  chat_structured_json_schema: {}
+  chat_strict_schema: false
+response:
+  normalized:
+    role: assistant
+    text: "Tool call response. Inline link: <a href=\"https://evil.com/answer\">click</a>"
+    images: []
+    tools:
+      - id: "call_test_1"
+        type: "function"
+        function:
+          name: "url_test"
+          arguments: '{"input": "Click <a href=\"https://evil.com/page\">here</a>"}'
+    tool_id: null
+  rawOutput: []
+  metadata: {}
+  tokenUsage:
+    input: null
+    output: null
+    total: null
+    reasoning: null
+    cached: null

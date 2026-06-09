@@ -1,0 +1,48 @@
+{{ attach_library('ai_chatbot/toolbar-chatbot') }}
+{% if settings.expansion_method == 'fullscreen' %}
+  {{ attach_library('ai_chatbot/toolbar-fullscreen') }}
+{% endif %}
+
+<div class="{{ current_theme }} ai-deepchat chat-container {{ settings.placement }}" data-chat-id="bot1">
+  <div class="sidebar-header">
+    <div class="sidebar-header--title">
+     Assistant
+    </div>
+
+    <div class="chat-dropdown">
+      <button title="{{ 'Toggle chat dropdown'|t }}" class="chat-dropdown-button sidebar-header--icon toolbar-button" aria-label="{{ 'Toggle chat dropdown'|t }}">
+      </button>
+      <div class="chat-dropdown-content">
+        <button class="clear-history chat-dropdown-link">{{ 'Clear History'|t }}</button>
+      </div>
+    </div>
+
+    {% if settings.expansion_method != 'none' %}
+    <button
+      data-expansion-method="{{ settings.expansion_method }}"
+      title="{{ 'Expand chat'|t }}" class="sidebar-header--icon toolbar-button expand"
+      aria-label="{{ 'Expand chat'|t }}"
+      aria-expanded="false">
+    </button>
+    {% endif %}
+
+    <button title="{{ 'Close chat'|t }}" class="sidebar-header--icon toolbar-button close" aria-label="{{ 'Close chat'|t }}" data-action="close-chat">
+    </button>
+  </div>
+
+    <deep-chat
+    {% for key, value in deepchat_settings %}{{ key }}='{{ value|raw }}'
+    {% endfor %}
+    >
+      <div class="chat-header">
+        <span class="chat-header--icon"></span>
+        <div class="chat-header--title">
+          {{ "Hi there! \n Welcome to \n Drupal"|t|nl2br }}
+          <div class="chat-header--title-emoji">👋</div>
+          <br />
+          <span class="chat-header--subtitle">{{ 'How can I help you today?'|t }}</span>
+        </div>
+      </div>
+    </deep-chat>
+	</div>
+</div>

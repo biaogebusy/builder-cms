@@ -1,0 +1,8 @@
+automator_ckeditor:
+  js:
+    js/ckeditor_update.js: {}
+
+field_widget:
+  css:
+    theme:
+      css/field_widget.css: {}

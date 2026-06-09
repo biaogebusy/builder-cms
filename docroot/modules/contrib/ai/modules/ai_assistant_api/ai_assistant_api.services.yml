@@ -1,0 +1,46 @@
+services:
+  ai_assistant_api.runner:
+    class: Drupal\ai_assistant_api\AiAssistantApiRunner
+    arguments:
+      - '@entity_type.manager'
+      - '@ai.provider'
+      - '@renderer'
+      - '@tempstore.private'
+      - '@ai_assistant_api.action_plugin.manager'
+      - '@event_dispatcher'
+      - '@current_user'
+      - '@logger.factory'
+      - '@ai.prompt_json_decode'
+      - '@ai_assistant_api.assistant_message_builder'
+      - '@session_manager'
+      - '@settings'
+      - '@module_handler'
+  ai_assistant_api.action_plugin.manager:
+    class: Drupal\ai_assistant_api\AiAssistantActionPluginManager
+    parent: default_plugin_manager
+  ai_assistant_api.assistant_message_builder:
+    class: Drupal\ai_assistant_api\Service\AssistantMessageBuilder
+    arguments:
+      - '@entity_type.manager'
+      - '@ai_assistant_api.action_plugin.manager'
+      - '@event_dispatcher'
+      - '@current_user'
+      - '@title_resolver'
+      - '@request_stack'
+      - '@language_manager'
+      - '@config.factory'
+      - '@settings'
+      - '@module_handler'
+  cache.ai_assistant_api:
+    class: Drupal\Core\Cache\CacheBackendInterface
+    arguments: ['ai_assistant_api']
+    factory: cache_factory:get
+    tags:
+      - { name: cache.bin }
+  ai_assistant_api.agent_runner:
+    class: Drupal\ai_assistant_api\Service\AgentRunner
+    arguments:
+      - '@ai.provider'
+      - '@tempstore.private'
+      - '@event_dispatcher'
+      - '@?plugin.manager.ai_agents'

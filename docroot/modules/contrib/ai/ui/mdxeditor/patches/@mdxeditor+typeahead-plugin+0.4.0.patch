@@ -1,0 +1,13 @@
+diff --git a/node_modules/@mdxeditor/typeahead-plugin/dist/index.js b/node_modules/@mdxeditor/typeahead-plugin/dist/index.js
+index 8bbccdd..f111fed 100644
+--- a/node_modules/@mdxeditor/typeahead-plugin/dist/index.js
++++ b/node_modules/@mdxeditor/typeahead-plugin/dist/index.js
+@@ -251,7 +251,7 @@ function he({
+       for (const c of _)
+         if (I(i, c.regex, 0) !== null)
+           return null;
+-      return I(i, d, 1);
++      return I(i, d, 0);
+     },
+     [d, _]
+   ), M = v(

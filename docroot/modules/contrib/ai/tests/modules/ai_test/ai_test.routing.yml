@@ -1,0 +1,43 @@
+ai_test.mock_settings:
+  path: '/admin/config/ai/providers/ai-test'
+  defaults:
+    _title: 'AI Test Provider'
+    _form: 'Drupal\ai_test\Form\MockSettingsForm'
+  requirements:
+    _permission: 'administer ai providers'
+ai_test.export_file:
+  path: '/admin/config/ai/providers/ai-test/export/{result}'
+  defaults:
+    _title: 'Export AI Test Provider'
+    _controller: '\Drupal\ai_test\Controller\ExportForTesting::export'
+  requirements:
+    _permission: 'administer ai providers'
+  options:
+    no_cache: 'TRUE'
+    parameters:
+      result:
+        type: 'entity:ai_mock_provider_result'
+
+ai_test.form_elements:
+  path: '/admin/config/ai/test-form-elements'
+  defaults:
+    _title: 'AI Form Elements'
+    _form: 'Drupal\ai_test\Form\FormElementForm'
+  requirements:
+    _permission: 'administer ai'
+
+ai_test.provider_configuration_test:
+  path: '/admin/config/ai/test-provider-configuration-values'
+  defaults:
+    _title: 'AI Provider Configuration Value Test'
+    _form: 'Drupal\ai_test\Form\AiProviderConfigurationTestForm'
+  requirements:
+    _permission: 'administer ai'
+
+ai_test.provider_config_target:
+  path: '/admin/config/ai/test-provider-config-target'
+  defaults:
+    _title: 'AI Provider Config Target'
+    _form: 'Drupal\ai_test\Form\AiProviderConfigurationConfigTargetForm'
+  requirements:
+    _permission: 'administer ai'

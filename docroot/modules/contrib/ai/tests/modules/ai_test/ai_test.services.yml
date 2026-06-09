@@ -1,0 +1,9 @@
+services:
+  Drupal\ai_test\Hook\OperationTypeHook:
+    class: Drupal\ai_test\Hook\OperationTypeHook
+    autowire: true
+  ai_test.log_mock_requests:
+    class: '\Drupal\ai_test\EventSubscriber\LogMockRequests'
+    arguments: ['@entity_type.manager', '@config.factory']
+    tags:
+      - { name: 'event_subscriber' }

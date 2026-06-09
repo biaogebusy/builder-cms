@@ -1,0 +1,17 @@
+entity.automator_deriver.edit_form:
+  deriver: 'Drupal\ai_automators\Plugin\Derivative\ChainLocalTasks'
+  weight: 100
+
+entity.automator_chain.collection:
+  title: 'Automator Chains'
+  route_name: entity.automator_chain.collection
+  base_route: system.admin_content
+  weight: 10
+entity.automator_chain_type.edit_form:
+  title: 'Edit'
+  route_name: entity.automator_chain_type.edit_form
+  base_route: entity.automator_chain_type.edit_form
+entity.automator_chain_type.collection:
+  title: 'List'
+  route_name: entity.automator_chain_type.collection
+  base_route: entity.automator_chain_type.collection

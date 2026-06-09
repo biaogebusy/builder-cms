@@ -1,0 +1,135 @@
+<?php
+
+/**
+ * @file
+ * Contains ai_logging install hooks.
+ */
+
+use Drupal\Core\Config\FileStorage;
+
+/**
+ * Removed updated hook now that entity structure has changed.
+ */
+function ai_logging_update_10301() {
+  return t('No action needed.');
+}
+
+/**
+ * Removed updated hook now that entity structure has changed.
+ */
+function ai_logging_update_10302() {
+
+}
+
+/**
+ * Delete the old AI Log entity and its contents and use the new entity.
+ */
+function ai_logging_update_10303() {
+  $messenger = \Drupal::messenger();
+
+  // Step 1: Delete all old ai_log entities from the storage.
+  $entity_type_id = 'ai_log';
+  $storage = \Drupal::entityTypeManager()->getStorage($entity_type_id);
+  $entity_ids = $storage->getQuery()
+    ->accessCheck(FALSE)
+    ->execute();
+  if (!empty($entity_ids)) {
+    $entities = $storage->loadMultiple($entity_ids);
+    $storage->delete($entities);
+  }
+
+  // Step 2: Remove the old ai_log entity type definition if it exists.
+  if (\Drupal::entityTypeManager()->hasDefinition($entity_type_id)) {
+    $entity_type = \Drupal::entityTypeManager()->getDefinition($entity_type_id);
+    \Drupal::service('entity.definition_update_manager')->uninstallEntityType($entity_type);
+
+    // Step 3: Ensure that the new ai_log entity type is registered.
+    // This will trigger the system to recognize the new entity definition.
+    $table_name = $entity_type->getBaseTable();
+    if (!\Drupal::database()->schema()->tableExists($table_name)) {
+      \Drupal::entityDefinitionUpdateManager()->installEntityType($entity_type);
+    }
+
+    $messenger->addMessage(t('New AI Log entity type is now registered.'));
+  }
+}
+
+/**
+ * Install the new AI Log entity.
+ */
+function ai_logging_update_10304() {
+
+  // Recreate the AI Log entity.
+  $entity_type = \Drupal::entityTypeManager()->getDefinition('ai_log');
+  $table_name = $entity_type->getBaseTable();
+  if (!\Drupal::database()->schema()->tableExists($table_name)) {
+    \Drupal::entityDefinitionUpdateManager()->installEntityType($entity_type);
+  }
+
+  // Remove the old view if exists.
+  $config_factory = \Drupal::configFactory();
+  if ($config_factory->get('views.view.ai_logging')) {
+    \Drupal::service('config.factory')->getEditable('views.view.ai_logging')->delete();
+  }
+
+  // Install the new view.
+  $module_path = \Drupal::service('extension.list.module')->getPath('ai_logging');
+  $config_path = $module_path . '/config/install';
+  $source_storage = new FileStorage($config_path);
+  $config_name = 'views.view.ai_logs';
+  $config_data = $source_storage->read($config_name);
+  if ($config_data) {
+    $config = \Drupal::configFactory()->getEditable($config_name);
+
+    // Set the configuration values.
+    foreach ($config_data as $key => $value) {
+      $config->set($key, $value);
+    }
+
+    // Save the configuration.
+    $config->save();
+  }
+
+  // Same for the ai logging generic type.
+  $config_name = 'ai_logging.ai_log_type.generic';
+  $config_data = $source_storage->read($config_name);
+  if ($config_data) {
+    $config = \Drupal::configFactory()->getEditable($config_name);
+
+    // Set the configuration values.
+    foreach ($config_data as $key => $value) {
+      $config->set($key, $value);
+    }
+
+    // Save the configuration.
+    $config->save();
+  }
+
+}
+
+/**
+ * Update the AI logs view access settings.
+ */
+function ai_logging_update_10305() {
+  $config_factory = \Drupal::configFactory();
+  if ($config_factory->get('views.view.ai_logging')) {
+    /** @var \Drupal\Core\Config\Config $view */
+    $view = \Drupal::service('config.factory')->getEditable('views.view.ai_logs');
+    $display = $view->get('display');
+    if (
+      isset($display['default']['display_options']['access'])
+      && $display['default']['display_options']['access']['type'] === 'none'
+    ) {
+
+      // Change permission to the 'view ai log' permission.
+      $display['default']['display_options']['access'] = [
+        'type' => 'perm',
+        'options' => [
+          'perm' => 'view ai log',
+        ],
+      ];
+      $view->set('display', $display);
+      $view->save();
+    }
+  }
+}

@@ -1,0 +1,40 @@
+openai-text-embedding-3-small:
+  id: text-embedding-3-small
+  label: OpenAI Text Embedding 3 Small
+  metadata:
+    dimensions: 1536
+openai-text-embedding-3-large:
+  id: text-embedding-3-large
+  label: OpenAI Text Embedding 3 Large
+  metadata:
+    dimensions: 3072
+nv-embed-v2:
+  id: nv-embed-v2
+  label: NV Embed V2
+  metadata:
+    dimensions: 4096
+gte-Qwen2-7B-instruct:
+  id: gte-Qwen2-7B-instruct
+  label: GTE Qwen2 7B Instruct
+  metadata:
+    dimensions: 3584
+mistral e5-mistral-7b-instruct:
+  id: e5-mistral-7b-instruct
+  label: Mistral E5 Mistral 7B Instruct
+  metadata:
+    dimensions: 4096
+google-text-embedding-004:
+  id: google-text-embedding-004
+  label: Google Text Embedding 004
+  metadata:
+    dimensions: 768
+gte-large-en-v1.5:
+  id: gte-large-en-v1-5
+  label: GTE Large EN V1.5
+  metadata:
+    dimensions: 1024
+UAE-Large-V1:
+  id: uae-large-v1
+  label: UAE Large V1
+  metadata:
+    dimensions: 1024

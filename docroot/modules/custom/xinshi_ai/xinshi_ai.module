@@ -1,0 +1,11 @@
+<?php
+
+/**
+ * @file
+ * Xinshi AI module hooks.
+ *
+ * AI 任务统一后端。内容类型、路由、SSE 等业务实现见 src/。
+ * 本文件仅放必要的过程式 hook,尽量保持精简。
+ */
+
+declare(strict_types=1);

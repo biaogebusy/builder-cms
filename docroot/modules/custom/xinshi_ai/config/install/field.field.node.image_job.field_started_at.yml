@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_started_at
+    - node.type.image_job
+id: node.image_job.field_started_at
+field_name: field_started_at
+entity_type: node
+bundle: image_job
+label: 'Started at'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: timestamp

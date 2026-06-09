@@ -1,0 +1,31 @@
+<?php
+
+/**
+ * @file
+ * A module file.
+ */
+
+use Drupal\ai_ckeditor\PreRender\PreRender;
+
+/**
+ * Implements hook_element_info_alter().
+ */
+function ai_ckeditor_element_info_alter(array &$info): void {
+  if (isset($info['text_format']['#pre_render'])) {
+    $info['text_format']['#pre_render'][] = [
+      PreRender::class,
+      'textFormatPreRender',
+    ];
+  }
+}
+
+/**
+ * Implements hook_module_implements_alter().
+ */
+function ai_ckeditor_module_implements_alter(&$implementations, $hook): void {
+  if (isset($implementations['ai_ckeditor'])) {
+    $implementation = $implementations['ai_ckeditor'];
+    unset($implementations['ai_ckeditor']);
+    $implementations['ai_ckeditor'] = $implementation;
+  }
+}

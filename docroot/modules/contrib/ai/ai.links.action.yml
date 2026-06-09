@@ -1,0 +1,23 @@
+ai_prompt_type.add_form:
+  title: 'Add AI Prompt Type'
+  route_name: entity.ai_prompt_type.add_form
+  appears_on:
+    - entity.ai_prompt_type.collection
+
+ai_prompt.add_page:
+  title: 'Add Prompt'
+  route_name: entity.ai_prompt.add_form
+  appears_on:
+    - entity.ai_prompt.collection
+
+entity.ai_guardrail.add_form:
+  route_name: 'entity.ai_guardrail.add_form'
+  title: 'Add guardrail'
+  appears_on:
+    - entity.ai_guardrail.collection
+
+entity.ai_guardrail_set.add_form:
+  route_name: 'entity.ai_guardrail_set.add_form'
+  title: 'Add guardrail set'
+  appears_on:
+    - entity.ai_guardrail_set.collection

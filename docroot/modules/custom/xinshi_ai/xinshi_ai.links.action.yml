@@ -1,0 +1,5 @@
+xinshi_ai.models.add:
+  title: '新增模型'
+  route_name: xinshi_ai.models.add
+  appears_on:
+    - xinshi_ai.models.overview

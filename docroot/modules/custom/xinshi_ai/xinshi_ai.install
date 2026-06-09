@@ -1,0 +1,38 @@
+<?php
+
+/**
+ * @file
+ * Install / uninstall hooks for Xinshi AI.
+ */
+
+declare(strict_types=1);
+
+/**
+ * Implements hook_install().
+ */
+function xinshi_ai_install(): void {
+  // config/install/ 内的 yml 由 Drupal 在安装时自动导入。
+  // 给已认证用户授予图片任务的创建 / 取消权限。
+  if (\Drupal::moduleHandler()->moduleExists('user')) {
+    user_role_grant_permissions('authenticated', [
+      'create xinshi_ai image job',
+      'cancel xinshi_ai image job',
+    ]);
+  }
+}
+
+/**
+ * 重新导入 image_jobs view,添加后台管理列表页(page_admin display)。
+ */
+function xinshi_ai_update_10001(): void {
+  $config_path = \Drupal::service('extension.list.module')->getPath('xinshi_ai') . '/config/install';
+  $source = new \Drupal\Core\Config\FileStorage($config_path);
+  $config_storage = \Drupal::service('config.storage');
+
+  $config_name = 'views.view.image_jobs';
+  $data = $source->read($config_name);
+  if ($data) {
+    $config_storage->write($config_name, $data);
+    \Drupal::service('cache_tags.invalidator')->invalidateTags(['config:' . $config_name]);
+  }
+}

@@ -1,0 +1,10 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - ai_automators
+id: automator_chain_delete_action
+label: 'Delete automator chains'
+type: automator_chain
+plugin: entity:delete_action:automator_chain
+configuration: {  }

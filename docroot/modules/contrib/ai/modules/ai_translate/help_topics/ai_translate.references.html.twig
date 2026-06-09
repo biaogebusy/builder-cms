@@ -1,0 +1,17 @@
+---
+label: 'Translating referenced entities'
+top_level: false
+---
+<h2>{% trans %}AI translate and entity reference fields{% endtrans %}</h2>
+<p>{% trans %}Editors may want to translate all the text associated with the entity,
+  i.e. not only text fields of the entity itself, but also text fields of referenced entities{% endtrans %}</p>
+<p>{% trans %}Most common examples are paragraphs and inline blocks used by layout builder{% endtrans %}</p>
+<h2>{% trans %}Defaults and per-field settings{% endtrans %}</h2>
+{% set module_settings_link_text %}
+  {% trans %}module settings{% endtrans %}
+{% endset %}
+{% set help_link = render_var(help_route_link(module_settings_link_text, 'ai_translate.settings_form')) %}
+<p>{% trans %}Defaults for referenced entities of each supported type
+  can be set in {{ help_link }}.
+  In addition, every entity reference can be set to translated to AI in field settings form{% endtrans %}
+</p>

@@ -1,0 +1,53 @@
+/* Suggestions Dialog */
+.ui-dialog-fwa-suggestions .ui-dialog-content {
+  padding: 16px;
+}
+
+.ui-dialog-fwa-suggestions ol {
+  list-style-type: none;
+}
+
+.ui-dialog-fwa-suggestions li {
+  position: relative;
+  margin-bottom: 8px;
+  border-bottom: 1px solid lightgray;
+  padding-bottom: 8px;
+}
+.ui-dialog-fwa-suggestions li:last-child {
+  border-bottom: none;
+}
+
+.ui-dialog-fwa-suggestions .field-widget-actions-suggestion {
+  display: block;
+  font-size: 18px;
+  position: relative;
+}
+.ui-dialog-fwa-suggestions li:hover .field-widget-actions-suggestion  {
+  background: #01004326;
+  border-radius: 8px;
+}
+.ui-dialog-fwa-suggestions .field-widget-actions-suggestion::after {
+  content: "";
+  display: block;
+  width: 32px;
+  height: 32px;
+  position: absolute;
+  top: 0;
+  right: 16px;
+  bottom: 0;
+  background-image: url("../../../icons/caret-right.svg");
+  background-repeat: no-repeat;
+  align-self: center;
+  pointer-events: none;
+}
+
+.ui-dialog-fwa-suggestions .fwa-use-suggestion {
+  cursor: pointer;
+  padding: 8px 50px 8px 8px;
+  line-height: normal;
+  appearance: none;
+  background: inherit;
+  border: none;
+  text-align: left;
+  width: 100%;
+}

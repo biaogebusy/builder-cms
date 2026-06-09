@@ -1,0 +1,102 @@
+ai.admin_settings:
+  title: 'AI'
+  description: 'Settings for Drupal AI'
+  parent: system.admin_config
+  route_name: ai.settings.menu
+
+ai.admin_config_infrastructure:
+  title: 'AI Infrastructure'
+  description: 'Configure AI providers, models, and core infrastructure.'
+  parent: ai.admin_settings
+  route_name: ai.admin_config_infrastructure
+  weight: -40
+
+ai.admin_config_tools:
+  title: 'Tools & Automation'
+  description: 'Configure AI tools, agents, and automation workflows.'
+  parent: ai.admin_settings
+  route_name: ai.admin_config_tools
+  weight: -35
+
+ai.admin_config_content:
+  title: 'Content Creation & Support'
+  description: 'Manage AI prompts, content generation, and support features.'
+  parent: ai.admin_settings
+  route_name: ai.admin_config_content
+  weight: -30
+
+ai.admin_config_people:
+  title: 'People, Accounts & Users'
+  description: 'Configure AI features for user accounts and personalization.'
+  parent: ai.admin_settings
+  route_name: ai.admin_config_people
+  weight: -25
+
+ai.admin_config_safety:
+  title: 'Safety & Compliance'
+  description: 'Configure moderation, guardrails, and compliance settings.'
+  parent: ai.admin_settings
+  route_name: ai.admin_config_safety
+  weight: -20
+
+ai.admin_config_search:
+  title: 'Search & Discovery'
+  description: 'Configure AI-powered search and content discovery features.'
+  parent: ai.admin_settings
+  route_name: ai.admin_config_search
+  weight: -15
+
+ai.admin_config_site_building:
+  title: 'Site Building & Design'
+  description: 'Configure AI features for site building, theming, and design.'
+  parent: ai.admin_settings
+  route_name: ai.admin_config_site_building
+  weight: -10
+
+ai.admin_settings_page:
+  title: 'Default Models for AI Operations'
+  description: 'Select default providers and models for each AI capability such as chat, embedding, and image generation.'
+  parent: ai.admin_config_infrastructure
+  route_name: ai.settings_form
+
+ai.admin_providers:
+  title: 'AI Platform Providers'
+  description: 'Connect and configure AI platform providers like OpenAI, Anthropic, and other services.'
+  parent: ai.admin_config_infrastructure
+  route_name: ai.admin_providers
+
+ai.admin_vdb_providers:
+  title: 'Vector Database Configuration'
+  description: 'Connect and configure vector database providers for semantic search and retrieval.'
+  parent: ai.admin_config_infrastructure
+  route_name: ai.admin_vdb_providers
+
+entity.ai_prompt.collection:
+  title: 'Prompt Library'
+  description: 'Create and manage reusable AI prompts used throughout the AI ecosystem.'
+  route_name: entity.ai_prompt.collection
+  parent: ai.admin_vdb_providers
+
+entity.ai_prompt_type.collection:
+  title: 'AI Prompt Types'
+  description: 'Manage AI Prompt Types. These are typically provided by the AI Ecosystem to determine required variables and/or tokens needed for a given AI Prompt.'
+  route_name: entity.ai_prompt_type.collection
+  parent: entity.ai_prompt.collection
+
+ai.external_moderation_settings:
+  title: 'AI External Moderation'
+  description: 'Configure moderation models from one provider before chat models from another provider.'
+  parent: ai.admin_config_tools
+  route_name: ai.external_moderation_settings
+
+entity.ai_guardrail.collection:
+  title: 'AI Moderation Guardrails'
+  description: 'Define guardrails to filter and moderate AI-generated content for safety and quality.'
+  route_name: entity.ai_guardrail.collection
+  parent: ai.admin_config_safety
+
+entity.ai_guardrail_set.collection:
+  title: 'AI Guardrail Sets'
+  description: 'List of guardrail sets to wrap multiple guardrails together.'
+  route_name: entity.ai_guardrail_set.collection
+  parent: entity.ai_guardrail.collection

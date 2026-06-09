@@ -1,0 +1,31 @@
+{#
+/**
+ * @file
+ * Default theme implementation of a ai tool library item.
+ *
+ * Available variables:
+ * - attributes: HTML attributes for the containing element.
+ * - content: The content of the ai tool library item, plus any additional
+ *   fields or elements surrounding it.
+ *
+ * @see template_preprocess_ai_tools_library_item()
+ *
+ * @ingroup themeable
+ */
+#}
+{%
+  set classes = [
+  'ai-tools-library-item',
+  'ai-tools-library-item--grid',
+]
+%}
+<div{{ attributes.addClass(classes) }}>
+  <h5>{{ title }}</h5>
+  <p>{{ description }}</p>
+  <a class="ai-tools-library-item__remove ai-icon-button ai-icon--trash" href="#" data-tool-id="{{ tool_id }}" data-widget-id="{{ widget_id }}" aria-label="{{ 'Remove tool'|t }}"></a>
+  {% if buttons %}
+    <div class="ai-tools-library-item__buttons">
+      {{ buttons }}
+    </div>
+  {% endif %}
+</div>

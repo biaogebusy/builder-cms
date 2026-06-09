@@ -1,0 +1,42 @@
+ai.ai_prompt_type.*:
+  type: config_entity
+  label: 'AI Prompt Type'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    label:
+      type: label
+      label: 'Label'
+    variables:
+      type: sequence
+      label: 'Variables'
+      sequence:
+        type: mapping
+        label: 'Variable'
+        mapping:
+          name:
+            type: string
+            label: 'Variable name'
+          help_text:
+            type: string
+            label: 'Description'
+          required:
+            type: boolean
+            label: 'Required'
+    tokens:
+      type: sequence
+      label: 'Tokens'
+      sequence:
+        type: mapping
+        label: 'Token'
+        mapping:
+          name:
+            type: string
+            label: 'Token name'
+          help_text:
+            type: string
+            label: 'Description'
+          required:
+            type: boolean
+            label: 'Required'

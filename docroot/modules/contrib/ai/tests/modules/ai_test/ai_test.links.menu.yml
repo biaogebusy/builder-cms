@@ -1,0 +1,11 @@
+ai_test.mock_settings:
+  title: AI Test Provider
+  route_name: ai_test.mock_settings
+  weight: 10
+  parent: ai.admin_providers
+
+entity.ai_mock_provider_result.collection:
+  title: 'AI Mock Provider Results'
+  description: 'List of ai mock provider results.'
+  route_name: entity.ai_mock_provider_result.collection
+  parent: system.admin_content

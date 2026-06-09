@@ -1,0 +1,61 @@
+plugin.plugin_configuration.search_api_backend.search_api_ai_search:
+  type: mapping
+  label: 'Search API AI Search settings'
+  mapping:
+    chat_model:
+      type: string
+      label: 'The chat model'
+    database:
+      type: string
+      label: 'The database type'
+    database_settings:
+      type: mapping
+      label: 'Database Settings'
+      mapping:
+        database_name:
+          type: string
+          label: 'The name of the database'
+        collection:
+          type: string
+          label: 'The collection name'
+        metric:
+          type: string
+          label: 'The similarity metric to use'
+    embeddings_engine:
+      type: string
+      label: 'The embeddings engine'
+    embeddings_engine_configuration:
+      type: mapping
+      label: 'Embeddings Engine Configuration'
+      mapping:
+        set_dimensions:
+          type: boolean
+          label: 'Whether to set dimensions manually'
+        dimensions:
+          type: integer
+          label: 'The number of dimensions'
+    embedding_strategy:
+      type: string
+      label: 'The embedding strategy'
+    embedding_strategy_configuration:
+      type: mapping
+      label: 'Embedding Strategy Configuration'
+      mapping:
+        chunk_size:
+          type: string
+          label: 'The size of each chunk'
+        chunk_min_overlap:
+          type: string
+          label: 'The minimum overlap between chunks'
+        contextual_content_max_percentage:
+          type: string
+          label: 'Maximum percentage of contextual content'
+        skip_moderation:
+          type: boolean
+          label: 'Whether to skip moderation'
+    embedding_strategy_details:
+      type: string
+      label: 'Additional details for the embedding strategy'
+    include_raw_embedding_vector:
+      type: boolean
+      label: 'Whether to include raw embedding vector in results'

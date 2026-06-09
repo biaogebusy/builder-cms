@@ -1,0 +1,27 @@
+request:
+  messages:
+  - role: user
+    text: "Create a detailed summary of the following text in less than 130 words using the same language as the following text:\n\nMonkeys are primates that likes to eat bananas."
+    images: []
+    tools: null
+    tool_id: null
+  debug_data: {}
+  chat_tools: null
+  chat_structured_json_schema: {}
+  chat_strict_schema: false
+response:
+  normalized:
+    role: assistant
+    text: >-
+      This is my Monkey summary.
+    images: []
+    tools: null
+    tool_id: null
+  rawOutput: []
+  metadata: {}
+  tokenUsage:
+    input: null
+    output: null
+    total: null
+    reasoning: null
+    cached: null

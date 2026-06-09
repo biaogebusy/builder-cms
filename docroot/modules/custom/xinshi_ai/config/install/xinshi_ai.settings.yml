@@ -1,0 +1,23 @@
+gateway:
+  base_url: 'https://ai.builder.design'
+  api_key: ''
+  request_timeout: 180
+image:
+  default_n: 4
+event_ticket:
+  ttl: 300
+queue:
+  # cron / immediate:响应后在 PHP-FPM 进程内即时消费(开发便利,但会占住 worker、且进程用户需可写 media 目录)。
+  # daemon:交给常驻消费者(supervisor 跑 drush queue:run),不在 web 进程处理 —— 生产推荐。
+  worker: daemon
+sse:
+  heartbeat_seconds: 25
+  max_lifetime_seconds: 1200
+observability:
+  exporters:
+    - database
+  capture_content: false
+  ingest_token_env: XINSHI_AI_INGEST_TOKEN
+  otel:
+    endpoint: ''
+    headers: {  }

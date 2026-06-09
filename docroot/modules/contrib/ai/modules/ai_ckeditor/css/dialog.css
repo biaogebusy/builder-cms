@@ -1,0 +1,55 @@
+[dir="ltr"] .ui-dialog .ui-widget-content.ui-dialog-buttonpane .button:last-of-type {
+  margin-left: auto;
+}
+
+[dir="rtl"] .ui-dialog .ui-widget-content.ui-dialog-buttonpane .button:last-of-type {
+  margin-right: auto;
+}
+
+/* Style for generate actions container */
+.ai-ckeditor-generate-actions {
+  margin-bottom: 1.5em;
+  text-align: left;
+  margin-top: 1em;
+  display: flex;
+  clear: both;
+}
+
+.ai-ckeditor-generate-actions .button {
+  margin-left: auto;
+}
+
+[dir="rtl"] .ai-ckeditor-generate-actions {
+  text-align: right;
+}
+
+/* Make the save button stand out as primary */
+.ui-dialog .ui-dialog-buttonpane .ui-dialog-buttonset .button--primary {
+  background-color: #0e9e4c;
+  color: white;
+  font-weight: bold;
+}
+
+.ui-dialog .ui-dialog-buttonpane .ui-dialog-buttonset .button--primary:hover {
+  background-color: #0b8741;
+}
+
+/* Fix extra spacing between form and button pane */
+.ui-dialog .ui-dialog-content {
+  padding-bottom: 0;
+}
+
+/* Ensure form container has enough space */
+.ai-ckeditor-response {
+  margin-bottom: 1em;
+}
+
+/* Clear margin that was previously used to push save to right */
+.ui-dialog .ui-dialog-buttonpane .ui-dialog-buttonset .button {
+  margin: 0 0.5em 0 0;
+}
+
+[dir="rtl"] .ui-dialog .ui-dialog-buttonpane .ui-dialog-buttonset .button {
+  margin: 0 0 0 0.5em;
+}
+

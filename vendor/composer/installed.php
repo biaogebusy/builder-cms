@@ -3,7 +3,7 @@
         'name' => 'drupal/recommended-project',
         'pretty_version' => '10.x-dev',
         'version' => '10.9999999.9999999.9999999-dev',
-        'reference' => 'aa3a2d8ac95886805a1b1b8af9b403ed95424508',
+        'reference' => 'a7186b8dab34b2c454fbadc075d9696e3e26e0a7',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -430,6 +430,24 @@
             'reference' => '8.x-1.5',
             'type' => 'drupal-module',
             'install_path' => __DIR__ . '/../../docroot/modules/contrib/advancedqueue',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'drupal/ai' => array(
+            'pretty_version' => '1.4.1',
+            'version' => '1.4.1.0',
+            'reference' => '1.4.1',
+            'type' => 'drupal-module',
+            'install_path' => __DIR__ . '/../../docroot/modules/contrib/ai',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'drupal/ai_provider_openai' => array(
+            'pretty_version' => '1.2.1',
+            'version' => '1.2.1.0',
+            'reference' => '1.2.1',
+            'type' => 'drupal-module',
+            'install_path' => __DIR__ . '/../../docroot/modules/contrib/ai_provider_openai',
             'aliases' => array(),
             'dev_requirement' => false,
         ),
@@ -1297,6 +1315,15 @@
             'aliases' => array(),
             'dev_requirement' => false,
         ),
+        'drupal/key' => array(
+            'pretty_version' => '1.22.0',
+            'version' => '1.22.0.0',
+            'reference' => '8.x-1.22',
+            'type' => 'drupal-module',
+            'install_path' => __DIR__ . '/../../docroot/modules/contrib/key',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
         'drupal/key_value' => array(
             'pretty_version' => '1.3.0',
             'version' => '1.3.0.0',
@@ -1660,7 +1687,7 @@
         'drupal/recommended-project' => array(
             'pretty_version' => '10.x-dev',
             'version' => '10.9999999.9999999.9999999-dev',
-            'reference' => 'aa3a2d8ac95886805a1b1b8af9b403ed95424508',
+            'reference' => 'a7186b8dab34b2c454fbadc075d9696e3e26e0a7',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
@@ -2221,6 +2248,15 @@
             'aliases' => array(),
             'dev_requirement' => false,
         ),
+        'league/html-to-markdown' => array(
+            'pretty_version' => '5.1.1',
+            'version' => '5.1.1.0',
+            'reference' => '0b4066eede55c48f38bcee4fb8f0aa85654390fd',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../league/html-to-markdown',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
         'league/oauth2-client' => array(
             'pretty_version' => '2.8.1',
             'version' => '2.8.1.0',
@@ -2422,6 +2458,15 @@
             'aliases' => array(),
             'dev_requirement' => false,
         ),
+        'openai-php/client' => array(
+            'pretty_version' => 'v0.19.2',
+            'version' => '0.19.2.0',
+            'reference' => '12e3513527e22d5657f4f9809796f8fe254fd0a9',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../openai-php/client',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
         'orno/di' => array(
             'dev_requirement' => false,
             'replaced' => array(
@@ -2518,6 +2563,15 @@
             'reference' => '5cad731844891a4c282f3f3e1b582c46839d22f4',
             'type' => 'library',
             'install_path' => __DIR__ . '/../php-http/httplug',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'php-http/multipart-stream-builder' => array(
+            'pretty_version' => '1.4.2',
+            'version' => '1.4.2.0',
+            'reference' => '10086e6de6f53489cca5ecc45b6f468604d3460e',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../php-http/multipart-stream-builder',
             'aliases' => array(),
             'dev_requirement' => false,
         ),
@@ -2639,8 +2693,8 @@
         'psr/http-client-implementation' => array(
             'dev_requirement' => false,
             'provided' => array(
-                0 => '*',
-                1 => '1.0',
+                0 => '1.0',
+                1 => '*',
             ),
         ),
         'psr/http-factory' => array(
@@ -2655,8 +2709,8 @@
         'psr/http-factory-implementation' => array(
             'dev_requirement' => false,
             'provided' => array(
-                0 => '*',
-                1 => '1.0',
+                0 => '1.0',
+                1 => '*',
             ),
         ),
         'psr/http-message' => array(
@@ -2671,8 +2725,8 @@
         'psr/http-message-implementation' => array(
             'dev_requirement' => false,
             'provided' => array(
-                0 => '*',
-                1 => '1.0',
+                0 => '1.0',
+                1 => '*',
             ),
         ),
         'psr/http-server-handler' => array(
@@ -3176,6 +3230,15 @@
             'reference' => 'bd2148e0456f560df4d1c857d6cd1f8ad9f5222e',
             'type' => 'library',
             'install_path' => __DIR__ . '/../wechatpay/wechatpay',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'yethee/tiktoken' => array(
+            'pretty_version' => '0.5.1',
+            'version' => '0.5.1.0',
+            'reference' => '94a4ac18ab505198f5a0955948ab29ce659c1697',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../yethee/tiktoken',
             'aliases' => array(),
             'dev_requirement' => false,
         ),

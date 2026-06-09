@@ -1,0 +1,23 @@
+<?php
+
+/**
+ * @file
+ * Drupal install file.
+ */
+
+/**
+ * Copy existing config and disable deprecated AI External Moderation module.
+ */
+function ai_external_moderation_update_10001(): void {
+
+  // Copy the old config to the new.
+  if ($old_config = \Drupal::config('ai_external_moderation.settings')) {
+    if ($moderations = $old_config->get('moderations')) {
+      $new_config = \Drupal::configFactory()->getEditable('ai.external_moderation');
+      $new_config->set('moderations', $moderations);
+      $new_config->save();
+    }
+  }
+
+  \Drupal::service('module_installer')->uninstall(['ai_external_moderation']);
+}
