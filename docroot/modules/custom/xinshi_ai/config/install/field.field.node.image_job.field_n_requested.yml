@@ -1,0 +1,24 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_n_requested
+    - node.type.image_job
+id: node.image_job.field_n_requested
+field_name: field_n_requested
+entity_type: node
+bundle: image_job
+label: 'N requested'
+description: ''
+required: false
+translatable: true
+default_value:
+  -
+    value: 4
+default_value_callback: ''
+settings:
+  min: 1
+  max: 6
+  prefix: ''
+  suffix: ''
+field_type: integer

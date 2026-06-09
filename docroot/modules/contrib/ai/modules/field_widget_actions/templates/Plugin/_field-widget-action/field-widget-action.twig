@@ -1,0 +1,100 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\{{ machine_name }}\Plugin\FieldWidgetAction;
+
+{% apply sort_namespaces %}
+{% if use_ajax %}
+use Drupal\Core\Ajax\AjaxResponse;
+{% endif %}
+{% if use_ajax or configurable %}
+use Drupal\Core\Form\FormStateInterface;
+{% endif %}
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\field_widget_actions\Attribute\FieldWidgetAction;
+use Drupal\field_widget_actions\FieldWidgetActionBase;
+{% endapply %}
+
+/**
+ * {{ description }}
+ */
+#[FieldWidgetAction(
+  id: '{{ plugin_id }}',
+  label: new TranslatableMarkup('{{ plugin_label }}'),
+  widget_types: [
+{% for widget_type in widget_type_keys %}
+    '{{ widget_type }}',
+{% endfor %}
+  ],
+  field_types: [
+{% for field_type in field_type_keys %}
+    '{{ field_type }}',
+{% endfor %}
+  ],
+  category: new TranslatableMarkup('{{ category }}'),
+  multiple: {{ multiple ? 'TRUE' : 'FALSE' }},
+  description: new TranslatableMarkup('{{ description }}'),
+)]
+class {{ class }} extends FieldWidgetActionBase {
+
+{% if use_ajax %}
+  /**
+   * {@inheritdoc}
+   */
+  public function getAjaxCallback(): ?string {
+    return 'ajaxCallback';
+  }
+
+  /**
+   * AJAX callback for the action button.
+   *
+   * @param array $form
+   *   The form array.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   *
+   * @return \Drupal\Core\Ajax\AjaxResponse
+   *   The AJAX response.
+   */
+  public function ajaxCallback(array &$form, FormStateInterface $form_state): AjaxResponse {
+    $selector = $this->getSuggestionsTarget($form, $form_state);
+    // @todo Implement your action logic here.
+    $suggestions = [$this->t('Example suggestion')];
+    return $this->returnSuggestions($suggestions, $selector);
+  }
+
+{% endif %}
+{% if configurable %}
+  /**
+   * {@inheritdoc}
+   */
+  public function defaultConfiguration() {
+    return parent::defaultConfiguration() + [
+      'prompt' => '',
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildConfigurationForm(
+    array $form,
+    FormStateInterface $form_state,
+    $action_id = NULL,
+  ) {
+    $element = parent::buildConfigurationForm($form, $form_state, $action_id);
+    $configuration = $this->getConfiguration();
+
+    $element['prompt'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Prompt'),
+      '#default_value' => $configuration['prompt'] ?? '',
+      '#description' => $this->t('Configuration for this action.'),
+    ];
+
+    return $element;
+  }
+
+{% endif %}
+}

@@ -1,0 +1,7 @@
+langcode: en
+status: true
+dependencies: {  }
+id: my_prompt_type__my_prompt
+label: 'Default prompt for suggest synonyms'
+type: my_prompt_type
+prompt: 'Suggest five synonyms for the word: {word}'

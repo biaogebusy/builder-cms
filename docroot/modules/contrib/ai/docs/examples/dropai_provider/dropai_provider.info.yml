@@ -1,0 +1,14 @@
+name: 'DropAI Provider'
+type: module
+description: 'DropAI provider for AI module.'
+package: AI Providers
+core_version_requirement: ^10 || ^11
+hidden: true # This is just for example reasons.
+dependencies:
+  - ai:ai
+  - key:key
+
+# Information added by Drupal.org packaging script on 2026-06-03
+version: '1.4.1'
+project: 'ai'
+datestamp: 1780493209

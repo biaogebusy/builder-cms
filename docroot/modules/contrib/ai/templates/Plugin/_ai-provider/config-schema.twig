@@ -1,0 +1,114 @@
+
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\{{ machine_name }}\Form;
+
+use Drupal\ai\AiProviderPluginManager;
+use Drupal\ai\Service\AiProviderFormHelper;
+use Drupal\Core\Form\ConfigFormBase;
+use Drupal\Core\Form\FormStateInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+
+/**
+ * Configure {{ plugin_label }} provider settings.
+ */
+final class {{ class }}ConfigForm extends ConfigFormBase {
+
+  /**
+   * Config settings name.
+   */
+  const CONFIG_NAME = '{{ machine_name }}.settings';
+
+  /**
+   * The AI provider manager.
+   *
+   * @var \Drupal\ai\AiProviderPluginManager
+   */
+  protected AiProviderPluginManager $aiProviderManager;
+
+  /**
+   * The form helper.
+   *
+   * @var \Drupal\ai\Service\AiProviderFormHelper
+   */
+  protected AiProviderFormHelper $formHelper;
+
+  /**
+   * {@inheritdoc}
+   */
+  final public function __construct(AiProviderPluginManager $ai_provider_manager, AiProviderFormHelper $form_helper) {
+    $this->aiProviderManager = $ai_provider_manager;
+    $this->formHelper = $form_helper;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  final public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('ai.provider'),
+      $container->get('ai.form_helper'),
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFormId(): string {
+    return '{{ machine_name }}_config';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getEditableConfigNames(): array {
+    return [static::CONFIG_NAME];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildForm(array $form, FormStateInterface $form_state): array {
+    $config = $this->config(static::CONFIG_NAME);
+
+    $form['api_key'] = [
+      '#type' => 'key_select',
+      '#title' => $this->t('API Key'),
+      '#description' => $this->t('Select the API key for {{ plugin_label }}.'),
+      '#default_value' => $config->get('api_key'),
+    ];
+
+    $form['endpoint'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('API Endpoint'),
+      '#description' => $this->t('Leave empty for the default endpoint.'),
+      '#default_value' => $config->get('endpoint') ?? '',
+    ];
+
+    // Optionally add models table for per-model configuration.
+    // Uncomment to enable:
+    // $provider = $this->aiProviderManager->createInstance('{{ plugin_id }}');
+    // $form['models'] = $this->formHelper->getModelsTable($form, $form_state, $provider);
+
+    return parent::buildForm($form, $form_state);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
+    // Optionally set as default provider for supported operation types.
+    // Uncomment to enable:
+    // $this->aiProviderManager->defaultIfNone('chat', '{{ plugin_id }}', 'model-1');
+
+    $this->config(static::CONFIG_NAME)
+      ->set('api_key', $form_state->getValue('api_key'))
+      ->set('endpoint', $form_state->getValue('endpoint'))
+      ->save();
+
+    parent::submitForm($form, $form_state);
+  }
+
+}

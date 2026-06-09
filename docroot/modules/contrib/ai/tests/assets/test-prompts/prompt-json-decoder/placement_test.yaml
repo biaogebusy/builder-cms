@@ -1,0 +1,20 @@
+text: |
+  This text will be so long that it will not work to extract the actual json
+  from it in a stream, because it will give up searching before its done.
+
+  Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+  Lorem Ipsum has been the industry's standard dummy text ever since the 1500s,
+  when an unknown printer took a galley of type and scrambled it to make a
+  type specimen book. It has survived not only five centuries, but also the
+  leap into electronic typesetting, remaining essentially unchanged. It was
+  popularized in the 1960s with the release of Learjet sheets containing
+  Lorem Ipsum passages, and more recently with desktop publishing software like
+  Lades PageMaker including versions of Lorem Ipsum.
+
+  Finally
+  comes
+  the
+  JSON
+  ```json\n{"key": "value"}\n```
+expected_token: 17
+has_json: true

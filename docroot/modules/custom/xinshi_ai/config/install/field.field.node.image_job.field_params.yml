@@ -1,0 +1,21 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_params
+    - node.type.image_job
+  module:
+    - text
+id: node.image_job.field_params
+field_name: field_params
+entity_type: node
+bundle: image_job
+label: 'Params (JSON)'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats: {  }
+field_type: text_long

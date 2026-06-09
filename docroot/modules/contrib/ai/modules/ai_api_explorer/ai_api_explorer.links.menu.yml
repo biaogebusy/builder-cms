@@ -1,0 +1,5 @@
+ai_api_explorer.main:
+  title: AI API Explorer
+  description: 'Test and explore different AI APIs in a development sandbox.'
+  parent: ai.admin_config_search
+  route_name: ai_api_explorer.list_page

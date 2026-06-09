@@ -1,0 +1,18 @@
+entity.ai_log.view:
+  title: 'View'
+  route_name: entity.ai_log.canonical
+  base_route: entity.ai_log.canonical
+entity.ai_log.edit_form:
+  title: 'Edit'
+  route_name: entity.ai_log.edit_form
+  base_route: entity.ai_log.canonical
+entity.ai_log.delete_form:
+  title: 'Delete'
+  route_name: entity.ai_log.delete_form
+  base_route: entity.ai_log.canonical
+  weight: 10
+entity.ai_log.collection:
+  title: 'AI Logs'
+  route_name: entity.ai_log.collection
+  base_route: ai_log.logging
+  weight: 10

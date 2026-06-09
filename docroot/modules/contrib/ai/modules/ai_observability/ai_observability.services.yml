@@ -1,0 +1,8 @@
+services:
+  Drupal\ai_observability\EventSubscriber\AiLoggingEventSubscriber:
+    autowire: true
+    tags:
+      - name: 'event_subscriber'
+  logger.channel.ai_observability:
+    parent: logger.channel_base
+    arguments: ['ai_observability']

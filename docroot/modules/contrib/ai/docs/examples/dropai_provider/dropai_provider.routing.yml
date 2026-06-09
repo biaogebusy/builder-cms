@@ -1,0 +1,7 @@
+dropai_provider.drop_ai_config:
+  path: '/admin/config/ai/providers/dropai'
+  defaults:
+    _title: 'DropAI Config'
+    _form: 'Drupal\dropai_provider\Form\DropAiConfigForm'
+  requirements:
+    _permission: 'administer ai providers'

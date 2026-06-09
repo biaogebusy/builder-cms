@@ -1,0 +1,31 @@
+.item-list ul.ai-setup-progress-items,
+.item-list ul.ai-setup-progress-items li {
+  margin: 0;
+  list-style: none;
+}
+
+.ai-setup-progress-items {
+  display: inline-flex;
+}
+
+.ai-setup-progress-items li {
+  display: inline-flex;
+}
+
+.ai-setup-progress-items li:not(:last-child)::after {
+  padding: 0.5em;
+  content: ">";
+}
+
+.ai-setup-progress-items li a {
+  display: block;
+  padding: 0.5em;
+}
+
+.ai-setup-progress-items li a.complete {
+  color: #808080;
+}
+
+.ai-setup-progress-items li a.pending {
+  color: #f00;
+}

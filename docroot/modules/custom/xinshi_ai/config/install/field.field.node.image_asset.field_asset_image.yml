@@ -1,0 +1,23 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_asset_image
+    - node.type.image_asset
+  module:
+    - media
+id: node.image_asset.field_asset_image
+field_name: field_asset_image
+entity_type: node
+bundle: image_asset
+label: 'Image'
+description: ''
+required: true
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:media'
+  handler_settings:
+    target_bundles: null
+field_type: entity_reference

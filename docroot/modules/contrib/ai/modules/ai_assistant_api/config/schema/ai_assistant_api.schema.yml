@@ -1,0 +1,89 @@
+ai_assistant_api.ai_assistant.*:
+  type: config_entity
+  label: AI Assistant
+  mapping:
+    id:
+      type: string
+      label: ID
+    label:
+      type: label
+      label: Label
+    uuid:
+      type: string
+    description:
+      type: string
+      label: Description
+    system_prompt:
+      type: string
+      label: System Prompt
+    pre_action_prompt:
+      type: string
+      label: Pre Action Prompt
+    instructions:
+      type: string
+      label: Instructions
+    allow_history:
+      type: string
+      label: Allow History
+    history_context_length:
+      type: string
+      label: History context length
+    preprompt_instructions:
+      type: string
+      label: Pre-prompt Instructions
+    system_role:
+      type: string
+      label: System Role
+    assistant_message:
+      type: string
+      label: Assistant Message
+      required: true
+    no_results_message:
+      type: string
+      label: No Results Message
+      required: true
+    error_message:
+      type: string
+      label: Generic Error Message
+      required: true
+    specific_error_messages:
+      type: sequence
+      label: Specific Error Messages
+      required: false
+      sequence:
+        type: string
+    llm_provider:
+      type: string
+      label: LLM Provider
+      required: true
+    llm_model:
+      type: string
+      label: LLM Model
+      required: true
+    llm_configuration:
+      type: sequence
+      label: LLM Configuration in JSON
+      required: false
+      sequence:
+        type: ignore
+    actions_enabled:
+      type: sequence
+      label: Actions Enabled
+      required: false
+      sequence:
+        type: ignore
+    roles:
+      type: sequence
+      label: Roles
+      required: false
+      sequence:
+        type: ignore
+    use_function_calling:
+      label: 'Use function calling'
+      type: boolean
+      description: 'Whether to use function calling in the AI operations. This is a new feature that allows the AI to call functions directly, rather than just returning text.'
+    ai_agent:
+      label: 'AI Agent'
+      type: string
+      description: 'The AI agent that will be used for the AI operations. This is the agent that will be used to perform the AI operations. It can be overridden by the operation provider.'
+      required: false

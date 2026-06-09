@@ -1,0 +1,98 @@
+services:
+  _defaults:
+    autoconfigure: true
+    autowire: true
+  ai.provider:
+    class: Drupal\ai\AiProviderPluginManager
+    parent: default_plugin_manager
+    arguments: ['@service_container', '@messenger', '@uuid', '@ai.hostname_filter_service']
+  ai.form_helper:
+    class: Drupal\ai\Service\AiProviderFormHelper
+    arguments: ['@ai.provider', '@path.current', '@messenger']
+  ai.prompt_json_decode:
+    class: Drupal\ai\Service\PromptJsonDecoder\PromptJsonDecoder
+  ai.prompt_code_block_extractor:
+    class: Drupal\ai\Service\PromptCodeBlockExtractor\PromptCodeBlockExtractor
+  ai.prompt_manager:
+    class: Drupal\ai\Service\AiPromptManager
+    arguments: ['@entity_type.manager', '@extension.path.resolver', '@logger.factory']
+  ai.prompt_subform:
+    class: Drupal\ai\Form\AiPromptSubform
+    arguments: ['@form_builder', '@entity_type.manager', '@datetime.time']
+  ai.vdb_provider:
+    class: Drupal\ai\AiVdbProviderPluginManager
+    parent: default_plugin_manager
+  ai.tokenizer:
+    class: Drupal\ai\Utility\Tokenizer
+    arguments: ['@ai.provider']
+  ai.context_definition_normalizer:
+    class: Drupal\ai\Utility\ContextDefinitionNormalizer
+    arguments: ['@module_handler']
+  ai.text_chunker:
+    class: Drupal\ai\Utility\TextChunker
+    arguments: ['@ai.tokenizer']
+  ai.breadcrumb.ai_model_settings_breadcrumbs:
+    class: Drupal\ai\Breadcrumb\AiModelSettingsBreadcrumbBuilder
+    tags:
+      - { name: breadcrumb_builder, priority: 100 }
+  ai.exception_event_subscriber:
+    class: Drupal\ai\EventSubscriber\AiExceptionEventSubscriber
+    arguments: ['@logger.factory']
+    tags:
+      - { name: event_subscriber }
+  plugin.manager.ai.function_calls:
+    class: Drupal\ai\Service\FunctionCalling\FunctionCallPluginManager
+    parent: default_plugin_manager
+  plugin.manager.ai.function_groups:
+    class: Drupal\ai\Service\FunctionCalling\FunctionGroupPluginManager
+    parent: default_plugin_manager
+  plugin.manager.ai_data_type_converter:
+    class: Drupal\ai\PluginManager\AiDataTypeConverterPluginManager
+    parent: default_plugin_manager
+  Drupal\ai\Guardrail\AiGuardrailPluginManager:
+    class: Drupal\ai\Guardrail\AiGuardrailPluginManager
+    parent: default_plugin_manager
+  plugin.manager.ai_guardrail: '@Drupal\ai\Guardrail\AiGuardrailPluginManager'
+  ai.function_call_form_helper:
+    class: Drupal\ai\Service\FunctionCalling\PropertyFormBuilder
+    arguments: ['@plugin.manager.ai.function_calls']
+  cache.ai:
+    class: Drupal\Core\Cache\CacheBackendInterface
+    arguments: ['ai']
+    factory: cache_factory:get
+    tags:
+      - { name: cache.bin }
+  cache_context.ai_providers:
+    class: Drupal\ai\Cache\Context\AIProvidersCacheContext
+    arguments: ['@ai.provider', '@ai.vdb_provider']
+    tags:
+      - { name: cache.context }
+  ai.pre_request_subscriber:
+    class: '\Drupal\ai\EventSubscriber\ModeratePreRequestEventSubscriber'
+    arguments: ['@ai.provider', '@config.factory']
+    tags:
+      - { name: 'event_subscriber' }
+  Drupal\ai\EventSubscriber\GuardrailsEventSubscriber: ~
+  Drupal\ai\EventSubscriber\GlobalGuardrailsEventSubscriber: ~
+  Drupal\ai\Guardrail\AiGuardrailRepository: ~
+  Drupal\ai\Guardrail\AiGuardrailHelper: ~
+  ai.guardrail_helper: '@Drupal\ai\Guardrail\AiGuardrailHelper'
+  ai.tools_library.ui_builder:
+    class: Drupal\ai\Service\AiToolsLibraryUiBuilder
+    arguments: ['@plugin.manager.ai.function_groups', '@plugin.manager.ai.function_calls', '@module_handler', '@request_stack', '@form_builder']
+  ai_tools_library.opener.form_element:
+    class: Drupal\ai\AiToolsLibraryFormElementOpener
+  plugin.manager.ai.short_term_memory:
+    class: Drupal\ai\PluginManager\AiShortTermMemoryPluginManager
+    parent: default_plugin_manager
+  Drupal\ai\Hook\FormElement:
+    class: Drupal\ai\Hook\FormElement
+    autowire: true
+  ai.hostname_filter_service:
+    class: Drupal\ai\Service\HostnameFilter
+    arguments: ['@logger.factory', '@config.factory']
+  plugin.manager.ai.chat_processor:
+    class: Drupal\ai\PluginManager\ChatProcessorPluginManager
+    parent: default_plugin_manager
+    arguments: ['@container.namespaces', '@cache.discovery', '@module_handler']
+  Drupal\ai\PluginManager\ChatProcessorPluginManager: '@plugin.manager.ai.chat_processor'

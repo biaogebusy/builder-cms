@@ -1,0 +1,69 @@
+ai_translate.settings:
+  type: config_object
+  label: 'AI Translate settings'
+  mapping:
+    use_ai_translate:
+      type: boolean
+      label: 'Use AI Translate as the default to translate content'
+    reference_defaults:
+      type: sequence
+      label: 'Referenced entity types that will be translated by default'
+      sequence:
+        type: string
+        label: 'Entity type'
+        constraints:
+          NotBlank: { }
+          Choice:
+            callback: \Drupal\ai_translate\Form\AiTranslateSettingsForm::getReferencingEntityTypes
+            message: 'The enabled entity type you selected is not valid. Possible choices: %choices.'
+    prompt:
+      type: string
+      label: 'Default Prompt ID'
+      description: 'The default prompt config entity to use when a language-specific one is not defined.'
+      constraints:
+        ConfigExists:
+          prefix: 'ai.ai_prompt.'
+    entity_reference_depth:
+      type: integer
+      label: 'Maximum Reference Depth'
+      constraints:
+        # These are the available depth values, as defined in the settings form.
+        # @see \Drupal\ai_translate\Form\AiTranslateSettingsForm::buildForm().
+        Choice: [ 0, 1, 2, 5, 10 ]
+    language_settings:
+      type: sequence
+      label: 'Language-specific settings'
+      sequence:
+        type: ai_translate.language_setting.[%key]
+    translation_status:
+      type: string
+      label: 'Translation status'
+      description: 'Controls how the publication status of translated content is handled'
+      constraints:
+        Choice:
+          - keep_original
+          - create_draft
+    redirect_after_create:
+      type: string
+      label: 'Action after creating a new translation'
+      description: 'Where to redirect after creating a new translation.'
+      constraints:
+        Choice:
+          - list
+          - edit
+
+ai_translate.language_setting.*:
+  type: mapping
+  label: 'Language-specific AI settings'
+  mapping:
+    model:
+      type: string
+      label: 'Model'
+      description: 'The specific AI model to use for this language (e.g., gpt-4, gemini-pro).'
+    prompt:
+      type: string
+      label: 'Default Prompt ID'
+      description: 'The prompt config entity to use for this language.'
+      constraints:
+        ConfigExists:
+          prefix: 'ai.ai_prompt.'

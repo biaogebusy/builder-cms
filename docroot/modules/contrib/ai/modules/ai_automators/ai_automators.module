@@ -1,0 +1,162 @@
+<?php
+
+/**
+ * @file
+ * Hooks for AI Automator.
+ */
+
+use Drupal\ai_automators\AiAutomatorInterface;
+use Drupal\Core\Config\ConfigImporter;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\field\Entity\FieldConfig;
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function ai_automators_form_field_config_edit_form_alter(&$form, FormStateInterface $form_state) {
+  \Drupal::service('ai_automator.field_config')->alterForm($form, $form_state);
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function ai_automators_form_base_field_override_edit_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  \Drupal::service('ai_automator.field_config')->alterForm($form, $form_state);
+}
+
+/**
+ * Implements hook_entity_presave().
+ */
+function ai_automators_entity_presave(EntityInterface $entity) {
+  if (ai_automators_entity_can_save_toggle()) {
+    \Drupal::service('ai_automator.entity_modifier')->saveEntity($entity);
+  }
+}
+
+/**
+ * Implements hook_entity_insert().
+ */
+function ai_automators_entity_insert(EntityInterface $entity) {
+  // Never generate on import since that will be done via the importer.
+  if ($entity instanceof FieldConfig) {
+    $importing = \Drupal::state()->get('ai_automators.importing', FALSE);
+    $config_installer_syncing = \Drupal::service('config.installer')->isSyncing();
+    if (!$importing && !$config_installer_syncing) {
+      \Drupal::service('ai_automator.status_field')->modifyStatusField($entity->get('entity_type'), $entity->get('bundle'));
+    }
+  }
+  if (ai_automators_entity_can_save_toggle()) {
+    \Drupal::service('ai_automator.entity_modifier')->saveEntity($entity, TRUE);
+  }
+}
+
+/**
+ * Implements hook_entity_update().
+ */
+function ai_automators_entity_update(EntityInterface $entity) {
+  if ($entity instanceof FieldConfig) {
+    $importing = \Drupal::state()->get('ai_automators.importing', FALSE);
+    $config_installer_syncing = \Drupal::service('config.installer')->isSyncing();
+    if (!$importing && !$config_installer_syncing) {
+      \Drupal::service('ai_automator.status_field')->modifyStatusField($entity->get('entity_type'), $entity->get('bundle'));
+    }
+  }
+  if (ai_automators_entity_can_save_toggle()) {
+    \Drupal::service('ai_automator.entity_modifier')->saveEntity($entity, TRUE);
+  }
+}
+
+/**
+ * Implements hook_entity_delete().
+ */
+function ai_automators_entity_delete(EntityInterface $entity) {
+  if ($entity instanceof FieldConfig && ai_automators_entity_can_save_toggle()) {
+    $importing = \Drupal::state()->get('ai_automators.importing', FALSE);
+    $config_installer_syncing = \Drupal::service('config.installer')->isSyncing();
+    if (!$importing && !$config_installer_syncing) {
+      \Drupal::service('ai_automator.status_field')->modifyStatusField($entity->get('entity_type'), $entity->get('bundle'));
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_predelete().
+ *
+ * Clean up field widget actions when an AI automator is deleted.
+ */
+function ai_automators_entity_predelete(EntityInterface $entity) {
+  // Only act on AI Automator entities being deleted.
+  if (!($entity instanceof AiAutomatorInterface)) {
+    return;
+  }
+
+  // Clean up related field widget actions.
+  \Drupal::service('ai_automators.cleanup')
+    ->cleanupActionsForAutomator($entity);
+}
+
+/**
+ * Implements hook_config_import_steps_alter().
+ */
+function ai_automators_config_import_steps_alter(&$sync_steps, ConfigImporter $config_importer) {
+  // Set state to indicate we're importing config.
+  \Drupal::state()->set('ai_automators.importing', TRUE);
+
+  // Add cleanup step at the end to reset the state.
+  $sync_steps[] = '_ai_automators_cleanup_import_state';
+}
+
+/**
+ * Custom config import step to cleanup import state.
+ *
+ * @param array $context
+ *   The batch context.
+ * @param \Drupal\Core\Config\ConfigImporter $config_importer
+ *   The configuration importer.
+ */
+function _ai_automators_cleanup_import_state(&$context, ConfigImporter $config_importer) {
+  // Reset the import state.
+  \Drupal::state()->delete('ai_automators.importing');
+  $context['finished'] = 1;
+}
+
+/**
+ * Global function to toggle or check if to save.
+ *
+ * @param bool $newToggle
+ *   The new toggle if you want to change it.
+ *
+ * @return bool
+ *   If it is possible to save or not.
+ */
+function ai_automators_entity_can_save_toggle($newToggle = NULL) {
+  static $toggle;
+  // Set default to TRUE.
+  // @codingStandardsIgnoreLine
+  $toggle = $toggle === NULL ? TRUE : $toggle;
+  if (isset($newToggle)) {
+    $toggle = $newToggle;
+  }
+  return $toggle;
+}
+
+/**
+ * Global function to toggle if import is possible.
+ *
+ * @param bool $newToggle
+ *   The new toggle if you want to change it.
+ *
+ * @return bool
+ *   If it is possible to import or not.
+ */
+function ai_automators_can_import_toggle($newToggle = NULL) {
+  static $toggle;
+  // Set default to TRUE.
+  // @codingStandardsIgnoreLine
+  $toggle = $toggle === NULL ? TRUE : $toggle;
+  if (isset($newToggle)) {
+    $toggle = $newToggle;
+  }
+  return $toggle;
+}

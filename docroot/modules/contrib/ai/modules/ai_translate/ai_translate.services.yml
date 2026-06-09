@@ -1,0 +1,23 @@
+services:
+  ai_translate.subscriber:
+    class: Drupal\ai_translate\Routing\AiTranslateRouteSubscriber
+    arguments: ['@config.factory']
+    tags:
+      - { name: event_subscriber }
+  ai_translate.text_extractor:
+    class: Drupal\ai_translate\TextExtractor
+    arguments:
+      - '@entity_type.manager'
+      - '@plugin.manager.text_extractor'
+  ai_translate.text_translator:
+    class: Drupal\ai_translate\TextTranslator
+    arguments:
+      - '@entity_type.manager'
+      - '@language_manager'
+      - '@config.factory'
+      - '@ai.provider'
+      - '@twig'
+      - '@module_handler'
+  plugin.manager.text_extractor:
+    class: Drupal\ai_translate\FieldTextExtractorPluginManager
+    parent: default_plugin_manager

@@ -1,0 +1,63 @@
+.mdxeditor-wrapper {
+  border: 1px solid var(--gin-border-color,#ddd);
+  border-radius: var(--gin-border-m, 0.5rem);
+}
+
+.mdxeditor .typeahead-popover {
+  position: absolute;
+}
+
+.mdxeditor .mdxeditor-rich-text-editor [contenteditable] {
+  min-height: 240px;
+}
+
+.mdxeditor-root-contenteditable [contenteditable="true"][role="textbox"]:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.mdxeditor .typeahead-popover ul {
+  overflow: unset;
+}
+
+.mdxeditor .typeahead-popover {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px #00000026;
+  min-width: 300px;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.mdxeditor .typeahead-popover ul li {
+  padding: 14px 18px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  background-color: white;
+  line-height: normal;
+}
+.mdxeditor .typeahead-popover ul li.selected{
+  background-color: var(--gin-bg-item-hover);
+}
+
+.mdxeditor .typeahead-popover ul li.selected .typeahead-item-title {
+  color: var(--gin-color-primary);
+}
+
+.mdxeditor .typeahead-popover ul li .typeahead-item-title {
+  display: block;
+  font-weight: 500;
+  font-size: 16px;
+  line-height: normal;
+}
+
+.mdxeditor .typeahead-popover ul li .typeahead-item-description {
+  display: block;
+  font-size: 12px;
+  margin-top: 4px;
+  color: var(--gin-color-text-light, #666);
+}
+
+.mdxeditor .typeahead-popover ul li:last-child {
+  border-bottom: none;
+}

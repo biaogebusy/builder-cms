@@ -1,0 +1,64 @@
+block.settings.ai_deepchat_block:
+  type: block_settings
+  label: DeepChat Chatbot Block
+  mapping:
+    ai_assistant:
+      type: string
+      label: AI Assistant
+    bot_name:
+      type: string
+      label: Bot Name
+    bot_image:
+      type: text
+      label: Bot Image
+    use_username:
+      type: integer
+      label: Use Username
+    default_username:
+      type: text
+      label: Default Username
+    use_avatar:
+      type: integer
+      label: Use Avatar
+    default_avatar:
+      type: string
+      label: Default Avatar
+    first_message:
+      type: text
+      label: First Message
+    loading_message:
+      type: text
+      label: Loading Message
+    stream:
+      type: integer
+      label: Stream
+    toggle_state:
+      type: string
+      label: Toggle State
+    width:
+      type: string
+      label: Width
+    height:
+      type: string
+      label: Height
+    placement:
+      type: string
+      label: Placement
+    show_structured_results:
+      type: boolean
+      label: Show Structured Results
+    show_copy_icon:
+      type: boolean
+      label: Show Copy Icon
+    collapse_minimal:
+      type: boolean
+      label: Collapse Minimal
+    style_file:
+      type: string
+      label: Style File
+    verbose_mode:
+      type: boolean
+      label: Verbose Mode
+    expansion_method:
+      type: string
+      label: Expansion Method

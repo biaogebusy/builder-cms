@@ -1,0 +1,41 @@
+ai_observability.settings:
+  type: config_object
+  label: 'AI Observability Settings'
+  mapping:
+    logging_enabled:
+      type: boolean
+      label: 'Enable logging AI events'
+    log_event_types:
+      type: sequence
+      label: 'Log event types'
+      sequence:
+        type: string
+    log_input:
+      type: boolean
+      label: Log input
+    log_output:
+      type: boolean
+      label: Log output
+    log_tags:
+      type: sequence
+      label: 'Log tags'
+      sequence:
+        type: string
+    fallback_log_message_mode:
+      type: boolean
+      label: 'Fallback mode for the log message placeholders'
+    otel_enabled:
+      type: boolean
+      label: 'Enable exporting AI events to the OpenTelemetry'
+    otel_spans:
+      type: boolean
+      label: 'Export OpenTelemetry spans for AI events'
+    otel_spans_store_input:
+      type: boolean
+      label: 'Store input in the span attributes'
+    otel_spans_store_output:
+      type: boolean
+      label: 'Store output in the span attributes'
+    otel_metrics:
+      type: boolean
+      label: 'Export OpenTelemetry metrics for AI events'

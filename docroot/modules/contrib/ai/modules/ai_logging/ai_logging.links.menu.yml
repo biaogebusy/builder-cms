@@ -1,0 +1,26 @@
+ai_log.logging:
+  title: 'AI Logging'
+  description: 'View and configure logs of AI operations for auditing and debugging.'
+  parent: ai.admin_config_safety
+  route_name: ai_logging.list_page
+
+ai_log.collection:
+  title: "AI Logs"
+  description: "View logs"
+  route_name: entity.ai_log.collection
+  parent: ai_log.logging
+  weight: 1
+
+ai_log.settings_menu:
+  title: "AI Logging Settings"
+  description: "Setup AI Logging"
+  route_name: ai_logging.settings_form
+  parent: ai_log.logging
+  weight: 2
+
+ai_log_type.collection:
+  title: "AI Log Types"
+  description: "View log types"
+  route_name: entity.ai_log_type.collection
+  parent: ai_log.logging
+  weight: 3

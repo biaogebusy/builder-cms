@@ -1,0 +1,21 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_negative_prompt
+    - node.type.image_job
+  module:
+    - text
+id: node.image_job.field_negative_prompt
+field_name: field_negative_prompt
+entity_type: node
+bundle: image_job
+label: 'Negative prompt'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats: {  }
+field_type: text_long

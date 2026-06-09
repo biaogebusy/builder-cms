@@ -1,0 +1,40 @@
+block.settings.ai_chatbot_block:
+  type: block_settings
+  label: Chatbot Block
+  mapping:
+    ai_assistant:
+      type: string
+      label: AI Assistant
+    bot_name:
+      type: text
+      label: Bot Name
+    bot_image:
+      type: string
+      label: Bot Image
+    use_username:
+      type: integer
+      label: Use Username
+    default_username:
+      type: text
+      label: Default Username
+    use_avatar:
+      type: integer
+      label: Use Avatar
+    default_avatar:
+      type: string
+      label: Default Avatar
+    first_message:
+      type: text
+      label: First Message
+    stream:
+      type: integer
+      label: Stream
+    toggle_state:
+      type: string
+      label: Toggle State
+    output_type:
+      type: string
+      label: Output Type
+    show_structured_results:
+      type: boolean
+      label: Show Structured Results

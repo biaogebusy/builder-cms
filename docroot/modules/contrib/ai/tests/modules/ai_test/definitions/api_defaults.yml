@@ -1,0 +1,209 @@
+chat:
+  input:
+    description: 'Input provided to the model.'
+    type: 'array'
+    default:
+      - { role: "system", content: "You are a helpful assistant." }
+      - { role: "user", content: "Introduce yourself!" }
+    required: true
+  authentication:
+    description: 'EchoAI API Key.'
+    type: 'string'
+    default: ''
+    required: true
+  configuration:
+    max_tokens:
+      label: 'Max Tokens'
+      description: 'The maximum number of tokens that can be generated in the chat completion.'
+      type: 'integer'
+      default: 4096
+      required: false
+      constraints:
+        min: 0
+        max: 4096
+    temperature:
+      label: 'Temperature'
+      description: 'Sampling temperature 0-1. Higher values mean more random output.'
+      type: 'float'
+      default: 1
+      required: false
+      constraints:
+        min: 0
+        max: 2
+        step: 0.1
+    frequency_penalty:
+      label: 'Frequency Penalty'
+      description: 'Number between -2.0 and 2.0. Positive values penalize new tokens based on existing frequency in the text so far.'
+      type: 'integer'
+      default: 0
+      required: false
+      constraints:
+        min: -2
+        max: 2
+        step: 0.1
+    presence_penalty:
+      label: 'Presence Penalty'
+      description: 'Number between -2.0 and 2.0. Positive values penalize new tokens on whether they appear in the text so far.'
+      type: 'integer'
+      default: 0
+      required: false
+      constraints:
+        min: -2
+        max: 2
+        step: 0.1
+    top_p:
+      label: 'Top P'
+      description: 'An alternative to sampling with temperature, called nucleus sampling.'
+      type: 'float'
+      default: 1
+      required: false
+      constraints:
+        min: 0
+        max: 1
+        step: 0.1
+text_to_image:
+  input:
+    description: 'Image generation prompt.'
+    type: 'string'
+    default: 'A beautiful sunset over the city.'
+    required: true
+  authentication:
+    description: 'EchoAI API Key.'
+    type: 'string'
+    default: ''
+    required: true
+  configuration:
+    n:
+      label: 'Number of Images'
+      description: 'The number of images to generate.'
+      type: 'integer'
+      default: 1
+      required: false
+      constraints:
+        min: 1
+        max: 10
+    response_format:
+      label: 'Response Format'
+      description: 'The format in which the generated images are returned.'
+      type: 'string'
+      default: 'url'
+      required: false
+      constraints:
+        options:
+          - url
+          - b64_json
+    size:
+      label: 'Size'
+      description: 'The size of the images that will be generated.'
+      type: 'string'
+      default: '256x256'
+      required: false
+      constraints:
+        options:
+          - '256x256'
+          - '512x512'
+          - '1024x1024'
+text_to_speech:
+  input:
+    description: 'Textual representation of the speech.'
+    type: 'string'
+    default: 'Once upon a time in London.'
+    required: true
+  authentication:
+    description: 'EchoAI API Key.'
+    type: 'string'
+    default: ''
+    required: true
+  configuration:
+    voice:
+      label: 'Voice'
+      description: 'The voice for the text to speech.'
+      type: 'string'
+      default: 'alloy'
+      required: true
+      constraints:
+        options:
+          - alloy
+          - echo
+          - fable
+          - onyx
+          - nova
+          - shimmer
+    response_format:
+      label: 'Response Format'
+      description: 'The format in which the generated audio is returned.'
+      type: 'string'
+      default: 'mp3'
+      required: false
+      constraints:
+        options:
+          - mp3
+          - opus
+          - aac
+          - flac
+          - wav
+          - pcm
+speech_to_text:
+  input:
+    description: 'Binary of audio file to be transcribed.'
+    type: 'string'
+    default: ''
+    required: true
+  authentication:
+    description: 'EchoAI API Key.'
+    type: 'string'
+    default: ''
+    required: true
+  configuration:
+    language:
+      label: 'Language'
+      description: 'The language of the audio file. Supplying the input language in ISO-639-1 format will improve accuracy and latency.'
+      type: 'string'
+      default: ''
+      required: false
+    prompt:
+      label: 'Prompt'
+      description: An optional text to guide the model's style or continue a previous audio segment. The prompt should match the audio language.
+      type: 'string_long'
+      default: ''
+      required: false
+    response_format:
+      label: 'Response Format'
+      description: 'The format in which the transcribed text is returned.'
+      type: 'string'
+      default: 'json'
+      required: false
+      constraints:
+        options:
+          - text
+          - json
+          - srt
+          - verbose_json
+          - vtt
+    temperature:
+      label: 'Temperature'
+      description: 'Sampling temperature 0-1. Higher values mean more random output.'
+      type: 'float'
+      default: 0
+      required: false
+      constraints:
+        min: 0
+        max: 1
+        step: 0.1
+embeddings:
+  input:
+    description: 'Textual representation of the speech.'
+    type: 'string'
+    default: 'Once upon a time in London.'
+    required: true
+  authentication:
+    description: 'EchoAI API Key.'
+    type: 'string'
+    default: ''
+    required: true
+  configuration:
+    dimensions:
+      label: 'Vector Dimension'
+      type: 'integer'
+      default: 1536
+      required: false

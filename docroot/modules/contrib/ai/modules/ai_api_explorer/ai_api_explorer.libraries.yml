@@ -1,0 +1,17 @@
+explorer:
+  css:
+    theme:
+      css/api_explorer.css: {}
+stream:
+  js:
+    js/stream.js: {}
+  css:
+    theme:
+      css/stream.css: {}
+multiselect:
+  js:
+    js/multiple-select/multiple-select.js: { attributes: { type: module }}
+    js/multiselect.js: {}
+  css:
+    theme:
+      css/multiple-select/multiple-select.css: {}

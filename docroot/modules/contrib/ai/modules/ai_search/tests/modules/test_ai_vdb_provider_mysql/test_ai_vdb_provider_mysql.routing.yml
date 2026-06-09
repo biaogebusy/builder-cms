@@ -1,0 +1,7 @@
+test_ai_vdb_provider_mysql.settings_form:
+  path: '/admin/config/ai/vdb_providers/test_ai_vdb_provider_mysql'
+  defaults:
+    _form: '\Drupal\test_ai_vdb_provider_mysql\Form\SetupForm'
+    _title: 'Setup Test MySQL VDB Provider'
+  requirements:
+    _permission: 'administer ai providers'

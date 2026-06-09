@@ -1,0 +1,199 @@
+<?php
+
+/**
+ * @file
+ * The AI translate module.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Element;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Url;
+use Drupal\ai_translate\ConfigurableFieldTextExtractorInterface;
+use Drupal\ai_translate\Controller\AiTranslateInterfaceController;
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ */
+function ai_translate_form_field_config_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  $fieldConfig = $form_state->getFormObject()->getEntity();
+  /** @var \Drupal\ai_translate\FieldTextExtractorPluginManager $pluginManager */
+  $pluginManager = \Drupal::service('plugin.manager.text_extractor');
+  $fieldType = $fieldConfig->getType();
+  foreach ($pluginManager->getDefinitions() as $pluginId => $definition) {
+    if (!in_array($fieldType, $definition['field_types'])) {
+      continue;
+    }
+    /** @var \Drupal\ai_translate\ConfigurableFieldTextExtractorInterface $plugin */
+    $plugin = $pluginManager->createInstance($pluginId);
+    if (!$plugin instanceof ConfigurableFieldTextExtractorInterface) {
+      continue;
+    }
+    $subform = $plugin->fieldSettingsForm($fieldConfig, $form_state, $form);
+    if (!$subform) {
+      continue;
+    }
+    // Only create the fieldset if there is at least one plugin form.
+    if (empty($form['third_party_settings']['ai_translate'])) {
+      $form['third_party_settings']['ai_translate'] = [
+        '#type' => 'fieldset',
+        '#title' => t('AI Translate'),
+        '#collapsible' => TRUE,
+        '#collapsed' => FALSE,
+      ];
+    }
+    $form['third_party_settings']['ai_translate'][$pluginId] = $subform;
+    $form['#entity_builders'][] = 'ai_translate_config_entity_builder';
+  }
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ */
+function ai_translate_form_locale_translate_edit_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+
+  // Bail if no permission.
+  if (!\Drupal::currentUser()->hasPermission('create ai interface translation')) {
+    return;
+  }
+
+  // Bail with message if no translation model set.
+  if (!_ai_translate_check_default_provider_and_model()) {
+    $message = t('Please select a default provider and model for translation via the <a href="@ai_settings">AI settings</a> page.', [
+      '@ai_settings' => Url::fromRoute('ai.settings_form')->toString(),
+    ]);
+    \Drupal::messenger()->addWarning($message);
+    return;
+  }
+
+  if (!empty($form['strings']['#header']) && count($form['strings']['#header']) === 2) {
+    /** @var \Drupal\ai\AiProviderPluginManager $provider_manager */
+    $provider_manager = \Drupal::service('ai.provider');
+    $default_model = $provider_manager->getDefaultProviderForOperationType('translate_text');
+    $form['strings']['#header'][] = t('Translate with @model', [
+      '@model' => $default_model['model_id'] ?? 'Default Model',
+    ]);
+
+    // Get the current language code for translations.
+    // This value is set in TranslateEditForm::buildForm.
+    $langcode_for_translation = $form['langcode']['#value'] ?? NULL;
+    if (!$langcode_for_translation) {
+      return;
+    }
+
+    foreach (Element::children($form['strings']) as $key => $string_row_id) {
+
+      // Validate that the row is structured as expected.
+      if (
+        !isset($form['strings'][$string_row_id]['original']) ||
+        !isset($form['strings'][$string_row_id]['translations']) ||
+        !is_array($form['strings'][$string_row_id]['translations'])
+      ) {
+        continue;
+      }
+
+      // Add a wrapper around the translations area for AJAX replacement.
+      $translation_wrapper_id = 'ai-translate-translations-wrapper-' . $string_row_id;
+      $form['strings'][$string_row_id]['translations']['#prefix'] = '<div id="' . $translation_wrapper_id . '">';
+      $form['strings'][$string_row_id]['translations']['#suffix'] = '</div>';
+
+      // Prepare AJAX callback.
+      $ajax_options = [
+        'callback' => [AiTranslateInterfaceController::class, 'translateInterface'],
+        'wrapper' => $translation_wrapper_id,
+        'event' => 'click',
+        'progress' => [
+          'type' => 'throbber',
+          'message' => t('Translating...'),
+        ],
+        'options' => [
+          // Merge to maintain any existing pager or filter settings. Most
+          // are stored in session but some are query string.
+          // @see \Drupal\locale\Form\TranslateEditForm.
+          'query' => array_merge(\Drupal::request()->query->all(), [
+            'string_row_id' => $string_row_id,
+            'string_row_key' => $key,
+            'langcode' => $langcode_for_translation,
+          ]),
+        ],
+      ];
+
+      // Add the AI Translate button to a new cell in the row.
+      $form['strings'][$string_row_id]['ai_translate_action'] = [
+        '#type' => 'button',
+        '#value' => t('AI Translate'),
+        '#name' => 'ai_translate_button_' . $string_row_id,
+        '#ajax' => $ajax_options,
+        '#attributes' => [
+          'class' => [
+            'button--small',
+          ],
+        ],
+      ];
+    }
+  }
+}
+
+/**
+ * Field config entity builder.
+ *
+ * Injects settings of configurable text extractors.
+ *
+ * @see \Drupal\Core\Entity\EntityForm::buildEntity()
+ */
+function ai_translate_config_entity_builder(
+  string $entityTypeId,
+  $entity,
+  &$form,
+  FormStateInterface &$form_state,
+) {
+  if (!$form_state->isSubmitted()) {
+    return;
+  }
+  $thirdPartySettings = $form_state->getValue(['third_party_settings', 'ai_translate']);
+  if (!$thirdPartySettings) {
+    return;
+  }
+  $pluginManager = \Drupal::service('plugin.manager.text_extractor');
+  foreach ($thirdPartySettings as $pluginId => $values) {
+    try {
+      /** @var \Drupal\ai_translate\ConfigurableFieldTextExtractorInterface $plugin */
+      $plugin = $pluginManager->createInstance($pluginId);
+      $plugin->submitFieldSettingForm($entity, $form_state, $form);
+    }
+    catch (\Throwable $exception) {
+      \Drupal::logger('ai_translate')->error($exception->getMessage());
+      \Drupal::messenger()->addWarning(t('An error has occurred. Please try again later.'));
+    }
+  }
+}
+
+/**
+ * Implements hook_help() for module help info.
+ */
+function ai_translate_plugin_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.ai':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('This module will integrate AI with our Drupal system. It will add a Translate link to translate an entire piece of content into another language in one click.');
+      $output .= ' ' . t('For more information, see the <a href=":drupal-org-help">online documentation for the ai_translate module</a>.', [':drupal-org-help' => 'https://www.drupal.org/project/ai']);
+      $output .= '</p>';
+      return $output;
+  }
+}
+
+/**
+ * Check if default provider is chosen and model is selected.
+ *
+ * @return bool
+ *   True if a default provider has been set.
+ */
+function _ai_translate_check_default_provider_and_model(): bool {
+  $sets = \Drupal::service('ai.provider')->getDefaultProviderForOperationType('translate_text');
+  if (empty($sets['provider_id'])) {
+    \Drupal::messenger()->addMessage(t('Please set a default provider & model for the text translation the <a href=":url">AI module settings</a>.', [':url' => Url::fromRoute('ai.settings_form')->toString()]), 'error', FALSE);
+    return FALSE;
+  }
+  return TRUE;
+}

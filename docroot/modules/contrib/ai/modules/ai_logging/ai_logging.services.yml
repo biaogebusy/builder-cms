@@ -1,0 +1,9 @@
+services:
+  ai_logging.post_request_subscriber:
+    class: '\Drupal\ai_logging\EventSubscriber\LogPostRequestEventSubscriber'
+    arguments: ['@entity_type.manager', '@config.factory', '@module_handler', '@datetime.time']
+    tags:
+      - { name: 'event_subscriber' }
+  ai_logging.prune:
+    class: '\Drupal\ai_logging\Cron\AiLogPruning'
+    arguments: ['@config.factory', '@entity_type.manager', '@logger.factory']

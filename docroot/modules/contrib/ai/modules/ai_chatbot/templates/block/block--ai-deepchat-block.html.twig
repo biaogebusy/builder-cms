@@ -1,0 +1,27 @@
+{#
+/**
+ * @file
+ * AI chatbot implementation to display in a block.
+ *
+ * @see template_preprocess_block()
+ *
+ * @ingroup themeable
+ */
+#}
+
+{%
+  set classes = [
+    'block',
+    'block-' ~ configuration.provider|clean_class,
+    'block-' ~ plugin_id|clean_class,
+    layout ? 'layout--' ~ layout|clean_class,
+  ]
+%}
+
+<div{{ attributes.addClass(classes) }}>
+  {% block content %}
+    <div{{ content_attributes.addClass('block__content') }}>
+      {{ content }}
+    </div>
+  {% endblock %}
+</div>

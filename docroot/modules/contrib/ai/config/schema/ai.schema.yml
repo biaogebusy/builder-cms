@@ -1,0 +1,233 @@
+ai.settings:
+  label: 'AI Settings'
+  type: config_object
+  mapping:
+    prompt_logging:
+      label: 'If the AI should log prompts'
+      type: boolean
+    prompt_logging_tags:
+      label: 'Tags to log prompts with'
+      type: string
+    default_providers:
+      label: 'Default providers'
+      type: mapping
+      mapping:
+        audio_to_audio:
+          label: 'Default audio to audio provider'
+          type: ai.default_operation_provider
+        chat:
+          label: 'Default chat provider'
+          type: ai.default_operation_provider
+        chat_with_complex_json:
+          label: 'Default chat with complex JSON provider'
+          type: ai.default_operation_provider
+        chat_with_image_vision:
+          label: 'Default chat with image vision provider'
+          type: ai.default_operation_provider
+        chat_with_structured_response:
+          label: 'Default chat with structured response provider'
+          type: ai.default_operation_provider
+        chat_with_tools:
+          label: 'Default chat with tools provider'
+          type: ai.default_operation_provider
+        embeddings:
+          label: 'Default embeddings provider'
+          type: ai.default_operation_provider
+        image_and_audio_to_video:
+          label: 'Default image and audio to video provider'
+          type: ai.default_operation_provider
+        image_classification:
+          label: 'Default image classification provider'
+          type: ai.default_operation_provider
+        image_to_image:
+          label: 'Default image to image provider'
+          type: ai.default_operation_provider
+        image_to_video:
+          label: 'Default image to video provider'
+          type: ai.default_operation_provider
+        moderation:
+          label: 'Default moderation provider'
+          type: ai.default_operation_provider
+        object_detection:
+          label: 'Default object detection provider'
+          type: ai.default_operation_provider
+        rerank:
+          label: 'Default rerank provider'
+          type: ai.default_operation_provider
+        speech_to_speech:
+          label: 'Default speech to speech provider'
+          type: ai.default_operation_provider
+        speech_to_text:
+          label: 'Default speech to text provider'
+          type: ai.default_operation_provider
+        summarize:
+          label: 'Default summarize provider'
+          type: ai.default_operation_provider
+        text_classification:
+          label: 'Default text classification provider'
+          type: ai.default_operation_provider
+        text_to_image:
+          label: 'Default text to image provider'
+          type: ai.default_operation_provider
+        text_to_speech:
+          label: 'Default text to speech provider'
+          type: ai.default_operation_provider
+        translate_text:
+          label: 'Default translate text provider'
+          type: ai.default_operation_provider
+    default_vdb_provider:
+      label: 'Default Vector Database Provider'
+      type: string
+    request_timeout:
+      label: 'HTTP request timeout in seconds'
+      type: integer
+      constraints:
+        Range:
+          min: 1
+          max: 3600
+    models:
+      type: sequence
+      label: The overridden/added models.
+      required: false
+      sequence:
+        type: ignore
+    allowed_hosts:
+      type: sequence
+      label: 'Allowed hosts for external AI requests'
+      sequence:
+        type: string
+    allowed_hosts_rewrite_links:
+      type: boolean
+      label: 'If links to allowed hosts should be rewritten'
+    global_guardrails:
+      type: sequence
+      label: 'Global guardrail set ids applied to every AI request'
+      sequence:
+        type: string
+
+ai.default_operation_provider:
+  type: mapping
+  label: 'Default provider'
+  mapping:
+    provider_id:
+      label: 'Provider ID'
+      type: string
+    model_id:
+      label: 'Model ID'
+      type: string
+
+ai.ai_guardrail.*:
+  type: config_entity
+  label: Guardrail
+  mapping:
+    id:
+      type: string
+      label: ID
+    label:
+      type: label
+      label: Label
+    uuid:
+      type: string
+    description:
+      type: string
+    guardrail:
+      type: string
+      label: Guardrail plugin ID
+    guardrail_settings:
+      type: ai.guardrail.settings.[%parent.guardrail]
+      label: Guardrail settings
+
+ai.guardrail.settings.*:
+  type: mapping
+  label: Default guardrail settings
+
+ai.guardrail.settings.input_length_limit:
+  type: mapping
+  label: Input Length Limit settings
+  mapping:
+    max_length:
+      type: integer
+      label: Maximum length
+    use_tokens:
+      type: boolean
+      label: Use token-based counting
+    tokenizer_model:
+      type: string
+      label: Tokenizer model
+    check_all_messages:
+      type: boolean
+      label: Check total conversation length
+    violation_message:
+      type: string
+      label: Violation message
+
+ai.guardrail.settings.regexp_guardrail:
+  type: mapping
+  label: Regexp Guardrail settings
+  mapping:
+    regexp_pattern:
+      type: string
+      label: Regexp pattern
+    violation_message:
+      type: string
+      label: Violation message
+
+ai.guardrail.settings.restrict_to_topic:
+  type: mapping
+  label: Restrict to Topic settings
+  mapping:
+    valid_topics:
+      type: string
+      label: Valid topics
+    invalid_topics:
+      type: string
+      label: Invalid topics
+    invalid_topics_present_message:
+      type: string
+      label: Invalid topics present message
+    valid_topics_missing_message:
+      type: string
+      label: Valid topics missing message
+    llm_provider:
+      type: string
+      label: LLM provider
+    llm_model:
+      type: string
+      label: LLM model
+    llm_config:
+      type: mapping
+      label: LLM configuration
+
+ai.ai_guardrail_set.*:
+  type: config_entity
+  label: Guardrail set
+  mapping:
+    id:
+      type: string
+      label: ID
+    label:
+      type: label
+      label: Label
+    uuid:
+      type: string
+    description:
+      type: string
+    stop_threshold:
+      type: float
+      label: Stop threshold
+    pre_generate_guardrails:
+      type: mapping
+      label: Pre-generate guardrails
+      mapping:
+        plugin_id:
+          type: sequence
+          sequence:
+            type: string
+    post_generate_guardrails:
+      type: mapping
+      label: Post-generate guardrails
+      mapping:
+        plugin_id:
+          type: sequence
+          sequence:
+            type: string

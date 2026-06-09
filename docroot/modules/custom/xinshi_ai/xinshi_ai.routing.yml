@@ -1,0 +1,102 @@
+# 模型注册中心(详见模块文档 §5)— 前端 AiModelRegistryService 拉取。
+xinshi_ai.models.list:
+  path: '/api/v3/ai/models'
+  defaults:
+    _controller: '\Drupal\xinshi_ai\Controller\ModelRegistryController::list'
+    _format: 'json'
+  methods: [GET]
+  requirements:
+    _permission: 'access content'
+
+# 模块全局配置(详见模块文档 §10.4)。
+xinshi_ai.settings:
+  path: '/admin/config/xinshi/ai'
+  defaults:
+    _form: '\Drupal\xinshi_ai\Form\SettingsForm'
+    _title: 'Xinshi AI 设置'
+  requirements:
+    _permission: 'administer xinshi_ai'
+  options:
+    _admin_route: TRUE
+
+# 模型注册中心后台管理(列表 + CRUD)。
+xinshi_ai.models.overview:
+  path: '/admin/config/xinshi/ai/models'
+  defaults:
+    _controller: '\Drupal\xinshi_ai\Controller\ModelAdminController::list'
+    _title: '模型管理'
+  requirements:
+    _permission: 'administer xinshi_ai'
+  options:
+    _admin_route: TRUE
+
+xinshi_ai.models.add:
+  path: '/admin/config/xinshi/ai/models/add'
+  defaults:
+    _form: '\Drupal\xinshi_ai\Form\ModelForm'
+    _title: '新增模型'
+  requirements:
+    _permission: 'administer xinshi_ai'
+  options:
+    _admin_route: TRUE
+
+xinshi_ai.models.edit:
+  path: '/admin/config/xinshi/ai/models/{id}/edit'
+  defaults:
+    _form: '\Drupal\xinshi_ai\Form\ModelForm'
+    _title: '编辑模型'
+  requirements:
+    _permission: 'administer xinshi_ai'
+  options:
+    _admin_route: TRUE
+
+xinshi_ai.models.delete:
+  path: '/admin/config/xinshi/ai/models/{id}/delete'
+  defaults:
+    _form: '\Drupal\xinshi_ai\Form\ModelDeleteForm'
+    _title: '删除模型'
+  requirements:
+    _permission: 'administer xinshi_ai'
+  options:
+    _admin_route: TRUE
+
+# 图片任务:创建(详见模块文档 §4.1)。
+xinshi_ai.image_job.create:
+  path: '/api/v3/image-jobs'
+  defaults:
+    _controller: '\Drupal\xinshi_ai\Controller\ImageJobController::submit'
+    _format: 'json'
+  methods: [POST]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2', 'cookie']
+  requirements:
+    _permission: 'create xinshi_ai image job'
+
+# 图片任务:取消(软取消)。
+xinshi_ai.image_job.cancel:
+  path: '/api/v3/image-jobs/{uuid}/cancel'
+  defaults:
+    _controller: '\Drupal\xinshi_ai\Controller\ImageJobController::cancel'
+    _format: 'json'
+  methods: [POST]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2', 'cookie']
+  requirements:
+    _permission: 'cancel xinshi_ai image job'
+    uuid: '[0-9a-f-]+'
+
+# 图片任务:SSE 进度流(ticket 鉴权,见 §8)。
+xinshi_ai.image_job.events:
+  path: '/api/v3/image-jobs/{uuid}/events'
+  defaults:
+    _controller: '\Drupal\xinshi_ai\Controller\ImageJobEventsController::stream'
+    _format: 'json'
+  methods: [GET]
+  options:
+    no_cache: TRUE
+  requirements:
+    _custom_access: '\Drupal\xinshi_ai\Controller\ImageJobEventsController::accessByTicket'
+    uuid: '[0-9a-f-]+'
+

@@ -1,0 +1,337 @@
+{% import '@lib/di.twig' as di %}
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\{{ machine_name }}\Plugin\AiProvider;
+
+{% apply sort_namespaces %}
+use Drupal\Core\Config\ImmutableConfig;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\ai\Attribute\AiProvider;
+{% if base_class == 'AiProviderClientBase' %}
+use Drupal\ai\Base\AiProviderClientBase;
+{% else %}
+use Drupal\ai\Base\OpenAiBasedProviderClientBase;
+{% endif %}
+use Drupal\ai\Exception\AiResponseErrorException;
+{% if 'chat' in operation_types %}
+use Drupal\ai\OperationType\Chat\ChatInput;
+use Drupal\ai\OperationType\Chat\ChatInterface;
+use Drupal\ai\OperationType\Chat\ChatMessage;
+use Drupal\ai\OperationType\Chat\ChatOutput;
+{% endif %}
+{% if 'embeddings' in operation_types %}
+use Drupal\ai\OperationType\Embeddings\EmbeddingsInput;
+use Drupal\ai\OperationType\Embeddings\EmbeddingsInterface;
+use Drupal\ai\OperationType\Embeddings\EmbeddingsOutput;
+{% endif %}
+{% if 'text_to_image' in operation_types %}
+use Drupal\ai\OperationType\TextToImage\TextToImageInput;
+use Drupal\ai\OperationType\TextToImage\TextToImageInterface;
+use Drupal\ai\OperationType\TextToImage\TextToImageOutput;
+{% endif %}
+{% if 'text_to_speech' in operation_types %}
+use Drupal\ai\OperationType\TextToSpeech\TextToSpeechInput;
+use Drupal\ai\OperationType\TextToSpeech\TextToSpeechInterface;
+use Drupal\ai\OperationType\TextToSpeech\TextToSpeechOutput;
+{% endif %}
+{% if 'speech_to_text' in operation_types %}
+use Drupal\ai\OperationType\SpeechToText\SpeechToTextInput;
+use Drupal\ai\OperationType\SpeechToText\SpeechToTextInterface;
+use Drupal\ai\OperationType\SpeechToText\SpeechToTextOutput;
+{% endif %}
+{% if 'moderation' in operation_types %}
+use Drupal\ai\OperationType\Moderation\ModerationInput;
+use Drupal\ai\OperationType\Moderation\ModerationInterface;
+use Drupal\ai\OperationType\Moderation\ModerationOutput;
+{% endif %}
+{% endapply %}
+
+/**
+ * Provides the {{ plugin_label }} AI provider.
+ */
+#[AiProvider(
+  id: '{{ plugin_id }}',
+  label: new TranslatableMarkup('{{ plugin_label }}'),
+)]
+class {{ class }} extends {{ base_class }}{% if 'chat' in operation_types %} implements ChatInterface{% endif %}{% if 'embeddings' in operation_types %}{% if 'chat' in operation_types %}, EmbeddingsInterface{% else %} implements EmbeddingsInterface{% endif %}{% endif %}{% if 'text_to_image' in operation_types %}{% if 'chat' in operation_types or 'embeddings' in operation_types %}, TextToImageInterface{% else %} implements TextToImageInterface{% endif %}{% endif %}{% if 'text_to_speech' in operation_types %}{% if 'chat' in operation_types or 'embeddings' in operation_types or 'text_to_image' in operation_types %}, TextToSpeechInterface{% else %} implements TextToSpeechInterface{% endif %}{% endif %}{% if 'speech_to_text' in operation_types %}{% if 'chat' in operation_types or 'embeddings' in operation_types or 'text_to_image' in operation_types or 'text_to_speech' in operation_types %}, SpeechToTextInterface{% else %} implements SpeechToTextInterface{% endif %}{% endif %}{% if 'moderation' in operation_types %}{% if 'chat' in operation_types or 'embeddings' in operation_types or 'text_to_image' in operation_types or 'text_to_speech' in operation_types or 'speech_to_text' in operation_types %}, ModerationInterface{% else %} implements ModerationInterface{% endif %}{% endif %} {
+
+  /**
+   * The API client instance.
+   *
+   * @var object|null
+   */
+  protected $client = NULL;
+
+  /**
+   * The API key.
+   *
+   * @var string
+   */
+  protected string $apiKey = '';
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getConfig(): ImmutableConfig {
+    return $this->configFactory->get('{{ machine_name }}.settings');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getConfiguredModels(?string $operation_type = NULL, array $capabilities = []): array {
+    $models = [];
+
+{% if 'chat' in operation_types %}
+    if (!$operation_type || $operation_type === 'chat') {
+      // @todo Add actual chat models from your API.
+      $models['chat-model-1'] = 'Chat Model One';
+    }
+
+{% endif %}
+{% if 'embeddings' in operation_types %}
+    if (!$operation_type || $operation_type === 'embeddings') {
+      // @todo Add actual embedding models from your API.
+      $models['embedding-model-1'] = 'Embedding Model One';
+    }
+
+{% endif %}
+{% if 'text_to_image' in operation_types %}
+    if (!$operation_type || $operation_type === 'text_to_image') {
+      // @todo Add actual image generation models from your API.
+      $models['image-model-1'] = 'Image Model One';
+    }
+
+{% endif %}
+{% if 'text_to_speech' in operation_types %}
+    if (!$operation_type || $operation_type === 'text_to_speech') {
+      // @todo Add actual TTS models from your API.
+      $models['tts-model-1'] = 'TTS Model One';
+    }
+
+{% endif %}
+{% if 'speech_to_text' in operation_types %}
+    if (!$operation_type || $operation_type === 'speech_to_text') {
+      // @todo Add actual STT models from your API.
+      $models['stt-model-1'] = 'STT Model One';
+    }
+
+{% endif %}
+{% if 'moderation' in operation_types %}
+    if (!$operation_type || $operation_type === 'moderation') {
+      // @todo Add actual moderation models from your API.
+      $models['moderation-model-1'] = 'Moderation Model One';
+    }
+
+{% endif %}
+    return $models;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isUsable(?string $operation_type = NULL, array $capabilities = []): bool {
+    if (!$this->getConfig()->get('api_key')) {
+      return FALSE;
+    }
+
+    if ($operation_type) {
+      return in_array($operation_type, $this->getSupportedOperationTypes());
+    }
+
+    return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSupportedOperationTypes(): array {
+    return [
+{% for op_type in operation_types %}
+      '{{ op_type }}',
+{% endfor %}
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setAuthentication(mixed $authentication): void {
+    $this->apiKey = $authentication;
+    $this->client = NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getModelSettings(string $model_id, array $generalConfig = []): array {
+    return $generalConfig;
+  }
+
+{% if 'chat' in operation_types %}
+  /**
+   * {@inheritdoc}
+   */
+  public function chat(array|string|ChatInput $input, string $model_id, array $tags = []): ChatOutput {
+    $this->loadClient();
+
+    // Normalize input to ChatInput.
+    if (is_string($input)) {
+      $input = new ChatInput([new ChatMessage('user', $input)]);
+    }
+    elseif (is_array($input)) {
+      $messages = [];
+      foreach ($input as $msg) {
+        $messages[] = new ChatMessage($msg['role'] ?? 'user', $msg['content'] ?? '');
+      }
+      $input = new ChatInput($messages);
+    }
+
+    try {
+      // @todo Implement actual API call to your provider.
+      // Example: $response = $this->client->chat($payload);
+      $response_text = 'Example response from ' . $model_id;
+
+      $message = new ChatMessage('assistant', $response_text);
+      return new ChatOutput($message, $response_text, []);
+    }
+    catch (\Exception $e) {
+      throw new AiResponseErrorException($e->getMessage());
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getMaxInputTokens(string $model_id): int {
+    // @todo Return actual token limits for your models.
+    return 4096;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getMaxOutputTokens(string $model_id): int {
+    // @todo Return actual token limits for your models.
+    return 4096;
+  }
+
+{% endif %}
+{% if 'embeddings' in operation_types %}
+  /**
+   * {@inheritdoc}
+   */
+  public function embeddings(string|EmbeddingsInput $input, string $model_id, array $tags = []): EmbeddingsOutput {
+    $this->loadClient();
+
+    try {
+      // @todo Implement actual API call to your provider.
+      // Example: $vectors = $this->client->embeddings($input);
+      $vector = array_fill(0, $this->embeddingsVectorSize($model_id), 0.0);
+      return new EmbeddingsOutput([$vector], $input, []);
+    }
+    catch (\Exception $e) {
+      throw new AiResponseErrorException($e->getMessage());
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function maxEmbeddingsInput(string $model_id = ''): int {
+    // @todo Return actual max input size for your models.
+    return 8191;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function embeddingsVectorSize(string $model_id): int {
+    // @todo Return actual vector dimensions for your models.
+    return 1536;
+  }
+
+{% endif %}
+{% if 'text_to_image' in operation_types %}
+  /**
+   * {@inheritdoc}
+   */
+  public function textToImage(string|TextToImageInput $input, string $model_id, array $tags = []): TextToImageOutput {
+    $this->loadClient();
+
+    try {
+      // @todo Implement actual API call to your provider.
+      throw new AiResponseErrorException('Text-to-image not yet implemented.');
+    }
+    catch (\Exception $e) {
+      throw new AiResponseErrorException($e->getMessage());
+    }
+  }
+
+{% endif %}
+{% if 'text_to_speech' in operation_types %}
+  /**
+   * {@inheritdoc}
+   */
+  public function textToSpeech(string|TextToSpeechInput $input, string $model_id, array $tags = []): TextToSpeechOutput {
+    $this->loadClient();
+
+    try {
+      // @todo Implement actual API call to your provider.
+      throw new AiResponseErrorException('Text-to-speech not yet implemented.');
+    }
+    catch (\Exception $e) {
+      throw new AiResponseErrorException($e->getMessage());
+    }
+  }
+
+{% endif %}
+{% if 'speech_to_text' in operation_types %}
+  /**
+   * {@inheritdoc}
+   */
+  public function speechToText(string|SpeechToTextInput $input, string $model_id, array $tags = []): SpeechToTextOutput {
+    $this->loadClient();
+
+    try {
+      // @todo Implement actual API call to your provider.
+      throw new AiResponseErrorException('Speech-to-text not yet implemented.');
+    }
+    catch (\Exception $e) {
+      throw new AiResponseErrorException($e->getMessage());
+    }
+  }
+
+{% endif %}
+{% if 'moderation' in operation_types %}
+  /**
+   * {@inheritdoc}
+   */
+  public function moderation(string|ModerationInput $input, string $model_id, array $tags = []): ModerationOutput {
+    $this->loadClient();
+
+    try {
+      // @todo Implement actual API call to your provider.
+      throw new AiResponseErrorException('Moderation not yet implemented.');
+    }
+    catch (\Exception $e) {
+      throw new AiResponseErrorException($e->getMessage());
+    }
+  }
+
+{% endif %}
+  /**
+   * Loads the API client.
+   */
+  protected function loadClient(): void {
+    if ($this->client) {
+      return;
+    }
+
+    // @todo Initialize your API client here.
+    // Example: $this->client = new YourApiClient($this->loadApiKey());
+  }
+
+}

@@ -1,0 +1,36 @@
+<?php
+
+/**
+ * @file
+ * AI test module file.
+ */
+
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Hook\Attribute\LegacyHook;
+use Drupal\Core\Url;
+use Drupal\ai_test\Entity\AIMockProviderResult;
+use Drupal\ai_test\Hook\OperationTypeHook;
+
+/**
+ * Implements hook_ai_operationtype_alter().
+ */
+#[LegacyHook]
+function ai_test_ai_operationtype_alter(array &$operation_types) {
+  \Drupal::service(OperationTypeHook::class)->echoOperationType($operation_types);
+}
+
+/**
+ * Implements hook_entity_operation().
+ */
+#[LegacyHook]
+function ai_test_entity_operation(EntityInterface $entity) {
+  return $entity instanceof AIMockProviderResult ? [
+    'export' => [
+      'title' => t('Export to test'),
+      'url' => Url::fromRoute('ai_test.export_file', [
+        'result' => $entity->id(),
+      ]),
+      'weight' => 100,
+    ],
+  ] : [];
+}

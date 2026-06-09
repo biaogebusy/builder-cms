@@ -1,0 +1,10 @@
+langcode: en
+status: true
+dependencies: {  }
+name: 'AI 图片作品'
+type: image_asset
+description: '单张生成图(隶属于 image_job)。'
+help: null
+new_revision: false
+preview_mode: 0
+display_submitted: false

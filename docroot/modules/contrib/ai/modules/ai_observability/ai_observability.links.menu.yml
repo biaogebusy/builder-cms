@@ -1,0 +1,5 @@
+ai_observability.settings:
+  title: 'AI Observability'
+  description: 'Monitor and track AI operations for transparency and compliance reporting.'
+  parent: ai.admin_config_safety
+  route_name: ai_observability.settings

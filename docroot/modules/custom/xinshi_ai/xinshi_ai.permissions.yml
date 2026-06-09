@@ -1,0 +1,11 @@
+create xinshi_ai image job:
+  title: '创建 AI 图片任务'
+  description: '允许用户提交新的图片生成任务。'
+
+cancel xinshi_ai image job:
+  title: '取消 AI 图片任务'
+
+administer xinshi_ai:
+  title: '管理 Xinshi AI 配置'
+  description: '管理厂商凭据、默认参数、模型白名单等设置。'
+  restrict access: true

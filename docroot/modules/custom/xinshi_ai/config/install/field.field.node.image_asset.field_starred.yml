@@ -1,0 +1,22 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_starred
+    - node.type.image_asset
+id: node.image_asset.field_starred
+field_name: field_starred
+entity_type: node
+bundle: image_asset
+label: 'Starred'
+description: ''
+required: false
+translatable: true
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

@@ -1,0 +1,26 @@
+---
+label: 'Using Twig in prompts'
+top_level: false
+---
+<h2>{% trans %}What is a prompt?{% endtrans %}</h2>
+<p>{% trans %}A <em>prompt</em> is a text sent to an AI provider in order to achieve a certain task.{% endtrans %}</p>
+<h2>{% trans %}What is Twig?{% endtrans %}</h2>
+<p>{% trans %}Twig is a modern template engine for PHP, used as default rendering engine by Drupal.{% endtrans %}</p>
+<h2>{% trans %}Example of using conditions in the prompt{% endtrans %}</h2>
+<p>In the following example, AI translate module will use more specific
+prompt for translating from Swedish to German (having additional "Make sure..." sentence),
+and default prompt for all other cases:</p>
+<pre>{% verbatim %}
+{% if source_lang == 'sv' and dest_lang == 'de' %}
+  Take the following text and translate it from Swedish to German word by word. Make sure that you try to understand from context if the person being spoken to is in a position where they are allowed to say 'du', otherwise change this to 'sie':
+  {{ text }}
+{% else %}
+  Take the following text and translate it from {{ source_lang_name }} to {{ dest_lang_name }} word by word.
+  {{ text }}
+{% endif %}
+{% endverbatim %}</pre>
+<h2>{% trans %}Additional resources{% endtrans %}</h2>
+<ul>
+  <li><a href="https://twig.symfony.com/">{% trans %}Twig documentation{% endtrans %}</a></li>
+  <li><a href="https://www.drupal.org/docs/develop/theming-drupal/twig-in-drupal">{% trans %}Twig in Drupal{% endtrans %}</a></li>
+</ul>

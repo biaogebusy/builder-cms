@@ -1,0 +1,5 @@
+entity.ai_assistant.overview:
+  title: AI Assistants
+  description: 'Create and manage AI assistants that extend site functionality with conversational interfaces.'
+  parent: ai.admin_config_tools
+  route_name: entity.ai_assistant.collection

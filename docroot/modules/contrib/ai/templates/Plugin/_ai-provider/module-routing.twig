@@ -1,0 +1,7 @@
+{{ machine_name }}.config:
+  path: '/admin/config/ai/providers/{{ plugin_id }}'
+  defaults:
+    _title: '{{ plugin_label }} Configuration'
+    _form: 'Drupal\{{ machine_name }}\Form\{{ class }}ConfigForm'
+  requirements:
+    _permission: 'administer ai providers'

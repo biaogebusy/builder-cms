@@ -1,0 +1,8 @@
+field_widget_actions.modal_form_action:
+  path: '/admin/field-widget-action/modal/{plugin_id}/{tempstore_id}'
+  defaults:
+    _controller: '\Drupal\field_widget_actions\Controller\FieldWidgetActionFormController::submitModal'
+    _title: 'Field Widget Action'
+  requirements:
+    # Access is checked in the form wrapper build form.
+    _permission: 'access content'

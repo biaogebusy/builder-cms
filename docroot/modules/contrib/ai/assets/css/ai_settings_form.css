@@ -1,0 +1,31 @@
+/**
+ * @file
+ * Styles for the AI Settings form.
+ *
+ * Form-specific layout (e.g. icon button cells, message cells) that is not
+ * part of the global AI utilities.
+ */
+
+/**
+ * Container for icon buttons in settings form tables.
+ * Displays icons inline (row) with left alignment so icons stack vertically
+ * when looking down the column, even when only one icon is present.
+ */
+.ai-info-cell {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--gin-spacing-xxs, 0.25rem);
+}
+
+.ai-messages-cell {
+  margin-top: 1rem;
+}
+
+/**
+ * Providers cell in additional capabilities table.
+ */
+ .ai-providers-cell {
+  font-size: var(--ai-font-size-s);
+}

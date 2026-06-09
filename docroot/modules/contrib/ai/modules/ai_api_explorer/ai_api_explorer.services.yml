@@ -1,0 +1,19 @@
+services:
+  ai_api_explorer.helper:
+    class: Drupal\ai_api_explorer\ExplorerHelper
+  ai_api_explorer.route_subscriber:
+    class: Drupal\ai_api_explorer\Routing\AiApiExplorerRouteSubscriber
+    arguments: ['@plugin.manager.ai_api_explorer']
+    tags:
+      - { name: event_subscriber }
+  access_check.ai_api_explorer.ai_api_explorer_access:
+    class: Drupal\ai_api_explorer\Access\AiApiExplorerAccessChecker
+    arguments: ['@plugin.manager.ai_api_explorer']
+    tags:
+      - { name: access_check, applies_to: _ai_api_explorer_access }
+  plugin.manager.ai_api_explorer:
+    class: Drupal\ai_api_explorer\AiApiExplorerPluginManager
+    parent: default_plugin_manager
+  Drupal\ai_api_explorer\Hook\AiApiExplorer:
+    class: Drupal\ai_api_explorer\Hook\AiApiExplorer
+    autowire: true

@@ -1,0 +1,217 @@
+name: Toolbar
+parameters:
+  auxiliaryStyle: "
+    .chat-header {
+      display: flex;
+      color: var(--gin-color-primary, #0550e6);
+      font-weight: 600;
+      font-size: 34px;
+      gap: 10px;
+      overflow: hidden;
+    }
+    .chat-header--title {
+      background: linear-gradient(71.82deg, #0550E6 12.55%, #8FB4FF 85.42%);
+      background-clip: text;
+      color: transparent;
+      white-space: nowrap;
+    }
+    .chat-header--title-emoji {
+      color: initial;
+      font-size: 34px;
+      display: inline;
+    }
+    .chat-header .chat-header--subtitle {
+      font-weight: 400;
+      color: #4B4F58;
+      font-size: 16px;
+    }
+    .chat-header--icon {
+      background-image: url(/modules/contrib/ai/modules/ai_chatbot/assets/ai-icon-gradient.svg);
+      display: block;
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    [contenteditable][textcolor]:empty:before {
+      white-space: nowrap;
+      display: block;
+      overflow: hidden;
+    }
+    #chat-view:not(:has(.message-bubble)) {
+      display: block;
+    }
+
+    #messages {
+      margin-right: 8px;
+    }
+    #messages .outer-message-container:first-child {
+      margin-top: 40px;
+    }
+
+    .outer-message-container:has(.loading-wrapper) .avatar-container,
+    .outer-message-container:has(.deep-chat-temporary-message) .avatar-container {
+      background-image: url(/modules/contrib/ai/modules/ai_chatbot/assets/loading.svg);
+      background-repeat: no-repeat;
+      height: fit-content;
+      min-width: 26px;
+      min-height: 26px;
+      background-size: 26px;
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+    }
+    .outer-message-container:has(.loading-wrapper) .avatar-container img,
+    .outer-message-container:has(.deep-chat-temporary-message) .avatar-container img {
+      padding: 0;
+      height: 12px;
+      width: 12px;
+    }
+    
+    .input-button-container.outer-button-container {
+      position: absolute;
+      bottom: 0;
+      left: 12px;
+    }
+    "
+  introPanelStyle:
+    top: "0"
+    marginTop: "24px"
+    justifyContent: "flex-start"
+    position: "static"
+  names:
+    default:
+      style:
+        display: "none"
+  textInput:
+    styles:
+      container:
+        width: "100%"
+        marginBottom: "4px"
+        borderRadius: "8px"
+        boxShadow: "none"
+        height: "104px"
+        marginRight: "16px"
+        marginTop: "26px"
+        border: "1px solid #D8DADE"
+      text:
+        padding: "16px 60px 16px 18px"
+        fontSize: "16px"
+        lineHeight: "20px"
+      focus:
+        border: "1px solid #0550E6"
+    placeholder:
+      text: "Ask me anything"
+  messageStyles:
+    default:
+      shared:
+        bubble:
+          maxWidth: "100%"
+          backgroundColor: "unset"
+          marginTop: "10px"
+          marginBottom: "10px"
+          fontSize: "16px"
+          lineHeight: "1.5em"
+          marginLeft: "0"
+          paddingLeft: "0"
+          paddingTop: "0"
+        innerContainer:
+          marginLeft: "12px"
+          marginRight: "12px"
+      user:
+        outerContainer:
+          backgroundColor: "#F1F2F3"
+          borderRadius: "10px"
+          position: "relative"
+          marginLeft: "auto"
+          width: "90%"
+          marginBottom: "16px"
+          marginRight: "8px"
+        bubble:
+          marginLeft: "0px"
+          color: "#1C2024"
+          fontSize: "16px"
+          lineHeight: "26px"
+          fontWeight: "400"
+          padding: "0px"
+      ai:
+        outerContainer:
+          position: "relative"
+          marginRight: "auto"
+          width: "95%"
+          marginBottom: "16px"
+        innerContainer:
+          width: "auto"
+          marginLeft: "0"
+        bubble:
+          fontSize: "16px"
+          lineHeight: "26px"
+          fontWeight: "400"
+          flexBasis: "100%"
+          marginTop: "0"
+          color: "#4B4F58"
+    loading:
+      message:
+        styles:
+          outerContainer:
+            marginLeft: "0"
+          innerContainer:
+            flexWrap: "wrap"
+            marginLeft: "8px"
+          bubble:
+            flexBasis: "100%"
+            marginLeft: "10px"
+            maxWidth: 'fit-content'
+            marginTop: "auto"
+            marginBottom: "auto"
+            paddingTop: "8px"
+  avatars:
+    default:
+      styles:
+        container:
+          display: "none"
+    ai:
+      styles:
+        container:
+          display: "block"
+          marginTop: "0"
+  
+  submitButtonStyles:
+    submit:
+      container:
+        default:
+          bottom: "16px"
+          right: "32px"
+          height: "fit-content"
+          margin: "0px"
+        hover:
+          backgroundColor: "transparent"
+      svg:
+        content: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M11.25 10H6.25" stroke="#808793" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.7881 17.2875C3.74416 17.4075 3.73807 17.5381 3.77065 17.6617C3.80323 17.7853 3.87292 17.8959 3.97032 17.9787C4.06772 18.0614 4.18815 18.1123 4.31537 18.1245C4.4426 18.1367 4.57051 18.1096 4.68185 18.0469L17.8069 10.5398C17.9045 10.4858 17.986 10.4066 18.0427 10.3104C18.0994 10.2142 18.1293 10.1046 18.1293 9.99297C18.1293 9.88133 18.0994 9.77172 18.0427 9.67555C17.986 9.57937 17.9045 9.50014 17.8069 9.4461L4.68185 1.95781C4.57084 1.89573 4.44353 1.86899 4.31693 1.88117C4.19032 1.89335 4.07044 1.94386 3.9733 2.02597C3.87616 2.10808 3.80639 2.21788 3.7733 2.34069C3.7402 2.4635 3.74537 2.59348 3.7881 2.71328L6.24982 10L3.7881 17.2875Z" stroke="#808793" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    loading:
+      container:
+        default:
+          backgroundColor: ""
+          bottom: "32px"
+          width: "36px"
+      svg:
+        styles:
+          default:
+            filter: "brightness(0) saturate(100%) invert(72%) sepia(0%) saturate(3044%) hue-rotate(322deg) brightness(100%) contrast(96%)"
+    stop:
+      container:
+        default:
+          backgroundColor: ""
+        hover:
+          backgroundColor: "#dadada52"
+      svg:
+        content: |
+          <?xml version="1.0" encoding="utf-8"?>
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <rect width="24" height="24" rx="4" ry="4" />
+          </svg>
+        styles:
+          default:
+            width: "0.95em"
+            marginTop: "0.32em"
+            filter: "brightness(0) saturate(100%) invert(72%) sepia(0%) saturate(3044%) hue-rotate(322deg) brightness(100%) contrast(96%)"

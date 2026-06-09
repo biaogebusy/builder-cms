@@ -1,0 +1,12 @@
+text: |
+  Hello, what do we want to say about JSON?
+  ```json
+  {
+    "json": "is_awesome"
+
+
+  }
+  ```
+  Its awesome isn't it!
+expected_token: 4
+has_json: true

@@ -1,0 +1,122 @@
+ai_automators.ai_automator.*.*.*.*:
+  type: config_entity
+  label: AI Automator
+  mapping:
+    id:
+      type: string
+      label: ID
+    label:
+      type: label
+      label: Label
+    uuid:
+      type: string
+    rule:
+      type: string
+      label: Rule
+    input_mode:
+      type: string
+      label: Input Mode
+    weight:
+      type: integer
+      label: Weight
+    worker_type:
+      type: string
+      label: Worker Type
+    entity_type:
+      type: string
+      label: Entity Type
+    bundle:
+      type: string
+      label: Bundle
+    field_name:
+      type: string
+      label: Field Name
+    edit_mode:
+      type: boolean
+      label: Edit Mode
+    base_field:
+      type: string
+      label: Base Field
+    prompt:
+      type: string
+      label: Prompt
+    token:
+      type: string
+      label: Token
+    guardrail_set_id:
+      type: string
+      label: 'Guardrail set'
+      nullable: true
+    plugin_config:
+      type: sequence
+      label: Plugin Config
+      sequence:
+        type: ignore
+
+ai_automators.automators_tool.*:
+  type: config_entity
+  label: Automators Tool
+  mapping:
+    id:
+      type: string
+      label: ID
+    label:
+      type: label
+      label: Label
+    uuid:
+      type: string
+    description:
+      type: string
+
+ai_automators.automator_chain_type.*:
+  type: config_entity
+  label: 'Automator Chain type config'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    label:
+      type: label
+      label: 'Label'
+    uuid:
+      type: string
+
+ckeditor5.plugin.ai_ckeditor_ai.ai_automators_ckeditor:
+  type: ckeditor5.plugin.ai_ckeditor_ai_base
+  mapping:
+    workflows:
+      type: sequence
+      label: 'Workflows'
+      sequence:
+        type: ckeditor5.plugin.ai_ckeditor_ai.ai_automators_ckeditor.workflows.[%key]
+
+ckeditor5.plugin.ai_ckeditor_ai.ai_automators_ckeditor.workflows.*:
+  type: mapping
+  mapping:
+    enabled:
+      type: boolean
+      label: 'Workflow enabled'
+    inputs:
+      type: sequence
+      label: 'Inputs for this workflow'
+      sequence:
+        type: string
+        label: 'Input field name'
+    selected_input:
+      type: string
+      label: 'Text selection input field'
+    require_selection:
+      type: boolean
+      label: 'Require selection'
+    write_mode:
+      type: string
+      label: 'Write mode'
+      constraints:
+        Choice:
+          choices:
+            - append
+            - prepend
+            - replace
+    output:
+      type: string
+      label: 'Output'

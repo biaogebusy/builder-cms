@@ -1,0 +1,22 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_cost_tokens
+    - node.type.image_job
+id: node.image_job.field_cost_tokens
+field_name: field_cost_tokens
+entity_type: node
+bundle: image_job
+label: 'Cost tokens'
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

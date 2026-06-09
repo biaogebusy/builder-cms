@@ -1,0 +1,42 @@
+services:
+  plugin.manager.ai_automator:
+    class: Drupal\ai_automators\PluginManager\AiAutomatorTypeManager
+    parent: default_plugin_manager
+  plugin.manager.ai_processor:
+    class: Drupal\ai_automators\PluginManager\AiAutomatorFieldProcessManager
+    parent: default_plugin_manager
+  ai_automator.field_config:
+    class: Drupal\ai_automators\FormAlter\AiAutomatorFieldConfig
+    arguments: ['@entity_field.manager', '@ai_automator.field_rules', '@current_route_match', '@plugin.manager.ai_processor', '@entity_type.manager', '@ai.guardrail_helper']
+  ai_automator.field_rules:
+    class: Drupal\ai_automators\AiFieldRules
+    arguments: ['@plugin.manager.ai_automator', '@event_dispatcher']
+  ai_automator.entity_modifier:
+    class: Drupal\ai_automators\AiAutomatorEntityModifier
+    arguments: ['@entity_field.manager', '@plugin.manager.ai_processor', '@ai_automator.field_rules', '@event_dispatcher', '@entity_type.manager']
+  ai_automator.rule_runner:
+    class: Drupal\ai_automators\AiAutomatorRuleRunner
+    arguments: ['@entity_type.manager', '@ai_automator.field_rules', '@event_dispatcher']
+  ai_automator.prompt_helper:
+    class: Drupal\ai_automators\AiPromptHelper
+    arguments: ['@twig', '@current_user', '@token']
+  ai_automator.status_field:
+    class: Drupal\ai_automators\AiAutomatorStatusField
+    arguments: ['@entity_type.manager', '@entity_field.manager']
+  ai_automator.rule_helper.general:
+    class: Drupal\ai_automators\Rulehelpers\GeneralHelper
+    arguments: ['@entity_field.manager', '@module_handler', '@ai_automator.field_config', '@token', '@current_user', '@entity_type.manager', '@token.tree_builder', '@ai.prompt_code_block_extractor']
+  ai_automator.rule_helper.file:
+    class: Drupal\ai_automators\Rulehelpers\FileHelper
+    arguments: ['@entity_type.manager', '@file_system', '@file.repository', '@token', '@current_user']
+  ai_automator.automate:
+    class: Drupal\ai_automators\Service\Automate
+    arguments: ['@entity_type.manager', '@entity_field.manager']
+  access_check.ai_automators.automator_advanced:
+    class: Drupal\ai_automators\Access\AutomatorAdvancedAccessChecker
+    arguments: ['@module_handler']
+    tags:
+      - { name: access_check, applies_to: _automator_advanced }
+  ai_automators.cleanup:
+    class: Drupal\ai_automators\AiAutomatorCleanupService
+    arguments: ['@entity_type.manager', '@logger.factory']

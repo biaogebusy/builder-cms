@@ -1,0 +1,135 @@
+# AI 平台与模型注册中心 — AI 任务的单一事实源。
+# 安装时作为种子数据导入;之后增删改走 admin UI / config sync(详见模块文档 §5)。
+#
+# 重要:xinshi 网关的 base_url / token 不在这里,由 XinshiGatewayAiProvider
+# 从 xinshi_ai.settings 的 gateway 段读取(base_url 入 config,token 走 env)。
+platforms:
+  xinshi:
+    label: '信使'
+    description: '信使统一网关(New API),代理转发到具体厂商(含阿里通义千问);前端无需关心 API key。'
+    enabled: true
+    auth: gateway
+  custom:
+    label: '自定义供应商'
+    description: '用户在前端表单提交 endpoint + key + model,后端透传调用。'
+    enabled: true
+    auth: api_key
+    user_supplied: true
+models:
+  - id: deepseek-chat
+    label: 'DeepSeek Chat'
+    platform: xinshi
+    capabilities:
+      - chat
+  - id: deepseek-v4-pro
+    label: 'DeepSeek v4'
+    platform: xinshi
+    capabilities:
+      - chat
+      - reasoning
+  - id: mimo-v2.5-pro
+    label: 'Mimo v2.5 Pro'
+    platform: xinshi
+    capabilities:
+      - chat
+  - id: kimi-k2.5
+    label: 'K2 k2.5'
+    platform: xinshi
+    capabilities:
+      - chat
+  - id: kimi-k2-thinking
+    label: 'K2 Thinking'
+    platform: xinshi
+    capabilities:
+      - chat
+      - reasoning
+  - id: glm-4.6
+    label: 'GLM 4.6'
+    platform: xinshi
+    capabilities:
+      - chat
+  - id: glm-4.7
+    label: 'GLM 4.7'
+    platform: xinshi
+    capabilities:
+      - chat
+  - id: gpt-5
+    label: 'GPT 5'
+    platform: xinshi
+    capabilities:
+      - chat
+  - id: gpt-5.4
+    label: 'GPT 5.4'
+    platform: xinshi
+    capabilities:
+      - chat
+      - reasoning
+  - id: gemini-3-flash-preview
+    label: 'Gemini 3 flash'
+    platform: xinshi
+    capabilities:
+      - chat
+  - id: claude-sonnet-4-6
+    label: 'Claude Sonnet 4.6'
+    platform: xinshi
+    capabilities:
+      - chat
+  - id: claude-opus-4-6
+    label: 'Claude opus 4.6'
+    platform: xinshi
+    capabilities:
+      - chat
+      - reasoning
+  - id: claude-opus-4-7
+    label: 'Claude opus 4.7'
+    platform: xinshi
+    capabilities:
+      - chat
+      - reasoning
+  - id: gpt-image-2
+    label: 'Gpt image 2'
+    platform: xinshi
+    capabilities:
+      - image
+    max_n: 1
+    sizes:
+      - '1024x1024'
+      - '1024x1536'
+      - '1536x1024'
+    notes: 'Single image only; supports global scripts & legible text-in-image.'
+  - id: z-image-turbo
+    label: 'Z Image Turbo'
+    platform: xinshi
+    capabilities:
+      - image
+    max_n: 4
+    sizes:
+      - '1024x1024'
+      - '1280x720'
+      - '720x1280'
+  - id: qwen-image-max
+    label: 'Image Max'
+    platform: xinshi
+    capabilities:
+      - image
+    max_n: 4
+    sizes:
+      - '1024x1024'
+      - '1664x928'
+      - '928x1664'
+  - id: qwen-image-plus
+    label: 'Image Plus'
+    platform: xinshi
+    capabilities:
+      - image
+    max_n: 4
+    sizes:
+      - '1024x1024'
+      - '1664x928'
+      - '928x1664'
+  - id: qwen-image-edit-plus
+    label: 'Image Edit Plus'
+    platform: xinshi
+    capabilities:
+      - image-edit
+    max_n: 1

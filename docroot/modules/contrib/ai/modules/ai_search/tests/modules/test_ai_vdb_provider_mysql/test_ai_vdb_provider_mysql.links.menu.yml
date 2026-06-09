@@ -1,0 +1,5 @@
+test_ai_vdb_provider_mysql.settings_menu:
+  title: "Setup Test MySQL VDB Provider"
+  description: "Setup Test MySQL VDB Provider"
+  route_name: test_ai_vdb_provider_mysql.settings_form
+  parent: ai.admin_vdb_providers

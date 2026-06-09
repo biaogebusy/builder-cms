@@ -1,0 +1,50 @@
+chat:
+  input:
+    description: 'Input provided to the model.'
+    type: 'array'
+    default:
+      - { role: "system", content: "You are a helpful assistant." }
+      - { role: "user", content: "Introduce yourself!" }
+    required: true
+  authentication:
+    description: 'DropAI API Key.'
+    type: 'string'
+    default: ''
+    required: true
+  configuration:
+    maxOutputTokens:
+      label: 'Max Tokens'
+      description: 'The maximum number of tokens to include in a response candidate'
+      type: 'integer'
+      default: 1024
+      required: false
+    temperature:
+      label: 'Temperature'
+      description: 'Sampling temperature 0-1. Higher values mean more random output.'
+      type: 'float'
+      default: ''
+      required: false
+      constraints:
+        min: 0
+        max: 2
+        step: 0.1
+    topP:
+      label: 'Top P'
+      description: 'An alternative to sampling with temperature, called nucleus sampling.'
+      type: 'float'
+      default:
+      required: false
+      constraints:
+        min: 0
+        max: 1
+        step: 0.1
+    topK:
+      label: 'Top K'
+      description: 'Used to remove "long tail" low probability responses. '
+      type: 'float'
+      default:
+      required: false
+      constraints:
+        min: 0
+        max: 1
+        step: 0.1

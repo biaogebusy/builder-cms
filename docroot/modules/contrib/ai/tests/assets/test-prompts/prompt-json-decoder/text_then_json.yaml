@@ -1,0 +1,7 @@
+text: |
+  Sure I would be happy to return JSON for your request. Please be aware that
+  JSON is a data format that is awesome for transmitting data between a server
+  and a client. Here is an example of JSON:
+  {"json": "is_awesome"}
+expected_token: 4
+has_json: true

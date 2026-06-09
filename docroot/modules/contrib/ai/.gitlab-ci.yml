@@ -1,0 +1,238 @@
+# Use the Drupal GitLab CI template.
+include:
+  - project: $_GITLAB_TEMPLATES_REPO
+    # We hard code to "main" based on having the latest templates, before they
+    # are merged. This will be possible until gitlab_templates project has a 2.x
+    # branch.
+    # See: https://www.drupal.org/project/gitlab_templates/issues/3404175
+    ref: main
+    file:
+      - '/includes/include.drupalci.main.yml'
+      - '/includes/include.drupalci.variables.yml'
+      - '/includes/include.drupalci.workflows.yml'
+
+variables:
+  # Give more verbose PHPUnit output.
+  _PHPUNIT_EXTRA: --verbose
+  # Opt into the relevant versions.
+  OPT_IN_TEST_PREVIOUS_MAJOR: 1
+  OPT_IN_TEST_PREVIOUS_MINOR: 1
+  OPT_IN_TEST_NEXT_MINOR: 1
+  OPT_IN_TEST_NEXT_MAJOR: 0
+  OPT_IN_TEST_MAX_PHP: 1
+  # Use runtests.sh which gives better output.
+  _PHPUNIT_CONCURRENT: 1
+  # Configured skipped tests.
+  SKIP_ESLINT: 1
+  SKIP_STYLELINT: 1   # Until fixed in gitlab templates.
+  # showdown.js is full of emoji words.
+  _CSPELL_IGNORE_PATHS: "'assets/js/ai_chat_history_element.js', 'modules/*/tests/resources/ai_test/requests/*/*.yml', 'modules/ai_api_explorer/css', 'modules/ai_api_explorer/js', 'modules/ai_chatbot/js', 'modules/ai_chatbot/deepchat', 'modules/ai_chatbot/css', 'modules/ai_automators/tests/config', '.cspell-project-words.txt', 'grumphp.yml', 'ui'"
+  COMPOSER_IGNORE_PLATFORM_REQS: 'ext-ffi'
+  # Selenium hostname for video recording in FunctionalJavascript tests.
+  # The Drupal CI template uses 'selenium' as the service alias.
+  DRUPAL_TEST_WEBDRIVER_HOSTNAME: selenium
+
+phpunit (previous major):
+  allow_failure: true
+  needs:
+    - composer (previous major)
+    - js_build
+  before_script:
+    # We need to build 8.1 with the FFI extension enabled.
+    # Install dependencies.
+    - apt-get update
+    - apt-get install -y --no-install-recommends $PHPIZE_DEPS libffi-dev
+    # Download and extract PHP source.
+    - curl -LS -o /usr/src/php.tar.xz "https://php.net/distributions/php-$(php -r 'echo PHP_VERSION;').tar.xz"
+    - docker-php-source extract
+    # Compile the FFI module.
+    - |-
+      (
+        cd /usr/src/php/ext/ffi
+        phpize
+        ./configure
+        make
+        make install
+      )
+    # Enable the FFI module.
+    - echo "extension=ffi.so" > /usr/local/etc/php/conf.d/docker-php-ext-ffi.ini
+    - echo "ffi.enable=true" >> /usr/local/etc/php/conf.d/docker-php-ext-ffi.ini
+    # Show the configuration for debugging purposes.
+    - php -i | grep ffi
+
+# Build JS artifacts. They are needed for tests.
+js_build:
+  stage: build
+  image: node:20.14.0-alpine
+  # Provide artifacts for subsequent jobs.
+  artifacts:
+    paths:
+      - modules/ai_ckeditor/js/build
+      - ui/mdxeditor/dist
+      - ui/default-tools-editor/dist
+      - ui/json-schema-editor
+    expire_in: 1h
+  # Build artifacts.
+  script:
+    - |
+      # Build ai_ckeditor JS artifacts
+      cd modules/ai_ckeditor
+      npm install
+      npm run build
+      cd $CI_PROJECT_DIR
+
+      # Build mdxeditor JS artifacts
+      cd ui/mdxeditor
+      npm install
+      npm run build
+      cd $CI_PROJECT_DIR
+
+      # Build JSON Schema Editor artifacts
+      cd ui/json-schema-editor
+      npm install
+      npm run build
+      cd $CI_PROJECT_DIR
+
+      # Build default tools editor artifacts
+      cd ui/default-tools-editor
+      npm install
+      npm run build
+      cd $CI_PROJECT_DIR
+
+mkdocs:
+  stage: test
+  image: python:3.12-alpine
+  rules:
+    - changes:
+        - mkdocs.yml
+        - docs/**/*
+        - docs/*
+        - README.md
+      when: on_success
+    - when: never
+  script:
+    - pip install mkdocs mkdocs-material mike mkdocs-glightbox mkdocs-include-markdown-plugin
+    - mkdocs build --strict
+
+pages:
+  stage: .post
+  rules:
+    - if: '$CI_COMMIT_TAG'   # skip tags
+      when: never
+    - if: '$CI_COMMIT_REF_NAME !~ /^[0-9]+\.[0-9]+\.x$/'
+      when: never
+    - changes:
+        - docs/**/*
+        - docs/*
+      when: on_success
+    - when: never
+  script:
+    - echo "Project name is $CI_PROJECT_NAME"
+    - echo "Get the version - only for branches matching the pattern [0-9]+.[0-9]+.x"
+    - |
+      if [[ "$CI_COMMIT_REF_NAME" =~ ^([0-9]+)\.([0-9]+)\.x$ ]]; then
+        VERSION="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.x"
+        echo "Version to write documentation for: $VERSION"
+      else
+        echo "Branch $CI_COMMIT_REF_NAME does not match version pattern."
+        exit 1
+      fi
+    - cd $CI_PROJECT_DIR && pwd
+    - pip install mkdocs-material mike mkdocs-glightbox mkdocs-include-markdown-plugin
+    - echo "Pulling latest changes from origin to get mike versions"
+    - git fetch origin gh-pages --depth=1
+    - pwd && ls -l logo* && ls -l docs/logo* || true
+    - |
+      if [[ -f logo.png ]]; then
+        # Do not copy the logo if the destination file already exists.
+        test -f docs/logo.png && echo "logo.png not copied to /docs because that file already exists." || cp -v logo.png docs/logo.png
+      fi
+    - echo "Setup Mike for deployment"
+    - git config --global user.name "CI Bot AI"
+    - git config --global user.email "ci-bot-ai@drupal.org"
+    - git config pull.rebase false
+    - echo "Allowing Mike to deploy to the gh-pages branch"
+    - git remote set-url origin https://oauth2:${DOCS_TOKEN}@git.drupalcode.org/project/ai.git
+    - echo "Deploying documentation to gh-pages branch to have latest built version"
+    - mike deploy $VERSION --push
+    - echo "Remove any changes"
+    - git reset --hard
+    - git clean -fd
+    - echo "Switching to updated gh-pages branch to copy the built documentation"
+    - git checkout gh-pages
+    - mv mkdocs public
+
+cspell:
+  allow_failure: false
+phpcs:
+  allow_failure: false
+phpstan:
+  allow_failure: false
+
+.phpunit-base:
+  needs:
+    - composer
+    - js_build
+  before_script:
+    # Enable the FFI module.
+    - echo "extension=ffi" > /usr/local/etc/php/conf.d/docker-php-ext-ffi.ini
+    - echo "ffi.enable=true" >> /usr/local/etc/php/conf.d/docker-php-ext-ffi.ini
+    # Show the configuration for debugging purposes.
+    - php --ri ffi
+    # Filter FunctionalJavascript tests and conditionally install ffmpeg.
+    # See scripts/filter-functionaljavascript-tests.sh for details.
+    - source $CI_PROJECT_DIR/scripts/filter-functionaljavascript-tests.sh
+    - |
+      if [ "${HAS_FJS:-0}" = "1" ]; then
+        apt-get update && apt-get install -y --no-install-recommends ffmpeg
+      else
+        echo "No FunctionalJavascript tests to run, skipping ffmpeg installation."
+      fi
+
+composer:
+  before_script:
+    # Workaround for https://www.drupal.org/project/opentelemetry/issues/3581743
+    - composer require "google/protobuf:4.33.6 as 3.25.0" --no-update
+
+composer (previous major):
+  before_script:
+    # We need doctrine/instantiator to still be on 2.0 for previous major.
+    - composer require doctrine/instantiator:"2.0.0" --no-update
+    # Workaround for https://www.drupal.org/project/opentelemetry/issues/3581743
+    - composer require "google/protobuf:4.33.6 as 3.25.0" --no-update
+
+composer (previous minor):
+  before_script:
+    # Workaround for https://www.drupal.org/project/opentelemetry/issues/3581743
+    - composer require "google/protobuf:4.33.6 as 3.25.0" --no-update
+
+composer (next minor):
+  before_script:
+    # Workaround for https://www.drupal.org/project/opentelemetry/issues/3581743
+    - composer require "google/protobuf:4.33.6 as 3.25.0" --no-update
+
+composer (max PHP version):
+  before_script:
+    # Workaround for https://www.drupal.org/project/opentelemetry/issues/3581743
+    - composer require "google/protobuf:4.33.6 as 3.25.0" --no-update
+
+# Add js_build to `needs` of all phpunit jobs as it has mdxeditor assets.
+phpunit (max PHP version):
+  needs:
+    - composer (max PHP version)
+    - js_build
+
+phpunit (previous minor):
+  needs:
+    - composer (previous minor)
+    - js_build
+
+phpunit (next minor):
+  needs:
+    - composer (next minor)
+    - js_build
+
+phpunit (next major):
+  needs:
+    - composer (next major)
+    - js_build

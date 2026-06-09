@@ -1,0 +1,43 @@
+/* Extra specificity needed to override strict Gin defaults introduced in https://www.drupal.org/node/3560492 */
+:is(#ai-chatbot, [data-drupal-admin-styles]) {
+  .top-bar__tools .button--ai-chatbot {
+    cursor: pointer;
+    background-color: transparent;
+    background-image: url(../assets/ai-icon.svg);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 24px;
+    height: 32px;
+    width: 32px;
+    min-height: 32px;
+    min-width: 32px;
+    border: none;
+    border-radius: var(--gin-border-m);
+    padding: 0;
+    order: -1;
+    transition: background-color 150ms ease-in-out;
+  }
+
+}
+
+:is(#ai-chatbot, body) {
+  &.ai-chatbot-opened .top-bar__tools .button--ai-chatbot, 
+  .top-bar__tools .button--ai-chatbot:hover,
+  .top-bar__tools .button--ai-chatbot:focus {
+    background-color: var(--gin-color-primary, #0550e6);
+    background-image: url(../assets/ai-icon-white.svg);
+    background-size: 20px;
+  }
+}
+
+.toolbar .toolbar-bar .toolbar-tab.ai-chatbot-toolbar-tab .toolbar-item.toolbar-icon-ai-chatbot:before {
+  content: ' ';
+  mask-image: url('../assets/ai-icon.svg');
+  background-color: currentColor;
+  mask-repeat: no-repeat;
+  mask-position: center center;
+  mask-size: contain;
+}
+.toolbar .toolbar-bar .toolbar-tab.ai-chatbot-toolbar-tab .toolbar-item.toolbar-icon-ai-chatbot:is(:hover, :focus-visible):before {
+  mask-image: url('../assets/ai-icon-gradient.svg');
+}

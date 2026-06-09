@@ -1,0 +1,155 @@
+<?php
+
+/**
+ * @file
+ * AI module file.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Site\Settings;
+use Drupal\ai\Entity\AiGuardrailSet;
+use Drupal\ai\Form\GlobalGuardrailsSettingsForm;
+use Drupal\ai\Hook\FormElement;
+
+/**
+ * Implements hook_modules_installed().
+ */
+function ai_modules_installed(array $modules) {
+  // Clear the provider cache when a module is installed.
+  \Drupal::cache('discovery')->delete('ai_provider_plugins');
+}
+
+/**
+ * Helper function to check if the current route is an admin route.
+ *
+ * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
+ *   The route match interface.
+ *
+ * @return bool
+ *   TRUE if the route is an admin route, FALSE otherwise.
+ */
+function ai_is_admin_route(RouteMatchInterface $route_match) {
+  $route = $route_match->getRouteObject();
+  if ($route && $route->hasOption('_admin_route') && $route->getOption('_admin_route') == TRUE) {
+    return TRUE;
+  }
+
+  // Check if the route path starts with '/admin'.
+  $path = $route_match->getRouteObject()->getPath();
+  if (strpos($path, '/admin') === 0) {
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+/**
+ * Implements hook_module_preuninstall().
+ */
+function ai_module_preuninstall($module) {
+  // Check if the module has an ai provider plugin.
+  $plugin_manager = \Drupal::service('ai.provider');
+  $plugins = $plugin_manager->getDefinitions();
+  foreach ($plugins as $plugin) {
+    if ($plugin['provider'] == $module) {
+      \Drupal::service('ai.provider')->providerDisabled($plugin['id']);
+    }
+  }
+}
+
+/**
+ * Implements hook_theme().
+ *
+ * Overrides the core html theme to use a custom template for iframes.
+ */
+function ai_theme() {
+  return [
+    'html__admin__config__ai__tools' => [
+      'template' => 'html--admin--config--ai--tools',
+      'render element' => 'html',
+      'preprocess functions' => ['template_preprocess_html'],
+    ],
+    'page__admin__config__ai__tools' => [
+      'template' => 'page--admin--config--ai--tools',
+      'render element' => 'html',
+      'preprocess functions' => ['template_preprocess_page'],
+    ],
+    'ai_tools_library_item' => [
+      'variables' => [
+        'title' => '',
+        'description' => '',
+        'tool_id' => '',
+        'widget_id' => '',
+        'buttons' => [],
+      ],
+    ],
+    'ai_tools_library_wrapper' => [
+      'variables' => [
+        'menu' => [],
+        'content' => [],
+      ],
+    ],
+  ];
+}
+
+/**
+ * Implements hook_page_attachments().
+ */
+function ai_page_attachments(array &$attachments) {
+  $attachments['#attached']['library'][] = 'ai/ai_global';
+}
+
+/**
+ * Implements hook_preprocess_links__ai_tools_library_menu().
+ *
+ * This targets the menu of available ai tools group in the ai tools library's
+ * modal dialog.
+ *
+ * @todo Do this in the relevant template once
+ *   https://www.drupal.org/project/drupal/issues/3088856 is resolved.
+ */
+function ai_preprocess_links__ai_tools_library_menu(array &$variables): void {
+  foreach ($variables['links'] as &$link) {
+    // Add a class to the AI Tools Library menu items.
+    $link['attributes']->addClass('ai-tools-library-menu__item');
+    $link['link']['#options']['attributes']['class'][] = 'ai-tools-library-menu__link';
+  }
+}
+
+/**
+ * Implements hook_element_info_alter().
+ */
+function ai_element_info_alter(array &$info) {
+  \Drupal::service(FormElement::class)->elementInfoAlter($info);
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_delete() for ai_guardrail_set.
+ *
+ * Removes the deleted set's id from ai.settings:global_guardrails so stale
+ * references do not linger in config until an admin re-saves the form.
+ */
+function ai_ai_guardrail_set_delete(AiGuardrailSet $entity): void {
+  $config = \Drupal::configFactory()->getEditable(GlobalGuardrailsSettingsForm::CONFIG_NAME);
+  $ids = $config->get('global_guardrails') ?? [];
+  if (!is_array($ids) || !in_array($entity->id(), $ids, TRUE)) {
+    return;
+  }
+  $config
+    ->set('global_guardrails', array_values(array_diff($ids, [$entity->id()])))
+    ->save();
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for ai_settings_form.
+ */
+function ai_form_ai_settings_alter(&$form, FormStateInterface $form_state) {
+  if (!empty(Settings::get('ai_output')['full_trust_mode'])) {
+    $form['advanced_settings']['allowed_host_wrapper']['allowed_hosts_rewrite_links']['rewrite']['#attributes']['disabled'] = 'disabled';
+    $form['advanced_settings']['allowed_host_wrapper']['allowed_hosts_rewrite_links']['delete']['#attributes']['disabled'] = 'disabled';
+  }
+  else {
+    $form['advanced_settings']['allowed_host_wrapper']['allowed_hosts_rewrite_links']['full_trust']['#attributes']['disabled'] = 'disabled';
+  }
+}

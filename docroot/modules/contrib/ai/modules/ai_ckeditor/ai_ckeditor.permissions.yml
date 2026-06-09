@@ -1,0 +1,3 @@
+use ai ckeditor:
+  title: 'Use AI CKEditor plugin.'
+  description: 'Permits this role to use the AI CKEditor plugin endpoint to generate text for the editor. Without this permission, the editor plugin will not work.'

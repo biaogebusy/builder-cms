@@ -23,7 +23,7 @@ use Twig\Node\Expression\Variable\ContextVariable;
  * @author Fabien Potencier <fabien@symfony.com>
  */
 #[YieldReady]
-class ImportNode extends Node
+class ImportNode extends Node implements CoercesChildrenToStringInterface
 {
     public function __construct(AbstractExpression $expr, AbstractExpression|AssignTemplateVariable $var, int $lineno)
     {
@@ -48,10 +48,8 @@ class ImportNode extends Node
             $compiler->raw('$this');
         } else {
             $compiler
-                ->raw('$this->loadTemplate(')
+                ->raw('$this->load(')
                 ->subcompile($this->getNode('expr'))
-                ->raw(', ')
-                ->repr($this->getTemplateName())
                 ->raw(', ')
                 ->repr($this->getTemplateLine())
                 ->raw(')->unwrap()')
@@ -59,5 +57,11 @@ class ImportNode extends Node
         }
 
         $compiler->raw(";\n");
+    }
+
+    public function getStringCoercedChildNames(): array
+    {
+        // the loader resolves the template-name expression by coercing it to a string
+        return ['expr'];
     }
 }

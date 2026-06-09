@@ -1,0 +1,11 @@
+xinshi_ai.settings.tab:
+  title: '设置'
+  route_name: xinshi_ai.settings
+  base_route: xinshi_ai.settings
+  weight: 0
+
+xinshi_ai.models.tab:
+  title: '模型管理'
+  route_name: xinshi_ai.models.overview
+  base_route: xinshi_ai.settings
+  weight: 10

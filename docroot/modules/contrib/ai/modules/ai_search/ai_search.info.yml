@@ -1,0 +1,15 @@
+name: AI Search
+description: Offers an implementation of the Search API that uses a Vector DB server for indexing content.
+package: AI (Experimental)
+type: module
+core_version_requirement: ^10.4 || ^11
+lifecycle: experimental
+
+dependencies:
+  - ai:ai
+  - search_api:search_api
+
+# Information added by Drupal.org packaging script on 2026-06-03
+version: '1.4.1'
+project: 'ai'
+datestamp: 1780493209

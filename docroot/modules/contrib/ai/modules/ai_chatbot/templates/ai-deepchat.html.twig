@@ -1,0 +1,37 @@
+{{ attach_library('ai_chatbot/sticky-chatbot') }}
+
+<div class="{{ current_theme }} ai-deepchat chat-collapsed chat-container {{ settings.placement }}" data-chat-id="bot1">
+
+	<div class="ai-deepchat--header" tabindex="0" role="button" aria-label="Toggle Chat" aria-expanded="false">
+    <div class="chat-dropdown">
+      <button type="button" class="chat-dropdown-button">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" id="chevron" class="chevron-icon">
+          <path fill="none" stroke="currentColor" d="M3,6H21V8H3V6M3,11H21V13H3V11M3,16H21V18H3V16Z" />
+        </svg>
+      </button>
+      <div class="chat-dropdown-content">
+        <a class="clear-history chat-dropdown-link">{{ 'Clear History'|t }}</a>
+      </div>
+    </div>
+
+    <div class="ai-deepchat--label">
+			<span class="ai-deepchat--bullet"></span>
+			{{ settings.label }}
+		</div>
+		<span class="toggle-icon">
+			<svg xmlns="http://www.w3.org/2000/svg" viewbox="-1 -1 16 16" height="16" width="16">
+				<defs></defs>
+				<title>close</title>
+				<path d="m0.29166666666666663 0.2910833333333333 13.416666666666664 13.416666666666664" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+				<path d="m13.708333333333332 0.2910833333333333 -13.416666666666664 13.416666666666664" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+			</svg>
+		</span>
+	</div>
+
+	<div class="chat-element chat-collapsed" style="min-width: {{ settings.width }}">
+
+		<deep-chat {% for key, value in deepchat_settings %}{{ key }}='{{ value|raw }}'
+    {% endfor %}></deep-chat>
+
+	</div>
+</div>

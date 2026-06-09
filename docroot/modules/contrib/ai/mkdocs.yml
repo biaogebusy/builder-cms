@@ -1,0 +1,181 @@
+site_name: AI (Artificial Intelligence) module for Drupal
+repo_url: https://git.drupalcode.org/project/ai
+repo_name: drupal/ai
+edit_uri: -/tree/1.1.x/docs/
+theme:
+  name: material
+  font:
+    code: Roboto Mono
+  palette:
+    primary: indigo
+  features:
+    - header.autohide
+    - navigation.footer
+    - content.action.edit
+plugins:
+  - glightbox
+  # Include Markdown: Allows embedding markdown files in one another with {% include-markdown "file.md" %}
+  # https://github.com/mondeja/mkdocs-include-markdown-plugin
+  - include-markdown:
+      encoding: ascii
+  - search:
+      lang: en
+  - mike:
+      alias_type: redirect
+      # This is for SEO reasons, not redirects.
+      canonical_version: 1.4.0
+      version_selector: true
+      deploy_prefix: "mkdocs"
+markdown_extensions:
+  - attr_list
+  - md_in_html
+  - pymdownx.blocks.caption
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+extra:
+  social:
+    - icon: fontawesome/brands/gitlab
+      link: https://git.drupalcode.org/project/ai
+    - icon: fontawesome/brands/slack
+      link: https://drupal.slack.com/archives/C0803LX4536
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/company/drupal-ai
+  version:
+    provider: mike
+nav:
+  - Home: index.md
+  - General Settings: general/index.md
+  - Submodules:
+    - AI API Explorer: modules/ai_api_explorer/index.md
+    - AI Assistant API: modules/ai_assistant_api/index.md
+    - AI Automators:
+      - General: modules/ai_automators/index.md
+      - AI Automator Types: modules/ai_automators/automator_types/index.md
+    - AI Chatbot: modules/ai_assistant_api/index.md
+    - AI Ckeditor: modules/ai_ckeditor/index.md
+    - AI Content Suggestions: modules/ai_content_suggestions/index.md
+    - AI ECA: modules/ai_eca/index.md
+    - AI Logging: modules/ai_logging/index.md
+    - AI Observability: modules/ai_observability/index.md
+    - AI Providers: modules/providers/index.md
+    - AI Search: modules/ai_search/index.md
+    - AI Translate: modules/ai_translate/index.md
+    - AI VDB Providers: modules/vdb_providers/index.md
+    - AI Validations: modules/ai_validations/index.md
+    - Field Widget Actions:
+      - Overview: modules/field_widget_actions/index.md
+      - With AI Automators: modules/field_widget_actions/automators.md
+  - Develop:
+    - Getting Started: developers/developer_information.md
+    - Why base on the AI module?: developers/why_ai.md
+    - Making AI Calls:
+      - The Idea: developers/base_calls.md
+      - Chat Call:
+        - Basic Chat Call: developers/call_chat.md
+        - Streaming Chat Call: developers/call_chat_streaming.md
+      - Text-To-Image Call: developers/call_text_to_image.md
+      - Text-To-Speech Call: developers/call_text_to_speech.md
+      - Speech-To-Text Call: developers/call_speech_to_text.md
+      - Embeddings Call: developers/call_embeddings.md
+      - Moderation Call: developers/call_moderation.md
+      - Audio-To-Audio Call: developers/call_audio_to_audio.md
+      - Speech-To-Speech Call: developers/call_speech_to_speech.md
+      - Image Classification Call: developers/call_image_classification.md
+      - Text Classification Call: developers/call_text_classification.md
+      - Translate Text Call: developers/call_translate_text.md
+      - Image-To-Image Call: developers/call_image_to_image.md
+      - Object Detection Call: developers/call_object_detection.md
+    - Plugins/Managers:
+      - Function Call Plugins: developers/function_call.md
+      - ChatProcessor Plugin: developers/writing_a_chat_processor_plugin.md
+      - Function Call Schema: developers/function_call_schema.md
+      - Short-Term Memory: developers/short_term_memory.md
+    - Helper Services:
+      - CSS / JS / Icon Utility Library: developers/css_utility_library.md
+      - HostnameFilter Service: developers/hostname_filter.md
+      - Provider Config Schema: developers/provider_config_schema.md
+      - Text Chunker: developers/text_chunker.md
+      - Tokenizer: developers/tokenizer.md
+      - Response Helpers: developers/response_helpers.md
+    - Develop an AI Provider:
+      - Getting Started: developers/writing_an_ai_provider.md
+      - Testing a Provider: developers/testing_an_ai_provider.md
+    - Develop a third-party module: developers/develop_third_party_module.md
+    - Guardrails: developers/guardrails.md
+    - Events: developers/events.md
+    - DDEV: developers/ddev.md
+    - Prompt Management: developers/ai_prompt_management.md
+    - Recipes: developers/recipes.md
+    - Mock a Provider: developers/virtual_provider.md
+    - Form Elements:
+      - AI Provider Configuration: developers/ai_provider_configuration_element.md
+      - Chat History: developers/chat_history_element.md
+      - MDXEditor: developers/mdxeditor.md
+      - JSON Schema Editor: developers/json-schema-editor.md
+      - Tools Library: developers/tools_library_element.md
+    - Develop for submodules:
+      - AI Assistant API Action: developers/develop_api_assistant_action.md
+      - Develop an AI API Explorer plugin: developers/ai_api_explorer.md
+      - Develop an AI Automators plugin: developers/writing_an_ai_automators_plugin.md
+      - AI CKEditor: developers/ck_editor_plugin.md
+  - Contribute:
+    - Getting Started: contribute/index.md
+    - Issue Guidelines: contribute/issue_guidelines.md
+    - Issue Review Guidelines: contribute/issue_review_guidelines.md
+    - Contribute Documentation: contribute/documentation.md
+    - Contribute Bug Reports: contribute/bug_finding.md
+    - Contribute Testings:
+      - Getting Started: contribute/testing.md
+      - Full Patch Test: contribute/testing/full_patch_test.md
+      - Mock Provider Calls: contribute/testing/spoof_provider.md
+    - Contribute Features: contribute/features.md
+    - Developer Information: contribute/developer_information.md
+    - Release Management:
+      - Overview: contribute/releases/index.md
+      - General Rules: contribute/releases/general_rules.md
+      - Versioning Rules: contribute/releases/versioning.md
+      - Tagging a Release: contribute/releases/tagging_a_release.md
+      - Publishing a Patch Release: contribute/releases/publishing_a_patch_release.md
+      - Publishing a Minor/Major Release: contribute/releases/publishing_a_minor_major_release.md
+      - Publishing a Security Release: contribute/releases/publishing_a_security_release.md
+      - Release Notes: contribute/releases/release_notes.md
+      - Breaking Changes: contribute/releases/breaking_changes.md
+      - Communicating a Release: contribute/releases/communicating_a_release.md
+  - Providers: providers/matris.md
+  - Examples:
+    - DropAI Provider: examples/dropai_provider/README.md
+  - Agents:
+    - Getting Started: agents/index.md
+    - What is an Agent?: agents/what_is_an_agent.md
+    - Understanding Orchestration: agents/orchestration.md
+    - Building an Agent: agents/build_agent.md
+    - Agent Form Parts: agents/agent_form_parts.md
+    - Security Considerations: agents/security.md
+    - Running Agents:
+      - Getting Started: agents/running/index.md
+      - Poll/Progress Service: agents/running/polling.md
+    - Testing Agents:
+      - Agent Explorer: agents/testing/agent_explorer.md
+      - AI Agent Test:
+        - Getting Started: agents/testing/ai_agent_test/index.md
+        - Set up one Test: agents/testing/ai_agent_test/setting_up_one_test.md
+        - Run one Test: agents/testing/ai_agent_test/running_one_test.md
+        - Set up a Test Group: agents/testing/ai_agent_test/setting_up_test_group.md
+        - Run a Test Group: agents/testing/ai_agent_test/running_a_test_group.md
+        - View Results, Export, Import Tests: agents/testing/ai_agent_test/result_export_import.md
+        - Drush Commands: agents/testing/ai_agent_test/drush.md
+  - AI User Experience:
+    - Core UX Principles: ux/core_ux_principles.md
+    - Organizing AI Modules & Features: ux/organizing_ai_modules_and_features.md
+    - Request UX Support for AI modules: ux/request_ux_support.md
+    - UX Improvement Projects: ux/ux_improvement_projects.md
+    - How to Contribute to UX: ux/how_to_contribute.md
+  - Documentation (How to): documentation/index.md
+  - Changelog: changelog.md
+  - Security: security.md
+docs_dir: docs
+site_dir: site

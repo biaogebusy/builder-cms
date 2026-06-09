@@ -1,0 +1,5 @@
+entity.ai_mock_provider_result.collection:
+  title: 'AI Mock Provider Results'
+  route_name: entity.ai_mock_provider_result.collection
+  base_route: system.admin_content
+  weight: 10

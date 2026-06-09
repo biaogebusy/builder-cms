@@ -1,0 +1,5 @@
+ai_translate.settings:
+  title: 'AI Translate'
+  description: 'Translate content between languages using AI-powered translation services.'
+  parent: ai.admin_config_content
+  route_name: ai_translate.settings_form

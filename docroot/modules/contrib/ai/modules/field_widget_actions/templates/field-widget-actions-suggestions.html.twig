@@ -1,0 +1,11 @@
+{% if suggestions %}
+<ol>
+  {% for suggestion in suggestions %}
+  <li>
+    <span class="field-widget-actions-suggestion">
+      <button class="fwa-use-suggestion" title="{{ 'Use suggestion'|t }}">{{ suggestion }}</button>
+    </span>
+  </li>
+  {% endfor %}
+</ol>
+{% endif %}

@@ -1,0 +1,30 @@
+ai_logging.settings:
+  type: config_object
+  label: 'AI Logging Settings'
+  mapping:
+    prompt_logging:
+      type: boolean
+      label: 'If the AI should log prompts'
+    prompt_logging_tags:
+      type: string
+      label: 'Tags to log prompts with'
+    prompt_logging_excluded_tags:
+      type: string
+      label: 'Tags to exclude from logging'
+    prompt_logging_max_messages:
+      type: integer
+      label: 'Maximum number of messages to log'
+    prompt_logging_max_age:
+      type: integer
+      label: 'Maximum age of messages to log in days'
+
+ai_logging.ai_log_type.*:
+  type: config_entity
+  label: 'AI Log type'
+  mapping:
+    label:
+      type: required_label
+      label: 'Name'
+    id:
+      type: machine_name
+      label: 'Machine-readable name'

@@ -1,0 +1,45 @@
+# ai_vdb_provider_registry.yml - Central registry of vector database modules
+# with limited metadata.
+#
+# IMPORTANT: Keys must match the provider's PLUGIN ID (not module name).
+# For example, the ai_vdb_provider_milvus module uses plugin ID 'milvus'.
+#
+# Schema:
+#   providers:
+#     [plugin_id]:
+#       label: Human-readable provider name (required)
+#       module: Drupal module name for override lookup (required)
+#       project_url: Drupal.org project page URL (required)
+#       info_url: Default pricing/documentation URL (optional)
+#       updated: ISO 8601 date when metadata was last verified (recommended)
+providers:
+  azure_ai_search:
+    label: 'Azure AI Search'
+    module: 'ai_vdb_provider_azure_ai_search'
+    project_url: 'https://www.drupal.org/project/ai_vdb_provider_azure_ai_search'
+    info_url: 'https://azure.microsoft.com/en-us/products/ai-services/ai-search'
+    updated: '2026-01-22'
+  milvus:
+    label: 'Milvus'
+    module: 'ai_vdb_provider_milvus'
+    project_url: 'https://www.drupal.org/project/ai_vdb_provider_milvus'
+    info_url: 'https://milvus.io/'
+    updated: '2026-01-22'
+  pinecone:
+    label: 'Pinecone'
+    module: 'ai_vdb_provider_pinecone'
+    project_url: 'https://www.drupal.org/project/ai_vdb_provider_pinecone'
+    info_url: 'https://www.pinecone.io/'
+    updated: '2026-01-22'
+  postgres:
+    label: 'Postgres'
+    module: 'ai_vdb_provider_postgres'
+    project_url: 'https://www.drupal.org/project/ai_vdb_provider_postgres'
+    info_url: 'https://github.com/pgvector/pgvector'
+    updated: '2026-01-22'
+  sqlite:
+    label: 'SQLite'
+    module: 'ai_vdb_provider_sqlite'
+    project_url: 'https://www.drupal.org/project/ai_vdb_provider_sqlite'
+    info_url: 'https://www.sqlite.ai/sqlite-vector'
+    updated: '2026-01-22'

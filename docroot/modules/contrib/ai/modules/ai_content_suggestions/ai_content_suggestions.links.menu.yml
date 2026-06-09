@@ -1,0 +1,5 @@
+ai_content_suggestions.settings:
+  title: 'AI Content Suggestions'
+  description: 'Enable AI-powered suggestions to help content editors improve their content.'
+  parent: ai.admin_config_content
+  route_name: ai_content_suggestions.settings

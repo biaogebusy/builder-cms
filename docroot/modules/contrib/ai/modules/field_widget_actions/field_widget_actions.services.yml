@@ -1,0 +1,11 @@
+services:
+  plugin.manager.field_widget_actions:
+    class: Drupal\field_widget_actions\PluginManager\FieldWidgetActionManager
+    parent: default_plugin_manager
+  Drupal\field_widget_actions\FieldWidgetActionManagerInterface: '@plugin.manager.field_widget_actions'
+  Drupal\field_widget_actions\Hook\FieldWidgetAction:
+    class: Drupal\field_widget_actions\Hook\FieldWidgetAction
+    autowire: true
+  logger.channel.field_widget_actions:
+    parent: logger.channel_base
+    arguments: ['field_widget_actions']

@@ -1,0 +1,7 @@
+ai_provider_openai.settings_form:
+  path: '/admin/config/ai/providers/openai'
+  defaults:
+    _form: '\Drupal\ai_provider_openai\Form\OpenAiConfigForm'
+    _title: 'Setup OpenAI Authentication'
+  requirements:
+    _permission: 'administer ai providers'

@@ -1,0 +1,13 @@
+name: AI CKEditor integration
+type: module
+description: Adds a plugin for CKEditor 5 to let editors prompt AI for text generation purposes.
+package: AI
+core_version_requirement: ^10.4 || ^11
+dependencies:
+  - drupal:ckeditor5
+  - ai:ai
+
+# Information added by Drupal.org packaging script on 2026-06-03
+version: '1.4.1'
+project: 'ai'
+datestamp: 1780493209

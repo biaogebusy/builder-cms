@@ -1,0 +1,84 @@
+The Drupal AI module provides a framework for easily integrating Artificial
+Intelligence on any Drupal site using any kind of AI (from multiple vendors).
+The AI module aims to provide a suite of modules and an API foundation for
+generating text content, images, content analysis and more.
+
+Drupal AI module is built and maintained by the Drupal project community.
+Everyone is encouraged to submit issues and merge requests to improve Drupal AI,
+and to contribute in other ways.
+Coordination of AI module ecosystem happens in #ai-contrib channel of Drupal Slack,
+-- see https://www.drupal.org/slack
+
+This file is inspired and largely based on Drupal core's file
+MAINTAINERS.txt(https://git.drupalcode.org/project/drupal/-/blob/HEAD/core/MAINTAINERS.txt)
+
+This file lists the active maintainers. Since the AI project is much younger than
+Drupal core, there are currently no past maintainers.
+
+There should be a documented process to step down from being an AI module maintainer.
+
+Drupal AI Leadership team
+---------------------------
+
+Consists of people with varied skills who make decisions about the general
+direction of the project. Members by role (in alphabetical order):
+
+Project lead
+- James Abrahams  'yautja_cetanu' https://www.drupal.org/u/yautja_cetanu
+
+Technical lead
+- Marcus Johansson 'marcus_johansson' https://www.drupal.org/u/marcus_johansson
+
+Product managers
+- ?
+
+User Experience (UX) managers
+- James Abrahams  'yautja_cetanu' https://www.drupal.org/u/yautja_cetanu
+- Aidan Foster 'afoster' https://www.drupal.org/u/afoster
+
+Subsystem maintainers
+
+  API Explorer
+    - Marcus Johansson 'marcus_johansson' https://www.drupal.org/u/marcus_johansson
+  Assistants
+    - David Galeano ‘gxleano’ https://www.drupal.org/u/gxleano
+    - Marcus Johansson 'marcus_johansson' https://www.drupal.org/u/marcus_johansson
+  Automators
+    - Marcus Johansson 'marcus_johansson' https://www.drupal.org/u/marcus_johansson
+  Chatbot
+    - Artem Dmitriiev 'admitriiev' https://www.drupal.org/u/admitriiev
+    - Bruno Bruno (bbruno) https://www.drupal.org/u/bbruno
+    - David Galeano ‘gxleano’ https://www.drupal.org/u/gxleano
+    - Marcus Johansson 'marcus_johansson' https://www.drupal.org/u/marcus_johansson
+    - Yannick (yannickoo) https://www.drupal.org/u/yannickoo
+  CKEditor
+    - Artem Dmitriiev 'admitriiev' https://www.drupal.org/u/admitriiev
+    - Marcus Johansson 'marcus_johansson' https://www.drupal.org/u/marcus_johansson
+  Content suggestions
+    - Artem Dmitriiev 'admitriiev' https://www.drupal.org/u/admitriiev
+  ECA <- deprecated in 1.2
+    - Jasper Lammens (lammensj) https://www.drupal.org/u/lammensj
+  Logging <- getting deprecated
+    - Marcus Johansson 'marcus_johansson' https://www.drupal.org/u/marcus_johansson
+    - Scott Euser 'scott_euser' https://www.drupal.org/u/scott_euser
+  Observability
+    - Alex Korepov 'murz' https://www.drupal.org/u/murz
+  Search
+    - David Galeano ‘gxleano’ https://www.drupal.org/u/gxleano
+    - Scott Euser 'scott_euser' https://www.drupal.org/u/scott_euser
+  Translate
+    - Valery Lourie 'valthebald' https://www.drupal.org/u/valthebald
+  Validations
+    - Marcus Johansson 'marcus_johansson' https://www.drupal.org/u/marcus_johansson
+    - Frederik Wouters 'wouters_f' https://www.drupal.org/u/wouters_f
+  Field widget actions
+    - Artem Dmitriiev 'admitriiev' https://www.drupal.org/u/admitriiev
+
+Release managers
+ - Marcus Johansson 'marcus_johansson' https://www.drupal.org/u/marcus_johansson
+ - Artem Dmitriiev 'admitriiev' https://www.drupal.org/u/admitriiev
+ - Abhisek Mazumdar 'abhisekmazumdar' https://www.drupal.org/u/abhisekmazumdar
+ - Rob Loach 'robloach' https://www.drupal.org/u/robloach
+
+Coordination with AI initiative
+  - Kristen Pol 'kristen pol' https://www.drupal.org/u/kristen-pol

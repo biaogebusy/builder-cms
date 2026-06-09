@@ -1,0 +1,379 @@
+# ai_provider_registry.yml - Central registry of AI provider modules with metadata.
+#
+# This file provides default metadata for AI provider modules. Contrib providers
+# can optionally override these values by creating an ai_provider_info.yml file
+# in their module root directory.
+#
+# IMPORTANT: Keys must match the provider's PLUGIN ID (not module name).
+# For example, the ai_provider_openai module uses plugin ID 'openai'.
+#
+# Schema:
+#   providers:
+#     [plugin_id]:
+#       label: Human-readable provider name (required)
+#       module: Drupal module name for override lookup (required)
+#       project_url: Drupal.org project page URL (required)
+#       info_url: Default pricing/documentation URL (optional)
+#       updated: ISO 8601 date when metadata was last verified (recommended)
+
+providers:
+  openai:
+    label: 'OpenAI'
+    module: 'ai_provider_openai'
+    project_url: 'https://www.drupal.org/project/ai_provider_openai'
+    info_url: 'https://platform.openai.com/docs/pricing'
+    updated: '2026-01-20'
+    capabilities:
+      - chat
+      - chat_with_complex_json
+      - chat_with_image_vision
+      - chat_with_structured_response
+      - chat_with_tools
+      - embeddings
+      - moderation
+      - speech_to_text
+      - text_to_image
+      - text_to_speech
+    models:
+      # Chat models
+      gpt-5.2:
+        info_url: 'https://platform.openai.com/docs/models/gpt-5.2'
+      gpt-5.1:
+        info_url: 'https://platform.openai.com/docs/models/gpt-5.1'
+      gpt-5:
+        info_url: 'https://platform.openai.com/docs/models/gpt-5'
+      gpt-5-mini:
+        info_url: 'https://platform.openai.com/docs/models/gpt-5-mini'
+      gpt-5-nano:
+        info_url: 'https://platform.openai.com/docs/models/gpt-5-nano'
+      gpt-4.1:
+        info_url: 'https://platform.openai.com/docs/models/gpt-4.1'
+      gpt-4.1-mini:
+        info_url: 'https://platform.openai.com/docs/models/gpt-4.1-mini'
+      gpt-4.1-nano:
+        info_url: 'https://platform.openai.com/docs/models/gpt-4.1-nano'
+      gpt-4o:
+        info_url: 'https://platform.openai.com/docs/models/gpt-4o'
+      gpt-4o-mini:
+        info_url: 'https://platform.openai.com/docs/models/gpt-4o-mini'
+      gpt-4-turbo:
+        info_url: 'https://platform.openai.com/docs/models/gpt-4-turbo'
+      gpt-3.5-turbo:
+        info_url: 'https://platform.openai.com/docs/models/gpt-3.5-turbo'
+      # Reasoning models
+      o3:
+        info_url: 'https://platform.openai.com/docs/models/o3'
+      o3-mini:
+        info_url: 'https://platform.openai.com/docs/models/o3-mini'
+      o4-mini:
+        info_url: 'https://platform.openai.com/docs/models/o4-mini'
+      o1:
+        info_url: 'https://platform.openai.com/docs/models/o1'
+      # Speech models
+      tts-1:
+        info_url: 'https://platform.openai.com/docs/models/tts-1'
+      tts-1-hd:
+        info_url: 'https://platform.openai.com/docs/models/tts-1-hd'
+      gpt-4o-mini-tts:
+        info_url: 'https://platform.openai.com/docs/models/gpt-4o-mini-tts'
+      whisper-1:
+        info_url: 'https://platform.openai.com/docs/models/whisper-1'
+      gpt-4o-transcribe:
+        info_url: 'https://platform.openai.com/docs/models/gpt-4o-transcribe'
+      gpt-4o-mini-transcribe:
+        info_url: 'https://platform.openai.com/docs/models/gpt-4o-mini-transcribe'
+      # Embedding models
+      text-embedding-3-large:
+        info_url: 'https://platform.openai.com/docs/models/text-embedding-3-large'
+      text-embedding-3-small:
+        info_url: 'https://platform.openai.com/docs/models/text-embedding-3-small'
+      text-embedding-ada-002:
+        info_url: 'https://platform.openai.com/docs/models/text-embedding-ada-002'
+      # Image models
+      gpt-image-1.5:
+        info_url: 'https://platform.openai.com/docs/models/gpt-image-1.5'
+      gpt-image-1:
+        info_url: 'https://platform.openai.com/docs/models/gpt-image-1'
+      dall-e-3:
+        info_url: 'https://platform.openai.com/docs/models/dall-e-3'
+      # Moderation
+      omni-moderation-latest:
+        info_url: 'https://platform.openai.com/docs/models/omni-moderation-latest'
+
+  amazeeio:
+    label: 'amazee.ai'
+    module: 'ai_provider_amazeeio'
+    project_url: 'https://www.drupal.org/project/ai_provider_amazeeio'
+    info_url: 'https://amazee.ai'
+    updated: '2026-01-20'
+    capabilities:
+      - chat
+      - chat_with_complex_json
+      - chat_with_image_vision
+      - chat_with_structured_response
+      - chat_with_tools
+      - embeddings
+
+  anthropic:
+    label: 'Anthropic'
+    module: 'ai_provider_anthropic'
+    project_url: 'https://www.drupal.org/project/ai_provider_anthropic'
+    info_url: 'https://platform.claude.com/docs/en/about-claude/pricing'
+    updated: '2026-01-20'
+    capabilities:
+      - chat
+      - chat_with_complex_json
+      - chat_with_image_vision
+      - chat_with_structured_response
+      - chat_with_tools
+    models:
+      claude-sonnet-4-5-20250929:
+        info_url: 'https://platform.claude.com/docs/en/about-claude/models/overview'
+      claude-sonnet-4-5:
+        info_url: 'https://platform.claude.com/docs/en/about-claude/models/overview'
+      claude-haiku-4-5-20251001:
+        info_url: 'https://platform.claude.com/docs/en/about-claude/models/overview'
+      claude-haiku-4-5:
+        info_url: 'https://platform.claude.com/docs/en/about-claude/models/overview'
+      claude-opus-4-5-20251101:
+        info_url: 'https://platform.claude.com/docs/en/about-claude/models/overview'
+      claude-opus-4-5:
+        info_url: 'https://platform.claude.com/docs/en/about-claude/models/overview'
+      claude-opus-4-1-20250805:
+        info_url: 'https://platform.claude.com/docs/en/about-claude/pricing'
+      claude-opus-4-1:
+        info_url: 'https://platform.claude.com/docs/en/about-claude/pricing'
+      claude-sonnet-4-20250514:
+        info_url: 'https://platform.claude.com/docs/en/about-claude/pricing'
+      claude-sonnet-4-0:
+        info_url: 'https://platform.claude.com/docs/en/about-claude/pricing'
+      claude-sonnet-4:
+        info_url: 'https://platform.claude.com/docs/en/about-claude/pricing'
+      claude-3-7-sonnet-20250219:
+        info_url: 'https://platform.claude.com/docs/en/about-claude/pricing'
+      claude-3-7-sonnet-latest:
+        info_url: 'https://platform.claude.com/docs/en/about-claude/pricing'
+      claude-3-7-sonnet:
+        info_url: 'https://platform.claude.com/docs/en/about-claude/pricing'
+      claude-opus-4-20250514:
+        info_url: 'https://platform.claude.com/docs/en/about-claude/pricing'
+      claude-opus-4-0:
+        info_url: 'https://platform.claude.com/docs/en/about-claude/pricing'
+      claude-opus-4:
+        info_url: 'https://platform.claude.com/docs/en/about-claude/pricing'
+      claude-3-haiku-20240307:
+        info_url: 'https://platform.claude.com/docs/en/about-claude/pricing'
+      claude-3-haiku:
+        info_url: 'https://platform.claude.com/docs/en/about-claude/pricing'
+
+  auphonic:
+    label: 'Auphonic'
+    module: 'auphonic'
+    project_url: 'https://www.drupal.org/project/auphonic'
+    info_url: 'https://auphonic.com/pricing'
+    updated: '2026-01-20'
+    capabilities:
+      - audio_to_audio
+
+  aws_bedrock:
+    label: 'AWS Bedrock'
+    module: 'ai_provider_aws_bedrock'
+    project_url: 'https://www.drupal.org/project/ai_provider_aws_bedrock'
+    info_url: 'https://aws.amazon.com/bedrock/pricing/'
+    updated: '2026-01-20'
+    capabilities:
+      - chat
+      - chat_with_complex_json
+      - chat_with_image_vision
+      - chat_with_structured_response
+      - chat_with_tools
+      - embeddings
+      - text_to_image
+
+  azure:
+    label: 'Azure OpenAI'
+    module: 'ai_provider_azure'
+    project_url: 'https://www.drupal.org/project/ai_provider_azure'
+    info_url: 'https://azure.microsoft.com/en-us/pricing/details/cognitive-services/openai-service/'
+    updated: '2026-01-20'
+    capabilities:
+      - chat
+      - chat_with_complex_json
+      - chat_with_image_vision
+      - chat_with_structured_response
+      - chat_with_tools
+      - embeddings
+      - speech_to_text
+      - text_to_image
+
+  deepgram:
+    label: 'Deepgram'
+    module: 'deepgram'
+    project_url: 'https://www.drupal.org/project/deepgram'
+    info_url: 'https://deepgram.com/pricing'
+    updated: '2026-01-20'
+    capabilities:
+      - speech_to_text
+      - text_to_speech
+
+  deepl:
+    label: 'DeepL'
+    module: 'ai_provider_deepl'
+    project_url: 'https://www.drupal.org/project/ai_provider_deepl'
+    info_url: 'https://www.deepl.com/pro#pricing'
+    updated: '2026-01-20'
+    capabilities:
+      - translate_text
+
+  dreamstudio:
+    label: 'Stability AI'
+    module: 'ai_provider_dreamstudio'
+    project_url: 'https://www.drupal.org/project/ai_provider_dreamstudio'
+    info_url: 'https://platform.stability.ai/pricing'
+    updated: '2026-01-20'
+    capabilities:
+      - text_to_image
+      - image_to_image
+      - image_to_video
+
+  elevenlabs:
+    label: 'ElevenLabs'
+    module: 'elevenlabs'
+    project_url: 'https://www.drupal.org/project/elevenlabs'
+    info_url: 'https://elevenlabs.io/pricing'
+    updated: '2026-01-20'
+    capabilities:
+      - audio_to_audio
+      - speech_to_speech
+      - text_to_speech
+
+  fireworksai:
+    label: 'Fireworks AI'
+    module: 'fireworksai'
+    project_url: 'https://www.drupal.org/project/fireworksai'
+    info_url: 'https://fireworks.ai/pricing'
+    updated: '2026-01-20'
+    capabilities:
+      - chat
+      - chat_with_image_vision
+      - chat_with_structured_response
+      - embeddings
+      - speech_to_text
+      - text_to_image
+
+  gemini:
+    label: 'Google AI (Gemini)'
+    module: 'gemini_provider'
+    project_url: 'https://www.drupal.org/project/gemini_provider'
+    info_url: 'https://ai.google.dev/pricing'
+    updated: '2026-01-20'
+    capabilities:
+      - chat
+      - embeddings
+
+  google_vertex:
+    label: 'Google Vertex AI'
+    module: 'ai_provider_google_vertex'
+    project_url: 'https://www.drupal.org/project/ai_provider_google_vertex'
+    info_url: 'https://cloud.google.com/vertex-ai/pricing'
+    updated: '2026-01-20'
+    capabilities:
+      - chat
+      - embeddings
+      - translate_text
+
+  groq:
+    label: 'Groq'
+    module: 'ai_provider_groq'
+    project_url: 'https://www.drupal.org/project/ai_provider_groq'
+    info_url: 'https://groq.com/pricing'
+    updated: '2026-01-20'
+    capabilities:
+      - chat
+      - chat_with_complex_json
+      - chat_with_image_vision
+      - chat_with_structured_response
+      - chat_with_tools
+
+  huggingface:
+    label: 'Hugging Face'
+    module: 'ai_provider_huggingface'
+    project_url: 'https://www.drupal.org/project/ai_provider_huggingface'
+    info_url: 'https://huggingface.co/pricing'
+    updated: '2026-03-12'
+    capabilities:
+      - chat
+      - embeddings
+      - image_classification
+      - summarize
+      - object_detection
+
+  browser:
+    label: 'Browser (Local AI)'
+    module: 'ai_provider_browser'
+    project_url: 'https://www.drupal.org/project/ai_provider_browser'
+    info_url: 'https://developer.chrome.com/docs/ai'
+    updated: '2026-03-12'
+    capabilities:
+      - summarize
+      - translate_text
+
+  litellm:
+    label: 'LiteLLM'
+    module: 'ai_provider_litellm'
+    project_url: 'https://www.drupal.org/project/ai_provider_litellm'
+    info_url: 'https://docs.litellm.ai/'
+    updated: '2026-03-12'
+    capabilities:
+      - audio_to_audio
+      - chat
+      - chat_with_complex_json
+      - chat_with_image_vision
+      - chat_with_structured_response
+      - chat_with_tools
+      - embeddings
+      - image_and_audio_to_video
+      - moderation
+      - rerank
+      - text_to_image
+      - text_to_speech
+
+  lmstudio:
+    label: 'LM Studio'
+    module: 'ai_provider_lmstudio'
+    project_url: 'https://www.drupal.org/project/ai_provider_lmstudio'
+    info_url: 'https://lmstudio.ai/'
+    updated: '2026-01-20'
+    capabilities:
+      - chat
+      - embeddings
+
+  mistral:
+    label: 'Mistral AI'
+    module: 'ai_provider_mistral'
+    project_url: 'https://www.drupal.org/project/ai_provider_mistral'
+    info_url: 'https://mistral.ai/pricing'
+    updated: '2026-01-20'
+    capabilities:
+      - chat
+      - chat_with_complex_json
+      - chat_with_image_vision
+      - chat_with_structured_response
+      - chat_with_tools
+      - embeddings
+      - moderation
+
+  ollama:
+    label: 'Ollama'
+    module: 'ai_provider_ollama'
+    project_url: 'https://www.drupal.org/project/ai_provider_ollama'
+    info_url: 'https://ollama.com/pricing'
+    updated: '2026-01-20'
+    capabilities:
+      - chat
+      - chat_with_complex_json
+      - chat_with_image_vision
+      - chat_with_structured_response
+      - chat_with_tools
+      - embeddings
+      - moderation

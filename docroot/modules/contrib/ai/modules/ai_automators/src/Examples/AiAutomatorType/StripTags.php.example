@@ -1,0 +1,130 @@
+<?php
+
+namespace Drupal\ai_automators\Examples\AiInterPolatorFieldRules;
+
+use Drupal\ai_automators\Attribute\AiAutomatorType;
+use Drupal\ai_automators\PluginInterfaces\AiAutomatorTypeInterface;
+use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+
+/**
+ * Strips the tags of a body.
+ */
+ #[AiAutomatorType(
+  id: 'ai_automator_strip_tags_string_long',
+  label: new TranslatableMarkup('Strip Tags'),
+  field_rule: 'string_long',
+  target: '',
+)]
+class StripTags extends AiAutomatorType implements AiAutomatorTypeInterface, ContainerFactoryPluginInterface {
+
+  /**
+   * {@inheritDoc}
+   */
+  public $title = 'Strip Tags';
+
+  /**
+   * The entity type manager.
+   */
+  public EntityTypeManagerInterface $entityManager;
+
+  /**
+   * Construct an image field.
+   *
+   * @param array $configuration
+   *   Inherited configuration.
+   * @param string $plugin_id
+   *   Inherited plugin id.
+   * @param mixed $plugin_definition
+   *   Inherited plugin definition.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityManager
+   *   The entity type manager.
+   */
+  public function __construct(
+    array $configuration,
+    $plugin_id,
+    $plugin_definition,
+    EntityTypeManagerInterface $entityManager,
+  ) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+    $this->entityManager = $entityManager;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('entity_type.manager'),
+    );
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function needsPrompt() {
+    return FALSE;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function advancedMode() {
+    return FALSE;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function placeholderText() {
+    return "";
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function allowedInputs() {
+    return ['text_long', 'text'];
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function generate(string $prompt, ContentEntityInterface $entity, FieldDefinitionInterface $fieldDefinition, array $automatorConfig) {
+    // Strip the tags.
+    $values = [];
+    foreach ($entity->get($automatorConfig['base_field']) as $target) {
+      if ($target->value) {
+        $values[] = strip_tags($target->value);
+      }
+    }
+    return $values;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function verifyValue(ContentEntityInterface $entity, $value, FieldDefinitionInterface $fieldDefinition, array $automatorConfig) {
+    // Should not have tags.
+    if($value != strip_tags($value)) {
+      return FALSE;
+    }
+    // Otherwise it is ok.
+    return TRUE;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function storeValues(ContentEntityInterface $entity, array $values, FieldDefinitionInterface $fieldDefinition, array $automatorConfig) {
+    // Then set the value.
+    $entity->set($fieldDefinition->getName(), $values);
+  }
+
+}

@@ -1,0 +1,10 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - ai_test
+id: ai_mock_provider_result_delete_action
+label: 'Delete ai mock provider results'
+type: ai_mock_provider_result
+plugin: entity:delete_action:ai_mock_provider_result
+configuration: {  }

@@ -1,0 +1,114 @@
+{{ php_prefix|raw }}
+
+declare(strict_types=1);
+
+namespace Drupal\{{ machine_name }}\Plugin\AiGuardrail;
+
+use Drupal\ai\Attribute\AiGuardrail;
+use Drupal\ai\Guardrail\AiGuardrailPluginBase;
+use Drupal\ai\Guardrail\Result\GuardrailResultInterface;
+use Drupal\ai\Guardrail\Result\PassResult;
+use Drupal\ai\Guardrail\Result\StopResult;
+use Drupal\ai\OperationType\Chat\ChatInput;
+use Drupal\ai\OperationType\Chat\ChatMessage;
+use Drupal\ai\OperationType\InputInterface;
+use Drupal\ai\OperationType\OutputInterface;
+use Drupal\Component\Plugin\ConfigurableInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\PluginFormInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+
+/**
+ * {{ description }}
+ */
+#[AiGuardrail(
+  id: '{{ plugin_id }}',
+  label: new TranslatableMarkup('{{ label }}'),
+  description: new TranslatableMarkup('{{ description }}'),
+)]
+class {{ class }} extends AiGuardrailPluginBase implements ConfigurableInterface, PluginFormInterface {
+
+  use StringTranslationTrait;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function processInput(InputInterface $input): GuardrailResultInterface {
+    if (!$input instanceof ChatInput) {
+      return new PassResult('Input is not a chat input, skipping.', $this);
+    }
+
+    $messages = $input->getMessages();
+    $last_message = end($messages);
+
+    if (!$last_message instanceof ChatMessage) {
+      return new PassResult('No text message found to analyze.', $this);
+    }
+
+    $text = $last_message->getText();
+
+    // @todo Implement your validation logic here.
+    // Use $this->configuration for admin-configured values.
+    // Return StopResult to block, PassResult to allow.
+
+    return new PassResult('Input passed the check.', $this);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function processOutput(OutputInterface $output): GuardrailResultInterface {
+    return new PassResult('Output processing is not applicable for this guardrail.', $this);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getConfiguration(): array {
+    return $this->configuration;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setConfiguration(array $configuration): void {
+    $this->configuration = $configuration;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function defaultConfiguration(): array {
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
+    $form['violation_message'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Violation message'),
+      '#description' => $this->t('The message displayed when the guardrail triggers.'),
+      '#default_value' => $this->configuration['violation_message'] ?? '',
+    ];
+
+    // @todo Add your configuration fields here.
+
+    return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateConfigurationForm(array &$form, FormStateInterface $form_state): void {}
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitConfigurationForm(array &$form, FormStateInterface $form_state): void {
+    $this->setConfiguration($form_state->getValues());
+  }
+
+}

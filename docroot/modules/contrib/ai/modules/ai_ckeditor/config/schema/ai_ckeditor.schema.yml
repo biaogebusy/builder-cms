@@ -1,0 +1,118 @@
+ckeditor5.plugin.ai_ckeditor_ai:
+  type: mapping
+  label: AI CKEditor configuration
+  mapping:
+    dialog:
+      type: mapping
+      label: 'Dialog options'
+      mapping:
+        autoresize:
+          type: string
+          label: 'The CSS value at which auto resize in the modal should be triggered.'
+        height:
+          type: string
+          label: 'A pixel or percent value of what the height of the modal should be.'
+        width:
+          type: string
+          label: 'A pixel or percent value of what the width of the modal should be.'
+        dialog_class:
+          type: string
+          label: 'A CSS class to apply to the modal dialog.'
+    plugins:
+      type: sequence
+      label: 'Plugins'
+      orderby: key
+      sequence:
+        type: ckeditor5.plugin.ai_ckeditor_ai.[%key]
+ai_ckeditor.settings:
+  type: config_object
+  label: 'AI Ckeditor Settings'
+  mapping:
+    prompts:
+      type: mapping
+      label: 'Prompts settings'
+      mapping:
+        complete:
+          type: string
+          label: 'Completion prompt'
+        modify_prompt:
+          type: text
+          label: 'Modify with a prompt template'
+        reformat:
+          type: text
+          label: 'Reformat prompt'
+        spellfix:
+          type: text
+          label: 'Spellfix prompt'
+        summarise:
+          type: text
+          label: 'Summarize prompt'
+        tone:
+          type: text
+          label: 'Tone adjustment prompt'
+        translate:
+          type: text
+          label: 'Translate prompt'
+
+# Individual AiCKEditor plugins config schema.
+ckeditor5.plugin.ai_ckeditor_ai_base:
+  type: mapping
+  mapping:
+    enabled:
+      type: boolean
+      label: 'Enabled'
+    provider:
+      type: string
+      label: 'AI Provider-model'
+
+ckeditor5.plugin.ai_ckeditor_ai.ai_ckeditor_help:
+  type: ckeditor5.plugin.ai_ckeditor_ai_base
+
+ckeditor5.plugin.ai_ckeditor_ai.ai_ckeditor_completion:
+  type: ckeditor5.plugin.ai_ckeditor_ai_base
+
+ckeditor5.plugin.ai_ckeditor_ai.ai_ckeditor_modify_prompt:
+  type: ckeditor5.plugin.ai_ckeditor_ai_base
+
+ckeditor5.plugin.ai_ckeditor_ai.ai_ckeditor_reformat_html:
+  type: ckeditor5.plugin.ai_ckeditor_ai_base
+
+ckeditor5.plugin.ai_ckeditor_ai.ai_ckeditor_spellfix:
+  type: ckeditor5.plugin.ai_ckeditor_ai_base
+
+ckeditor5.plugin.ai_ckeditor_ai.ai_ckeditor_summarize:
+  type: ckeditor5.plugin.ai_ckeditor_ai_base
+
+ckeditor5.plugin.ai_ckeditor_ai.ai_ckeditor_tone:
+  type: ckeditor5.plugin.ai_ckeditor_ai_base
+  mapping:
+    autocreate:
+      type: boolean
+      label: 'Autocreate'
+    tone_vocabulary:
+      type: string
+      label: 'Tone vocabulary'
+    use_description:
+      type: boolean
+      label: 'Use description'
+
+ckeditor5.plugin.ai_ckeditor_ai.ai_ckeditor_translate:
+  type: ckeditor5.plugin.ai_ckeditor_ai_base
+  mapping:
+    language_source:
+      type: string
+      label: 'Language source'
+      constraints:
+        Choice:
+          choices:
+            - lang
+            - tax
+    autocreate:
+      type: boolean
+      label: 'Autocreate'
+    translate_vocabulary:
+      type: string
+      label: 'Translate vocabulary'
+    use_description:
+      type: boolean
+      label: 'Use description'

@@ -1,0 +1,102 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.image_asset
+  module:
+    - jsonapi_extras
+id: node--image_asset
+disabled: false
+path: node/image_asset
+resourceType: node--image_asset
+resourceFields:
+  field_job:
+    fieldName: field_job
+    publicName: job
+    enhancer:
+      id: ''
+    disabled: false
+  field_index:
+    fieldName: field_index
+    publicName: index
+    enhancer:
+      id: ''
+    disabled: false
+  field_seed:
+    fieldName: field_seed
+    publicName: seed
+    enhancer:
+      id: ''
+    disabled: false
+  field_asset_image:
+    fieldName: field_asset_image
+    publicName: image
+    enhancer:
+      id: ''
+    disabled: false
+  field_width:
+    fieldName: field_width
+    publicName: width
+    enhancer:
+      id: ''
+    disabled: false
+  field_height:
+    fieldName: field_height
+    publicName: height
+    enhancer:
+      id: ''
+    disabled: false
+  field_status:
+    fieldName: field_status
+    publicName: status
+    enhancer:
+      id: ''
+    disabled: false
+  field_starred:
+    fieldName: field_starred
+    publicName: starred
+    enhancer:
+      id: ''
+    disabled: false
+  field_meta:
+    fieldName: field_meta
+    publicName: meta
+    enhancer:
+      id: ''
+    disabled: false
+  vid:
+    fieldName: vid
+    publicName: vid
+    enhancer:
+      id: ''
+    disabled: true
+  revision_timestamp:
+    fieldName: revision_timestamp
+    publicName: revision_timestamp
+    enhancer:
+      id: ''
+    disabled: true
+  revision_uid:
+    fieldName: revision_uid
+    publicName: revision_uid
+    enhancer:
+      id: ''
+    disabled: true
+  revision_log:
+    fieldName: revision_log
+    publicName: revision_log
+    enhancer:
+      id: ''
+    disabled: true
+  revision_translation_affected:
+    fieldName: revision_translation_affected
+    publicName: revision_translation_affected
+    enhancer:
+      id: ''
+    disabled: true
+  default_langcode:
+    fieldName: default_langcode
+    publicName: default_langcode
+    enhancer:
+      id: ''
+    disabled: true

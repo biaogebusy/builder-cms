@@ -1,0 +1,11 @@
+name: Field Widget Actions
+description: Provides easy way to attach actions to field widgets, for example for content suggestions.
+type: module
+core_version_requirement: ^10.3 || ^11.1
+lifecycle: deprecated
+lifecycle_link: https://www.drupal.org/node/3568339
+
+# Information added by Drupal.org packaging script on 2026-06-03
+version: '1.4.1'
+project: 'ai'
+datestamp: 1780493209

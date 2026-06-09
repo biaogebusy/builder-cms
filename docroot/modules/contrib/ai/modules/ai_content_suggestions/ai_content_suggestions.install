@@ -1,0 +1,152 @@
+<?php
+
+/**
+ * @file
+ * Contains install/update hooks for ai_content_suggestions module.
+ */
+
+/**
+ * Set default prompt for field widget.
+ */
+function ai_content_suggestions_update_10001() {
+  $config = \Drupal::configFactory()->getEditable('ai_content_suggestions.settings');
+  $config->set('field_widget_prompt', 'You will be asked to help with content suggestions based on the input in markdown format. Answer with
+  suggestions only, do not repeat the task description, do not use any other text except for the suggestions.
+  Wrap each suggestion in span tag that has the class "ai-cs-use". Here is an example of a single suggestion:
+  ```html
+  <span class="ai-content-suggestion"><span class="ai-use-cs">Suggestion</span></span>
+  ```
+  If there are multiple suggestions, ensure that these are wrapped in <li> tags inside an ordered list <ol>.
+  Here is an example of multiple suggestions:
+  ```html
+  <ol>
+    <li>
+      <span class="ai-content-suggestion">
+        <span class="ai-use-cs">Suggestion</span>
+      </span>
+    </li>
+    <li>
+      <span class="ai-content-suggestion">
+        <span class="ai-use-cs">Another suggestion</span>
+      </span>
+    </li>
+  </ol>
+  ```
+  If there is too little information to generate a response, respond with "Insufficient information provided, please add more data before generating suggestions."');
+  $config->save(TRUE);
+}
+
+/**
+ * Install field_widget_actions module.
+ */
+function ai_content_suggestions_update_10002() {
+  \Drupal::service('module_installer')->install(['field_widget_actions']);
+}
+
+/**
+ * Converts the existing tags prompt to an AI Prompt entity if different.
+ */
+function ai_content_suggestions_update_10003() {
+  // Automatically install any missing prompt types and prompts from your
+  // module's config/install/ folder.
+  /** @var \Drupal\ai\Service\AiPromptManager $prompt_manager */
+  $prompt_manager = \Drupal::service('ai.prompt_manager');
+  $prompt_manager->upsertFromConfigInstall('ai_content_suggestions');
+
+  // Set the prompt to be the machine name of your ai.ai_prompt.* from your
+  // config install.
+  $config_factory = \Drupal::configFactory();
+  $config = $config_factory->getEditable('ai_content_suggestions.prompts');
+  $original_prompt = $config->get('taxonomy_suggest_open');
+  $config->set('taxonomy_suggest_open', 'suggest_tags__suggest_tags_default');
+
+  // If the user modified the prompt, create it as a separate one.
+  $prompt = $config_factory->get('ai.ai_prompt.suggest_tags_default')->get('prompt');
+  if ($prompt && $original_prompt && trim($prompt) !== ($original_prompt)) {
+    $prompt = $prompt_manager->upsertPrompt([
+      'id' => 'suggest_tags__suggest_tags_modified',
+      'label' => t('Modified Suggest Tags'),
+      'prompt' => $original_prompt,
+      'type' => 'suggest_tags',
+    ]);
+    // Set the selected prompt to be the modified one.
+    $config->set('taxonomy_suggest_open', $prompt->id());
+  }
+
+  // Save the config.
+  $config->save();
+}
+
+/**
+ * Converts the existing vocabulary prompt to an AI Prompt entity if different.
+ */
+function ai_content_suggestions_update_10004() {
+  // Automatically install any missing prompt types and prompts from your
+  // module's config/install/ folder.
+  /** @var \Drupal\ai\Service\AiPromptManager $prompt_manager */
+  $prompt_manager = \Drupal::service('ai.prompt_manager');
+  $prompt_manager->upsertFromConfigInstall('ai_content_suggestions');
+
+  // Set the prompt to be the machine name of your ai.ai_prompt.* from your
+  // config install.
+  $config_factory = \Drupal::configFactory();
+  $config = $config_factory->getEditable('ai_content_suggestions.prompts');
+  $original_prompt = $config->get('taxonomy_suggest_from_voc');
+  $config->set('taxonomy_suggest_from_voc', 'suggest_vocabulary__suggest_vocabulary_default');
+
+  // If the user modified the prompt, create it as a separate one.
+  $prompt = $config_factory->get('ai.ai_prompt.suggest_vocabulary__suggest_vocabulary_default')->get('prompt');
+  if ($prompt && $original_prompt && trim($prompt) !== ($original_prompt)) {
+    $prompt = $prompt_manager->upsertPrompt([
+      'id' => 'suggest_vocabulary__suggest_vocabulary_modified',
+      'label' => t('Modified Suggest Vocabulary'),
+      'prompt' => $original_prompt,
+      'type' => 'suggest_vocabulary',
+    ]);
+    // Set the selected prompt to be the modified one.
+    $config->set('taxonomy_suggest_from_voc', $prompt->id());
+  }
+
+  // Save the config.
+  $config->save();
+}
+
+/**
+ * Update content suggestion system prompt for field widget.
+ */
+function ai_content_suggestions_update_10005() {
+  $config = \Drupal::configFactory()->getEditable('ai_content_suggestions.settings');
+  $config->set('field_widget_prompt', 'You will be asked to help with content suggestions based on the input in markdown format. Answer with
+  suggestions only, do not repeat the task description, do not use any other text except for the suggestions.
+  Do not include any explanations, only provide a RFC8259 compliant JSON response following this format without deviation:
+  ```
+  [
+    {"suggestion": "First suggested text"},
+    {"suggestion": "Second suggested text"},
+  ]
+  ```
+  If you are enable to generate a response, respond with "Insufficient information provided, please add more data before generating suggestions."');
+  $config->save(TRUE);
+}
+
+/**
+ * Update entity types to use bundles for content types.
+ */
+function ai_content_suggestions_update_14001() {
+  $config = \Drupal::configFactory()->getEditable('ai_content_suggestions.settings');
+  $config->set('entity_types', [
+    'node' => [
+      'bundles' => [],
+      'mode' => 'disable',
+    ],
+    'taxonomy_term' => [
+      'bundles' => [],
+      'mode' => 'disable',
+    ],
+    'block_content' => [
+      'bundles' => [],
+      'mode' => 'disable',
+    ],
+  ]);
+  $config->save();
+}

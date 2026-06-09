@@ -1,0 +1,3 @@
+administer ai_mock_provider_result:
+  title: 'Administer ai mock provider results'
+  restrict access: true

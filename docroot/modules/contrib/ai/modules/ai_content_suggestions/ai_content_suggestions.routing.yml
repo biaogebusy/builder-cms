@@ -1,0 +1,7 @@
+ai_content_suggestions.settings:
+  path: '/admin/config/ai/suggestions'
+  defaults:
+    _title: 'AI Content Suggestions settings'
+    _form: 'Drupal\ai_content_suggestions\Form\SettingsForm'
+  requirements:
+    _permission: 'administer ai'

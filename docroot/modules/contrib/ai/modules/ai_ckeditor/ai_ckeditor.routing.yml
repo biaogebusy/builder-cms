@@ -1,0 +1,20 @@
+ai_ckeditor.dialog:
+  path: '/api/ai-ckeditor/dialog'
+  defaults:
+    _title: 'AI CKEditor Dialog'
+    _form: '\Drupal\ai_ckeditor\Form\AiCKEditorDialogForm'
+  requirements:
+    _permission: 'use ai ckeditor'
+
+ai_ckeditor.do_request:
+  methods: [ POST ]
+  path: '/api/ai-ckeditor/request/{editor}/{ai_ckeditor_plugin}'
+  defaults:
+    _title: 'AI CKEditor Request'
+    _controller: 'Drupal\ai_ckeditor\Controller\AiRequest::doRequest'
+  requirements:
+    _permission: 'use ai ckeditor'
+  options:
+    parameters:
+      ai_ckeditor_plugin:
+        type: ai_ckeditor_plugin

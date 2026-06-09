@@ -1,0 +1,20 @@
+{#
+/**
+ * @file
+ * Default theme implementation of a container used to wrap the ai tools library's
+ * modal dialog interface.
+ *
+ * Available variables:
+ * - attributes: HTML attributes for the containing element.
+ * - menu: The menu of available ai tools groups to choose from.
+ * - content: The grid or table of existing tools to choose from.
+ *
+ * @see template_preprocess_ai_tools_library_wrapper()
+ *
+ * @ingroup themeable
+ */
+#}
+<div{{ attributes.addClass('ai-tools-library-wrapper') }}>
+  {{ menu }}
+  {{ content }}
+</div>

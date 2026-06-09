@@ -1,0 +1,19 @@
+.ai-json-schema-editor-wrapper {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    min-height: 200px;
+    overflow: hidden;
+}
+
+.ai-json-schema-editor-wrapper .cm-editor {
+    min-height: 200px;
+}
+
+.ai-json-schema-editor-wrapper .cm-editor.cm-focused {
+    outline: 2px solid #0074bd;
+    outline-offset: -1px;
+}
+
+.ai-json-schema-editor-wrapper .cm-scroller {
+    overflow: auto;
+}

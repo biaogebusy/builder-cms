@@ -1,0 +1,5 @@
+ai_mock_provider_result.add_form:
+  title: 'Add ai mock provider result'
+  route_name: entity.ai_mock_provider_result.add_form
+  appears_on:
+    - entity.ai_mock_provider_result.collection

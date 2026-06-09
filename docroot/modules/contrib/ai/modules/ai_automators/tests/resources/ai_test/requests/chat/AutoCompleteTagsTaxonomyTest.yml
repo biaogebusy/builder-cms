@@ -1,0 +1,27 @@
+request:
+  messages:
+  - role: user
+    text: "Based on the context text create between 2 to 5 categories from the category context that fits the text.\n\nContext:\nMonkeys are cool animals\n\nDo not include any explanations, only provide a RFC8259 compliant JSON response following this format without deviation.\n[{\"value\": \"requested value\"}]"
+    images: []
+    tools: null
+    tool_id: null
+  debug_data: {}
+  chat_tools: null
+  chat_structured_json_schema: {}
+  chat_strict_schema: false
+response:
+  normalized:
+    role: assistant
+    text: >-
+      [{"value": "monkeys"}]
+    images: []
+    tools: null
+    tool_id: null
+  rawOutput: []
+  metadata: {}
+  tokenUsage:
+    input: null
+    output: null
+    total: null
+    reasoning: null
+    cached: null

@@ -1,0 +1,8 @@
+test_ai_vdb_provider_mysql.settings:
+  type: config_object
+  label: 'Test MySQL AI VDB Provider Settings'
+  mapping:
+    test:
+      type: string
+      label: 'Test'
+      required: false

@@ -1,0 +1,245 @@
+<?php
+
+/**
+ * @file
+ * AI Search install file.
+ */
+
+use Drupal\ai\Enum\EmbeddingStrategyIndexingOptions;
+
+/**
+ * Update the servers that use AI Search with nested database settings.
+ */
+function ai_search_update_10001() {
+  $config_factory = \Drupal::configFactory();
+  $servers = $config_factory->listAll('search_api.server.');
+  if (empty($servers)) {
+    return t('No Search API servers found to review for changes.');
+  }
+
+  $updated_servers = 0;
+  foreach ($servers as $server) {
+    $config_object = $config_factory->getEditable($server);
+    $config = $config_object->getRawData();
+
+    // It must be an AI Search server.
+    if (
+      empty($config['dependencies']['module'])
+      || !in_array('ai_search', $config['dependencies']['module'])
+    ) {
+      continue;
+    }
+
+    // Nest the database settings that were previous higher level settings
+    // within the server back-end configuration.
+    if (!isset($config['backend_config']['database_settings'])) {
+      $config['backend_config']['database_settings'] = [
+        'database_name' => $config['backend_config']['database_name'],
+        'collection' => $config['backend_config']['collection'],
+        'metric' => $config['backend_config']['metric'],
+      ];
+      unset($config['backend_config']['database_name']);
+      unset($config['backend_config']['collection']);
+      unset($config['backend_config']['metric']);
+      $config_object->set('backend_config', $config['backend_config']);
+      $config_object->save();
+      $updated_servers++;
+    }
+  }
+
+  return t('Search API Servers using the AI Search module updated database settings: @number.', [
+    '@number' => $updated_servers,
+  ]);
+}
+
+/**
+ * Update the indexes that use AI Search with new index and field settings.
+ */
+function ai_search_update_10002() {
+  $config_factory = \Drupal::configFactory();
+  $indexes = $config_factory->listAll('search_api.index.');
+  if (empty($indexes)) {
+    return t('No Search API indexes found to review for changes.');
+  }
+
+  // Find all indexes that have field settings with type embedding and remove
+  // that to avoid fatal errors.
+  $updated_indexes = 0;
+  foreach ($indexes as $index) {
+    $config_object = $config_factory->getEditable($index);
+    $config = $config_object->getRawData();
+
+    // It must be an AI Search index.
+    if (
+      empty($config['dependencies']['module'])
+      || !in_array('ai_search', $config['dependencies']['module'])
+    ) {
+      continue;
+    }
+    $ai_search_config_object = $config_factory->getEditable('ai_search.index.' . $config['id']);
+    $ai_search_config = $config_object->getRawData();
+
+    // Update fields to use the indexing options instead of embeddings field
+    // data type.
+    $indexing_options = [];
+    if (!empty($config['field_settings'])) {
+      foreach ($config['field_settings'] as $key => $setting) {
+        if (!isset($setting['type'])) {
+          continue;
+        }
+
+        $indexing_options[$key] = [
+          'indexing_option' => '',
+          'max' => -1,
+        ];
+
+        if ($setting['type'] !== 'embeddings') {
+          continue;
+        }
+        $setting['type'] = 'string';
+        $config_object->set('field_settings.' . $key, $setting);
+        $indexing_options[$key]['indexing_option'] = EmbeddingStrategyIndexingOptions::MainContent->getKey();
+      }
+    }
+
+    // Add the boolean to determine if the max length fields should be shown
+    // next to indexing options.
+    if (!isset($ai_search_config['control_field_max_length'])) {
+      $control_field_max_length = $config['control_field_max_length'] ?? FALSE;
+      $ai_search_config_object->set('control_field_max_length', $control_field_max_length);
+      if (isset($config['control_field_max_length'])) {
+        $config_object->clear('control_field_max_length');
+      }
+    }
+    if (!isset($ai_search_config['exclude_chunk_from_metadata'])) {
+      $exclude_chunk_from_metadata = $config['exclude_chunk_from_metadata'] ?? FALSE;
+      $ai_search_config_object->set('exclude_chunk_from_metadata', $exclude_chunk_from_metadata);
+      if (isset($config['exclude_chunk_from_metadata'])) {
+        $config_object->clear('exclude_chunk_from_metadata');
+      }
+    }
+    if (!empty($config['indexing_options'])) {
+      $ai_search_config_object->set('indexing_options', $config['indexing_options']);
+      $config_object->clear('indexing_options');
+    }
+    elseif ($indexing_options) {
+      $ai_search_config_object->set('indexing_options', $indexing_options);
+    }
+
+    if (isset($config['control_field_max_length'])) {
+      $config_object->clear('control_field_max_length');
+    }
+
+    $config_object->save();
+    $ai_search_config_object->save();
+    $updated_indexes++;
+  }
+
+  // If we have at least one, tell the user to go to manage their fields.
+  if ($updated_indexes) {
+    return t('The Search API field type Embedding is no longer used. Please go to your Search API Fields and configure your field indexing. This has changed significantly since the early experimental versions.');
+  }
+  return t('No Search API index changes have been made, all indexes are as expected or unrelated to the AI Search module.');
+}
+
+/**
+ * Update the servers that use AI Search with new settings.
+ */
+function ai_search_update_10003() {
+  $config_factory = \Drupal::configFactory();
+  $servers = $config_factory->listAll('search_api.server.');
+  if (empty($servers)) {
+    return t('No Search API servers found to review for changes.');
+  }
+
+  $updated_servers = 0;
+  foreach ($servers as $server) {
+    $has_updates = FALSE;
+    $config_object = $config_factory->getEditable($server);
+    $config = $config_object->getRawData();
+
+    // It must be an AI Search server.
+    if (
+      empty($config['dependencies']['module'])
+      || !in_array('ai_search', $config['dependencies']['module'])
+    ) {
+      continue;
+    }
+
+    // Relabel the embedding strategies.
+    if (isset($config['backend_config']['embedding_strategy'])) {
+      if ($config['backend_config']['embedding_strategy'] === 'metadata_average_pool') {
+        $config['backend_config']['embedding_strategy'] = 'average_pool';
+        $has_updates = TRUE;
+      }
+      elseif ($config['backend_config']['embedding_strategy'] === 'metadata_chunks') {
+        $config['backend_config']['embedding_strategy'] = 'contextual_chunks';
+        $has_updates = TRUE;
+      }
+    }
+
+    // Rename the metadata variable to avoid overlapping terms with metadata
+    // stored in the vector database.
+    if (isset($config['backend_config']['embedding_strategy_configuration']['metadata_max_percentage'])) {
+      $config['backend_config']['embedding_strategy_configuration']['contextual_content_max_percentage'] = $config['backend_config']['embedding_strategy_configuration']['metadata_max_percentage'];
+      unset($config['backend_config']['embedding_strategy_configuration']['metadata_max_percentage']);
+      $has_updates = TRUE;
+    }
+
+    if ($has_updates) {
+      $config_object->set('backend_config', $config['backend_config']);
+      $config_object->save();
+      $updated_servers++;
+    }
+  }
+
+  return t('Search API Servers using the AI Search module updated: @number.', [
+    '@number' => $updated_servers,
+  ]);
+}
+
+/**
+ * Update the indexes that use AI Search with new index and settings via config.
+ */
+function ai_search_update_10004() {
+  // Re-run the updated 10002 hook as that has been updated to handle both
+  // pre and post 10001 scenarios.
+  return ai_search_update_10002();
+}
+
+/**
+ * Update the search servers to include include_raw_embedding_vector setting.
+ */
+function ai_search_update_10005() {
+  $config_factory = \Drupal::configFactory();
+  $servers = $config_factory->listAll('search_api.server.');
+  if (empty($servers)) {
+    return t('No Search API servers found to review for changes.');
+  }
+
+  $updated_servers = 0;
+  foreach ($servers as $server) {
+    $config_object = $config_factory->getEditable($server);
+    $config = $config_object->getRawData();
+
+    // It must be an AI Search server.
+    if (
+      empty($config['dependencies']['module'])
+      || !in_array('ai_search', $config['dependencies']['module'])
+    ) {
+      continue;
+    }
+
+    // Add the new include_raw_embedding_vector setting if it doesn't exist.
+    if (!isset($config['backend_config']['include_raw_embedding_vector'])) {
+      $config['backend_config']['include_raw_embedding_vector'] = FALSE;
+      $config_object->set('backend_config', $config['backend_config']);
+      $config_object->save();
+      $updated_servers++;
+    }
+  }
+
+  return t('Search API Servers using the AI Search module updated with include_raw_embedding_vector setting: @number.', [
+    '@number' => $updated_servers,
+  ]);
+}

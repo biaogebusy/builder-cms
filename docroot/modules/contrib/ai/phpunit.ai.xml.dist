@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- PHPUnit configuration for AI LLM tests. -->
+<!-- Copy this into your project root, removing the .dist. -->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         bootstrap="web/core/tests/bootstrap.php"
+         colors="true"
+         beStrictAboutTestsThatDoNotTestAnything="true"
+         beStrictAboutOutputDuringTests="true"
+         beStrictAboutChangesToGlobalState="true"
+         failOnWarning="true"
+         displayDetailsOnTestsThatTriggerErrors="true"
+         displayDetailsOnTestsThatTriggerWarnings="true"
+         displayDetailsOnTestsThatTriggerDeprecations="true"
+         cacheResult="false"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd"
+         cacheDirectory=".phpunit.cache">
+  <php>
+    <!-- Set error reporting to E_ALL. -->
+    <ini name="error_reporting" value="32767"/>
+    <!-- Do not limit the amount of memory tests take to run. -->
+    <ini name="memory_limit" value="-1"/>
+    <!-- Example SIMPLETEST_BASE_URL value: http://localhost -->
+    <env name="SIMPLETEST_DB" value=""/>
+
+    <!-- Override to run tests with a the comma separated list of models. -->
+    <!-- This overrides any test level configuration. -->
+    <env name="AI_PHPUNIT_TARGET_MODELS" value=""/>
+
+    <!-- Provide authentication credentials for any provider being run. -->
+    <!-- This can a string for a simple API key, or a JSON object. -->
+    <env name="AI_PHPUNIT_AUTH_<PROVIDER>" value=""/>
+  </php>
+  <testsuites>
+    <testsuite name="ai_llm">
+      <directory>web/modules/*/*/tests/src/AiLlm</directory>
+    </testsuite>
+  </testsuites>
+</phpunit>

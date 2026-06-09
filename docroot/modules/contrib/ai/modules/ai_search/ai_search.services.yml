@@ -1,0 +1,13 @@
+services:
+  ai_search.embedding_strategy:
+    class: Drupal\ai_search\EmbeddingStrategyPluginManager
+    parent: default_plugin_manager
+  ai_search.event_subscriber.solr_boost_by_ai_search:
+    class: Drupal\ai_search\EventSubscriber\SolrBoostByAiSearchEventSubscriber
+    tags:
+      - { name: event_subscriber }
+  ai_search.event_subscriber.new_server:
+    class: Drupal\ai_search\EventSubscriber\NewServerEventSubscriber
+    tags:
+      - { name: event_subscriber }
+    arguments: ['@ai.vdb_provider']

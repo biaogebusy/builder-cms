@@ -1,0 +1,19 @@
+services:
+  ollama-gpu:
+    container_name: ddev-${DDEV_SITENAME}-ollama-gpu
+    pull_policy: always
+    tty: true
+    image: ollama/ollama:latest
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+      - HTTP_EXPOSE=11434:11434
+      - HTTPS_EXPOSE=11434:11434
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

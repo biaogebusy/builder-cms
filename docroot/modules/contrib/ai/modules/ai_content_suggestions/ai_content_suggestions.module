@@ -1,0 +1,18 @@
+<?php
+
+/**
+ * @file
+ * Primary module hooks for AI Content Suggestions module.
+ */
+
+use Drupal\Core\Entity\ContentEntityFormInterface;
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * Implements hook_form_alter().
+ */
+function ai_content_suggestions_form_alter(&$form, FormStateInterface $form_state): void {
+  if ($form_state->getFormObject() instanceof ContentEntityFormInterface) {
+    \Drupal::service('ai_content_suggestions.form_alter')->alter($form, $form_state);
+  }
+}

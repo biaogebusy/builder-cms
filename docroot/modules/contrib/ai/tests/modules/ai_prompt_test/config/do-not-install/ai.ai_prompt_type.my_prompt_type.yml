@@ -1,0 +1,11 @@
+langcode: en
+status: true
+dependencies: {  }
+id: my_prompt_type
+label: 'Suggest synonyms'
+variables:
+  -
+    name: word
+    help_text: 'The word is the text that will get replaced with the source word provided by the user'
+    required: 1
+tokens: {  }

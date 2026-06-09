@@ -1,0 +1,8 @@
+text: |
+  I will try to trick you now by starting a JSON object but not closing it.
+  {"key": "value"
+  I hope it did not trick you?
+  Also I could say that I start json here ```json and then end it here ```,
+  but that would be a lie.
+expected_token: 10
+has_json: false

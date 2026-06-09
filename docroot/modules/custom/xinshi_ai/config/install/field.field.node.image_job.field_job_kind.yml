@@ -1,0 +1,20 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_job_kind
+    - node.type.image_job
+  module:
+    - options
+id: node.image_job.field_job_kind
+field_name: field_job_kind
+entity_type: node
+bundle: image_job
+label: 'Job kind'
+description: ''
+required: true
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string

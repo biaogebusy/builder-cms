@@ -1,0 +1,126 @@
+xinshi_ai.settings:
+  type: config_object
+  label: 'Xinshi AI settings'
+  mapping:
+    gateway:
+      type: mapping
+      label: '信使网关'
+      mapping:
+        base_url:
+          type: uri
+          label: '网关 base URL'
+        api_key:
+          type: string
+          label: '网关 API key(各项目独立;保存在配置中)'
+        request_timeout:
+          type: integer
+          label: '上游请求超时(秒)'
+    image:
+      type: mapping
+      label: '图片任务'
+      mapping:
+        default_n:
+          type: integer
+          label: '默认生成张数'
+    event_ticket:
+      type: mapping
+      label: '事件票据'
+      mapping:
+        ttl:
+          type: integer
+          label: 'TTL(秒)'
+    queue:
+      type: mapping
+      label: '队列'
+      mapping:
+        worker:
+          type: string
+          label: 'Worker(cron / advancedqueue)'
+    sse:
+      type: mapping
+      label: 'SSE'
+      mapping:
+        heartbeat_seconds:
+          type: integer
+          label: '心跳间隔(秒)'
+        max_lifetime_seconds:
+          type: integer
+          label: '最大存活(秒)'
+    observability:
+      type: mapping
+      label: '可观测性'
+      mapping:
+        exporters:
+          type: sequence
+          sequence:
+            type: string
+        capture_content:
+          type: boolean
+        ingest_token_env:
+          type: string
+        otel:
+          type: mapping
+          mapping:
+            endpoint:
+              type: string
+            headers:
+              type: sequence
+              sequence:
+                type: string
+
+xinshi_ai.models:
+  type: config_object
+  label: 'Xinshi AI 模型注册中心'
+  mapping:
+    platforms:
+      type: sequence
+      label: '平台'
+      sequence:
+        type: xinshi_ai.platform
+    models:
+      type: sequence
+      label: '模型'
+      sequence:
+        type: xinshi_ai.model
+
+xinshi_ai.platform:
+  type: mapping
+  label: '平台'
+  mapping:
+    label:
+      type: label
+    description:
+      type: text
+    enabled:
+      type: boolean
+    auth:
+      type: string
+    api_key_env:
+      type: string
+    user_supplied:
+      type: boolean
+
+xinshi_ai.model:
+  type: mapping
+  label: '模型'
+  mapping:
+    id:
+      type: string
+    label:
+      type: label
+    platform:
+      type: string
+    capabilities:
+      type: sequence
+      sequence:
+        type: string
+    max_n:
+      type: integer
+    sizes:
+      type: sequence
+      sequence:
+        type: string
+    deprecated:
+      type: boolean
+    notes:
+      type: text

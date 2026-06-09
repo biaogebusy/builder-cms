@@ -1,0 +1,50 @@
+ai_logging.settings_form:
+  path: '/admin/config/ai/logging/settings'
+  defaults:
+    _form: '\Drupal\ai_logging\Form\AiLogFormSettings'
+    _title: 'AI Logging Settings'
+  requirements:
+    _permission: 'administer ai log'
+
+ai_logging.list_page:
+  path: '/admin/config/ai/logging'
+  defaults:
+    _controller: '\Drupal\ai\Controller\ProviderSetupList::list'
+    _title: 'AI Logging'
+  requirements:
+    _permission: 'administer ai log'
+
+entity.ai_log.collection:
+  path: '/admin/config/ai/logging/collection'
+  defaults:
+    _title: 'AI Logs'
+    _controller: '\Drupal\views\Routing\ViewPageController::handle'
+    view_id: 'ai_logs'
+    display_id: 'page_1'
+  requirements:
+    _permission: 'view ai log'
+
+entity.ai_log.edit_form:
+  path: '/admin/config/ai/logging/collection/{ai_log}/edit'
+  defaults:
+    _entity_form: 'ai_log.edit'
+    _title: 'Edit AI Log'
+  requirements:
+    _entity_access: 'ai_log.update'
+    _permission: 'administer ai log'
+
+entity.ai_log_type.collection:
+  path: '/admin/config/ai/logging/types'
+  defaults:
+    _entity_list: 'ai_log_type'
+    _title: 'AI Log Types'
+  requirements:
+    _permission: 'administer ai log'
+
+entity.ai_log_type.canonical:
+  path: '/admin/config/ai/logging/types/{ai_log_type}'
+  defaults:
+    _entity_view: 'ai_log_type.edit_form'
+  requirements:
+    _entity_access: 'ai_log_type.edit'
+    _permission: 'administer ai log'

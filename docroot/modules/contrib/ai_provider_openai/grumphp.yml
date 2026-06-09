@@ -1,0 +1,16 @@
+# cspell:ignore blacklist
+grumphp:
+    tasks:
+        phpcs:
+            standard: Drupal,DrupalPractice
+        git_blacklist:
+            keywords:
+                - '(var_|)dump\(.*\);*'
+                - 'die(;|\(.*\));*'
+                - 'dpm\(.*\);*'
+                - 'print_r\(.*\);*'
+            regexp_type: P
+            triggered_by: ['php','module','inc']
+    ascii:
+        succeeded: tests/assets/grumphp/success.txt
+        failed: tests/assets/grumphp/fail.txt

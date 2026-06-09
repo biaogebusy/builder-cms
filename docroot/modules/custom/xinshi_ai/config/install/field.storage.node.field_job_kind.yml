@@ -1,0 +1,32 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - options
+id: node.field_job_kind
+field_name: field_job_kind
+entity_type: node
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: text_to_image
+      label: 文生图
+    -
+      value: image_edit
+      label: 图编辑
+    -
+      value: variation
+      label: 变体
+    -
+      value: upscale
+      label: 升频
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

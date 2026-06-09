@@ -1,0 +1,82 @@
+ai_automators.list:
+  path: '/admin/config/ai/ai-automators'
+  defaults:
+    _title: 'AI Automators'
+    _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
+  requirements:
+    _permission: 'administer ai_automator'
+
+entity.ai_automator.collection:
+  path: '/admin/config/ai/ai-automators/ai-automator'
+  defaults:
+    _entity_list: 'ai_automator'
+    _title: 'AI Automator configuration'
+  requirements:
+    _permission: 'administer ai_automator'
+
+entity.ai_automator.add_form:
+  path: '/admin/config/ai/ai-automators/ai-automator/add'
+  defaults:
+    _entity_form: 'ai_automator.add'
+    _title: 'Add an ai automator'
+  requirements:
+    _permission: 'administer ai_automator'
+
+entity.ai_automator.edit_form:
+  path: '/admin/config/ai/ai-automators/ai-automator/{ai_automator}'
+  defaults:
+    _entity_form: 'ai_automator.edit'
+    _title: 'Edit an ai automator'
+  requirements:
+    _permission: 'administer ai_automator'
+
+entity.ai_automator.delete_form:
+  path: '/admin/config/ai/ai-automators/ai-automator/{ai_automator}/delete'
+  defaults:
+    _entity_form: 'ai_automator.delete'
+    _title: 'Delete an ai automator'
+  requirements:
+    _permission: 'administer ai_automator'
+
+route_callbacks:
+  - '\Drupal\ai_automators\Routing\AutomatorRouteSubscriber::routes'
+
+entity.automators_tool.collection:
+  path: '/admin/config/ai/ai-automators/automators-tool'
+  defaults:
+    _entity_list: 'automators_tool'
+    _title: 'Automators Tool configuration'
+  requirements:
+    _permission: 'administer automators_tool'
+
+entity.automators_tool.add_form:
+  path: '/admin/config/ai/ai-automators/automators_tool/add'
+  defaults:
+    _entity_form: 'automators_tool.add'
+    _title: 'Add an automators tool'
+  requirements:
+    _permission: 'administer automators_tool'
+
+entity.automators_tool.edit_form:
+  path: '/admin/config/ai/ai-automators/automators-tool/{automators_tool}'
+  defaults:
+    _entity_form: 'automators_tool.edit'
+    _title: 'Edit an automators tool'
+  requirements:
+    _permission: 'administer automators_tool'
+
+entity.automators_tool.delete_form:
+  path: '/admin/config/ai/ai-automators/automators-tool/{automators_tool}/delete'
+  defaults:
+    _entity_form: 'automators_tool.delete'
+    _title: 'Delete an automators tool'
+  requirements:
+    _permission: 'administer automators_tool'
+
+ai_automators.autocomplete.workflows:
+  path: '/admin/ai_automators/autocomplete/workflows'
+  defaults:
+    _controller: '\Drupal\ai_automators\Controller\WorkflowAutocomplete::workflows'
+    _format: json
+  requirements:
+    _permission: 'administer automators_tool'

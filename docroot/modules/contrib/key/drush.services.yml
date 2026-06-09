@@ -1,0 +1,6 @@
+services:
+  key.commands:
+    class: Drupal\key\Commands\KeyCommands
+    arguments: ['@key.repository', '@plugin.manager.key.key_type', '@entity_type.manager', '@plugin.manager.key.key_provider', '@logger.factory']
+    tags:
+      - { name: drush.command }

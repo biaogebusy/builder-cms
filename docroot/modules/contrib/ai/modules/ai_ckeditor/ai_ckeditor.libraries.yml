@@ -1,0 +1,27 @@
+# JS assets below require compilation on dev releases. See docs/contribute/testing/full_patch_test.md
+ai_ckeditor:
+  js:
+    js/build/aickeditor.js: { preprocess: false, minified: true }
+  dependencies:
+    - core/ckeditor5
+    - editor/drupal.editor.dialog
+    - ai_ckeditor/ai_ckeditor.dialog
+
+ai_balloon_menu:
+  js:
+    js/build/ai_balloon_menu.js: { preprocess: false, minified: true }
+  dependencies:
+    - core/ckeditor5
+
+admin.ai_ckeditor:
+  css:
+    theme:
+      css/ai_ckeditor.css: {}
+
+ai_ckeditor.dialog:
+  css:
+    theme:
+      css/dialog.css: {}
+      css/status.css: {}
+  js:
+    js/ai_ckeditor.js: { preprocess: false, minified: true }

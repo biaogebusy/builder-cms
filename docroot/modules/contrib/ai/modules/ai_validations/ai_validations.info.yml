@@ -1,0 +1,16 @@
+name: AI Validations
+description: This provides AI support for the Field Validation module.
+package: AI
+type: module
+core_version_requirement: ^10.4 || ^11
+lifecycle: deprecated
+lifecycle_link: https://www.drupal.org/project/ai/issues/3552888
+
+dependencies:
+  - ai:ai
+  - field_validation:field_validation (>=3.0.0-beta3)
+
+# Information added by Drupal.org packaging script on 2026-06-03
+version: '1.4.1'
+project: 'ai'
+datestamp: 1780493209

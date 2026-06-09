@@ -1,0 +1,34 @@
+uuid: f4a812d1-b1d3-420d-9ff1-ed9a793576a0
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.article.field_tags
+id: node.article.field_tags.default
+label: 'Tags Default'
+rule: llm_taxonomy
+input_mode: base
+weight: 100
+worker_type: field_widget_actions
+entity_type: node
+bundle: article
+field_name: field_tags
+edit_mode: false
+base_field: body
+prompt: "Based on the context text create between 2 to 5 categories from the category context that fits the text.\r\n\r\nContext:\r\n{{ context }}"
+token: ''
+plugin_config:
+  automator_enabled: 1
+  automator_rule: llm_taxonomy
+  automator_mode: base
+  automator_base_field: body
+  automator_prompt: "Based on the context text create between 2 to 5 categories from the category context that fits the text.\r\n\r\nContext:\r\n{{ context }}"
+  automator_token: ''
+  automator_edit_mode: 0
+  automator_label: 'Tags Default'
+  automator_weight: '100'
+  automator_worker_type: field_widget_actions
+  automator_ai_provider: echoai
+  automator_ai_model: default
+  automator_clean_up: lowercase
+  automator_search_similar_tags: 0

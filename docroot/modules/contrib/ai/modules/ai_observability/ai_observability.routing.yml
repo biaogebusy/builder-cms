@@ -1,0 +1,7 @@
+ai_observability.settings:
+  path: '/admin/config/ai/observability'
+  defaults:
+    _form: '\Drupal\ai_observability\Form\SettingsForm'
+    _title: 'AI Observability Settings'
+  requirements:
+    _permission: 'administer ai observability'

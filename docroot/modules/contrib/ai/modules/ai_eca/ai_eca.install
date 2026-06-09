@@ -1,0 +1,152 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the ai_eca module.
+ *
+ * @deprecated in ai:1.2.0 and is removed from ai:2.0.0. This is replaced by the
+ * ai_integration_eca module.
+ *
+ * @see https://www.drupal.org/project/ai/issues/3503947
+ */
+
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+
+/**
+ * Checks to ensure a smooth migration from AI submodule to external module.
+ */
+function ai_eca_update_11001(): TranslatableMarkup {
+  $submodule = 'ai_eca';
+  $external_module = 'ai_integration_eca';
+
+  // Define module migrations for ECA configuration updates.
+  $module_migrations = [
+    'ai_eca' => 'ai_integration_eca',
+    'ai_eca_agents' => 'ai_integration_eca_agents',
+  ];
+
+  /** @var \Drupal\Component\Plugin\PluginManagerInterface $action_manager */
+  $action_manager = \Drupal::service('plugin.manager.eca.action');
+
+  /** @var \Drupal\Core\Extension\ModuleInstallerInterface $installer */
+  $installer = \Drupal::service('module_installer');
+
+  // Clean up old ECA configurations and migrate them to external modules.
+  foreach (\Drupal::entityTypeManager()->getStorage('eca')->loadMultiple() as $eca) {
+    $config = \Drupal::configFactory()->getEditable('eca.eca.' . $eca->id());
+    $module_dependencies = $config->get('dependencies.module');
+    $config_updated = FALSE;
+
+    // Migrate module dependencies.
+    foreach ($module_migrations as $old_module => $new_module) {
+      $key = array_search($old_module, $module_dependencies);
+      if ($key !== FALSE) {
+        $module_dependencies[$key] = $new_module;
+        $config_updated = TRUE;
+      }
+    }
+
+    if ($config_updated) {
+      $config->set('dependencies.module', $module_dependencies);
+
+      // Update plugin IDs from ai_eca_* to ai_integration_eca_*.
+      $actions = $config->get('actions');
+      if ($actions) {
+        $update = FALSE;
+        foreach ($actions as $action_id => &$action) {
+          if (isset($action['plugin']) && str_starts_with($action['plugin'], 'ai_eca_')) {
+            $update = TRUE;
+            $new_plugin_id = str_replace('ai_eca_', 'ai_integration_eca_', $action['plugin']);
+
+            // Check if the new plugin exists and log a warning if not.
+            if (!$action_manager->hasDefinition($new_plugin_id)) {
+              \Drupal::logger('ai_eca')->warning(
+                'ECA configuration @eca_id references plugin @plugin_id that does not exist in @external_module. Removing action @action_id.',
+                [
+                  '@eca_id' => $eca->id(),
+                  '@plugin_id' => $new_plugin_id,
+                  '@external_module' => 'ai_integration_eca',
+                  '@action_id' => $action_id,
+                ]
+              );
+              unset($actions[$action_id]);
+            }
+            else {
+              // Update the plugin ID to the new one.
+              $action['plugin'] = $new_plugin_id;
+            }
+          }
+        }
+        // Update the actions in the config.
+        if ($update) {
+          $config->set('actions', $actions);
+        }
+      }
+      // Save the updated config.
+      $config->save();
+    }
+  }
+
+  // phpcs:disable
+  // Scenarios are:
+  // 1. Old submodule is not enabled -> we have nothing to do.
+  // 2. Old submodule is enabled:
+  //   1. New module exists but is not yet installed -> install it.
+  //   2. New module does not exist and is therefor not installed -> Tell
+  //      the user to composer require it and retry the update hook.
+  //   3. New module exists and is installed (yet the old is still enabled,
+  //      see (1)) -> Since the new module should uninstall the old, this
+  //      should never happen. Throw an error.
+  // phpcs:enable
+
+  // If the new module is already enabled, it should have uninstalled the
+  // old module. The 'moduleExists' method checks if the module is actually
+  // enabled too.
+  /** @var \Drupal\Core\Extension\ModuleHandlerInterface $handler */
+  $handler = \Drupal::service('module_handler');
+  if (!$handler->moduleExists($submodule)) {
+    return t('@submodule has already been uninstalled.', [
+      '@submodule' => $submodule,
+    ]);
+  }
+
+  // If the new module exists but is not yet installed, enable it. The 'list'
+  // service exists method only checks that the module is in the file system,
+  // but does not care if its enabled or not.
+  /** @var \Drupal\Core\Extension\ModuleExtensionList $list */
+  $list = \Drupal::service('extension.list.module');
+  if ($list->exists($external_module) && !$handler->moduleExists($external_module)) {
+    // No try-catch, we want a failure to throw an error.
+    $installer->install([$external_module]);
+
+    return t('@external_module has been installed.', [
+      '@external_module' => $external_module,
+    ]);
+  }
+
+  // If the new module does not exist but the old submodule is enabled,
+  // we need to tell the user to composer require it. We will then fail this
+  // update hook so that we can try it again later after they have carried out
+  // the composer install.
+  if (!$list->exists($external_module)) {
+    $message = t('@submodule has moved from the AI Core to a separate module. Please run `composer require drupal/@external_module` then run the update again.', [
+      '@submodule' => $submodule,
+      '@external_module' => $external_module,
+    ]);
+    throw new \Exception((string) $message);
+  }
+
+  // New module is installed but so is the old submodule. Uninstall the old.
+  if ($handler->moduleExists($external_module)) {
+    $installer->uninstall([$submodule]);
+
+    return t('@submodule has been uninstalled.', [
+      '@submodule' => $submodule,
+    ]);
+  }
+
+  return t('@submodule-module moving to contributed @external_module-module has been completed.', [
+    '@submodule' => $submodule,
+    '@external_module' => $external_module,
+  ]);
+}

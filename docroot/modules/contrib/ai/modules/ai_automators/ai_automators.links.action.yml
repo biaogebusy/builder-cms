@@ -1,0 +1,17 @@
+automator_chain.type_add:
+  title: 'Add Automator Chain Type'
+  route_name: entity.automator_chain_type.add_form
+  appears_on:
+    - entity.automator_chain_type.collection
+
+automator_chain.add_page:
+  title: 'Add automator chain'
+  route_name: entity.automator_chain.add_page
+  appears_on:
+    - entity.automator_chain.collection
+
+entity.automators_tool.add_form:
+  route_name: 'entity.automators_tool.add_form'
+  title: 'Add automators tool'
+  appears_on:
+    - entity.automators_tool.collection

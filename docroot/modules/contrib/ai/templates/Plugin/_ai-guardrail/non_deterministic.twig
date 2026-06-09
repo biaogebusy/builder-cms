@@ -1,0 +1,218 @@
+{{ php_prefix|raw }}
+
+declare(strict_types=1);
+
+namespace Drupal\{{ machine_name }}\Plugin\AiGuardrail;
+
+use Drupal\ai\Attribute\AiGuardrail;
+use Drupal\ai\Guardrail\AiGuardrailPluginBase;
+use Drupal\ai\Guardrail\NeedsAiPluginManagerTrait;
+use Drupal\ai\Guardrail\NonDeterministicGuardrailInterface;
+use Drupal\ai\Guardrail\NonStreamableGuardrailInterface;
+use Drupal\ai\Guardrail\Result\GuardrailResultInterface;
+use Drupal\ai\Guardrail\Result\PassResult;
+use Drupal\ai\Guardrail\Result\StopResult;
+use Drupal\ai\OperationType\Chat\ChatInput;
+use Drupal\ai\OperationType\Chat\ChatMessage;
+use Drupal\ai\OperationType\InputInterface;
+use Drupal\ai\OperationType\OutputInterface;
+use Drupal\ai\Service\AiProviderFormHelper;
+use Drupal\ai\Utility\CastUtility;
+use Drupal\Component\Plugin\ConfigurableInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Plugin\PluginFormInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+
+/**
+ * {{ description }}
+ */
+#[AiGuardrail(
+  id: '{{ plugin_id }}',
+  label: new TranslatableMarkup('{{ label }}'),
+  description: new TranslatableMarkup('{{ description }}'),
+)]
+final class {{ class }} extends AiGuardrailPluginBase implements ConfigurableInterface, PluginFormInterface, ContainerFactoryPluginInterface, NonDeterministicGuardrailInterface, NonStreamableGuardrailInterface {
+
+  use NeedsAiPluginManagerTrait;
+  use StringTranslationTrait;
+
+  /**
+   * The AI provider form helper service.
+   *
+   * @var \Drupal\ai\Service\AiProviderFormHelper
+   */
+  private AiProviderFormHelper $aiProviderFormHelper;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(array $configuration, $plugin_id, $plugin_definition) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+    $this->setConfiguration($configuration);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition): self {
+    $instance = new static($configuration, $plugin_id, $plugin_definition);
+    $ai_provider_form_helper = $container->get('ai.form_helper');
+    if ($ai_provider_form_helper instanceof AiProviderFormHelper) {
+      $instance->aiProviderFormHelper = $ai_provider_form_helper;
+    }
+    return $instance;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function processInput(InputInterface $input): GuardrailResultInterface {
+    if (!$input instanceof ChatInput) {
+      return new PassResult('Input is not a chat input, skipping.', $this);
+    }
+
+    $messages = $input->getMessages();
+    $last_message = end($messages);
+
+    if (!$last_message instanceof ChatMessage) {
+      return new PassResult('No text message found to analyze.', $this);
+    }
+
+    $text = $last_message->getText();
+
+    // @todo Build your AI classification prompt here.
+    $prompt = 'Classify this text: ' . $text;
+
+    $classification_input = new ChatInput([
+      new ChatMessage('user', $prompt),
+    ]);
+
+    // Get the AI provider.
+    $provider_id = $this->configuration['llm_provider'] ?? '';
+    $model_id = $this->configuration['llm_model'] ?? '';
+
+    if (empty($provider_id)) {
+      $default = $this->getAiPluginManager()->getDefaultProviderForOperationType('chat');
+      if ($default === NULL) {
+        return new StopResult('No AI provider configured. Please configure a default chat provider.', $this);
+      }
+      $provider_id = $default['provider_id'];
+      $model_id = $default['model_id'];
+    }
+
+    $ai_provider = $this->getAiPluginManager()->createInstance($provider_id);
+    // @phpstan-ignore-next-line
+    $ai_provider->setConfiguration($this->configuration['llm_config'] ?? []);
+
+    // @phpstan-ignore-next-line
+    $response = $ai_provider
+      ->chat($classification_input, $model_id, ['ai'])
+      ->getNormalized();
+
+    // @todo Parse the AI response and decide pass/stop.
+
+    return new PassResult('Input passed the check.', $this);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function processOutput(OutputInterface $output): GuardrailResultInterface {
+    return new PassResult('Output processing is not applicable for this guardrail.', $this);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getConfiguration(): array {
+    return $this->configuration;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setConfiguration(array $configuration): void {
+    $this->configuration = $configuration;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function defaultConfiguration(): array {
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
+    $form['violation_message'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Violation message'),
+      '#description' => $this->t('The message displayed when the guardrail triggers.'),
+      '#default_value' => $this->configuration['violation_message'] ?? '',
+    ];
+
+    // @todo Add your plugin-specific configuration fields here.
+
+    // AI provider/model selection for the internal AI calls.
+    if ($form_state->getValue('llm_ai_provider') == NULL) {
+      $form_state->setValue('llm_ai_provider', $this->getConfiguration()['llm_provider'] ?? NULL);
+    }
+    if ($form_state->getValue('llm_ai_model') == NULL) {
+      $form_state->setValue('llm_ai_model', $this->getConfiguration()['llm_model'] ?? NULL);
+    }
+
+    $this->aiProviderFormHelper->generateAiProvidersForm(
+      $form, $form_state, 'chat', 'llm',
+      AiProviderFormHelper::FORM_CONFIGURATION_FULL,
+      0, '',
+      $this->t('AI Provider'),
+      $this->t('The provider of the AI models used by this guardrail.'),
+      TRUE
+    );
+
+    $llm_configs = $this->getConfiguration()['llm_config'] ?? [];
+    if ($llm_configs && count($llm_configs)) {
+      foreach ($llm_configs as $key => $value) {
+        $form['llm_ajax_prefix']['llm_ajax_prefix_configuration_' . $key]['#default_value'] = $value;
+      }
+    }
+
+    return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateConfigurationForm(array &$form, FormStateInterface $form_state): void {
+    $this->aiProviderFormHelper->validateAiProvidersConfig($form, $form_state, 'chat', 'llm');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitConfigurationForm(array &$form, FormStateInterface $form_state): void {
+    $values = $form_state->getValues();
+
+    $values['llm_model'] = $values['llm_ajax_prefix']['llm_ai_model'];
+    $values['llm_provider'] = $values['llm_ai_provider'];
+    unset($values['llm_ajax_prefix']['llm_ai_model']);
+    unset($values['llm_ai_provider']);
+
+    $provider = $this->getAiPluginManager()->createInstance($values['llm_provider']);
+    $schema = $provider->getAvailableConfiguration('chat', $values['llm_model']);
+    foreach ($values['llm_ajax_prefix'] as $key => $value) {
+      $real_key = str_replace('llm_ajax_prefix_configuration_', '', $key);
+      $type = $schema[$real_key]['type'] ?? 'string';
+      $values['llm_config'][$real_key] = CastUtility::typeCast($type, $value);
+    }
+    unset($values['llm_ajax_prefix']);
+
+    $this->setConfiguration($values);
+  }
+
+}

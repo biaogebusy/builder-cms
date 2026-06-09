@@ -1,0 +1,58 @@
+.ai-left-side {
+  float: left;
+  width: 35%;
+  padding: 10px;
+  border: 1px solid #000;
+  background: #c5c5c5;
+}
+
+.ai-right-side {
+  float: left;
+  width: 60%;
+  padding: 10px;
+}
+
+.ai-three-info {
+  float: left;
+  width: 24%;
+  padding: 1%;
+  background: #c5c5c5;
+}
+
+.ai-three-middle {
+  float: left;
+  width: 44%;
+  padding: 0 1%;
+}
+
+.ai-break {
+  clear: both;
+}
+
+.ai-error {
+  color: #cc3d3d;
+}
+
+code.ai-code {
+  display: block;
+  padding: 20px;
+  white-space: pre-wrap;
+}
+
+.ai-code-wrapper {
+  padding: 5px;
+  background: #ccc;
+}
+
+.gin--dark-mode .ai-three-info,
+.gin--dark-mode .ai-left-side {
+  background: #c5c5c512;
+}
+
+.gin--dark-mode .ai-code-wrapper {
+  background: #000;
+}
+
+.ms-parent {
+  width: 100%;
+}

@@ -1,0 +1,5 @@
+entity.ai_assistant.add_form:
+  route_name: 'entity.ai_assistant.add_form'
+  title: 'Add AI Assistant'
+  appears_on:
+    - entity.ai_assistant.collection

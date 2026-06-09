@@ -1,0 +1,10 @@
+{
+  "name": "drupal/ai_provider_openai",
+  "description": "OpenAI provider implementation for the AI module for Drupal",
+  "type": "drupal-module",
+  "license": "GPL-2.0-or-later",
+  "require": {
+    "drupal/ai": "^1.2.0",
+    "drupal/key": "^1.18"
+  }
+}

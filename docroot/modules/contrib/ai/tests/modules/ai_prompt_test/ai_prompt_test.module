@@ -1,0 +1,45 @@
+<?php
+
+/**
+ * @file
+ * Provides a simple update test for converting from string to AI Prompt.
+ */
+
+/**
+ * Converts the existing plain text prompt to an AI Prompt entity.
+ */
+function ai_prompt_test_update_test() {
+  // Since we do not want to install from config install here to actually
+  // test the install we mimic ::upsertFromConfigInstall() here.
+  /** @var \Drupal\Core\Extension\ExtensionPathResolver $extension */
+  $extension = \Drupal::service('extension.path.resolver');
+  $path = $extension->getPath('module', 'ai_prompt_test') . '/config/do-not-install';
+
+  // Automatically install any missing prompt types and prompts from your
+  // module's config/install/ folder.
+  /** @var \Drupal\ai\Service\AiPromptManager $prompt_manager */
+  $prompt_manager = \Drupal::service('ai.prompt_manager');
+  $prompt_manager->upsertFromPath($path);
+
+  // Set the prompt to be the machine name of your ai.ai_prompt.* from your
+  // config install.
+  $config_factory = \Drupal::configFactory();
+  $config = $config_factory->getEditable('ai_prompt_test.settings');
+  $original_prompt = $config->get('my_prompt_value');
+  $config->set('my_prompt_value', 'my_prompt');
+
+  // If the user modified the prompt, create it as a separate one.
+  $prompt = $config_factory->get('ai.ai_prompt.my_prompt')->get('prompt');
+  if ($prompt !== $original_prompt) {
+    $prompt = $prompt_manager->upsertPrompt([
+      'id' => 'my_prompt_modified',
+      'label' => t('My prompt modified'),
+      'prompt' => $original_prompt,
+      'type' => 'my_prompt_type',
+    ]);
+    $config->set('my_prompt_value', $prompt->id());
+  }
+
+  // Save the config.
+  $config->save();
+}
