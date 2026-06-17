@@ -1,5 +1,0 @@
-contextual:
-  js:
-    js/contextual.js: {}
-  dependencies:
-    - core/jquery

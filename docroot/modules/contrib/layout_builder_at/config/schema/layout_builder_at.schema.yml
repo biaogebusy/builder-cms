@@ -1,0 +1,9 @@
+# Schema for the configuration files of the layout_builder_at module.
+
+field.widget.settings.layout_builder_at_copy:
+  type: mapping
+  label: 'Layout Builder Asymmetric Translation copy widget'
+  mapping:
+    appearance:
+      type: string
+      label: 'Whether the "Copy blocks into translation" checkbox is checked by default or not.'

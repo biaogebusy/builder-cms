@@ -9130,19 +9130,19 @@
             "install-path": "../../docroot/modules/contrib/key_value"
         },
         {
-            "name": "drupal/layout_builder_st",
-            "version": "2.0.0",
-            "version_normalized": "2.0.0.0",
+            "name": "drupal/layout_builder_at",
+            "version": "3.0.2",
+            "version_normalized": "3.0.2.0",
             "source": {
                 "type": "git",
-                "url": "https://git.drupalcode.org/project/layout_builder_st.git",
-                "reference": "2.0.0"
+                "url": "https://git.drupalcode.org/project/layout_builder_at.git",
+                "reference": "3.0.2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/layout_builder_st-2.0.0.zip",
-                "reference": "2.0.0",
-                "shasum": "c0d2c366b4154b3f1de0f579cbcf6ba483f6e702"
+                "url": "https://ftp.drupal.org/files/projects/layout_builder_at-3.0.2.zip",
+                "reference": "3.0.2",
+                "shasum": "c3bd5a37daeaf6a27ac63ae8c3c0662b4d29a44b"
             },
             "require": {
                 "drupal/core": "^10.2 || ^11"
@@ -9150,8 +9150,8 @@
             "type": "drupal-module",
             "extra": {
                 "drupal": {
-                    "version": "2.0.0",
-                    "datestamp": "1767966502",
+                    "version": "3.0.2",
+                    "datestamp": "1771863423",
                     "security-coverage": {
                         "status": "covered",
                         "message": "Covered by Drupal's security advisory policy"
@@ -9161,35 +9161,27 @@
             "installation-source": "dist",
             "notification-url": "https://packages.drupal.org/8/downloads",
             "license": [
-                "GPL-2.0+"
+                "GPL-2.0-or-later"
             ],
             "authors": [
                 {
-                    "name": "Ted Bow",
-                    "homepage": "https://www.drupal.org/u/tedbow",
+                    "name": "Kristof De Jaeger (swentel)",
+                    "homepage": "https://www.drupal.org/u/swentel",
                     "role": "Maintainer"
                 },
                 {
-                    "name": "Lucas Hedding",
-                    "homepage": "https://www.drupal.org/u/heddn",
-                    "role": "Maintainer"
-                },
-                {
-                    "name": "Contributors",
-                    "homepage": "https://www.drupal.org/node/3060271/committers",
-                    "role": "Contributors"
+                    "name": "svendecabooter",
+                    "homepage": "https://www.drupal.org/user/35369"
                 }
             ],
-            "description": "Allows translating Layout overrides",
-            "homepage": "https://www.drupal.org/project/layout_builder_st",
-            "keywords": [
-                "Drupal"
-            ],
+            "description": "Layout Builder Asymmetric Translation",
+            "homepage": "https://www.drupal.org/project/layout_builder_at",
             "support": {
-                "source": "https://git.drupalcode.org/project/layout_builder_st",
-                "issues": "https://www.drupal.org/project/issues/layout_builder_st"
+                "source": "https://git.drupalcode.org/project/layout_builder_at",
+                "issues": "https://www.drupal.org/project/issues/layout_builder_at",
+                "irc": "irc://irc.freenode.org/drupal-contribute"
             },
-            "install-path": "../../docroot/modules/contrib/layout_builder_st"
+            "install-path": "../../docroot/modules/contrib/layout_builder_at"
         },
         {
             "name": "drupal/layout_library",
