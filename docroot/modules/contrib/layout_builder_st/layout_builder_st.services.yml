@@ -1,0 +1,20 @@
+services:
+  # The following 2 services are from the core patch in https://www.drupal.org/project/drupal/issues/2946333#comment-13129737
+  access_check.entity.layout_builder_translation_access:
+    class: Drupal\layout_builder_st\Access\LayoutBuilderTranslationAccessCheck
+    tags:
+      - { name: access_check, applies_to: _layout_builder_translation_access }
+  layout_builder.translate_block_component_subscriber:
+    class: Drupal\layout_builder_st\EventSubscriber\ComponentPluginTranslate
+    arguments: ['@language_manager', '@current_route_match']
+    tags:
+      - { name: event_subscriber }
+  # The route subscriber service is only needed to alter core layout_builder routes.
+  layout_builder.route_subscriber:
+    class: Drupal\layout_builder_st\Routing\RouteSubscriber
+    tags:
+      - { name: event_subscriber }
+  Drupal\layout_builder_st\DependencyInjection\ClassResolver:
+    public: false
+    decorates: class_resolver
+    arguments: ['@.inner']
