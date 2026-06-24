@@ -1,0 +1,19 @@
+{
+  "name": "drupal/layout_builder_at",
+  "description": "Layout Builder Asymmetric Translation",
+  "license": "GPL-2.0-or-later",
+  "type": "drupal-module",
+  "authors": [
+    {
+      "name": "Kristof De Jaeger (swentel)",
+      "homepage": "https://www.drupal.org/u/swentel",
+      "role": "Maintainer"
+    }
+  ],
+  "homepage": "https://www.drupal.org/project/layout_builder_at",
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/layout_builder_at",
+    "irc": "irc://irc.freenode.org/drupal-contribute",
+    "source": "https://git.drupalcode.org/project/layout_builder_at"
+  }
+}

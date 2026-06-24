@@ -1,0 +1,28 @@
+<?php
+
+/**
+ * @file
+ * Layout Builder Asymmetric Translation install file.
+ */
+
+use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
+
+/**
+ * Implements hook_install().
+ */
+function layout_builder_at_install(): void {
+  // Makes all existing layout_section field translatable.
+  if (!\Drupal::service('config.installer')->isSyncing()) {
+
+    /** @var \Drupal\field\FieldStorageConfigInterface $field_storage_config */
+    foreach (\Drupal::entityTypeManager()->getStorage('field_storage_config')->loadMultiple() as $field_storage_config) {
+      // Only act on layout builder section fields.
+      if ($field_storage_config->getType() === 'layout_section' && $field_storage_config->getName() === OverridesSectionStorage::FIELD_NAME) {
+        // Call save. layout_builder_at_field_storage_config_presave() will make
+        // the field translatable.
+        $field_storage_config->save();
+      }
+
+    }
+  }
+}

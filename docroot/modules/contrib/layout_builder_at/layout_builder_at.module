@@ -1,0 +1,183 @@
+<?php
+
+/**
+ * @file
+ * Provides hook implementations for Layout Builder Asymmetric Translation.
+ */
+
+use Drupal\Component\Utility\DeprecationHelper;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Site\Settings;
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\FieldStorageConfigInterface;
+use Drupal\field_ui\Form\EntityDisplayFormBase;
+use Drupal\layout_builder\Hook\LayoutBuilderHooks;
+use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
+
+/**
+ * Implements hook_help().
+ */
+function layout_builder_at_help($route_name, RouteMatchInterface $route_match): ?string {
+  if ($route_name == 'help.page.layout_builder_at') {
+    $text = file_get_contents(dirname(__FILE__) . '/README.md');
+    if (\Drupal::moduleHandler()->moduleExists('layout_builder_at')) {
+      return '<pre>' . $text . '</pre>';
+    }
+    else {
+      $output = '';
+      $output .= '<p>' . t('Asymmetric translations allow you to choose different layouts and blocks for different languages on content items') . '</p>';
+      $output .= '<p>' . t('that override Layout Builder settings for their entity type.') . '</p>';
+      $output .= '<h2>' . t('<a href="https://www.drupal.org/project/layout_builder_at"> Module page </a>') . '</h2>';
+      return $output;
+    }
+  }
+  return NULL;
+}
+
+/**
+ * Implements hook_module_implements_alter().
+ */
+function layout_builder_at_module_implements_alter(&$implementations, $hook): void {
+  if ($hook == 'form_entity_form_display_edit_form_alter') {
+    unset($implementations['layout_builder']);
+  }
+}
+
+/**
+ * Implements hook_theme_registry_alter().
+ */
+function layout_builder_at_theme_registry_alter(&$theme_registry): void {
+  // Removes layout_builder_preprocess_language_content_settings_table() to
+  // remove the 'Non translatable' warning.
+  if (!empty($theme_registry['language_content_settings_table']['preprocess functions'])) {
+    $preprocess_functions = &$theme_registry['language_content_settings_table']['preprocess functions'];
+    $index = array_search('layout_builder_preprocess_language_content_settings_table', $preprocess_functions);
+    if ($index !== FALSE) {
+      unset($preprocess_functions[$index]);
+    }
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for \Drupal\field_ui\Form\EntityFormDisplayEditForm.
+ */
+function layout_builder_at_form_entity_form_display_edit_form_alter(array &$form, FormStateInterface $form_state): void {
+  $hide = TRUE;
+  $callback_object = $form_state->getBuildInfo()['callback_object'];
+  if (isset($form['fields'][OverridesSectionStorage::FIELD_NAME]) && $callback_object instanceof EntityDisplayFormBase) {
+    /** @var \Drupal\Core\Entity\Display\EntityFormDisplayInterface $display */
+    $display = $callback_object->getEntity();
+    $id = $display->getTargetEntityTypeId() . '.' . $display->getTargetBundle() . '.' . OverridesSectionStorage::FIELD_NAME;
+    $fieldConfig = FieldConfig::load($id);
+    if ($fieldConfig && $fieldConfig->isTranslatable()) {
+      $hide = FALSE;
+    }
+  }
+
+  if ($hide) {
+    DeprecationHelper::backwardsCompatibleCall(
+      currentVersion: \Drupal::VERSION,
+      deprecatedVersion: '11.1',
+      currentCallable: function () use ($form, $form_state) {
+        $layout_builder_hooks = new LayoutBuilderHooks();
+        $layout_builder_hooks->formEntityFormDisplayEditFormAlter($form, $form_state);
+      },
+      deprecatedCallable: fn() => layout_builder_form_entity_form_display_edit_form_alter($form, $form_state),
+    );
+  }
+  else {
+    // Add an extra validation handler which prevents setting the layout widget
+    // to the original one from Layout Builder.
+    $form['#validate'][] = 'layout_builder_at_validate_form_display';
+  }
+}
+
+/**
+ * Validation callback for the manage form display screen.
+ *
+ * @param array $form
+ *   An associative array containing the structure of the form.
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *   The current state of the form.
+ */
+function layout_builder_at_validate_form_display(array $form, FormStateInterface $form_state): void {
+  $values = $form_state->getValues();
+  if (isset($values['fields'][OverridesSectionStorage::FIELD_NAME])) {
+    if ($values['fields'][OverridesSectionStorage::FIELD_NAME]['type'] == 'layout_builder_widget') {
+      $form_state->setErrorByName('fields][' . OverridesSectionStorage::FIELD_NAME, t('You can not select the Layout Builder Widget, please select a different widget.'));
+    }
+  }
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function layout_builder_at_form_alter(array &$form, FormStateInterface $form_state, string $form_id): void {
+  if (isset($form[OverridesSectionStorage::FIELD_NAME]['widget']['#layout_builder_at_access']) && $form[OverridesSectionStorage::FIELD_NAME]['widget']['#layout_builder_at_access']) {
+    $form[OverridesSectionStorage::FIELD_NAME]['#access'] = TRUE;
+    $form[OverridesSectionStorage::FIELD_NAME]['widget']['value']['#title'] = t('Copy blocks into translation');
+    $form[OverridesSectionStorage::FIELD_NAME]['widget']['value']['#title_display'] = 'after';
+  }
+}
+
+/**
+ * Implements hook_layout_builder_section_storage_alter().
+ */
+function layout_builder_at_layout_builder_section_storage_alter(array &$definitions): void {
+  /** @var \Drupal\layout_builder\SectionStorage\SectionStorageDefinition $overrides_storage_definition */
+  $overrides_storage_definition = $definitions['overrides'];
+  // Override the section storage definition to allow access to the layout tab
+  // on translations.
+  $overrides_storage_definition->setClass('\Drupal\layout_builder_at\Plugin\SectionStorage\TranslatableOverridesSectionStorage');
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_presave() for 'field_storage_config'.
+ */
+function layout_builder_at_field_storage_config_presave(FieldStorageConfigInterface $field_storage): void {
+  // Make the field translatable for asymmetric translations. Only act on
+  // layout builder section fields.
+  if ($field_storage->getType() === 'layout_section' && $field_storage->getName() === OverridesSectionStorage::FIELD_NAME) {
+    $field_storage->setTranslatable(TRUE);
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function layout_builder_at_form_layout_builder_add_block_alter(&$form, FormStateInterface $form_state): void {
+  // Set the default language of the block based on the entity language.
+  if (isset($form['settings']['block_form']['#block']) && Settings::get('layout_builder_at_set_content_block_language_to_entity', TRUE)) {
+    /** @var \Drupal\block_content\Entity\BlockContent $block */
+    $block = $form['settings']['block_form']['#block'];
+    if ($block) {
+      $contexts = $form_state->getTemporaryValue('gathered_contexts');
+      if ($contexts && $contexts['layout_builder.entity']) {
+        $entity = $contexts['layout_builder.entity']->getContextValue('entity');
+        if ($entity) {
+          try {
+            $block->set('langcode', $entity->language()->getId());
+          }
+          catch (\Exception $ignored) {
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Delete our translated inline block when the translation is deleted.
+ *
+ * Implements hook_entity_translation_delete().
+ */
+function layout_builder_at_entity_translation_delete(EntityInterface $translation): void {
+  /** @var \Drupal\Core\TempStore\SharedTempStore $tempStore */
+  $tempStore = Drupal::service('tempstore.shared')->get('layout_builder.section_storage.overrides');
+  $name = $translation->getEntityTypeId() . '.' . $translation->id() . '.default.' . $translation->language()->getId();
+  if ($tempStore->get($name)) {
+    $tempStore->delete($name);
+  }
+}

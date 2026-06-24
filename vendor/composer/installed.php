@@ -3,7 +3,7 @@
         'name' => 'drupal/recommended-project',
         'pretty_version' => '10.x-dev',
         'version' => '10.9999999.9999999.9999999-dev',
-        'reference' => 'a7186b8dab34b2c454fbadc075d9696e3e26e0a7',
+        'reference' => 'a736a75073796b5bb7b49b1a019a666dc0dc0823',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -1333,6 +1333,15 @@
             'aliases' => array(),
             'dev_requirement' => false,
         ),
+        'drupal/layout_builder_at' => array(
+            'pretty_version' => '3.0.2',
+            'version' => '3.0.2.0',
+            'reference' => '3.0.2',
+            'type' => 'drupal-module',
+            'install_path' => __DIR__ . '/../../docroot/modules/contrib/layout_builder_at',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
         'drupal/layout_library' => array(
             'pretty_version' => '1.0.0-beta6',
             'version' => '1.0.0.0-beta6',
@@ -1687,7 +1696,7 @@
         'drupal/recommended-project' => array(
             'pretty_version' => '10.x-dev',
             'version' => '10.9999999.9999999.9999999-dev',
-            'reference' => 'a7186b8dab34b2c454fbadc075d9696e3e26e0a7',
+            'reference' => 'a736a75073796b5bb7b49b1a019a666dc0dc0823',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
