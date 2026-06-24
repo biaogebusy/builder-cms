@@ -8,6 +8,7 @@ use Drupal\layout_builder\SectionComponent;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Views;
 use Drupal\Component\Serialization\Json;
+use Drupal\entity_print\Plugin\EntityPrint\PrintEngine\DomPdf;
 
 /**
  * Class NodeJson
@@ -33,35 +34,55 @@ class NodeJson extends EntityJsonBase {
    * @return array
    */
   private function landingPageType() {
-    $displays = $this->entity->get('panelizer')->panels_display;
     $this->setMate($data);
     $this->setConfiguration($data);
-    $data['nid']=$this->entity->id();
-    $data['langcode']=$this->entity->language()->getId();
+    $data['nid'] = $this->entity->id();
+    $data['langcode'] = $this->entity->language()->getId();
     $data['body'] = [];
-    $widgets = [];
     $this->setBanner($data);
-    foreach ($displays['blocks'] as $display) {
-      switch ($display['provider']) {
-        case 'block_content':
-          if (empty($display['vid'])) {
-            $block = $this->entityTypeManager->getStorage($display['provider'])->loadByProperties(['uuid' => explode(':', $display['id'])[1]]);
-          } else {
-            $block = $this->entityTypeManager->getStorage('block_content')->loadRevision($display['vid']);
-          }
-          if ($block) {
-            $entityJson = new EntityJsonBase(is_array($block) ? current($block) : $block);
+    $widgets = [];
+    if ($this->isLayoutBuilder()) {
+      $builder =  $this->layoutBuilder->build($this->entity);
+      $weight = 0;
+      foreach ($builder['_layout_builder'] as $section) {
+        /** @var SectionComponent $component */
+        foreach ($section['content'] as $component) {
+          if ($component['content']['#entity_type'] == 'block_content') {
+            $entityJson = new EntityJsonBase($component['content']['#block_content']);
             $widgets[] = [
-              'weight' => $display['weight'],
+              'weight' => $weight,
               'content' => $entityJson->getContent(),
               'type' => $entityJson->entity->bundle(),
             ];
-            $this->addCacheTags($entityJson->getCacheTags());
+            $weight++;
+            $this->addCacheTags($entityJson->getCacheTags());;
           }
-          break;
+        }
       }
-
+    } elseif ($this->isPanelizer()) {
+      $displays = $this->entity->get('panelizer')->panels_display;
+      foreach ($displays['blocks'] as $display) {
+        switch ($display['provider']) {
+          case 'block_content':
+            if (empty($display['vid'])) {
+              $block = $this->entityTypeManager->getStorage($display['provider'])->loadByProperties(['uuid' => explode(':', $display['id'])[1]]);
+            } else {
+              $block = $this->entityTypeManager->getStorage('block_content')->loadRevision($display['vid']);
+            }
+            if ($block) {
+              $entityJson = new EntityJsonBase(is_array($block) ? current($block) : $block);
+              $widgets[] = [
+                'weight' => $display['weight'],
+                'content' => $entityJson->getContent(),
+                'type' => $entityJson->entity->bundle(),
+              ];
+              $this->addCacheTags($entityJson->getCacheTags());
+            }
+            break;
+        }
+      }
     }
+
     //Sort widgets by weight
     array_multisort($widgets, SORT_ASC, SORT_NUMERIC, array_column($widgets, 'weight'));
     foreach ($widgets as $widget) {
@@ -108,8 +129,7 @@ class NodeJson extends EntityJsonBase {
       $banner['style'] = 'no-bg';
     }
     $banner['title'] = $this->entity->get('is_display_title')->value ? $this->entity->label() : '';
-    $banner['breadcrumb'] = [
-    ];
+    $banner['breadcrumb'] = [];
     $data['body'][] = $banner;
   }
 
@@ -130,7 +150,8 @@ class NodeJson extends EntityJsonBase {
           case 'views_block':
             $panels[$content['content']['#name'] . '_' . $content['content']['#display_id']] = [
               'rows' => $content['content']['view_build']['#rows'] ? $content['content']['view_build']['#rows'][0]['#rows'] : [],
-              'title' => $content['#configuration']['views_label'] ? $content['#configuration']['views_label'] : $content['content']['#title']['#markup']];
+              'title' => $content['#configuration']['views_label'] ? $content['#configuration']['views_label'] : $content['content']['#title']['#markup']
+            ];
             $this->addCacheTags($content['content']['#cache']['tags']);
             break;
         }
@@ -203,6 +224,21 @@ class NodeJson extends EntityJsonBase {
     }
   }
 
+  /**
+   * 渲染布局构建器中的视图块
+   *
+   * 该方法加载与当前实体类型和包关联的布局构建器配置，并渲染其中的视图块。
+   * 对于每个视图组件，会检查访问权限，执行视图并收集渲染结果。
+   *
+   * @return array 返回渲染后的视图块数组，格式为：
+   *   - 键：视图名称_显示ID（如"view_name_display_id"）
+   *   - 值：包含以下键的数组：
+   *     - 'rows': 视图的行数据
+   *     - 'title': 视图标题或配置的标签
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
   private function renderLayoutBuilder() {
     $builder = LayoutBuilderEntityViewDisplay::load($this->entity->getEntityTypeId() . '.' . $this->entity->bundle() . '.json');
     if (empty($builder)) {

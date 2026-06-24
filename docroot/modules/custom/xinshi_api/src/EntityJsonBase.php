@@ -6,6 +6,7 @@ use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Url;
+use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
 use Drupal\webform\Entity\Webform;
 
 /**
@@ -35,6 +36,13 @@ class EntityJsonBase implements EntityJsonInterface {
   private $cacheTags = [];
 
   /**
+   * Undocumented variable
+   *
+   * @var LayoutBuilderEntityViewDisplay
+   */
+  protected $layoutBuilder;
+
+  /**
    * EntityJsonBase constructor.
    * @param EntityInterface $entity
    * @param string $mode
@@ -44,6 +52,10 @@ class EntityJsonBase implements EntityJsonInterface {
     $this->mode = $mode;
     $this->entityTypeManager = \Drupal::entityTypeManager();
     $this->setCacheTags($entity->getCacheTags());
+  }
+
+  public function getLayoutBuilder() {
+    return $this->layoutBuilder;
   }
 
   /**
@@ -203,5 +215,56 @@ class EntityJsonBase implements EntityJsonInterface {
       }
     }
     return $elements;
+  }
+
+  /**
+   * 检查当前实体是否使用Layout Builder进行显示配置
+   *
+   * 不会修改原始 $this->mode，会尝试当前 mode、'full'、'default'
+   *
+   * @return bool
+   */
+  public function isLayoutBuilder() {
+    $storage = \Drupal::entityTypeManager()->getStorage('entity_view_display');
+    $modes = [$this->mode, 'full', 'default'];
+    foreach ($modes as $display_mode) {
+      $display = $storage->load($this->entity->getEntityTypeId() . '.' . $this->entity->bundle() . '.' . $display_mode);
+      if (!$display) {
+        continue;
+      }
+      // 或者检查 third party settings 中是否有 layout_builder 的配置
+      $settings = $display->get('third_party_settings') ?: [];
+      if (!empty($settings['layout_builder']) && $settings['layout_builder']['enabled']) {
+        $this->layoutBuilder = $display;
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * 检查当前实体是否使用 Panelizer/Panelize 进行显示配置
+   *
+   * @return bool
+   */
+  public function isPanelizer() {
+    if (!\Drupal::moduleHandler()->moduleExists('panelizer')) {
+      // 如果模块未启用，直接返回 false
+      return false;
+    }
+    $storage = \Drupal::entityTypeManager()->getStorage('entity_view_display');
+    $modes = [$this->mode, 'full', 'default'];
+    foreach ($modes as $display_mode) {
+      $display = $storage->load($this->entity->getEntityTypeId() . '.' . $this->entity->bundle() . '.' . $display_mode);
+      if (!$display) {
+        continue;
+      }
+      $settings = $display->get('third_party_settings') ?: [];
+      // Panelizer 常见 key 为 'panelizer'，部分场景或 Panels 集成可能为 'panels'
+      if (!empty($settings['panelizer']['enable'] ?? false) || !empty($settings['panels']['enable'] ?? false)) {
+        return true;
+      }
+    }
+    return false;
   }
 }
