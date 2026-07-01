@@ -138,7 +138,7 @@ class PanelsIPEPageController extends BasePanelsIPEPageController {
           'type' => 'json',
           'info' => "Json {$number}",
           'body' => [
-            'value' => $body,
+            'value' => is_array($body) ?  json_encode($body, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) : $body,
             'format' => 'json',
           ],
           'langcode' => [
@@ -151,7 +151,7 @@ class PanelsIPEPageController extends BasePanelsIPEPageController {
         $block = $this->addBlockTranslation($block, $langcode);
         $block->set('body', [
           [
-            'value' => json_encode($body, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
+            'value' => is_array($body) ?  json_encode($body, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) : $body,
             'format' => 'json',
           ],
         ]);
@@ -322,7 +322,10 @@ class PanelsIPEPageController extends BasePanelsIPEPageController {
     if ($vid == $node->getRevisionId()) {
       return TRUE;
     }
-    $revision = $this->entityTypeManager()->getStorage('node')->loadRevision($vid);
+    /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
+    $storage = $this->entityTypeManager()->getStorage('node');
+    /** @var Node $revision */
+    $revision = $storage->loadRevision($vid);
     if (empty($revision) || $node->id() != $revision->id()) {
       $this->setMessage($this->t('Invalid revision'));
       return FALSE;
@@ -359,6 +362,7 @@ class PanelsIPEPageController extends BasePanelsIPEPageController {
           if (empty($entities)) {
             continue;
           }
+          /** @var BlockContent $block */
           $block = reset($entities);
           if ($block->hasTranslation($this->currentLanguageId())) {
             $block = $block->getTranslation($this->currentLanguageId());
@@ -561,6 +565,7 @@ class PanelsIPEPageController extends BasePanelsIPEPageController {
       $uuid = $row['uuid'] ?? '';
       $body = $row['attributes']['body'] ?? '';
       $blocks = $uuid ? $this->entityTypeManager->getStorage('block_content')->loadByProperties(['uuid' => $uuid]) : FALSE;
+      /** @var BlockContent $block_content */
       $block_content = $blocks ? reset($blocks) : FALSE;
       if ($block_content && $block_content->bundle() != 'json') {
         continue;
@@ -584,7 +589,7 @@ class PanelsIPEPageController extends BasePanelsIPEPageController {
       }
       $block_content->set('body', [
         [
-          'value' => $body,
+          'value' => is_array($body) ?  json_encode($body, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) : $body,
           'format' => 'json',
         ],
       ]);
