@@ -448,6 +448,50 @@ class PanelsIPEPageController extends BasePanelsIPEPageController {
   }
 
   /**
+   * 删除翻译
+   * @param Node $node
+   * @param LanguageInterface $langcode
+   * @return JsonResponse
+   */
+  public function landingPageTranslationsDelete(Node $node, LanguageInterface $langcode) {
+    $langcode_id = $langcode->getId();
+    if ($node->bundle() !== 'landing_page') {
+      return new JsonResponse([
+        'status' => FALSE,
+        'message' => 'Invalid content type',
+      ]);
+    }
+    // 默认翻译不允许删除。
+    if ($langcode_id === $node->getUntranslated()->language()->getId()) {
+      return new JsonResponse([
+        'status' => FALSE,
+        'message' => 'Cannot delete the default translation.',
+      ]);
+    }
+    // 检查是否存在对应的语言翻译。
+    if (!$node->hasTranslation($langcode_id)) {
+      return new JsonResponse([
+        'status' => FALSE,
+        'message' => 'Translation does not exist.',
+      ]);
+    }
+    try {
+      $node->removeTranslation($langcode_id);
+      $node->save();
+      $data = [
+        'status' => TRUE,
+        'message' => $this->t('Translation deleted.'),
+      ];
+    } catch (\Exception $exception) {
+      $data = [
+        'status' => FALSE,
+        'message' => $exception->getMessage(),
+      ];
+    }
+    return new JsonResponse($data);
+  }
+
+  /**
    * add block translation
    * @param BlockContent $block
    * @param $langcode

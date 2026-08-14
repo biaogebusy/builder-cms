@@ -65,3 +65,20 @@ xinshi_api.v3.landingPage.translations.add:
       target:
         type: 'language'
   methods: [ POST ]
+
+xinshi_api.v3.landingPage.translations.delete:
+  path: '/api/v3/landingPage/translations/delete/{node}/{langcode}'
+  defaults:
+    _controller: '\Drupal\xinshi_api\Controller\PanelsIPEPageController::landingPageTranslationsDelete'
+    _title: 'landingPage delete translation'
+  requirements:
+    _entity_access: 'node.update'
+    node: \d+
+  options:
+    _auth: [ 'oauth2', 'cookie' ]
+    parameters:
+      node:
+        type: 'entity:node'
+      langcode:
+        type: 'language'
+  methods: [ POST ]
