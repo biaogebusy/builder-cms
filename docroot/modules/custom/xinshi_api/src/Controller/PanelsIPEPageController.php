@@ -138,7 +138,7 @@ class PanelsIPEPageController extends BasePanelsIPEPageController {
           'type' => 'json',
           'info' => "Json {$number}",
           'body' => [
-            'value' => $body,
+            'value' => is_array($body) ?  json_encode($body, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) : $body,
             'format' => 'json',
           ],
           'langcode' => [
@@ -151,7 +151,7 @@ class PanelsIPEPageController extends BasePanelsIPEPageController {
         $block = $this->addBlockTranslation($block, $langcode);
         $block->set('body', [
           [
-            'value' => json_encode($body, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
+            'value' => is_array($body) ?  json_encode($body, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) : $body,
             'format' => 'json',
           ],
         ]);
@@ -322,7 +322,10 @@ class PanelsIPEPageController extends BasePanelsIPEPageController {
     if ($vid == $node->getRevisionId()) {
       return TRUE;
     }
-    $revision = $this->entityTypeManager()->getStorage('node')->loadRevision($vid);
+    /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
+    $storage = $this->entityTypeManager()->getStorage('node');
+    /** @var Node $revision */
+    $revision = $storage->loadRevision($vid);
     if (empty($revision) || $node->id() != $revision->id()) {
       $this->setMessage($this->t('Invalid revision'));
       return FALSE;
@@ -359,6 +362,7 @@ class PanelsIPEPageController extends BasePanelsIPEPageController {
           if (empty($entities)) {
             continue;
           }
+          /** @var BlockContent $block */
           $block = reset($entities);
           if ($block->hasTranslation($this->currentLanguageId())) {
             $block = $block->getTranslation($this->currentLanguageId());
@@ -440,6 +444,50 @@ class PanelsIPEPageController extends BasePanelsIPEPageController {
     }
     $data['status'] = empty($this->getMessage());
     $data['message'] = $this->getMessage() ?? '';
+    return new JsonResponse($data);
+  }
+
+  /**
+   * 删除翻译
+   * @param Node $node
+   * @param LanguageInterface $langcode
+   * @return JsonResponse
+   */
+  public function landingPageTranslationsDelete(Node $node, LanguageInterface $langcode) {
+    $langcode_id = $langcode->getId();
+    if ($node->bundle() !== 'landing_page') {
+      return new JsonResponse([
+        'status' => FALSE,
+        'message' => 'Invalid content type',
+      ]);
+    }
+    // 默认翻译不允许删除。
+    if ($langcode_id === $node->getUntranslated()->language()->getId()) {
+      return new JsonResponse([
+        'status' => FALSE,
+        'message' => 'Cannot delete the default translation.',
+      ]);
+    }
+    // 检查是否存在对应的语言翻译。
+    if (!$node->hasTranslation($langcode_id)) {
+      return new JsonResponse([
+        'status' => FALSE,
+        'message' => 'Translation does not exist.',
+      ]);
+    }
+    try {
+      $node->removeTranslation($langcode_id);
+      $node->save();
+      $data = [
+        'status' => TRUE,
+        'message' => $this->t('Translation deleted.'),
+      ];
+    } catch (\Exception $exception) {
+      $data = [
+        'status' => FALSE,
+        'message' => $exception->getMessage(),
+      ];
+    }
     return new JsonResponse($data);
   }
 
@@ -561,6 +609,7 @@ class PanelsIPEPageController extends BasePanelsIPEPageController {
       $uuid = $row['uuid'] ?? '';
       $body = $row['attributes']['body'] ?? '';
       $blocks = $uuid ? $this->entityTypeManager->getStorage('block_content')->loadByProperties(['uuid' => $uuid]) : FALSE;
+      /** @var BlockContent $block_content */
       $block_content = $blocks ? reset($blocks) : FALSE;
       if ($block_content && $block_content->bundle() != 'json') {
         continue;
@@ -584,7 +633,7 @@ class PanelsIPEPageController extends BasePanelsIPEPageController {
       }
       $block_content->set('body', [
         [
-          'value' => $body,
+          'value' => is_array($body) ?  json_encode($body, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) : $body,
           'format' => 'json',
         ],
       ]);
