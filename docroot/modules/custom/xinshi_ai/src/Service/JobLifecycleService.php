@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\xinshi_ai\Service;
 
 use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\media\MediaInterface;
@@ -25,6 +26,7 @@ final class JobLifecycleService implements JobLifecycleServiceInterface {
   public function __construct(
     private readonly EntityTypeManagerInterface $entityTypeManager,
     private readonly TimeInterface $time,
+    private readonly EntityRepositoryInterface $entityRepository,
   ) {}
 
   /**
@@ -52,10 +54,19 @@ final class JobLifecycleService implements JobLifecycleServiceInterface {
       $values['field_negative_prompt'] = $input['negativePrompt'];
     }
     if (!empty($input['inputImage'])) {
-      $values['field_input_image'] = ['target_id' => $input['inputImage']];
+      // 前端只持有 media uuid(JSON:API 规范);entity_reference 的 target_id 需要 numeric
+      // entity id,这里做 uuid → id 解析。无效 uuid 直接跳过写入,后续 worker 会因
+      // field_input_image 为空抛 image_edit job 缺少 field_input_image,行为可观察。
+      $media = $this->entityRepository->loadEntityByUuid('media', (string) $input['inputImage']);
+      if ($media) {
+        $values['field_input_image'] = ['target_id' => $media->id()];
+      }
     }
     if (!empty($input['parentJob'])) {
-      $values['field_parent_job'] = ['target_id' => $input['parentJob']];
+      $parent = $this->entityRepository->loadEntityByUuid('node', (string) $input['parentJob']);
+      if ($parent) {
+        $values['field_parent_job'] = ['target_id' => $parent->id()];
+      }
     }
     if (!empty($input['taskId'])) {
       $values['field_task_id'] = $input['taskId'];

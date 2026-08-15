@@ -82,7 +82,10 @@ MediaUploadService ─► media:image + image_asset 节点
 | POST | `/api/v3/image-jobs` | oauth2 / cookie + `create xinshi_ai image job` | 创建任务,返回 `202 {uuid, status, nRequested, eventTicket}` |
 | POST | `/api/v3/image-jobs/{uuid}/cancel` | oauth2 / cookie + `cancel xinshi_ai image job` | 软取消(置终态 cancelled) |
 | GET | `/api/v3/image-jobs/{uuid}/events` | **ticket**(非用户登录) | SSE 进度流 |
-| GET | `/api/v3/ai/models` | `access content` | 模型注册中心(只读,剔除后端内部字段) |
+| GET | `/api/v3/ai/models` | `access content` | 模型注册中心(只读,剔除后端内部字段与禁用条目) |
+| GET | `/api/v3/ai/manage/models` | oauth2 / cookie + `administer xinshi_ai` | 管理端全量注册中心(含禁用的平台与模型) |
+| POST | `/api/v3/ai/models` | oauth2 / cookie + `administer xinshi_ai` | 新增模型 |
+| PATCH | `/api/v3/ai/models/{id}` | oauth2 / cookie + `administer xinshi_ai` | 部分更新模型;`{"enabled": false}` 即禁用 |
 
 任务与资产的**读取**走 JSON:API(`jsonapi_extras` 暴露,resource config 见 `config/optional/`)。`ImageJobNormalizer` 在 `format=json` 的读响应里把 `field_assets` 内联展开为带图片 URL 的资产对象,使列表单次请求即拿到缩略图。
 
@@ -98,6 +101,8 @@ MediaUploadService ─► media:image + image_asset 节点
 - **模型**(`models`):带 `capabilities`(chat / reasoning / image / image-edit)、`max_n`、`sizes` 等约束。
 
 `ModelRegistryService` 读取并缓存(随 `config:xinshi_ai.models` 失效),提供能力过滤与校验;后台模型管理通过 `saveModel` / `deleteModel` 改写配置。注意:**网关 base_url / api_key 不在这里**,在 `xinshi_ai.settings` 的 `gateway` 段。
+
+模型条目支持 `enabled: false` 禁用(键缺省为启用):禁用后 `/api/v3/ai/models` 不再返回,任务提交校验(`validateModelCapability` / `isValid`)也会拒绝,但记录保留可随时重新启用。除后台 UI 外,管理前台可直接调用 §4 的管理 API(`ModelManageController`)新增与启停模型,写的是同一份配置。前端对接文档(字段契约 / 错误码 / 联调示例)见 [`docs/model-management-api.md`](docs/model-management-api.md)。
 
 ---
 
@@ -225,7 +230,7 @@ src/
 ├── Plugin/AiTask/                 # ImageGenerationTask / ImageEditTask
 ├── Plugin/AiProvider/             # XinshiGateway / Custom + image-edit trait
 ├── Plugin/QueueWorker/            # ImageJobWorker(异步 + 重试)
-├── Controller/                    # ImageJob / ImageJobEvents / ModelRegistry / ModelAdmin
+├── Controller/                    # ImageJob / ImageJobEvents / ModelRegistry / ModelManage / ModelAdmin
 ├── Service/                       # Lifecycle / EventStream / EventTicket / ModelRegistry / ProviderResolver / ProviderErrorMapper / MediaUpload
 ├── Normalizer/ImageJobNormalizer.php   # json 读响应内联 assets
 ├── EventSubscriber/ImageJobCacheSubscriber.php  # 强制 no-store

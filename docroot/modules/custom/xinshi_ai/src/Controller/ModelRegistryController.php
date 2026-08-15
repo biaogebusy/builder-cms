@@ -56,11 +56,27 @@ final class ModelRegistryController extends ControllerBase {
       ? $this->registry->getModelsByCapability((string) $capability)
       : $registry['models'];
 
+    // enabled=false 的模型不对外暴露(键缺省为启用)。
+    $models = array_filter($models, static fn(array $model): bool => (bool) ($model['enabled'] ?? TRUE));
+
     $payload = [
       'version' => $registry['version'],
       'platforms' => $platforms,
       'models' => array_values($models),
     ];
+
+    // 各模式默认模型:只暴露公开可用(平台+模型均启用)且能力匹配的条目;
+    // 无有效条目时整键省略,前端回落到本地兜底默认。
+    $defaults = [];
+    foreach ($registry['defaults'] as $mode => $id) {
+      $model = $this->registry->getModel((string) $id);
+      if ($model !== NULL && in_array($mode, $model['capabilities'] ?? [], TRUE)) {
+        $defaults[$mode] = $id;
+      }
+    }
+    if ($defaults !== []) {
+      $payload['defaults'] = $defaults;
+    }
 
     $response = new CacheableJsonResponse($payload);
     $response->addCacheableDependency(

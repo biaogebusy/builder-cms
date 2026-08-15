@@ -91,6 +91,7 @@ models:
     platform: xinshi
     capabilities:
       - image
+      - image-edit
     max_n: 1
     sizes:
       - '1024x1024'
@@ -133,3 +134,9 @@ models:
     capabilities:
       - image-edit
     max_n: 1
+# 各模式默认模型(与前端 model-config.service 的硬编码兜底保持一致;
+# 前端在 defaults 缺失或指向无效模型时回落到本地常量)。
+defaults:
+  chat: deepseek-v4-pro
+  image: qwen-image-plus
+  image-edit: qwen-image-edit-plus

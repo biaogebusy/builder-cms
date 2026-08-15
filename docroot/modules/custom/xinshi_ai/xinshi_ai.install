@@ -36,3 +36,24 @@ function xinshi_ai_update_10001(): void {
     \Drupal::service('cache_tags.invalidator')->invalidateTags(['config:' . $config_name]);
   }
 }
+
+/**
+ * 为模型注册中心补种各模式默认模型(defaults 键;已设置的站点不覆盖)。
+ */
+function xinshi_ai_update_10002(): void {
+  $config = \Drupal::configFactory()->getEditable('xinshi_ai.models');
+  if ($config->get('defaults') !== NULL) {
+    return;
+  }
+  $existing = array_column($config->get('models') ?? [], NULL, 'id');
+  $seed = [
+    'chat' => 'deepseek-v4-pro',
+    'image' => 'qwen-image-plus',
+    'image-edit' => 'qwen-image-edit-plus',
+  ];
+  // 只写入当前注册中心里真实存在的模型,避免站点自定义清单后指向悬空 id。
+  $defaults = array_filter($seed, static fn(string $id): bool => isset($existing[$id]));
+  if ($defaults !== []) {
+    $config->set('defaults', $defaults)->save();
+  }
+}

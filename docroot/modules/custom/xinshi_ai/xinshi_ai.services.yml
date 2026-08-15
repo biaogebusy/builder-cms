@@ -22,7 +22,7 @@ services:
 
   xinshi_ai.job_lifecycle:
     class: Drupal\xinshi_ai\Service\JobLifecycleService
-    arguments: ['@entity_type.manager', '@datetime.time']
+    arguments: ['@entity_type.manager', '@datetime.time', '@entity.repository']
 
   xinshi_ai.media_upload:
     class: Drupal\xinshi_ai\Service\MediaUploadService

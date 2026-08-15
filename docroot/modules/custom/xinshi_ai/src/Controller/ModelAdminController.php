@@ -41,6 +41,9 @@ final class ModelAdminController extends ControllerBase {
       if (!empty($model['deprecated'])) {
         $label .= ' (' . $this->t('已弃用') . ')';
       }
+      if (!($model['enabled'] ?? TRUE)) {
+        $label .= ' (' . $this->t('已禁用') . ')';
+      }
       $rows[] = [
         'data' => [
           $id,

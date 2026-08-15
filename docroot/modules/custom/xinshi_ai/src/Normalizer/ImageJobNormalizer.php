@@ -41,6 +41,9 @@ final class ImageJobNormalizer implements NormalizerInterface, SerializerAwareIn
     $data = $this->serializer->normalize($object, $format, $context);
     assert($object instanceof NodeInterface);
     $data['field_assets'] = $this->inlineAssets($object);
+    // image_edit / variation 卡片需要显示输入图缩略,默认 entity 序列化只给 target_id/uuid
+    // 不含 URL;这里 inline 出 mediaUuid+src+thumb,前端 mapper 直接读。
+    $data['field_input_image'] = $this->inlineInputImage($object);
     return $data;
   }
 
@@ -118,6 +121,34 @@ final class ImageJobNormalizer implements NormalizerInterface, SerializerAwareIn
       'thumb' => $thumb ?? $src,
       'meta' => $meta,
     ];
+  }
+
+  /**
+   * inline field_input_image:文生图 job 返回空数组,image_edit/variation 返回单元素数组,
+   * 形状对齐 inline asset 的关键字段(mediaUuid/src/thumb),前端 mapper 可复用一套读取逻辑。
+   */
+  private function inlineInputImage(NodeInterface $job): array {
+    $media = $job->get('field_input_image')->entity;
+    if (!$media instanceof MediaInterface) {
+      return [];
+    }
+    $file = $media->get('field_media_image')->entity;
+    if (!$file) {
+      // 媒体存在但底层 file 丢失:回填 uuid 让前端能反查/重建,src 留空由 UI 兜底。
+      return [['mediaUuid' => $media->uuid(), 'src' => NULL, 'thumb' => NULL]];
+    }
+    $src = $file->createFileUrl(TRUE);
+    $style = ImageStyle::load(self::THUMB_STYLE);
+    $thumb = $src;
+    if ($style) {
+      $absolute = $style->buildUrl($file->getFileUri());
+      $thumb = preg_replace('#^https?://[^/]+#', '', $absolute);
+    }
+    return [[
+      'mediaUuid' => $media->uuid(),
+      'src' => $src,
+      'thumb' => $thumb,
+    ]];
   }
 
 }

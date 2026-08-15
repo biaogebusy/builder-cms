@@ -12,10 +12,15 @@ namespace Drupal\xinshi_ai\Service;
 interface ModelRegistryServiceInterface {
 
   /**
+   * 默认模型支持的模式(键名与能力枚举一致)。
+   */
+  public const DEFAULT_MODES = ['chat', 'image', 'image-edit'];
+
+  /**
    * 全量注册中心(供 admin 与 /api/v3/ai/models 使用)。
    *
    * @return array
-   *   ['platforms' => array, 'models' => array, 'version' => string]
+   *   ['platforms' => array, 'models' => array, 'defaults' => array, 'version' => string]
    */
   public function getRegistry(): array;
 
@@ -64,5 +69,21 @@ interface ModelRegistryServiceInterface {
    * 按 id 删除一个模型。
    */
   public function deleteModel(string $id): void;
+
+  /**
+   * 各模式默认模型映射(稀疏:未设置的模式无键)。
+   *
+   * @return array<string, string>
+   *   如 ['chat' => 'deepseek-v4-pro'];键限 DEFAULT_MODES。
+   */
+  public function getDefaults(): array;
+
+  /**
+   * 整体保存默认模型映射(空数组 = 清除全部默认)。
+   *
+   * @param array<string, string> $defaults
+   *   键限 DEFAULT_MODES,值为模型 id;调用方负责校验。
+   */
+  public function saveDefaults(array $defaults): void;
 
 }

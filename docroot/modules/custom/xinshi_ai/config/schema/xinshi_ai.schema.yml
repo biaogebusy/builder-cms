@@ -82,6 +82,19 @@ xinshi_ai.models:
       label: '模型'
       sequence:
         type: xinshi_ai.model
+    defaults:
+      type: mapping
+      label: '各模式默认模型(模型 id;稀疏,未设置的模式无键)'
+      mapping:
+        chat:
+          type: string
+          label: '对话默认模型'
+        image:
+          type: string
+          label: '文生图默认模型'
+        'image-edit':
+          type: string
+          label: '图片编辑默认模型'
 
 xinshi_ai.platform:
   type: mapping
@@ -120,6 +133,8 @@ xinshi_ai.model:
       type: sequence
       sequence:
         type: string
+    enabled:
+      type: boolean
     deprecated:
       type: boolean
     notes:

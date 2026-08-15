@@ -38,10 +38,21 @@ final class ModelRegistryService implements ModelRegistryServiceInterface {
       $platforms[] = ['id' => $id] + (array) $platform;
     }
 
+    // 各模式默认模型:只保留合法模式键与非空字符串值(稀疏,未设置无键)。
+    $rawDefaults = $config->get('defaults') ?? [];
+    $defaults = [];
+    foreach (ModelRegistryServiceInterface::DEFAULT_MODES as $mode) {
+      $id = $rawDefaults[$mode] ?? NULL;
+      if (is_string($id) && $id !== '') {
+        $defaults[$mode] = $id;
+      }
+    }
+
     $registry = [
-      'version' => $this->hash($rawPlatforms, $models),
+      'version' => $this->hash($rawPlatforms, $models, $defaults),
       'platforms' => $platforms,
       'models' => $models,
+      'defaults' => $defaults,
     ];
 
     // 随配置实体一起失效:config:xinshi_ai.models 在保存时由 Drupal 自动清除。
@@ -72,7 +83,8 @@ final class ModelRegistryService implements ModelRegistryServiceInterface {
     $enabled = $this->enabledPlatformIds();
     foreach ($this->getRegistry()['models'] as $model) {
       if (($model['id'] ?? NULL) === $id && in_array($model['platform'] ?? '', $enabled, TRUE)) {
-        return $model;
+        // 模型级禁用(enabled=false)视为未注册;键缺省为启用。
+        return ($model['enabled'] ?? TRUE) ? $model : NULL;
       }
     }
     return NULL;
@@ -111,8 +123,8 @@ final class ModelRegistryService implements ModelRegistryServiceInterface {
     return $ids;
   }
 
-  private function hash(array $platforms, array $models): string {
-    return substr(hash('sha256', serialize([$platforms, $models])), 0, 12);
+  private function hash(array $platforms, array $models, array $defaults): string {
+    return substr(hash('sha256', serialize([$platforms, $models, $defaults])), 0, 12);
   }
 
   /**
@@ -159,6 +171,25 @@ final class ModelRegistryService implements ModelRegistryServiceInterface {
       static fn(array $model): bool => ($model['id'] ?? NULL) !== $id,
     ));
     $config->set('models', $models)->save();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefaults(): array {
+    return $this->getRegistry()['defaults'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function saveDefaults(array $defaults): void {
+    $config = $this->configFactory->getEditable(self::CONFIG_NAME);
+    if ($defaults === []) {
+      $config->clear('defaults')->save();
+      return;
+    }
+    $config->set('defaults', $defaults)->save();
   }
 
 }

@@ -8,6 +8,57 @@ xinshi_ai.models.list:
   requirements:
     _permission: 'access content'
 
+# 模型注册中心管理 API(新增 / 更新 / 启停)— 供管理前台调用(详见模块文档 §5)。
+xinshi_ai.models.manage:
+  path: '/api/v3/ai/manage/models'
+  defaults:
+    _controller: '\Drupal\xinshi_ai\Controller\ModelManageController::list'
+    _format: 'json'
+  methods: [GET]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2', 'cookie']
+  requirements:
+    _permission: 'administer xinshi_ai'
+
+xinshi_ai.models.api_add:
+  path: '/api/v3/ai/models'
+  defaults:
+    _controller: '\Drupal\xinshi_ai\Controller\ModelManageController::add'
+    _format: 'json'
+  methods: [POST]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2', 'cookie']
+  requirements:
+    _permission: 'administer xinshi_ai'
+
+xinshi_ai.models.api_update:
+  path: '/api/v3/ai/models/{id}'
+  defaults:
+    _controller: '\Drupal\xinshi_ai\Controller\ModelManageController::update'
+    _format: 'json'
+  methods: [PATCH]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2', 'cookie']
+  requirements:
+    _permission: 'administer xinshi_ai'
+    id: '[a-z0-9_.\-]+'
+
+# 各模式默认模型(chat / image / image-edit)— 部分更新,null 清除。
+xinshi_ai.models.api_defaults:
+  path: '/api/v3/ai/manage/defaults'
+  defaults:
+    _controller: '\Drupal\xinshi_ai\Controller\ModelManageController::updateDefaults'
+    _format: 'json'
+  methods: [PATCH]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2', 'cookie']
+  requirements:
+    _permission: 'administer xinshi_ai'
+
 # 模块全局配置(详见模块文档 §10.4)。
 xinshi_ai.settings:
   path: '/admin/config/xinshi/ai'

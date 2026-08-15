@@ -48,7 +48,7 @@ final class ModelForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, ?string $id = NULL): array {
     $model = $id !== NULL ? $this->registry->getModel($id) : NULL;
-    // getModel() 会过滤掉 enabled=false 平台的模型;编辑场景下仍需能取到。
+    // getModel() 会过滤掉 enabled=false 的平台与模型;编辑场景下仍需能取到。
     if ($id !== NULL && $model === NULL) {
       foreach ($this->registry->getRegistry()['models'] as $candidate) {
         if (($candidate['id'] ?? NULL) === $id) {
@@ -114,6 +114,12 @@ final class ModelForm extends FormBase {
       '#description' => $this->t('每行一个,如 1024x1024。仅图像模型需要。'),
       '#default_value' => $isEdit ? implode("\n", $model['sizes'] ?? []) : '',
       '#rows' => 4,
+    ];
+    $form['enabled'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('启用'),
+      '#description' => $this->t('禁用后不对前台暴露,任务提交校验也会拒绝;记录保留,可随时重新启用。'),
+      '#default_value' => $isEdit ? (bool) ($model['enabled'] ?? TRUE) : TRUE,
     ];
     $form['deprecated'] = [
       '#type' => 'checkbox',
@@ -186,6 +192,10 @@ final class ModelForm extends FormBase {
     }
     if ($form_state->getValue('deprecated')) {
       $model['deprecated'] = TRUE;
+    }
+    // enabled 缺省为启用;仅显式禁用时落库(与种子数据保持最小键集)。
+    if (!$form_state->getValue('enabled')) {
+      $model['enabled'] = FALSE;
     }
     $notes = trim((string) $form_state->getValue('notes'));
     if ($notes !== '') {
