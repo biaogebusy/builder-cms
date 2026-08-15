@@ -206,10 +206,9 @@ class NodeJson extends EntityJsonBase {
   private function setMate(&$data) {
     $data['title'] = \Drupal::token()->replace('[node:title] | [site:name]', ['node' => $this->entity]);
     if ($meta = $this->entity->get('meta_tags')->value) {
-      $meta = unserialize($meta);
-      if (!is_array($meta)) {
-        return;
-      }
+      // Metatag v2 stores JSON; metatag_data_decode() reads both that and the
+      // serialized values left over from v1, and always returns an array.
+      $meta = metatag_data_decode($meta);
       foreach ($meta as $key => $value) {
         $content = \Drupal::token()->replace($value, ['node' => $this->entity]);
         if (empty($content)) {
