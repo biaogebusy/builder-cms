@@ -23,6 +23,11 @@ use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
  */
 class PanelsIPEPageController extends BasePanelsIPEPageController {
 
+  /**
+   * 历史版本列表最多返回的条数
+   */
+  const REVISION_LIMIT = 50;
+
   private $message;
 
   /**
@@ -228,22 +233,7 @@ class PanelsIPEPageController extends BasePanelsIPEPageController {
     $data = [];
     $block_json = [];
     if ($node->bundle() == 'landing_page') {
-      foreach ($this->getPanelBlocks($node) as $block) {
-        if ($block->bundle() !== 'json') {
-          $this->setMessage('This page contains non Json blocks and cannot be edited.');
-          break;
-        } else {
-          $block_json[] = [
-            'uuid' => $block->uuid(),
-            'id' => $block->id(),
-            'type' => $block->bundle(),
-            'langcode' => $block->language()->getId(),
-            'attributes' => [
-              'body' => Json::decode(htmlspecialchars_decode($block->get('body')->value)) ?? Json::decode($block->get('body')->value),
-            ],
-          ];
-        }
-      }
+      $block_json = $this->formatBlocks($this->getPanelBlocks($node));
     } else {
       $this->setMessage('Invalid content type.');
     }
@@ -261,6 +251,193 @@ class PanelsIPEPageController extends BasePanelsIPEPageController {
       $data['body'] = $block_json;
     }
     return new JsonResponse($data);
+  }
+
+  /**
+   * 历史版本列表
+   *
+   * @param Node $node
+   * @return JsonResponse
+   */
+  public function landingPageRevisions(Node $node) {
+    if ($node->bundle() !== 'landing_page') {
+      return new JsonResponse([
+        'status' => FALSE,
+        'message' => 'Invalid content type',
+      ]);
+    }
+    /** @var \Drupal\node\NodeStorageInterface $storage */
+    $storage = $this->entityTypeManager()->getStorage('node');
+    $langcode = $this->currentLanguageId();
+    // revisionIds 按修订 ID 升序返回，倒序后取最近的若干条
+    $vids = array_slice(array_reverse($storage->revisionIds($node)), 0, self::REVISION_LIMIT);
+    $revisions = [];
+    foreach ($vids as $vid) {
+      /** @var Node $revision */
+      $revision = $storage->loadRevision($vid);
+      if (empty($revision)) {
+        continue;
+      }
+      if ($revision->hasTranslation($langcode)) {
+        $revision = $revision->getTranslation($langcode);
+      }
+      // panelizer 保存时不会写 revision_uid，回退到内容作者
+      $author = $revision->getRevisionUser() ?: $revision->getOwner();
+      $revisions[] = [
+        'vid' => $revision->getRevisionId(),
+        'current' => $revision->getRevisionId() == $node->getRevisionId(),
+        'changed' => $revision->getChangedTime(),
+        'log' => $revision->getRevisionLogMessage() ?? '',
+        'author' => $author ? $author->getDisplayName() : '',
+      ];
+    }
+    return new JsonResponse([
+      'status' => TRUE,
+      'message' => '',
+      'nid' => $node->id(),
+      'uuid' => $node->uuid(),
+      'vid' => $node->getRevisionId(),
+      'langcode' => $langcode,
+      'revisions' => $revisions,
+    ]);
+  }
+
+  /**
+   * 指定历史版本的页面 JSON
+   *
+   * 结构与 landingPageCanonical 一致，前端可直接载入草稿。
+   *
+   * @param Node $node
+   * @param string $vid
+   * @return JsonResponse
+   */
+  public function landingPageRevisionCanonical(Node $node, $vid) {
+    if ($node->bundle() !== 'landing_page') {
+      return new JsonResponse([
+        'status' => FALSE,
+        'message' => 'Invalid content type',
+      ]);
+    }
+    /** @var \Drupal\Core\Entity\RevisionableStorageInterface $storage */
+    $storage = $this->entityTypeManager()->getStorage('node');
+    /** @var Node $revision */
+    $revision = $storage->loadRevision($vid);
+    if (empty($revision) || $revision->id() != $node->id()) {
+      return new JsonResponse([
+        'status' => FALSE,
+        'message' => 'Invalid revision',
+      ]);
+    }
+    $langcode = $this->currentLanguageId();
+    if ($revision->hasTranslation($langcode)) {
+      $revision = $revision->getTranslation($langcode);
+    }
+    $data = [];
+    $block_json = $this->formatBlocks($this->getRevisionBlocks($revision));
+    $data['status'] = empty($this->getMessage());
+    $data['message'] = $this->getMessage() ?? '';
+    if ($data['status']) {
+      $title = "[node:title] | [site:name]";
+      $data['title'] = \Drupal::token()->replace($title, ['node' => $revision]);
+      $data['uuid'] = $node->uuid();
+      $data['nid'] = $node->id();
+      // vid/changed 取当前默认修订：载入历史版本只替换内容，保存时仍然是在最新修订
+      // 之上提交，landingPageUpdate 的并发校验和前端的过期轮询都读这两个值。
+      $data['vid'] = $node->getRevisionId();
+      $data['changed'] = $node->getChangedTime();
+      $data['revision_vid'] = $revision->getRevisionId();
+      $data['revision_changed'] = $revision->getChangedTime();
+      $data['langcode'] = $revision->language()->getId();
+      $data['label'] = $revision->label();
+      $data['body'] = $block_json;
+    }
+    return new JsonResponse($data);
+  }
+
+  /**
+   * 区块转成页面 JSON 的 body 结构
+   *
+   * @param array $blocks
+   * @return array
+   */
+  private function formatBlocks(array $blocks) {
+    $block_json = [];
+    /** @var BlockContent $block */
+    foreach ($blocks as $block) {
+      if ($block->bundle() !== 'json') {
+        $this->setMessage('This page contains non Json blocks and cannot be edited.');
+        return [];
+      }
+      $block_json[] = [
+        'uuid' => $block->uuid(),
+        'id' => $block->id(),
+        'type' => $block->bundle(),
+        'langcode' => $block->language()->getId(),
+        'attributes' => [
+          'body' => Json::decode(htmlspecialchars_decode($block->get('body')->value)) ?? Json::decode($block->get('body')->value),
+        ],
+      ];
+    }
+    return $block_json;
+  }
+
+  /**
+   * 取回某个修订当时的区块
+   *
+   * 布局里固定了区块的修订 ID（panelizer 的 blocks[].vid、layout builder 的
+   * block_revision_id），只有按该 ID 载入才是当时的内容，按 uuid 载入拿到的
+   * 永远是最新内容。
+   *
+   * @param Node $revision
+   * @return array
+   */
+  private function getRevisionBlocks(Node $revision) {
+    $blocks = [];
+    $storage = $this->entityTypeManager()->getStorage('block_content');
+    $json = new NodeJson($revision, 'full');
+    if ($json->isLayoutBuilder()) {
+      foreach ($revision->get(OverridesSectionStorage::FIELD_NAME) as $item) {
+        /** @var \Drupal\layout_builder\Section $section */
+        $section = $item->section;
+        foreach ($section->getComponents() as $component) {
+          $rev_id = $component->get('configuration')['block_revision_id'] ?? NULL;
+          $block = $rev_id ? $storage->loadRevision($rev_id) : NULL;
+          if ($block) {
+            $blocks[] = $this->getBlockTranslation($block);
+          }
+        }
+      }
+    }
+    elseif ($json->isPanelizer()) {
+      $panelizer = $revision->get('panelizer')->getValue();
+      foreach ($panelizer[0]['panels_display']['blocks'] ?? [] as $block_config) {
+        if (($block_config['provider'] ?? '') !== 'block_content') {
+          continue;
+        }
+        if (!empty($block_config['vid'])) {
+          $block = $storage->loadRevision($block_config['vid']);
+        }
+        else {
+          $entities = $storage->loadByProperties(['uuid' => explode(':', $block_config['id'])[1]]);
+          $block = $entities ? reset($entities) : NULL;
+        }
+        if ($block) {
+          $blocks[] = $this->getBlockTranslation($block);
+        }
+      }
+    }
+    return $blocks;
+  }
+
+  /**
+   * 当前语言的区块翻译，没有翻译时返回原区块
+   *
+   * @param BlockContent $block
+   * @return BlockContent
+   */
+  private function getBlockTranslation(BlockContent $block) {
+    $langcode = $this->currentLanguageId();
+    return $block->hasTranslation($langcode) ? $block->getTranslation($langcode) : $block;
   }
 
   /**

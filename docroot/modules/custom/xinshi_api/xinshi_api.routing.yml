@@ -32,6 +32,37 @@ xinshi_api.v3.landingPage.canonical:
         type: 'entity:node'
   methods: [ GET ]
 
+xinshi_api.v3.landingPage.revisions:
+  path: '/api/v3/landingPage/revisions/{node}'
+  defaults:
+    _controller: '\Drupal\xinshi_api\Controller\PanelsIPEPageController::landingPageRevisions'
+    _title: 'landingPage revisions'
+  requirements:
+    _entity_access: 'node.update'
+    node: \d+
+  options:
+    _auth: [ 'oauth2', 'cookie' ]
+    parameters:
+      node:
+        type: 'entity:node'
+  methods: [ GET ]
+
+xinshi_api.v3.landingPage.revision.canonical:
+  path: '/api/v3/landingPage/revisions/{node}/{vid}'
+  defaults:
+    _controller: '\Drupal\xinshi_api\Controller\PanelsIPEPageController::landingPageRevisionCanonical'
+    _title: 'landingPage revision canonical'
+  requirements:
+    _entity_access: 'node.update'
+    node: \d+
+    vid: \d+
+  options:
+    _auth: [ 'oauth2', 'cookie' ]
+    parameters:
+      node:
+        type: 'entity:node'
+  methods: [ GET ]
+
 xinshi_api.v3.landingPage.update:
   path: '/api/v3/landingPage/update/{node}'
   defaults:
