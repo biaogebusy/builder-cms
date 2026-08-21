@@ -269,17 +269,34 @@ class PanelsIPEPageController extends BasePanelsIPEPageController {
     /** @var \Drupal\node\NodeStorageInterface $storage */
     $storage = $this->entityTypeManager()->getStorage('node');
     $langcode = $this->currentLanguageId();
-    // revisionIds 按修订 ID 升序返回，倒序后取最近的若干条
-    $vids = array_slice(array_reverse($storage->revisionIds($node)), 0, self::REVISION_LIMIT);
+    // 页面本身没有当前语言的版本时（例如内容语言为“未指定”，或站点默认语言
+    // 变更过），按语言过滤只会得到空列表，这种情况下退回列出全部修订
+    $filter_by_language = $node->hasTranslation($langcode);
+    // revisionIds 按修订 ID 升序返回，倒序后从最近的一条开始
+    $vids = array_reverse($storage->revisionIds($node));
     $revisions = [];
     foreach ($vids as $vid) {
+      // 条数限制要在按语言过滤之后才算得准，因此放在循环里
+      if (count($revisions) >= self::REVISION_LIMIT) {
+        break;
+      }
       /** @var Node $revision */
       $revision = $storage->loadRevision($vid);
       if (empty($revision)) {
         continue;
       }
-      if ($revision->hasTranslation($langcode)) {
+      if ($filter_by_language) {
+        // 一个节点的修订由所有翻译共享：改英文也会生成修订，不过滤的话中文列表
+        // 里会出现时间和内容都一样的重复行，而早于翻译创建的修订还会退回源语言
+        // 的内容。判断方式与 Drupal 自带修订页一致：必须有当前语言，且这次修订
+        // 确实改动了当前语言
+        if (!$revision->hasTranslation($langcode)) {
+          continue;
+        }
         $revision = $revision->getTranslation($langcode);
+        if (!$revision->isRevisionTranslationAffected()) {
+          continue;
+        }
       }
       // panelizer 保存时不会写 revision_uid，回退到内容作者
       $author = $revision->getRevisionUser() ?: $revision->getOwner();
