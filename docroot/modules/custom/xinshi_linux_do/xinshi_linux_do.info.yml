@@ -1,0 +1,14 @@
+name: 'XINSHI Linux.do'
+type: module
+description: 'linux.do OAuth2 federated identity provider for simple_oauth.'
+core_version_requirement: ^10.2
+version: '1.0'
+package: 'XINSHI CMS'
+dependencies:
+  # field: hook_install creates the linux_do binding fields on the user entity.
+  - drupal:field
+  # file: LinuxDoSDK takes @file.repository, so the container needs it even when
+  # download_avatar is off.
+  - drupal:file
+  - drupal:user
+  - simple_oauth:simple_oauth

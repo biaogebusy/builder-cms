@@ -1,0 +1,7 @@
+client_id: ''
+client_secret: ''
+authorize_url: 'https://connect.linux.do/oauth2/authorize'
+token_url: 'https://connect.linux.do/oauth2/token'
+userinfo_url: 'https://connect.linux.do/api/user'
+login_activate: true
+download_avatar: false

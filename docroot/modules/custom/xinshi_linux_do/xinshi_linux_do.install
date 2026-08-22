@@ -1,0 +1,77 @@
+<?php
+
+/**
+ * @file
+ * Install/update hooks for xinshi_linux_do.
+ */
+
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
+
+/**
+ * Implements hook_install().
+ */
+function xinshi_linux_do_install() {
+  _xinshi_linux_do_ensure_user_fields();
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function xinshi_linux_do_uninstall() {
+  foreach (['field_linux_do_id', 'field_linux_do_username'] as $field_name) {
+    if ($storage = FieldStorageConfig::loadByName('user', $field_name)) {
+      $storage->delete();
+    }
+  }
+}
+
+/**
+ * Ensure the linux.do binding fields exist on the user entity.
+ */
+function _xinshi_linux_do_ensure_user_fields(): void {
+  // field_linux_do_id (integer, unique).
+  if (!FieldStorageConfig::loadByName('user', 'field_linux_do_id')) {
+    FieldStorageConfig::create([
+      'field_name' => 'field_linux_do_id',
+      'entity_type' => 'user',
+      'type' => 'integer',
+      'cardinality' => 1,
+      'settings' => [
+        'unsigned' => TRUE,
+        'size' => 'big',
+      ],
+    ])->save();
+  }
+  if (!FieldConfig::loadByName('user', 'user', 'field_linux_do_id')) {
+    FieldConfig::create([
+      'field_name' => 'field_linux_do_id',
+      'entity_type' => 'user',
+      'bundle' => 'user',
+      'label' => 'Linux.do ID',
+      'required' => FALSE,
+    ])->save();
+  }
+
+  // field_linux_do_username (string).
+  if (!FieldStorageConfig::loadByName('user', 'field_linux_do_username')) {
+    FieldStorageConfig::create([
+      'field_name' => 'field_linux_do_username',
+      'entity_type' => 'user',
+      'type' => 'string',
+      'cardinality' => 1,
+      'settings' => [
+        'max_length' => 255,
+      ],
+    ])->save();
+  }
+  if (!FieldConfig::loadByName('user', 'user', 'field_linux_do_username')) {
+    FieldConfig::create([
+      'field_name' => 'field_linux_do_username',
+      'entity_type' => 'user',
+      'bundle' => 'user',
+      'label' => 'Linux.do username',
+      'required' => FALSE,
+    ])->save();
+  }
+}

@@ -1,0 +1,18 @@
+services:
+  xinshi_linux_do.sdk:
+    class: Drupal\xinshi_linux_do\LinuxDoSDK
+    arguments:
+      - '@config.factory'
+      - '@entity_type.manager'
+      - '@http_client'
+      - '@logger.factory'
+      - '@file.repository'
+      - '@file_system'
+
+  xinshi_linux_do.authorize_idp_subscriber:
+    class: Drupal\xinshi_linux_do\EventSubscriber\AuthorizeIdpRedirectSubscriber
+    arguments:
+      - '@current_user'
+      - '@current_route_match'
+    tags:
+      - { name: event_subscriber }

@@ -1,0 +1,4 @@
+administer xinshi linux_do:
+  title: 'Administer XINSHI linux.do'
+  description: 'Configure linux.do OAuth client.'
+  restrict access: TRUE

@@ -1,0 +1,27 @@
+xinshi_linux_do.settings:
+  path: '/admin/xinshi/config/linux_do'
+  defaults:
+    _form: '\Drupal\xinshi_linux_do\Form\LinuxDoSettingsForm'
+    _title: 'Linux.do OAuth Settings'
+  requirements:
+    _permission: 'administer xinshi linux_do'
+
+xinshi_linux_do.user.login:
+  path: '/user/login/linux_do'
+  defaults:
+    _controller: '\Drupal\xinshi_linux_do\Controller\LinuxDoAuthController::login'
+    _title: 'Login with linux.do'
+  requirements:
+    _custom_access: '\Drupal\xinshi_linux_do\Controller\LinuxDoAuthController::loginAccess'
+  options:
+    no_cache: TRUE
+
+xinshi_linux_do.user.callback:
+  path: '/user/login/linux_do/callback'
+  defaults:
+    _controller: '\Drupal\xinshi_linux_do\Controller\LinuxDoAuthController::callback'
+    _title: 'linux.do callback'
+  requirements:
+    _access: 'TRUE'
+  options:
+    no_cache: TRUE

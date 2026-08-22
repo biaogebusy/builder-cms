@@ -1,0 +1,6 @@
+xinshi_linux_do.settings:
+  title: 'Linux.do'
+  description: 'Configure linux.do OAuth client.'
+  parent: xinshi_manage.admin.config
+  route_name: xinshi_linux_do.settings
+  weight: 40
