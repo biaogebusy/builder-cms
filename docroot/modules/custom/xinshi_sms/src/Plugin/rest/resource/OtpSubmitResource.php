@@ -6,6 +6,7 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\rest\Plugin\ResourceBase;
 use Drupal\rest\ResourceResponse;
+use Drupal\xinshi_sms\OtpErrorCode;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use League\OAuth2\Server\Exception\OAuthServerException;
@@ -65,36 +66,35 @@ class OtpSubmitResource extends ResourceBase {
       throw new AccessDeniedHttpException();
     }
     $user_input = json_decode($this->request->getCurrentRequest()->getContent(), TRUE);
-    $otp = $user_input["code"];
-    $mobile_number = $user_input["mobile_number"];
+    $otp = $user_input["code"] ?? '';
+    $mobile_number = $user_input["mobile_number"] ?? '';
     $otp_service = \Drupal::service('xinshi_sms.OTP');
     $data = [
       'status' => TRUE,
       'message' => '',
     ];
     try {
-      $message = $otp_service->validateMobileNumber($user_input["mobile_number"]);
+      $message = $otp_service->validateMobileNumber($mobile_number);
       if (empty($message)) {
         $is_invalid_otp = $otp_service->validateOtp($otp, $mobile_number);
         if ($is_invalid_otp) {
-          $data = [
-            'status' => FALSE,
-            'message' => 'Incorrect Code',
-          ];
-        } else {
+          $data = OtpErrorCode::failure(OtpErrorCode::CODE_INCORRECT, 'Incorrect Code');
+        }
+        else {
           // Check if OAuth2 token generation is requested.
           if (!empty($user_input['grant_type']) && $user_input['grant_type'] === 'oauth2') {
             // For OAuth flow, only validate client and generate token.
             $oauth_data = $this->generateOAuthToken($user_input);
             if ($oauth_data) {
               return new ResourceResponse($oauth_data);
-            } else {
-              return new ResourceResponse([
-                'status' => FALSE,
-                'message' => 'Invalid client credentials or OAuth2 configuration',
-              ]);
             }
-          } else {
+            else {
+              return new ResourceResponse(
+                OtpErrorCode::failure(OtpErrorCode::OAUTH_FAILED, 'Invalid client credentials or OAuth2 configuration')
+              );
+            }
+          }
+          else {
             // Standard OTP login flow.
             $otp_service->userOtpLogin($otp, $mobile_number);
             $logout_path = \Drupal::service('router.route_provider')->getRouteByName('user.logout.http');
@@ -108,17 +108,14 @@ class OtpSubmitResource extends ResourceBase {
             $data['csrf_token'] = \Drupal::service('csrf_token')->get('rest');
           }
         }
-      } else {
-        $data = [
-          'status' => FALSE,
-          'message' => $message,
-        ];
       }
-    } catch (\Exception $exception) {
-      $data = [
-        'status' => FALSE,
-        'message' => $exception->getMessage(),
-      ];
+      else {
+        $data = OtpErrorCode::failure(OtpErrorCode::phoneFailure($mobile_number), $message);
+      }
+    }
+    catch (\Exception $exception) {
+      $this->logger->error('OTP login failed: @message', ['@message' => $exception->getMessage()]);
+      $data = OtpErrorCode::failure(OtpErrorCode::SERVER_ERROR, $exception->getMessage());
     }
     return new ResourceResponse($data);
   }
