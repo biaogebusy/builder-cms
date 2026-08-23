@@ -9,7 +9,6 @@ use Drupal\rest\ResourceResponse;
 use Drupal\xinshi_sms\OtpErrorCode;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use League\OAuth2\Server\Exception\OAuthServerException;
 use Defuse\Crypto\Crypto;
 
 /**
@@ -84,13 +83,14 @@ class OtpSubmitResource extends ResourceBase {
           // Check if OAuth2 token generation is requested.
           if (!empty($user_input['grant_type']) && $user_input['grant_type'] === 'oauth2') {
             // For OAuth flow, only validate client and generate token.
-            $oauth_data = $this->generateOAuthToken($user_input);
-            if ($oauth_data) {
-              return new ResourceResponse($oauth_data);
+            // generateOAuthToken throws \RuntimeException on failure with a
+            // specific reason, kept as debug text behind a single stable code.
+            try {
+              return new ResourceResponse($this->generateOAuthToken($user_input));
             }
-            else {
+            catch (\RuntimeException $exception) {
               return new ResourceResponse(
-                OtpErrorCode::failure(OtpErrorCode::OAUTH_FAILED, 'Invalid client credentials or OAuth2 configuration')
+                OtpErrorCode::failure(OtpErrorCode::OAUTH_FAILED, $exception->getMessage())
               );
             }
           }
@@ -126,60 +126,65 @@ class OtpSubmitResource extends ResourceBase {
    * @param array $user_input
    *   The user input from the request.
    *
-   * @return array|null
-   *   An array with token data or NULL if generation failed.
+   * @return array
+   *   The token data on success.
+   *
+   * @throws \RuntimeException
+   *   When token generation fails. The message identifies the failed step.
    */
   protected function generateOAuthToken(array $user_input) {
     // Check if simple_oauth module is enabled.
     if (!$this->moduleHandler->moduleExists('simple_oauth')) {
-      return NULL;
+      throw new \RuntimeException('simple_oauth module is not enabled');
     }
 
     // Validate required parameters.
     if (empty($user_input['client_id'])) {
-      return NULL;
+      throw new \RuntimeException('Missing client_id');
     }
 
-    try {
-      $client_repository = \Drupal::service('simple_oauth.repositories.client');
-      $scope_repository = \Drupal::service('simple_oauth.repositories.scope');
-      $access_token_repository = \Drupal::service('simple_oauth.repositories.access_token');
-      $refresh_token_repository = \Drupal::service('simple_oauth.repositories.refresh_token');
-      $config_factory = \Drupal::service('config.factory');
+    $client_repository = \Drupal::service('simple_oauth.repositories.client');
+    $scope_repository = \Drupal::service('simple_oauth.repositories.scope');
+    $access_token_repository = \Drupal::service('simple_oauth.repositories.access_token');
+    $refresh_token_repository = \Drupal::service('simple_oauth.repositories.refresh_token');
+    $config_factory = \Drupal::service('config.factory');
 
-      // Validate client credentials.
+    // Confirm client is registered. For this custom OTP grant the OTP itself
+    // is the user credential — browser-based clients cannot safely hold a
+    // client_secret, so we don't require one. If a client_secret is provided
+    // we still validate it for defense in depth.
+    $client_entity = $client_repository->getClientEntity($user_input['client_id']);
+    if (empty($client_entity)) {
+      throw new \RuntimeException('Client not found');
+    }
+    if (!empty($user_input['client_secret'])) {
       if (!$client_repository->validateClient(
         $user_input['client_id'],
         $user_input['client_secret'],
         'password'
       )) {
-        return NULL;
+        throw new \RuntimeException('Invalid client credentials');
       }
+    }
 
-      // Get the client entity.
-      $client_entity = $client_repository->getClientEntity($user_input['client_id']);
-      if (empty($client_entity)) {
-        return NULL;
-      }
+    // Get user by mobile number.
+    if (empty($user_input['mobile_number'])) {
+      throw new \RuntimeException('Missing mobile_number');
+    }
 
-      // Get user by mobile number.
-      if (empty($user_input['mobile_number'])) {
-        return NULL;
-      }
+    $user = \Drupal::service('xinshi_sms.OTP')->otpLoginCheckUserAlreadyExists($user_input['mobile_number']);
+    if (empty($user)) {
+      throw new \RuntimeException('User not found for mobile_number');
+    }
+    $user_id = $user->id();
 
-      $user = \Drupal::service('xinshi_sms.OTP')->otpLoginCheckUserAlreadyExists($user_input['mobile_number']);
-      if (empty($user)) {
-        return NULL;
-      }
-      $user_id = $user->id();
-
-      // Get scopes.
+    try {
+      // Scopes live on the consumer's `scopes` field, each item keyed by
+      // `scope_id`. A consumer with none configured yields a token without
+      // scopes — authorization is still enforced by Drupal roles/permissions.
       $scopes = [];
-      $scope_identifiers[] = 'authenticated';
-      if ($roles = $client_entity->getDrupalEntity()->get('roles')->getValue()) {
-        $scope_identifiers = array_merge($scope_identifiers, array_column($roles, 'target_id'));
-      }
-      foreach ($scope_identifiers as $scope_identifier) {
+      $scope_values = $client_entity->getDrupalEntity()->get('scopes')->getValue();
+      foreach (array_filter(array_column($scope_values, 'scope_id')) as $scope_identifier) {
         $scope = $scope_repository->getScopeEntityByIdentifier($scope_identifier);
         if ($scope) {
           $scopes[] = $scope;
@@ -206,12 +211,18 @@ class OtpSubmitResource extends ResourceBase {
       $refresh_token_repository->persistNewRefreshToken($refresh_token);
 
       // Generate JWT token for access token.
-      $private_key = \Drupal::service('file_system')->realpath($settings->get('private_key'));
+      $private_key_path = $settings->get('private_key');
+      if (empty($private_key_path)) {
+        throw new \RuntimeException('simple_oauth private_key is not configured');
+      }
+      $private_key = \Drupal::service('file_system')->realpath($private_key_path);
+      if (empty($private_key) || !is_readable($private_key)) {
+        throw new \RuntimeException('simple_oauth private_key file is missing or unreadable');
+      }
       $key = new \League\OAuth2\Server\CryptKey($private_key);
 
-      // Convert access token to JWT.
       $access_token->setPrivateKey($key);
-      $jwt_access_token = (string) $access_token;
+      $jwt_access_token = $access_token->toString();
 
       // Encrypt refresh token.
       $refresh_token_payload = json_encode([
@@ -234,12 +245,14 @@ class OtpSubmitResource extends ResourceBase {
         'access_token' => $jwt_access_token,
         'refresh_token' => $encrypted_refresh_token,
       ];
-    } catch (OAuthServerException $exception) {
+    } catch (\RuntimeException $exception) {
+      // Already carries the failed step; re-thrown as-is so the reason is not
+      // buried under a second wrapper.
       $this->logger->error('OAuth2 token generation failed: @message', ['@message' => $exception->getMessage()]);
-      return NULL;
+      throw $exception;
     } catch (\Exception $exception) {
       $this->logger->error('OAuth2 token generation failed: @message', ['@message' => $exception->getMessage()]);
-      return NULL;
+      throw new \RuntimeException('OAuth2 token generation failed: ' . $exception->getMessage(), 0, $exception);
     }
   }
 }

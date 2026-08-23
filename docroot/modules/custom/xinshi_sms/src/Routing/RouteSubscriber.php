@@ -22,5 +22,10 @@ class RouteSubscriber extends RouteSubscriberBase {
         $route->setDefault('_form', '\Drupal\xinshi_sms\Form\FindPasswordForm');
       }
     }
+    // Only present when simple_oauth is enabled, which is what keeps the
+    // subclass from being autoloaded on a site without it.
+    if ($route = $collection->get('oauth2_token.authorize')) {
+      $route->setDefault('_controller', '\Drupal\xinshi_sms\Controller\OtpAwareAuthorizeController::authorize');
+    }
   }
 }
