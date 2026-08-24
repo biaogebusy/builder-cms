@@ -116,6 +116,20 @@ linux.do 新建的用户**默认只有 `authenticated`**。如果业务要求新
 | `xinshi_linux_do.settings` | `/admin/xinshi/config/linux_do` | 后台配置 |
 | `xinshi_linux_do.user.login` | `/user/login/linux_do` | 入口，302 到 linux.do |
 | `xinshi_linux_do.user.callback` | `/user/login/linux_do/callback` | 处理 linux.do 回跳 |
+| `xinshi_linux_do.session.logout` | `/api/v3/session/logout` | 前端退出时销毁 Drupal session（POST，仅 `oauth2` 认证） |
+
+### 退出为什么需要一个专门的接口
+
+`/oauth/authorize` 会建立 Drupal session，而前端只持有 bearer token，没法自己关掉它：
+
+- 核心 `user.logout` 要求 `_csrf_token`，token 由 session 派生，`/session/token` 只发 `X-CSRF-Token` 那一个值，对不上 `user/logout` 路径
+- 不带 token 直接 GET `/user/logout` 会被 403，然后被 `CsrfExceptionSubscriber` 重定向到 `/user/logout/confirm` 确认表单 —— 页面能加载，session 却还在
+
+session 活过前端的退出动作之后，下一次 `/oauth/authorize` 会直接给旧账号发 code：`AuthorizeIdpRedirectSubscriber` 见到已登录用户就放行给 `simple_oauth`，所以点 linux.do 登录不会跳到 linux.do，而是原地返回上一个用户。
+
+`/api/v3/session/logout` 用 `_auth: ['oauth2']` 代替 CSRF token —— 跨站请求能带 cookie，但带不上 `Authorization` 头。**不要**把 `cookie` 加进 `_auth`，也不要放宽 `_user_is_logged_in`，否则就等于给站点开了一个强制退出的 CSRF 口子。
+
+> 该接口不吊销 access/refresh token，只结束 Drupal 会话。前端退出时会丢掉本地 token，但 token 在 TTL 内服务端仍然有效。
 
 ## 六、用户映射策略
 
@@ -171,3 +185,4 @@ A: `hook_uninstall` 会自动删除两个 field storage。
 - `src/LinuxDoSDK.php` — OAuth client + 用户映射 + state 签名
 - `src/EventSubscriber/AuthorizeIdpRedirectSubscriber.php` — 联邦关键拦截器
 - `src/Controller/LinuxDoAuthController.php` — login / callback 入口
+- `src/Controller/SessionLogoutController.php` — 前端退出用的 session 销毁接口

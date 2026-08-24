@@ -25,3 +25,20 @@ xinshi_linux_do.user.callback:
     _access: 'TRUE'
   options:
     no_cache: TRUE
+
+# Restricting _auth to 'oauth2' is what replaces the CSRF token core's
+# user.logout relies on: a cross-site request can carry the session cookie but
+# never the Authorization header, so it cannot force a logout. Dropping
+# _user_is_logged_in would reopen exactly that hole, because a cookie-only
+# request would then reach the controller.
+xinshi_linux_do.session.logout:
+  path: '/api/v3/session/logout'
+  defaults:
+    _controller: '\Drupal\xinshi_linux_do\Controller\SessionLogoutController::logout'
+    _title: 'Destroy Drupal session'
+  methods: [POST]
+  requirements:
+    _user_is_logged_in: 'TRUE'
+  options:
+    _auth: [ 'oauth2' ]
+    no_cache: TRUE
