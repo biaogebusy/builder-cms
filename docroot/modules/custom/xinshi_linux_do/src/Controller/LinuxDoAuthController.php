@@ -7,7 +7,6 @@ use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Routing\TrustedRedirectResponse;
-use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\xinshi_linux_do\LinuxDoSDK;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -85,8 +84,16 @@ class LinuxDoAuthController extends ControllerBase {
       return new RedirectResponse(Url::fromRoute('user.login')->toString());
     }
 
-    // Establish a Drupal session.
+    // Establish a Drupal session. Replaces whoever was signed in before, which
+    // is what makes switching accounts through linux.do work.
     user_login_finalize($account);
+
+    // Records that this session came from linux.do, so the authorize
+    // interceptor lets the follow-up /oauth/authorize — and the consent form's
+    // POST back to the same URL — through instead of bouncing here again.
+    if ($request->hasSession()) {
+      $request->getSession()->set(LinuxDoSDK::SESSION_FEDERATED_KEY, TRUE);
+    }
 
     // Resume the original /oauth/authorize flow if a destination was stashed.
     $destination = $this->sdk->consumeDestination();
@@ -100,12 +107,16 @@ class LinuxDoAuthController extends ControllerBase {
 
   /**
    * Access check for /user/login/linux_do.
+   *
+   * Authenticated users are allowed on purpose: an explicit linux.do login is a
+   * request to authenticate as the linux.do account, so a session that is still
+   * open must not block it. The callback's user_login_finalize() then switches
+   * the session over.
    */
-  public function loginAccess(AccountInterface $account): AccessResultInterface {
+  public function loginAccess(): AccessResultInterface {
     $config = $this->config(LinuxDoSDK::CONFIG_NAME);
-    return AccessResult::allowedIf(
-      $account->isAnonymous() && (bool) $config->get('login_activate')
-    )->addCacheTags($config->getCacheTags());
+    return AccessResult::allowedIf((bool) $config->get('login_activate'))
+      ->addCacheTags($config->getCacheTags());
   }
 
   /**

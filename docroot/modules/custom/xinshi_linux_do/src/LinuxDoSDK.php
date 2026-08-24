@@ -24,6 +24,11 @@ class LinuxDoSDK {
   const FIELD_USERNAME = 'field_linux_do_username';
   // State token is valid for 10 minutes.
   const STATE_TTL = 600;
+  // Marks a session as established by the linux.do flow. The authorize
+  // interceptor needs it to tell "the browser just came back from linux.do", so
+  // simple_oauth must be allowed to issue the code, apart from "an unrelated
+  // session is still open", where reusing that account is precisely the bug.
+  const SESSION_FEDERATED_KEY = 'xinshi_linux_do.federated';
 
   protected ConfigFactoryInterface $configFactory;
   protected EntityTypeManagerInterface $entityTypeManager;

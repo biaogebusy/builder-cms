@@ -125,11 +125,25 @@ linux.do 新建的用户**默认只有 `authenticated`**。如果业务要求新
 - 核心 `user.logout` 要求 `_csrf_token`，token 由 session 派生，`/session/token` 只发 `X-CSRF-Token` 那一个值，对不上 `user/logout` 路径
 - 不带 token 直接 GET `/user/logout` 会被 403，然后被 `CsrfExceptionSubscriber` 重定向到 `/user/logout/confirm` 确认表单 —— 页面能加载，session 却还在
 
-session 活过前端的退出动作之后，下一次 `/oauth/authorize` 会直接给旧账号发 code：`AuthorizeIdpRedirectSubscriber` 见到已登录用户就放行给 `simple_oauth`，所以点 linux.do 登录不会跳到 linux.do，而是原地返回上一个用户。
+session 活过前端的退出动作之后，下一次 `/oauth/authorize` 会直接给旧账号发 code，所以点 linux.do 登录不跳转、原地返回上一个用户。
 
 `/api/v3/session/logout` 用 `_auth: ['oauth2']` 代替 CSRF token —— 跨站请求能带 cookie，但带不上 `Authorization` 头。**不要**把 `cookie` 加进 `_auth`，也不要放宽 `_user_is_logged_in`，否则就等于给站点开了一个强制退出的 CSRF 口子。
 
+接口里 `user_logout()` **之外**还按 uid 调了 `session_manager->delete($uid)`，这一步是必须的：请求是靠 bearer token 授权的，session cookie 未必跟着到（`/api/*` 前面的缓存层剥掉 `Cookie`、SameSite 限制、前端站点和 CMS 不同站），而 `user_logout()` 只能销毁「请求 cookie 指认的那个 session」。按 uid 删不需要 cookie，代价是同时结束该账号在其它设备上的会话。
+
 > 该接口不吊销 access/refresh token，只结束 Drupal 会话。前端退出时会丢掉本地 token，但 token 在 TTL 内服务端仍然有效。
+
+### 已登录时点 linux.do 登录会怎样
+
+`AuthorizeIdpRedirectSubscriber` **不信任**不是自己建立的 session：`?idp=linux_do` 的语义是「用 linux.do 这个身份登录」，复用当前登录者就是 bug 本身。判据是 session 上的 `LinuxDoSDK::SESSION_FEDERATED_KEY` 标记 —— callback 里 `user_login_finalize()` 之后写入：
+
+| 当前状态 | 行为 |
+| --- | --- |
+| 匿名 | 拦截 → 跳 linux.do |
+| 有标记（刚从 linux.do 回来 / consent 表单 POST 回同一 URL） | 放行，让 `simple_oauth` 发 code |
+| 无标记（密码登录、后台登录、退出没成功残留的 session） | 拦截 → 跳 linux.do，callback 用 `user_login_finalize()` 换成 linux.do 账号 |
+
+没有这个标记的话，回跳后的 `/oauth/authorize` 会被再次拦截 → 无限重定向。因此 `loginAccess` 也不再要求匿名 —— 否则已登录用户会在入口路由上吃 403。
 
 ## 六、用户映射策略
 
@@ -152,6 +166,8 @@ linux.do profile { id, username, email, avatar_template, ... }
 - linux.do `access_token` 拉完 profile 即丢弃，**不入库**
 - `client_secret` 仅存配置，不下发到前端
 - 邮箱已绑定到不同 linux_do_id 时**拒绝**，不重新绑定
+- `/api/v3/session/logout` 只接受 `oauth2` 认证，跨站请求拿不到 `Authorization` 头，等效于 CSRF 保护
+- 已登录用户被拦到 linux.do 时**不销毁**原 session；只有 callback 成功后 `user_login_finalize()` 才换人 —— 伪造的 authorize 链接因此无法把用户挤下线
 
 ## 八、常见问题
 
