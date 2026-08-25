@@ -22,10 +22,10 @@ class RouteSubscriber extends RouteSubscriberBase {
         $route->setDefault('_form', '\Drupal\xinshi_sms\Form\FindPasswordForm');
       }
     }
-    // Only present when simple_oauth is enabled, which is what keeps the
-    // subclass from being autoloaded on a site without it.
-    if ($route = $collection->get('oauth2_token.authorize')) {
-      $route->setDefault('_controller', '\Drupal\xinshi_sms\Controller\OtpAwareAuthorizeController::authorize');
-    }
+    // oauth2_token.authorize is deliberately left alone: the decoupled client
+    // carries its own SMS login form (see the /api/v3/otp/* resources), so an
+    // anonymous authorize request belongs on core's /user/login — the route
+    // simple_oauth points at by default, and the only login path other modules
+    // (require_login, for one) reliably treat as public.
   }
 }

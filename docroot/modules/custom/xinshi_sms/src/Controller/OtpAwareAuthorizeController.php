@@ -20,6 +20,13 @@ use Symfony\Component\HttpFoundation\Request;
  * The parent's "An external client application is requesting access to your
  * data" notice is intentionally left out here: on a first-party login the
  * client is this very site, and the warning only alarms the user.
+ *
+ * Site requirement: when the require_login module is enabled, /user/signin has
+ * to sit in its excluded paths (its own PROTECTED_ROUTES list only knows core's
+ * login routes). Otherwise require_login answers /user/signin with a redirect
+ * to /user/login, core's RedirectResponseSubscriber rewrites that Location to
+ * the `destination` this hop carries, and the browser bounces between
+ * /oauth/authorize and /user/signin until it aborts with too many redirects.
  */
 class OtpAwareAuthorizeController extends Oauth2AuthorizeController {
 
