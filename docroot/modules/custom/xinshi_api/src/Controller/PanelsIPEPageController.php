@@ -602,13 +602,27 @@ class PanelsIPEPageController extends BasePanelsIPEPageController {
       }
     }
     try {
+      // 路由上的 {source} 之前是被忽略的：请求 URL 不带语言前缀，参数转换器按当前
+      // 语言上溯，$node 永远是默认语言那份。按 source 取翻译，"从简体创建繁体"才
+      // 真的以简体为源。
+      $source_node = $node->hasTranslation($source->getId())
+        ? $node->getTranslation($source->getId())
+        : $node->getUntranslated();
       /** @var Node $trans */
-      $trans = $node->addTranslation($target->getId(), $node->toArray());
+      $trans = $node->addTranslation($target->getId(), $source_node->toArray());
       $time = time();
       $trans->setCreatedTime($time);
       $trans->setChangedTime($time);
       $trans->setOwnerId($this->currentUser()->id());
       $trans->setNewRevision();
+      // toArray() 复制过来的 path 里带着源语言别名记录的 pid。核心 PathItem::postSave()
+      // 一见到 pid 就只改写那条已有记录，目标语言拿不到自己的 path_alias（URL 退回
+      // /<lang>/node/N），源语言的别名反而可能被改掉。清掉 pid 才会走新建分支。
+      $trans->set('path', [
+        'alias' => $source_node->get('path')->alias ?: '',
+        'pid' => NULL,
+        'langcode' => $target->getId(),
+      ]);
       $json = $this->getRequest(FALSE);
       if (!empty($json['title'])) {
         $trans->set('title', $json['title']);
@@ -627,7 +641,7 @@ class PanelsIPEPageController extends BasePanelsIPEPageController {
           // layout 字段中各组件的 block_revision_id 同步更新为新生成的修订。
           $this->cloneLayoutBuilderTranslations($trans, $target->getId());
         } else {
-          foreach ($this->getPanelBlocks($node) as $block) {
+          foreach ($this->getPanelBlocks($source_node) as $block) {
             $this->addBlockTranslation($block, $target->getId());
           }
         }
@@ -670,8 +684,13 @@ class PanelsIPEPageController extends BasePanelsIPEPageController {
       ]);
     }
     try {
+      // 核心在移除翻译时按 (path, langcode) 批量删 path_alias
+      // （PathFieldItemList::delete()），只要有一条记录的 langcode 是脏的，别的语言
+      // 的 URL 就会跟着消失。先记下其它语言当前生效的别名，保存后补回来。
+      $aliases = $this->getNodeAliases($node, [$langcode_id]);
       $node->removeTranslation($langcode_id);
       $node->save();
+      $this->restoreNodeAliases($node, $aliases);
       $data = [
         'status' => TRUE,
         'message' => $this->t('Translation deleted.'),
@@ -709,6 +728,58 @@ class PanelsIPEPageController extends BasePanelsIPEPageController {
    */
   private function currentLanguageId() {
     return $this->languageManager()->getCurrentLanguage()->getId();
+  }
+
+  /**
+   * 节点在各语言下当前生效的别名，键为语言代码
+   *
+   * @param Node $node
+   * @param array $skip 要跳过的语言代码
+   * @return array
+   */
+  private function getNodeAliases(Node $node, array $skip = []) {
+    $aliases = [];
+    $path = '/node/' . $node->id();
+    /** @var \Drupal\path_alias\AliasRepositoryInterface $repository */
+    $repository = \Drupal::service('path_alias.repository');
+    foreach (array_keys($node->getTranslationLanguages()) as $langcode) {
+      if (in_array($langcode, $skip, TRUE)) {
+        continue;
+      }
+      if ($record = $repository->lookupBySystemPath($path, $langcode)) {
+        $aliases[$langcode] = $record['alias'];
+      }
+    }
+    return $aliases;
+  }
+
+  /**
+   * 补回保存过程中被连带删掉的别名
+   *
+   * lookupBySystemPath 自带 und 回退，仍能解析出别名的语言会被跳过，不会产生重复
+   * 记录；补建时按语言写入正确的 langcode，顺带修掉历史脏数据。
+   *
+   * @param Node $node
+   * @param array $aliases getNodeAliases() 取的快照
+   */
+  private function restoreNodeAliases(Node $node, array $aliases) {
+    if (empty($aliases)) {
+      return;
+    }
+    $path = '/node/' . $node->id();
+    /** @var \Drupal\path_alias\AliasRepositoryInterface $repository */
+    $repository = \Drupal::service('path_alias.repository');
+    $storage = $this->entityTypeManager()->getStorage('path_alias');
+    foreach ($aliases as $langcode => $alias) {
+      if ($repository->lookupBySystemPath($path, $langcode)) {
+        continue;
+      }
+      $storage->create([
+        'path' => $path,
+        'alias' => $alias,
+        'langcode' => $langcode,
+      ])->save();
+    }
   }
 
   /**
