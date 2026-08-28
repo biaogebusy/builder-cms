@@ -78,6 +78,21 @@ xinshi_api.v3.landingPage.update:
         type: 'entity:node'
   methods: [ PATCH ]
 
+xinshi_api.v3.landingPage.alias:
+  path: '/api/v3/landingPage/alias/{node}'
+  defaults:
+    _controller: '\Drupal\xinshi_api\Controller\PanelsIPEPageController::landingPageAlias'
+    _title: 'landingPage alias'
+  requirements:
+    _entity_access: 'node.update'
+    node: \d+
+  options:
+    _auth: [ 'oauth2', 'cookie' ]
+    parameters:
+      node:
+        type: 'entity:node'
+  methods: [ POST ]
+
 xinshi_api.v3.landingPage.translations.add:
   path: '/api/v3/landingPage/translations/add/{node}/{source}/{target}'
   defaults:

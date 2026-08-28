@@ -705,6 +705,72 @@ class PanelsIPEPageController extends BasePanelsIPEPageController {
   }
 
   /**
+   * 写入着陆页 URL 别名
+   *
+   * 走 JSON:API PATCH 节点 path 字段写不进来：核心 EntityResource::updateEntityField()
+   * 用 $origin->getValue() 往目标实体复制，而 Map::getValue() 跳过 computed 属性，
+   * pathauto 恰恰是 computed —— 请求里的 pathauto=0 到不了保存时刻，
+   * PathautoItem::postSave() 便按节点存量状态（builder 建的页是 CREATE）跳过核心
+   * PathItem::postSave()，而站点又没有 pattern，别名两头落空。服务端在同一个字段
+   * 对象上 set，没有这段 getValue 往返，属性不会丢。
+   *
+   * 各语言别名只差前缀（前端切语言只换前缀），所以同一个别名写给所有翻译；一次
+   * save 即可，核心保存时会对每个翻译分别调用 postSave。
+   *
+   * @param Node $node
+   * @return JsonResponse
+   */
+  public function landingPageAlias(Node $node) {
+    if ($node->bundle() !== 'landing_page') {
+      return new JsonResponse([
+        'status' => FALSE,
+        'message' => 'Invalid content type',
+      ]);
+    }
+    $json = $this->getRequest(FALSE);
+    $alias = trim($json['alias'] ?? '');
+    if ($alias === '') {
+      return new JsonResponse([
+        'status' => FALSE,
+        'message' => $this->t('Missing alias'),
+      ]);
+    }
+    if (strpos($alias, '/') !== 0) {
+      $alias = '/' . $alias;
+    }
+    try {
+      $langcodes = array_keys($node->getTranslationLanguages());
+      foreach ($langcodes as $langcode) {
+        $translation = $node->getTranslation($langcode);
+        $translation->set('path', [
+          'alias' => $alias,
+          // 已有别名记录就地改写，没有的（如新翻译）交给核心走新建分支。
+          'pid' => $translation->get('path')->pid,
+          'langcode' => $langcode,
+          // 标记为手动别名，等同后台取消勾选"生成自动 URL 别名"。没装 pathauto
+          // 的站点上 path 字段没有这个属性，核心不读它，留着也无害。
+          'pathauto' => 0,
+        ]);
+      }
+      $node->save();
+      $data = [
+        'status' => TRUE,
+        'message' => $this->t('Alias updated.'),
+        'data' => [
+          'alias' => $alias,
+          'langcodes' => $langcodes,
+        ],
+      ];
+    } catch (\Exception $exception) {
+      $data = [
+        'status' => FALSE,
+        'message' => $exception->getMessage(),
+      ];
+    }
+    return new JsonResponse($data);
+  }
+
+  /**
    * add block translation
    * @param BlockContent $block
    * @param $langcode
