@@ -705,6 +705,66 @@ class PanelsIPEPageController extends BasePanelsIPEPageController {
   }
 
   /**
+   * 创建普通内容类型的节点翻译
+   *
+   * 核心 JSON:API 只能读取和更新已存在的翻译（EntityUuidConverter 对缺失翻译的
+   * PATCH 直接 405），创建必须走这里。端点只负责创建：把源语言的值复制过去，
+   * 字段值随后由前端按语言前缀 PATCH 写入新翻译。
+   *
+   * @param Node $node
+   * @param LanguageInterface $source
+   * @param LanguageInterface $target
+   * @return JsonResponse
+   */
+  public function nodeTranslations(Node $node, LanguageInterface $source, LanguageInterface $target) {
+    if ($node->bundle() === 'landing_page') {
+      return new JsonResponse([
+        'status' => FALSE,
+        'message' => 'Invalid content type',
+      ]);
+    }
+    $trans_manager = \Drupal::moduleHandler()->moduleExists('content_translation') ? \Drupal::service('content_translation.manager') : FALSE;
+    if (empty($trans_manager) || !$trans_manager->isEnabled($node->getEntityTypeId(), $node->bundle())) {
+      return new JsonResponse([
+        'status' => FALSE,
+        'message' => 'Translation not enabled.',
+      ]);
+    }
+    if ($node->hasTranslation($target->getId())) {
+      return new JsonResponse([
+        'status' => FALSE,
+        'message' => 'Translation already exists.',
+      ]);
+    }
+    try {
+      $source_node = $node->hasTranslation($source->getId())
+        ? $node->getTranslation($source->getId())
+        : $node->getUntranslated();
+      /** @var Node $trans */
+      $trans = $node->addTranslation($target->getId(), $source_node->toArray());
+      $time = time();
+      $trans->setCreatedTime($time);
+      $trans->setChangedTime($time);
+      $trans->setOwnerId($this->currentUser()->id());
+      $trans->setNewRevision();
+      // toArray() 复制过来的 path 里带着源语言别名记录的 pid。核心 PathItem::postSave()
+      // 一见到 pid 就只改写那条已有记录，目标语言拿不到自己的 path_alias。清掉 pid
+      // 才会走新建分支（同 landingPageTranslations）。
+      $trans->set('path', [
+        'alias' => $source_node->get('path')->alias ?: '',
+        'pid' => NULL,
+        'langcode' => $target->getId(),
+      ]);
+      $trans->save();
+    } catch (\Exception $exception) {
+      $this->setMessage($exception->getMessage());
+    }
+    $data['status'] = empty($this->getMessage());
+    $data['message'] = $this->getMessage() ?? '';
+    return new JsonResponse($data);
+  }
+
+  /**
    * 写入着陆页 URL 别名
    *
    * 走 JSON:API PATCH 节点 path 字段写不进来：核心 EntityResource::updateEntityField()

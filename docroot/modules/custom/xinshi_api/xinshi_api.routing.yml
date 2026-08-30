@@ -128,3 +128,22 @@ xinshi_api.v3.landingPage.translations.delete:
       langcode:
         type: 'language'
   methods: [ POST ]
+
+xinshi_api.v3.node.translations.add:
+  path: '/api/v3/node/translations/add/{node}/{source}/{target}'
+  defaults:
+    _controller: '\Drupal\xinshi_api\Controller\PanelsIPEPageController::nodeTranslations'
+    _title: 'node translation add'
+  requirements:
+    _entity_access: 'node.update'
+    node: \d+
+  options:
+    _auth: [ 'oauth2', 'cookie' ]
+    parameters:
+      node:
+        type: 'entity:node'
+      source:
+        type: 'language'
+      target:
+        type: 'language'
+  methods: [ POST ]
