@@ -730,10 +730,12 @@ class PanelsIPEPageController extends BasePanelsIPEPageController {
         'message' => 'Translation not enabled.',
       ]);
     }
+    // 幂等：翻译已存在（例如创建成功后 PATCH 失败重试）直接返回成功，
+    // 让前端继续 PATCH 字段值。
     if ($node->hasTranslation($target->getId())) {
       return new JsonResponse([
-        'status' => FALSE,
-        'message' => 'Translation already exists.',
+        'status' => TRUE,
+        'message' => 'Translation exists.',
       ]);
     }
     try {
