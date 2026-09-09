@@ -1,0 +1,37 @@
+<?php
+
+/**
+ * @file
+ * Schema and updates for durable page draft operations.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function xinshi_api_schema() {
+  $schema['xinshi_page_draft_operation'] = [
+    'description' => 'Immutable owner-bound results of page draft creation operations.',
+    'fields' => [
+      'execution_id' => ['type' => 'varchar_ascii', 'length' => 36, 'not null' => TRUE],
+      'uid' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE],
+      'input_json' => ['type' => 'text', 'size' => 'big', 'not null' => TRUE],
+      'result_json' => ['type' => 'text', 'size' => 'big', 'not null' => FALSE],
+      'nid' => ['type' => 'int', 'unsigned' => TRUE, 'not null' => FALSE],
+      'created' => ['type' => 'int', 'not null' => TRUE],
+    ],
+    'primary key' => ['execution_id'],
+    'indexes' => ['owner' => ['uid']],
+  ];
+  return $schema;
+}
+
+/**
+ * Add the transactional idempotency ledger for page drafts.
+ */
+function xinshi_api_update_10001() {
+  $schema = \Drupal::database()->schema();
+  $table = 'xinshi_page_draft_operation';
+  if (!$schema->tableExists($table)) {
+    $schema->createTable($table, xinshi_api_schema()[$table]);
+  }
+}

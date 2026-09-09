@@ -1,4 +1,16 @@
 services:
+  xinshi_api.page_drafts:
+    class: Drupal\xinshi_api\PageDraftService
+    arguments:
+      - '@database'
+      - '@entity_type.manager'
+      - '@current_user'
+      - '@language_manager'
+      - '@datetime.time'
+      - '@?panelizer'
+      - '@?panels.display_manager'
+      - '@?content_moderation.moderation_information'
+      - '@?content_moderation.state_transition_validation'
   xinshi_api.twig.extension:
     class: Drupal\xinshi_api\TwigExtension\DefaultTwigExtension
     tags:

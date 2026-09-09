@@ -3,6 +3,7 @@
 namespace Drupal\xinshi_api\Plugin\rest\resource;
 
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\Entity\EntityPublishedInterface;
 use Drupal\Core\Render\RenderContext;
 use Drupal\rest\ResourceResponse;
 use Drupal\xinshi_api\EntityJsonBase;
@@ -46,6 +47,11 @@ class LandingPageResource extends XinshibResourceBase {
     $data = [];
     $entity = JsonAPIUtil::getEntityByQuery();
     $access = $entity && $entity->access('view');
+    $is_draft = $entity instanceof EntityPublishedInterface && !$entity->isPublished();
+    // Draft visibility depends on ownership as well as permissions. Never cache its response.
+    if ($is_draft) {
+      $this->setCacheMaxAge(0);
+    }
     if (empty($entity)) {
       $data = JsonAPIUtil::notFound();
     }
@@ -56,7 +62,7 @@ class LandingPageResource extends XinshibResourceBase {
     $mode = $request->get('mode') ?? 'json';
     if ($access) {
       try {
-        $cache_enable = $this->config->get('cache_enable');
+        $cache_enable = !$is_draft && $this->config->get('cache_enable');
         $cache_config = $this->config->get($entity->getEntityTypeId() . '_cache') ?? [];
         $context = $cache_config[$entity->bundle()]['context'] ?? [];
         $cid = empty($cache_enable) ? '' : "xinshi:jsonapi:{$mode}" . $entity->getEntityTypeId() . ':' . $entity->id();

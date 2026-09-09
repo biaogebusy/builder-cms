@@ -23,7 +23,7 @@ xinshi_api.v3.landingPage.canonical:
     _controller: '\Drupal\xinshi_api\Controller\PanelsIPEPageController::landingPageCanonical'
     _title: 'landingPage canonical'
   requirements:
-    _permission: 'access content'
+    _entity_access: 'node.view'
     node: \d+
   options:
     _auth: [ 'oauth2', 'cookie' ]
@@ -147,3 +147,39 @@ xinshi_api.v3.node.translations.add:
       target:
         type: 'language'
   methods: [ POST ]
+
+xinshi_api.v3.landingPage.drafts.capabilities:
+  path: '/api/v3/landingPage/drafts/capabilities'
+  defaults:
+    _controller: '\Drupal\xinshi_api\Controller\PageDraftController::capabilities'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+  methods: [ GET ]
+  options:
+    _auth: [ 'oauth2', 'cookie' ]
+    no_cache: TRUE
+
+xinshi_api.v3.landingPage.drafts.create:
+  path: '/api/v3/landingPage/drafts/{execution_id}'
+  defaults:
+    _controller: '\Drupal\xinshi_api\Controller\PageDraftController::createDraft'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _csrf_request_header_token: 'TRUE'
+    execution_id: '[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}'
+  methods: [ POST ]
+  options:
+    _auth: [ 'oauth2', 'cookie' ]
+    no_cache: TRUE
+
+xinshi_api.v3.landingPage.drafts.find:
+  path: '/api/v3/landingPage/drafts/{execution_id}'
+  defaults:
+    _controller: '\Drupal\xinshi_api\Controller\PageDraftController::findDraft'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    execution_id: '[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}'
+  methods: [ GET ]
+  options:
+    _auth: [ 'oauth2', 'cookie' ]
+    no_cache: TRUE
