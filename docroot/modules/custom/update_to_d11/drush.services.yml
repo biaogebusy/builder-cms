@@ -23,3 +23,11 @@ services:
       - '@theme_installer'
     tags:
       - { name: drush.command }
+  update_to_d11.legacy_cleanup_commands:
+    class: Drupal\update_to_d11\Drush\LegacyCleanupCommands
+    arguments:
+      - '@config.factory'
+      - '@module_handler'
+      - '@module_installer'
+    tags:
+      - { name: drush.command }

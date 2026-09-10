@@ -82,6 +82,28 @@ drush update-to-d11:seven-cleanup
 composer update drupal/seven
 ```
 
+## 遗留核心模块清理（color / rdf / tour / switch_page_theme）
+
+color、rdf（D10 已从 core 移除的 contrib 回退）、tour（D11 core 弃用）与
+switch_page_theme（无 D11 版本）在升级 D11 前统一卸载，并把弃用的 standard
+安装 profile 切换到 minimal：
+
+```bash
+# 1. 卸载 color/rdf/tour/switch_page_theme，并切换 profile standard → minimal
+drush update-to-d11:legacy-cleanup
+
+# 2. 移除 vendor 中的孤儿锁定包
+composer update drupal/color drupal/rdf drupal/switch_page_theme
+```
+
+quickedit 从 1.x 升到 2.x（2.0 支持 `^10.2 || ^11`，D10 阶段即可执行）；
+ckeditor_templates、ckeditor_templates_ui、colorbutton（及其依赖 panelbutton）
+已从 composer.json require 移除：
+
+```bash
+composer update drupal/quickedit --with-all-dependencies
+```
+
 ## entity_theme_engine D11 支持
 
 entity_theme_engine 8.x-1.7 的 info 约束只到 `^10`，但代码审计与上游
