@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Drupal\update_to_d11;
 
-use Drupal\Component\Uuid\Uuid;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -69,21 +68,32 @@ class PanelizerMigrator {
 
     $bundles = $this->getPanelizerBundles();
 
-    // 2. 为每个 bundle 的 default 视图显示启用 Layout Builder（自动创建
-    // layout_builder__layout 字段）。
+    // 2. 为每个 bundle 的 default 视图显示启用 Layout Builder 并设为可覆盖
+    // （allow_custom），触发自动创建 layout_builder__layout 字段。
     foreach ($bundles as $bundle) {
       $stats['bundles'][] = $bundle;
       $display = $this->entityTypeManager->getStorage('entity_view_display')->load("node.$bundle.default");
-      if ($display && !$display->isLayoutBuilderEnabled()) {
-        $display->enableLayoutBuilder();
+      if ($display && !$display->isOverridable()) {
+        $display->setOverridable(TRUE);
         $display->save();
       }
     }
+
+    // 3. 确保 layout_builder__layout 字段实例可翻译（多语言各自布局）。
+    // layout_builder_at 已让字段存储可翻译，此处补齐 bundle 级实例。
+    foreach ($bundles as $bundle) {
+      $field = $this->entityTypeManager->getStorage('field_config')->load("node.$bundle.layout_builder__layout");
+      if ($field && !$field->isTranslatable()) {
+        $field->setTranslatable(TRUE);
+        $field->save();
+      }
+    }
+
     if ($bundles) {
       $this->entityFieldManager->clearCachedFieldDefinitions();
     }
 
-    // 3. 分批迁移节点（每个翻译独立持有自己的布局）。
+    // 4. 分批迁移节点（每个翻译独立持有自己的布局）。
     $storage = $this->entityTypeManager->getStorage('node');
     foreach ($bundles as $bundle) {
       $ids = $storage->getQuery()
@@ -204,14 +214,13 @@ class PanelizerMigrator {
         'views_label' => $block['views_label'] ?? ($block['label'] ?? ''),
         'items_per_page' => $block['items_per_page'] ?? 'none',
       ];
-      $section->appendComponent(new SectionComponent(
-        Uuid::generate(),
+      $section->appendComponent((new SectionComponent(
+        \Drupal::service('uuid')->generate(),
         'content',
         $configuration,
-        $weight,
-      ));
+      ))->setWeight($weight));
     }
-    $display->setThirdPartySetting('layout_builder', 'sections', [$section->toArray()]);
+    $display->setThirdPartySetting('layout_builder', 'sections', [$section]);
     $display->save();
   }
 
@@ -272,12 +281,11 @@ class PanelizerMigrator {
       if (!empty($block['vid'])) {
         $configuration['vid'] = $block['vid'];
       }
-      $section->appendComponent(new SectionComponent(
-        Uuid::generate(),
+      $section->appendComponent((new SectionComponent(
+        \Drupal::service('uuid')->generate(),
         'content',
         $configuration,
-        (int) ($block['weight'] ?? 0),
-      ));
+      ))->setWeight((int) ($block['weight'] ?? 0)));
     }
     return $section->getComponents() ? $section : NULL;
   }
@@ -375,7 +383,7 @@ class PanelizerMigrator {
       $components = $section->getComponents();
       uasort($components, static fn($a, $b): int => $a->getWeight() <=> $b->getWeight());
       foreach ($components as $component) {
-        $id = $component->getConfiguration()['id'] ?? '';
+        $id = $component->getPluginId();
         if (str_starts_with($id, 'block_content:')) {
           $uuids[] = substr($id, strlen('block_content:'));
         }

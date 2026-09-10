@@ -1,9 +1,12 @@
 name: 'XINSHI CMS Update To Drupal 11'
 type: module
-description: 'Drupal 11 升级处理：panelizer 到 Layout Builder 的数据迁移与清理、CKEditor 4 到 5 迁移、switch_page_theme 替代等。'
+description: 'Drupal 11 升级处理：panelizer 到 Layout Builder 的数据迁移与清理等。'
 core_version_requirement: ^10 || ^11
-package: 'XINSHI'
+version: '2.1'
+package: "XINSHI CMS"
 dependencies:
   - drupal:block_content
   - drupal:layout_builder
+  - drupal:layout_builder_at
   - drupal:eck
+project: 'update_to_d11'

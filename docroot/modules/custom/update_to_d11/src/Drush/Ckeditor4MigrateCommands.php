@@ -34,10 +34,10 @@ class Ckeditor4MigrateCommands extends DrushCommands {
     $this->logger()->success('迁移完成，请到各文本格式的编辑器配置页人工复核 toolbar 与插件设置。');
   }
 
-  #[CLI\Command(name: 'update-to-d11:ckeditor4-cleanup', description: '清理 CKEditor 4：卸载 ckeditor/ckeditor_font/ckeditor_templates/ckeditor_templates_ui/ckeditor_textindent/codesnippet/colorbutton 模块。')]
+  #[CLI\Command(name: 'update-to-d11:ckeditor4-cleanup', description: '清理 CKEditor 4：卸载 ckeditor/ckeditor_font/codesnippet/ckeditor_textindent 模块。')]
   #[CLI\Usage(name: 'drush update-to-d11:ckeditor4-cleanup', description: '执行前请先 drush sql-dump 备份。')]
   public function cleanup(): void {
-    if (!$this->io()->confirm('将卸载 ckeditor、ckeditor_font、ckeditor_templates、ckeditor_templates_ui、ckeditor_textindent、codesnippet、colorbutton 模块，继续？', FALSE)) {
+    if (!$this->io()->confirm('将卸载 ckeditor、ckeditor_font、codesnippet、ckeditor_textindent 模块，继续？', FALSE)) {
       $this->logger()->warning('已取消。');
       return;
     }

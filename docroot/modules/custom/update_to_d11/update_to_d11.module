@@ -1,0 +1,22 @@
+<?php
+
+/**
+ * @file
+ * XINSHI CMS 升级 Drupal 11 的统一处理模块。
+ */
+
+/**
+ * Implements hook_ckeditor5_plugin_info_alter().
+ *
+ * ckeditor_font 自带的 CKEditor 5 插件（ckeditor_font_font 等）用 2022 年
+ * 旧版 CKEditor 5 打包（mix API 已废弃），与 core 10.6 不兼容，且 fontSize /
+ * fontFamily 已由 ckeditor5_plugin_pack_font 提供。迁移期间排除这些插件，
+ * 避免前端 font.js 报 "mix is not a function" 错误。
+ */
+function update_to_d11_ckeditor5_plugin_info_alter(array &$plugin_definitions): void {
+  unset(
+    $plugin_definitions['ckeditor_font_font'],
+    $plugin_definitions['ckeditor_font_font_color'],
+    $plugin_definitions['ckeditor_font_font_background_color'],
+  );
+}

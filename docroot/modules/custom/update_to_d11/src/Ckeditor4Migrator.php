@@ -18,17 +18,6 @@ use Drupal\filter\FilterFormatInterface;
 class Ckeditor4Migrator {
 
   /**
-   * CKEditor 4 按钮 → CKEditor 5 toolbar item 的手工映射。
-   *
-   * SmartDefaultSettings 不认识 contrib 模块的按钮，需在转换后手工补入。
-   */
-  protected const BUTTON_MAP = [
-    'FontSize' => 'fontSize',
-    'CodeSnippet' => 'codeBlock',
-    'Maximize' => 'fullscreen',
-  ];
-
-  /**
    * 无 CKEditor 5 等价物的按钮（内容不受影响，仅按钮消失）。
    */
   protected const DROPPED_BUTTONS = [
@@ -37,6 +26,9 @@ class Ckeditor4Migrator {
     'textindent',
     // ImceImage：imce 模块未安装，本就是死按钮。
     'ImceImage',
+    // Maximize：ckeditor5_plugin_pack_fullscreen 子模块仅 1.5.x 提供，
+    // 当前 1.2.0 无该子模块，丢弃全屏按钮。
+    'Maximize',
   ];
 
   public function __construct(
@@ -61,7 +53,6 @@ class Ckeditor4Migrator {
       'ckeditor5',
       'ckeditor5_plugin_pack',
       'ckeditor5_plugin_pack_font',
-      'ckeditor5_plugin_pack_fullscreen',
     ];
     $missing = array_filter(
       $install,
@@ -120,15 +111,6 @@ class Ckeditor4Migrator {
     [$new_editor] = $smart->computeSmartDefaultSettings($editor, $format);
     $settings = $new_editor->getSettings();
 
-    // 补充 contrib 按钮的等价 toolbar item。
-    $added = [];
-    foreach (self::BUTTON_MAP as $button => $item) {
-      if (in_array($button, $old_buttons, TRUE)) {
-        $settings['toolbar']['items'][] = $item;
-        $added[] = sprintf('%s → %s', $button, $item);
-      }
-    }
-
     // fontSize（plugin_pack font）输出 <span class>，
     // 启用 filter_html 的格式需放行 class 属性。
     $span_class_needed = in_array('FontSize', $old_buttons, TRUE)
@@ -143,9 +125,6 @@ class Ckeditor4Migrator {
 
     $dropped = array_values(array_intersect(self::DROPPED_BUTTONS, $old_buttons));
     $log = sprintf('%s：已切换到 CKEditor 5', $editor->id());
-    if ($added) {
-      $log .= '，补充按钮（' . implode('、', $added) . '）';
-    }
     if ($dropped) {
       $log .= '，丢弃按钮（' . implode('、', $dropped) . '）';
     }
@@ -177,17 +156,7 @@ class Ckeditor4Migrator {
    */
   public function cleanup(): array {
     $log = [];
-    // 覆盖本项目 composer.json 中全部 CKEditor 4 系模块（含未启用的，
-    // moduleExists 过滤会自动跳过，保证兜底清理不留残留）。
-    $uninstall = [
-      'ckeditor',
-      'ckeditor_font',
-      'ckeditor_templates',
-      'ckeditor_templates_ui',
-      'ckeditor_textindent',
-      'codesnippet',
-      'colorbutton',
-    ];
+    $uninstall = ['ckeditor', 'ckeditor_font', 'codesnippet', 'ckeditor_textindent'];
     $enabled = array_filter(
       $uninstall,
       static fn(string $m): bool => \Drupal::moduleHandler()->moduleExists($m),
@@ -199,7 +168,7 @@ class Ckeditor4Migrator {
     else {
       $log[] = 'CKEditor 4 相关模块均已卸载。';
     }
-    $log[] = '后续步骤：容器内执行 composer update drupal/ckeditor drupal/ckeditor_font drupal/ckeditor_templates drupal/ckeditor_templates_ui drupal/ckeditor_textindent drupal/codesnippet drupal/colorbutton 移除 vendor 包。';
+    $log[] = '后续步骤：容器内执行 composer update drupal/ckeditor drupal/ckeditor_font drupal/codesnippet drupal/ckeditor_textindent 移除 vendor 包。';
     return $log;
   }
 

@@ -6,6 +6,7 @@ namespace Drupal\update_to_d11\Drush;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Extension\ThemeHandlerInterface;
+use Drupal\Core\Extension\ThemeInstallerInterface;
 use Drush\Attributes as CLI;
 use Drush\Commands\DrushCommands;
 
@@ -20,6 +21,7 @@ class SevenCleanupCommands extends DrushCommands {
   public function __construct(
     protected ConfigFactoryInterface $configFactory,
     protected ThemeHandlerInterface $themeHandler,
+    protected ThemeInstallerInterface $themeInstaller,
   ) {
     parent::__construct();
   }
@@ -33,7 +35,7 @@ class SevenCleanupCommands extends DrushCommands {
     }
 
     if (!$this->themeHandler->themeExists('gin')) {
-      $this->themeHandler->install(['gin']);
+      $this->themeInstaller->install(['gin']);
       $this->logger()->info('gin 主题未安装，已安装。');
     }
 
@@ -47,22 +49,13 @@ class SevenCleanupCommands extends DrushCommands {
     }
 
     if ($this->themeHandler->themeExists('seven')) {
-      $this->themeHandler->uninstall(['seven']);
+      $this->themeInstaller->uninstall(['seven']);
       $this->logger()->success('已卸载 seven 主题。');
     }
     else {
-      // seven 文件已随 D11 代码部署消失时，卸载流程走不到，
-      // 但 core.extension 的已安装列表仍会残留 seven（表现为"缺失主题"警告）。
-      $extension_config = $this->configFactory->getEditable('core.extension');
-      if ($extension_config->get('theme.seven') !== NULL) {
-        $extension_config->clear('theme.seven')->save();
-        $this->logger()->success('seven 主题文件已缺失，已从 core.extension 移除残留记录。');
-      }
-      else {
-        $this->logger()->info('seven 主题未安装，无需处理。');
-      }
+      $this->logger()->info('seven 主题未安装，无需处理。');
     }
-    $this->logger()->info('vendor 中的 drupal/seven 包已随 11.x 分支的 composer update 移除，无需再单独执行。');
+    $this->logger()->info('后续步骤：容器内执行 composer update drupal/seven 移除 vendor 包。');
   }
 
 }

@@ -9,12 +9,3 @@ services:
     class: Drupal\update_to_d11\Ckeditor4Migrator
     arguments:
       - '@entity_type.manager'
-  update_to_d11.theme_negotiator:
-    class: Drupal\update_to_d11\Theme\ManageThemeNegotiator
-    arguments:
-      - '@config.factory'
-      - '@path.current'
-      - '@path_alias.manager'
-      - '@path.matcher'
-    tags:
-      - { name: theme_negotiator, priority: 1 }
