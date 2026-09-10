@@ -1,0 +1,30 @@
+services:
+  update_to_d11.panelizer_commands:
+    class: Drupal\update_to_d11\Drush\PanelizerMigrateCommands
+    arguments:
+      - '@update_to_d11.panelizer_migrator'
+    tags:
+      - { name: drush.command }
+  update_to_d11.ckeditor4_commands:
+    class: Drupal\update_to_d11\Drush\Ckeditor4MigrateCommands
+    arguments:
+      - '@update_to_d11.ckeditor4_migrator'
+    tags:
+      - { name: drush.command }
+  update_to_d11.conflict_cleanup_commands:
+    class: Drupal\update_to_d11\Drush\ConflictCleanupCommands
+    tags:
+      - { name: drush.command }
+  update_to_d11.seven_cleanup_commands:
+    class: Drupal\update_to_d11\Drush\SevenCleanupCommands
+    arguments:
+      - '@config.factory'
+      - '@theme_handler'
+    tags:
+      - { name: drush.command }
+  update_to_d11.switch_page_theme_replace_commands:
+    class: Drupal\update_to_d11\Drush\SwitchPageThemeReplaceCommands
+    arguments:
+      - '@config.factory'
+    tags:
+      - { name: drush.command }
