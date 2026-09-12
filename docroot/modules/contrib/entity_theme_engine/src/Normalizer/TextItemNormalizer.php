@@ -16,7 +16,7 @@ class TextItemNormalizer extends FieldItemNormalizer {
   /**
    * {@inheritdoc}
    */
-  public function normalize($field, $format = NULL, array $context = []) {
+  public function normalize($field, ?string $format = NULL, array $context = []): array {
     $data = parent::normalize($field, $format, $context);
     $data['render'] = [
       '#type' => 'processed_text',

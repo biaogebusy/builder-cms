@@ -1,7 +1,0 @@
-xinshi_layout.migrate:
-  path: '/admin/xinshi/layout/migrate'
-  defaults:
-    _title: 'Migrate translations to Layout Builder'
-    _form: '\Drupal\xinshi_layout\Form\MigrationConfirmForm'
-  requirements:
-    _permission: 'administer xinshi layout'

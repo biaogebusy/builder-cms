@@ -17,7 +17,7 @@ class FieldItemNormalizer extends ContentEntityNormalizer {
   /**
    * {@inheritdoc}
    */
-  public function normalize($object, $format = NULL, array $context = []) {
+  public function normalize($object, ?string $format = NULL, array $context = []): array {
     $cache = [
       'contexts' => [],
       'tags' => [],

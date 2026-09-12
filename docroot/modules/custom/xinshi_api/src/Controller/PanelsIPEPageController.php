@@ -493,14 +493,18 @@ class PanelsIPEPageController extends ControllerBase {
       $builder = new NodeJson($node);
       if (!empty($json['body'])) {
         if ($builder->isLayoutBuilder()) {
-          $this->saveLayoutBuilder($trans, $json['body'], TRUE, $target->getId());
+          $this->saveLayoutBuilder($trans, $json['body'], $target->getId());
         }
       } else {
         if ($builder->isLayoutBuilder()) {
-          // Layout Builder 下 inline_block 的 block_revision_id 锁定了具体修订，
-          // 仅给 block_content 加翻译并不会让译文出现在前台 —— 必须把 $trans 的
-          // layout 字段中各组件的 block_revision_id 同步更新为新生成的修订。
-          $this->cloneLayoutBuilderTranslations($trans, $target->getId());
+          // addTranslation() 用 toArray() 复制时 layout_builder__layout 字段会
+          // 丢失，需用源节点的 blocks 重建 layout，否则翻译的 body 为空。
+          /** @var \Drupal\block_content\Entity\BlockContent $block */
+          $blocks = $this->getPanelBlocks($source_node);
+          foreach ($blocks as $block) {
+            $this->addBlockTranslation($block, $target->getId());
+          }
+          $this->saveLayout($trans, $blocks, TRUE);
         }
       }
       $trans->save();
@@ -768,51 +772,38 @@ class PanelsIPEPageController extends ControllerBase {
   }
 
   /**
-   * 为 Layout Builder 节点的所有 inline_block 创建目标语言翻译，
-   * 并把 $trans 上对应组件的 block_revision_id 更新为最新修订，
-   * 否则前台仍按旧 revision 渲染、看不到译文。
+   * 用源节点的 blocks 重建 layout_builder__layout 字段。
    *
-   * 注意：本方法不会再调用 $trans->save()，由调用方统一保存。
+   * addTranslation() 用 toArray() 复制时 layout_builder__layout 字段会丢失，
+   * 所以这里从源节点的 block_content 实体重新构建布局，否则翻译的 body 为空。
    *
-   * @param Node $trans
-   * @param string $langcode
+   * 注意：本方法不会再调用 $entity->save()，由调用方统一保存。
+   *
+   * @param \Drupal\node\Entity\Node $entity
+   * @param \Drupal\block_content\Entity\BlockContent[] $blocks
+   * @param bool $add_translations
    */
-  private function cloneLayoutBuilderTranslations(Node $trans, $langcode) {
-    /** @var \Drupal\layout_builder\Field\LayoutSectionItemList $layout_field */
-    $layout_field = $trans->get(OverridesSectionStorage::FIELD_NAME);
-    $storage = $this->entityTypeManager()->getStorage('block_content');
+  private function saveLayout(Node &$entity, array $blocks, $add_translations = FALSE) {
+    $layout_field = $entity->get(OverridesSectionStorage::FIELD_NAME);
+    $layout_field->setValue([]);
+    /** @var \Drupal\block_content\Entity\BlockContent $block */
+    foreach ($blocks as $block) {
+      $configuration = [
+        'id' => 'inline_block:' . $block->bundle(),
+        'label' => $block->label(),
+        'label_display' => '0',
+        'provider' => 'layout_builder',
+        'view_mode' => 'full',
+        'block_revision_id' => $block->getRevisionId(),
+      ];
+      $section = new Section('layout_onecol');
+      $component = new SectionComponent(\Drupal::service('uuid')->generate(), 'content', $configuration);
+      $section->appendComponent($component);
+      $layout_field->appendItem($section);
+    }
 
-    foreach ($layout_field as $delta => $item) {
-      /** @var \Drupal\layout_builder\Section $section */
-      $section = $item->section;
-      $changed = FALSE;
-      foreach ($section->getComponents() as $component) {
-        $config = $component->get('configuration');
-        $rev_id = $config['block_revision_id'] ?? NULL;
-        if (empty($rev_id)) {
-          continue;
-        }
-        /** @var BlockContent $revision */
-        $revision = $storage->loadRevision($rev_id);
-        if (!$revision || $revision->bundle() !== 'json') {
-          continue;
-        }
-        // addBlockTranslation 基于默认修订操作，先取最新默认实体。
-        /** @var BlockContent $latest */
-        $latest = $storage->load($revision->id());
-        if (!$latest) {
-          continue;
-        }
-        $translated = $this->addBlockTranslation($latest, $langcode);
-        // addBlockTranslation 内部 save() 会生成新修订；同步给布局组件。
-        $config['block_revision_id'] = $translated->getRevisionId();
-        $component->setConfiguration($config);
-        $changed = TRUE;
-      }
-      if ($changed) {
-        // 重新写回字段项以触发序列化。
-        $layout_field->set($delta, ['section' => $section]);
-      }
+    if (!$add_translations) {
+      $entity->save();
     }
   }
 
@@ -847,7 +838,7 @@ class PanelsIPEPageController extends ControllerBase {
     return $blocks;
   }
 
-  private function saveLayoutBuilder(Node &$entity, array $blocks, $add_translations = FALSE, $langcode = NULL) {
+  private function saveLayoutBuilder(Node &$entity, array $blocks, $langcode = NULL) {
     // 获取布局字段（存储layout builder配置的字段）
     /** @var \Drupal\layout_builder\Field\LayoutSectionItemList $layout_field */
     $layout_field = $entity->get(OverridesSectionStorage::FIELD_NAME);
@@ -878,9 +869,7 @@ class PanelsIPEPageController extends ControllerBase {
         continue;
       }
 
-      if ($add_translations) {
-        $block_content = $this->addBlockTranslation($block_content, $langcode);
-      }
+      $block_content = $this->addBlockTranslation($block_content, $langcode);
       $block_content->set('body', [
         [
           'value' => is_array($body) ?  json_encode($body, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) : $body,

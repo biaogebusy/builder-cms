@@ -40,7 +40,7 @@ class ContentEntityNormalizer extends NormalizerBase {
   /**
    * {@inheritdoc}
    */
-  public function normalize($entity, $format = NULL, array $context = []) {
+  public function normalize($entity, ?string $format = NULL, array $context = []): array {
     $label = '';
     try {
       $label = $entity->label();
@@ -157,7 +157,7 @@ class ContentEntityNormalizer extends NormalizerBase {
   /**
    * {@inheritdoc}
    */
-  public function supportsNormalization($data, string $format = NULL, array $context = []): bool {
+  public function supportsNormalization($data, ?string $format = NULL, array $context = []): bool {
     if(in_array($format, $this->format) && parent::supportsNormalization($data, $format, $context)) {
       return TRUE;
     }

@@ -1,5 +1,0 @@
-xinshi_layout.migrate:
-  title: 'Layout migration'
-  description: 'Migrate Panelizer translations to Layout Builder'
-  route_name: xinshi_layout.migrate
-  parent: system.admin_config_content

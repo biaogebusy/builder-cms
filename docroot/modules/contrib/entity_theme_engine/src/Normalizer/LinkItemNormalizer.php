@@ -15,7 +15,7 @@ class LinkItemNormalizer extends FieldItemNormalizer {
   /**
    * {@inheritdoc}
    */
-  public function normalize($object, $format = NULL, array $context = []) {
+  public function normalize($object, ?string $format = NULL, array $context = []): array {
     $data = parent::normalize($object, $format, $context);
     $data['title'] = $object->title;
     $data['url'] = $object->getUrl()->toString(TRUE)->getGeneratedUrl();

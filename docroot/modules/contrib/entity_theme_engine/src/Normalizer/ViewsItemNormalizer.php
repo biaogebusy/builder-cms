@@ -18,7 +18,7 @@ class ViewsItemNormalizer extends FieldItemNormalizer {
   /**
    * {@inheritdoc}
    */
-  public function normalize($field, $format = NULL, array $context = []) {
+  public function normalize($field, ?string $format = NULL, array $context = []): array {
     $data = parent::normalize($field, $format, $context);
 
     $view_name = $field->target_id;
