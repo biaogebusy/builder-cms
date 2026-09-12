@@ -157,6 +157,17 @@ class ContentEntityNormalizer extends NormalizerBase {
   /**
    * {@inheritdoc}
    */
+  public function getSupportedTypes(?string $format): array {
+    $types = [];
+    foreach ((array) $this->supportedInterfaceOrClass as $class) {
+      $types[$class] = TRUE;
+    }
+    return $types;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function supportsNormalization($data, ?string $format = NULL, array $context = []): bool {
     if(in_array($format, $this->format) && parent::supportsNormalization($data, $format, $context)) {
       return TRUE;

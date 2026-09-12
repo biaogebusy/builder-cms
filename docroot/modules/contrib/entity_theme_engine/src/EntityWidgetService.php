@@ -257,11 +257,13 @@ class EntityWidgetService {
    * @param array $b
    * @return string[][]|number[]
    */
-  public function  mergeCache(array $a, array $b) {
+  public function  mergeCache(?array $a, ?array $b) {
+    $a = $a ?? [];
+    $b = $b ?? [];
     $cache = [];
-    $cache['contexts'] = Cache::mergeContexts($a['contexts']?:[],$b['contexts']?:[]);
-    $cache['tags'] = Cache::mergeTags($a['tags']?:[],$b['tags']?:[]);
-    $cache['max-age'] = Cache::mergeMaxAges($a['max-age'],$b['max-age']);
+    $cache['contexts'] = Cache::mergeContexts($a['contexts'] ?: [], $b['contexts'] ?: []);
+    $cache['tags'] = Cache::mergeTags($a['tags'] ?: [], $b['tags'] ?: []);
+    $cache['max-age'] = Cache::mergeMaxAges($a['max-age'] ?? Cache::PERMANENT, $b['max-age'] ?? Cache::PERMANENT);
     return $cache;
   }
 

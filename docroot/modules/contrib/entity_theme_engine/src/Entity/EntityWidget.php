@@ -28,7 +28,6 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  * "uuid" = "uuid"
  * },
  * links = {
- * "canonical" = "/admin/structure/entity-widget/{entity_widget}",
  * "add-form" = "/admin/structure/entity-widget/add",
  * "edit-form" = "/admin/structure/entity-widget/{entity_widget}/edit",
  * "delete-form" = "/admin/structure/entity-widget/{entity_widget}/delete",

@@ -80,7 +80,7 @@ class EntityJsonBase implements EntityJsonInterface {
     unset($build['#prefix']);
     unset($build['#suffix']);
     $content = \Drupal::service('renderer')->render($build);
-    if (($str = $content->jsonSerialize()) && $data = Json::decode(htmlspecialchars_decode($str))) {
+    if (($str = (string) $content) && $data = Json::decode(htmlspecialchars_decode($str))) {
       $this->setFullText($data);
     }
     return $data ? $data : [];
