@@ -13,9 +13,8 @@ use Drush\Commands\DrushCommands;
 /**
  * D11 移除/弃用模块与 standard profile 清理命令。
  *
- * color / rdf（D10 已出 core 的 contrib 回退）、tour（D11 core 弃用）、
- * switch_page_theme（无 D11 版本）统一卸载；standard profile 在 D11 弃用，
- * 切换到 minimal。
+ * color / rdf（D10 已出 core 的 contrib 回退）、switch_page_theme（无 D11 版本）
+ * 统一卸载；standard profile 在 D11 弃用，切换到 minimal。
  */
 class LegacyCleanupCommands extends DrushCommands {
 
@@ -25,7 +24,6 @@ class LegacyCleanupCommands extends DrushCommands {
   protected const UNINSTALL = [
     'color',
     'rdf',
-    'tour',
     'switch_page_theme',
   ];
 
@@ -37,10 +35,10 @@ class LegacyCleanupCommands extends DrushCommands {
     parent::__construct();
   }
 
-  #[CLI\Command(name: 'update-to-d11:legacy-cleanup', description: '卸载 color/rdf/tour/switch_page_theme，并把 standard profile 切到 minimal。')]
+  #[CLI\Command(name: 'update-to-d11:legacy-cleanup', description: '卸载 color/rdf/switch_page_theme，并把 standard profile 切到 minimal。')]
   #[CLI\Usage(name: 'drush update-to-d11:legacy-cleanup', description: '执行前请先 drush sql-dump 备份。')]
   public function cleanup(): void {
-    if (!$this->io()->confirm('将卸载 color、rdf、tour、switch_page_theme 模块，并把安装 profile 从 standard 切到 minimal，继续？', FALSE)) {
+    if (!$this->io()->confirm('将卸载 color、rdf、switch_page_theme 模块，并把安装 profile 从 standard 切到 minimal，继续？', FALSE)) {
       $this->logger()->warning('已取消。');
       return;
     }
@@ -54,11 +52,11 @@ class LegacyCleanupCommands extends DrushCommands {
       $this->logger()->success('已卸载模块：' . implode(', ', $enabled));
     }
     else {
-      $this->logger()->info('color、rdf、tour、switch_page_theme 均未启用，无需处理。');
+      $this->logger()->info('color、rdf、switch_page_theme 均未启用，无需处理。');
     }
 
     // standard profile 在 D11 弃用，切换到 minimal。
-    // uninstall() 在 profile 仍为 standard 时可能遗留 color/rdf/tour 的 module
+    // uninstall() 在 profile 仍为 standard 时可能遗留 color/rdf 的 module
     // 条目（见 update_to_d11 README「待删除字段脏数据」同一类 config 残留），
     // 这里显式清除卸载模块的条目，并把弃用的 standard 标记换成 minimal。
     $extension = $this->configFactory->getEditable('core.extension');
