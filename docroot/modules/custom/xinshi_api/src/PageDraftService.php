@@ -13,8 +13,10 @@ use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\panelizer\PanelizerInterface;
 use Drupal\panels\PanelsDisplayManagerInterface;
+use Drupal\panels\Plugin\DisplayVariant\PanelsDisplayVariant;
+use Drupal\node\NodeInterface;
 
-/** Creates only new, unpublished entities, atomically with their operation record. */
+/** Creates, appends to and deletes owned drafts atomically with their operation record. */
 final class PageDraftService {
 
   private const TABLE = 'xinshi_page_draft_operation';
@@ -44,9 +46,77 @@ final class PageDraftService {
     }
   }
 
+  public function capabilities(): array {
+    $permissions = $this->canCreate() ? ['pages.create_draft'] : [];
+    if (!$this->account->isAuthenticated() || !$this->database->schema()->tableExists(self::TABLE)) {
+      return $permissions;
+    }
+    $node = $this->entities->getStorage('node')->create([
+      'type' => 'landing_page', 'title' => 'Draft', 'uid' => $this->account->id(),
+      'langcode' => $this->languages->getDefaultLanguage()->getId(), 'status' => FALSE,
+    ]);
+    if ($node->access('view', $this->account)) {
+      $permissions[] = 'pages.read_draft';
+      $format = $this->entities->getStorage('filter_format')->load('json');
+      if ($node->access('update', $this->account) && $format &&
+        $format->access('use', $this->account) &&
+        $this->entities->getAccessControlHandler('block_content')->createAccess('json', $this->account)) {
+        $permissions[] = 'pages.update_draft';
+      }
+      if ($node->access('delete', $this->account)) {
+        $permissions[] = 'pages.delete_draft';
+      }
+    }
+    return $permissions;
+  }
+
   public function createDraft(string $execution_id, mixed $input): array {
     $this->validateId($execution_id);
     $input = $this->validateInput($input);
+    return $this->writeOperation($execution_id, $input, function () use ($input) {
+      [$node, $blocks] = $this->prepareEntities($input);
+      $this->saveComponents($node, $blocks, NULL);
+      return $this->pageResult($node);
+    });
+  }
+
+  public function readDraft(string $page_id): array {
+    return $this->snapshot($this->ownedDraft($page_id, 'view'));
+  }
+
+  public function changeDraft(string $execution_id, mixed $input): array {
+    $this->validateId($execution_id);
+    $input = $this->validateChange($input);
+    return $this->writeOperation($execution_id, $input, function () use ($input) {
+      // Serialize writers for this page, including requests with different operation IDs.
+      $this->database->select('node', 'n')->fields('n', ['nid'])
+        ->condition('nid', $input->pageId)->forUpdate()->execute()->fetchField();
+      $node = $this->ownedDraft($input->pageId, $input->action === 'append' ? 'update' : 'delete');
+      $current = $this->snapshot($node);
+      if (!hash_equals($current['version'], $input->expectedVersion)) {
+        throw new PageDraftException('version_conflict', 409);
+      }
+      if ($input->action === 'delete') {
+        $node->delete();
+        return ['id' => $input->pageId, 'status' => 'deleted'];
+      }
+      $body = [...$current['body'], ...$input->body];
+      if (count($body) > 200 || strlen(json_encode($body, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR)) > 1048576) {
+        throw new PageDraftException('invalid_input', 422);
+      }
+      $this->setDraftState($node);
+      $blocks = $this->prepareBlocks((object) [
+        'title' => $node->label(), 'body' => $input->body,
+      ], $node->language()->getId());
+      $node->setNewRevision(TRUE);
+      $display = $this->panels->importDisplay(
+        $this->panelizer->getPanelsDisplay($node, 'full')->getConfiguration(), FALSE);
+      $this->saveComponents($node, $blocks, $display);
+      return $this->pageResult($node);
+    });
+  }
+
+  private function writeOperation(string $execution_id, \stdClass $input, callable $write): array {
     $encoded = $this->encodeInput($input);
     if ($existing = $this->operation($execution_id)) {
       return $this->existingResult($existing, $encoded);
@@ -63,39 +133,9 @@ final class PageDraftService {
         'created' => $this->time->getRequestTime(),
       ])->execute();
       $reserved = TRUE;
-      [$node, $block] = $this->prepareEntities($input);
-      if (count($node->validate()) || count($block->validate())) {
-        throw new PageDraftException('invalid_input', 422);
-      }
-      $block->save();
-      $display = $this->panels->createDisplay('layout_onecol', 'ipe');
-      $display->setConfiguration(array_replace($display->getConfiguration(), [
-        'page_title' => '[node:title]',
-        'pattern' => 'panelizer',
-      ]));
-      $regions = $display->getLayout()->getPluginDefinition()->get('regions');
-      $display->addBlock([
-        'id' => 'block_content:' . $block->uuid(),
-        'label' => $block->label(),
-        'label_display' => 0,
-        'region' => array_key_first($regions),
-        'weight' => 1,
-        'vid' => $block->getRevisionId(),
-      ]);
-      $this->panelizer->setPanelsDisplay($node, 'full', '__bundle_default__', $display);
-      if ($node->isPublished() || $block->isPublished()) {
-        throw new \RuntimeException('Draft entities must remain unpublished.');
-      }
-      if (!$node->access('view', $this->account)) {
-        throw new PageDraftException('permission_denied', 403);
-      }
-      $result = [
-        'id' => (string) $node->id(),
-        'url' => $node->toUrl('canonical', ['absolute' => FALSE])->toString(),
-        'status' => 'draft',
-      ];
+      $result = $write();
       $this->database->update(self::TABLE)->fields([
-        'nid' => $node->id(),
+        'nid' => $result['id'],
         'result_json' => json_encode($result, JSON_THROW_ON_ERROR),
       ])->condition('execution_id', $execution_id)->execute();
       // Drupal commits when the transaction object is released. Do not report success earlier.
@@ -119,6 +159,45 @@ final class PageDraftService {
     }
   }
 
+  private function saveComponents(NodeInterface $node, array $blocks, ?PanelsDisplayVariant $display): void {
+    foreach ([$node, ...$blocks] as $entity) {
+      if (count($entity->validate())) {
+        throw new PageDraftException('invalid_input', 422);
+      }
+    }
+    if (!$display) {
+      $display = $this->panels->createDisplay('layout_onecol', 'ipe');
+      $display->setConfiguration(array_replace($display->getConfiguration(), [
+        'page_title' => '[node:title]', 'pattern' => 'panelizer',
+      ]));
+    }
+    $regions = $display->getLayout()->getPluginDefinition()->get('regions');
+    $existing = $display->getConfiguration()['blocks'] ?? [];
+    $weight = $existing ? max(array_map(fn($block) => (int) ($block['weight'] ?? 0), $existing)) + 1 : 0;
+    foreach ($blocks as $block) {
+      $block->save();
+      $display->addBlock([
+        'id' => 'block_content:' . $block->uuid(), 'label' => $block->label(),
+        'label_display' => 0, 'region' => array_key_last($regions),
+        'weight' => $weight++, 'vid' => $block->getRevisionId(),
+      ]);
+    }
+    $this->panelizer->setPanelsDisplay($node, 'full', '__bundle_default__', $display);
+    foreach ([$node, ...$blocks] as $entity) {
+      if ($entity->isPublished()) {
+        throw new \RuntimeException('Draft entities must remain unpublished.');
+      }
+    }
+    if (!$node->access('view', $this->account)) {
+      throw new PageDraftException('permission_denied', 403);
+    }
+  }
+
+  private function pageResult(NodeInterface $node): array {
+    return ['id' => (string) $node->id(),
+      'url' => $node->toUrl('canonical', ['absolute' => FALSE])->toString(), 'status' => 'draft'];
+  }
+
   public function findDraft(string $execution_id): ?array {
     $this->validateId($execution_id);
     $operation = $this->operation($execution_id);
@@ -137,15 +216,94 @@ final class PageDraftService {
     if ($input !== NULL && $operation->input_json !== $input) {
       throw new PageDraftException('operation_conflict', 409);
     }
-    $node = $this->entities->getStorage('node')->load($operation->nid);
-    if (!$node || !$node->access('view', $this->account)) {
-      throw new PageDraftException('result_inaccessible', 403);
+    $result = json_decode($operation->result_json, TRUE, 64, JSON_THROW_ON_ERROR);
+    // A deletion receipt remains readable by its actor after the node is gone or rights change.
+    if (($result['status'] ?? NULL) !== 'deleted') {
+      $node = $this->entities->getStorage('node')->load($operation->nid);
+      if (!$node || !$node->access('view', $this->account)) {
+        throw new PageDraftException('result_inaccessible', 403);
+      }
     }
     return [
       'executionId' => $operation->execution_id,
       'input' => json_decode($operation->input_json, FALSE, 64, JSON_THROW_ON_ERROR),
       // Return the original result even if the page title or alias changed later.
-      'result' => json_decode($operation->result_json, TRUE, 64, JSON_THROW_ON_ERROR),
+      'result' => $result,
+    ];
+  }
+
+  private function ownedDraft(string $page_id, string $operation): NodeInterface {
+    if (!preg_match('/^[1-9][0-9]*$/D', $page_id)) {
+      throw new PageDraftException('invalid_input', 422);
+    }
+    if (!$this->account->isAuthenticated()) {
+      throw new PageDraftException('permission_denied', 403);
+    }
+    $storage = $this->entities->getStorage('node');
+    $storage->resetCache([$page_id]);
+    $node = $storage->load($page_id);
+    if (!$node instanceof NodeInterface || $node->bundle() !== 'landing_page') {
+      throw new PageDraftException('page_not_found', 404);
+    }
+    foreach ($node->getTranslationLanguages() as $langcode => $language) {
+      $translation = $node->getTranslation($langcode);
+      if ((string) $translation->getOwnerId() !== (string) $this->account->id() ||
+        !$translation->access('view', $this->account) ||
+        !$translation->access($operation, $this->account)) {
+        throw new PageDraftException('permission_denied', 403);
+      }
+      if ($translation->isPublished()) {
+        throw new PageDraftException('not_draft', 409);
+      }
+    }
+    if ((string) $storage->getLatestRevisionId($page_id) !== (string) $node->getRevisionId()) {
+      throw new PageDraftException('version_conflict', 409);
+    }
+    if (!$this->panelizer || !$this->panels || !$node->hasField('panelizer')) {
+      throw new PageDraftException('draft_not_supported', 409);
+    }
+    return $node;
+  }
+
+  private function snapshot(NodeInterface $node): array {
+    $body = [];
+    $version = [];
+    $storage = $this->entities->getStorage('block_content');
+    $storage->resetCache();
+    foreach ($node->getTranslationLanguages() as $langcode => $language) {
+      $translation = $node->getTranslation($langcode);
+      $layout = $this->panelizer->getPanelsDisplay($translation, 'full')->getConfiguration();
+      $contents = [];
+      $components = $layout['blocks'] ?? [];
+      uasort($components, static fn($a, $b) => ($a['weight'] ?? 0) <=> ($b['weight'] ?? 0));
+      foreach ($components as $configuration) {
+        $plugin = $configuration['id'] ?? '';
+        if (!str_starts_with($plugin, 'block_content:')) {
+          throw new PageDraftException('draft_not_supported', 409);
+        }
+        $matches = $storage->loadByProperties(['uuid' => substr($plugin, 14)]);
+        $block = reset($matches);
+        if (!$block || $block->bundle() !== 'json') {
+          throw new PageDraftException('draft_not_supported', 409);
+        }
+        $block = $block->hasTranslation($langcode) ? $block->getTranslation($langcode) : $block;
+        $contents[] = $block->toArray();
+        if ($langcode === $node->language()->getId()) {
+          $component_body = json_decode($block->get('body')->value, FALSE, 64, JSON_THROW_ON_ERROR);
+          if (!$component_body instanceof \stdClass || !isset($component_body->type)) {
+            throw new PageDraftException('draft_not_supported', 409);
+          }
+          $body[] = $component_body;
+        }
+      }
+      $values = $translation->toArray();
+      $values['panelizer'] = $layout;
+      $version[$langcode] = [$values, $contents];
+    }
+    return $this->pageResult($node) + [
+      'title' => $node->label(), 'langcode' => $node->language()->getId(), 'body' => $body,
+      // Content participates too: legacy editors can update blocks without changing node vid.
+      'version' => hash('sha256', json_encode($version, JSON_THROW_ON_ERROR)),
     ];
   }
 
@@ -171,20 +329,35 @@ final class PageDraftService {
     if (!$node->hasField('panelizer') || !($settings['custom'] || $settings['allow'])) {
       throw new PageDraftException('draft_not_supported', 503);
     }
-    // Model-supplied UUIDs remain plain component data; existing blocks are never loaded/updated.
-    $block = $this->entities->getStorage('block_content')->create([
-      'type' => 'json', 'info' => $input->title, 'langcode' => $langcode, 'status' => FALSE,
-      'body' => [
-        'value' => json_encode($input->body, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
-        'format' => 'json',
-      ],
-    ]);
     $this->setDraftState($node);
-    $this->setDraftState($block);
+    $blocks = $this->prepareBlocks($input, $langcode);
     if (!$node->access('view', $this->account)) {
       throw new PageDraftException('permission_denied', 403);
     }
-    return [$node, $block];
+    return [$node, $blocks];
+  }
+
+  private function prepareBlocks(\stdClass $input, string $langcode): array {
+    $format = $this->entities->getStorage('filter_format')->load('json');
+    if (!$this->entities->getAccessControlHandler('block_content')->createAccess('json', $this->account) ||
+      !$format || !$format->access('use', $this->account)) {
+      throw new PageDraftException('permission_denied', 403);
+    }
+    $blocks = [];
+    // The page reader expects one component object per JSON block, not the body array.
+    // Model-supplied UUIDs remain plain component data; existing blocks are never loaded/updated.
+    foreach ($input->body as $component) {
+      $block = $this->entities->getStorage('block_content')->create([
+        'type' => 'json', 'info' => $input->title, 'langcode' => $langcode, 'status' => FALSE,
+        'body' => [
+          'value' => json_encode($component, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
+          'format' => 'json',
+        ],
+      ]);
+      $this->setDraftState($block);
+      $blocks[] = $block;
+    }
+    return $blocks;
   }
 
   private function setDraftState(ContentEntityInterface $entity): void {
@@ -196,7 +369,8 @@ final class PageDraftService {
     if (!$type->hasState('draft') || $type->getState('draft')->isPublishedState()) {
       throw new PageDraftException('draft_not_supported', 503);
     }
-    $initial = $type->getInitialState($entity);
+    $initial = $entity->isNew() ? $type->getInitialState($entity)
+      : $type->getState($entity->get('moderation_state')->value);
     if (!$initial->canTransitionTo('draft') || !$this->transitions->isTransitionValid(
       $workflow, $initial, $type->getState('draft'), $this->account, $entity
     )) {
@@ -228,6 +402,21 @@ final class PageDraftService {
     if (property_exists($input, 'langcode') && (!is_string($input->langcode) ||
       !preg_match('/^[a-z]{2,3}(?:-[a-z0-9]{2,8})*$/iD', $input->langcode))) {
       throw new PageDraftException('invalid_input', 422);
+    }
+    return $input;
+  }
+
+  private function validateChange(mixed $input): \stdClass {
+    if (!$input instanceof \stdClass || !isset($input->action, $input->pageId, $input->expectedVersion) ||
+      !in_array($input->action, ['append', 'delete'], TRUE) ||
+      !is_string($input->pageId) || !preg_match('/^[1-9][0-9]*$/D', $input->pageId) ||
+      !is_string($input->expectedVersion) || !preg_match('/^[a-f0-9]{64}$/D', $input->expectedVersion) ||
+      array_diff(array_keys(get_object_vars($input)), $input->action === 'append'
+        ? ['action', 'pageId', 'expectedVersion', 'body'] : ['action', 'pageId', 'expectedVersion'])) {
+      throw new PageDraftException('invalid_input', 422);
+    }
+    if ($input->action === 'append') {
+      $this->validateInput((object) ['title' => 'Draft', 'body' => $input->body ?? NULL]);
     }
     return $input;
   }

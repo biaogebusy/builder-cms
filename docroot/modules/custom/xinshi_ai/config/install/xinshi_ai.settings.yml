@@ -4,6 +4,12 @@ gateway:
   request_timeout: 180
 image:
   default_n: 4
+harness:
+  tools:
+    pages_enabled: false
+  task_limits:
+    max_model_calls: 40
+    max_tokens: 200000
 event_ticket:
   ttl: 300
 queue:

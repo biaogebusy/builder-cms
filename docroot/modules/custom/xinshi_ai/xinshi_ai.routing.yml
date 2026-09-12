@@ -8,6 +8,19 @@ xinshi_ai.models.list:
   requirements:
     _permission: 'access content'
 
+# Harness 配置白名单：登录用户只读，修改仍走管理员配置表单。
+xinshi_ai.harness.settings:
+  path: '/api/v3/ai/harness'
+  defaults:
+    _controller: '\Drupal\xinshi_ai\Controller\HarnessSettingsController::read'
+    _format: 'json'
+  methods: [GET]
+  options:
+    no_cache: TRUE
+    _auth: ['oauth2', 'cookie']
+  requirements:
+    _user_is_logged_in: 'TRUE'
+
 # 模型注册中心管理 API(新增 / 更新 / 启停)— 供管理前台调用(详见模块文档 §5)。
 xinshi_ai.models.manage:
   path: '/api/v3/ai/manage/models'
@@ -150,4 +163,3 @@ xinshi_ai.image_job.events:
   requirements:
     _custom_access: '\Drupal\xinshi_ai\Controller\ImageJobEventsController::accessByTicket'
     uuid: '[0-9a-f-]+'
-

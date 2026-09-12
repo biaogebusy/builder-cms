@@ -22,6 +22,35 @@ xinshi_ai.settings:
         default_n:
           type: integer
           label: '默认生成张数'
+    harness:
+      type: mapping
+      label: '对话任务（Harness）'
+      mapping:
+        tools:
+          type: mapping
+          label: '业务工具'
+          mapping:
+            pages_enabled:
+              type: boolean
+              label: '启用页面草稿工具'
+        task_limits:
+          type: mapping
+          label: '任务限制'
+          mapping:
+            max_model_calls:
+              type: integer
+              label: '每个任务最多模型调用次数'
+              constraints:
+                Range:
+                  min: 1
+                  max: 9007199254740991
+            max_tokens:
+              type: integer
+              label: '每个任务最多已报告 Token'
+              constraints:
+                Range:
+                  min: 1
+                  max: 9007199254740991
     event_ticket:
       type: mapping
       label: '事件票据'
