@@ -1,0 +1,8 @@
+{
+  "js/third-party.js": {
+    "file": "third-party.js",
+    "name": "third-party",
+    "src": "js/third-party.js",
+    "isEntry": true
+  }
+}

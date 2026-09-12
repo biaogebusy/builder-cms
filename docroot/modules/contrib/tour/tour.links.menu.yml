@@ -1,0 +1,5 @@
+entity.tour.collection:
+  title: Tours
+  description: 'Add and modify tours.'
+  route_name: entity.tour.collection
+  parent: system.admin_config_ui

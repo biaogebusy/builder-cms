@@ -1,0 +1,20 @@
+entity.tour.edit_form:
+  route_name: entity.tour.edit_form
+  base_route: entity.tour.edit_form
+  title: Edit
+
+entity.tour.edit_form_tips:
+  route_name: entity.tour.edit_form_tips
+  base_route: entity.tour.edit_form
+  title: Tips
+
+tour.settings_tab:
+  route_name: tour.tour_settings
+  title: Settings
+  base_route: tour.tour_settings
+
+tour.list_tab:
+  route_name: entity.tour.collection
+  title: List
+  base_route: tour.tour_settings
+  weight: -100

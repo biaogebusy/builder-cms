@@ -1,0 +1,18 @@
+services:
+  _defaults:
+    autowire: true
+
+  plugin.manager.tour.tip:
+    class: Drupal\tour\TipPluginManager
+    parent: default_plugin_manager
+    autowire: false
+
+  tour.lazy_builders:
+    class: Drupal\tour\LazyBuilders
+
+  Drupal\tour\TourHelper:
+    alias: tour.helper
+  tour.helper:
+    class: Drupal\tour\TourHelper
+
+  Drupal\tour\Hook\TourHooks: ~

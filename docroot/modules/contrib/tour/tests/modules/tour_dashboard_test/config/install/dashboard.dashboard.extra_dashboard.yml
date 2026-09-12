@@ -1,0 +1,8 @@
+langcode: en
+status: true
+dependencies: {  }
+id: extra_dashboard
+label: 'Extra Dashboard'
+description: ''
+layout: {  }
+weight: -9

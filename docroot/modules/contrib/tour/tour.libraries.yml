@@ -1,0 +1,31 @@
+tour:
+  js:
+    js/tour.js: {
+      weight: -1,
+      minified: true,
+      preprocess: false,
+    }
+  dependencies:
+    - core/jquery
+    - tour/third-party
+    - core/drupal
+    - core/drupalSettings
+    - core/once
+    - tour/tour-styling
+
+third-party:
+  js:
+    dist/third-party.js: { weight: -2 }
+  css:
+    component:
+      css/third-party/shepherd/css/shepherd.css: { }
+
+tour-styling:
+  css:
+    component:
+      css/tour.module.css: { media: screen }
+
+tour-block-styling:
+  css:
+    component:
+      css/tour.block.css: { media: screen }

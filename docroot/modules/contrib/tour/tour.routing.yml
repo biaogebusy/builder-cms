@@ -1,0 +1,120 @@
+entity.tour.collection:
+  path: '/admin/config/user-interface/tour'
+  defaults:
+    _entity_list: 'tour'
+    _title: 'Tours'
+  requirements:
+    _permission: 'administer tour'
+
+tour.tour.add:
+  path: '/admin/config/user-interface/tour/add'
+  defaults:
+    _entity_form: tour.default
+    _title: 'Add tour'
+  requirements:
+    _permission: 'administer tour'
+
+entity.tour.edit_form:
+  path: '/admin/config/user-interface/tour/manage/{tour}'
+  defaults:
+    _entity_form: 'tour.edit'
+  requirements:
+    _permission: 'administer tour'
+
+entity.tour.edit_form_tips:
+  path: '/admin/config/user-interface/tour/manage/{tour}/tips'
+  defaults:
+    _entity_form: 'tour.edit_tips'
+  requirements:
+    _permission: 'administer tour'
+
+entity.tour.enable:
+  path: '/admin/config/user-interface/tour/manage/{tour}/enable'
+  defaults:
+    _controller: '\Drupal\tour\Controller\TourUIController::ajaxOperation'
+    op: enable
+  requirements:
+    _permission: 'administer tour'
+    _csrf_token: 'TRUE'
+
+entity.tour.disable:
+  path: '/admin/config/user-interface/tour/manage/{tour}/disable'
+  defaults:
+    _controller: '\Drupal\tour\Controller\TourUIController::ajaxOperation'
+    op: disable
+  requirements:
+    _permission: 'administer tour'
+    _csrf_token: 'TRUE'
+
+entity.tour.clone_form:
+  path: '/admin/config/user-interface/tour/manage/{tour}/clone'
+  defaults:
+    _entity_form: tour.clone
+    _title: 'Clone tour'
+  requirements:
+    _permission: 'administer tour'
+
+entity.tour.delete_form:
+  path: '/admin/config/user-interface/tour/manage/{tour}/delete'
+  defaults:
+    _entity_form: tour.delete
+  requirements:
+    _permission: 'administer tour'
+
+tour.tip.add:
+  path: '/admin/config/user-interface/tour/manage/{tour}/tip/add/{type}'
+  defaults:
+    _controller: '\Drupal\tour\Controller\TourTipController:add'
+    _title: 'Add tip'
+  requirements:
+    _permission: 'administer tour'
+
+tour.tip.edit:
+  path: '/admin/config/user-interface/tour/manage/{tour}/tip/edit/{tip}'
+  defaults:
+    _controller: '\Drupal\tour\Controller\TourTipController:edit'
+    _title: 'Edit tip'
+  requirements:
+    _permission: 'administer tour'
+
+tour.tip.delete:
+  path: '/admin/config/user-interface/tour/manage/{tour}/tip/delete/{tip}'
+  defaults:
+    _form: '\Drupal\tour\Form\TourTipDeleteForm'
+    _title: 'Delete tip'
+  requirements:
+    _permission: 'administer tour'
+
+tour.get_modules:
+  path: '/admin/config/user-interface/tour/get-modules'
+  defaults:
+    _controller: 'Drupal\tour\Controller\TourUIController::getModules'
+  requirements:
+    _permission: 'administer tour'
+
+tour.get_routes:
+  path: '/admin/config/user-interface/tour/get-routes'
+  defaults:
+    _controller: 'Drupal\tour\Controller\TourUIController::getRoutes'
+  requirements:
+    _permission: 'administer tour'
+
+tour.tour_settings:
+  path: '/admin/config/user-interface/tour/settings'
+  defaults:
+    _form: '\Drupal\tour\Form\TourSettingsForm'
+    _title: 'Settings'
+  requirements:
+    _permission: 'administer tour'
+
+tour.recap:
+  path: '/tour/{tour}/recap'
+  defaults:
+    _controller: '\Drupal\tour\Controller\TourRecapController::recap'
+    _title_callback: '\Drupal\tour\Controller\TourRecapController::title'
+  requirements:
+    _permission: 'access tour'
+  options:
+    parameters:
+      tour:
+        type: entity:tour

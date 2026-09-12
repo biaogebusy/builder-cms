@@ -1,0 +1,8 @@
+langcode: en
+status: true
+dependencies: {  }
+id: main_dashboard
+label: 'Main dashboard'
+description: ''
+layout: {  }
+weight: -10

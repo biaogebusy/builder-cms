@@ -1,0 +1,23 @@
+{
+  "name": "tour",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build"
+  },
+  "dependencies": {
+    "backbone": "^1.6.1",
+    "shepherd.js": "^13.0.3",
+    "underscore": "^1.13.7",
+    "vite": "^7.0.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3"
+  },
+  "prettier": {
+    "printWidth": 80,
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "all"
+  }
+}

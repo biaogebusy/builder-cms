@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - tourauto_test
+id: tourauto_test_tour
+label: 'Tourauto Test Tour'
+module: tourauto_test
+routes:
+  - route_name: tourauto_test.page
+tips:
+  tourauto_test_tip_1:
+    id: tourauto_test_tip_1
+    plugin: text
+    label: 'Tourauto Test Tip 1'
+    body: 'This is a test tip for tourauto functionality.'
+    weight: 1
+    position: bottom 

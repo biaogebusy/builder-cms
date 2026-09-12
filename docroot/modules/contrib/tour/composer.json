@@ -1,0 +1,31 @@
+{
+    "name": "drupal/tour",
+    "description": "The Tour module provides guided tours of the site interface via tooltips.",
+    "type": "drupal-module",
+    "license": "GPL-2.0-or-later",
+    "authors": [
+        {
+            "name": "Stephen Mustgrave (smustgrave)",
+            "homepage": "https://www.drupal.org/u/smustgrave",
+            "role": "Maintainer"
+        }
+    ],
+    "homepage": "https://drupal.org/project/tour",
+    "support": {
+        "issues": "https://drupal.org/project/issues/tour",
+        "source": "https://git.drupalcode.org/project/tour"
+    },
+    "require-dev": {
+        "drupal/dashboard": "*",
+        "php-forge/foxy": "^0.1"
+    },
+    "suggest": {
+        "drupal/tour_core": "*",
+        "drupal/tour_core_language": "*"
+    },
+    "config": {
+        "allow-plugins": {
+            "php-forge/foxy": false
+        }
+    }
+}

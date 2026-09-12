@@ -1,0 +1,15 @@
+langcode: en
+status: true
+dependencies: {  }
+id: tour-test-3
+label: 'Tour test front page'
+routes:
+  -
+    route_name: '<front>'
+tips:
+  tour-test-1:
+    id: tour-test-1
+    plugin: text
+    label: 'The front page tip'
+    weight: 1
+    body: 'This is the front page'

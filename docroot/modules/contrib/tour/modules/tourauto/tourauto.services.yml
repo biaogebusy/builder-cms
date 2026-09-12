@@ -1,0 +1,9 @@
+services:
+  _defaults:
+    autowire: true
+
+  tourauto.manager:
+    class: Drupal\tourauto\TourautoManager
+  Drupal\tourauto\TourautoManager:
+    alias: tourauto.manager
+  Drupal\tourauto\Hook\TourautoHooks: ~

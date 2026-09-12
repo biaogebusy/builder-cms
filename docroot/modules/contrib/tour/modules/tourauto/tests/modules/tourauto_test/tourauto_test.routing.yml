@@ -1,0 +1,7 @@
+tourauto_test.page:
+  path: '/tourauto-test'
+  defaults:
+    _controller: '\Drupal\tourauto_test\Controller\TourautoTestController::testPage'
+    _title: 'Tourauto Test Page'
+  requirements:
+    _permission: 'access tour' 

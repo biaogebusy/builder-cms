@@ -1,0 +1,22 @@
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+      - node
+id: tour_test_5
+label: 'Tour Test 5'
+routes:
+  -
+    route_name: entity.node.edit_form
+    route_params:
+      bundle: page
+tips:
+  hello_world:
+    id: hello_world
+    plugin: text
+    label: 'Hello world'
+    weight: -10
+    position: auto
+    selector: ''
+    body: 'This tour appears on bundle of type page but not article.'

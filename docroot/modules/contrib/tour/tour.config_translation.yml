@@ -1,0 +1,5 @@
+tour.settings:
+  title: 'Tour settings'
+  base_route_name: tour.tour_settings
+  names:
+    - tour.settings

@@ -1,0 +1,17 @@
+langcode: en
+status: true
+dependencies: {  }
+id: tour_dashboard_main_test
+label: 'Tour Dashboard Main test'
+routes:
+  -
+    route_name: 'dashboard'
+tips:
+  welcome_to_main_dashboard_test:
+    id: welcome_to_main_dashboard_test
+    plugin: text
+    label: 'Welcome to main dashboard test!'
+    weight: -10
+    position: auto
+    selector: ''
+    body: 'Hello this should only appear on this page.'

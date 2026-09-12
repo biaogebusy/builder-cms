@@ -1,0 +1,22 @@
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+      - taxonomy
+id: tour_test_taxonomy_term_id
+label: 'Tour Test Taxonomy Term Id'
+routes:
+  -
+    route_name: entity.taxonomy_term.edit_form
+    route_params:
+      taxonomy_term: '1'
+tips:
+  hello_world:
+    id: hello_world
+    plugin: text
+    label: 'Hello world'
+    weight: -10
+    position: auto
+    selector: ''
+    body: 'This tour appears only when visiting edit of term with id 1.'

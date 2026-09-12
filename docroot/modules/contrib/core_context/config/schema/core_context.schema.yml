@@ -1,0 +1,10 @@
+core_context.sequence:
+  type: mapping
+  label: 'Core Context settings'
+  mapping:
+    contexts:
+      type: sequence
+      label: 'Contexts'
+      sequence:
+        type: ctools.context
+        label: 'Context'

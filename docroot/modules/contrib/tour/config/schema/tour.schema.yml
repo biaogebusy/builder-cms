@@ -1,0 +1,136 @@
+# Schema for the configuration files of the Tour module.
+
+tour.settings:
+  type: config_object
+  label: 'Tour settings'
+  mapping:
+    hide_tour_when_empty:
+      type: boolean
+      label: 'Hide the tour button when empty'
+    display_custom_labels:
+      type: boolean
+      label: 'Display custom labels'
+    tour_avail_text:
+      type: label
+      label: 'Tour available text'
+      constraints:
+        NotNull: []
+    tour_no_avail_text:
+      type: label
+      label: 'Tour not available text'
+      constraints:
+        NotNull: []
+    enable_recap:
+      type: boolean
+      label: 'Enable tour recap'
+
+tour.tour.*:
+  type: config_entity
+  label: 'Tour settings'
+  mapping:
+    id:
+      type: machine_name
+      label: 'ID'
+      constraints:
+        # Tour IDs also allow dashes.
+        Regex:
+          pattern: '/^[a-z0-9_-]+$/'
+          message: "The %value machine name is not valid."
+    label:
+      type: required_label
+      label: 'Label'
+    routes:
+      type: sequence
+      label: 'A sequence of any routes that match and their required route parameters.'
+      sequence:
+        type: route_tour
+        label: 'Route'
+    tips:
+      type: sequence
+      label: 'Tips'
+      sequence:
+        type: tour.tip.[plugin]
+        label: 'Tour tip'
+  constraints:
+    FullyValidatable: ~
+
+tour.tip:
+  type: mapping
+  label: 'Tour tip'
+  mapping:
+    id:
+      type: machine_name
+      label: 'ID'
+      constraints:
+        # Tour IDs also allow dashes.
+        Regex:
+          pattern: '/^[a-z0-9_-]+$/'
+          message: "The %value machine name is not valid."
+    plugin:
+      type: string
+      label: 'Plugin'
+      constraints:
+        PluginExists:
+          manager: plugin.manager.tour.tip
+          interface: '\Drupal\tour\TipPluginInterface'
+    label:
+      type: required_label
+      label: 'Label'
+    weight:
+      type: weight
+      label: 'Weight'
+    position:
+      type: string
+      label: 'Position'
+      constraints:
+        Choice:
+          - auto
+          - auto-start
+          - auto-end
+          - top
+          - top-start
+          - top-end
+          - bottom
+          - bottom-start
+          - bottom-end
+          - right
+          - right-start
+          - right-end
+          - left
+          - left-start
+          - left-end
+    selector:
+      type: string
+      label: 'Selector'
+      nullable: true
+      constraints:
+        NotBlank:
+          allowNull: true
+
+tour.tip.text:
+  type: tour.tip
+  label: 'Textual tour tip'
+  mapping:
+    body:
+      type: text
+      label: 'Body'
+
+
+# Array of routes with route_name and route_params keys.
+# Copied from core but route_params could be null.
+route_tour:
+  type: mapping
+  label: 'Route'
+  mapping:
+    route_name:
+      type: string
+      label: 'Route Name'
+      constraints:
+        NotNull: []
+    route_params:
+      type: sequence
+      label: 'Route Params'
+      requiredKey: false
+      sequence:
+        type: string
+        label: 'Param'

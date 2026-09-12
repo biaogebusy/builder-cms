@@ -1,0 +1,44 @@
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+      - tour
+id: tours
+label: Tours
+routes:
+  -
+    route_name: entity.tour.collection
+tips:
+  getting_started:
+    id: getting_started
+    plugin: text
+    label: 'Getting started'
+    weight: -100
+    position: top
+    selector: null
+    body: 'On this page you can manage tours.'
+  adding_tours:
+    id: adding_tours
+    plugin: text
+    label: 'Adding tours'
+    weight: -100
+    position: top
+    selector: '.action-links a[href="/admin/config/user-interface/tour/add'
+    body: "When adding Tours you need to know on what page(s) more specific route(s) they must be present.\r\n\r\n<h3>Routes</h3>\r\n\r\nYou can install the <a href=\"https://www.drupal.org/project/devel\">Devel</a> module then visit <a href=\"/devel/routes\">/devel/routes</a> to find the Route by entering the URL path on that page."
+  edit_tour:
+    id: edit_tour
+    plugin: text
+    label: 'Edit tour'
+    weight: -100
+    position: left
+    selector: .dropbutton-action
+    body: '<p>Here you can choose what actions to apply to your tour.</p>'
+  share_tours:
+    id: share_tours
+    plugin: text
+    label: 'Share Tours'
+    weight: -100
+    position: top
+    selector: null
+    body: "After creating or updating a Tour you maybe want to share it.\r\n\r\n<h3>Configuration management</h3>\r\n\r\nYou can export a single item as a YAML file. Make sure not to share the <strong>uuid</strong> row and <strong>_core</strong> values\r\n\r\n<h3>Tour builder</h3>"

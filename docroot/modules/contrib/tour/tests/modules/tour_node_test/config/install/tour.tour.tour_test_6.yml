@@ -1,0 +1,22 @@
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+      - node
+id: tour_test_6
+label: 'Tour test 6'
+routes:
+  -
+    route_name: entity.node.edit_form
+    route_params:
+      node: '3'
+tips:
+  hello_world:
+    id: hello_world
+    plugin: text
+    label: 'Hello world'
+    weight: -10
+    position: auto
+    selector: ''
+    body: 'This tour appears on node 3 ONLY.'

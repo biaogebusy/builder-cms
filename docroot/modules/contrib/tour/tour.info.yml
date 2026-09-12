@@ -1,0 +1,11 @@
+name: Tour
+type: module
+description: 'Displays guided tours of the site interface.'
+package: User interface
+configure: entity.tour.collection
+core_version_requirement: ^11.3 || ^12
+
+# Information added by Drupal.org packaging script on 2026-06-30
+version: '3.0.0'
+project: 'tour'
+datestamp: 1782838403

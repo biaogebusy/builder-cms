@@ -1,0 +1,5 @@
+# Tour extension relation types.
+# See https://tools.ietf.org/html/rfc5988#section-4.2.
+clone-form:
+  uri: https://drupal.org/link-relations/clone-form
+  description: A form where a tour can be cloned.

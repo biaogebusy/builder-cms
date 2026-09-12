@@ -1,0 +1,23 @@
+langcode: en
+status: true
+dependencies: {  }
+id: tour-test-4
+label: 'Tour test 4'
+routes:
+  -
+    route_name: tour_test.4
+tips:
+  tour-test-1:
+    id: tour-test-1
+    plugin: text
+    label: 'The first tip'
+    body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+    weight: 1
+    selector: '#tour-test-1'
+  tour-test-2:
+    id: tour-test-2
+    plugin: text
+    label: 'The 2nd tip'
+    body: 'Lorem ipsum2'
+    weight: 2
+    selector: '#tour-test-2'

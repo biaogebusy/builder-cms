@@ -1,0 +1,16 @@
+langcode: en
+status: true
+dependencies: {  }
+id: tour-test-2
+label: 'Tour test english'
+routes:
+  -
+    route_name: tour_test.2
+tips:
+  tour-test-2:
+    id: tour-test-2
+    plugin: text
+    label: 'The quick brown fox'
+    weight: 2
+    selector: '#tour-test-2'
+    body: 'The quick brown fox jumped over the wall.'

@@ -1,0 +1,211 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the tour module.
+ */
+
+use Drupal\Component\Serialization\Yaml;
+use Drupal\tour\Entity\Tour;
+
+/**
+ * Helper function to import a new tour config.
+ *
+ * @param string $id
+ *   ID of the config.
+ */
+function import_new_tour_config(string $id): void {
+  /** @var \Drupal\Core\Config\ConfigManagerInterface $config_manager */
+  $config_manager = \Drupal::service('config.manager');
+
+  try {
+    // First check that this config doesn't already exist.
+    $exists = Tour::load($id);
+
+    if ($exists) {
+      return;
+    }
+
+    $file = \Drupal::service('extension.list.module')->getPath('tour') . '/config/optional/tour.tour.' . $id . '.yml';
+    if (!file_exists($file)) {
+      return;
+    }
+    $raw = file_get_contents($file);
+    if ($raw) {
+      $value = Yaml::decode($raw);
+      if (!is_array($value)) {
+        throw new \RuntimeException('Invalid YAML file %s', $file);
+      }
+      $type = $config_manager->getEntityTypeIdByName(basename($file));
+      $entity_manager = $config_manager->getEntityTypeManager();
+      $definition = $entity_manager->getDefinition($type);
+      $id_key = $definition->getKey('id');
+      $id = $value[$id_key];
+      /** @var \Drupal\Core\Config\Entity\ConfigEntityStorage $entity_storage */
+      $entity_storage = $entity_manager->getStorage($type);
+      $entity = $entity_storage->load($id);
+      if (!$entity) {
+        $entity = $entity_storage->createFromStorageRecord($value);
+        $entity->save();
+      }
+    }
+  }
+  catch (Exception) {
+    throw new \RuntimeException('Error running tour_update_10300');
+  }
+}
+
+/**
+ * Import new configuration for 2.0.x branch.
+ */
+function tour_update_10300(): void {
+  import_new_tour_config('people');
+  import_new_tour_config('user_create');
+  import_new_tour_config('user_edit');
+  import_new_tour_config('appearance');
+  import_new_tour_config('extend');
+  import_new_tour_config('content_language');
+  import_new_tour_config('dblog');
+  import_new_tour_config('user_profile_language');
+  import_new_tour_config('node_form');
+  import_new_tour_config('node_translation');
+  import_new_tour_config('node_translation_overview_page');
+  import_new_tour_config('admin_content');
+  import_new_tour_config('menu_ui');
+  import_new_tour_config('field_ui_display');
+  import_new_tour_config('field_ui_fields');
+  import_new_tour_config('field_ui_form_display');
+  import_new_tour_config('custom_block_edit');
+  import_new_tour_config('custom_blocks_list');
+  import_new_tour_config('shortcut_manage');
+}
+
+/**
+ * Re-save all tours.
+ */
+function tour_update_10301(): void {
+  $tours = \Drupal::entityTypeManager()
+    ->getStorage('tour')
+    ->loadMultiple();
+
+  if (!empty($tours)) {
+    foreach ($tours as $tour) {
+      $tour->save();
+    }
+  }
+}
+
+/**
+ * Fix dblog tour tip.
+ */
+function tour_update_10302(): void {
+  $tour = \Drupal::entityTypeManager()
+    ->getStorage('tour')
+    ->load('dblog');
+
+  if ($tour) {
+    $tips = $tour->getTips();
+
+    if (!empty($tips)) {
+      $new_tips = [];
+      foreach ($tips as $id => $tip) {
+        if ($id === 'dblog_intro') {
+          $new_tip = $tip->getConfiguration();
+          $new_tip['id'] = 'dblog_intro';
+          $new_tips[$tip->id()] = $new_tip;
+        }
+        else {
+          $new_tips[$tip->id()] = $tip->getConfiguration();
+        }
+      }
+      $tour->set('tips', $new_tips);
+    }
+  }
+}
+
+/**
+ * Import tour configure settings.
+ */
+function tour_update_10303(): void {
+  // Import the config & set default value.
+  \Drupal::configFactory()->getEditable('tour.settings')
+    ->set('tour_avail_text', 'Take a tour of this page.')
+    ->set('tour_no_avail_text', 'No tour available for this page.')
+    ->save();
+}
+
+/**
+ * Import tour configure settings attempt 2.
+ */
+function tour_update_10304(): void {
+  // Import the config & set default value.
+  $config = \Drupal::configFactory()->getEditable('tour.settings');
+
+  if (!$config->get('tour_avail_text')) {
+    $config->set('tour_avail_text', 'Take a tour of this page.');
+  }
+
+  if (!$config->get('tour_no_avail_text')) {
+    $config->set('tour_no_avail_text', 'No tour available for this page.');
+  }
+
+  $config->save();
+}
+
+/**
+ * New setting display_custom_labels.
+ */
+function tour_update_10306(): void {
+  \Drupal::configFactory()->getEditable('tour.settings')
+    ->set('display_custom_labels', TRUE)
+    ->save();
+}
+
+/**
+ * Re-save all tours.
+ */
+function tour_update_10307(): void {
+  try {
+    $tours = \Drupal::entityTypeManager()
+      ->getStorage('tour')
+      ->loadMultiple();
+
+    foreach ($tours as $tour) {
+      $tips = $tour->getTips();
+      if (!empty($tips)) {
+        $new_tips = [];
+        foreach ($tips as $tip) {
+          $new_tip = $tip->getConfiguration();
+          if (isset($new_tip['selector']) && $new_tip['selector'] === '') {
+            $new_tip['selector'] = NULL;
+            $new_tips[$tip->id()] = $new_tip;
+          }
+          else {
+            $new_tips[$tip->id()] = $tip->getConfiguration();
+          }
+        }
+        $tour->set('tips', $new_tips)->save();
+      }
+    }
+  }
+  catch (Exception) {
+  }
+}
+
+/**
+ * New setting hide_tour_when_empty.
+ */
+function tour_update_10309(): void {
+  \Drupal::configFactory()->getEditable('tour.settings')
+    ->set('hide_tour_when_empty', FALSE)
+    ->save();
+}
+
+/**
+ * New setting enable_recap.
+ */
+function tour_update_10310(): void {
+  \Drupal::configFactory()->getEditable('tour.settings')
+    ->set('enable_recap', FALSE)
+    ->save();
+}

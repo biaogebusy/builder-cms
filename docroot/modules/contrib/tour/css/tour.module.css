@@ -1,0 +1,430 @@
+/**
+ * @file
+ * Styling for tour module.
+ */
+
+/* Tab appearance. */
+.toolbar .toolbar-bar .tour-toolbar-tab.toolbar-tab,
+.toolbar .toolbar-bar .tour-toolbar-tab.toolbar-tab.toolbar-tab-empty {
+  float: right; /* LTR */
+}
+
+.tour-button {
+  padding: 1rem;
+  font-size: 1rem;
+}
+
+/* Mobile responsive tour button */
+@media only screen and (max-width: 480px) {
+  .tour-button {
+    padding: 0.75rem;
+    font-size: 0.875rem;
+  }
+}
+
+@media only screen and (max-width: 375px) {
+  .tour-button {
+    padding: 0.5rem;
+    font-size: 0.8rem;
+  }
+}
+
+.tour-button:focus {
+  outline: solid 1px Highlight;
+  outline: solid 1px -webkit-focus-ring-color;
+}
+
+.tour-button.toolbar-tab-empty,
+.toolbar .toolbar-bar .tour-toolbar-tab.toolbar-tab .toolbar-tab-empty,
+.admin-toolbar .toolbar-tab-empty {
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+[dir='rtl'] .toolbar .toolbar-bar .tour-toolbar-tab.toolbar-tab {
+  float: left;
+}
+
+/* Style the tour progress indicator. */
+.tour-progress {
+  position: absolute;
+  right: 20px; /* LTR */
+  bottom: 20px;
+}
+
+/* Mobile responsive tour progress */
+@media only screen and (max-width: 480px) {
+  .tour-progress {
+    right: 10px;
+    bottom: 10px;
+  }
+}
+
+@media only screen and (max-width: 375px) {
+  .tour-progress {
+    right: 5px;
+    bottom: 5px;
+  }
+}
+
+[dir='rtl'] .tour-progress {
+  right: auto;
+  left: 20px;
+}
+
+@media only screen and (max-width: 480px) {
+  [dir='rtl'] .tour-progress {
+    left: 10px;
+  }
+}
+
+@media only screen and (max-width: 375px) {
+  [dir='rtl'] .tour-progress {
+    left: 5px;
+  }
+}
+
+/**
+ * Following are largely Shepherd's default styles, with a few modifications.
+ */
+.shepherd-footer {
+  display: flex;
+  justify-content: flex-start;
+  padding: 0 20px 20px;
+}
+
+/* Mobile responsive footer */
+@media only screen and (max-width: 480px) {
+  .shepherd-footer {
+    justify-content: space-between;
+    padding: 0 15px 15px;
+    gap: 0.5rem;
+  }
+}
+
+@media only screen and (max-width: 375px) {
+  .shepherd-footer {
+    flex-wrap: wrap;
+    padding: 0 10px 10px;
+    gap: 0.25rem;
+  }
+}
+
+.shepherd-footer .shepherd-button-secondary {
+  margin-right: 1.5rem;
+  background: #d3d4d9;
+}
+
+/* Mobile responsive button spacing */
+@media only screen and (max-width: 480px) {
+  .shepherd-footer .shepherd-button-secondary {
+    margin-right: 0;
+  }
+
+  .shepherd-footer .shepherd-button {
+    min-width: 60px;
+    padding: 0.4rem 1rem;
+    font-size: 0.875rem;
+  }
+}
+
+@media only screen and (max-width: 375px) {
+  .shepherd-footer .shepherd-button {
+    min-width: 50px;
+    padding: 0.3rem 0.75rem;
+    font-size: 0.8rem;
+  }
+}
+
+.shepherd-footer .shepherd-button:last-child {
+  margin-right: 0;
+}
+
+/* Shared styling for buttons. */
+.button--primary.shepherd-button:not(:disabled):hover,
+.button--primary.shepherd-button:not(:disabled):active {
+  color: #fff;
+  background-color: #0036b1;
+}
+
+.button--secondary.shepherd-button:not(:disabled):hover {
+  color: #232429;
+  background-color: #c1c2c7;
+}
+
+.button--secondary.shepherd-button:not(:disabled):hover {
+  background-color: #adaeb3;
+}
+
+.shepherd-has-title .shepherd-content .shepherd-cancel-icon {
+  width: 24px;
+  height: 24px;
+  color: #000;
+}
+
+/* Mobile responsive cancel icon */
+@media only screen and (max-width: 375px) {
+  .shepherd-has-title .shepherd-content .shepherd-cancel-icon {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.shepherd-header .shepherd-cancel-icon:focus,
+.shepherd-footer .shepherd-button:focus {
+  outline: 2px dotted transparent;
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 calc(3px + 2px) #26a769;
+}
+
+.shepherd-title {
+  font-size: 1.6rem;
+}
+
+/* Mobile responsive title */
+@media only screen and (max-width: 480px) {
+  .shepherd-title {
+    font-size: 1.4rem;
+  }
+}
+
+@media only screen and (max-width: 375px) {
+  .shepherd-title {
+    font-size: 1.2rem;
+  }
+}
+
+.shepherd-has-title .shepherd-content .shepherd-header {
+  position: relative;
+  margin-bottom: 10px;
+  background: transparent;
+}
+
+.shepherd-text {
+  padding: 0 20px;
+}
+
+/* Mobile responsive text padding */
+@media only screen and (max-width: 480px) {
+  .shepherd-text {
+    padding: 0 15px;
+  }
+}
+
+@media only screen and (max-width: 375px) {
+  .shepherd-text {
+    padding: 0 10px;
+  }
+}
+
+.shepherd-text p {
+  margin: 0 0 1.4em;
+}
+
+/* Mobile responsive paragraph spacing */
+@media only screen and (max-width: 375px) {
+  .shepherd-text p {
+    margin: 0 0 1em;
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+}
+
+.shepherd-element {
+  z-index: 503;
+  width: 300px;
+  background: #fff;
+}
+
+/* Mobile responsive tour element */
+@media only screen and (max-width: 767px) {
+  .shepherd-element {
+    left: 2.5%;
+    width: 85%;
+    max-width: 400px;
+  }
+}
+
+@media only screen and (max-width: 480px) {
+  .shepherd-element {
+    left: 2%;
+    width: 96%;
+    max-width: none;
+  }
+}
+
+@media only screen and (max-width: 375px) {
+  .shepherd-element {
+    left: 1%;
+    width: 98%;
+  }
+}
+
+.shepherd-enabled.shepherd-element {
+  min-width: 500px;
+  opacity: 1;
+  border: 1px solid rgb(212, 212, 218, 0.8);
+  border-radius: 2px;
+  background-color: #fff;
+  box-shadow: 0 0 0.625rem rgb(0, 0, 0, 0.56);
+}
+
+/* Mobile responsive enabled element */
+@media only screen and (max-width: 767px) {
+  .shepherd-enabled.shepherd-element {
+    min-width: auto;
+  }
+}
+
+@media only screen and (max-width: 375px) {
+  .shepherd-enabled.shepherd-element {
+    border-radius: 1px;
+    box-shadow: 0 0 0.5rem rgb(0, 0, 0, 0.56);
+  }
+}
+
+.shepherd-element[data-popper-reference-hidden]:not(.shepherd-centered) {
+  opacity: 0;
+}
+
+.shepherd-element,
+.shepherd-element *,
+.shepherd-element ::after,
+.shepherd-element ::before {
+  box-sizing: border-box;
+}
+
+.shepherd-arrow,
+.shepherd-arrow::before {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+}
+
+/* Mobile responsive arrows */
+@media only screen and (max-width: 375px) {
+  .shepherd-arrow,
+  .shepherd-arrow::before {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+.shepherd-arrow::before {
+  content: '';
+  transform: rotate(45deg);
+  background: #fff;
+}
+
+.shepherd-element[data-popper-placement^='top'] > .shepherd-arrow {
+  bottom: -8px !important;
+  border: initial !important;
+}
+
+/* Mobile responsive top arrow positioning */
+@media only screen and (max-width: 375px) {
+  .shepherd-element[data-popper-placement^='top'] > .shepherd-arrow {
+    bottom: -6px !important;
+  }
+}
+
+.shepherd-element[data-popper-placement^='top'] > .shepherd-arrow::before {
+  border-right: 1px solid rgb(212, 212, 218, 0.8);
+  border-bottom: 1px solid rgb(212, 212, 218, 0.8);
+  border-radius: 2px;
+  background: #fff;
+  box-shadow: 3px 3px 3px -3px rgb(0, 0, 0, 0.56);
+}
+
+.shepherd-element *:focus {
+  outline: auto;
+}
+
+.shepherd-element[data-popper-placement^='bottom'] > .shepherd-arrow {
+  top: -8px !important;
+  border: initial !important;
+}
+
+/* Mobile responsive bottom arrow positioning */
+@media only screen and (max-width: 375px) {
+  .shepherd-element[data-popper-placement^='bottom'] > .shepherd-arrow {
+    top: -6px !important;
+  }
+}
+
+.shepherd-element[data-popper-placement^='bottom'] > .shepherd-arrow::before {
+  border-top: 1px solid rgb(212, 212, 218, 0.8);
+  border-left: 1px solid rgb(212, 212, 218, 0.8);
+  border-radius: 2px;
+  background: #fff;
+  box-shadow: -3px -3px 3px -3px rgb(0, 0, 0, 0.56);
+}
+
+.shepherd-element[data-popper-placement^='left'] > .shepherd-arrow {
+  right: -8px !important;
+  border: initial !important;
+}
+
+/* Mobile responsive left arrow positioning */
+@media only screen and (max-width: 375px) {
+  .shepherd-element[data-popper-placement^='left'] > .shepherd-arrow {
+    right: -6px !important;
+  }
+}
+
+.shepherd-element[data-popper-placement^='left'] > .shepherd-arrow::before {
+  border-top: 1px solid rgb(212, 212, 218, 0.8);
+  border-right: 1px solid rgb(212, 212, 218, 0.8);
+  border-radius: 2px;
+  background: #fff;
+  box-shadow: 3px -3px 3px -3px rgb(0, 0, 0, 0.56);
+}
+
+.shepherd-element[data-popper-placement^='right'] > .shepherd-arrow {
+  left: -8px !important;
+  border: initial !important;
+}
+
+/* Mobile responsive right arrow positioning */
+@media only screen and (max-width: 375px) {
+  .shepherd-element[data-popper-placement^='right'] > .shepherd-arrow {
+    left: -6px !important;
+  }
+}
+
+.shepherd-element[data-popper-placement^='right'] > .shepherd-arrow::before {
+  border-bottom: 1px solid rgb(212, 212, 218, 0.8);
+  border-left: 1px solid rgb(212, 212, 218, 0.8);
+  border-radius: 2px;
+  background: #fff;
+  box-shadow: -3px 3px 3px -3px rgb(0, 0, 0, 0.56);
+}
+
+.shepherd-target-click-disabled.shepherd-enabled.shepherd-target,
+.shepherd-target-click-disabled.shepherd-enabled.shepherd-target * {
+  pointer-events: none;
+}
+
+.shepherd-modal-overlay-container {
+  position: fixed;
+  z-index: 105;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  width: 100vw;
+  height: 0;
+  pointer-events: none;
+  opacity: 0;
+  fill-rule: evenodd;
+}
+
+.shepherd-modal-overlay-container.shepherd-modal-is-visible {
+  z-index: 502;
+  height: 100vh;
+  opacity: 0.5;
+}
+
+.shepherd-modal-overlay-container.shepherd-modal-is-visible path {
+  pointer-events: all;
+}

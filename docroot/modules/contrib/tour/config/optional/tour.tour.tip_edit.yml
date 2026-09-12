@@ -1,0 +1,44 @@
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+      - tour
+id: tip_edit
+label: 'Edit tip'
+routes:
+  -
+    route_name: tour.tip.edit
+tips:
+  tour_page:
+    id: tour_page
+    plugin: text
+    label: 'Tour edit'
+    weight: 1
+    position: top
+    selector: null
+    body: '<p>On this page you edit a tour.</p><p>Note that after saving a tour you need to make sure the tour file is copied for later use into a module config directory or into an issue queue.</p>'
+  tour_label:
+    id: tour_label
+    plugin: text
+    label: Label
+    weight: 3
+    position: top
+    selector: '#edit-label'
+    body: '<p>The label is for administrative purposed. Used by Tour UI to list a Tour.</p>'
+  tour_paths:
+    id: tour_paths
+    plugin: text
+    label: Paths
+    weight: 5
+    position: top
+    selector: '#edit-paths'
+    body: '<p>Here you define the path or paths a Tour should be displayed.</p><p>You may use * as a wildcard for a path element. Ie node/*edit</p>'
+  tour_tips:
+    id: tour_tips
+    plugin: text
+    label: Tips
+    weight: 7
+    position: 'auto'
+    selector: '#edit-tips'
+    body: '<p>These are the tips.</p>'

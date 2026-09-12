@@ -1,0 +1,60 @@
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+      - tour_test
+id: tour-test
+label: 'Tour test english'
+routes:
+  -
+    route_name: tour_test.1
+  -
+    route_name: tour_test.1_no_action
+  # Test the same route with different parameters:
+  -
+    route_name: tour_test.3
+    route_params:
+      locale: foo
+  -
+    route_name: tour_test.3
+    route_params:
+      locale: baz
+  -
+    route_name: node.add
+tips:
+  tour-test-1:
+    id: tour-test-1
+    plugin: text
+    label: 'The first tip'
+    weight: 1
+    selector: '#tour-test-1'
+    body: 'Is <a href="[site:url]">[site:name]</a> always the best dressed?'
+  tour-test-action:
+    id: tour-test-3
+    plugin: text
+    label: 'The action'
+    weight: 2
+    selector: .button-action
+    body: 'The action button of awesome'
+  tour-test-3:
+    id: tour-test-3
+    plugin: image
+    label: 'The awesome image'
+    url: 'http://local/image.png'
+    weight: 1
+  tour-test-6:
+    id: tour-test-6
+    plugin: text
+    label: 'Im a list'
+    weight: 6
+    selector: '#tour-test-3'
+    body: 'Im all these things:</p><ul><li>Modal</li><li>Awesome</li></ul>'
+  tour-test-7:
+    id: tour-test-7
+    plugin: text
+    label: 'Hidden item'
+    weight: -100
+    position: auto
+    selector: '#edit-path-0-alias'
+    body: 'Hidden tour item found!'

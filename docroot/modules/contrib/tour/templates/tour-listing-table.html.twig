@@ -1,0 +1,40 @@
+{#
+/**
+ * @file
+ * Default theme implementation for views listing table.
+ *
+ * Available variables:
+ * - headers: Contains table headers.
+ * - rows: Contains multiple rows. Each row contains:
+ *   - tour_name: The human-readable name of the tour.
+ *   - machine_name: Machine name of the tour.
+ *   - status: The status of the tour.
+ *   - tips: The number of tips of the tour.
+ *   - operations: List of available operations.
+ *
+ * @ingroup themeable
+ */
+#}
+{% if rows %}
+  <table{{ attributes.addClass('responsive-enabled') }}>
+    <thead>
+    <tr>
+      {% for header in headers %}
+        <th{{ header.attributes }}>{{ header }}</th>
+      {% endfor %}
+    </tr>
+    </thead>
+    <tbody>
+    {% for row in rows %}
+      <tr{{ create_attribute(row.attributes) }}>
+        {% for data in row.data %}
+          <td>{{ data }}</td>
+        {% endfor %}
+      </tr>
+    {% endfor %}
+
+    </tbody>
+  </table>
+{% else %}
+  {{ empty }}
+{% endif %}

@@ -1,0 +1,19 @@
+langcode: en
+status: true
+dependencies: {  }
+id: tour_dashboard_extra_test
+label: 'Tour Dashboard Extra Test'
+routes:
+  -
+    route_name: entity.dashboard.canonical
+    route_params:
+      id: extra_dashboard
+tips:
+  extra_dashboard_tour:
+    id: extra_dashboard_tour
+    plugin: text
+    label: 'Extra Dashboard Tour'
+    weight: -10
+    position: auto
+    selector: ''
+    body: 'Hello world'

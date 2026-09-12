@@ -1,0 +1,31 @@
+{#
+/**
+ * @file
+ * Default theme implementation for a tour recap page.
+ *
+ * Available variables:
+ * - tour: The tour entity.
+ * - tips: An array of tip items, each containing:
+ *   - title: The tip title/label.
+ *   - body: The rendered tip body content.
+ *
+ * @see \Drupal\tour\Controller\TourRecapController::recap()
+ *
+ * @ingroup themeable
+ */
+#}
+<div class="tour-recap">
+  <p class="tour-recap__description">{{ 'This is a summary of all steps in the tour.'|t }}</p>
+  <ol class="tour-recap__steps">
+    {% for tip in tips %}
+      <li class="tour-recap__step">
+        {% if tip.title %}
+          <h2 class="tour-recap__step-title">{{ tip.title }}</h2>
+        {% endif %}
+        {% if tip.body %}
+          <div class="tour-recap__step-body">{{ tip.body|raw }}</div>
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ol>
+</div>

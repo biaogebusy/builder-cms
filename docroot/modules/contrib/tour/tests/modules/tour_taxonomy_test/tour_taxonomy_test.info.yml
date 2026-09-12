@@ -1,0 +1,13 @@
+name: Tour Taxonomy tests
+type: module
+core_version_requirement: ^11.3 || ^12
+description: Tour tests with taxonomy module.
+package: Testing
+dependencies:
+  - drupal:tour
+  - drupal:taxonomy
+
+# Information added by Drupal.org packaging script on 2026-06-30
+version: '3.0.0'
+project: 'tour'
+datestamp: 1782838403
