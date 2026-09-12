@@ -7,11 +7,10 @@ namespace Drupal\xinshi_api\Controller;
 use Drupal\block_content\Entity\BlockContent;
 use Drupal\Component\Serialization\Json;
 use Drupal\content_translation\ContentTranslationManager;
+use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\node\Entity\Node;
-use Drupal\panels\Plugin\DisplayVariant\PanelsDisplayVariant;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Drupal\panels_ipe\Controller\PanelsIPEPageController as BasePanelsIPEPageController;
 use Drupal\xinshi_api\NodeJson;
 use Drupal\layout_builder\Section;
 use Drupal\layout_builder\SectionComponent;
@@ -21,7 +20,7 @@ use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
  * Class PanelsIPEPageController
  * @package Drupal\xinshi_api\Controller
  */
-class PanelsIPEPageController extends BasePanelsIPEPageController {
+class PanelsIPEPageController extends ControllerBase {
 
   /**
    * 历史版本列表最多返回的条数
@@ -56,8 +55,6 @@ class PanelsIPEPageController extends BasePanelsIPEPageController {
         $builder = new NodeJson($entity);
         if ($builder->isLayoutBuilder()) {
           $this->saveLayoutBuilder($entity, $json['body']);
-        } else {
-          $this->savePanelizer($entity, $this->getBlockContent($json['body']));
         }
         $data['data'] = [
           'nid' => $entity->id(),
@@ -116,106 +113,6 @@ class PanelsIPEPageController extends BasePanelsIPEPageController {
     ]);
     $entity->save();
     return $entity;
-  }
-
-  /**
-   * Create custom block content.
-   * @param $data
-   * @param false $rebuild
-   * @param null $langcode
-   * @return array
-   */
-  private function getBlockContent($data, $rebuild = FALSE, $langcode = NULL) {
-    $langcode = $langcode ?? $this->currentLanguageId();
-    $list = [];
-    $number = $this->getNumber();
-    foreach ($data as $row) {
-      $uuid = $row['uuid'] ?? '';
-      $body = $row['attributes']['body'] ?? '';
-      $blocks = $uuid ? $this->entityTypeManager->getStorage('block_content')->loadByProperties(['uuid' => $uuid]) : FALSE;
-      $block = $blocks ? reset($blocks) : FALSE;
-      if ($block && $block->bundle() != 'json') {
-        $block = FALSE;
-      }
-      if ((empty($block) || $rebuild) && $body) {
-        $number++;
-        $block = BlockContent::create([
-          'type' => 'json',
-          'info' => "Json {$number}",
-          'body' => [
-            'value' => is_array($body) ?  json_encode($body, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) : $body,
-            'format' => 'json',
-          ],
-          'langcode' => [
-            'value' => $langcode,
-          ],
-        ]);
-      }
-
-      if ($block) {
-        $block = $this->addBlockTranslation($block, $langcode);
-        $block->set('body', [
-          [
-            'value' => is_array($body) ?  json_encode($body, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) : $body,
-            'format' => 'json',
-          ],
-        ]);
-        $block->save();
-        $list[] = $block;
-      }
-    }
-    return $list;
-  }
-
-  /**
-   * Save layout.
-   * @param Node $entity
-   * @param array $blocks
-   * @param false $add_translations
-   */
-  private function savePanelizer(Node &$entity, array $blocks, $add_translations = FALSE) {
-    $nid = $entity->id();
-    $panels_storage_id = "node:{$nid}:full";
-
-    /** @var PanelsDisplayVariant $panels_display */
-    $panels_display = $this->loadPanelsDisplay('panelizer_field', $panels_storage_id);
-    $regions = $panels_display->getLayout()->getPluginDefinition()->get('regions');
-    $panels_display->setConfiguration([
-      "storage_type" => "panelizer_field",
-      "storage_id" => "node:{$nid}:full",
-      "page_title" => "[node:title]",
-      "layout" => "layout_onecol",
-      "label" => $this->t("Default"),
-      "pattern" => "panelizer",
-      "builder" => "ipe",
-    ]);
-    $region = array_keys($regions)[0];
-    $weight = 1;
-    /** @var BlockContent $block */
-    foreach ($blocks as $block) {
-      $panels_display->addBlock([
-        'id' => 'block_content:' . $block->uuid(),
-        'label' => $block->label(),
-        'label_display' => 0,
-        'region' => $region,
-        'weight' => $weight,
-        'vid' => $block->getRevisionId(),
-      ]);
-      $weight++;
-    }
-
-    // 始终清理 IPE 临时存储，避免残留数据
-    \Drupal::service('tempstore.shared')->get('panels_ipe')->delete($panels_display->getTempStoreId());
-
-    if ($add_translations) {
-      // 多语言场景：将 panels 配置写入实体字段，各语言互不覆盖
-      $panelizer = $entity->get('panelizer')->getValue();
-      $panelizer[0]['panels_display'] = $panels_display->getConfiguration();
-      $entity->set('panelizer', $panelizer);
-    } else {
-      // 单语言场景：直接写入共享存储
-      \Drupal::service('panels.storage_manager')->save($panels_display);
-    }
   }
 
   private function getNumber() {
@@ -425,24 +322,6 @@ class PanelsIPEPageController extends BasePanelsIPEPageController {
         }
       }
     }
-    elseif ($json->isPanelizer()) {
-      $panelizer = $revision->get('panelizer')->getValue();
-      foreach ($panelizer[0]['panels_display']['blocks'] ?? [] as $block_config) {
-        if (($block_config['provider'] ?? '') !== 'block_content') {
-          continue;
-        }
-        if (!empty($block_config['vid'])) {
-          $block = $storage->loadRevision($block_config['vid']);
-        }
-        else {
-          $entities = $storage->loadByProperties(['uuid' => explode(':', $block_config['id'])[1]]);
-          $block = $entities ? reset($entities) : NULL;
-        }
-        if ($block) {
-          $blocks[] = $this->getBlockTranslation($block);
-        }
-      }
-    }
     return $blocks;
   }
 
@@ -475,18 +354,6 @@ class PanelsIPEPageController extends BasePanelsIPEPageController {
         $builder = new NodeJson($node);
         if ($builder->isLayoutBuilder()) {
           $this->saveLayoutBuilder($node, $json['body']);
-        } else {
-          // 检测是否启用了内容翻译：多语言场景下必须按翻译实体保存，
-          // 否则 panels.storage_manager 的共享存储会覆盖其他语言的配置。
-          $trans_manager = \Drupal::moduleHandler()->moduleExists('content_translation')
-            ? \Drupal::service('content_translation.manager') : FALSE;
-          $has_translations = $trans_manager
-            && $trans_manager->isEnabled($node->getEntityTypeId(), $node->bundle());
-
-          $this->savePanelizer($node, $this->getBlockContent($json['body']), $has_translations);
-          if ($has_translations) {
-            $node->save();
-          }
         }
         $data['data'] = [
           'nid' => $node->id(),
@@ -527,12 +394,26 @@ class PanelsIPEPageController extends BasePanelsIPEPageController {
     if ($revision->hasTranslation($this->currentLanguageId())) {
       $revision = $revision->getTranslation($this->currentLanguageId());
     }
-    if (json_encode($node->get('panelizer')->getValue()[0]['panels_display'] ?? '') == json_encode($revision->get('panelizer')->getValue()[0]['panels_display'] ?? '')) {
+    if ($this->layoutSignature($node) === $this->layoutSignature($revision)) {
       return TRUE;
     } else {
       $this->setMessage($this->t('The content has either been modified by another user, or you have already submitted modifications. As a result, your changes cannot be saved.'));
       return FALSE;
     }
+  }
+
+  /**
+   * 计算节点布局字段的签名，用于并发编辑检测。
+   *
+   * @param Node $node
+   * @return string
+   */
+  private function layoutSignature(Node $node) {
+    $field = OverridesSectionStorage::FIELD_NAME;
+    if (!$node->hasField($field) || $node->get($field)->isEmpty()) {
+      return '';
+    }
+    return serialize($node->get($field)->getValue());
   }
 
 
@@ -546,24 +427,6 @@ class PanelsIPEPageController extends BasePanelsIPEPageController {
     $json = new NodeJson($node, 'full');
     if ($json->isLayoutBuilder()) {
       $blocks = $this->getLayoutBuilderBlocks($node);
-    } elseif ($json->isPanelizer()) {
-      $panelizer = $node->get('panelizer')->getValue();
-      foreach ($panelizer[0]['panels_display']['blocks'] ?? [] as $block_config) {
-        if ($block_config['provider'] == 'block_content') {
-          $entities = $this->entityTypeManager()->getStorage('block_content')->loadByProperties([
-            'uuid' => explode(':', $block_config['id'])[1]
-          ]);
-          if (empty($entities)) {
-            continue;
-          }
-          /** @var BlockContent $block */
-          $block = reset($entities);
-          if ($block->hasTranslation($this->currentLanguageId())) {
-            $block = $block->getTranslation($this->currentLanguageId());
-          }
-          $blocks[] = $block;
-        }
-      }
     }
     return $blocks;
   }
@@ -631,8 +494,6 @@ class PanelsIPEPageController extends BasePanelsIPEPageController {
       if (!empty($json['body'])) {
         if ($builder->isLayoutBuilder()) {
           $this->saveLayoutBuilder($trans, $json['body'], TRUE, $target->getId());
-        } else {
-          $this->savePanelizer($trans, $this->getBlockContent($json['body'], TRUE, $target->getId()), TRUE);
         }
       } else {
         if ($builder->isLayoutBuilder()) {
@@ -640,10 +501,6 @@ class PanelsIPEPageController extends BasePanelsIPEPageController {
           // 仅给 block_content 加翻译并不会让译文出现在前台 —— 必须把 $trans 的
           // layout 字段中各组件的 block_revision_id 同步更新为新生成的修订。
           $this->cloneLayoutBuilderTranslations($trans, $target->getId());
-        } else {
-          foreach ($this->getPanelBlocks($source_node) as $block) {
-            $this->addBlockTranslation($block, $target->getId());
-          }
         }
       }
       $trans->save();

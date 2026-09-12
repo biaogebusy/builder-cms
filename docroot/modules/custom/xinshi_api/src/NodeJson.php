@@ -2,11 +2,7 @@
 
 namespace Drupal\xinshi_api;
 
-use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
-use Drupal\layout_builder\Section;
 use Drupal\layout_builder\SectionComponent;
-use Drupal\views\ViewExecutable;
-use Drupal\views\Views;
 use Drupal\Component\Serialization\Json;
 use Drupal\entity_print\Plugin\EntityPrint\PrintEngine\DomPdf;
 
@@ -57,28 +53,6 @@ class NodeJson extends EntityJsonBase {
             $weight++;
             $this->addCacheTags($entityJson->getCacheTags());;
           }
-        }
-      }
-    } elseif ($this->isPanelizer()) {
-      $displays = $this->entity->get('panelizer')->panels_display;
-      foreach ($displays['blocks'] as $display) {
-        switch ($display['provider']) {
-          case 'block_content':
-            if (empty($display['vid'])) {
-              $block = $this->entityTypeManager->getStorage($display['provider'])->loadByProperties(['uuid' => explode(':', $display['id'])[1]]);
-            } else {
-              $block = $this->entityTypeManager->getStorage('block_content')->loadRevision($display['vid']);
-            }
-            if ($block) {
-              $entityJson = new EntityJsonBase(is_array($block) ? current($block) : $block);
-              $widgets[] = [
-                'weight' => $display['weight'],
-                'content' => $entityJson->getContent(),
-                'type' => $entityJson->entity->bundle(),
-              ];
-              $this->addCacheTags($entityJson->getCacheTags());
-            }
-            break;
         }
       }
     }
@@ -140,25 +114,7 @@ class NodeJson extends EntityJsonBase {
   private function getNodeContent() {
     $data = [];
     $build = $this->entityTypeManager->getViewBuilder($this->entity->getEntityTypeId())->view($this->entity);
-    $panels = [];
-    if (isset($build['#panels_display']) && isset($build['content']['content'])) {
-      foreach ($build['content']['content'] as $key => $content) {
-        if (strpos($key, '#') === 0) {
-          continue;
-        }
-        switch ($content['#base_plugin_id']) {
-          case 'views_block':
-            $panels[$content['content']['#name'] . '_' . $content['content']['#display_id']] = [
-              'rows' => $content['content']['view_build']['#rows'] ? $content['content']['view_build']['#rows'][0]['#rows'] : [],
-              'title' => $content['#configuration']['views_label'] ? $content['#configuration']['views_label'] : $content['content']['#title']['#markup']
-            ];
-            $this->addCacheTags($content['content']['#cache']['tags']);
-            break;
-        }
-      }
-    } else {
-      $panels = $this->renderLayoutBuilder();
-    }
+    $panels = $this->renderLayoutBuilder();
     \Drupal::service('entity_theme_engine.entity_widget_service')->entityViewAlter($build, $this->entity, $this->mode);
     foreach ($panels as $key => $panel) {
       $build['content']['#context'][$key] = $panel;
@@ -226,52 +182,4 @@ class NodeJson extends EntityJsonBase {
     }
   }
 
-  /**
-   * 渲染布局构建器中的视图块
-   *
-   * 该方法加载与当前实体类型和包关联的布局构建器配置，并渲染其中的视图块。
-   * 对于每个视图组件，会检查访问权限，执行视图并收集渲染结果。
-   *
-   * @return array 返回渲染后的视图块数组，格式为：
-   *   - 键：视图名称_显示ID（如"view_name_display_id"）
-   *   - 值：包含以下键的数组：
-   *     - 'rows': 视图的行数据
-   *     - 'title': 视图标题或配置的标签
-   *
-   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
-   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
-   */
-  private function renderLayoutBuilder() {
-    $builder = LayoutBuilderEntityViewDisplay::load($this->entity->getEntityTypeId() . '.' . $this->entity->bundle() . '.json');
-    if (empty($builder)) {
-      return [];
-    }
-    $blocks = [];
-    /** @var Section $section */
-    foreach ($builder->getSections() as $section) {
-      /** @var SectionComponent $component */
-      foreach ($section->getComponents() as $component) {
-        $configuration = $component->get('configuration');
-        if ($configuration['provider'] == 'views') {
-          $id = explode(':', $configuration['id'])[1];
-          $view_name = explode('-', $id)[0];
-          $display_id = explode('-', $id)[1];
-          /** @var ViewExecutable $view */
-          $view = Views::getView($view_name);
-          if ($view && $view->access($display_id)) {
-            $view->setDisplay($display_id);
-            $view->preExecute();
-            $view->execute($display_id);
-            $render = $view->render();
-            $blocks["{$view_name}_{$display_id}"] = [
-              'rows' => $render['#rows'][0]['#rows'] ?? [],
-              'title' => empty($configuration['views_label']) ? $view->getTitle() : $configuration['views_label'],
-            ];
-            $this->addCacheTags($view->getCacheTags());
-          }
-        }
-      }
-    }
-    return $blocks;
-  }
 }

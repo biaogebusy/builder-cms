@@ -26,6 +26,23 @@ drush update-to-d11:panelizer-cleanup
 composer update drupal/panelizer drupal/panels drupal/panels_ipe
 ```
 
+> 注意：`panelizer-cleanup` 内部会调用 `field_purge_batch()`，若站点残留
+> 「实体类型已不存在的待删除字段」（如 workspace-upstream）会直接中断，
+> 需先执行下方的 `update-to-d11:stale-field-cleanup`。
+
+## 待删除字段脏数据清理（workspace-upstream）
+
+站点历史上启用过 workspaces（后禁用），其 base field `upstream` 被标记删除后残留在
+`field.storage.deleted` / `field.field.deleted` 状态里。由于 `workspace` 实体类型已不存在，
+`field_purge_batch()` 遍历到它时会抛 `The "workspace" entity type does not exist`，
+阻塞所有字段清理（含 panelizer 清理）。本命令统一移除这类「实体类型已不存在的
+待删除字段」：
+
+```bash
+# 1. 移除实体类型已不存在的待删除字段（如 workspace-upstream）
+drush update-to-d11:stale-field-cleanup
+```
+
 ## CKEditor 4 → CKEditor 5 迁移
 
 核心 CKEditor 4（`drupal/ckeditor`）随 Drupal 11 移除。本模块把全部文本编辑器

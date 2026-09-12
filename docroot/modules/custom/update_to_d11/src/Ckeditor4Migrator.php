@@ -31,6 +31,11 @@ class Ckeditor4Migrator {
     'Maximize',
   ];
 
+  /**
+   * plugin_pack font 子模块是否可用（未通过 composer 安装时为 FALSE）。
+   */
+  protected bool $fontSizeAvailable = FALSE;
+
   public function __construct(
     protected EntityTypeManagerInterface $entityTypeManager,
   ) {}
@@ -49,11 +54,15 @@ class Ckeditor4Migrator {
     ];
 
     // 1. 安装 CKEditor 5 与补充插件（fontSize、fullscreen）。
-    $install = [
-      'ckeditor5',
-      'ckeditor5_plugin_pack',
-      'ckeditor5_plugin_pack_font',
-    ];
+    //    plugin_pack 是 contrib 包，D10 阶段可能尚未通过 composer 安装，
+    //    未安装时跳过，FontSize 按钮降级丢弃（内容不受影响）。
+    $extension_list = \Drupal::service('extension.list.module');
+    $install = ['ckeditor5'];
+    foreach (['ckeditor5_plugin_pack', 'ckeditor5_plugin_pack_font'] as $module) {
+      if ($extension_list->exists($module)) {
+        $install[] = $module;
+      }
+    }
     $missing = array_filter(
       $install,
       static fn(string $m): bool => !\Drupal::moduleHandler()->moduleExists($m),
@@ -62,6 +71,7 @@ class Ckeditor4Migrator {
       \Drupal::service('module_installer')->install(array_values($missing));
       $report['editors'][] = '已安装模块：' . implode(', ', $missing);
     }
+    $this->fontSizeAvailable = \Drupal::moduleHandler()->moduleExists('ckeditor5_plugin_pack_font');
 
     // 2. 逐个转换 editor 实体。
     $storage = $this->entityTypeManager->getStorage('editor');
@@ -113,7 +123,8 @@ class Ckeditor4Migrator {
 
     // fontSize（plugin_pack font）输出 <span class>，
     // 启用 filter_html 的格式需放行 class 属性。
-    $span_class_needed = in_array('FontSize', $old_buttons, TRUE)
+    $span_class_needed = $this->fontSizeAvailable
+      && in_array('FontSize', $old_buttons, TRUE)
       && $format->filters('filter_html')->status;
     if ($span_class_needed) {
       $this->allowSpanClass($format);
@@ -123,7 +134,11 @@ class Ckeditor4Migrator {
     $editor->setSettings($settings);
     $editor->save();
 
-    $dropped = array_values(array_intersect(self::DROPPED_BUTTONS, $old_buttons));
+    $dropped_buttons = self::DROPPED_BUTTONS;
+    if (!$this->fontSizeAvailable) {
+      $dropped_buttons[] = 'FontSize';
+    }
+    $dropped = array_values(array_intersect($dropped_buttons, $old_buttons));
     $log = sprintf('%s：已切换到 CKEditor 5', $editor->id());
     if ($dropped) {
       $log .= '，丢弃按钮（' . implode('、', $dropped) . '）';

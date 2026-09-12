@@ -17,25 +17,7 @@ class TermJson extends EntityJsonBase {
     // TODO: Implement getJson() method.
     $data = [];
     $build = $this->entityTypeManager->getViewBuilder($this->entity->getEntityTypeId())->view($this->entity);
-    $panels = [];
-    if (isset($build['#panels_display']) && isset($build['content']['content'])) {
-      foreach ($build['content']['content'] as $key => $content) {
-        if (strpos($key, '#') === 0) {
-          continue;
-        }
-        switch ($content['#base_plugin_id']) {
-          case 'views_block':
-            $panels[$content['content']['#name'] . '_' . $content['content']['#display_id']] = [
-              'rows' => $content['content']['view_build']['#rows'] ? $content['content']['view_build']['#rows'][0]['#rows'] : [],
-              'title' => $content['#configuration']['views_label'] ? $content['#configuration']['views_label'] : $content['content']['#title']['#markup'] ?? '',
-            ];
-            if (isset($content['content']['#cache']['tags'])) {
-              $this->addCacheTags($content['content']['#cache']['tags']);
-            }
-            break;
-        }
-      }
-    }
+    $panels = $this->renderLayoutBuilder();
     \Drupal::service('entity_theme_engine.entity_widget_service')->entityViewAlter($build, $this->entity, $this->mode);
     if (isset($build['content'])) {
       foreach ($panels as $key => $panel) {

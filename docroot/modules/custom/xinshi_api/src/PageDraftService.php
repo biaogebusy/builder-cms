@@ -11,8 +11,9 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Session\AccountProxyInterface;
-use Drupal\panelizer\PanelizerInterface;
-use Drupal\panels\PanelsDisplayManagerInterface;
+use Drupal\layout_builder\Plugin\SectionStorage\OverridesSectionStorage;
+use Drupal\layout_builder\Section;
+use Drupal\layout_builder\SectionComponent;
 
 /** Creates only new, unpublished entities, atomically with their operation record. */
 final class PageDraftService {
@@ -25,8 +26,6 @@ final class PageDraftService {
     private readonly AccountProxyInterface $account,
     private readonly LanguageManagerInterface $languages,
     private readonly TimeInterface $time,
-    private readonly ?PanelizerInterface $panelizer,
-    private readonly ?PanelsDisplayManagerInterface $panels,
     private readonly ?ModerationInformationInterface $moderation,
     private readonly ?StateTransitionValidationInterface $transitions,
   ) {}
@@ -68,21 +67,20 @@ final class PageDraftService {
         throw new PageDraftException('invalid_input', 422);
       }
       $block->save();
-      $display = $this->panels->createDisplay('layout_onecol', 'ipe');
-      $display->setConfiguration(array_replace($display->getConfiguration(), [
-        'page_title' => '[node:title]',
-        'pattern' => 'panelizer',
-      ]));
-      $regions = $display->getLayout()->getPluginDefinition()->get('regions');
-      $display->addBlock([
-        'id' => 'block_content:' . $block->uuid(),
-        'label' => $block->label(),
-        'label_display' => 0,
-        'region' => array_key_first($regions),
-        'weight' => 1,
-        'vid' => $block->getRevisionId(),
-      ]);
-      $this->panelizer->setPanelsDisplay($node, 'full', '__bundle_default__', $display);
+      $section = new Section('layout_onecol');
+      $section->appendComponent(new SectionComponent(
+        \Drupal::service('uuid')->generate(),
+        'content',
+        [
+          'id' => 'block_content:' . $block->uuid(),
+          'label' => $block->label(),
+          'label_display' => 0,
+          'provider' => 'block_content',
+          'vid' => $block->getRevisionId(),
+        ],
+      ));
+      $node->set(OverridesSectionStorage::FIELD_NAME, [$section]);
+      $node->save();
       if ($node->isPublished() || $block->isPublished()) {
         throw new \RuntimeException('Draft entities must remain unpublished.');
       }
@@ -150,7 +148,7 @@ final class PageDraftService {
   }
 
   private function prepareEntities(\stdClass $input): array {
-    if (!$this->account->isAuthenticated() || !$this->panelizer || !$this->panels ||
+    if (!$this->account->isAuthenticated() ||
       !$this->entities->getAccessControlHandler('node')->createAccess('landing_page', $this->account) ||
       !$this->entities->getAccessControlHandler('block_content')->createAccess('json', $this->account)) {
       throw new PageDraftException('permission_denied', 403);
@@ -167,8 +165,7 @@ final class PageDraftService {
       'type' => 'landing_page', 'title' => $input->title,
       'uid' => $this->account->id(), 'langcode' => $langcode, 'status' => FALSE,
     ]);
-    $settings = $this->panelizer->getPanelizerSettings('node', 'landing_page', 'full');
-    if (!$node->hasField('panelizer') || !($settings['custom'] || $settings['allow'])) {
+    if (!$node->hasField(OverridesSectionStorage::FIELD_NAME)) {
       throw new PageDraftException('draft_not_supported', 503);
     }
     // Model-supplied UUIDs remain plain component data; existing blocks are never loaded/updated.

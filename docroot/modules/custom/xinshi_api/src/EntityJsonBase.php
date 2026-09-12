@@ -7,6 +7,10 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Url;
 use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
+use Drupal\layout_builder\Section;
+use Drupal\layout_builder\SectionComponent;
+use Drupal\views\ViewExecutable;
+use Drupal\views\Views;
 use Drupal\webform\Entity\Webform;
 
 /**
@@ -243,28 +247,51 @@ class EntityJsonBase implements EntityJsonInterface {
   }
 
   /**
-   * 检查当前实体是否使用 Panelizer/Panelize 进行显示配置
+   * 渲染布局构建器中的视图块
    *
-   * @return bool
+   * 该方法加载与当前实体类型和包关联的布局构建器配置，并渲染其中的视图块。
+   * 对于每个视图组件，会检查访问权限，执行视图并收集渲染结果。
+   *
+   * @return array 返回渲染后的视图块数组，格式为：
+   *   - 键：视图名称_显示ID（如"view_name_display_id"）
+   *   - 值：包含以下键的数组：
+   *     - 'rows': 视图的行数据
+   *     - 'title': 视图标题或配置的标签
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function isPanelizer() {
-    if (!\Drupal::moduleHandler()->moduleExists('panelizer')) {
-      // 如果模块未启用，直接返回 false
-      return false;
+  protected function renderLayoutBuilder() {
+    $builder = LayoutBuilderEntityViewDisplay::load($this->entity->getEntityTypeId() . '.' . $this->entity->bundle() . '.json');
+    if (empty($builder)) {
+      return [];
     }
-    $storage = \Drupal::entityTypeManager()->getStorage('entity_view_display');
-    $modes = [$this->mode, 'full', 'default'];
-    foreach ($modes as $display_mode) {
-      $display = $storage->load($this->entity->getEntityTypeId() . '.' . $this->entity->bundle() . '.' . $display_mode);
-      if (!$display) {
-        continue;
-      }
-      $settings = $display->get('third_party_settings') ?: [];
-      // Panelizer 常见 key 为 'panelizer'，部分场景或 Panels 集成可能为 'panels'
-      if (!empty($settings['panelizer']['enable'] ?? false) || !empty($settings['panels']['enable'] ?? false)) {
-        return true;
+    $blocks = [];
+    /** @var Section $section */
+    foreach ($builder->getSections() as $section) {
+      /** @var SectionComponent $component */
+      foreach ($section->getComponents() as $component) {
+        $configuration = $component->get('configuration');
+        if ($configuration['provider'] == 'views') {
+          $id = explode(':', $configuration['id'])[1];
+          $view_name = explode('-', $id)[0];
+          $display_id = explode('-', $id)[1];
+          /** @var ViewExecutable $view */
+          $view = Views::getView($view_name);
+          if ($view && $view->access($display_id)) {
+            $view->setDisplay($display_id);
+            $view->preExecute();
+            $view->execute($display_id);
+            $render = $view->render();
+            $blocks["{$view_name}_{$display_id}"] = [
+              'rows' => $render['#rows'][0]['#rows'] ?? [],
+              'title' => empty($configuration['views_label']) ? $view->getTitle() : $configuration['views_label'],
+            ];
+            $this->addCacheTags($view->getCacheTags());
+          }
+        }
       }
     }
-    return false;
+    return $blocks;
   }
 }

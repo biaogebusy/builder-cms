@@ -31,3 +31,7 @@ services:
       - '@module_installer'
     tags:
       - { name: drush.command }
+  update_to_d11.stale_field_cleanup_commands:
+    class: Drupal\update_to_d11\Drush\StaleFieldCleanupCommands
+    tags:
+      - { name: drush.command }
